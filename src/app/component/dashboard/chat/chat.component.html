@@ -1,6 +1,6 @@
-<div class="flex flex-col h-full min-h-[60vh] lg:min-h-[inherit]">
+<div class="flex flex-col h-full min-h-[60vh] lg:min-h-[inherit] max-h-[60vh]"  >
 
-  <div class="flex-1 overflow-y-auto px-4 space-y-4 pt-4">
+  <div class="flex-1 overflow-y-auto px-4 space-y-4 pt-4 flex flex-col-reverse" >
     <div class="max-w-4xl mx-auto">
 
     <div *ngFor="let msg of chatFacadeService.messages" class="flex fade-in"

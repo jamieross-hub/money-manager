@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild, viewChild } from '@angular/core';
 import { ChatFacadeService } from 'src/app/util/service/ai-chat/chat-facade-service';
 
 @Component({
@@ -7,6 +7,7 @@ import { ChatFacadeService } from 'src/app/util/service/ai-chat/chat-facade-serv
   styleUrls: ['./chat.component.scss']
 })
 export class ChatComponent {
+
   constructor(public chatFacadeService: ChatFacadeService) {}
 
   sendMessage(input: HTMLInputElement) {
