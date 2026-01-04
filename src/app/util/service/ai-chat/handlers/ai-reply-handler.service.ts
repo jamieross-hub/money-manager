@@ -12,6 +12,12 @@ export class AiReplyHandlerService {
     handleAI(userText: string) {
         const systemMessage = this.ai.createFinancialAdvisorMessage();
         const userMessage = { role: 'user' as const, content: userText };
-        return this.ai.sendMessage([systemMessage, userMessage]);
+        try {
+            return this.ai.sendMessage([systemMessage, userMessage]);
+        }
+        catch (error) {
+            console.error('Error in AI Reply Handler:', error);
+            throw error;
+        }
     }
 }

@@ -78,6 +78,8 @@ import { FeedbackComponent } from './component/feedback/feedback.component';
 import { PrivacyPolicyComponent } from './component/privacy-policy/privacy-policy.component';
 import { GoogleSheetsComponent } from './component/dashboard/google-sheets/google-sheets.component';
 import { OpenaiInteractionComponent } from './component/dashboard/openai-interaction/openai-interaction.component';
+import { ChatCategoryDropdownComponent } from './util/components/chat-category-dropdown/chat-category-dropdown.component';
+import { ChatComponent } from './component/dashboard/chat/chat.component';
 
 // Card Components
 import { TopCategoriesCardComponent } from './util/components/cards/top-categories-card/top-categories-card.component';
@@ -172,6 +174,8 @@ import { UpcomingTransactionsCardComponent } from './util/components/cards/upcom
     TermsConditionsComponent,
     GoogleSheetsComponent,
     OpenaiInteractionComponent,
+    ChatCategoryDropdownComponent,
+    ChatComponent,
 
   ],
   imports: [

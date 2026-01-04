@@ -1,0 +1,48 @@
+<div class="flex flex-col h-full min-h-[60vh] lg:min-h-[inherit]">
+
+  <div class="flex-1 overflow-y-auto px-4 space-y-4 pt-4">
+    <div class="max-w-4xl mx-auto">
+
+    <div *ngFor="let msg of chatFacadeService.messages" class="flex fade-in"
+      [ngClass]="msg.sender === 'user' ? 'justify-end' : 'justify-start'">
+
+      <ng-container *ngIf="msg.type !== 'categoryDropdown'">
+        <div class="px-4 py-2 my-2 rounded-2xl max-w-[80%] sm:max-w-[60%] text-sm sm:text-base" [ngClass]="msg.sender === 'user'
+          ? 'bg-primary-500 text-white rounded-br-md'
+          : 'bg-gray-100 text-gray-800 rounded-bl-md'" [innerHTML]="msg.text | safeHtml">
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="msg.type === 'categoryDropdown'">
+        <div class="px-4 py-2 my-2 rounded-2xl max-w-[80%] sm:max-w-[60%] text-sm sm:text-base bg-gray-100 text-gray-800 rounded-bl-md">
+          <app-chat-category-dropdown [categories]="msg.data.categories" [placeholder]="msg.data.placeholder" [amount]="msg.data.amount" [txType]="msg.data.txType" (selected)="onChatCategorySelected($event)"></app-chat-category-dropdown>
+        </div>
+      </ng-container>
+
+    </div>
+
+    <!-- Typing Loader -->
+    <div *ngIf="chatFacadeService.isTyping" class="flex justify-start fade-in">
+      <div class="bg-gray-100 px-4 py-2 rounded-2xl rounded-bl-md">
+        <span class="typing-dots">
+          <span></span><span></span><span></span>
+        </span>
+      </div>
+    </div>
+
+  </div>
+    </div>
+  </div>
+
+  <!-- Input Bar -->
+  <div class="border-t border-gray-100 p-4 bg-white sticky bottom-0 z-10">
+    <div class="max-w-2xl mx-auto flex gap-3">
+    <input #chatInput type="text" placeholder="Ask AI or enter expense, income..."
+      (keydown.enter)="sendMessage(chatInput)"
+      class="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary-300 transition">
+    <button (click)="sendMessage(chatInput)"
+      class="bg-primary-500 hover:bg-primary-700 text-white px-4 sm:px-6 py-2 rounded-xl text-sm sm:text-base font-medium transition">
+      Send
+    </button>
+  </div>
+</div>

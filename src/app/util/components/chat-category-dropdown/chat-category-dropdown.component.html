@@ -1,0 +1,7 @@
+<div class="chat-category-dropdown">
+  <label style="display:block;margin-bottom:6px;color:#374151">{{placeholder}}</label>
+  <select (change)="onChange($event)" style="padding:8px;border-radius:8px;border:1px solid #e5e7eb;min-width:200px">
+    <option value="">{{placeholder}}</option>
+    <option *ngFor="let c of categories" [value]="c.name">{{c.name}}</option>
+  </select>
+</div>

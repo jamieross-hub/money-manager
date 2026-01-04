@@ -9,7 +9,7 @@ import { AmountExtractor } from "./utils/amount-extractor.util";
 
 @Injectable({ providedIn: 'root' })
 export class ChatFacadeService {
-    messages: Array<{ sender: string; text: string }> = [];
+    messages: Array<any> = [];
     isTyping = false;
 
     constructor(
@@ -21,34 +21,32 @@ export class ChatFacadeService {
         private aiReply: AiReplyHandlerService,
         private extract: AmountExtractor
     ) {
-        this.messages.push({
-            sender: 'bot',
-            text: '🙂 Hello! I am your financial assistant. How can I help you today?'
-        });
+        this.messages.push({ sender: 'bot', type: 'html', text: '🙂 Hello! I am your financial assistant. How can I help you today?' });
     }
 
-    startBotReply(userText: string) {
+       startBotReply(userText: string) {
         this.isTyping = true;
         const detected = this.intent.detectIntent(userText);
         const amount = this.extract.extractAmount(userText);
 
         // 1. Start follow-up flow if user entered only amount and no flow is active
         if (!this.flow.getStage() && detected === 'AI_REPLY' && amount > 0) {
-            this.pushBot(this.flow.startAmountFlow(amount));
+            const reply = this.flow.startAmountFlow(amount);
+            this.pushBot(typeof reply === 'string' ? { sender: 'bot', type: 'html', text: reply } : { sender: 'bot', type: 'html', ...(reply as Record<string, any>) });
             return;
         }
 
         // 2. Handle type confirmation stage
         if (this.flow.getStage() === 'askType') {
             const reply = this.flow.handleTypeReply(userText, detected);
-            this.pushBot(reply);
+            this.pushBot(typeof reply === 'string' ? { sender: 'bot', type: 'html', text: reply } : { sender: 'bot', type: 'html', ...(reply as Record<string, any>) });
             return;
         }
 
         // 3. Handle category asking stage
         if (this.flow.getStage() === 'askCategory') {
             const reply = this.flow.handleCategoryReply(userText.trim());
-            this.pushBot(reply);
+            this.pushBot({ sender: 'bot', type: 'html', text: reply });
             return;
         }
 
@@ -71,12 +69,29 @@ export class ChatFacadeService {
         // 5. AI reply fallback
         this.aiReply.handleAI(userText).subscribe({
             next: (reply) => this.pushBot(reply),
-            error: () => this.pushBot('Internal error, please try again!')
+            error: () => this.pushBot({ sender: 'bot', type: 'html', text: 'Internal error, please try again!' })
         });
     }
 
-    private pushBot(text: string) {
-        this.messages.push({ sender: 'bot', text });
+    private pushBot(message: any) {
+        this.messages.push(message);
         this.isTyping = false;
+    }
+
+    // Called by UI when a category is selected from the Angular dropdown component
+    handleCategorySelection(name: string, amount: number, txType: string) {
+        if (!name) return;
+        if (txType === 'INCOME') {
+            this.income.addIncome(name, amount);
+            const reply = this.flow.handleCategoryReply(name);
+            this.pushBot({ sender: 'bot', type: 'html', text: reply });
+            return;
+        }
+        if (txType === 'EXPENSE') {
+            this.expense.addExpense(name, amount);
+            const reply = this.flow.handleCategoryReply(name);
+            this.pushBot({ sender: 'bot', type: 'html', text: reply });
+            return;
+        }
     }
 }

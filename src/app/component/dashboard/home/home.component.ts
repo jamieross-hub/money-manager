@@ -170,14 +170,7 @@ export class HomeComponent {
 
 
 
-  sendMessage(input: HTMLInputElement) {
-    const text = input.value?.trim();
-    if (!text) return;
-
-    this.chatFacadeService.messages.push({ sender: 'user', text });
-    input.value = '';
-    this.chatFacadeService.startBotReply(text);
-  }
+  // Chat UI moved to `app-chat` component.
 
 
 

@@ -250,6 +250,13 @@ export class CategoryService {
         return this.categories[categoryId]?.name || '';
     }
 
+    /** Get cached categories (synchronous) optionally filtered by type */
+    public getCachedCategories(type?: TransactionType) : Category[] {
+        const all = Object.values(this.categories) as Category[];
+        if (!type) return all;
+        return all.filter(c => c.type === type);
+    }
+
     /** Remove a category from its parent (convert to main category) */
     removeFromParentCategory(userId: string, categoryId: string): Observable<void> {
         return new Observable<void>(observer => {
