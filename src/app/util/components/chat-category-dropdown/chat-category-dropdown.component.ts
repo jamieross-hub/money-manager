@@ -22,6 +22,7 @@ export class ChatCategoryDropdownComponent {
 
   public currentCategory: Category | null = null;
   public currentAccount: any = null;
+  public isDisabled = false;
 
   public accountList$: Observable<any[]> | undefined;
 
@@ -48,6 +49,7 @@ export class ChatCategoryDropdownComponent {
 
   onSubmit() {
     if (!this.currentCategory || !this.currentAccount) return;
+    this.isDisabled = true;
     this.submitSelection.emit({ selectedCategory: this.currentCategory, account: this.currentAccount, amount: this.amount, txType: this.txType });
   }
 }
