@@ -1,29 +1,27 @@
 <div class="chat-category-dropdown">
   <div class="chat-controls" role="group" aria-label="Select account and category">
-    <mat-form-field appearance="outline" class="select-pill account-pill">
+    <mat-form-field appearance="outline" class="select-pill account-pill w-full">
       <mat-select (selectionChange)="onAccountChange($event.value)" placeholder="Account" panelClass="chat-select-panel">
         <mat-option *ngFor="let acc of (accountList$ | async)" [value]="acc">
           <div class="option-item">
-            <span class="avatar">{{acc.name?.charAt(0) || 'A'}}</span>
             <span class="label">{{acc.name}}</span>
           </div>
         </mat-option>
       </mat-select>
     </mat-form-field>
 
-    <mat-form-field appearance="outline" class="select-pill category-pill">
+    <mat-form-field appearance="outline" class="select-pill category-pill w-full">
       <mat-select (selectionChange)="onChange($event.value)" placeholder="{{placeholder}}" panelClass="chat-select-panel">
         <mat-option *ngFor="let category of categories" [value]="category">
           <div class="option-item">
-            <span class="avatar">{{category.name?.charAt(0) || 'C'}}</span>
             <span class="label">{{category.name}}</span>
           </div>
         </mat-option>
       </mat-select>
     </mat-form-field>
 
-    <button mat-mini-fab color="primary" class="submit-btn" aria-label="Submit selection" (click)="onSubmit()" [disabled]="!currentCategory || !currentAccount">
+    <!-- <button mat-mini-fab color="primary" class="submit-btn" aria-label="Submit selection" (click)="onSubmit()" [disabled]="!currentCategory || !currentAccount">
       <mat-icon>send</mat-icon>
-    </button>
+    </button> -->
   </div>
 </div>

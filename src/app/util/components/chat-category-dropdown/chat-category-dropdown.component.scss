@@ -1,58 +1,153 @@
 .chat-category-dropdown {
   display: block;
+  font-family: 'Inter', sans-serif; // Ensure clean typography
 }
 
-.chat-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-}
-
-.select-pill {
-  min-width: 180px;
-  max-width: 260px;
-  border-radius: 999px;
-}
-
-.select-pill .mat-form-field-flex {
-  border-radius: 999px;
-}
-
-.option-item {
+.action-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  background: #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 4px;
+  border: 1px solid #f3f4f6;
+  width: fit-content;
+  max-width: 100%;
+  transition: all 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+  }
+}
+
+.select-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  min-width: 140px;
+  padding: 0 12px;
+  cursor: pointer;
+  border-radius: 999px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f9fafb;
+  }
+}
+
+// Override default mat-form-field density and appearance to fit the pill
+::ng-deep .compact-field {
+  width: 100%;
+  
+  .mat-form-field-wrapper {
+    padding-bottom: 0;
+  }
+  
+  .mat-form-field-flex {
+    background-color: transparent !important;
+    padding: 0 !important;
+    align-items: center;
+  }
+  
+  .mat-form-field-infix {
+    padding: 0 !important;
+    border: none !important;
+    width: auto !important;
+  }
+  
+  .mat-form-field-underline {
+    display: none;
+  }
+}
+
+.divider {
+  width: 1px;
+  height: 24px;
+  background-color: #e5e7eb;
+  margin: 0 4px;
+}
+
+.option-trigger, .option-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #374151;
 }
 
 .avatar {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #f3f4f6; /* neutral bg */
-  color: #111827;
+  background: #eff6ff;
+  color: #3b82f6;
   font-weight: 600;
+  font-size: 13px;
+  flex-shrink: 0;
 }
 
 .label {
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 120px;
 }
 
 .submit-btn {
-  margin-left: 4px;
-}
-
-/* style dropdown panel to be compact */
-.chat-select-panel .mat-option {
+  width: 40px;
   height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #3b82f6; // Primary color
+  color: white;
+  border: none;
+  margin-left: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+
+  &:hover {
+    background-color: #2563eb;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &:disabled {
+    background-color: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
 }
 
-.chat-select-panel .mat-select-panel {
-  padding: 4px 0;
+// Compact panel styles
+::ng-deep .chat-select-panel {
+  border-radius: 12px !important;
+  margin-top: 8px;
+  
+  .mat-option {
+    height: 44px;
+    font-size: 14px;
+    padding: 0 16px; 
+    
+    &:hover {
+      background-color: #f3f4f6;
+    }
+  }
 }

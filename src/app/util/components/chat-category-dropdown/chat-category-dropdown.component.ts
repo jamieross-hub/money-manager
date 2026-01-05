@@ -32,13 +32,18 @@ export class ChatCategoryDropdownComponent {
   onChange(value: any) {
     if (!value) return;
     this.currentCategory = value;
+    if(this.currentCategory && this.currentAccount){
+      this.onSubmit();
+    }
     // this.selected.emit({ selectedCategory: value, amount: this.amount, txType: this.txType });
   }
 
   onAccountChange(account: any) {
     if (!account) return;
     this.currentAccount = account;
-    // this.accountSelected.emit(account);
+    if(this.currentCategory && this.currentAccount){
+      this.onSubmit();
+    }
   }
 
   onSubmit() {
