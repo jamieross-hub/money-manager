@@ -80,10 +80,10 @@ export class ChatFacadeService {
     }
 
     // Called by UI when a category is selected from the Angular dropdown component
-    handleCategorySelection(selectedCategory: Category, amount: number, txType: string) {
+    handleCategorySelection(selectedCategory: Category, account: any, amount: number, txType: string) {
         if (!selectedCategory) return;
         if (txType === 'INCOME') {
-            this.income.addIncome(selectedCategory, amount);
+            this.income.addIncome(selectedCategory, account, amount);
             const reply = this.flow.handleCategoryReply(selectedCategory.name);
             this.pushBot({ sender: 'bot', type: 'html', text: reply });
             return;

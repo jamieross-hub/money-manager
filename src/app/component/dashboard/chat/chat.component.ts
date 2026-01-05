@@ -20,7 +20,7 @@ export class ChatComponent {
     this.chatFacadeService.startBotReply(text);
   }
 
-  onChatCategorySelected(event: { selectedCategory: Category; amount: number; txType: string }) {
-    this.chatFacadeService.handleCategorySelection(event.selectedCategory, event.amount, event.txType);
+  onChatCategorySelected(event: { selectedCategory: Category; account: any; amount: number; txType: string }) {
+    this.chatFacadeService.handleCategorySelection(event.selectedCategory, event.account, event.amount, event.txType);
   }
 }

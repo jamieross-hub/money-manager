@@ -1,8 +1,17 @@
 <div class="chat-category-dropdown">
-  <!-- <label style="display:block;margin-bottom:6px;color:#374151">{{placeholder}}</label> -->
-   <mat-select style="min-width:200px" (selectionChange)="onChange($event.value)" placeholder="{{placeholder}}">
-    @for (category of categories; track category) {
-      <mat-option [value]="category">{{category.name}}</mat-option>
-    }
-  </mat-select>
+  <mat-form-field appearance="outline" style="min-width:200px">
+    <mat-select (selectionChange)="onChange($event.value)" placeholder="{{placeholder}}">
+      <ng-container *ngFor="let category of categories">
+        <mat-option [value]="category">{{category.name}}</mat-option>
+      </ng-container>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field appearance="outline" style="min-width:200px; margin-right:8px;">
+    <mat-select (selectionChange)="onAccountChange($event.value)" placeholder="Select account">
+      <mat-option *ngFor="let acc of (accountList$ | async)" [value]="acc">{{acc.name}}</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+ 
+  <button mat-raised-button color="primary" style="margin-left:8px; height:40px;" (click)="onSubmit()" [disabled]="!currentCategory || !currentAccount">Submit</button>
 </div>

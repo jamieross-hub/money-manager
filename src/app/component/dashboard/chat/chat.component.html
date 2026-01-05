@@ -16,7 +16,7 @@
 
       <ng-container *ngIf="msg.type === 'categoryDropdown'">
         <div class="px-4 py-2 my-2 rounded-2xl max-w-[80%] sm:max-w-[60%] text-sm sm:text-base bg-gray-100 text-gray-800 rounded-bl-md">
-          <app-chat-category-dropdown [categories]="msg.data.categories" [placeholder]="msg.data.placeholder" [amount]="msg.data.amount" [txType]="msg.data.txType" (selected)="onChatCategorySelected($event)"></app-chat-category-dropdown>
+          <app-chat-category-dropdown [categories]="msg.data.categories" [placeholder]="msg.data.placeholder" [amount]="msg.data.amount" [txType]="msg.data.txType" (submitSelection)="onChatCategorySelected($event)"></app-chat-category-dropdown>
         </div>
       </ng-container>
 

@@ -7,7 +7,7 @@ import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.serv
 import * as TransactionsActions from 'src/app/store/transactions/transactions.actions';
 import { AppState } from 'src/app/store/app.state';
 import { SyncStatus, TransactionStatus, TransactionType } from 'src/app/util/config/enums';
-import { Category } from "src/app/util/models";
+import { Account, Category } from "src/app/util/models";
 
 
 @Injectable({ providedIn: 'root' })
@@ -19,7 +19,7 @@ export class IncomeHandlerService {
         private hapticFeedback: HapticFeedbackService
     ) {}
 
-    async addIncome(selectedCategory: Category, amount: number) {
+    async addIncome(selectedCategory: Category, account: Account, amount: number) {
         const userId = this.auth.currentUser?.uid;
 
         // Fallback if user not available
@@ -30,7 +30,7 @@ export class IncomeHandlerService {
 
         const transactionData = {
             userId: userId,
-            accountId: '',
+            accountId: account?.accountId || '',
             categoryId: selectedCategory?.id || '',
             category: selectedCategory?.name,
             payee: 'Income',
