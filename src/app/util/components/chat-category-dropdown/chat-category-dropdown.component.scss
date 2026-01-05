@@ -1,4 +1,58 @@
-/* minimal styling kept inline in templates; leave empty for now */
 .chat-category-dropdown {
-  display: inline-block;
+  display: block;
+}
+
+.chat-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+}
+
+.select-pill {
+  min-width: 180px;
+  max-width: 260px;
+  border-radius: 999px;
+}
+
+.select-pill .mat-form-field-flex {
+  border-radius: 999px;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f3f4f6; /* neutral bg */
+  color: #111827;
+  font-weight: 600;
+}
+
+.label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.submit-btn {
+  margin-left: 4px;
+}
+
+/* style dropdown panel to be compact */
+.chat-select-panel .mat-option {
+  height: 40px;
+}
+
+.chat-select-panel .mat-select-panel {
+  padding: 4px 0;
 }
