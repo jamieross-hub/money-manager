@@ -1,4 +1,5 @@
 import { Component, ElementRef, ViewChild, viewChild } from '@angular/core';
+import { Category } from 'src/app/util/models';
 import { ChatFacadeService } from 'src/app/util/service/ai-chat/chat-facade-service';
 
 @Component({
@@ -19,7 +20,7 @@ export class ChatComponent {
     this.chatFacadeService.startBotReply(text);
   }
 
-  onChatCategorySelected(event: { name: string; amount: number; txType: string }) {
-    this.chatFacadeService.handleCategorySelection(event.name, event.amount, event.txType);
+  onChatCategorySelected(event: { selectedCategory: Category; amount: number; txType: string }) {
+    this.chatFacadeService.handleCategorySelection(event.selectedCategory, event.amount, event.txType);
   }
 }

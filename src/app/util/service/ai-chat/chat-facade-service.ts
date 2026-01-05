@@ -6,6 +6,7 @@ import { ReportHandlerService } from "./handlers/report-handler.service";
 import { AiReplyHandlerService } from "./handlers/ai-reply-handler.service";
 import { ChatFlowService } from "./handlers/chat-flow.service";
 import { AmountExtractor } from "./utils/amount-extractor.util";
+import { Category } from "../../models";
 
 @Injectable({ providedIn: 'root' })
 export class ChatFacadeService {
@@ -52,12 +53,12 @@ export class ChatFacadeService {
 
         // 4. Normal intent handlers
         if (detected === 'ADD_INCOME') {
-            this.pushBot(this.income.addIncome(userText, amount));
+            //this.pushBot(this.income.addIncome({}, amount));
             return;
         }
 
         if (detected === 'ADD_EXPENSE') {
-            this.pushBot(this.expense.addExpense(userText, amount));
+            //this.pushBot(this.expense.addExpense(userText, amount));
             return;
         }
 
@@ -79,17 +80,17 @@ export class ChatFacadeService {
     }
 
     // Called by UI when a category is selected from the Angular dropdown component
-    handleCategorySelection(name: string, amount: number, txType: string) {
-        if (!name) return;
+    handleCategorySelection(selectedCategory: Category, amount: number, txType: string) {
+        if (!selectedCategory) return;
         if (txType === 'INCOME') {
-            this.income.addIncome(name, amount);
-            const reply = this.flow.handleCategoryReply(name);
+            this.income.addIncome(selectedCategory, amount);
+            const reply = this.flow.handleCategoryReply(selectedCategory.name);
             this.pushBot({ sender: 'bot', type: 'html', text: reply });
             return;
         }
         if (txType === 'EXPENSE') {
-            this.expense.addExpense(name, amount);
-            const reply = this.flow.handleCategoryReply(name);
+            this.expense.addExpense(selectedCategory, amount);
+            const reply = this.flow.handleCategoryReply(selectedCategory.name);
             this.pushBot({ sender: 'bot', type: 'html', text: reply });
             return;
         }
