@@ -21,6 +21,8 @@ export class ChatComponent {
   }
 
   onChatCategorySelected(event: { selectedCategory: Category; account: any; amount: number; txType: string }) {
+    this.chatFacadeService.messages.pop();
     this.chatFacadeService.handleCategorySelection(event.selectedCategory, event.account, event.amount, event.txType);
+  
   }
 }

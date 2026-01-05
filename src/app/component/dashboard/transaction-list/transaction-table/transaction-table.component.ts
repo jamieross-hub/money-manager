@@ -35,7 +35,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   @Output() cancelRowEdit = new EventEmitter<Transaction>();
   @Output() addTransaction = new EventEmitter<void>();
   @Output() bulkDeleteTransactions = new EventEmitter<Transaction[]>();
-  @Output() bulkUpdateCategory = new EventEmitter<{transactions: Transaction[], categoryId: string}>();
+  @Output() bulkUpdateCategory = new EventEmitter<{ transactions: Transaction[], categoryId: string }>();
 
   @ViewChild(MatSort) sort!: MatSort;
 
@@ -106,14 +106,14 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
         this.displayedColumns = ['Date', 'Payee', 'Amount', 'Actions'];
       } else if (screenWidth < this.TABLET_BREAKPOINT) {
         // Small tablet: Show more columns but hide status (include select column only if not home)
-        this.displayedColumns = this.isHome ? 
-          ['Date', 'Type', 'Payee', 'Amount', 'Actions'] : 
+        this.displayedColumns = this.isHome ?
+          ['Date', 'Type', 'Payee', 'Amount', 'Actions'] :
           ['select', 'Date', 'Type', 'Payee', 'Amount', 'Actions'];
       } else {
         // Desktop: Show all columns (include select column only if not home)
-        this.displayedColumns = this.isHome ? 
-          ['Date', 'Type', 'Payee', 'Amount', 'Status', 'Actions'] : 
-          ['select', 'Date', 'Type', 'Payee', 'Amount', 'Status', 'Actions', 'Account'];
+        this.displayedColumns = this.isHome ?
+          ['Date', 'Type', 'Payee', 'Amount', 'Status', 'Actions'] :
+          ['select', 'Date', 'Type', 'Payee', 'Amount', 'Status', 'Account', 'Actions'];
       }
     }
   }
@@ -170,9 +170,9 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
     let filteredData: Transaction[];
 
     // Check if we have specific date filters applied
-    const hasDateFilters = this.filterService.getSelectedDate() || 
-                          this.filterService.getSelectedDateRange() || 
-                          this.filterService.getSelectedYear();
+    const hasDateFilters = this.filterService.getSelectedDate() ||
+      this.filterService.getSelectedDateRange() ||
+      this.filterService.getSelectedYear();
 
     if (!hasDateFilters) {
       // Filter to show only current year transactions when no specific date filter is applied
@@ -441,13 +441,13 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   private updateSelectionState(): void {
     const selectedCount = this.selectedTransactions.size;
     const totalCount = this.dataSource.data.length;
-    
+
     this.isAllSelected = selectedCount === totalCount && totalCount > 0;
     this.isIndeterminate = selectedCount > 0 && selectedCount < totalCount;
   }
 
   getSelectedTransactions(): Transaction[] {
-    return this.dataSource.data.filter(transaction => 
+    return this.dataSource.data.filter(transaction =>
       this.selectedTransactions.has(transaction.id!)
     );
   }
@@ -494,7 +494,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
     if (selectedTransactions.length === 0) return;
 
     // Get all available categories
-    const availableCategories = Object.values(this.categories).filter(category => 
+    const availableCategories = Object.values(this.categories).filter(category =>
       !category.parentCategoryId // Only show parent categories
     );
 

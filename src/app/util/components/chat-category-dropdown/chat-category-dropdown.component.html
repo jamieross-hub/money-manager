@@ -1,7 +1,7 @@
 <div class="chat-category-dropdown">
   <div class="chat-controls" role="group" aria-label="Select account and category">
     <mat-form-field appearance="outline" class="select-pill account-pill w-full">
-      <mat-select [disabled]="isDisabled" (selectionChange)="onAccountChange($event.value)" placeholder="Account" panelClass="chat-select-panel">
+      <mat-select [disabled]="isDisabled" (selectionChange)="onAccountChange($event.value)" placeholder="Select account" panelClass="chat-select-panel">
         <mat-option *ngFor="let acc of (accountList$ | async)" [value]="acc">
           <div class="option-item">
             <span class="label">{{acc.name}}</span>
