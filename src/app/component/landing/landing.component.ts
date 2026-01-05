@@ -64,19 +64,19 @@ export class LandingComponent implements OnInit {
 
   howItWorks = [
     {
-      step: '1',
+      step: 1,
       title: 'Download & Sign Up',
       description: 'Get the app from App Store or Play Store and create your account in seconds.',
       icon: 'smartphone'
     },
     {
-      step: '2',
+      step: 2,
       title: 'Set Your Goals',
       description: 'Define your financial goals and create personalized budgets.',
       icon: 'flag'
     },
     {
-      step: '3',
+      step: 3,
       title: 'Track & Grow',
       description: 'Monitor your progress and watch your savings grow with smart insights.',
       icon: 'trending_up'
@@ -133,9 +133,9 @@ export class LandingComponent implements OnInit {
   constructor(
     private router: Router,
     private notificationService: NotificationService
-  ) {}
+  ) { }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   navigateToSignUp(): void {
     this.router.navigate(['/sign-in']);
@@ -157,8 +157,8 @@ export class LandingComponent implements OnInit {
   }
 
   prevScreenshot(): void {
-    this.currentScreenshotIndex = this.currentScreenshotIndex === 0 
-      ? this.screenshots.length - 1 
+    this.currentScreenshotIndex = this.currentScreenshotIndex === 0
+      ? this.screenshots.length - 1
       : this.currentScreenshotIndex - 1;
   }
 

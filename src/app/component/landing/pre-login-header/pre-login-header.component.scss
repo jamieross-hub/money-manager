@@ -1,26 +1,67 @@
-/* Navbar */
+/* Navbar Styles */
 .navbar {
-  display: flex;
-  justify-content: space-between;
-  padding: 20px 40px;
-  border-bottom: 1px solid #eee;
-  background-color: white;
+  width: 100%;
+  transition: all 0.3s ease;
+}
 
-  .logo {
-    font-size: 1.5rem;
-    font-weight: bold;
-    display: flex;
+/* Mobile Menu Animation */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
-  nav {
-    display: flex;
-    align-items: center;
-    gap: 20px;
+.animate-slide-down {
+  animation: slideDown 0.2s ease-out forwards;
+}
 
-    a {
-      text-decoration: none;
-      color: #333;
-      font-weight: 500;
+/* Mobile Menu Button */
+.mobile-menu-btn {
+  /* Ensure good touch target size on mobile */
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Navigation Links */
+.nav-link {
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--primary-color, #3b82f6);
+    transition: width 0.3s ease;
+  }
+  
+  &:hover::after {
+    width: 100%;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .navbar-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .mobile-nav {
+    a, button {
+      /* Ensure good touch targets on mobile */
+      min-height: 48px;
+      font-size: 16px;
     }
   }
 }

@@ -1,10 +1,65 @@
-<header class="navbar">
-  <div class="logo cursor-pointer" routerLink="/landing"><img src="assets/icon/app-icon/icon-192x192.png" alt="Money Manager" class="w-8 h-8" /> <span
-      class="top-2 relative ml-1">Money Manager</span></div>
-  <nav>
-    <a href="#features">Features</a>
-    <a href="#how">How it Works</a>
-    <a href="#pricing">Pricing</a>
-    <button mat-flat-button  (click)="navigateToSignIn()">Sign In</button>
-  </nav>
+<header class="navbar sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all duration-300">
+  <div class="navbar-container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="navbar-content flex items-center justify-between h-16 sm:h-20">
+      
+      <!-- Logo -->
+      <div class="logo cursor-pointer flex items-center gap-2 sm:gap-3 group transition-transform hover:scale-105" routerLink="/landing">
+        <img src="assets/icon/app-icon/icon-192x192.png" alt="Money Manager" class="w-8 h-8 sm:w-10 sm:h-10 transition-transform group-hover:rotate-12" /> 
+        <span class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 tracking-tight">Money Manager</span>
+      </div>
+
+      <!-- Desktop Navigation -->
+      <nav class="desktop-nav hidden md:flex items-center gap-6 lg:gap-8">
+        <a href="#features" class="nav-link text-gray-700 hover:text-primary font-medium transition-colors duration-200 text-sm lg:text-base">Features</a>
+        <a href="#how" class="nav-link text-gray-700 hover:text-primary font-medium transition-colors duration-200 text-sm lg:text-base">How it Works</a>
+        <button 
+          class="bg-primary hover:bg-primary-700 text-white px-6 py-2.5 rounded-full font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 text-sm lg:text-base" 
+          (click)="navigateToSignIn()">
+          Sign In
+        </button>
+      </nav>
+
+      <!-- Mobile Menu Button -->
+      @if (breakpointService.device.isMobile) {
+      <button 
+        class="mobile-menu-btn md:hidden p-2 rounded-lg text-gray-600 hover:text-primary hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200" 
+        (click)="toggleMobileMenu()"
+        [attr.aria-label]="isMobileMenuOpen ? 'Close menu' : 'Open menu'"
+        [attr.aria-expanded]="isMobileMenuOpen">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transition-transform duration-200" [class.rotate-90]="isMobileMenuOpen" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          @if (!isMobileMenuOpen) {
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          } @else {
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          }
+        </svg>
+      </button>
+      }
+    </div>
+  </div>
+
+  <!-- Mobile Navigation Dropdown -->
+  @if (isMobileMenuOpen) {
+    <div class="mobile-nav md:hidden bg-white border-t border-gray-100 shadow-lg animate-slide-down">
+      <div class="max-w-7xl mx-auto px-4 py-4 space-y-3">
+        <a 
+          href="#features" 
+          class="block py-3 px-4 text-gray-700 hover:text-primary hover:bg-primary-50 rounded-lg font-medium transition-all duration-200" 
+          (click)="toggleMobileMenu()">
+          Features
+        </a>
+        <a 
+          href="#how" 
+          class="block py-3 px-4 text-gray-700 hover:text-primary hover:bg-primary-50 rounded-lg font-medium transition-all duration-200" 
+          (click)="toggleMobileMenu()">
+          How it Works
+        </a>
+        <button 
+          class="w-full bg-primary hover:bg-primary-700 text-white py-3 px-4 rounded-lg font-semibold shadow-md active:scale-95 transition-all duration-200" 
+          (click)="navigateToSignIn(); toggleMobileMenu()">
+          Sign In
+        </button>
+      </div>
+    </div>
+  }
 </header>

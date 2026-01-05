@@ -5,4 +5,6 @@ import { Component } from '@angular/core';
   templateUrl: './pre-footer.component.html',
   styleUrls: ['./pre-footer.component.scss']
 })
-export class PreFooterComponent {}
+export class PreFooterComponent {
+  currentYear = new Date().getFullYear();
+}

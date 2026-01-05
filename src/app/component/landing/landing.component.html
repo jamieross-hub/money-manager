@@ -1,73 +1,79 @@
 <!-- Navbar -->
 <app-pre-login-header></app-pre-login-header>
 
+
 <div class="body">
 	<!-- Hero Section -->
-	<section class="hero relative h-[35vh] flex items-center justify-center overflow-hidden ">
+	<section class="hero relative min-h-[90vh] flex items-center justify-center overflow-hidden">
 		<div class="hero-bg absolute inset-0 bg-primary-200 bg-center scale-110"></div>
-		<div class="absolute inset-0 bg-white/70 backdrop-blur-sm"></div>
+		<!-- Darker overlay for better text contrast -->
+		<div class="absolute inset-0 bg-gradient-to-b from-white/90 via-white/70 to-white/90 backdrop-blur-sm"></div>
 
-		<div class="relative z-10  text-center px-4 sm:px-6 hero-content ">
-			<p class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-primary-600 leading-tight !mb-2">
-				Manage & Track Your Finances
+		<div class="relative z-10 text-center px-4 sm:px-6 hero-content max-w-5xl mx-auto">
+			<p class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-primary-900 leading-tight !mb-6 tracking-tight">
+				Manage & Track Your <span class="text-primary-600">Finances</span>
 			</p>
 
-			<p class="text-sm sm:text-base md:text-lg lg:text-xl text-gray-500 mt-2 mx-auto">
-				Easily track spending, set budgets, and grow your savings.
+			<p class="text-lg sm:text-xl md:text-2xl text-gray-600 mt-4 mx-auto max-w-2xl font-light">
+				Easily track spending, set budgets, and grow your savings with our intuitive money management tools.
 			</p>
 
-			<div class="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6 sm:mt-12 justify-center">
-					<button class="bg-primary text-white px-10 py-4 rounded-xl text-lg font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 " (click)="navigateToSignUp()">
-				Get Started Free <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-5 sm:h-5 sm:w-5" fill="none"
-						viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+			<div class="flex flex-col sm:flex-row gap-4 mt-10 sm:mt-16 justify-center items-center">
+				<button class="bg-primary hover:bg-primary-700 text-white px-8 py-4 rounded-full text-lg font-bold shadow-lg hover:shadow-primary/30 transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 min-w-[200px]" (click)="navigateToSignUp()">
+					Get Started Free 
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
 					</svg>
-			</button>
+				</button>
 
-				<button
-					class="border border-gray-300 hover:border-gray-400 text-gray-700 text-sm sm:text-base font-medium px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl">
+				<button class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-8 py-4 rounded-full text-lg font-semibold shadow-sm hover:shadow-md transform hover:-translate-y-1 transition-all duration-300 min-w-[200px]">
 					View Demo
 				</button>
 			</div>
 
-			<div
-				class="flex items-center gap-2 text-gray-400 text-[10px] sm:text-sm md:text-base mt-2 sm:mt-3 justify-center">
-				<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-4 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24"
-					stroke="currentColor" stroke-width="2">
-					<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-				</svg>
-				<span>Bank-grade security</span>
-				<span>|</span>
-				<span>Syncs securely</span>
+			<div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-gray-500 text-sm sm:text-base mt-8 justify-center font-medium">
+				<div class="flex items-center gap-2">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+					</svg>
+					<span>Bank-grade security</span>
+				</div>
+				<div class="flex items-center gap-2">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+					</svg>
+					<span>Syncs securely</span>
+				</div>
 			</div>
 		</div>
 	</section>
 
 
 	<!-- Features Section -->
-	<section id="features" class="py-16 lg:py-20 bg-white features">
-		<div class="container mx-auto px-4">
-			<div class="text-center mb-12 flex flex-col items-center justify-center">
-				<h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+	<section id="features" class="py-20 lg:py-28 bg-white relative z-20">
+		<div class="container mx-auto px-4 sm:px-6 lg:px-8">
+			<div class="text-center mb-16 max-w-3xl mx-auto">
+				<h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 tracking-tight">
 					What You Can Do
 				</h2>
-				<p class="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-					Essential tools to help you manage your money better.
+				<p class="text-lg sm:text-xl text-gray-600">
+					Everything you need to take control of your financial life, all in one place.
 				</p>
 			</div>
 
-			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
 				@for (feature of features; track feature.title) {
 				<div
-					class="group p-6 lg:p-8 rounded-2xl border border-gray-200 hover:border-primary hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-primary-50/30 hover:from-primary-50/50 hover:to-white">
+					class="group p-8 rounded-3xl border border-gray-100 hover:border-primary-200 shadow-sm hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 bg-white relative overflow-hidden">
+					<div class="absolute inset-0 bg-gradient-to-br from-transparent to-primary-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 					<div
-						class="text-3xl lg:text-4xl mb-4 group-hover:scale-110 transition-transform duration-300 text-primary">
+						class="relative w-14 h-14 mb-6 rounded-2xl bg-primary-50 text-primary flex items-center justify-center text-3xl group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-primary/40">
 						<mat-icon>{{ feature.icon }}</mat-icon>
 					</div>
 					<h3
-						class="text-lg lg:text-xl font-semibold text-gray-900 mb-3 group-hover:text-primary transition-colors duration-300">
+						class="relative text-xl font-bold text-gray-900 mb-3 group-hover:text-primary transition-colors duration-300">
 						{{ feature.title }}</h3>
-					<p class="text-sm lg:text-base text-gray-600 leading-relaxed">{{ feature.description }}</p>
+					<p class="relative text-gray-600 leading-relaxed">{{ feature.description }}</p>
 				</div>
 				}
 			</div>
@@ -75,31 +81,34 @@
 	</section>
 
 	<!-- How it works -->
-	<section class="py-20 bg-gradient-to-br from-primary-50 to-white mb-10">
-		<div class="container-responsive px-4 sm:px-6 lg:px-8">
-			<div class="text-center mb-16 flex flex-col items-center justify-center">
-				<h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-					Getting Started
+	<section id="how" class="py-20 lg:py-28 bg-gray-50">
+		<div class="container mx-auto px-4 sm:px-6 lg:px-8">
+			<div class="text-center mb-16 max-w-3xl mx-auto">
+				<h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 tracking-tight">
+					Getting Started is Easy
 				</h2>
-				<p class="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-					Simple steps to start managing your money
+				<p class="text-lg sm:text-xl text-gray-600">
+					Start your journey to financial freedom in just a few minutes.
 				</p>
 			</div>
 
-			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+			<div class="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-6xl mx-auto align-top">
 				@for (step of howItWorks; track step.step) {
-				<div class="text-center group relative">
+				<div class="text-center relative">
+					<!-- Connector Line (Desktop only) -->
+					@if (step.step < 3) {
+						<div class="hidden md:block absolute top-8 left-1/2 w-full h-0.5 bg-gray-200 -z-10 transform translate-x-1/2"></div>
+					}
+					
 					<div
-						class="w-16 h-16 bg-gradient-to-r from-primary to-primary-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+						class="w-16 h-16 bg-white border-2 border-primary-100 text-primary rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-lg shadow-primary/10 relative z-10 transition-transform duration-300 hover:scale-110 active:scale-95">
 						{{ step.step }}
 					</div>
-					<!-- <div class="text-3xl mb-4 group-hover:scale-110 transition-transform duration-300 text-primary">
-            <mat-icon>{{ step.icon }}</mat-icon>
-          </div> -->
-					<h3
-						class="text-xl font-semibold text-gray-900 mb-4 group-hover:text-primary transition-colors duration-300">
-						{{ step.title }}</h3>
-					<p class="text-gray-600 leading-relaxed">{{ step.description }}</p>
+					
+					<h3 class="text-xl font-bold text-gray-900 mb-3">
+						{{ step.title }}
+					</h3>
+					<p class="text-gray-600 leading-relaxed max-w-xs mx-auto">{{ step.description }}</p>
 
 				</div>
 				}
