@@ -1,6 +1,7 @@
-<div class="flex flex-col h-full min-h-[60vh] lg:min-h-[inherit] max-h-[60vh]"  >
+<section class="relative h-[73vh] md:h-full md:max-h-full">
+<div class="flex flex-col  max-h-[80%] h-[80%]">
 
-  <div class="flex-1 overflow-y-auto px-4 space-y-4 pt-4 flex flex-col-reverse" >
+  <div class="flex-1 overflow-y-auto px-4 space-y-4 pt-4 flex flex-col-reverse max-h-[50rem]" >
     <div class="max-w-4xl mx-auto">
 
     <div *ngFor="let msg of chatFacadeService.messages" class="flex fade-in"
@@ -35,7 +36,7 @@
   </div>
 
   <!-- Input Bar -->
-  <div class="border-t border-gray-100 p-4 bg-white sticky bottom-0 z-10">
+  <div class="border-t border-gray-100 p-4 bg-white mt-auto z-10 absolute bottom-0 left-0 w-full">
     <div class="max-w-2xl mx-auto flex gap-3">
     <input #chatInput type="text" placeholder="Ask AI or enter expense, income..."
       (keydown.enter)="sendMessage(chatInput)"
@@ -46,3 +47,4 @@
     </button>
   </div>
 </div>
+</section>
