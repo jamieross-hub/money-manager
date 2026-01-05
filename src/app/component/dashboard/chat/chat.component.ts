@@ -1,6 +1,7 @@
 import { Component, ElementRef, ViewChild, viewChild } from '@angular/core';
 import { Category } from 'src/app/util/models';
 import { ChatFacadeService } from 'src/app/util/service/ai-chat/chat-facade-service';
+import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 
 @Component({
   selector: 'app-chat',
@@ -9,7 +10,9 @@ import { ChatFacadeService } from 'src/app/util/service/ai-chat/chat-facade-serv
 })
 export class ChatComponent {
 
-  constructor(public chatFacadeService: ChatFacadeService) {}
+  visible: boolean = false;
+
+  constructor(public chatFacadeService: ChatFacadeService, public breakpointService: BreakpointService) { }
 
   sendMessage(input: HTMLInputElement) {
     const text = input.value?.trim();
@@ -23,6 +26,20 @@ export class ChatComponent {
   onChatCategorySelected(event: { selectedCategory: Category; account: any; amount: number; txType: string }) {
     this.chatFacadeService.messages.pop();
     this.chatFacadeService.handleCategorySelection(event.selectedCategory, event.account, event.amount, event.txType);
-  
+  }
+
+  setQuickAction(action: string, inputRef: HTMLInputElement) {
+    inputRef.value = `${action}: `;
+    inputRef.focus();
+  }
+
+  onMicClick() {
+    console.log("Mic clicked - Placeholder for speech-to-text");
+    // TODO: Implement speech-to-text logic
+  }
+
+  onAttachmentClick() {
+    console.log("Attachment clicked - Placeholder for file upload");
+    // TODO: Implement file upload logic
   }
 }
