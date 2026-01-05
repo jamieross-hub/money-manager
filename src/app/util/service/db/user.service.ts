@@ -33,7 +33,7 @@ import {
   deleteDoc
 } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, throwError, timer } from 'rxjs';
+import { BehaviorSubject, Observable, throwError, timer, firstValueFrom } from 'rxjs';
 import { catchError, retry, timeout, map } from 'rxjs/operators';
 
 import { defaultBankAccounts } from 'src/app/component/auth/registration/registration.component';
@@ -50,6 +50,8 @@ import { createAccount } from 'src/app/store/accounts/accounts.actions';
 import { createCategory } from 'src/app/store/categories/categories.actions';
 import { AccountType } from '../../config/enums';
 import { APP_CONFIG } from '../../config/config';
+import { AccountsService } from './accounts.service'; // Import AccountsService
+import { CategoryService } from './category.service'; // Import CategoryService
 
 /**
  * Security configuration for user operations
@@ -92,7 +94,7 @@ interface RateLimitEntry {
 export class UserService {
   public readonly userAuth$ = new BehaviorSubject<User | null>(null);
   public isAdmin: boolean = false;
-  
+
   // Security tracking
   private readonly loginAttempts = new Map<string, { count: number; lastAttempt: number; lockedUntil?: number }>();
   private readonly rateLimitMap = new Map<string, RateLimitEntry>();
@@ -104,7 +106,9 @@ export class UserService {
     private readonly router: Router,
     private readonly afAuth: Auth,
     private readonly firestore: Firestore,
-    private readonly store: Store<AppState>
+    private readonly store: Store<AppState>,
+    private readonly accountsService: AccountsService, // Inject AccountsService
+    private readonly categoryService: CategoryService, // Inject CategoryService
   ) {
     this.initializeAuthState();
     this.startSecurityMonitoring();
@@ -114,22 +118,22 @@ export class UserService {
    * Initialize authentication state listener with enhanced security
    */
   private initializeAuthState(): void {
-    onAuthStateChanged(getAuth(), async (user:any) => {
+    onAuthStateChanged(getAuth(), async (user: any) => {
       await this.checkIfAdmin(user);
       console.log(
         'Auth state changed:',
         user ? 'User logged in' : 'User logged out'
       );
-      
+
       this.userAuth$.next(user);
 
       if (user) {
         this.ensureUserDataCached(user.uid);
-        this.logAuditEvent('USER_LOGIN', user.uid, { 
-          email: user.email, 
-          provider: user.providerData[0]?.providerId 
+        this.logAuditEvent('USER_LOGIN', user.uid, {
+          email: user.email,
+          provider: user.providerData[0]?.providerId
         });
-        
+
         // Check for suspicious activity
         this.detectSuspiciousActivity(user);
       } else {
@@ -158,11 +162,11 @@ export class UserService {
   private detectSuspiciousActivity(user: any): void {
     const userAgent = navigator.userAgent;
     const lastLoginInfo = localStorage.getItem(`last-login-${user.uid}`);
-    
+
     if (lastLoginInfo) {
       const lastLogin = JSON.parse(lastLoginInfo);
       const timeDiff = Date.now() - lastLogin.timestamp;
-      
+
       // Alert if login from different location/device within short time
       if (timeDiff < 5 * 60 * 1000 && lastLogin.userAgent !== userAgent) {
         this.logAuditEvent('SUSPICIOUS_LOGIN', user.uid, {
@@ -170,11 +174,11 @@ export class UserService {
           currentUserAgent: userAgent,
           timeDiff
         });
-        
+
         this.notificationService.warning('New login detected from different device');
       }
     }
-    
+
     // Store current login info
     localStorage.setItem(`last-login-${user.uid}`, JSON.stringify({
       timestamp: Date.now(),
@@ -191,7 +195,7 @@ export class UserService {
     setInterval(() => {
       this.cleanupRateLimits();
     }, USER_SECURITY_CONFIG.RATE_LIMIT_WINDOW);
-    
+
     // Monitor for locked accounts
     setInterval(() => {
       this.cleanupLockedAccounts();
@@ -229,16 +233,16 @@ export class UserService {
   private checkRateLimit(identifier: string): boolean {
     const now = Date.now();
     const entry = this.rateLimitMap.get(identifier);
-    
+
     if (!entry || now - entry.windowStart > USER_SECURITY_CONFIG.RATE_LIMIT_WINDOW) {
       this.rateLimitMap.set(identifier, { count: 1, windowStart: now });
       return true;
     }
-    
+
     if (entry.count >= USER_SECURITY_CONFIG.MAX_REQUESTS_PER_WINDOW) {
       return false;
     }
-    
+
     entry.count++;
     return true;
   }
@@ -251,14 +255,14 @@ export class UserService {
     if (!emailRegex.test(email)) {
       return false;
     }
-    
+
     // Check for disposable email domains (basic check)
     const disposableDomains = ['tempmail.org', '10minutemail.com', 'guerrillamail.com'];
     const domain = email.split('@')[1];
     if (disposableDomains.includes(domain)) {
       return false;
     }
-    
+
     return true;
   }
 
@@ -267,21 +271,21 @@ export class UserService {
    */
   private validatePassword(password: string): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-    
+
     if (password.length < USER_SECURITY_CONFIG.PASSWORD_MIN_LENGTH) {
       errors.push(`Password must be at least ${USER_SECURITY_CONFIG.PASSWORD_MIN_LENGTH} characters long`);
     }
-    
+
     if (!USER_SECURITY_CONFIG.PASSWORD_REQUIREMENTS.test(password)) {
       errors.push('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character');
     }
-    
+
     // Check for common passwords
     const commonPasswords = ['password', '123456', 'qwerty', 'admin', 'letmein'];
     if (commonPasswords.includes(password.toLowerCase())) {
       errors.push('Password is too common. Please choose a more secure password');
     }
-    
+
     return {
       isValid: errors.length === 0,
       errors
@@ -294,11 +298,11 @@ export class UserService {
   private isAccountLocked(email: string): boolean {
     const attempt = this.loginAttempts.get(email);
     if (!attempt) return false;
-    
+
     if (attempt.lockedUntil && Date.now() < attempt.lockedUntil) {
       return true;
     }
-    
+
     return false;
   }
 
@@ -307,18 +311,18 @@ export class UserService {
    */
   private recordLoginAttempt(email: string, success: boolean): void {
     const attempt = this.loginAttempts.get(email) || { count: 0, lastAttempt: 0 };
-    
+
     if (success) {
       this.loginAttempts.delete(email);
     } else {
       attempt.count++;
       attempt.lastAttempt = Date.now();
-      
+
       if (attempt.count >= USER_SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS) {
         attempt.lockedUntil = Date.now() + USER_SECURITY_CONFIG.LOCKOUT_DURATION;
         this.logAuditEvent('ACCOUNT_LOCKED', undefined, { email, reason: 'max_attempts' });
       }
-      
+
       this.loginAttempts.set(email, attempt);
     }
   }
@@ -336,23 +340,23 @@ export class UserService {
       if (!this.checkRateLimit(`signup:${email}`)) {
         throw new Error('Too many signup attempts. Please try again later.');
       }
-      
+
       // Input validation
       if (!this.validateEmail(email)) {
         throw new Error('Invalid email address');
       }
-      
+
       const passwordValidation = this.validatePassword(password);
       if (!passwordValidation.isValid) {
         throw new Error(passwordValidation.errors.join(', '));
       }
-      
+
       // Check if user already exists
       const existingUser = await this.checkUserExists(email);
       if (existingUser) {
         throw new Error('User with this email already exists');
       }
-      
+
       // Create user account
       const userCredential = await createUserWithEmailAndPassword(
         this.auth,
@@ -374,13 +378,13 @@ export class UserService {
         };
 
         await this.createUserInFirestore(userCredential.user.uid, newUser);
-        
+
         // Send email verification
         if (userCredential.user.email) {
           await sendEmailVerification(userCredential.user);
           this.notificationService.info('Please check your email to verify your account');
         }
-        
+
         this.logAuditEvent('USER_REGISTRATION', userCredential.user.uid, {
           email,
           name,
@@ -423,23 +427,23 @@ export class UserService {
       if (!this.checkRateLimit(`signin:${email}`)) {
         throw new Error('Too many login attempts. Please try again later.');
       }
-      
+
       // Check if account is locked
       if (this.isAccountLocked(email)) {
         const attempt = this.loginAttempts.get(email);
         const remainingTime = attempt?.lockedUntil ? Math.ceil((attempt.lockedUntil - Date.now()) / 1000 / 60) : 0;
         throw new Error(`Account is temporarily locked. Please try again in ${remainingTime} minutes.`);
       }
-      
+
       // Input validation
       if (!this.validateEmail(email)) {
         throw new Error('Invalid email address');
       }
-      
+
       if (!password || password.length < 1) {
         throw new Error('Password is required');
       }
-      
+
       // Attempt sign in
       const userCredential = await signInWithEmailAndPassword(
         this.auth,
@@ -450,14 +454,14 @@ export class UserService {
       if (userCredential.user) {
         // Record successful login
         this.recordLoginAttempt(email, true);
-        
+
         await this.ensureUserDataCached(userCredential.user.uid);
-        
+
         // Check if email is verified
         if (!userCredential.user.emailVerified) {
           this.notificationService.warning('Please verify your email address for full access');
         }
-        
+
         this.logAuditEvent('LOGIN_SUCCESS', userCredential.user.uid, {
           email,
           timestamp: new Date().toISOString()
@@ -468,7 +472,7 @@ export class UserService {
     } catch (error) {
       // Record failed login attempt
       this.recordLoginAttempt(email, false);
-      
+
       console.error('Error signing in:', error);
       this.logAuditEvent('LOGIN_FAILED', undefined, {
         email,
@@ -489,11 +493,11 @@ export class UserService {
         this.logAuditEvent('USER_LOGOUT', currentUser.uid, {
           timestamp: new Date().toISOString()
         });
-        
+
         // Clear cached data
         localStorage.removeItem(`user-data-${currentUser.uid}`);
         localStorage.removeItem(`last-login-${currentUser.uid}`);
-        
+
         // Clear rate limits for this user
         this.rateLimitMap.delete(`signin:${currentUser.email}`);
       }
@@ -519,15 +523,15 @@ export class UserService {
       if (!this.checkRateLimit(`reset:${email}`)) {
         throw new Error('Too many password reset requests. Please try again later.');
       }
-      
+
       // Validate email
       if (!this.validateEmail(email)) {
         throw new Error('Invalid email address');
       }
-      
+
       await sendPasswordResetEmail(this.auth, email);
       this.notificationService.success('Password reset email sent. Please check your inbox.');
-      
+
       this.logAuditEvent('PASSWORD_RESET_REQUESTED', undefined, {
         email,
         timestamp: new Date().toISOString()
@@ -551,22 +555,22 @@ export class UserService {
       if (!currentUser || !currentUser.email) {
         throw new Error('No authenticated user found');
       }
-      
+
       // Validate new password
       const passwordValidation = this.validatePassword(newPassword);
       if (!passwordValidation.isValid) {
         throw new Error(passwordValidation.errors.join(', '));
       }
-      
+
       // Re-authenticate user
       const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
       await reauthenticateWithCredential(currentUser, credential);
-      
+
       // Update password
       await updatePassword(currentUser, newPassword);
-      
+
       this.notificationService.success('Password updated successfully');
-      
+
       this.logAuditEvent('PASSWORD_UPDATED', currentUser.uid, {
         timestamp: new Date().toISOString()
       });
@@ -589,7 +593,7 @@ export class UserService {
       const provider = new GoogleAuthProvider();
       provider.addScope('email');
       provider.addScope('profile');
-      
+
       // Rate limiting
       if (!this.checkRateLimit('google-signin')) {
         throw new Error('Too many Google sign-in attempts. Please try again later.');
@@ -597,7 +601,7 @@ export class UserService {
 
       const result = await signInWithPopup(this.auth, provider);
       await this.handleGoogleSignInResult(result);
-      
+
       this.logAuditEvent('GOOGLE_LOGIN_SUCCESS', result.user.uid, {
         email: result.user.email,
         timestamp: new Date().toISOString()
@@ -724,9 +728,9 @@ export class UserService {
           loginAlerts: true
         }
       });
-      
+
       localStorage.setItem(`user-data-${uid}`, JSON.stringify(userData));
-      
+
       this.logAuditEvent('USER_CREATED_IN_FIRESTORE', uid, {
         email: userData.email,
         timestamp: new Date().toISOString()
@@ -748,36 +752,28 @@ export class UserService {
       // Create default bank accounts
       for (const defaultAccount of defaultBankAccounts) {
         const accountType = this.mapBankAccountType(defaultAccount.type);
-        const timestamp = Date.now();
 
-        await this.store.dispatch(
-          createAccount({
-            userId: uid,
-            accountData: {
-              name: defaultAccount.name,
-              type: accountType,
-              balance: defaultAccount.balance,
-              description: `${defaultAccount.type} account`,
-              institution: defaultAccount.institution,
-              currency: defaultAccount.currency,
-            },
-          })
-        );
+        await firstValueFrom(this.accountsService.createAccount(uid, {
+          name: defaultAccount.name,
+          type: accountType,
+          balance: defaultAccount.balance,
+          description: `${defaultAccount.type} account`,
+          institution: defaultAccount.institution,
+          currency: defaultAccount.currency,
+        }));
       }
 
       // Create default categories
       for (const defaultCategory of defaultCategoriesForNewUser) {
-        await this.store.dispatch(
-          createCategory({
-            userId: uid,
-            name: defaultCategory.name,
-            categoryType: defaultCategory.type,
-            icon: defaultCategory.icon,
-            color: defaultCategory.color,
-          })
-        );
+        await firstValueFrom(this.categoryService.createCategory(
+          uid,
+          defaultCategory.name,
+          defaultCategory.type,
+          defaultCategory.icon,
+          defaultCategory.color
+        ));
       }
-      
+
       this.logAuditEvent('DEFAULT_DATA_SETUP', uid, {
         timestamp: new Date().toISOString()
       });
@@ -818,9 +814,9 @@ export class UserService {
         ...user,
         updatedAt: serverTimestamp()
       }, { merge: true });
-      
+
       localStorage.setItem(`user-data-${user.uid}`, JSON.stringify(user));
-      
+
       this.logAuditEvent('USER_UPDATED', user.uid, {
         timestamp: new Date().toISOString()
       });
@@ -874,7 +870,7 @@ export class UserService {
       this.logAuditEvent('GET_USER_FAILED', currentUser.uid, {
         error: error instanceof Error ? error.message : 'Unknown error'
       });
-      
+
       // If we're offline and there's an error, try to return cached data
       if (!navigator.onLine) {
         console.log('[UserService] Offline mode - error occurred, trying cached data');
@@ -883,7 +879,7 @@ export class UserService {
           return JSON.parse(cachedUserData) as User;
         }
       }
-      
+
       return null;
     }
   }
@@ -919,7 +915,7 @@ export class UserService {
           localStorage.removeItem(key);
         }
       });
-      
+
       this.logAuditEvent('CACHE_CLEARED', undefined, {
         timestamp: new Date().toISOString()
       });
@@ -961,14 +957,14 @@ export class UserService {
     };
 
     this.auditLog.push(auditEntry);
-    
+
     // Keep only last 1000 audit entries
     if (this.auditLog.length > 1000) {
       this.auditLog.shift();
     }
-    
+
     console.log('Audit Event:', auditEntry);
-    
+
     // In production, send to audit service
     // this.auditService.logEvent(auditEntry);
   }
@@ -986,10 +982,10 @@ export class UserService {
   public getSecurityStatus(): any {
     const currentUser = this.userAuth$.value;
     if (!currentUser) return null;
-    
+
     const email = currentUser.email;
     const loginAttempt = this.loginAttempts.get(email);
-    
+
     return {
       isLocked: this.isAccountLocked(email),
       loginAttempts: loginAttempt?.count || 0,
@@ -1024,7 +1020,7 @@ export class UserService {
       const usersRef = collection(this.firestore, 'users');
       const q = query(usersRef, where('email', '==', email.toLowerCase()), limit(1));
       const querySnapshot = await getDocs(q);
-      
+
       if (!querySnapshot.empty) {
         const userDoc = querySnapshot.docs[0];
         return {
@@ -1032,7 +1028,7 @@ export class UserService {
           ...userDoc.data()
         } as User;
       }
-      
+
       return null;
     } catch (error) {
       console.error('Error finding user by email:', error);
@@ -1048,7 +1044,7 @@ export class UserService {
     try {
       const usersRef = collection(this.firestore, 'users');
       const querySnapshot = await getDocs(usersRef);
-      
+
       const users: any[] = [];
       for (const doc of querySnapshot.docs) {
         const userData = doc.data();
@@ -1067,7 +1063,7 @@ export class UserService {
           role: userData['role'] || 'free'
         });
       }
-      
+
       return users;
     } catch (error) {
       console.error('Error fetching all users:', error);
@@ -1085,7 +1081,7 @@ export class UserService {
         status: status,
         updatedAt: serverTimestamp()
       });
-      
+
       this.logAuditEvent('USER_STATUS_UPDATED', uid, {
         status: status,
         timestamp: new Date().toISOString()
@@ -1103,16 +1099,16 @@ export class UserService {
     try {
       const userRef = doc(this.firestore, `users/${uid}`);
       const userDoc = await getDoc(userRef);
-      
+
       if (userDoc.exists()) {
         const userData = userDoc.data();
         const newRole = userData['role'] === 'admin' ? 'free' : 'admin';
-        
+
         await updateDoc(userRef, {
           role: newRole,
           updatedAt: serverTimestamp()
         });
-        
+
         this.logAuditEvent('ADMIN_ROLE_TOGGLED', uid, {
           newRole: newRole,
           timestamp: new Date().toISOString()
@@ -1131,7 +1127,7 @@ export class UserService {
     try {
       const usersRef = collection(this.firestore, 'users');
       const querySnapshot = await getDocs(usersRef);
-      
+
       const stats = {
         totalUsers: querySnapshot.size,
         activeUsers: 0,
@@ -1140,7 +1136,7 @@ export class UserService {
         totalTransactions: 0,
         totalCategories: 0
       };
-      
+
       querySnapshot.forEach(doc => {
         const userData = doc.data();
         if (userData['isActive'] === 'active') stats.activeUsers++;
@@ -1149,7 +1145,7 @@ export class UserService {
         // stats.totalTransactions += userData['totalTransactions'] || 0;
         // stats.totalCategories += userData['totalCategories'] || 0;
       });
-      
+
       return stats;
     } catch (error) {
       console.error('Error fetching user statistics:', error);
@@ -1164,7 +1160,7 @@ export class UserService {
     try {
       const userRef = doc(this.firestore, `users/${uid}`);
       await deleteDoc(userRef);
-      
+
       this.logAuditEvent('USER_DELETED', uid, {
         timestamp: new Date().toISOString()
       });

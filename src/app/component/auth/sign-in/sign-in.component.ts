@@ -36,7 +36,7 @@ export class SignInComponent implements OnInit, OnDestroy {
   public passwordStrength = 0;
   public securityLevel = 'moderate';
   public showSecurityNotice = false;
-  
+
   signInForm!: FormGroup;
   private destroy$ = new Subject<void>();
   private loginAttemptCount = 0;
@@ -45,11 +45,11 @@ export class SignInComponent implements OnInit, OnDestroy {
   private maxAttemptsPerWindow = 3;
 
   constructor(
-    private fb: FormBuilder, 
-    private router: Router, 
+    private fb: FormBuilder,
+    private router: Router,
     private route: ActivatedRoute,
-    private userService: UserService, 
-    private notificationService: NotificationService, 
+    private userService: UserService,
+    private notificationService: NotificationService,
     private securityService: SecurityService,
     private validationService: ValidationService,
     private store: Store<AppState>
@@ -63,7 +63,7 @@ export class SignInComponent implements OnInit, OnDestroy {
     this.setupFormValidation();
     this.checkSecurityStatus();
     this.startSecurityMonitoring();
-    
+
     // Show security notice after main form is loaded for better LCP
     setTimeout(() => {
       this.showSecurityNotice = true;
@@ -144,7 +144,7 @@ export class SignInComponent implements OnInit, OnDestroy {
       this.isAccountLocked = securityStatus.isLocked;
       this.loginAttempts = securityStatus.loginAttempts;
       this.maxLoginAttempts = securityStatus.remainingAttempts + securityStatus.loginAttempts;
-      
+
       if (this.isAccountLocked) {
         this.calculateLockoutTime();
       }
@@ -199,7 +199,7 @@ export class SignInComponent implements OnInit, OnDestroy {
       this.lastLoginAttempt = Date.now();
 
       await this.userService.signIn(email, password);
-      
+
       // Log successful login
       this.securityService.logSecurityEvent(
         SecurityEventType.LOGIN_SUCCESS,
@@ -208,12 +208,12 @@ export class SignInComponent implements OnInit, OnDestroy {
       );
 
       this.notificationService.success('Successfully signed in!');
-      
+
       // Load user data
       await this.loadUserData();
-      
+
       this.router.navigate(['/dashboard']);
-      
+
     } catch (error: any) {
       this.handleSignInError(error, email);
     } finally {
@@ -252,10 +252,10 @@ export class SignInComponent implements OnInit, OnDestroy {
     this.securityService.logSecurityEvent(
       SecurityEventType.SECURITY_ALERT,
       SecurityLevel.MEDIUM,
-      { 
+      {
         type: 'registration_attempt',
-        email, 
-        timestamp: new Date().toISOString() 
+        email,
+        timestamp: new Date().toISOString()
       }
     );
 
@@ -263,21 +263,21 @@ export class SignInComponent implements OnInit, OnDestroy {
       this.isLoading = true;
 
       await this.userService.signUp(email, password, name);
-      
+
       // Log successful registration
       this.securityService.logSecurityEvent(
         SecurityEventType.SECURITY_ALERT,
         SecurityLevel.LOW,
-        { 
+        {
           type: 'registration_success',
-          email, 
-          timestamp: new Date().toISOString() 
+          email,
+          timestamp: new Date().toISOString()
         }
       );
 
       this.notificationService.success('Account created successfully! Please check your email for verification.');
       this._setIsSignInPage(true);
-      
+
     } catch (error: any) {
       this.handleSignUpError(error, email);
     } finally {
@@ -297,36 +297,46 @@ export class SignInComponent implements OnInit, OnDestroy {
 
     try {
       this.isLoading = true;
-      
+
+      // Force sign out first to clear any stale state
+      try {
+        await this.userService.signOut();
+      } catch (e) {
+        // Ignore error if already signed out
+        console.log('Pre-sign-in logout skipped or failed', e);
+      }
+
+      this.isLoading = true;
+
       // Log Google sign-in attempt
       this.securityService.logSecurityEvent(
         SecurityEventType.LOGIN_ATTEMPT,
         SecurityLevel.MEDIUM,
-        { 
+        {
           method: 'google',
-          timestamp: new Date().toISOString() 
+          timestamp: new Date().toISOString()
         }
       );
-      
+
       await this.userService.signInWithGoogle();
-      
+
       // Log successful Google sign-in
       this.securityService.logSecurityEvent(
         SecurityEventType.LOGIN_SUCCESS,
         SecurityLevel.LOW,
-        { 
+        {
           method: 'google',
-          timestamp: new Date().toISOString() 
+          timestamp: new Date().toISOString()
         }
       );
-      
+
       this.notificationService.success('Successfully signed in with Google!');
-      
+
       // Load user data
       await this.loadUserData();
-      
+
       this.router.navigate(['/dashboard']);
-      
+
     } catch (error: any) {
       this.handleGoogleSignInError(error);
     } finally {
@@ -363,15 +373,15 @@ export class SignInComponent implements OnInit, OnDestroy {
    */
   private handleSignInError(error: any, email: string): void {
     console.error('Sign-in error:', error);
-    
+
     // Log failed login attempt
     this.securityService.logSecurityEvent(
       SecurityEventType.LOGIN_FAILED,
       SecurityLevel.HIGH,
-      { 
-        email, 
+      {
+        email,
         error: error.message || 'Unknown error',
-        timestamp: new Date().toISOString() 
+        timestamp: new Date().toISOString()
       }
     );
 
@@ -403,16 +413,16 @@ export class SignInComponent implements OnInit, OnDestroy {
    */
   private handleSignUpError(error: any, email: string): void {
     console.error('Sign-up error:', error);
-    
+
     // Log failed registration
     this.securityService.logSecurityEvent(
       SecurityEventType.SECURITY_ALERT,
       SecurityLevel.HIGH,
-      { 
+      {
         type: 'registration_failed',
-        email, 
+        email,
         error: error.message || 'Unknown error',
-        timestamp: new Date().toISOString() 
+        timestamp: new Date().toISOString()
       }
     );
 
@@ -437,15 +447,16 @@ export class SignInComponent implements OnInit, OnDestroy {
    */
   private handleGoogleSignInError(error: any): void {
     console.error('Google sign-in error:', error);
-    
+
     // Log failed Google sign-in
     this.securityService.logSecurityEvent(
       SecurityEventType.LOGIN_FAILED,
       SecurityLevel.MEDIUM,
-      { 
+      {
         method: 'google',
         error: error.message || 'Unknown error',
-        timestamp: new Date().toISOString() 
+        code: error.code || 'no_code',
+        timestamp: new Date().toISOString()
       }
     );
 
@@ -456,8 +467,10 @@ export class SignInComponent implements OnInit, OnDestroy {
       this.notificationService.error('Popup was blocked. Please allow popups for this site and try again.');
     } else if (error.code === 'auth/cancelled-popup-request') {
       this.notificationService.error('Sign-in request was cancelled. Please try again.');
+    } else if (error.code === 'auth/account-exists-with-different-credential') {
+      this.notificationService.error('An account already exists with the same email address but different sign-in credentials. Sign in using a provider associated with this email address.');
     } else {
-      this.notificationService.error('Google sign-in failed. Please try again or use email sign-in.');
+      this.notificationService.error(`Google sign-in failed: ${error.message || 'Unknown error'}`);
     }
   }
 
@@ -489,15 +502,15 @@ export class SignInComponent implements OnInit, OnDestroy {
   private isRateLimited(): boolean {
     const now = Date.now();
     const timeSinceLastAttempt = now - this.lastLoginAttempt;
-    
+
     if (timeSinceLastAttempt < this.rateLimitWindow && this.loginAttemptCount >= this.maxAttemptsPerWindow) {
       return true;
     }
-    
+
     if (timeSinceLastAttempt >= this.rateLimitWindow) {
       this.loginAttemptCount = 0;
     }
-    
+
     return false;
   }
 
@@ -517,15 +530,15 @@ export class SignInComponent implements OnInit, OnDestroy {
    */
   private calculatePasswordStrength(password: string): number {
     if (!password) return 0;
-    
+
     let strength = 0;
-    
+
     if (password.length >= 8) strength++;
     if (/[a-z]/.test(password)) strength++;
     if (/[A-Z]/.test(password)) strength++;
     if (/[0-9]/.test(password)) strength++;
     if (/[^A-Za-z0-9]/.test(password)) strength++;
-    
+
     return Math.min(strength, 4);
   }
 
@@ -534,7 +547,7 @@ export class SignInComponent implements OnInit, OnDestroy {
    */
   private monitorEmailInput(email: string): void {
     if (!email) return;
-    
+
     // Check for suspicious patterns
     const suspiciousPatterns = [
       /test/i,
@@ -543,15 +556,15 @@ export class SignInComponent implements OnInit, OnDestroy {
       /temp/i,
       /fake/i
     ];
-    
+
     if (suspiciousPatterns.some(pattern => pattern.test(email))) {
       this.securityService.logSecurityEvent(
         SecurityEventType.SUSPICIOUS_ACTIVITY,
         SecurityLevel.MEDIUM,
-        { 
+        {
           type: 'suspicious_email',
           email,
-          timestamp: new Date().toISOString() 
+          timestamp: new Date().toISOString()
         }
       );
     }
@@ -562,18 +575,18 @@ export class SignInComponent implements OnInit, OnDestroy {
    */
   private emailDomainValidator(control: AbstractControl): ValidationErrors | null {
     if (!control.value) return null;
-    
+
     const email = control.value.toLowerCase();
     const disposableDomains = [
       'tempmail.org', '10minutemail.com', 'guerrillamail.com',
       'mailinator.com', 'throwaway.email', 'temp-mail.org'
     ];
-    
+
     const domain = email.split('@')[1];
     if (disposableDomains.includes(domain)) {
       return { disposableEmail: true };
     }
-    
+
     return null;
   }
 
@@ -582,22 +595,22 @@ export class SignInComponent implements OnInit, OnDestroy {
    */
   private passwordStrengthValidator(control: AbstractControl): ValidationErrors | null {
     if (!control.value) return null;
-    
+
     const password = control.value;
     const minLength = 8;
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumbers = /\d/.test(password);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    
+
     if (password.length < minLength) {
       return { minLength: { requiredLength: minLength, actualLength: password.length } };
     }
-    
+
     if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSpecialChar) {
       return { passwordStrength: true };
     }
-    
+
     return null;
   }
 
