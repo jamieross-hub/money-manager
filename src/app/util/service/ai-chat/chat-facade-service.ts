@@ -7,6 +7,7 @@ import { AiReplyHandlerService } from "./handlers/ai-reply-handler.service";
 import { ChatFlowService } from "./handlers/chat-flow.service";
 import { AmountExtractor } from "./utils/amount-extractor.util";
 import { Category } from "../../models";
+import { BreakpointService } from "../breakpoint.service";
 
 export interface Message {
     sender: 'bot' | 'user' | string;
@@ -27,12 +28,17 @@ export class ChatFacadeService {
         private expense: ExpenseHandlerService,
         private report: ReportHandlerService,
         private aiReply: AiReplyHandlerService,
-        private extract: AmountExtractor
+        private extract: AmountExtractor,
+        private breakpointService: BreakpointService
     ) {
-        // Initial greeting message
-        this.messages.push({ sender: 'bot', type: 'UI-ELEMENT', text: 'ACCOUNT_SUMMARY_CARD' });
-        this.messages.push({ sender: 'bot', type: 'UI-ELEMENT', text: 'RECENT_ACTIVITY_CARD' });
-        this.messages.push({ sender: 'bot', type: 'html', text: '🙂 Hello! I am your financial assistant. How can I help you today?' });
+        if (this.breakpointService.device.isMobile) {
+            this.messages.push({ sender: 'bot', type: 'UI-ELEMENT', text: 'ACCOUNT_SUMMARY_CARD' });
+        } else {
+            this.messages.push({ sender: 'bot', type: 'UI-ELEMENT', text: 'ACCOUNT_SUMMARY_CARD' });
+            this.messages.push({ sender: 'bot', type: 'UI-ELEMENT', text: 'RECENT_ACTIVITY_CARD' });
+            this.messages.push({ sender: 'bot', type: 'html', text: '🙂 Hello! I am your financial assistant. How can I help you today?' });
+        }
+
 
     }
 
