@@ -56,13 +56,13 @@
 <div class="bg-white text-gray-800 font-roboto grid h-full" style="grid-template-rows: auto 1fr;">
 
 	<!-- Balance Card -->
-	<div class="p-4" *ngIf="breakpointService.device.isDesktop">
+	<!-- <div class="p-4" *ngIf="breakpointService.device.isDesktop">
 		<div class="max-w-4xl mx-auto  rounded-2xl shadow-sm animate-fadeUp">
-			<app-account-summary-card></app-account-summary-card>
+		
 		</div>
-	</div>
+	</div> -->
+<!-- <app-recent-activity-card [config]="recentActivityConfig"></app-recent-activity-card> -->
 
-
-	<app-chat class="h-full"></app-chat>
+	<app-chat class="h-[calc(100vh-10rem)]"></app-chat>
 
 </div>

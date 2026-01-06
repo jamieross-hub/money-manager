@@ -1,8 +1,8 @@
 <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 w-full">
 
   <!-- Header -->
-  <div class="flex items-center justify-between mb-4">
-    <div class="flex items-start gap-3">
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
+    <div class="flex items-center gap-3">
       <div class="h-10 w-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center shrink-0">
         <mat-icon aria-hidden="true">account_balance</mat-icon>
       </div>
@@ -14,9 +14,9 @@
       </div>
     </div>
 
-    <div class="flex flex-col items-end">
+    <div class="flex flex-col items-start sm:items-end mt-3 sm:mt-0 min-w-0">
       <span
-        class="text-xl font-semibold leading-none"
+        class="text-lg sm:text-xl font-semibold leading-none truncate"
         [class.text-green-600]="((totalBalance$ | async) ?? 0) >= 0"
         [class.text-red-500]="((totalBalance$ | async) ?? 0) < 0"
         aria-label="Total balance">
