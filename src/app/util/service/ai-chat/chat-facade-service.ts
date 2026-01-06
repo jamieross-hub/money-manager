@@ -29,8 +29,11 @@ export class ChatFacadeService {
         private aiReply: AiReplyHandlerService,
         private extract: AmountExtractor
     ) {
+        // Initial greeting message
         this.messages.push({ sender: 'bot', type: 'UI-ELEMENT', text: 'ACCOUNT_SUMMARY_CARD' });
+        this.messages.push({ sender: 'bot', type: 'UI-ELEMENT', text: 'RECENT_ACTIVITY_CARD'});
         this.messages.push( { sender: 'bot', type: 'html', text: '🙂 Hello! I am your financial assistant. How can I help you today?' });
+        
     }
 
        startBotReply(userText: string) {

@@ -56,7 +56,7 @@ export interface RecentActivityConfig {
 })
 export class RecentActivityCardComponent implements OnInit, OnDestroy {
   @Input() config: RecentActivityConfig = {
-    title: 'Recent Activity',
+    title: 'Recent transactions',
     subtitle: 'Latest transactions',
     currency: 'INR',
     showHeaderIcon: true,
