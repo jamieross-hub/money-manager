@@ -3,15 +3,13 @@
 
     <div class="flex-1 overflow-y-auto px-4 space-y-4 pt-4 pb-28 md:pb-4 flex flex-col-reverse max-h-[70vh]">
       <div class="max-w-screen-xl mx-auto w-full">
-        <div class="sticky top-0 z-10">
-          <app-account-summary-card></app-account-summary-card>
-        </div>
+
         <div *ngFor="let msg of chatFacadeService.messages" class="flex fade-in"
           [ngClass]="msg.sender === 'user' ? 'justify-end' : 'justify-start'">
 
 
-
-          <ng-container *ngIf="msg.type !== 'categoryDropdown'">
+          <!-- Text/HTML Messages -->
+          <ng-container *ngIf="msg.type === 'text' || msg.type === 'html'">
             <div class="px-4 py-2 my-2 rounded-2xl max-w-[80%] sm:max-w-[60%] text-sm sm:text-base"
               [ngClass]="msg.sender === 'user' ? 'bg-primary-500 text-white rounded-br-md' : 'bg-gray-100 text-gray-800 rounded-bl-md'"
               [innerHTML]="msg.text | safeHtml"
@@ -19,7 +17,15 @@
             </div>
           </ng-container>
 
-          <ng-container *ngIf="msg.type === 'categoryDropdown'">
+          <!-- Account Summary Card -->
+          <ng-container *ngIf="msg.type === 'UI-ELEMENT' && msg.text === 'ACCOUNT_SUMMARY_CARD'">
+            <div class="relative top-0 z-10 w-full my-2">
+              <app-account-summary-card></app-account-summary-card>
+            </div>
+          </ng-container>
+
+          <!-- Chat Category Dropdown -->
+          <ng-container *ngIf="msg.type === 'UI-ELEMENT' && msg.text === 'categoryDropdown' ">
             <div
               class="px-4 py-2 my-2 rounded-2xl max-w-[80%] sm:max-w-[60%] text-sm sm:text-base bg-gray-100 text-gray-800 rounded-bl-md"
               style="-webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text;">
@@ -84,17 +90,17 @@
     <!-- Quick Actions -->
     <div class="flex gap-2 px-2 overflow-x-auto no-scrollbar justify-center" *ngIf="!breakpointService.device.isMobile">
       <mat-chip (click)="setQuickAction('Expense', chatInput)"
-        class="quick-action-chip bg-red-50  px-3 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-red-100 transition whitespace-nowrap">
+        class="quick-action-chip bg-red-50   py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-red-100 transition whitespace-nowrap">
         <mat-icon matChipAvatar>remove</mat-icon>
         Expense
       </mat-chip>
       <mat-chip (click)="setQuickAction('Income', chatInput)"
-        class="quick-action-chip  border border-green-100 px-3 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-green-100 transition whitespace-nowrap">
+        class="quick-action-chip  border border-green-100 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-green-100 transition whitespace-nowrap">
         <mat-icon matChipAvatar>add</mat-icon>
         Income
       </mat-chip>
       <mat-chip (click)="setQuickAction('Transfer', chatInput)"
-        class="quick-action-chip  border border-blue-100 px-3 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-blue-100 transition whitespace-nowrap">
+        class="quick-action-chip  border border-blue-100  py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-blue-100 transition whitespace-nowrap">
         <mat-icon matChipAvatar>swap_horiz</mat-icon>
         Transfer
       </mat-chip>

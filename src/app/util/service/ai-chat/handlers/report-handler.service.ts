@@ -6,8 +6,8 @@ import { Injectable } from "@angular/core";
 export class ReportHandlerService {
 
 
-    generateReport() {
+    generateReport(): { sender: 'bot', type: 'html', text: string } {
         console.log('Generating report...');
-        return 'Generating your financial report...';
+        return { sender: 'bot', type: 'html', text: 'Generating your financial report...' };    
     }
 }

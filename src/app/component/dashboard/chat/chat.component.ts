@@ -18,7 +18,7 @@ export class ChatComponent {
     const text = input.value?.trim();
     if (!text) return;
 
-    this.chatFacadeService.messages.push({ sender: 'user', text });
+    this.chatFacadeService.messages.push({ sender: 'user', text , type: 'html' });
     input.value = '';
     this.chatFacadeService.startBotReply(text);
   }

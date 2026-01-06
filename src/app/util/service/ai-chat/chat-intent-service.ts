@@ -17,7 +17,34 @@ export class ChatIntentService {
 
     if (t.includes('balance') || t.includes('wallet') || t.includes('bank')) return 'CHECK_BALANCE';
 
-    if (t.includes('report') || t.includes('summary') || t.includes('statement') || t.includes('overview')) return 'GET_REPORT';
+    // Detect requests for an account summary card / accounts overview
+    if (
+      t.includes('account summary') ||
+      t.includes('account-summary') ||
+      t.includes('accountsummary') ||
+      t.includes('account summary card') ||
+      t.includes('account card') ||
+      t.includes('show accounts') ||
+      t.includes('my accounts') ||
+      t.includes('list accounts') ||
+      (t.includes('accounts') && (t.includes('summary') || t.includes('balances') || t.includes('overview') || t.includes('card')))
+    ) return 'ACCOUNT_SUMMARY_CARD';
+
+    // Detect clear / reset / delete-all data requests
+    if (
+      t.includes('clear') ||
+      t.includes('clear data') ||
+      t.includes('reset data') ||
+      t.includes('delete all') ||
+      t.includes('clear all') ||
+      t.includes('wipe data') ||
+      t.includes('erase data') ||
+      t.includes('reset app') ||
+      t.includes('factory reset') ||
+      (t.includes('delete') && t.includes('data'))
+    ) return 'CLEAR_DATA';
+
+    if (t.includes('report') || t.includes('statement')) return 'GET_REPORT';
     
     if (t.includes('advice') || t.includes('suggest') || t.includes('tips') || t.includes('insight') || t.includes('analyze')) return 'GET_INSIGHTS';
 

@@ -8,9 +8,16 @@ import { ChatFlowService } from "./handlers/chat-flow.service";
 import { AmountExtractor } from "./utils/amount-extractor.util";
 import { Category } from "../../models";
 
+export interface Message {
+    sender: 'bot' | 'user' | string;
+    type: 'html' | 'text' | 'UI-ELEMENT'
+    text?: string | any;
+    data?: any;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ChatFacadeService {
-    messages: Array<any> = [];
+    messages: Message[] = [];
     isTyping = false;
 
     constructor(
@@ -22,7 +29,8 @@ export class ChatFacadeService {
         private aiReply: AiReplyHandlerService,
         private extract: AmountExtractor
     ) {
-        this.messages.push({ sender: 'bot', type: 'html', text: '🙂 Hello! I am your financial assistant. How can I help you today?' });
+        this.messages.push({ sender: 'bot', type: 'UI-ELEMENT', text: 'ACCOUNT_SUMMARY_CARD' });
+        this.messages.push( { sender: 'bot', type: 'html', text: '🙂 Hello! I am your financial assistant. How can I help you today?' });
     }
 
        startBotReply(userText: string) {
@@ -67,14 +75,25 @@ export class ChatFacadeService {
             return;
         }
 
+        if (detected === 'ACCOUNT_SUMMARY_CARD') {
+            this.pushBot({ sender: 'bot', type: 'UI-ELEMENT', text: 'ACCOUNT_SUMMARY_CARD' });
+            return;
+        }
+
+        if (detected === 'CLEAR_DATA') {
+            this.messages = [];
+            this.pushBot({ sender: 'bot', type: 'html', text: 'All your data has been cleared successfully.' });
+            return;
+        }
+
         // 5. AI reply fallback
         this.aiReply.handleAI(userText).subscribe({
-            next: (reply) => this.pushBot(reply),
+            next: (reply) => this.pushBot({ sender: 'bot', type: 'html', text: reply }),
             error: () => this.pushBot({ sender: 'bot', type: 'html', text: 'Internal error, please try again!' })
         });
     }
 
-    private pushBot(message: any) {
+    private pushBot(message: Message) {
         this.messages.push(message);
         this.isTyping = false;
     }

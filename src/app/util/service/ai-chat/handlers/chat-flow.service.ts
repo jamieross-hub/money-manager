@@ -21,13 +21,13 @@ export class ChatFlowService {
             this.type = 'INCOME';
             this.stage = 'askCategory';
             const categories = this.categoryService.getCachedCategories(TransactionType.INCOME);
-            return { type: 'categoryDropdown', data: { categories, placeholder: 'Select income category', amount: this.amount, txType: 'INCOME' } };
+            return { type:'UI-ELEMENT', text: 'categoryDropdown', data: { categories, placeholder: 'Select income category', amount: this.amount, txType: 'INCOME' } };
         }
         if (detected === 'ADD_EXPENSE' || /expense|spent|buy|purchase/.test(t)) {
             this.type = 'EXPENSE';
             this.stage = 'askCategory';
             const categories = this.categoryService.getCachedCategories(TransactionType.EXPENSE);
-            return { type: 'categoryDropdown', data: { categories, placeholder: 'Select expense category', amount: this.amount, txType: 'EXPENSE' } };
+            return { type:'UI-ELEMENT', text: 'categoryDropdown', data: { categories, placeholder: 'Select expense category', amount: this.amount, txType: 'EXPENSE' } };
         }
         return `Please reply with "income" or "expense".`;
     }
