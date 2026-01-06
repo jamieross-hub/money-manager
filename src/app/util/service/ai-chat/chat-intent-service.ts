@@ -7,10 +7,10 @@ export class ChatIntentService {
     const t = text.toLowerCase();
 
     const amount = /₹?\$?\d+[.,]?\d*/.test(t);
-    const actions = ['add','paid','received','got','spent','debit','credit','purchase','buy','transfer','sent','deposit','withdraw'];
+    const actions = ['add', 'paid', 'received', 'got', 'spent', 'debit', 'credit', 'purchase', 'buy', 'transfer', 'sent', 'deposit', 'withdraw'];
     const hasAction = actions.some(a => t.includes(a));
-    const isIncome = ['salary','income','received','got','credited','deposit'].some(w => t.includes(w));
-    const isExpense = ['spent','expense','paid','debited','withdraw','purchase','buy'].some(w => t.includes(w));
+    const isIncome = ['salary', 'income', 'received', 'got', 'credited', 'deposit'].some(w => t.includes(w));
+    const isExpense = ['spent', 'expense', 'paid', 'debited', 'withdraw', 'purchase', 'buy'].some(w => t.includes(w));
 
     if (amount && hasAction && isIncome) return 'ADD_INCOME';
     if (amount && hasAction && isExpense) return 'ADD_EXPENSE';
@@ -30,6 +30,20 @@ export class ChatIntentService {
       (t.includes('accounts') && (t.includes('summary') || t.includes('balances') || t.includes('overview') || t.includes('card')))
     ) return 'ACCOUNT_SUMMARY_CARD';
 
+    // Detect requests for recent activity card / transactions history
+    if (
+      t.includes('recent activity') ||
+      t.includes('recent-activity') ||
+      t.includes('recentactivity') ||
+      t.includes('activity card') ||
+      t.includes('recent transactions') ||
+      t.includes('last transactions') ||
+      t.includes('transaction history') ||
+      t.includes('show history') ||
+      t.includes('show recent') ||
+      (t.includes('activity') && (t.includes('log') || t.includes('list') || t.includes('history')))
+    ) return 'RECENT_ACTIVITY_CARD';
+
     // Detect clear / reset / delete-all data requests
     if (
       t.includes('clear') ||
@@ -45,7 +59,7 @@ export class ChatIntentService {
     ) return 'CLEAR_DATA';
 
     if (t.includes('report') || t.includes('statement')) return 'GET_REPORT';
-    
+
     if (t.includes('advice') || t.includes('suggest') || t.includes('tips') || t.includes('insight') || t.includes('analyze')) return 'GET_INSIGHTS';
 
     return 'AI_REPLY';

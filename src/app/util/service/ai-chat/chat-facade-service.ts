@@ -83,6 +83,11 @@ export class ChatFacadeService {
             return;
         }
 
+        if (detected === 'RECENT_ACTIVITY_CARD') {
+            this.pushBot({ sender: 'bot', type: 'UI-ELEMENT', text: 'RECENT_ACTIVITY_CARD' });
+            return;
+        }
+
         if (detected === 'CLEAR_DATA') {
             this.messages = [];
             this.pushBot({ sender: 'bot', type: 'html', text: 'All your data has been cleared successfully.' });
