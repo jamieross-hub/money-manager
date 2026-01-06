@@ -31,7 +31,7 @@ export class ChatFacadeService {
         private extract: AmountExtractor,
         private breakpointService: BreakpointService
     ) {
-        if (this.breakpointService.device.isMobile) {
+        if (this.breakpointService.device.isMobile || this.breakpointService.device.isLaptop) {
             this.messages.push({ sender: 'bot', type: 'UI-ELEMENT', text: 'ACCOUNT_SUMMARY_CARD' });
         } else {
             this.messages.push({ sender: 'bot', type: 'UI-ELEMENT', text: 'ACCOUNT_SUMMARY_CARD' });
