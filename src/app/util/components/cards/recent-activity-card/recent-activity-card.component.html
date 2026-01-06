@@ -3,9 +3,9 @@
     <!-- Header Section -->
     <div class="flex items-center justify-between mb-4 sm:mb-6">
       <div class="flex-1 min-w-0">
-        <h3 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white truncate">
+        <p class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white truncate !mb-0">
           {{ effectiveConfig.title }}
-        </h3>
+        </p>
         @if (effectiveConfig.subtitle) {
         <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
           {{ effectiveConfig.subtitle }}
@@ -46,27 +46,34 @@
     <div class="space-y-4">
       <!-- Recent Transactions List -->
       @if ((recentTransactions$ | async)?.length) {
-      <div class="space-y-3">
+      <div class="transactions-list space-y-3 pr-1">
         @for (transaction of recentTransactions$ | async; track transaction.id) {
         <div 
-          class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+          class="group flex items-center justify-between p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 border border-transparent hover:border-gray-200 dark:hover:border-gray-600"
           [class.cursor-pointer]="effectiveConfig.clickable"
           [class.cursor-default]="!effectiveConfig.clickable"
           (click)="onTransactionClick(transaction)">
-          <div class="flex items-center space-x-3 min-w-0 flex-1">
-            <mat-icon [ngClass]="getTransactionColor(transaction)" class="flex-shrink-0">{{ getTransactionIcon(transaction) }}</mat-icon>
-            <div class="min-w-0 flex-1">
-              <span class="text-gray-700 dark:text-gray-300 font-medium truncate block">{{ transaction.payee }}</span>
-              <div class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ transaction.category }}</div>
+          <!-- Left side: Icon + Details -->
+          <div class="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+            <div class="relative">
+              <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 group-hover:scale-105 transition-transform duration-200">
+                <mat-icon [class]="getTransactionColor(transaction)" class="text-xl sm:text-2xl">{{ getTransactionIcon(transaction) }}</mat-icon>
+              </div>
+            </div>
+            <div class="min-w-0 flex-1 flex flex-col justify-center">
+              <span class="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 truncate leading-tight">{{ transaction.payee }}</span>
+              <span class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate mt-0.5">{{ transaction.category }}</span>
             </div>
           </div>
-          <div class="text-right ml-3 flex-shrink-0">
-            <span class="font-semibold block" [ngClass]="getTransactionColor(transaction)">
+          
+          <!-- Right side: Amount + Date -->
+          <div class="text-right pl-3 sm:pl-4 flex-shrink-0 flex flex-col justify-center">
+            <span class="text-sm sm:text-base font-bold whitespace-nowrap tracking-tight" [ngClass]="getTransactionColor(transaction)">
               {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
             </span>
-            <div class="text-xs text-gray-500 dark:text-gray-400">
+            <span class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 font-medium">
               {{ formatDate(transaction.date) }}
-            </div>
+            </span>
           </div>
         </div>
         }
