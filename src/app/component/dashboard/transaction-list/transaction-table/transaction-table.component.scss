@@ -152,15 +152,20 @@ table {
 // Row Styles
 .mat-row {
   transition: all 0.2s ease;
-  
-  &:hover {
-    background-color: #f8fafc;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid transparent; // Prevent border collapse jumping
+
+  // Alternate striping for readability
+  &:nth-child(even) {
+    background-color: #f8fafc; // A very subtle slate/gray
   }
-  
-  &:last-child .mat-cell {
-    border-bottom: none;
+
+  // Hover elevation
+  &:hover {
+    background-color: #ffffff !important; // Ensure hover is white to make shadow pop
+    transform: translateY(-2px) scale(1.001); // Subtle lift
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); // Tailwind shadow-md equivalent
+    z-index: 10;
+    position: relative; // Needed for z-index
   }
 }
 

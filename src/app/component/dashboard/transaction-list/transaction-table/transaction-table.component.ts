@@ -1,6 +1,7 @@
 import { Component, Output, EventEmitter, ViewChild, OnInit, OnDestroy, AfterViewInit, HostListener, Input } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort, Sort } from '@angular/material/sort';
+import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { Transaction } from '../../../../util/models/transaction.model';
 import { Auth } from '@angular/fire/auth';
 import { Subscription, Observable } from 'rxjs';
@@ -24,7 +25,19 @@ import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
 @Component({
   selector: 'transaction-table',
   templateUrl: './transaction-table.component.html',
-  styleUrls: ['./transaction-table.component.scss']
+  styleUrls: ['./transaction-table.component.scss'],
+  animations: [
+    trigger('listAnimation', [
+      transition('* <=> *', [
+        query(':enter', [
+          style({ opacity: 0, transform: 'translateY(10px)' }),
+          stagger('50ms', [
+            animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+          ])
+        ], { optional: true })
+      ])
+    ])
+  ]
 })
 export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewInit {
   @Input() isHome: boolean = false;

@@ -50,7 +50,7 @@ export class ChatFacadeService {
 
         // 2. Handle type confirmation stage
         if (this.flow.getStage() === 'askType') {
-            const reply = this.flow.handleTypeReply(userText, detected);
+            const reply = this.flow.handleTypeReply(userText, detected, amount);
             this.pushBot(typeof reply === 'string' ? { sender: 'bot', type: 'html', text: reply } : { sender: 'bot', type: 'html', ...(reply as Record<string, any>) });
             return;
         }
@@ -64,12 +64,14 @@ export class ChatFacadeService {
 
         // 4. Normal intent handlers
         if (detected === 'ADD_INCOME') {
-            //this.pushBot(this.income.addIncome({}, amount));
+            const reply = this.flow.handleTypeReply(userText, detected, amount);
+            this.pushBot(typeof reply === 'string' ? { sender: 'bot', type: 'html', text: reply } : { sender: 'bot', type: 'html', ...(reply as Record<string, any>) });
             return;
         }
 
         if (detected === 'ADD_EXPENSE') {
-            //this.pushBot(this.expense.addExpense(userText, amount));
+            const reply = this.flow.handleTypeReply(userText, detected, amount);
+            this.pushBot(typeof reply === 'string' ? { sender: 'bot', type: 'html', text: reply } : { sender: 'bot', type: 'html', ...(reply as Record<string, any>) });
             return;
         }
 
