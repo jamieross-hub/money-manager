@@ -57,14 +57,14 @@
           class="flex-1 bg-transparent border-none focus:outline-none px-2 text-sm sm:text-base text-gray-700 placeholder-gray-400">
 
         <!-- Mic Button -->
-        <button (click)="onMicClick()" class="p-2 text-gray-400 hover:text-primary-500 transition rounded-full hover:bg-gray-100 mr-1 relative top-[6px]">
+        <button  *ngIf="!breakpointService.device.isMobile" (click)="onMicClick()" class="p-2 text-gray-400 hover:text-primary-500 transition rounded-full hover:bg-gray-100 mr-1 relative top-[6px]">
           <mat-icon class="material-icons-outlined text-[20px] leading-[20px] w-[20px] h-[20px]">mic</mat-icon>
         </button>
 
         <!-- Send Button -->
         <button (click)="sendMessage(chatInput)"
-          class="bg-primary-500 hover:bg-primary-600 text-white p-2 rounded-full shadow-md transition flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10">
-          <mat-icon class="material-icons-outlined text-[18px] sm:text-[20px] leading-[18px] sm:leading-[20px] w-[18px] sm:w-[20px] h-[18px] sm:h-[20px]">arrow_upward</mat-icon>
+          class="bg-primary-500 hover:bg-primary-600 text-white p-2 rounded-full shadow-md transition flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 ">
+          <mat-icon class="material-icons-outlined text-[18px] sm:text-[20px] leading-[18px] sm:leading-[20px] w-[18px] sm:w-[20px] h-[18px] sm:h-[20px] relative top-[3px]">arrow_upward</mat-icon>
         </button>
       </div>
     </div>
