@@ -72,7 +72,9 @@
         <!-- Input Field with Autocomplete -->
         <div class="flex-1 relative">
           <!-- Suggestion Overlay -->
-          <div class="absolute inset-0 px-2 text-sm sm:text-base text-gray-300 pointer-events-none flex items-center">
+          <div class="absolute inset-0 px-2 text-sm sm:text-base text-gray-300 flex items-center"
+            [class.pointer-events-none]="!suggestion" [class.cursor-pointer]="suggestion"
+            (click)="completeSuggestion(chatInput)">
             <span class="invisible">{{chatInput.value}}</span><span>{{suggestion}}</span>
           </div>
 

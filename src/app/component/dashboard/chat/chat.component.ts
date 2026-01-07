@@ -74,4 +74,12 @@ export class ChatComponent {
       this.suggestion = '';
     }
   }
+
+  completeSuggestion(input: HTMLInputElement) {
+    if (this.suggestion) {
+      input.value += this.suggestion;
+      this.suggestion = '';
+      input.focus();
+    }
+  }
 }
