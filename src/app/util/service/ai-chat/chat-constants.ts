@@ -40,8 +40,14 @@ export const CHAT_CONSTANTS = {
     PATTERNS: {
         AMOUNT: /₹?\$?\d+[.,]?\d*/,
         ACTIONS: ['add', 'paid', 'received', 'got', 'spent', 'debit', 'credit', 'purchase', 'buy', 'transfer', 'sent', 'deposit', 'withdraw', 'income:', 'expense:'],
-        INCOME_KEYWORDS: ['salary', 'income', 'income:', 'received', 'got', 'credited', 'deposit'],
-        EXPENSE_KEYWORDS: ['spent', 'expense', 'expense:', 'paid', 'debited', 'withdraw', 'purchase', 'buy'],
+        INCOME_KEYWORDS: ['salary', 'income', 'income:', 'received', 'got', 'credited', 'deposit', 'salary', 'income', 'credited', 'deposit', 'received', 'got', 'credit', 'add income',
+            'income added', 'income received', 'credited to', 'credit in', 'earn', 'earned',
+            'paycheck', 'allowance', 'pocket money', 'deposited', 'mil gaye', 'mila', 'aayi',
+            'income:', 'money received', 'received money', 'cash in'],
+        EXPENSE_KEYWORDS: ['spent', 'expense', 'expense:', 'paid', 'debited', 'withdraw', 'purchase', 'buy', 'spent', 'expense', 'paid', 'debited', 'withdraw', 'purchase', 'buy', 'payment',
+            'pay', 'debit', 'debit from', 'spent on', 'used for', 'paid for', 'purchase of',
+            'expense added', 'cost', 'bill', 'paid bill', 'shopping', 'transaction debit',
+            'kharche', 'kharch', 'diya', 'gaya', 'expense:', 'money spent', 'cash out'],
         BALANCE_KEYWORDS: ['balance', 'wallet', 'bank'],
         ACCOUNT_SUMMARY_KEYWORDS: [
             'account summary', 'account-summary', 'accountsummary', 'account summary card', 'account card',
@@ -56,7 +62,8 @@ export const CHAT_CONSTANTS = {
         ],
         REPORT_KEYWORDS: ['report', 'statement'],
         INSIGHTS_KEYWORDS: ['advice', 'suggest', 'tips', 'insight', 'analyze'],
-        HELP_KEYWORDS: ['help', 'usage', 'command', 'guide', 'instruction', 'what can you do', 'support', 'assist']
+        HELP_KEYWORDS: ['help', 'usage', 'command', 'guide', 'instruction', 'what can you do', 'support', 'assist', 'help', 'usage', 'command', 'guide', 'instruction', 'support', 'assist', 'what can you do',
+            'how to use', 'features', 'available commands', 'commands list', 'bot commands']
     },
     SUGGESTIONS: [
         'Spent ₹',
