@@ -14,7 +14,7 @@ export class ChatIntentService {
     const isExpense = C.PATTERNS.EXPENSE_KEYWORDS.some(w => t.includes(w));
 
     // Direct Transactions
-    if (hasAmount && hasAction) {
+    if (hasAmount && (hasAction || isIncome || isExpense)) {
       if (isIncome) return C.INTENTS.ADD_INCOME;
       if (isExpense) return C.INTENTS.ADD_EXPENSE;
     }
@@ -44,6 +44,9 @@ export class ChatIntentService {
 
     // Insights
     if (C.PATTERNS.INSIGHTS_KEYWORDS.some(w => t.includes(w))) return C.INTENTS.GET_INSIGHTS;
+
+    // Help
+    if (C.PATTERNS.HELP_KEYWORDS.some(w => t.includes(w))) return C.INTENTS.HELP;
 
     return C.INTENTS.AI_REPLY;
   }

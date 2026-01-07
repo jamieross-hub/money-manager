@@ -12,6 +12,18 @@ export const CHAT_CONSTANTS = {
         INVALID_TYPE: 'Please reply with "income" or "expense".',
         MISSING_CATEGORY: 'Please provide a category name.',
         ASK_CATEGORY: (type: string) => `Select ${type} category`,
+        HELP_OPTIONS: `
+        <b>🤖 Available Commands:</b><br/>
+        <ul>
+            <li>💰 <b>Add Transaction:</b> "Spent 500 on food", "Salary 5000"</li>
+            <li>📊 <b>Check Balance:</b> "Show balance", "Account summary"</li>
+            <li>🗓 <b>Recent Activity:</b> "Recent transactions", "History"</li>
+            <li>📈 <b>Reports:</b> "Show report", "Statement"</li>
+            <li>🗑 <b>Manage Data:</b> "Clear data", "Reset app"</li>
+        </ul>
+        <br/>
+        <i>Just type naturally! I'll understand.</i>
+        `
     },
     INTENTS: {
         ADD_INCOME: 'ADD_INCOME',
@@ -22,7 +34,8 @@ export const CHAT_CONSTANTS = {
         CLEAR_DATA: 'CLEAR_DATA',
         GET_REPORT: 'GET_REPORT',
         GET_INSIGHTS: 'GET_INSIGHTS',
-        AI_REPLY: 'AI_REPLY'
+        AI_REPLY: 'AI_REPLY',
+        HELP: 'HELP'
     },
     PATTERNS: {
         AMOUNT: /₹?\$?\d+[.,]?\d*/,
@@ -42,6 +55,7 @@ export const CHAT_CONSTANTS = {
             'clear data', 'reset data', 'delete all', 'clear all', 'wipe data', 'erase data', 'reset app', 'factory reset'
         ],
         REPORT_KEYWORDS: ['report', 'statement'],
-        INSIGHTS_KEYWORDS: ['advice', 'suggest', 'tips', 'insight', 'analyze']
+        INSIGHTS_KEYWORDS: ['advice', 'suggest', 'tips', 'insight', 'analyze'],
+        HELP_KEYWORDS: ['help', 'usage', 'command', 'guide', 'instruction', 'what can you do', 'support', 'assist']
     }
 };

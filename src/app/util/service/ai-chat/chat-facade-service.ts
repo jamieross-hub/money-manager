@@ -190,6 +190,10 @@ export class ChatFacadeService {
                 this.handleAiFallback(userText);
                 break;
 
+            case CHAT_CONSTANTS.INTENTS.HELP:
+                this.pushBot({ sender: 'bot', type: 'html', text: CHAT_CONSTANTS.MSGS.HELP_OPTIONS });
+                break;
+
             default:
                 this.handleAiFallback(userText);
                 break;
