@@ -15,16 +15,14 @@ export class ChatFlowService {
         return `Got ₹${amount}. Is this income or expense?`;
     }
 
-    handleTypeReply(userText: string, detected: string, amount: number) {
-        this.amount = amount;
-        const t = userText.toLowerCase();
-        if (detected === 'ADD_INCOME' || /income|salary|earned|paid/.test(t)) {
+    handleTypeReply(userText: string) {
+        if (userText === 'income') {
             this.type = 'INCOME';
             this.stage = 'askCategory';
 
             return { type: 'UI-ELEMENT', text: 'categoryDropdown', data: { type: TransactionType.INCOME, placeholder: 'Select income category', amount: this.amount, txType: 'INCOME' } };
         }
-        if (detected === 'ADD_EXPENSE' || /expense|spent|buy|purchase/.test(t)) {
+        if (userText === 'expense') {
             this.type = 'EXPENSE';
             this.stage = 'askCategory';
 

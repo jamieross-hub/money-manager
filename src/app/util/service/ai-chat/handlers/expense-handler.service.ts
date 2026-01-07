@@ -1,13 +1,68 @@
 import { Injectable } from "@angular/core";
-import { Category } from "src/app/util/models";
+import { Store } from '@ngrx/store';
+import { Auth } from '@angular/fire/auth';
+import { NotificationService } from 'src/app/util/service/notification.service';
+import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
+import * as TransactionsActions from 'src/app/store/transactions/transactions.actions';
+import { AppState } from 'src/app/store/app.state';
+import { SyncStatus, TransactionStatus, TransactionType } from 'src/app/util/config/enums';
+import { Account, Category } from "src/app/util/models";
 
 
 @Injectable({ providedIn: 'root' })
 export class ExpenseHandlerService {
+    constructor(
+        private store: Store<AppState>,
+        private auth: Auth,
+        private notificationService: NotificationService,
+        private hapticFeedback: HapticFeedbackService
+    ) { }
 
+    async addExpense(selectedCategory: Category, account: Account, amount: number) {
+        const userId = this.auth.currentUser?.uid;
 
-    addExpense(selectedCategory: Category, amount: number) {
-        console.log('Adding expense:', amount);
-        return `Expense added: ₹${amount}`;
+        // Fallback if user not available
+        if (!userId) {
+            console.warn('No authenticated user - cannot create transaction');
+            return `Expense added locally: ₹${amount}`;
+        }
+
+        const transactionData = {
+            userId: userId,
+            accountId: account?.accountId || '',
+            categoryId: selectedCategory?.id || '',
+            category: selectedCategory?.name,
+            payee: 'Expense',
+            amount: amount,
+            type: TransactionType.EXPENSE,
+            date: new Date(),
+            notes: '',
+            status: TransactionStatus.COMPLETED,
+            tags: [],
+            isSplitTransaction: false,
+            isCategorySplit: false,
+            syncStatus: SyncStatus.PENDING,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            createdBy: userId,
+            updatedBy: userId,
+        };
+
+        try {
+            await this.store.dispatch(
+                TransactionsActions.createTransaction({
+                    userId: userId,
+                    transaction: transactionData,
+                })
+            );
+
+            this.notificationService.success('Transaction added successfully');
+            this.hapticFeedback.successVibration();
+            return `Expense added: ₹${amount}`;
+        } catch (error) {
+            console.error('Failed to add expense transaction', error);
+            this.notificationService.error('Failed to add transaction');
+            return `Failed to add expense: ₹${amount}`;
+        }
     }
 }
