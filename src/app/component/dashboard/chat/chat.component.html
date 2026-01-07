@@ -78,7 +78,7 @@
 
           <!-- Actual Input -->
           <input #chatInput type="text" placeholder="Ask AI or enter transaction..."
-            (keydown.enter)="sendMessage(chatInput)" (keydown.tab)="onTabKey($event, chatInput)"
+            (keydown.enter)="sendMessage(chatInput)" (keydown)="onTabKey($event, chatInput)"
             (input)="onInputChange(chatInput)"
             class="w-full bg-transparent border-none focus:outline-none px-2 text-sm sm:text-base text-gray-700 placeholder-gray-400 relative z-10">
         </div>

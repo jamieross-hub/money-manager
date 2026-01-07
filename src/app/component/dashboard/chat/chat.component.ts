@@ -68,7 +68,7 @@ export class ChatComponent {
   }
 
   onTabKey(event: KeyboardEvent, input: HTMLInputElement) {
-    if (this.suggestion) {
+    if (this.suggestion && event.key === 'Tab') {
       event.preventDefault();
       input.value += this.suggestion;
       this.suggestion = '';
