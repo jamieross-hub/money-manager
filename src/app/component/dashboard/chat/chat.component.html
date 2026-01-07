@@ -69,11 +69,19 @@
           <mat-icon class="material-icons-outlined text-[20px] leading-[20px] w-[20px] h-[20px]">add</mat-icon>
         </button>
 
-        <!-- Input Field -->
-        <input #chatInput type="text" placeholder="Ask AI or enter transaction..."
-          (keydown.enter)="sendMessage(chatInput)"
-          class="flex-1 bg-transparent border-none focus:outline-none px-2 text-sm sm:text-base text-gray-700 placeholder-gray-400">
+        <!-- Input Field with Autocomplete -->
+        <div class="flex-1 relative">
+          <!-- Suggestion Overlay -->
+          <div class="absolute inset-0 px-2 text-sm sm:text-base text-gray-300 pointer-events-none flex items-center">
+            <span class="invisible">{{chatInput.value}}</span><span>{{suggestion}}</span>
+          </div>
 
+          <!-- Actual Input -->
+          <input #chatInput type="text" placeholder="Ask AI or enter transaction..."
+            (keydown.enter)="sendMessage(chatInput)" (keydown.tab)="onTabKey($event, chatInput)"
+            (input)="onInputChange(chatInput)"
+            class="w-full bg-transparent border-none focus:outline-none px-2 text-sm sm:text-base text-gray-700 placeholder-gray-400 relative z-10">
+        </div>
         <!-- Mic Button -->
         <button *ngIf="!breakpointService.device.isMobile" (click)="onMicClick()"
           class="p-2 text-gray-400 hover:text-primary-500 transition rounded-full hover:bg-gray-100 mr-1 relative top-[6px]">

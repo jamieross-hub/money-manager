@@ -57,5 +57,17 @@ export const CHAT_CONSTANTS = {
         REPORT_KEYWORDS: ['report', 'statement'],
         INSIGHTS_KEYWORDS: ['advice', 'suggest', 'tips', 'insight', 'analyze'],
         HELP_KEYWORDS: ['help', 'usage', 'command', 'guide', 'instruction', 'what can you do', 'support', 'assist']
-    }
+    },
+    SUGGESTIONS: [
+        'Spent ₹',
+        'Income ₹',
+        'Expense ₹',
+        'Salary ₹',
+        'Show balance',
+        'Account summary',
+        'Recent transactions',
+        'Show report',
+        'Clear data',
+        'Help'
+    ]
 };

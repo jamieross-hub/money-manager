@@ -3,6 +3,7 @@ import { TransactionType } from 'src/app/util/config/enums';
 import { Category } from 'src/app/util/models';
 import { ChatFacadeService } from 'src/app/util/service/ai-chat/chat-facade-service';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
+import { CHAT_CONSTANTS } from 'src/app/util/service/ai-chat/chat-constants';
 
 @Component({
   selector: 'app-chat',
@@ -12,6 +13,8 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 export class ChatComponent {
 
   visible: boolean = false;
+  suggestion: string = '';
+  suggestions = CHAT_CONSTANTS.SUGGESTIONS;
 
   constructor(public chatFacadeService: ChatFacadeService, public breakpointService: BreakpointService) { }
 
@@ -19,8 +22,9 @@ export class ChatComponent {
     const text = input.value?.trim();
     if (!text) return;
 
-    this.chatFacadeService.messages.push({ sender: 'user', text , type: 'html' });
+    this.chatFacadeService.messages.push({ sender: 'user', text, type: 'html' });
     input.value = '';
+    this.suggestion = '';
     this.chatFacadeService.startBotReply(text);
   }
 
@@ -42,5 +46,32 @@ export class ChatComponent {
   onAttachmentClick() {
     console.log("Attachment clicked - Placeholder for file upload");
     // TODO: Implement file upload logic
+  }
+
+  onInputChange(input: HTMLInputElement) {
+    const value = input.value;
+    if (!value) {
+      this.suggestion = '';
+      return;
+    }
+
+    // Find matching suggestion
+    const match = this.suggestions.find(s =>
+      s.toLowerCase().startsWith(value.toLowerCase()) && s.toLowerCase() !== value.toLowerCase()
+    );
+
+    if (match) {
+      this.suggestion = match.substring(value.length);
+    } else {
+      this.suggestion = '';
+    }
+  }
+
+  onTabKey(event: KeyboardEvent, input: HTMLInputElement) {
+    if (this.suggestion) {
+      event.preventDefault();
+      input.value += this.suggestion;
+      this.suggestion = '';
+    }
   }
 }
