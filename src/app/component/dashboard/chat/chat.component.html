@@ -73,15 +73,14 @@
         <div class="flex-1 relative">
           <!-- Suggestion Overlay -->
           <div class="absolute inset-0 px-2 text-sm sm:text-base text-gray-300 flex items-center"
-            [class.pointer-events-none]="!suggestion" [class.cursor-pointer]="suggestion"
-            (click)="completeSuggestion(chatInput)">
+            [class.pointer-events-none]="!suggestion" [class.cursor-pointer]="suggestion">
             <span class="invisible">{{chatInput.value}}</span><span>{{suggestion}}</span>
           </div>
 
           <!-- Actual Input -->
           <input #chatInput type="text" placeholder="Ask AI or enter transaction..."
             (keydown.enter)="sendMessage(chatInput)" (keydown)="onTabKey($event, chatInput)"
-            (input)="onInputChange(chatInput)"
+            (input)="onInputChange(chatInput)" (click)="completeSuggestion(chatInput)"
             class="w-full bg-transparent border-none focus:outline-none px-2 text-sm sm:text-base text-gray-700 placeholder-gray-400 relative z-10">
         </div>
         <!-- Mic Button -->
