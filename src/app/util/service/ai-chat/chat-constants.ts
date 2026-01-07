@@ -4,13 +4,14 @@ export const CHAT_CONSTANTS = {
         GREETING: '🙂 Hello! I am your financial assistant. How can I help you today?',
         INTERNAL_ERROR: 'Internal error, please try again!',
         DATA_CLEARED: 'All your data has been cleared successfully.',
-        INCOME_ADDED: (amount: number, account: string, category: string) => `Income of ₹${amount} credited to ${account} for ${category}.`,
-        EXPENSE_ADDED: (amount: number, account: string, category: string) => `Spent ₹${amount} on ${category} from ${account}.`,
-        ASK_TYPE: (amount: number) => `Got ₹${amount}. Is this income or expense?`,
+        INCOME_ADDED: (amount: number, account: string, category: string) => `Income of <b>₹${amount.toLocaleString()} credited to ${account} for ${category}</b>.`,
+        EXPENSE_ADDED: (amount: number, account: string, category: string) => `Spent <b>₹${amount.toLocaleString()}  on ${category} from ${account}</b>.`,
+        ASK_TYPE: (amount: number) => `Got ₹${amount.toLocaleString()}. Is this income or expense?`,
         ASK_CATEGORY_INCOME: 'Select income category',
         ASK_CATEGORY_EXPENSE: 'Select expense category',
         INVALID_TYPE: 'Please reply with "income" or "expense".',
-        MISSING_CATEGORY: 'Please provide a category name.'
+        MISSING_CATEGORY: 'Please provide a category name.',
+        ASK_CATEGORY: (type: string) => `Select ${type} category`,
     },
     INTENTS: {
         ADD_INCOME: 'ADD_INCOME',
@@ -25,9 +26,9 @@ export const CHAT_CONSTANTS = {
     },
     PATTERNS: {
         AMOUNT: /₹?\$?\d+[.,]?\d*/,
-        ACTIONS: ['add', 'paid', 'received', 'got', 'spent', 'debit', 'credit', 'purchase', 'buy', 'transfer', 'sent', 'deposit', 'withdraw'],
-        INCOME_KEYWORDS: ['salary', 'income', 'received', 'got', 'credited', 'deposit'],
-        EXPENSE_KEYWORDS: ['spent', 'expense', 'paid', 'debited', 'withdraw', 'purchase', 'buy'],
+        ACTIONS: ['add', 'paid', 'received', 'got', 'spent', 'debit', 'credit', 'purchase', 'buy', 'transfer', 'sent', 'deposit', 'withdraw', 'income:', 'expense:'],
+        INCOME_KEYWORDS: ['salary', 'income', 'income:', 'received', 'got', 'credited', 'deposit'],
+        EXPENSE_KEYWORDS: ['spent', 'expense', 'expense:', 'paid', 'debited', 'withdraw', 'purchase', 'buy'],
         BALANCE_KEYWORDS: ['balance', 'wallet', 'bank'],
         ACCOUNT_SUMMARY_KEYWORDS: [
             'account summary', 'account-summary', 'accountsummary', 'account summary card', 'account card',

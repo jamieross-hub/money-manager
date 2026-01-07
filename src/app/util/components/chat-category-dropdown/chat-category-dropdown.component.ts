@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnDestroy, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
 import { Category } from 'src/app/util/models/category.model';
 import { map, Observable, Subscription } from 'rxjs';
 import { Store } from '@ngrx/store';
@@ -13,7 +13,7 @@ import { AccountType, TransactionType } from '../../config/enums';
   templateUrl: './chat-category-dropdown.component.html',
   styleUrls: ['./chat-category-dropdown.component.scss']
 })
-export class ChatCategoryDropdownComponent implements OnDestroy {
+export class ChatCategoryDropdownComponent implements OnChanges, OnDestroy {
   @Input() placeholder = 'Select category';
   @Input() amount: number = 0;
   @Input() txType: TransactionType = TransactionType.INCOME;
@@ -37,6 +37,12 @@ export class ChatCategoryDropdownComponent implements OnDestroy {
 
     this.categories = this.categoryService.getCachedCategories(this.txType);
 
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['txType']) {
+      this.categories = this.categoryService.getCachedCategories(this.txType);
+    }
   }
 
   onChange(value: any) {

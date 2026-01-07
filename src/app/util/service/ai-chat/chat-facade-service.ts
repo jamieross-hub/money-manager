@@ -13,6 +13,10 @@ import { CategoryService } from "../db/category.service";
 import { AccountsService } from "../db/accounts.service";
 import { Auth } from "@angular/fire/auth";
 import { CHAT_CONSTANTS } from "./chat-constants";
+import { AppState } from "src/app/store/app.state";
+import { Store } from "@ngrx/store";
+import { selectAllAccounts } from "src/app/store/accounts/accounts.selectors";
+import { Subscription } from "rxjs";
 
 export interface Message {
     sender: 'bot' | 'user' | string;
@@ -25,6 +29,8 @@ export interface Message {
 export class ChatFacadeService {
     messages: Message[] = [];
     isTyping = false;
+    subscription: Subscription;
+    defualtBankAccount: Account | null = null;
 
     constructor(
         private intent: ChatIntentService,
@@ -37,9 +43,13 @@ export class ChatFacadeService {
         private breakpointService: BreakpointService,
         private categoryService: CategoryService,
         private accountsService: AccountsService,
-        private auth: Auth
+        private auth: Auth,
+        private store: Store<AppState>
     ) {
         this.initWelcomeMessage();
+        this.subscription = this.store.select(selectAllAccounts).subscribe(accounts => {
+            this.defualtBankAccount = accounts.filter(account => account.type.toLowerCase().includes(AccountType.BANK))[0]; //Bank account as default
+        });
     }
 
     private initWelcomeMessage() {
@@ -130,6 +140,11 @@ export class ChatFacadeService {
             return true;
         }
 
+        if (!stage && intent == CHAT_CONSTANTS.INTENTS.ADD_INCOME || intent == CHAT_CONSTANTS.INTENTS.ADD_EXPENSE) {
+            this.dispatchFlowReply(this.flow.startCategoryFlow(intent == CHAT_CONSTANTS.INTENTS.ADD_INCOME ? TransactionType.INCOME : TransactionType.EXPENSE, amount));
+            return true;
+        }
+
         if (stage === 'askType') {
             this.dispatchFlowReply(this.flow.handleTypeReply(lowerText));
             return true;
@@ -137,7 +152,7 @@ export class ChatFacadeService {
 
         if (stage === 'askCategory') {
             // using rawText to allow proper casing if needed? usually lowerText matches better but let's stick to simple
-            this.pushBot({ sender: 'bot', type: 'html', text: this.flow.handleCategoryReply(rawText.trim()) });
+            this.pushBot({ sender: 'bot', type: 'html', text: this.flow.handleCategoryReply(rawText.trim(), this.defualtBankAccount) });
             return true;
         }
 
@@ -212,7 +227,7 @@ export class ChatFacadeService {
             this.expense.addExpense(selectedCategory, account, amount);
         }
 
-        const reply = this.flow.handleCategoryReply(selectedCategory.name);
+        const reply = this.flow.handleCategoryReply(selectedCategory.name, account);
         this.pushBot({ sender: 'bot', type: 'html', text: reply });
     }
 }

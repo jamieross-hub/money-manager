@@ -142,7 +142,7 @@
         <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100">
           <span *ngIf="!element.isEditing" class="font-bold text-xs md:text-sm"
             [class]="element.type === 'income' ? 'text-green-700' : 'text-red-800'">
-            {{ (element.type == 'income' ? '+':'-' ) + ' ₹' + element.amount.toLocaleString() }}
+            {{ (element.type == 'income' ? '+':'-' ) + ' ₹' + element?.amount?.toLocaleString() }}
           </span>
           <input *ngIf="element.isEditing" [(ngModel)]="element.amount" type="number"
             class="w-full px-2 md:px-3 py-1 md:py-2 border border-blue-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"

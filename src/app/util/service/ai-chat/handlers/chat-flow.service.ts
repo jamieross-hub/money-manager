@@ -2,6 +2,7 @@ import { Injectable } from "@angular/core";
 import { CategoryService } from 'src/app/util/service/db/category.service';
 import { CHAT_CONSTANTS } from '../chat-constants';
 import { TransactionType } from 'src/app/util/config/enums';
+import { Account } from "src/app/util/models";
 
 @Injectable({ providedIn: 'root' })
 export class ChatFlowService {
@@ -15,6 +16,12 @@ export class ChatFlowService {
         this.amount = amount;
         this.stage = 'askType';
         return CHAT_CONSTANTS.MSGS.ASK_TYPE(amount);
+    }
+
+    startCategoryFlow(type: TransactionType, amount: number) {
+        this.amount = amount;
+        this.stage = 'askCategory';
+        return this.handleTypeReply(type);
     }
 
     handleTypeReply(userText: string) {
@@ -53,15 +60,15 @@ export class ChatFlowService {
         return CHAT_CONSTANTS.MSGS.INVALID_TYPE;
     }
 
-    handleCategoryReply(category: string) {
+    handleCategoryReply(category: string, account: Account | null) {
         if (!category) return CHAT_CONSTANTS.MSGS.MISSING_CATEGORY;
 
         // This is usually a confirmation message after the facade adds the transaction
         let result = '';
         if (this.type === TransactionType.INCOME) {
-            result = CHAT_CONSTANTS.MSGS.INCOME_ADDED(this.amount || 0, 'account', category);
+            result = CHAT_CONSTANTS.MSGS.INCOME_ADDED(this.amount || 0, account?.name || '', category);
         } else {
-            result = CHAT_CONSTANTS.MSGS.EXPENSE_ADDED(this.amount || 0, 'account', category);
+            result = CHAT_CONSTANTS.MSGS.EXPENSE_ADDED(this.amount || 0, account?.name || '', category);
         }
 
         this.reset();
