@@ -12,6 +12,7 @@ import { AccountType, TransactionType } from "../../config/enums";
 import { CategoryService } from "../db/category.service";
 import { AccountsService } from "../db/accounts.service";
 import { Auth } from "@angular/fire/auth";
+import { CHAT_CONSTANTS } from "./chat-constants";
 
 export interface Message {
     sender: 'bot' | 'user' | string;
@@ -24,7 +25,6 @@ export interface Message {
 export class ChatFacadeService {
     messages: Message[] = [];
     isTyping = false;
-
 
     constructor(
         private intent: ChatIntentService,
@@ -39,143 +39,162 @@ export class ChatFacadeService {
         private accountsService: AccountsService,
         private auth: Auth
     ) {
+        this.initWelcomeMessage();
+    }
+
+    private initWelcomeMessage() {
         if (this.breakpointService.device.isMobile || this.breakpointService.device.isLaptop) {
-            this.messages.push({ sender: 'bot', type: 'UI-ELEMENT', text: 'ACCOUNT_SUMMARY_CARD' });
+            this.pushBot({ sender: 'bot', type: 'UI-ELEMENT', text: CHAT_CONSTANTS.INTENTS.ACCOUNT_SUMMARY_CARD });
         } else {
-            this.messages.push({ sender: 'bot', type: 'UI-ELEMENT', text: 'ACCOUNT_SUMMARY_CARD' });
-            this.messages.push({ sender: 'bot', type: 'UI-ELEMENT', text: 'RECENT_ACTIVITY_CARD' });
-            this.messages.push({ sender: 'bot', type: 'html', text: '🙂 Hello! I am your financial assistant. How can I help you today?' });
+            this.pushBot({ sender: 'bot', type: 'UI-ELEMENT', text: CHAT_CONSTANTS.INTENTS.ACCOUNT_SUMMARY_CARD });
+            this.pushBot({ sender: 'bot', type: 'UI-ELEMENT', text: CHAT_CONSTANTS.INTENTS.RECENT_ACTIVITY_CARD });
+            this.pushBot({ sender: 'bot', type: 'html', text: CHAT_CONSTANTS.MSGS.GREETING });
         }
     }
 
     startBotReply(userText: string) {
         this.isTyping = true;
-
-        // 0. Pre-process text detection for direct transaction matching
         const userId = this.auth.currentUser?.uid;
-        if (userId) {
-            // Fetch necessary data (ideally cached or from store, but here we fetch to check)
-            // Using a simple check pattern for now. In a real scenario, we might want to ensure data is loaded.
-            const categories = this.categoryService.getCachedCategories();
-            // We assume categories are cached since service is singleton and loaded. 
-            // Note: CategoryService loads from store in constructor, so getCachedCategories should work if store is populated.
 
+        if (userId) {
+            const categories = this.categoryService.getCachedCategories();
             this.accountsService.getAccounts(userId).subscribe(accounts => {
                 this.processUserText(userText, categories, accounts);
             });
-            return;
+        } else {
+            this.processUserText(userText, [], []);
         }
-
-        // Fallback for non-authenticated or if we want to skip to normal flow immediately (though we need async above)
-        // Since we moved logic to processUserText, we can call it with empty data if userId missing, 
-        // effectively falling back to existing logic.
-        this.processUserText(userText, [], []);
     }
 
     private processUserText(userText: string, categories: Category[], accounts: Account[]) {
-        const detected = this.intent.detectIntent(userText);
+        const detectedIntent = this.intent.detectIntent(userText);
         const amount = this.extract.extractAmount(userText);
         const lowerText = userText.toLowerCase();
 
-        // --- 0. NLP Transaction Matching Logic ---
-        // Verify if we have a valid amount and it looks like a transaction intent
-        // We look for category matches first.
+        // 1. Try Direct Transaction (e.g. "Values" provided in one go)
+        if (this.tryHandleDirectTransaction(detectedIntent, userText, amount, categories, accounts)) {
+            return;
+        }
 
-        if (amount > 0 && categories.length > 0) {
+        // 2. Active Flow (e.g. Answering "How much?")
+        if (this.handleActiveFlow(detectedIntent, amount, lowerText, userText)) {
+            return;
+        }
 
-            // Find category match
-            let foundCategory = categories.find(c => lowerText.includes(c.name.toLowerCase()));
+        // 3. New Intent / Command
+        this.handleNewIntent(detectedIntent, userText, amount);
+    }
 
-            // Check for Account match
-            let foundAccount = accounts.find(a => lowerText.includes(a.name.toLowerCase()));
+    private tryHandleDirectTransaction(intent: string, text: string, amount: number, categories: Category[], accounts: Account[]): boolean {
+        if (amount <= 0 || categories.length === 0 || (intent !== CHAT_CONSTANTS.INTENTS.ADD_INCOME && intent !== CHAT_CONSTANTS.INTENTS.ADD_EXPENSE)) {
+            return false;
+        }
 
-            const isBank = lowerText.includes('bank');
-            const isCash = lowerText.includes('cash');
+        const lowerText = text.toLowerCase();
 
-            if (!foundAccount) {
-                if (isBank) foundAccount = accounts.find(a => a.type.toLowerCase().includes(AccountType.BANK));
-                if (isCash) foundAccount = accounts.find(a => a.type.toLowerCase().includes(AccountType.CASH));
-                if (!foundAccount && accounts.length > 0) foundAccount = accounts[0];
+        // Find Category
+        const foundCategory = categories.find(c => lowerText.includes(c.name.toLowerCase()));
+
+        // Find Account
+        let foundAccount = accounts.find(a => lowerText.includes(a.name.toLowerCase()));
+        if (!foundAccount) {
+            if (lowerText.includes('bank')) foundAccount = accounts.find(a => a.type.toLowerCase().includes(AccountType.BANK));
+            else if (lowerText.includes('cash')) foundAccount = accounts.find(a => a.type.toLowerCase().includes(AccountType.CASH));
+
+            // Fallback to first account if still not found (optional, maybe unsafe? keeping original logic behavior)
+            if (!foundAccount && accounts.length > 0) foundAccount = accounts[0];
+        }
+
+        if (foundCategory && foundAccount) {
+            if (intent === CHAT_CONSTANTS.INTENTS.ADD_INCOME) {
+                this.income.addIncome(foundCategory, foundAccount, amount);
+                this.pushBot({ sender: 'bot', type: 'html', text: CHAT_CONSTANTS.MSGS.INCOME_ADDED(amount, foundAccount.name, foundCategory.name) });
+                return true;
             }
-
-
-            if (foundCategory && (detected === 'ADD_INCOME' || detected === 'ADD_EXPENSE')) {
-                if (detected === 'ADD_INCOME') {
-                    this.income.addIncome(foundCategory, foundAccount!, amount);
-                    const reply = `Income of ₹${amount} credited to ${foundAccount?.name || 'account'} for ${foundCategory.name}.`;
-                    this.pushBot({ sender: 'bot', type: 'html', text: reply });
-                    return;
-                } else if (detected === 'ADD_EXPENSE') {
-                    this.expense.addExpense(foundCategory, foundAccount!, amount);
-                    const reply = `Spent ₹${amount} on ${foundCategory.name} from ${foundAccount?.name || 'account'}.`;
-                    this.pushBot({ sender: 'bot', type: 'html', text: reply });
-                    return;
-                }
+            if (intent === CHAT_CONSTANTS.INTENTS.ADD_EXPENSE) {
+                this.expense.addExpense(foundCategory, foundAccount, amount);
+                this.pushBot({ sender: 'bot', type: 'html', text: CHAT_CONSTANTS.MSGS.EXPENSE_ADDED(amount, foundAccount.name, foundCategory.name) });
+                return true;
             }
         }
+        return false;
+    }
 
+    private handleActiveFlow(intent: string, amount: number, lowerText: string, rawText: string): boolean {
+        // If flow stage is active, or if it's a raw number input which might start a flow
+        const stage = this.flow.getStage();
 
-        // 1. Start follow-up flow if user entered only amount and no flow is active
-        if (!this.flow.getStage() && detected === 'AI_REPLY' && amount > 0) {
-            const reply = this.flow.startAmountFlow(amount);
-            this.pushBot(typeof reply === 'string' ? { sender: 'bot', type: 'html', text: reply } : { sender: 'bot', type: 'html', ...(reply as Record<string, any>) });
-            return;
+        // Implicit start of flow if user just sends a number and no other intent detected (default to AI_REPLY but has amount)
+        if (!stage && intent === CHAT_CONSTANTS.INTENTS.AI_REPLY && amount > 0) {
+            this.dispatchFlowReply(this.flow.startAmountFlow(amount));
+            return true;
         }
 
-        // 2. Handle type confirmation stage
-        if (this.flow.getStage() === 'askType') {
-            const reply = this.flow.handleTypeReply(lowerText);
-            this.pushBot(typeof reply === 'string' ? { sender: 'bot', type: 'html', text: reply } : { sender: 'bot', type: 'html', ...(reply as Record<string, any>) });
-            return;
+        if (stage === 'askType') {
+            this.dispatchFlowReply(this.flow.handleTypeReply(lowerText));
+            return true;
         }
 
-        // 3. Handle category asking stage
-        if (this.flow.getStage() === 'askCategory') {
-            const reply = this.flow.handleCategoryReply(userText.trim());
-            this.pushBot({ sender: 'bot', type: 'html', text: reply });
-            return;
+        if (stage === 'askCategory') {
+            // using rawText to allow proper casing if needed? usually lowerText matches better but let's stick to simple
+            this.pushBot({ sender: 'bot', type: 'html', text: this.flow.handleCategoryReply(rawText.trim()) });
+            return true;
         }
 
-        // 4. Normal intent handlers
-        if (detected === 'ADD_INCOME') {
+        return false;
+    }
 
-            const reply = !this.flow.getStage() ? this.flow.startAmountFlow(amount) : this.flow.handleTypeReply(detected);
-            this.pushBot(typeof reply === 'string' ? { sender: 'bot', type: 'html', text: reply } : { sender: 'bot', type: 'html', ...(reply as Record<string, any>) });
-            return;
+    private handleNewIntent(intent: string, userText: string, amount: number) {
+        switch (intent) {
+            case CHAT_CONSTANTS.INTENTS.ADD_INCOME:
+            case CHAT_CONSTANTS.INTENTS.ADD_EXPENSE:
+                // Start flow since direct transaction failed (missing cat/account)
+                const reply = !this.flow.getStage() ? this.flow.startAmountFlow(amount) : this.flow.handleTypeReply(intent);
+                this.dispatchFlowReply(reply);
+                break;
+
+            case CHAT_CONSTANTS.INTENTS.GET_REPORT:
+                this.pushBot(this.report.generateReport());
+                break;
+
+            case CHAT_CONSTANTS.INTENTS.ACCOUNT_SUMMARY_CARD:
+                this.pushBot({ sender: 'bot', type: 'UI-ELEMENT', text: CHAT_CONSTANTS.INTENTS.ACCOUNT_SUMMARY_CARD });
+                break;
+
+            case CHAT_CONSTANTS.INTENTS.RECENT_ACTIVITY_CARD:
+                this.pushBot({ sender: 'bot', type: 'UI-ELEMENT', text: CHAT_CONSTANTS.INTENTS.RECENT_ACTIVITY_CARD });
+                break;
+
+            case CHAT_CONSTANTS.INTENTS.CLEAR_DATA:
+                this.messages = [];
+                this.pushBot({ sender: 'bot', type: 'html', text: CHAT_CONSTANTS.MSGS.DATA_CLEARED });
+                break;
+
+            case CHAT_CONSTANTS.INTENTS.GET_INSIGHTS:
+                // Future implementation or AI fallback
+                this.handleAiFallback(userText);
+                break;
+
+            default:
+                this.handleAiFallback(userText);
+                break;
         }
+    }
 
-        if (detected === 'ADD_EXPENSE') {
-            const reply = !this.flow.getStage() ? this.flow.startAmountFlow(amount) : this.flow.handleTypeReply(detected);
-            this.pushBot(typeof reply === 'string' ? { sender: 'bot', type: 'html', text: reply } : { sender: 'bot', type: 'html', ...(reply as Record<string, any>) });
-            return;
-        }
-
-        if (detected === 'GET_REPORT') {
-            this.pushBot(this.report.generateReport());
-            return;
-        }
-
-        if (detected === 'ACCOUNT_SUMMARY_CARD') {
-            this.pushBot({ sender: 'bot', type: 'UI-ELEMENT', text: 'ACCOUNT_SUMMARY_CARD' });
-            return;
-        }
-
-        if (detected === 'RECENT_ACTIVITY_CARD') {
-            this.pushBot({ sender: 'bot', type: 'UI-ELEMENT', text: 'RECENT_ACTIVITY_CARD' });
-            return;
-        }
-
-        if (detected === 'CLEAR_DATA') {
-            this.messages = [];
-            this.pushBot({ sender: 'bot', type: 'html', text: 'All your data has been cleared successfully.' });
-            return;
-        }
-
-        // 5. AI reply fallback
-        this.aiReply.handleAI(userText).subscribe({
+    private handleAiFallback(text: string) {
+        this.aiReply.handleAI(text).subscribe({
             next: (reply) => this.pushBot({ sender: 'bot', type: 'html', text: reply }),
-            error: () => this.pushBot({ sender: 'bot', type: 'html', text: 'Internal error, please try again!' })
+            error: () => this.pushBot({ sender: 'bot', type: 'html', text: CHAT_CONSTANTS.MSGS.INTERNAL_ERROR })
         });
+    }
+
+    // Helper to standardise flow reply pushing
+    private dispatchFlowReply(reply: any) {
+        if (typeof reply === 'string') {
+            this.pushBot({ sender: 'bot', type: 'html', text: reply });
+        } else {
+            this.pushBot({ sender: 'bot', type: 'html', ...reply });
+        }
     }
 
     private pushBot(message: Message) {
@@ -183,20 +202,17 @@ export class ChatFacadeService {
         this.isTyping = false;
     }
 
-    // Called by UI when a category is selected from the Angular dropdown component
+    // Called by UI dropdown
     handleCategorySelection(selectedCategory: Category, account: any, amount: number, txType: TransactionType) {
         if (!selectedCategory) return;
+
         if (txType === TransactionType.INCOME) {
             this.income.addIncome(selectedCategory, account, amount);
-            const reply = this.flow.handleCategoryReply(selectedCategory.name);
-            this.pushBot({ sender: 'bot', type: 'html', text: reply });
-            return;
-        }
-        if (txType === TransactionType.EXPENSE) {
+        } else if (txType === TransactionType.EXPENSE) {
             this.expense.addExpense(selectedCategory, account, amount);
-            const reply = this.flow.handleCategoryReply(selectedCategory.name);
-            this.pushBot({ sender: 'bot', type: 'html', text: reply });
-            return;
         }
+
+        const reply = this.flow.handleCategoryReply(selectedCategory.name);
+        this.pushBot({ sender: 'bot', type: 'html', text: reply });
     }
 }
