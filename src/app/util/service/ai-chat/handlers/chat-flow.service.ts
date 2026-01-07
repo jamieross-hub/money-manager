@@ -1,49 +1,76 @@
 import { Injectable } from "@angular/core";
 import { CategoryService } from 'src/app/util/service/db/category.service';
+import { CHAT_CONSTANTS } from '../chat-constants';
 import { TransactionType } from 'src/app/util/config/enums';
 
 @Injectable({ providedIn: 'root' })
 export class ChatFlowService {
     private stage: 'askType' | 'askCategory' | null = null;
     private amount: number | null = null;
-    private type: 'INCOME' | 'EXPENSE' | null = null;
+    private type: TransactionType | null = null;
+
     constructor() { }
 
     startAmountFlow(amount: number) {
         this.amount = amount;
         this.stage = 'askType';
-        return `Got ₹${amount}. Is this income or expense?`;
+        return CHAT_CONSTANTS.MSGS.ASK_TYPE(amount);
     }
 
     handleTypeReply(userText: string) {
-        if (userText === 'income') {
-            this.type = 'INCOME';
-            this.stage = 'askCategory';
+        const text = userText.toLowerCase();
 
-            return { type: 'UI-ELEMENT', text: 'categoryDropdown', data: { type: TransactionType.INCOME, placeholder: 'Select income category', amount: this.amount, txType: 'INCOME' } };
-        }
-        if (userText === 'expense') {
-            this.type = 'EXPENSE';
+        if (text.includes('income')) {
+            this.type = TransactionType.INCOME;
             this.stage = 'askCategory';
-
-            return { type: 'UI-ELEMENT', text: 'categoryDropdown', data: { type: TransactionType.EXPENSE, placeholder: 'Select expense category', amount: this.amount, txType: 'EXPENSE' } };
+            return {
+                type: 'UI-ELEMENT',
+                text: 'categoryDropdown',
+                data: {
+                    type: TransactionType.INCOME,
+                    placeholder: CHAT_CONSTANTS.MSGS.ASK_CATEGORY_INCOME,
+                    amount: this.amount,
+                    txType: TransactionType.INCOME
+                }
+            };
         }
-        return `Please reply with "income" or "expense".`;
+
+        if (text.includes('expense')) {
+            this.type = TransactionType.EXPENSE;
+            this.stage = 'askCategory';
+            return {
+                type: 'UI-ELEMENT',
+                text: 'categoryDropdown',
+                data: {
+                    type: TransactionType.EXPENSE,
+                    placeholder: CHAT_CONSTANTS.MSGS.ASK_CATEGORY_EXPENSE,
+                    amount: this.amount,
+                    txType: TransactionType.EXPENSE
+                }
+            };
+        }
+
+        return CHAT_CONSTANTS.MSGS.INVALID_TYPE;
     }
 
     handleCategoryReply(category: string) {
-        if (!category) return 'Please provide a category name.';
-        const label = this.type === 'INCOME' ? 'Income' : 'Expense';
-        const result = `${label} added: ₹${this.amount} to ${category}`;
+        if (!category) return CHAT_CONSTANTS.MSGS.MISSING_CATEGORY;
+
+        // This is usually a confirmation message after the facade adds the transaction
+        let result = '';
+        if (this.type === TransactionType.INCOME) {
+            result = CHAT_CONSTANTS.MSGS.INCOME_ADDED(this.amount || 0, 'account', category);
+        } else {
+            result = CHAT_CONSTANTS.MSGS.EXPENSE_ADDED(this.amount || 0, 'account', category);
+        }
+
         this.reset();
         return result;
     }
 
-
     getStage() { return this.stage; }
     getAmount() { return this.amount; }
     getType() { return this.type; }
-
 
     private reset() {
         this.stage = null;

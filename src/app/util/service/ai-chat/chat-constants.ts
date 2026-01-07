@@ -6,6 +6,11 @@ export const CHAT_CONSTANTS = {
         DATA_CLEARED: 'All your data has been cleared successfully.',
         INCOME_ADDED: (amount: number, account: string, category: string) => `Income of ₹${amount} credited to ${account} for ${category}.`,
         EXPENSE_ADDED: (amount: number, account: string, category: string) => `Spent ₹${amount} on ${category} from ${account}.`,
+        ASK_TYPE: (amount: number) => `Got ₹${amount}. Is this income or expense?`,
+        ASK_CATEGORY_INCOME: 'Select income category',
+        ASK_CATEGORY_EXPENSE: 'Select expense category',
+        INVALID_TYPE: 'Please reply with "income" or "expense".',
+        MISSING_CATEGORY: 'Please provide a category name.'
     },
     INTENTS: {
         ADD_INCOME: 'ADD_INCOME',
