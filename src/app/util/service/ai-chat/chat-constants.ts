@@ -13,13 +13,13 @@ export const CHAT_CONSTANTS = {
         MISSING_CATEGORY: 'Please provide a category name.',
         ASK_CATEGORY: (type: string) => `Select ${type} category`,
         HELP_OPTIONS: `
-        <b>🤖 Available Commands:</b><br/>
-        <ul>
-            <li>💰 <b>Add Transaction:</b> "Spent 500 on food", "Salary 5000"</li>
-            <li>📊 <b>Check Balance:</b> "Show balance", "Account summary"</li>
-            <li>🗓 <b>Recent Activity:</b> "Recent transactions", "History"</li>
-            <li>📈 <b>Reports:</b> "Show report", "Statement"</li>
-            <li>🗑 <b>Manage Data:</b> "Clear data", "Reset app"</li>
+        <b>Available Commands:</b><br/>
+        <ul class="list-disc p-5">
+            <li>Add Transaction: "Spent 500 on food", "Salary 5000"</li>
+            <li>Check Balance: "Show balance", "Account summary"</li>
+            <li>Recent Activity: "Recent transactions", "History"</li>
+            <li>Reports: "Show report", "Statement"</li>
+            <li>Manage Data: "Clear data", "Reset app"</li>
         </ul>
         <br/>
         <i>Just type naturally! I'll understand.</i>
