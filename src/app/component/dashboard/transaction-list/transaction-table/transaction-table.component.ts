@@ -53,7 +53,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   @ViewChild(MatSort) sort!: MatSort;
 
   dataSource: MatTableDataSource<Transaction> = new MatTableDataSource<Transaction>();
-  displayedColumns: string[] = ['select', 'Date', 'Type', 'Payee', 'Amount', 'Status', 'Actions'];
+  displayedColumns: string[] = ['Date', 'Type', 'Payee', 'Amount', 'Status', 'Actions'];
   isListView: boolean = false;
 
   // Selection properties
@@ -121,12 +121,12 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
         // Small tablet: Show more columns but hide status (include select column only if not home)
         this.displayedColumns = this.isHome ?
           ['Date', 'Type', 'Payee', 'Amount', 'Actions'] :
-          ['select', 'Date', 'Type', 'Payee', 'Amount', 'Actions'];
+          ['Date', 'Type', 'Payee', 'Amount', 'Actions'];
       } else {
         // Desktop: Show all columns (include select column only if not home)
         this.displayedColumns = this.isHome ?
           ['Date', 'Type', 'Payee', 'Amount', 'Status', 'Actions'] :
-          ['select', 'Date', 'Type', 'Payee', 'Amount', 'Status', 'Account', 'Actions'];
+          ['Date', 'Type', 'Payee', 'Amount', 'Status', 'Account', 'Actions'];
       }
     }
   }
@@ -361,12 +361,12 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
     }
   }
 
-  getCategoryIcon(category: string): string {
-    return this.categories[category]?.icon || "category";
+  getCategoryIcon(category: string | undefined): string {
+    return category ? this.categories[category]?.icon || "category" : "category";
   }
 
-  getCategoryName(categoryId: string): string {
-    return this.categories[categoryId]?.name || categoryId;
+  getCategoryName(categoryId: string | undefined): string {
+    return categoryId ? this.categories[categoryId]?.name || categoryId : "";
   }
 
   getCategoryColor(category: string): string {

@@ -32,9 +32,8 @@
           }
           <!-- Chat Category Dropdown -->
           @if(msg.type === 'UI-ELEMENT' && msg.text === 'categoryDropdown') {
-          <app-chat-category-dropdown [categories]="msg.data.categories" [placeholder]="msg.data.placeholder"
-            [amount]="msg.data.amount" [txType]="msg.data.txType"
-            (submitSelection)="onChatCategorySelected($event)"></app-chat-category-dropdown>
+          <app-chat-category-dropdown [placeholder]="msg.data.placeholder" [amount]="msg.data.amount"
+            [txType]="msg.data.type" (submitSelection)="onChatCategorySelected($event)"></app-chat-category-dropdown>
 
           }
 

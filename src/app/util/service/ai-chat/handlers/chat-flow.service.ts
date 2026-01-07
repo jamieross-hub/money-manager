@@ -7,7 +7,7 @@ export class ChatFlowService {
     private stage: 'askType' | 'askCategory' | null = null;
     private amount: number | null = null;
     private type: 'INCOME' | 'EXPENSE' | null = null;
-    constructor(private categoryService: CategoryService) { }
+    constructor() { }
 
     startAmountFlow(amount: number) {
         this.amount = amount;
@@ -21,14 +21,14 @@ export class ChatFlowService {
         if (detected === 'ADD_INCOME' || /income|salary|earned|paid/.test(t)) {
             this.type = 'INCOME';
             this.stage = 'askCategory';
-            const categories = this.categoryService.getCachedCategories(TransactionType.INCOME);
-            return { type: 'UI-ELEMENT', text: 'categoryDropdown', data: { categories, placeholder: 'Select income category', amount: this.amount, txType: 'INCOME' } };
+
+            return { type: 'UI-ELEMENT', text: 'categoryDropdown', data: { type: TransactionType.INCOME, placeholder: 'Select income category', amount: this.amount, txType: 'INCOME' } };
         }
         if (detected === 'ADD_EXPENSE' || /expense|spent|buy|purchase/.test(t)) {
             this.type = 'EXPENSE';
             this.stage = 'askCategory';
-            const categories = this.categoryService.getCachedCategories(TransactionType.EXPENSE);
-            return { type: 'UI-ELEMENT', text: 'categoryDropdown', data: { categories, placeholder: 'Select expense category', amount: this.amount, txType: 'EXPENSE' } };
+
+            return { type: 'UI-ELEMENT', text: 'categoryDropdown', data: { type: TransactionType.EXPENSE, placeholder: 'Select expense category', amount: this.amount, txType: 'EXPENSE' } };
         }
         return `Please reply with "income" or "expense".`;
     }

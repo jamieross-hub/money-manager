@@ -4,6 +4,9 @@ import { Observable } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
+import { Account } from '../../models';
+import { CategoryService } from '../../service/db/category.service';
+import { TransactionType } from '../../config/enums';
 
 @Component({
   selector: 'app-chat-category-dropdown',
@@ -11,29 +14,30 @@ import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
   styleUrls: ['./chat-category-dropdown.component.scss']
 })
 export class ChatCategoryDropdownComponent {
-  @Input() categories: Category[] = [];
   @Input() placeholder = 'Select category';
-  @Input() amount = 0;
-  @Input() txType: 'INCOME' | 'EXPENSE' | '' = '';
+  @Input() amount: number = 0;
+  @Input() txType: TransactionType = TransactionType.INCOME;
 
   // @Output() selected = new EventEmitter<{ selectedCategory: Category; amount: number; txType: string }>();
   // @Output() accountSelected = new EventEmitter<any>();
-  @Output() submitSelection = new EventEmitter<{ selectedCategory: Category; account: any; amount: number; txType: string }>();
+  @Output() submitSelection = new EventEmitter<{ selectedCategory: Category; account: Account; amount: number; txType: TransactionType }>();
 
   public currentCategory: Category | null = null;
-  public currentAccount: any = null;
+  public currentAccount: Account | null = null;
   public isDisabled = false;
 
-  public accountList$: Observable<any[]> | undefined;
+  public categories: Category[] = [];
+  public accountList$: Observable<Account[]> | undefined;
 
-  constructor(private store: Store<AppState>) {
+  constructor(private store: Store<AppState>, private categoryService: CategoryService) {
     this.accountList$ = this.store.select(selectAllAccounts);
+    this.categories = this.categoryService.getCachedCategories(this.txType);
   }
 
   onChange(value: any) {
     if (!value) return;
     this.currentCategory = value;
-    if(this.currentCategory && this.currentAccount){
+    if (this.currentCategory && this.currentAccount) {
       this.onSubmit();
     }
     // this.selected.emit({ selectedCategory: value, amount: this.amount, txType: this.txType });
@@ -42,7 +46,7 @@ export class ChatCategoryDropdownComponent {
   onAccountChange(account: any) {
     if (!account) return;
     this.currentAccount = account;
-    if(this.currentCategory && this.currentAccount){
+    if (this.currentCategory && this.currentAccount) {
       this.onSubmit();
     }
   }

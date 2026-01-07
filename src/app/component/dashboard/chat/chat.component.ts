@@ -1,4 +1,5 @@
 import { Component, ElementRef, ViewChild, viewChild } from '@angular/core';
+import { TransactionType } from 'src/app/util/config/enums';
 import { Category } from 'src/app/util/models';
 import { ChatFacadeService } from 'src/app/util/service/ai-chat/chat-facade-service';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
@@ -23,7 +24,7 @@ export class ChatComponent {
     this.chatFacadeService.startBotReply(text);
   }
 
-  onChatCategorySelected(event: { selectedCategory: Category; account: any; amount: number; txType: string }) {
+  onChatCategorySelected(event: { selectedCategory: Category; account: any; amount: number; txType: TransactionType }) {
     this.chatFacadeService.messages.pop();
     this.chatFacadeService.handleCategorySelection(event.selectedCategory, event.account, event.amount, event.txType);
   }

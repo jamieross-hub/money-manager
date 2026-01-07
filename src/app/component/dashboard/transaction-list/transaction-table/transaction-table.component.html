@@ -1,8 +1,9 @@
 <!-- Table Container -->
-<div class="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col" 
-[ngClass]="{'max-h-[calc(75vh-210px)]': isHome && !breakpointService.device.isTablePortrait,'max-h-[65vh]':isHome && breakpointService.device.isTablePortrait,'max-h-[75vh]': !isHome}">
+<div class="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col"
+  [ngClass]="{'max-h-[calc(75vh-210px)]': isHome && !breakpointService.device.isTablePortrait,'max-h-[65vh]':isHome && breakpointService.device.isTablePortrait,'max-h-[75vh]': !isHome}">
   <!-- View Toggle Header -->
-  <div class="flex justify-between items-center p-3 border-b border-gray-200 bg-gray-50" *ngIf="hasSelection() && (breakpointService.device.isTablePortrait || breakpointService.device.isDesktop) && !isHome">
+  <div class="flex justify-between items-center p-3 border-b border-gray-200 bg-gray-50"
+    *ngIf="hasSelection() && (breakpointService.device.isTablePortrait || breakpointService.device.isDesktop) && !isHome">
     <!-- <div class="flex items-center space-x-2">
       <span class="text-sm font-medium text-gray-700">View:</span>
       <button 
@@ -26,25 +27,15 @@
     </div> -->
 
     <!-- Bulk Operations - Only for tablet portrait and desktop, and not on home page -->
-    <div class="flex items-center space-x-2" >
+    <div class="flex items-center space-x-2">
       <span class="text-sm text-gray-600">{{ getSelectedCount() }} selected</span>
-      <button 
-        mat-button 
-        color="primary"
-        (click)="onBulkUpdateCategory()"
-        class="text-xs px-3 py-1 rounded-md transition-colors"
-        matTooltip="Update category for selected transactions"
-      >
+      <button mat-button color="primary" (click)="onBulkUpdateCategory()"
+        class="text-xs px-3 py-1 rounded-md transition-colors" matTooltip="Update category for selected transactions">
         <mat-icon class="text-sm mr-1">category</mat-icon>
         Update Category
       </button>
-      <button 
-        mat-button 
-        color="warn"
-        (click)="onBulkDelete()"
-        class="text-xs px-3 py-1 rounded-md transition-colors"
-        matTooltip="Delete selected transactions"
-      >
+      <button mat-button color="warn" (click)="onBulkDelete()" class="text-xs px-3 py-1 rounded-md transition-colors"
+        matTooltip="Delete selected transactions">
         <mat-icon class="text-sm mr-1">delete</mat-icon>
         Delete
       </button>
@@ -53,26 +44,19 @@
 
   <!-- Desktop/Tablet Table View -->
   <div *ngIf="!isListView" class="hidden sm:flex flex-1 overflow-auto table-container">
-    <table mat-table [dataSource]="dataSource" matSort [@listAnimation]="dataSource.data.length" class="w-full min-w-[800px]">
+    <table mat-table [dataSource]="dataSource" matSort [@listAnimation]="dataSource.data.length"
+      class="w-full min-w-[800px]">
       <!-- Checkbox Column - Only for tablet portrait and desktop, and not on home page -->
-      <ng-container matColumnDef="select" *ngIf="(breakpointService.device.isTablePortrait || breakpointService.device.isDesktop) && !isHome">
+      <ng-container matColumnDef="select"
+        *ngIf="(breakpointService.device.isTablePortrait || breakpointService.device.isDesktop) && !isHome">
         <th mat-header-cell *matHeaderCellDef class="bg-gray-50 px-3 md:px-4 py-4 sticky top-0 z-10 w-[48px]">
-          <mat-checkbox
-            (change)="$event ? toggleAllSelection() : null"
-            [checked]="isAllSelected"
-            [indeterminate]="isIndeterminate"
-            [disabled]="!dataSource.data.length"
-            class="text-gray-700"
-          >
+          <mat-checkbox (change)="$event ? toggleAllSelection() : null" [checked]="isAllSelected"
+            [indeterminate]="isIndeterminate" [disabled]="!dataSource.data.length" class="text-gray-700">
           </mat-checkbox>
         </th>
         <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100 w-[48px]">
-          <mat-checkbox
-            (click)="$event.stopPropagation()"
-            (change)="$event ? toggleSelection(element) : null"
-            [checked]="isSelected(element)"
-            class="text-gray-700"
-          >
+          <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? toggleSelection(element) : null"
+            [checked]="isSelected(element)" class="text-gray-700">
           </mat-checkbox>
         </td>
       </ng-container>
@@ -89,11 +73,11 @@
           <div class="text-xs md:text-sm text-gray-600">
 
             @if(breakpointService.device.isTablePortrait) {
-              {{ element.date.seconds * 1000 | date:'MMM dd' }}
+            {{ element.date.seconds * 1000 | date:'MMM dd' }}
             } @else if(breakpointService.device.isDesktop) {
-              {{ element.date.seconds * 1000 | date:'dd MMM yyyy hh:mm a' }}
+            {{ element.date.seconds * 1000 | date:'dd MMM yyyy hh:mm a' }}
             } @else {
-              {{ element.date.seconds * 1000 | date:'dd MMM yyyy' }}
+            {{ element.date.seconds * 1000 | date:'dd MMM yyyy' }}
             }
           </div>
           <div class="text-xs text-gray-400 hidden md:block" *ngIf="!breakpointService.device.isDesktop">
@@ -104,7 +88,8 @@
 
       <!-- Type Column -->
       <ng-container matColumnDef="Type">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-3 md:px-4 py-4 hidden sm:table-cell sticky top-0 z-10 bg-gray-50">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header
+          class="px-3 md:px-4 py-4 hidden sm:table-cell sticky top-0 z-10 bg-gray-50">
           <div class="flex items-center space-x-1 ">
             <mat-icon class="text-gray-500 text-xs md:text-sm">category</mat-icon>
             <span class="font-semibold text-gray-700 text-xs md:text-sm">Category</span>
@@ -113,9 +98,11 @@
         <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100 hidden sm:table-cell">
           <div class="flex items-center ">
             <div class="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center bg-gray-100">
-              <mat-icon class="text-xs md:text-sm" [style.color]="getCategoryColor(element.categoryId)">{{ getCategoryIcon(element.categoryId) }}</mat-icon>
+              <mat-icon class="text-xs md:text-sm" [style.color]="getCategoryColor(element.categoryId)">{{
+                getCategoryIcon(element.categoryId) }}</mat-icon>
             </div>
-            <span class="inline-flex items-center px-1.5 md:px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            <span
+              class="inline-flex items-center px-1.5 md:px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
               {{getCategoryName(element.categoryId)}}
             </span>
           </div>
@@ -124,20 +111,23 @@
 
       <!-- Payee Column -->
       <ng-container matColumnDef="Payee">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-3 md:px-4 py-4 sticky top-0 z-10 bg-gray-50 min-w-[200px] max-w-[200px]" [ngClass]="{'min-w-[150px] max-w-[150px]': breakpointService.device.isTablePortrait}">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header
+          class="px-3 md:px-4 py-4 sticky top-0 z-10 bg-gray-50 min-w-[200px] max-w-[200px]"
+          [ngClass]="{'min-w-[150px] max-w-[150px]': breakpointService.device.isTablePortrait}">
           <div class="flex items-center space-x-1 md:space-x-2">
             <mat-icon class="text-gray-500 text-xs md:text-sm">description</mat-icon>
             <span class="font-semibold text-gray-700 text-xs md:text-sm">Description</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100 min-w-[200px] max-w-[200px]" [ngClass]="{'min-w-[150px] max-w-[150px]': breakpointService.device.isTablePortrait}">
-          <div *ngIf="!element.isEditing" class="font-medium text-gray-900 text-xs md:text-sm w-full overflow-hidden text-ellipsis whitespace-nowrap" [matTooltip]="element.payee">{{element.payee}}</div>
-          <input
-            *ngIf="element.isEditing"
-            [(ngModel)]="element.payee"
+        <td mat-cell *matCellDef="let element"
+          class="px-3 md:px-4 py-4 border-b border-gray-100 min-w-[200px] max-w-[200px]"
+          [ngClass]="{'min-w-[150px] max-w-[150px]': breakpointService.device.isTablePortrait}">
+          <div *ngIf="!element.isEditing"
+            class="font-medium text-gray-900 text-xs md:text-sm w-full overflow-hidden text-ellipsis whitespace-nowrap"
+            [matTooltip]="element.payee">{{element.payee}}</div>
+          <input *ngIf="element.isEditing" [(ngModel)]="element.payee"
             class="w-full px-2 md:px-3 py-1 md:py-2 border border-blue-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Enter payee name"
-          />
+            placeholder="Enter payee name" />
         </td>
       </ng-container>
 
@@ -150,22 +140,20 @@
           </div>
         </th>
         <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100">
-          <span *ngIf="!element.isEditing" class="font-bold text-xs md:text-sm" [class]="element.type === 'income' ? 'text-green-700' : 'text-red-800'">
+          <span *ngIf="!element.isEditing" class="font-bold text-xs md:text-sm"
+            [class]="element.type === 'income' ? 'text-green-700' : 'text-red-800'">
             {{ (element.type == 'income' ? '+':'-' ) + ' ₹' + element.amount.toLocaleString() }}
           </span>
-          <input
-            *ngIf="element.isEditing"
-            [(ngModel)]="element.amount"
-            type="number"
+          <input *ngIf="element.isEditing" [(ngModel)]="element.amount" type="number"
             class="w-full px-2 md:px-3 py-1 md:py-2 border border-blue-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Enter amount"
-          />
+            placeholder="Enter amount" />
         </td>
       </ng-container>
 
       <!-- Status Column -->
       <ng-container matColumnDef="Status">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header class="bg-gray-50 px-3 md:px-4 py-4 hidden md:table-cell sticky top-0 z-10">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header
+          class="bg-gray-50 px-3 md:px-4 py-4 hidden md:table-cell sticky top-0 z-10">
           <div class="flex items-center space-x-1 md:space-x-2">
             <mat-icon class="text-gray-500 text-xs md:text-sm">swap_horiz</mat-icon>
             <span class="font-semibold text-gray-700 text-xs md:text-sm">Type</span>
@@ -173,16 +161,14 @@
         </th>
         <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100 hidden md:table-cell">
           <span *ngIf="!element.isEditing">
-            <span class="inline-flex items-center px-2 md:px-3 py-1 rounded-full text-xs font-medium" [class]="element.type === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+            <span class="inline-flex items-center px-2 md:px-3 py-1 rounded-full text-xs font-medium"
+              [class]="element.type === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
               <mat-icon class="text-xs mr-1">{{element.type === 'income' ? 'trending_up' : 'trending_down'}}</mat-icon>
               {{element.type}}
             </span>
           </span>
-          <select
-            *ngIf="element.isEditing"
-            [(ngModel)]="element.type"
-            class="w-full px-2 md:px-3 py-1 md:py-2 border border-blue-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
+          <select *ngIf="element.isEditing" [(ngModel)]="element.type"
+            class="w-full px-2 md:px-3 py-1 md:py-2 border border-blue-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
             <option value="income">Income</option>
             <option value="expense">Expense</option>
           </select>
@@ -215,26 +201,26 @@
         <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100 text-center">
           <!-- Normal state -->
           <div *ngIf="!element.isEditing" class="flex justify-center space-x-1 md:space-x-2">
-            <button mat-icon-button class="text-blue-600 hover:bg-blue-50 rounded-full transition-colors" (click)="$event.stopPropagation(); onStartRowEdit(element)" matTooltip="Edit transaction">
+            <button mat-icon-button class="text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+              (click)="$event.stopPropagation(); onStartRowEdit(element)" matTooltip="Edit transaction">
               <mat-icon class="text-sm md:text-base">edit</mat-icon>
             </button>
-            <button mat-icon-button class="text-red-600 hover:bg-red-50 rounded-full transition-colors" (click)="$event.stopPropagation(); onDeleteTransaction(element)" matTooltip="Delete transaction">
+            <button mat-icon-button class="text-red-600 hover:bg-red-50 rounded-full transition-colors"
+              (click)="$event.stopPropagation(); onDeleteTransaction(element)" matTooltip="Delete transaction">
               <mat-icon class="text-sm md:text-base">delete</mat-icon>
             </button>
           </div>
 
           <!-- Editing state -->
           <div *ngIf="element.isEditing" class="flex justify-center space-x-1 md:space-x-2">
-            <button
-              mat-icon-button
-              color="primary"
+            <button mat-icon-button color="primary"
               class="bg-green-100 text-green-600 hover:bg-green-200 rounded-full transition-colors"
-              (click)="$event.stopPropagation(); onSaveRowEdit(element)"
-              matTooltip="Save changes"
-            >
+              (click)="$event.stopPropagation(); onSaveRowEdit(element)" matTooltip="Save changes">
               <mat-icon class="text-sm md:text-base">check</mat-icon>
             </button>
-            <button mat-icon-button color="warn" class="bg-red-100 text-red-600 hover:bg-red-200 rounded-full transition-colors" (click)="$event.stopPropagation(); onCancelRowEdit(element)" matTooltip="Cancel editing">
+            <button mat-icon-button color="warn"
+              class="bg-red-100 text-red-600 hover:bg-red-200 rounded-full transition-colors"
+              (click)="$event.stopPropagation(); onCancelRowEdit(element)" matTooltip="Cancel editing">
               <mat-icon class="text-sm md:text-base">close</mat-icon>
             </button>
           </div>
@@ -242,46 +228,51 @@
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns" class="h-12 md:h-16 sticky top-0 z-10"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-gray-50 transition-colors cursor-pointer" (click)="onRowClick(row)"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+        class="hover:bg-gray-50 transition-colors cursor-pointer" (click)="onRowClick(row)"></tr>
     </table>
   </div>
 
   <!-- Desktop/Tablet List View -->
   <div *ngIf="isListView" class="hidden sm:flex flex-1 overflow-auto list-container">
     <div class="w-full p-4 space-y-3">
-      @for (element of dataSource.data; track element.id) {
-      <div class="list-item bg-white border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer" (click)="onRowClick(element)">
+      @for (element of dataSource.data; track element?.id) {
+      <div
+        class="list-item bg-white border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+        (click)="onRowClick(element)">
         <div class="flex items-center justify-between">
           <!-- Left Section -->
           <div class="flex items-center space-x-4 flex-1">
             <!-- Checkbox - Only for tablet portrait and desktop, and not on home page -->
-            <div *ngIf="(breakpointService.device.isTablePortrait || breakpointService.device.isDesktop) && !isHome" class="flex-shrink-0">
-              <mat-checkbox
-                (click)="$event.stopPropagation()"
-                (change)="$event ? toggleSelection(element) : null"
-                [checked]="isSelected(element)"
-                class="text-gray-700"
-              >
+            <div *ngIf="(breakpointService.device.isTablePortrait || breakpointService.device.isDesktop) && !isHome"
+              class="flex-shrink-0">
+              <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? toggleSelection(element) : null"
+                [checked]="isSelected(element)" class="text-gray-700">
               </mat-checkbox>
             </div>
-            
+
             <!-- Category Icon -->
             <div class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100">
-              <mat-icon class="text-lg" [style.color]="getCategoryColor(element.categoryId)">{{ getCategoryIcon(element.categoryId) }}</mat-icon>
+              <mat-icon class="text-lg" [style.color]="getCategoryColor(element.categoryId)">{{
+                getCategoryIcon(element?.categoryId) }}</mat-icon>
             </div>
-            
+
             <!-- Transaction Details -->
             <div class="flex-1 min-w-0">
               <div class="flex items-center space-x-3">
-                <h4 class="font-medium text-gray-900 text-sm truncate" [matTooltip]="element.payee">{{element.payee}}</h4>
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                  {{getCategoryName(element.categoryId)}}
+                <h4 class="font-medium text-gray-900 text-sm truncate" [matTooltip]="element.payee">{{element.payee}}
+                </h4>
+                <span
+                  class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  {{getCategoryName(element?.categoryId)}}
                 </span>
               </div>
-                             <div class="flex items-center space-x-4 mt-1 text-xs text-gray-500">
-                 <span>{{ getDateDisplay(element.date) }}</span>
-                <span class="inline-flex items-center" [class]="element.type === 'income' ? 'text-green-600' : 'text-red-600'">
-                  <mat-icon class="text-xs mr-1">{{element.type === 'income' ? 'trending_up' : 'trending_down'}}</mat-icon>
+              <div class="flex items-center space-x-4 mt-1 text-xs text-gray-500">
+                <span>{{ getDateDisplay(element.date) }}</span>
+                <span class="inline-flex items-center"
+                  [class]="element.type === 'income' ? 'text-green-600' : 'text-red-600'">
+                  <mat-icon class="text-xs mr-1">{{element.type === 'income' ? 'trending_up' :
+                    'trending_down'}}</mat-icon>
                   {{element.type}}
                 </span>
               </div>
@@ -299,10 +290,12 @@
 
             <!-- Actions -->
             <div class="flex space-x-1">
-              <button mat-icon-button class="text-blue-600 hover:bg-blue-50 rounded-full transition-colors" (click)="$event.stopPropagation(); onStartRowEdit(element)" matTooltip="Edit transaction">
+              <button mat-icon-button class="text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                (click)="$event.stopPropagation(); onStartRowEdit(element)" matTooltip="Edit transaction">
                 <mat-icon class="text-sm">edit</mat-icon>
               </button>
-              <button mat-icon-button class="text-red-600 hover:bg-red-50 rounded-full transition-colors" (click)="$event.stopPropagation(); onDeleteTransaction(element)" matTooltip="Delete transaction">
+              <button mat-icon-button class="text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                (click)="$event.stopPropagation(); onDeleteTransaction(element)" matTooltip="Delete transaction">
                 <mat-icon class="text-sm">delete</mat-icon>
               </button>
             </div>
@@ -359,7 +352,8 @@
         <div class="card-header">
           <div class="left-section">
             <div class="category-icon">
-              <mat-icon [style.color]="getCategoryColor(element.categoryId)">{{ getCategoryIcon(element.categoryId) }}</mat-icon>
+              <mat-icon [style.color]="getCategoryColor(element.categoryId)">{{ getCategoryIcon(element.categoryId)
+                }}</mat-icon>
             </div>
             <div class="transaction-info">
               <div class="payee-name">{{element.payee}}</div>
@@ -383,10 +377,12 @@
 
           <!-- Actions -->
           <div class="action-buttons">
-            <button mat-icon-button class="text-blue-600 hover:bg-blue-50 rounded-full transition-colors" (click)="$event.stopPropagation(); onStartRowEdit(element)" matTooltip="Edit transaction">
+            <button mat-icon-button class="text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+              (click)="$event.stopPropagation(); onStartRowEdit(element)" matTooltip="Edit transaction">
               <mat-icon>edit</mat-icon>
             </button>
-            <button mat-icon-button class="text-red-600 hover:bg-red-50 rounded-full transition-colors" (click)="$event.stopPropagation(); onDeleteTransaction(element)" matTooltip="Delete transaction">
+            <button mat-icon-button class="text-red-600 hover:bg-red-50 rounded-full transition-colors"
+              (click)="$event.stopPropagation(); onDeleteTransaction(element)" matTooltip="Delete transaction">
               <mat-icon>delete</mat-icon>
             </button>
           </div>
@@ -400,33 +396,40 @@
   <div *ngIf="isListView" class="sm:hidden flex-1 overflow-auto max-h-full mobile-list-view">
     <div class="p-3 space-y-2">
       @for (element of dataSource.data; track element.id) {
-      <div class="list-item bg-white border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors cursor-pointer" (click)="onRowClick(element)">
+      <div
+        class="list-item bg-white border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors cursor-pointer"
+        (click)="onRowClick(element)">
         <div class="flex items-center space-x-3">
           <!-- Category Icon -->
           <div class="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 flex-shrink-0">
-            <mat-icon class="text-sm" [style.color]="getCategoryColor(element.categoryId)">{{ getCategoryIcon(element.categoryId) }}</mat-icon>
+            <mat-icon class="text-sm" [style.color]="getCategoryColor(element.categoryId)">{{
+              getCategoryIcon(element.categoryId) }}</mat-icon>
           </div>
-          
+
           <!-- Transaction Details -->
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between">
               <h4 class="font-medium text-gray-900 text-sm truncate" [matTooltip]="element.payee">{{element.payee}}</h4>
-              <div class="font-bold text-sm ml-2" [class]="element.type === 'income' ? 'text-green-700' : 'text-red-800'">
+              <div class="font-bold text-sm ml-2"
+                [class]="element.type === 'income' ? 'text-green-700' : 'text-red-800'">
                 {{ (element.type == 'income' ? '+':'-' ) + ' ₹' + element.amount.toLocaleString() }}
               </div>
             </div>
             <div class="flex items-center justify-between mt-1">
               <div class="flex items-center space-x-2 text-xs text-gray-500">
                 <span>{{ getDateDisplay(element.date) }}</span>
-                <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                <span
+                  class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                   {{getCategoryName(element.categoryId)}}
                 </span>
               </div>
               <div class="flex space-x-1">
-                <button mat-icon-button class="text-blue-600 hover:bg-blue-50 rounded-full transition-colors" (click)="$event.stopPropagation(); onStartRowEdit(element)" matTooltip="Edit transaction">
+                <button mat-icon-button class="text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                  (click)="$event.stopPropagation(); onStartRowEdit(element)" matTooltip="Edit transaction">
                   <mat-icon class="text-sm">edit</mat-icon>
                 </button>
-                <button mat-icon-button class="text-red-600 hover:bg-red-50 rounded-full transition-colors" (click)="$event.stopPropagation(); onDeleteTransaction(element)" matTooltip="Delete transaction">
+                <button mat-icon-button class="text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                  (click)="$event.stopPropagation(); onDeleteTransaction(element)" matTooltip="Delete transaction">
                   <mat-icon class="text-sm">delete</mat-icon>
                 </button>
               </div>
@@ -479,12 +482,12 @@
   <div *ngIf="!dataSource.data?.length" class="text-center py-8 md:py-12 px-4">
     <mat-icon class="text-gray-400 text-4xl md:text-6xl mb-4">receipt_long</mat-icon>
     <h3 class="text-base md:text-lg font-medium text-gray-900 mb-2">No transactions for {{ getCurrentYear() }}</h3>
-    <p class="text-gray-500 mb-4 text-sm md:text-base">No transactions found for the current year. Start by adding your first transaction to track your finances.</p>
-    <button mat-raised-button color="primary" class="flex items-center space-x-2 mx-auto text-sm md:text-base" (click)="onAddTransaction()">
+    <p class="text-gray-500 mb-4 text-sm md:text-base">No transactions found for the current year. Start by adding your
+      first transaction to track your finances.</p>
+    <button mat-raised-button color="primary" class="flex items-center space-x-2 mx-auto text-sm md:text-base"
+      (click)="onAddTransaction()">
       <mat-icon>add</mat-icon>
       <span>Add Transaction</span>
     </button>
   </div>
 </div>
-
- 

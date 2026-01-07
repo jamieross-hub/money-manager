@@ -8,6 +8,7 @@ import { ChatFlowService } from "./handlers/chat-flow.service";
 import { AmountExtractor } from "./utils/amount-extractor.util";
 import { Category } from "../../models";
 import { BreakpointService } from "../breakpoint.service";
+import { TransactionType } from "../../config/enums";
 
 export interface Message {
     sender: 'bot' | 'user' | string;
@@ -115,15 +116,15 @@ export class ChatFacadeService {
     }
 
     // Called by UI when a category is selected from the Angular dropdown component
-    handleCategorySelection(selectedCategory: Category, account: any, amount: number, txType: string) {
+    handleCategorySelection(selectedCategory: Category, account: any, amount: number, txType: TransactionType) {
         if (!selectedCategory) return;
-        if (txType === 'INCOME') {
+        if (txType === TransactionType.INCOME) {
             this.income.addIncome(selectedCategory, account, amount);
             const reply = this.flow.handleCategoryReply(selectedCategory.name);
             this.pushBot({ sender: 'bot', type: 'html', text: reply });
             return;
         }
-        if (txType === 'EXPENSE') {
+        if (txType === TransactionType.EXPENSE) {
             this.expense.addExpense(selectedCategory, amount);
             const reply = this.flow.handleCategoryReply(selectedCategory.name);
             this.pushBot({ sender: 'bot', type: 'html', text: reply });
