@@ -151,3 +151,57 @@
     }
   }
 }
+
+// Chip-based category selection styles
+.category-chip {
+  cursor: pointer;
+  background: #f9fafb;
+  border: none;
+  // border-radius: 999px;
+  height: 3rem;
+  transition: all 0.2s ease;
+  
+  &:hover:not([disabled]) {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  &.selected-chip {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    color: #1e40af;
+    
+    .chip-avatar {
+      background: #3b82f6;
+      color: white;
+    }
+  }
+  
+  &[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.chip-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.chip-label {
+  font-weight: 500;
+  font-size: 14px;
+  color: #374151;
+}
+

@@ -45,13 +45,12 @@ export class ChatCategoryDropdownComponent implements OnChanges, OnDestroy {
     }
   }
 
-  onChange(value: any) {
-    if (!value) return;
-    this.currentCategory = value;
+  onChange(category: Category) {
+    if (!category || this.isDisabled) return;
+    this.currentCategory = category;
     if (this.currentCategory && this.currentAccount) {
       this.onSubmit();
     }
-    // this.selected.emit({ selectedCategory: value, amount: this.amount, txType: this.txType });
   }
 
   // onAccountChange(account: any) {
