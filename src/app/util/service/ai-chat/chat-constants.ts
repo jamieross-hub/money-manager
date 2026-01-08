@@ -13,16 +13,18 @@ export const CHAT_CONSTANTS = {
         MISSING_CATEGORY: 'Please provide a category name.',
         ASK_CATEGORY: (type: string) => `Select ${type} category`,
         HELP_OPTIONS: `
-        <b class="text-lg">Available Commands:</b><br/>
-        <ul class="list-disc p-5">
-            <li> <b class="text-sm">Add Transaction:</b> "Spent 500 on food", "Salary 5000"</li>
-            <li> <b class="text-sm">Check Balance:</b> "Show balance", "Account summary"</li>
-            <li> <b class="text-sm">Recent Activity:</b> "Recent transactions", "History"</li>
-            <li> <b class="text-sm">Reports:</b> "Show report", "Statement"</li>
-            <li> <b class="text-sm">Manage Data:</b> "Clear data", "Reset app"</li>
-        </ul>
-        <br/>
-        <i>Just type naturally! I'll understand.</i>
+        <div class="max-w-full">
+            <b class="text-base">Available Commands:</b><br/><br/>
+            <div class="space-y-2 px-2">
+                <div><b class="text-sm">💰 Add Transaction:</b><br/><span class="text-xs">"Spent 500 on food", "Salary 5000"</span></div>
+                <div><b class="text-sm">💳 Check Balance:</b><br/><span class="text-xs">"Show balance", "Account summary"</span></div>
+                <div><b class="text-sm">📊 Recent Activity:</b><br/><span class="text-xs">"Recent transactions", "History"</span></div>
+                <div><b class="text-sm">📈 Reports:</b><br/><span class="text-xs">"Show report", "Statement"</span></div>
+                <div><b class="text-sm">🗑️ Manage Data:</b><br/><span class="text-xs">"Clear data", "Reset app"</span></div>
+            </div>
+            <br/>
+            <i class="text-xs">Just type naturally! I'll understand.</i>
+        </div>
         `
     },
     INTENTS: {
