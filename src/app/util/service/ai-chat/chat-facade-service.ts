@@ -23,8 +23,7 @@ import { RecentActivityIntentHandler } from './handlers/intent-handler/recent-ac
 import { ClearDataIntentHandler } from './handlers/intent-handler/clear-data-intent-handler.service';
 import { ReportIntentHandler } from './handlers/intent-handler/report-intent-handler.service';
 import { TransactionIntentHandler } from './handlers/intent-handler/transaction-intent-handler.service';
-import { InsightsIntentHandler } from './handlers/intent-handler/insights-intent-handler.service';
-import { DefaultIntentHandler } from './handlers/intent-handler/default-intent-handler.service';
+import { OpenAiIntentHandler } from './handlers/intent-handler/openai-intent-handler.service';
 import { INTENTS } from "./models/intent-config";
 
 // Message type now imported from models/message.types.ts
@@ -52,8 +51,7 @@ export class ChatFacadeService {
         private clearDataHandler: ClearDataIntentHandler,
         private reportIntentHandler: ReportIntentHandler,
         private transactionHandler: TransactionIntentHandler,
-        private insightsHandler: InsightsIntentHandler,
-        private defaultHandler: DefaultIntentHandler
+        private openAiHandler: OpenAiIntentHandler
     ) {
         this.registerHandlers();
         this.initWelcomeMessage();
@@ -73,8 +71,7 @@ export class ChatFacadeService {
         this.registry.register(INTENTS.GET_REPORT, this.reportIntentHandler);
         this.registry.register(INTENTS.ADD_INCOME, this.transactionHandler);
         this.registry.register(INTENTS.ADD_EXPENSE, this.transactionHandler);
-        this.registry.register(INTENTS.GET_INSIGHTS, this.insightsHandler);
-        this.registry.register(INTENTS.AI_REPLY, this.defaultHandler);
+        this.registry.register(INTENTS.AI_REPLY, this.openAiHandler);
     }
 
     private initWelcomeMessage() {
@@ -172,8 +169,8 @@ export class ChatFacadeService {
             const result = handler.handle(context);
             this.processHandlerResult(result);
         } else {
-            // Fallback to default handler
-            const result = this.defaultHandler.handle(context);
+            // Fallback to OpenAI handler
+            const result = this.openAiHandler.handle(context);
             this.processHandlerResult(result);
         }
     }

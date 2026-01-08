@@ -19,7 +19,7 @@ export class OpenaiInteractionComponent implements OnInit {
   isConfiguring: boolean = false;
   isTestingConnection: boolean = false;
   isSaving: boolean = false;
-  
+
   apiKeyForm: FormGroup;
 
   constructor(
@@ -62,7 +62,7 @@ export class OpenaiInteractionComponent implements OnInit {
       try {
         const apiKey = this.apiKeyForm.get('apiKey')?.value;
         const currentUser = await this.userService.getCurrentUser();
-        
+
         if (!currentUser) {
           throw new Error('User not found');
         }
@@ -81,7 +81,7 @@ export class OpenaiInteractionComponent implements OnInit {
 
         // Set in OpenAI service for immediate use
         this.openaiService.setApiKey(apiKey);
-        
+
         this.apiKey = apiKey;
         this.isConnected = true;
         this.isConfiguring = false;
@@ -100,7 +100,7 @@ export class OpenaiInteractionComponent implements OnInit {
   async removeApiKey(): Promise<void> {
     try {
       const currentUser = await this.userService.getCurrentUser();
-      
+
       if (!currentUser) {
         throw new Error('User not found');
       }
@@ -119,7 +119,7 @@ export class OpenaiInteractionComponent implements OnInit {
 
       // Remove from OpenAI service
       this.openaiService.removeApiKey();
-      
+
       this.apiKey = '';
       this.isConnected = false;
       this.apiKeyForm.reset();
@@ -135,7 +135,7 @@ export class OpenaiInteractionComponent implements OnInit {
       this.notificationService.warning('Please connect your OpenAI API key first');
       return;
     }
-    
+
     this.isTestingConnection = true;
     try {
       this.openaiService.sendMessage([
@@ -161,10 +161,10 @@ export class OpenaiInteractionComponent implements OnInit {
       this.isTestingConnection = true;
       try {
         const apiKey = this.apiKeyForm.get('apiKey')?.value;
-        
+
         // Temporarily set the API key for testing
         this.openaiService.setApiKey(apiKey);
-        
+
         // Test the connection
         this.openaiService.sendMessage([
           { role: 'user', content: 'Hello, this is a test message to verify the API key.' }

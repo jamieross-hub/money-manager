@@ -16,7 +16,6 @@ export const INTENTS = {
     RECENT_ACTIVITY_CARD: 'RECENT_ACTIVITY_CARD',
     CLEAR_DATA: 'CLEAR_DATA',
     GET_REPORT: 'GET_REPORT',
-    GET_INSIGHTS: 'GET_INSIGHTS',
     AI_REPLY: 'AI_REPLY',
     HELP: 'HELP'
 }
@@ -61,11 +60,6 @@ export const INTENT_CONFIG: IntentDefinition[] = [
     {
         id: INTENTS.GET_REPORT,
         keywords: CHAT_CONSTANTS.PATTERNS.REPORT_KEYWORDS,
-        priority: 70
-    },
-    {
-        id: INTENTS.GET_INSIGHTS,
-        keywords: CHAT_CONSTANTS.PATTERNS.INSIGHTS_KEYWORDS,
         priority: 70
     },
     {
