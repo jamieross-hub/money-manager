@@ -1,8 +1,5 @@
 import { Injectable } from "@angular/core";
 import { ChatIntentService } from "./chat-intent-service";
-import { IncomeHandlerService } from "./handlers/income-handler.service";
-import { ExpenseHandlerService } from "./handlers/expense-handler.service";
-import { AiReplyHandlerService } from "./handlers/ai-reply-handler.service";
 import { ChatFlowService } from "./chat-flow.service";
 import { AmountExtractor } from "./utils/amount-extractor.util";
 import { Category, Account } from "../../models";
@@ -41,9 +38,6 @@ export class ChatFacadeService {
     constructor(
         private intent: ChatIntentService,
         private flow: ChatFlowService,
-        private income: IncomeHandlerService,
-        private expense: ExpenseHandlerService,
-        private aiReply: AiReplyHandlerService,
         private extract: AmountExtractor,
         private breakpointService: BreakpointService,
         private categoryService: CategoryService,
@@ -111,54 +105,15 @@ export class ChatFacadeService {
         const amount = this.extract.extractAmount(userText);
         const lowerText = userText.toLowerCase();
 
-        // 1. Try Direct Transaction (e.g. "Values" provided in one go)
-        if (this.tryHandleDirectTransaction(detectedIntent, userText, amount, categories, accounts)) {
-            return;
-        }
-
-        // 2. Active Flow (e.g. Answering "How much?")
+        // 1. Active Flow (e.g. Answering "How much?")
         if (this.handleActiveFlow(detectedIntent, amount, lowerText, userText)) {
             return;
         }
 
-        // 3. New Intent / Command
-        this.handleNewIntent(detectedIntent, userText, amount);
+        // 2. New Intent / Command
+        this.handleNewIntent(detectedIntent, userText, amount, accounts);
     }
 
-    private tryHandleDirectTransaction(intent: string, text: string, amount: number, categories: Category[], accounts: Account[]): boolean {
-        if (amount <= 0 || categories.length === 0 || (intent !== CHAT_CONSTANTS.INTENTS.ADD_INCOME && intent !== CHAT_CONSTANTS.INTENTS.ADD_EXPENSE)) {
-            return false;
-        }
-
-        const lowerText = text.toLowerCase();
-
-        // Find Category
-        const foundCategory = categories.find(c => lowerText.includes(c.name.toLowerCase()));
-
-        // Find Account
-        let foundAccount = accounts.find(a => lowerText.includes(a.name.toLowerCase()));
-        if (!foundAccount) {
-            if (lowerText.includes('bank')) foundAccount = accounts.find(a => a.type.toLowerCase().includes(AccountType.BANK));
-            else if (lowerText.includes('cash')) foundAccount = accounts.find(a => a.type.toLowerCase().includes(AccountType.CASH));
-
-            // Fallback to first account if still not found (optional, maybe unsafe? keeping original logic behavior)
-            if (!foundAccount && accounts.length > 0) foundAccount = accounts[0];
-        }
-
-        if (foundCategory && foundAccount) {
-            if (intent === CHAT_CONSTANTS.INTENTS.ADD_INCOME) {
-                this.income.addIncome(foundCategory, foundAccount, amount);
-                this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.INCOME_ADDED(amount, foundAccount.name, foundCategory.name)).build());
-                return true;
-            }
-            if (intent === CHAT_CONSTANTS.INTENTS.ADD_EXPENSE) {
-                this.expense.addExpense(foundCategory, foundAccount, amount);
-                this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.EXPENSE_ADDED(amount, foundAccount.name, foundCategory.name)).build());
-                return true;
-            }
-        }
-        return false;
-    }
 
     private handleActiveFlow(intent: string, amount: number, lowerText: string, rawText: string): boolean {
         // If flow stage is active, or if it's a raw number input which might start a flow
@@ -177,11 +132,6 @@ export class ChatFacadeService {
             return true;
         }
 
-        if (!stage && intent == CHAT_CONSTANTS.INTENTS.ADD_INCOME || intent == CHAT_CONSTANTS.INTENTS.ADD_EXPENSE) {
-            this.dispatchFlowReply(this.flow.startCategoryFlow(intent == CHAT_CONSTANTS.INTENTS.ADD_INCOME ? TransactionType.INCOME : TransactionType.EXPENSE, amount));
-            return true;
-        }
-
         if (stage === 'askType') {
             this.dispatchFlowReply(this.flow.handleTypeReply(lowerText));
             return true;
@@ -196,10 +146,9 @@ export class ChatFacadeService {
         return false;
     }
 
-    private handleNewIntent(intent: string, userText: string, amount: number) {
+    private handleNewIntent(intent: string, userText: string, amount: number, accounts: Account[]) {
         const userId = this.auth.currentUser?.uid;
         const categories = userId ? this.categoryService.getCachedCategories() : [];
-        const accounts: Account[] = []; // Will be populated from observable in processUserText
 
         const context: IntentContext = {
             userText,
@@ -271,9 +220,9 @@ export class ChatFacadeService {
         if (!selectedCategory) return;
 
         if (txType === TransactionType.INCOME) {
-            this.income.addIncome(selectedCategory, account, amount);
+            this.transactionHandler.addIncome(selectedCategory, account, amount);
         } else if (txType === TransactionType.EXPENSE) {
-            this.expense.addExpense(selectedCategory, account, amount);
+            this.transactionHandler.addExpense(selectedCategory, account, amount);
         }
 
         const reply = this.flow.handleCategoryReply(selectedCategory.name, account);
