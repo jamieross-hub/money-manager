@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { CategoryService } from 'src/app/util/service/db/category.service';
-import { CHAT_CONSTANTS } from '../chat-constants';
+import { CHAT_CONSTANTS } from './chat-constants';
 import { TransactionType } from 'src/app/util/config/enums';
 import { Account } from "src/app/util/models";
 

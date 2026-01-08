@@ -2,9 +2,8 @@ import { Injectable } from "@angular/core";
 import { ChatIntentService } from "./chat-intent-service";
 import { IncomeHandlerService } from "./handlers/income-handler.service";
 import { ExpenseHandlerService } from "./handlers/expense-handler.service";
-import { ReportHandlerService } from "./handlers/report-handler.service";
 import { AiReplyHandlerService } from "./handlers/ai-reply-handler.service";
-import { ChatFlowService } from "./handlers/chat-flow.service";
+import { ChatFlowService } from "./chat-flow.service";
 import { AmountExtractor } from "./utils/amount-extractor.util";
 import { Category, Account } from "../../models";
 import { BreakpointService } from "../breakpoint.service";
@@ -16,14 +15,21 @@ import { CHAT_CONSTANTS } from "./chat-constants";
 import { AppState } from "src/app/store/app.state";
 import { Store } from "@ngrx/store";
 import { selectAllAccounts } from "src/app/store/accounts/accounts.selectors";
-import { Subscription } from "rxjs";
+import { Subscription, Observable, isObservable } from "rxjs";
+import { Message } from './models/message.types';
+import { IntentContext } from './models/intent-context.types';
+import { ResponseBuilder } from './response-builder';
+import { IntentHandlerRegistry } from './handlers/intent-handler/registry/intent-handler-registry.service';
+import { HelpIntentHandler } from './handlers/intent-handler/help-intent-handler.service';
+import { AccountSummaryIntentHandler } from './handlers/intent-handler/account-summary-intent-handler.service';
+import { RecentActivityIntentHandler } from './handlers/intent-handler/recent-activity-intent-handler.service';
+import { ClearDataIntentHandler } from './handlers/intent-handler/clear-data-intent-handler.service';
+import { ReportIntentHandler } from './handlers/intent-handler/report-intent-handler.service';
+import { TransactionIntentHandler } from './handlers/intent-handler/transaction-intent-handler.service';
+import { InsightsIntentHandler } from './handlers/intent-handler/insights-intent-handler.service';
+import { DefaultIntentHandler } from './handlers/intent-handler/default-intent-handler.service';
 
-export interface Message {
-    sender: 'bot' | 'user' | string;
-    type: 'html' | 'text' | 'UI-ELEMENT'
-    text?: string | any;
-    data?: any;
-}
+// Message type now imported from models/message.types.ts
 
 @Injectable({ providedIn: 'root' })
 export class ChatFacadeService {
@@ -37,28 +43,52 @@ export class ChatFacadeService {
         private flow: ChatFlowService,
         private income: IncomeHandlerService,
         private expense: ExpenseHandlerService,
-        private report: ReportHandlerService,
         private aiReply: AiReplyHandlerService,
         private extract: AmountExtractor,
         private breakpointService: BreakpointService,
         private categoryService: CategoryService,
         private accountsService: AccountsService,
         private auth: Auth,
-        private store: Store<AppState>
+        private store: Store<AppState>,
+        private registry: IntentHandlerRegistry,
+        private helpHandler: HelpIntentHandler,
+        private accountSummaryHandler: AccountSummaryIntentHandler,
+        private recentActivityHandler: RecentActivityIntentHandler,
+        private clearDataHandler: ClearDataIntentHandler,
+        private reportIntentHandler: ReportIntentHandler,
+        private transactionHandler: TransactionIntentHandler,
+        private insightsHandler: InsightsIntentHandler,
+        private defaultHandler: DefaultIntentHandler
     ) {
+        this.registerHandlers();
         this.initWelcomeMessage();
         this.subscription = this.store.select(selectAllAccounts).subscribe(accounts => {
             this.defualtBankAccount = accounts.filter(account => account.type.toLowerCase().includes(AccountType.BANK))[0]; //Bank account as default
         });
     }
 
+    /**
+     * Register all intent handlers in the registry
+     */
+    private registerHandlers(): void {
+        this.registry.register(CHAT_CONSTANTS.INTENTS.HELP, this.helpHandler);
+        this.registry.register(CHAT_CONSTANTS.INTENTS.ACCOUNT_SUMMARY_CARD, this.accountSummaryHandler);
+        this.registry.register(CHAT_CONSTANTS.INTENTS.RECENT_ACTIVITY_CARD, this.recentActivityHandler);
+        this.registry.register(CHAT_CONSTANTS.INTENTS.CLEAR_DATA, this.clearDataHandler);
+        this.registry.register(CHAT_CONSTANTS.INTENTS.GET_REPORT, this.reportIntentHandler);
+        this.registry.register(CHAT_CONSTANTS.INTENTS.ADD_INCOME, this.transactionHandler);
+        this.registry.register(CHAT_CONSTANTS.INTENTS.ADD_EXPENSE, this.transactionHandler);
+        this.registry.register(CHAT_CONSTANTS.INTENTS.GET_INSIGHTS, this.insightsHandler);
+        this.registry.register(CHAT_CONSTANTS.INTENTS.AI_REPLY, this.defaultHandler);
+    }
+
     private initWelcomeMessage() {
         if (this.breakpointService.device.isMobile || this.breakpointService.device.isLaptop) {
-            this.pushBot({ sender: 'bot', type: 'UI-ELEMENT', text: CHAT_CONSTANTS.INTENTS.ACCOUNT_SUMMARY_CARD });
+            this.pushBot(ResponseBuilder.create().uiElement(CHAT_CONSTANTS.INTENTS.ACCOUNT_SUMMARY_CARD).build());
         } else {
-            this.pushBot({ sender: 'bot', type: 'UI-ELEMENT', text: CHAT_CONSTANTS.INTENTS.ACCOUNT_SUMMARY_CARD });
-            this.pushBot({ sender: 'bot', type: 'UI-ELEMENT', text: CHAT_CONSTANTS.INTENTS.RECENT_ACTIVITY_CARD });
-            this.pushBot({ sender: 'bot', type: 'html', text: CHAT_CONSTANTS.MSGS.GREETING });
+            this.pushBot(ResponseBuilder.create().uiElement(CHAT_CONSTANTS.INTENTS.ACCOUNT_SUMMARY_CARD).build());
+            this.pushBot(ResponseBuilder.create().uiElement(CHAT_CONSTANTS.INTENTS.RECENT_ACTIVITY_CARD).build());
+            this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.GREETING).build());
         }
     }
 
@@ -118,12 +148,12 @@ export class ChatFacadeService {
         if (foundCategory && foundAccount) {
             if (intent === CHAT_CONSTANTS.INTENTS.ADD_INCOME) {
                 this.income.addIncome(foundCategory, foundAccount, amount);
-                this.pushBot({ sender: 'bot', type: 'html', text: CHAT_CONSTANTS.MSGS.INCOME_ADDED(amount, foundAccount.name, foundCategory.name) });
+                this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.INCOME_ADDED(amount, foundAccount.name, foundCategory.name)).build());
                 return true;
             }
             if (intent === CHAT_CONSTANTS.INTENTS.ADD_EXPENSE) {
                 this.expense.addExpense(foundCategory, foundAccount, amount);
-                this.pushBot({ sender: 'bot', type: 'html', text: CHAT_CONSTANTS.MSGS.EXPENSE_ADDED(amount, foundAccount.name, foundCategory.name) });
+                this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.EXPENSE_ADDED(amount, foundAccount.name, foundCategory.name)).build());
                 return true;
             }
         }
@@ -137,7 +167,7 @@ export class ChatFacadeService {
         // Check for exit keywords during active flow
         if (stage && this.flow.isExitKeyword(lowerText)) {
             this.flow.reset();
-            this.pushBot({ sender: 'bot', type: 'html', text: CHAT_CONSTANTS.MSGS.FLOW_CANCELLED });
+            this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.FLOW_CANCELLED).build());
             return true;
         }
 
@@ -167,59 +197,67 @@ export class ChatFacadeService {
     }
 
     private handleNewIntent(intent: string, userText: string, amount: number) {
-        switch (intent) {
-            case CHAT_CONSTANTS.INTENTS.ADD_INCOME:
-            case CHAT_CONSTANTS.INTENTS.ADD_EXPENSE:
-                // Start flow since direct transaction failed (missing cat/account)
-                const reply = !this.flow.getStage() ? this.flow.startAmountFlow(amount) : this.flow.handleTypeReply(intent);
-                this.dispatchFlowReply(reply);
-                break;
+        const userId = this.auth.currentUser?.uid;
+        const categories = userId ? this.categoryService.getCachedCategories() : [];
+        const accounts: Account[] = []; // Will be populated from observable in processUserText
 
-            case CHAT_CONSTANTS.INTENTS.GET_REPORT:
-                this.pushBot(this.report.generateReport());
-                break;
+        const context: IntentContext = {
+            userText,
+            amount,
+            categories,
+            accounts,
+            intent,
+            lowerText: userText.toLowerCase()
+        };
 
-            case CHAT_CONSTANTS.INTENTS.ACCOUNT_SUMMARY_CARD:
-                this.pushBot({ sender: 'bot', type: 'UI-ELEMENT', text: CHAT_CONSTANTS.INTENTS.ACCOUNT_SUMMARY_CARD });
-                break;
+        // Special handling for CLEAR_DATA - need to clear messages array
+        if (intent === CHAT_CONSTANTS.INTENTS.CLEAR_DATA) {
+            this.messages = [];
+        }
 
-            case CHAT_CONSTANTS.INTENTS.RECENT_ACTIVITY_CARD:
-                this.pushBot({ sender: 'bot', type: 'UI-ELEMENT', text: CHAT_CONSTANTS.INTENTS.RECENT_ACTIVITY_CARD });
-                break;
+        // Get handler from registry
+        const handler = this.registry.get(intent);
 
-            case CHAT_CONSTANTS.INTENTS.CLEAR_DATA:
-                this.messages = [];
-                this.pushBot({ sender: 'bot', type: 'html', text: CHAT_CONSTANTS.MSGS.DATA_CLEARED });
-                break;
-
-            case CHAT_CONSTANTS.INTENTS.GET_INSIGHTS:
-                // Future implementation or AI fallback
-                this.handleAiFallback(userText);
-                break;
-
-            case CHAT_CONSTANTS.INTENTS.HELP:
-                this.pushBot({ sender: 'bot', type: 'html', text: CHAT_CONSTANTS.MSGS.HELP_OPTIONS });
-                break;
-
-            default:
-                this.handleAiFallback(userText);
-                break;
+        if (handler) {
+            const result = handler.handle(context);
+            this.processHandlerResult(result);
+        } else {
+            // Fallback to default handler
+            const result = this.defaultHandler.handle(context);
+            this.processHandlerResult(result);
         }
     }
 
-    private handleAiFallback(text: string) {
-        this.aiReply.handleAI(text).subscribe({
-            next: (reply) => this.pushBot({ sender: 'bot', type: 'html', text: reply }),
-            error: () => this.pushBot({ sender: 'bot', type: 'html', text: CHAT_CONSTANTS.MSGS.INTERNAL_ERROR })
-        });
+    /**
+     * Process handler result - can be Message, Observable<Message>, or null
+     */
+    private processHandlerResult(result: Message | Observable<Message> | null): void {
+        if (!result) {
+            return;
+        }
+
+        if (isObservable(result)) {
+            result.subscribe({
+                next: (message) => this.pushBot(message),
+                error: () => this.pushBot(
+                    ResponseBuilder.create()
+                        .html(CHAT_CONSTANTS.MSGS.INTERNAL_ERROR)
+                        .build()
+                )
+            });
+        } else {
+            this.pushBot(result);
+        }
     }
 
     // Helper to standardise flow reply pushing
     private dispatchFlowReply(reply: any) {
         if (typeof reply === 'string') {
-            this.pushBot({ sender: 'bot', type: 'html', text: reply });
+            this.pushBot(ResponseBuilder.create().html(reply).build());
+        } else if (reply.type === 'UI-ELEMENT') {
+            this.pushBot(ResponseBuilder.create().uiElement(reply.text, reply.data).build());
         } else {
-            this.pushBot({ sender: 'bot', type: 'html', ...reply });
+            this.pushBot(ResponseBuilder.create().html(reply).build());
         }
     }
 
@@ -239,6 +277,6 @@ export class ChatFacadeService {
         }
 
         const reply = this.flow.handleCategoryReply(selectedCategory.name, account);
-        this.pushBot({ sender: 'bot', type: 'html', text: reply });
+        this.pushBot(ResponseBuilder.create().html(reply).build());
     }
 }
