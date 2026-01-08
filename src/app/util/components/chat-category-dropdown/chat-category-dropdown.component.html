@@ -14,9 +14,9 @@
           [class.selected-chip]="currentCategory?.id === category.id" class="category-chip">
           <div class="flex items-center gap-2">
             <div class="chip-avatar">
-              {{category.name | slice:0:1}}
+              <mat-icon>{{category?.icon}}</mat-icon>
             </div>
-            <span class="chip-label">{{category.name}}</span>
+            <span class="chip-label">{{category?.name}}</span>
           </div>
         </mat-chip-option>
       </div>
