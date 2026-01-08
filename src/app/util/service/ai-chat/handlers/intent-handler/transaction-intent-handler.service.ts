@@ -15,6 +15,7 @@ import { NotificationService } from '../../../notification.service';
 import { HapticFeedbackService } from '../../../haptic-feedback.service';
 import { Account, Category } from "src/app/util/models";
 import * as TransactionsActions from 'src/app/store/transactions/transactions.actions';
+import { EntityExtractorService } from '../../extractors/entity-extractor.service';
 
 /**
  * Handles ADD_INCOME and ADD_EXPENSE intents
@@ -28,7 +29,8 @@ export class TransactionIntentHandler implements IntentHandler {
         private store: Store<AppState>,
         private auth: Auth,
         private notificationService: NotificationService,
-        private hapticFeedback: HapticFeedbackService
+        private hapticFeedback: HapticFeedbackService,
+        private extractor: EntityExtractorService
     ) { }
 
     /**
@@ -106,27 +108,16 @@ export class TransactionIntentHandler implements IntentHandler {
     private tryHandleDirectTransaction(intent: string, text: string, amount: number, categories: Category[], accounts: Account[]): HandlerResult | null {
         if (amount <= 0 || categories.length === 0) return null;
 
-        const lowerText = text.toLowerCase();
-        const foundCategory = categories.find(c => lowerText.includes(c.name.toLowerCase()));
-        if (!foundCategory) return null;
+        const { category, account } = this.extractor.extractAll(text, categories, accounts);
 
-        // Find Account with logic: text-match > 'bank' keyword > 'cash' keyword > first fallback
-        let foundAccount = accounts.find(a => lowerText.includes(a.name.toLowerCase()));
-        if (!foundAccount) {
-            if (lowerText.includes('bank')) foundAccount = accounts.find(a => a.type.toLowerCase().includes(AccountType.BANK));
-            else if (lowerText.includes('cash')) foundAccount = accounts.find(a => a.type.toLowerCase().includes(AccountType.CASH));
-
-            if (!foundAccount && accounts.length > 0) foundAccount = accounts[0];
-        }
-
-        if (!foundAccount) return null;
+        if (!category || !account) return null;
 
         const isIncome = intent === CHAT_CONSTANTS.INTENTS.ADD_INCOME;
         const msgFunc = isIncome ? CHAT_CONSTANTS.MSGS.INCOME_ADDED : CHAT_CONSTANTS.MSGS.EXPENSE_ADDED;
 
-        return from(isIncome ? this.addIncome(foundCategory, foundAccount, amount) : this.addExpense(foundCategory, foundAccount, amount)).pipe(
+        return from(isIncome ? this.addIncome(category, account, amount) : this.addExpense(category, account, amount)).pipe(
             map(() => ResponseBuilder.create()
-                .html(msgFunc(amount, foundAccount!.name, foundCategory.name))
+                .html(msgFunc(amount, account.name, category.name))
                 .build())
         );
     }

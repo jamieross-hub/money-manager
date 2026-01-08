@@ -1,54 +1,62 @@
 import { Injectable } from "@angular/core";
 import { CHAT_CONSTANTS } from "./chat-constants";
-
+import { INTENT_CONFIG, IntentDefinition } from "./models/intent-config";
 
 @Injectable({ providedIn: 'root' })
 export class ChatIntentService {
+
+  /**
+   * Detects user intent based on text configuration.
+   * Prioritizes intents based on the defined priority in INTENT_CONFIG.
+   */
   detectIntent(text: string): string {
-    const t = text.toLowerCase();
-    const C = CHAT_CONSTANTS;
+    const textLower = text.toLowerCase();
 
-    const hasAmount = C.PATTERNS.AMOUNT.test(t);
-    const hasAction = C.PATTERNS.ACTIONS.some(a => t.includes(a));
-    const isIncome = C.PATTERNS.INCOME_KEYWORDS.some(w => t.includes(w));
-    const isExpense = C.PATTERNS.EXPENSE_KEYWORDS.some(w => t.includes(w));
+    // Check for amount if an intent requires it
+    const hasAmount = CHAT_CONSTANTS.PATTERNS.AMOUNT.test(textLower);
 
-    // Direct Transactions
-    if (hasAmount && (hasAction || isIncome || isExpense)) {
-      if (isIncome) return C.INTENTS.ADD_INCOME;
-      if (isExpense) return C.INTENTS.ADD_EXPENSE;
+    // Sort config by priority (highest first)
+    const sortedConfig = [...INTENT_CONFIG].sort((a: IntentDefinition, b: IntentDefinition) => b.priority - a.priority);
+
+    for (const config of sortedConfig) {
+      if (this.matches(textLower, config, hasAmount)) {
+        return config.id;
+      }
     }
 
-    // Balance Check
-    if (C.PATTERNS.BALANCE_KEYWORDS.some(w => t.includes(w))) {
-      return C.INTENTS.CHECK_BALANCE;
+    // Special case for complex account summary match if not caught by keywords
+    if (textLower.includes('accounts') && ['summary', 'balances', 'overview', 'card'].some(k => textLower.includes(k))) {
+      return CHAT_CONSTANTS.INTENTS.ACCOUNT_SUMMARY_CARD;
     }
 
-    // Account Summary
-    const accountsMatch = C.PATTERNS.ACCOUNT_SUMMARY_KEYWORDS.some(k => t.includes(k)) ||
-      (t.includes('accounts') && ['summary', 'balances', 'overview', 'card'].some(k => t.includes(k)));
-    if (accountsMatch) return C.INTENTS.ACCOUNT_SUMMARY_CARD;
+    // Special case for complex recent activity match if not caught by keywords
+    if (textLower.includes('activity') && ['log', 'list', 'history'].some(k => textLower.includes(k))) {
+      return CHAT_CONSTANTS.INTENTS.RECENT_ACTIVITY_CARD;
+    }
 
-    // Recent Activity
-    const activityMatch = C.PATTERNS.RECENT_ACTIVITY_KEYWORDS.some(k => t.includes(k)) ||
-      (t.includes('activity') && ['log', 'list', 'history'].some(k => t.includes(k)));
-    if (activityMatch) return C.INTENTS.RECENT_ACTIVITY_CARD;
+    return CHAT_CONSTANTS.INTENTS.AI_REPLY;
+  }
 
-    // Clear Data
-    const clearMatch = C.PATTERNS.CLEAR_DATA_KEYWORDS.some(k => t.includes(k)) ||
-      (t.includes('delete') && t.includes('data'));
-    if (clearMatch) return C.INTENTS.CLEAR_DATA;
+  /**
+   * Checks if the text matches an intent definition
+   */
+  private matches(text: string, config: IntentDefinition, hasAmount: boolean): boolean {
+    // If intent requires an amount and we don't have one, it's not a match
+    if (config.requiresAmount && !hasAmount) {
+      return false;
+    }
 
-    // Reports
-    if (C.PATTERNS.REPORT_KEYWORDS.some(w => t.includes(w))) return C.INTENTS.GET_REPORT;
+    // Priority 1: Regex match
+    if (config.regex && config.regex.test(text)) {
+      return true;
+    }
 
-    // Insights
-    if (C.PATTERNS.INSIGHTS_KEYWORDS.some(w => t.includes(w))) return C.INTENTS.GET_INSIGHTS;
+    // Priority 2: Keyword match
+    if (config.keywords && config.keywords.some(k => text.includes(k.toLowerCase()))) {
+      return true;
+    }
 
-    // Help
-    if (C.PATTERNS.HELP_KEYWORDS.some(w => t.includes(w))) return C.INTENTS.HELP;
-
-    return C.INTENTS.AI_REPLY;
+    return false;
   }
 }
 

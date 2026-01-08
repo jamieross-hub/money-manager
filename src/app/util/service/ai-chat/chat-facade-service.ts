@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { ChatIntentService } from "./chat-intent-service";
 import { ChatFlowService } from "./chat-flow.service";
-import { AmountExtractor } from "./utils/amount-extractor.util";
+import { EntityExtractorService } from "./extractors/entity-extractor.service";
 import { Category, Account } from "../../models";
 import { BreakpointService } from "../breakpoint.service";
 import { AccountType, TransactionType } from "../../config/enums";
@@ -38,7 +38,7 @@ export class ChatFacadeService {
     constructor(
         private intent: ChatIntentService,
         private flow: ChatFlowService,
-        private extract: AmountExtractor,
+        private extractor: EntityExtractorService,
         private breakpointService: BreakpointService,
         private categoryService: CategoryService,
         private accountsService: AccountsService,
@@ -102,7 +102,7 @@ export class ChatFacadeService {
 
     private processUserText(userText: string, categories: Category[], accounts: Account[]) {
         const detectedIntent = this.intent.detectIntent(userText);
-        const amount = this.extract.extractAmount(userText);
+        const amount = this.extractor.extractAmount(userText);
         const lowerText = userText.toLowerCase();
 
         // 1. Active Flow (e.g. Answering "How much?")
