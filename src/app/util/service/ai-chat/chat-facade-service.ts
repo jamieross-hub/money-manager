@@ -25,6 +25,7 @@ import { ReportIntentHandler } from './handlers/intent-handler/report-intent-han
 import { TransactionIntentHandler } from './handlers/intent-handler/transaction-intent-handler.service';
 import { InsightsIntentHandler } from './handlers/intent-handler/insights-intent-handler.service';
 import { DefaultIntentHandler } from './handlers/intent-handler/default-intent-handler.service';
+import { INTENTS } from "./models/intent-config";
 
 // Message type now imported from models/message.types.ts
 
@@ -65,23 +66,23 @@ export class ChatFacadeService {
      * Register all intent handlers in the registry
      */
     private registerHandlers(): void {
-        this.registry.register(CHAT_CONSTANTS.INTENTS.HELP, this.helpHandler);
-        this.registry.register(CHAT_CONSTANTS.INTENTS.ACCOUNT_SUMMARY_CARD, this.accountSummaryHandler);
-        this.registry.register(CHAT_CONSTANTS.INTENTS.RECENT_ACTIVITY_CARD, this.recentActivityHandler);
-        this.registry.register(CHAT_CONSTANTS.INTENTS.CLEAR_DATA, this.clearDataHandler);
-        this.registry.register(CHAT_CONSTANTS.INTENTS.GET_REPORT, this.reportIntentHandler);
-        this.registry.register(CHAT_CONSTANTS.INTENTS.ADD_INCOME, this.transactionHandler);
-        this.registry.register(CHAT_CONSTANTS.INTENTS.ADD_EXPENSE, this.transactionHandler);
-        this.registry.register(CHAT_CONSTANTS.INTENTS.GET_INSIGHTS, this.insightsHandler);
-        this.registry.register(CHAT_CONSTANTS.INTENTS.AI_REPLY, this.defaultHandler);
+        this.registry.register(INTENTS.HELP, this.helpHandler);
+        this.registry.register(INTENTS.ACCOUNT_SUMMARY_CARD, this.accountSummaryHandler);
+        this.registry.register(INTENTS.RECENT_ACTIVITY_CARD, this.recentActivityHandler);
+        this.registry.register(INTENTS.CLEAR_DATA, this.clearDataHandler);
+        this.registry.register(INTENTS.GET_REPORT, this.reportIntentHandler);
+        this.registry.register(INTENTS.ADD_INCOME, this.transactionHandler);
+        this.registry.register(INTENTS.ADD_EXPENSE, this.transactionHandler);
+        this.registry.register(INTENTS.GET_INSIGHTS, this.insightsHandler);
+        this.registry.register(INTENTS.AI_REPLY, this.defaultHandler);
     }
 
     private initWelcomeMessage() {
         if (this.breakpointService.device.isMobile || this.breakpointService.device.isLaptop) {
-            this.pushBot(ResponseBuilder.create().uiElement(CHAT_CONSTANTS.INTENTS.ACCOUNT_SUMMARY_CARD).build());
+            this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build());
         } else {
-            this.pushBot(ResponseBuilder.create().uiElement(CHAT_CONSTANTS.INTENTS.ACCOUNT_SUMMARY_CARD).build());
-            this.pushBot(ResponseBuilder.create().uiElement(CHAT_CONSTANTS.INTENTS.RECENT_ACTIVITY_CARD).build());
+            this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build());
+            this.pushBot(ResponseBuilder.create().uiElement(INTENTS.RECENT_ACTIVITY_CARD).build());
             this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.GREETING).build());
         }
     }
@@ -127,7 +128,7 @@ export class ChatFacadeService {
         }
 
         // Implicit start of flow if user just sends a number and no other intent detected (default to AI_REPLY but has amount)
-        if (!stage && intent === CHAT_CONSTANTS.INTENTS.AI_REPLY && amount > 0) {
+        if (!stage && intent === INTENTS.AI_REPLY && amount > 0) {
             this.dispatchFlowReply(this.flow.startAmountFlow(amount));
             return true;
         }
@@ -160,7 +161,7 @@ export class ChatFacadeService {
         };
 
         // Special handling for CLEAR_DATA - need to clear messages array
-        if (intent === CHAT_CONSTANTS.INTENTS.CLEAR_DATA) {
+        if (intent === INTENTS.CLEAR_DATA) {
             this.messages = [];
         }
 

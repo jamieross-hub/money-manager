@@ -30,18 +30,6 @@ export const CHAT_CONSTANTS = {
         </div>
         `
     },
-    INTENTS: {
-        ADD_INCOME: 'ADD_INCOME',
-        ADD_EXPENSE: 'ADD_EXPENSE',
-        CHECK_BALANCE: 'CHECK_BALANCE',
-        ACCOUNT_SUMMARY_CARD: 'ACCOUNT_SUMMARY_CARD',
-        RECENT_ACTIVITY_CARD: 'RECENT_ACTIVITY_CARD',
-        CLEAR_DATA: 'CLEAR_DATA',
-        GET_REPORT: 'GET_REPORT',
-        GET_INSIGHTS: 'GET_INSIGHTS',
-        AI_REPLY: 'AI_REPLY',
-        HELP: 'HELP'
-    },
     PATTERNS: {
         AMOUNT: /₹?\$?\d+[.,]?\d*/,
         ACTIONS: ['add', 'paid', 'received', 'got', 'spent', 'debit', 'credit', 'purchase', 'buy', 'transfer', 'sent', 'deposit', 'withdraw', 'income:', 'expense:'],

@@ -16,6 +16,7 @@ import { HapticFeedbackService } from '../../../haptic-feedback.service';
 import { Account, Category } from "src/app/util/models";
 import * as TransactionsActions from 'src/app/store/transactions/transactions.actions';
 import { EntityExtractorService } from '../../extractors/entity-extractor.service';
+import { INTENTS } from '../../models/intent-config';
 
 /**
  * Handles ADD_INCOME and ADD_EXPENSE intents
@@ -97,7 +98,7 @@ export class TransactionIntentHandler implements IntentHandler {
 
         // 2. If not a direct transaction, start or continue flow
         if (!this.flowService.getStage()) {
-            const type = intent === CHAT_CONSTANTS.INTENTS.ADD_INCOME ? TransactionType.INCOME : TransactionType.EXPENSE;
+            const type = intent === INTENTS.ADD_INCOME ? TransactionType.INCOME : TransactionType.EXPENSE;
             const reply = this.flowService.startCategoryFlow(type, amount);
             return this.convertFlowReply(reply);
         }
@@ -112,7 +113,7 @@ export class TransactionIntentHandler implements IntentHandler {
 
         if (!category || !account) return null;
 
-        const isIncome = intent === CHAT_CONSTANTS.INTENTS.ADD_INCOME;
+        const isIncome = intent === INTENTS.ADD_INCOME;
         const msgFunc = isIncome ? CHAT_CONSTANTS.MSGS.INCOME_ADDED : CHAT_CONSTANTS.MSGS.EXPENSE_ADDED;
 
         return from(isIncome ? this.addIncome(category, account, amount) : this.addExpense(category, account, amount)).pipe(

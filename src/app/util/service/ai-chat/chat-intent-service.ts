@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { CHAT_CONSTANTS } from "./chat-constants";
-import { INTENT_CONFIG, IntentDefinition } from "./models/intent-config";
+import { INTENT_CONFIG, IntentDefinition, INTENTS } from "./models/intent-config";
 
 @Injectable({ providedIn: 'root' })
 export class ChatIntentService {
@@ -26,15 +26,15 @@ export class ChatIntentService {
 
     // Special case for complex account summary match if not caught by keywords
     if (textLower.includes('accounts') && ['summary', 'balances', 'overview', 'card'].some(k => textLower.includes(k))) {
-      return CHAT_CONSTANTS.INTENTS.ACCOUNT_SUMMARY_CARD;
+      return INTENTS.ACCOUNT_SUMMARY_CARD;
     }
 
     // Special case for complex recent activity match if not caught by keywords
     if (textLower.includes('activity') && ['log', 'list', 'history'].some(k => textLower.includes(k))) {
-      return CHAT_CONSTANTS.INTENTS.RECENT_ACTIVITY_CARD;
+      return INTENTS.RECENT_ACTIVITY_CARD;
     }
 
-    return CHAT_CONSTANTS.INTENTS.AI_REPLY;
+    return INTENTS.AI_REPLY;
   }
 
   /**
