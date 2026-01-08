@@ -134,6 +134,13 @@ export class ChatFacadeService {
         // If flow stage is active, or if it's a raw number input which might start a flow
         const stage = this.flow.getStage();
 
+        // Check for exit keywords during active flow
+        if (stage && this.flow.isExitKeyword(lowerText)) {
+            this.flow.reset();
+            this.pushBot({ sender: 'bot', type: 'html', text: CHAT_CONSTANTS.MSGS.FLOW_CANCELLED });
+            return true;
+        }
+
         // Implicit start of flow if user just sends a number and no other intent detected (default to AI_REPLY but has amount)
         if (!stage && intent === CHAT_CONSTANTS.INTENTS.AI_REPLY && amount > 0) {
             this.dispatchFlowReply(this.flow.startAmountFlow(amount));

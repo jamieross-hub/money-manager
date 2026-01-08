@@ -10,6 +10,8 @@ export class ChatFlowService {
     private amount: number | null = null;
     private type: TransactionType | null = null;
 
+
+
     constructor() { }
 
     startAmountFlow(amount: number) {
@@ -26,6 +28,12 @@ export class ChatFlowService {
 
     handleTypeReply(userText: string) {
         const text = userText.toLowerCase();
+
+        // Check for exit keywords
+        if (this.isExitKeyword(text)) {
+            this.reset();
+            return CHAT_CONSTANTS.MSGS.FLOW_CANCELLED;
+        }
 
         if (text.includes('income')) {
             this.type = TransactionType.INCOME;
@@ -79,7 +87,12 @@ export class ChatFlowService {
     getAmount() { return this.amount; }
     getType() { return this.type; }
 
-    private reset() {
+    isExitKeyword(text: string): boolean {
+        const lowerText = text.toLowerCase().trim();
+        return CHAT_CONSTANTS.EXIT_KEYWORDS.some(keyword => lowerText === keyword || lowerText.includes(keyword));
+    }
+
+    reset() {
         this.stage = null;
         this.amount = null;
         this.type = null;

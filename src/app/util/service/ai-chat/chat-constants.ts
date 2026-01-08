@@ -7,11 +7,13 @@ export const CHAT_CONSTANTS = {
         INCOME_ADDED: (amount: number, account: string, category: string) => `Income of <b>₹${amount.toLocaleString()} credited to ${account} for ${category}</b>.`,
         EXPENSE_ADDED: (amount: number, account: string, category: string) => `Spent <b>₹${amount.toLocaleString()}  on ${category} from ${account}</b>.`,
         ASK_TYPE: (amount: number) => `Got ₹${amount.toLocaleString()}. Is this income or expense?`,
+        ASK_CATEGORY: (type: string) => `Select ${type} category`,
         ASK_CATEGORY_INCOME: 'Select income category',
         ASK_CATEGORY_EXPENSE: 'Select expense category',
         INVALID_TYPE: 'Please reply with "income" or "expense".',
         MISSING_CATEGORY: 'Please provide a category name.',
-        ASK_CATEGORY: (type: string) => `Select ${type} category`,
+        FLOW_CANCELLED: 'Okay, cancelled. How else can I help you?',
+
         HELP_OPTIONS: `
         <div class="max-w-full">
             <b class="text-base">Available Commands:</b><br/><br/>
@@ -23,7 +25,8 @@ export const CHAT_CONSTANTS = {
                 <div><b class="text-sm">🗑️ Manage Data:</b><br/><span class="text-xs">"Clear data", "Reset app"</span></div>
             </div>
             <br/>
-            <i class="text-xs">Just type naturally! I'll understand.</i>
+            <i class="text-xs">Just type naturally! I'll understand.</i><br/>
+            <i class="text-xs">💡 Type "cancel" or "exit" anytime to stop.</i>
         </div>
         `
     },
@@ -78,5 +81,6 @@ export const CHAT_CONSTANTS = {
         'Show report',
         'Clear data',
         'Help'
-    ]
+    ],
+    EXIT_KEYWORDS: ['cancel', 'exit', 'quit', 'stop', 'nevermind', 'never mind', 'back', 'abort']
 };
