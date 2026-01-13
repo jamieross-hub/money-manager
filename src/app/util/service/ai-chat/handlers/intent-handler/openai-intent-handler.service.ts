@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
-import { environment } from '@env/environment';
+import { Observable, of, throwError, from } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import { IntentHandler } from './base-intent-handler';
 import { IntentContext, HandlerResult } from '../../models/intent-context.types';
 import { ResponseBuilder } from '../../response-builder';
 import { CHAT_CONSTANTS } from '../../chat-constants';
+import { UserService } from 'src/app/util/service/db/user.service';
 
 export interface OpenAIMessage {
     role: 'user' | 'assistant' | 'system';
@@ -30,19 +30,25 @@ export interface OpenAIResponse {
 @Injectable({ providedIn: 'root' })
 export class OpenAiIntentHandler implements IntentHandler {
     private readonly apiUrl = 'https://api.openai.com/v1/chat/completions';
-    private readonly apiKey: string = environment.openAiApiKey || '';
 
-    constructor(private http: HttpClient) { }
+    constructor(
+        private http: HttpClient,
+        private userService: UserService
+    ) { }
 
     handle(context: IntentContext): HandlerResult {
-        if (!this.apiKey) {
-            console.error('OpenAI API key not set');
-            return of(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.INTERNAL_ERROR).build());
-        }
+        return from(this.userService.getCurrentUser()).pipe(
+            switchMap(user => {
+                const apiKey = user?.preferences?.openaiApiKey;
 
-        const systemMessage: OpenAIMessage = {
-            role: 'system',
-            content: `You are Money Manager AI, an advanced personal finance assistant.
+                if (!apiKey) {
+                    console.error('OpenAI API key not set in user preferences');
+                    return of(ResponseBuilder.create().html('Please connect your OpenAI API key in the OpenAI Integration to use this OpenAI feature.').build());
+                }
+
+                const systemMessage: OpenAIMessage = {
+                    role: 'system',
+                    content: `You are Money Manager AI, an advanced personal finance assistant.
 
 PROFILE:
 - Tone: Professional, empathetic, and motivating.
@@ -62,23 +68,29 @@ IMPORTANT RULES:
 - Use <b>bold</b> for key terms.
 - Keep responses mobile-friendly (short paragraphs).
 - Disclaimer: For complex/legal financial advice, suggest consulting a professional.`
-        };
+                };
 
-        const userMessage: OpenAIMessage = {
-            role: 'user',
-            content: context.userText
-        };
+                const userMessage: OpenAIMessage = {
+                    role: 'user',
+                    content: context.userText
+                };
 
-        return this.sendMessage([systemMessage, userMessage]).pipe(
-            map(reply => ResponseBuilder.create().html(reply).build()),
+                return this.sendMessage([systemMessage, userMessage], apiKey).pipe(
+                    map(reply => ResponseBuilder.create().html(reply).build()),
+                    catchError(error => {
+                        console.error('OpenAiIntentHandler Error:', error);
+                        return of(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.INTERNAL_ERROR).build());
+                    })
+                );
+            }),
             catchError(error => {
-                console.error('OpenAiIntentHandler Error:', error);
+                console.error('Error fetching user for OpenAI key:', error);
                 return of(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.INTERNAL_ERROR).build());
             })
         );
     }
 
-    private sendMessage(messages: OpenAIMessage[], model: string = 'gpt-3.5-turbo'): Observable<string> {
+    private sendMessage(messages: OpenAIMessage[], apiKey: string, model: string = 'gpt-3.5-turbo'): Observable<string> {
         const request = {
             model,
             messages,
@@ -88,7 +100,7 @@ IMPORTANT RULES:
 
         const headers = new HttpHeaders({
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.apiKey}`
+            'Authorization': `Bearer ${apiKey}`
         });
 
         return this.http.post<OpenAIResponse>(this.apiUrl, request, { headers }).pipe(
