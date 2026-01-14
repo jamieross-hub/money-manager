@@ -112,4 +112,58 @@ IMPORTANT RULES:
             })
         );
     }
+
+
+    /**
+     * Transcribe audio to text using OpenAI Whisper API
+     */
+    transcribeAudio(audioBlob: Blob): Observable<string> {
+        return from(this.userService.getCurrentUser()).pipe(
+            switchMap(user => {
+                const apiKey = user?.preferences?.openaiApiKey;
+                if (!apiKey) return throwError(() => new Error('OpenAI API Key not found'));
+
+                const formData = new FormData();
+                formData.append('file', audioBlob, 'recording.webm');
+                formData.append('model', 'whisper-1');
+
+                const headers = new HttpHeaders({
+                    'Authorization': `Bearer ${apiKey}`
+                });
+
+                return this.http.post<any>('https://api.openai.com/v1/audio/transcriptions', formData, { headers }).pipe(
+                    map(response => response.text)
+                );
+            })
+        );
+    }
+
+
+    /**
+     * Generate speech from text using OpenAI TTS API
+     */
+    generateSpeech(text: string): Observable<Blob> {
+        return from(this.userService.getCurrentUser()).pipe(
+            switchMap(user => {
+                const apiKey = user?.preferences?.openaiApiKey;
+                if (!apiKey) return throwError(() => new Error('OpenAI API Key not found'));
+
+                const request = {
+                    model: 'tts-1',
+                    input: text,
+                    voice: 'alloy'
+                };
+
+                const headers = new HttpHeaders({
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                });
+
+                return this.http.post('https://api.openai.com/v1/audio/speech', request, {
+                    headers: headers,
+                    responseType: 'blob'
+                });
+            })
+        );
+    }
 }

@@ -60,7 +60,48 @@
 
     <!-- Input Container -->
     <div class="w-full max-w-full relative">
-      <div
+
+      <!-- Voice Interaction Overlay -->
+      <div *ngIf="isRecording || voiceBlob"
+        class="flex items-center justify-between bg-primary-50 border border-primary-200 rounded-full px-4 py-2 shadow-md animate-fade-in">
+
+        <!-- Recording State -->
+        <div *ngIf="isRecording" class="flex items-center gap-3 w-full">
+          <div class="blob red"></div> <!-- Pulsating red dot -->
+          <span class="text-primary-700 font-medium">Recording...</span>
+          <button (click)="stopRecording()"
+            class="ml-auto p-2 bg-red-100 text-red-500 rounded-full hover:bg-red-200 transition">
+            <mat-icon>stop</mat-icon>
+          </button>
+        </div>
+
+        <!-- Review State -->
+        <div *ngIf="!isRecording && voiceBlob && !isProcessingAudio" class="flex items-center justify-between w-full">
+          <span class="text-primary-700 font-medium flex-1">Recording finished</span>
+
+          <div class="flex items-center gap-2">
+            <button (click)="discardVoice()" matTooltip="Discharge"
+              class="p-2 border border-gray-300 text-gray-500 rounded-full hover:bg-gray-200 transition bg-white">
+              <mat-icon>close</mat-icon>
+            </button>
+            <button (click)="confirmVoice()" matTooltip="Okay"
+              class="p-2 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition shadow-sm">
+              <mat-icon>check</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Processing State -->
+        <div *ngIf="isProcessingAudio" class="flex items-center gap-3 w-full justify-center">
+          <span class="typing-dots"><span></span><span></span><span></span></span>
+          <span class="text-primary-600 font-medium">Transcribing...</span>
+        </div>
+
+      </div>
+
+
+      <!-- Standard Input Bar (Hidden during voice interaction) -->
+      <div *ngIf="!isRecording && !voiceBlob"
         class="flex items-center bg-gray-50 border border-gray-200 rounded-full px-2 py-1 focus-within:ring-2 focus-within:ring-primary-100 focus-within:border-primary-300 transition shadow-sm">
 
         <!-- Attachment Button -->
@@ -85,7 +126,7 @@
         </div>
         <!-- Mic Button -->
         <button *ngIf="!breakpointService.device.isMobile" (click)="onMicClick()"
-          class="p-2 text-gray-400 hover:text-primary-500 transition rounded-full hover:bg-gray-100 mr-1 relative top-[6px]">
+          class="p-2 text-gray-400 hover:text-primary-500 transition rounded-full  mr-1 relative top-[6px]">
           <mat-icon class="material-icons-outlined text-[20px] leading-[20px] w-[20px] h-[20px]">mic</mat-icon>
         </button>
 
@@ -101,17 +142,17 @@
     <!-- Quick Actions -->
     <div class="flex gap-2 px-4 overflow-x-auto no-scrollbar justify-center mb-2"
       *ngIf="!breakpointService.device.isMobile">
-      <mat-chip (click)="setQuickAction('Expense', chatInput)"
+      <mat-chip (click)="setQuickAction('Expense', ChatInput)"
         class="quick-action-chip bg-red-50   py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-red-100 transition whitespace-nowrap">
         <mat-icon matChipAvatar>remove</mat-icon>
         Expense
       </mat-chip>
-      <mat-chip (click)="setQuickAction('Income', chatInput)"
+      <mat-chip (click)="setQuickAction('Income', ChatInput)"
         class="quick-action-chip  border border-green-100 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-green-100 transition whitespace-nowrap">
         <mat-icon matChipAvatar>add</mat-icon>
         Income
       </mat-chip>
-      <mat-chip (click)="setQuickAction('Transfer', chatInput)"
+      <mat-chip (click)="setQuickAction('Transfer', ChatInput)"
         class="quick-action-chip  border border-blue-100  py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-blue-100 transition whitespace-nowrap">
         <mat-icon matChipAvatar>swap_horiz</mat-icon>
         Transfer
