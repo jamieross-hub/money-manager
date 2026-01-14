@@ -24,6 +24,15 @@ export interface IntentContext {
 
     /** Lowercase version of user text for easier matching */
     lowerText: string;
+
+    /** Optional structured data extracted by AI */
+    extractedInfo?: {
+        categoryName?: string;
+        accountName?: string;
+        date?: string;
+        notes?: string;
+        [key: string]: any;
+    };
 }
 
 /**

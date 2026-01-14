@@ -24,11 +24,19 @@ export interface UIElementMessage {
     data?: UIElementData;
 }
 
+export interface CommandMessage {
+    sender: 'bot';
+    type: 'command';
+    text: string; // JSON string of the command
+    command: string; // The intent (e.g., ADD_INCOME)
+    data?: any; // Parsed command data
+}
+
 /**
  * Union type of all possible message types.
  * TypeScript will enforce correct properties based on the 'type' discriminator.
  */
-export type Message = HtmlMessage | TextMessage | UIElementMessage;
+export type Message = HtmlMessage | TextMessage | UIElementMessage | CommandMessage;
 
 /**
  * Data for UI elements
@@ -55,4 +63,8 @@ export function isTextMessage(msg: Message): msg is TextMessage {
 
 export function isUIElementMessage(msg: Message): msg is UIElementMessage {
     return msg.type === 'UI-ELEMENT';
+}
+
+export function isCommandMessage(msg: Message): msg is CommandMessage {
+    return msg.type === 'command';
 }

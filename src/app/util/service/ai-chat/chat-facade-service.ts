@@ -144,7 +144,7 @@ export class ChatFacadeService {
         return false;
     }
 
-    private handleNewIntent(intent: string, userText: string, amount: number, accounts: Account[]) {
+    private handleNewIntent(intent: string, userText: string, amount: number, accounts: Account[], extractedInfo?: any) {
         const userId = this.auth.currentUser?.uid;
         const categories = userId ? this.categoryService.getCachedCategories() : [];
 
@@ -154,7 +154,8 @@ export class ChatFacadeService {
             categories,
             accounts,
             intent,
-            lowerText: userText.toLowerCase()
+            lowerText: userText.toLowerCase(),
+            extractedInfo
         };
 
         // Special handling for CLEAR_DATA - need to clear messages array
@@ -185,15 +186,35 @@ export class ChatFacadeService {
 
         if (isObservable(result)) {
             result.subscribe({
-                next: (message) => this.pushBot(message),
-                error: () => this.pushBot(
-                    ResponseBuilder.create()
-                        .html(CHAT_CONSTANTS.MSGS.INTERNAL_ERROR)
-                        .build()
-                )
+                next: (message) => this.handleMessageOrCommand(message),
+                error: (e) => {
+                    console.error(e);
+                    this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.INTERNAL_ERROR).build());
+                }
             });
         } else {
-            this.pushBot(result);
+            this.handleMessageOrCommand(result);
+        }
+    }
+
+    private handleMessageOrCommand(message: Message) {
+        if (message.type === 'command') {
+            // It's a command from AI! Log it and process recursively
+            console.log('AI Command received:', message.command, message.data);
+            const cmd = message as any; // Cast for now
+            this.handleNewIntent(
+                cmd.command,
+                cmd.data.notes || '', // User text replacement (or use original?) - using notes as description
+                cmd.data.amount || 0,
+                [], // Accounts passed in handleNewIntent are for extraction context, not needed here as we have extracted data
+                { // Extended context
+                    categoryName: cmd.data.category,
+                    accountName: cmd.data.account,
+                    notes: cmd.data.notes
+                } as any // Pass extra data
+            );
+        } else {
+            this.pushBot(message);
         }
     }
 

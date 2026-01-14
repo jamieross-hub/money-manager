@@ -90,10 +90,10 @@ export class TransactionIntentHandler implements IntentHandler {
     }
 
     handle(context: IntentContext): HandlerResult {
-        const { intent, amount, userText, categories, accounts } = context;
+        const { intent, amount, userText, categories, accounts, extractedInfo } = context;
 
         // 1. Try Direct Transaction first
-        const directResult = this.tryHandleDirectTransaction(intent, userText, amount, categories || [], accounts || []);
+        const directResult = this.tryHandleDirectTransaction(intent, userText, amount, categories || [], accounts || [], extractedInfo);
         if (directResult) return directResult;
 
         // 2. If not a direct transaction, start or continue flow
@@ -106,10 +106,28 @@ export class TransactionIntentHandler implements IntentHandler {
         return this.convertFlowReply(this.flowService.handleTypeReply(intent));
     }
 
-    private tryHandleDirectTransaction(intent: string, text: string, amount: number, categories: Category[], accounts: Account[]): HandlerResult | null {
+    private tryHandleDirectTransaction(intent: string, text: string, amount: number, categories: Category[], accounts: Account[], extractedInfo?: any): HandlerResult | null {
         if (amount <= 0 || categories.length === 0) return null;
 
-        const { category, account } = this.extractor.extractAll(text, categories, accounts);
+        let category: Category | undefined | null;
+        let account: Account | undefined | null;
+
+        // 1. Try to use extracted info from AI if available
+        if (extractedInfo) {
+            if (extractedInfo.categoryName) {
+                category = categories.find(c => c.name.toLowerCase() === extractedInfo.categoryName.toLowerCase());
+            }
+            if (extractedInfo.accountName) {
+                account = accounts.find(a => a.name.toLowerCase() === extractedInfo.accountName.toLowerCase());
+            }
+        }
+
+        // 2. Fallback to regex extraction if not found
+        if (!category || !account) {
+            const extracted = this.extractor.extractAll(text, categories, accounts);
+            if (!category) category = extracted.category;
+            if (!account) account = extracted.account;
+        }
 
         if (!category || !account) return null;
 

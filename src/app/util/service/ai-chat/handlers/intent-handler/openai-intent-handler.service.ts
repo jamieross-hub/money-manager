@@ -40,7 +40,27 @@ export class OpenAiIntentHandler implements IntentHandler {
                 };
 
                 return this.openAiClient.chat([systemMessage, userMessage], apiKey).pipe(
-                    map(reply => ResponseBuilder.create().html(reply).build()),
+                    map(reply => {
+                        const trimmedReply = reply.trim();
+                        // Check if response looks like a JSON command
+                        if (trimmedReply.startsWith('{') && trimmedReply.endsWith('}')) {
+                            try {
+                                const commandData = JSON.parse(trimmedReply);
+                                if (commandData.command) {
+                                    return {
+                                        sender: 'bot',
+                                        type: 'command',
+                                        text: trimmedReply,
+                                        command: commandData.command,
+                                        data: commandData
+                                    } as any; // Cast to any to satisfy the Observable output type temporarily until interface alignment
+                                }
+                            } catch (e) {
+                                console.warn('Failed to parse potential JSON command from AI', e);
+                            }
+                        }
+                        return ResponseBuilder.create().html(reply).build();
+                    }),
                     catchError(error => {
                         console.error('OpenAiIntentHandler Error:', error);
                         return of(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.INTERNAL_ERROR).build());
