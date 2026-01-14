@@ -8,7 +8,7 @@ import { CHAT_CONSTANTS } from '../../chat-constants';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { OpenAIMessage } from '../../models/openai.types';
 import { OpenaiService } from '../../openai.service';
-import { AI_PROMPTS } from '../../prompts/system.prompts';
+import { SYSTEM_PROMPTS } from '../../prompts/system.prompts';
 
 /**
  * Consolidated handler for OpenAI-powered responses.
@@ -32,10 +32,7 @@ export class OpenAiIntentHandler implements IntentHandler {
                     return of(ResponseBuilder.create().html('Please connect your OpenAI API key in the OpenAI Integration to use this OpenAI feature.').build());
                 }
 
-                const systemMessage: OpenAIMessage = {
-                    role: 'system',
-                    content: AI_PROMPTS.SYSTEM_INSTRUCTION
-                };
+                const systemMessage: OpenAIMessage = SYSTEM_PROMPTS['moneyManagerDefault'];
 
                 const userMessage: OpenAIMessage = {
                     role: 'user',
@@ -67,7 +64,7 @@ export class OpenAiIntentHandler implements IntentHandler {
                 if (!apiKey) return throwError(() => new Error('OpenAI API Key not found'));
 
                 // System message prompt to guide usage of domain-specific terms
-                return this.openAiClient.transcribe(audioBlob, apiKey, AI_PROMPTS.SYSTEM_INSTRUCTION);
+                return this.openAiClient.transcribe(audioBlob, apiKey, SYSTEM_PROMPTS['moneyManagerVoiceAssistant'].content);
             })
         );
     }
