@@ -8,6 +8,7 @@ import { CHAT_CONSTANTS } from '../../chat-constants';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { OpenAIMessage } from '../../models/openai.types';
 import { OpenaiService } from '../../openai.service';
+import { AI_PROMPTS } from '../../prompts/system.prompts';
 
 /**
  * Consolidated handler for OpenAI-powered responses.
@@ -33,26 +34,7 @@ export class OpenAiIntentHandler implements IntentHandler {
 
                 const systemMessage: OpenAIMessage = {
                     role: 'system',
-                    content: `You are Money Manager AI, an advanced personal finance assistant.
-
-PROFILE:
-- Tone: Professional, empathetic, and motivating.
-- Goal: Empower users to achieve financial wellness through smart tracking and knowledge.
-
-CAPABILITIES:
-1. **Financial Guidance**: Offer advice on savings, budgeting (e.g. 50/30/20 rule), and investment basics.
-2. **App Assistance**: Guide users on how to use the app commands.
-
-APP COMMANDS (Guide users to these):
-- **Add Transaction**: "Spent [amount] on [category]" or "Income [amount]".
-- **Insights**: "Show balance", "Recent activity", "Monthly report".
-- **System**: "Clear data", "Help".
-
-IMPORTANT RULES:
-- You DO NOT have access to the user's live database. If asked for current balance, suggest typing "Show balance".
-- Use <b>bold</b> for key terms.
-- Keep responses mobile-friendly (short paragraphs).
-- Disclaimer: For complex/legal financial advice, suggest consulting a professional.`
+                    content: AI_PROMPTS.SYSTEM_INSTRUCTION
                 };
 
                 const userMessage: OpenAIMessage = {
@@ -84,7 +66,8 @@ IMPORTANT RULES:
                 const apiKey = user?.preferences?.openaiApiKey;
                 if (!apiKey) return throwError(() => new Error('OpenAI API Key not found'));
 
-                return this.openAiClient.transcribe(audioBlob, apiKey);
+                // System message prompt to guide usage of domain-specific terms
+                return this.openAiClient.transcribe(audioBlob, apiKey, AI_PROMPTS.SYSTEM_INSTRUCTION);
             })
         );
     }

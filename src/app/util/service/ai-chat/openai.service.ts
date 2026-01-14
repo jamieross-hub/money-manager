@@ -100,7 +100,7 @@ export class OpenaiService {
     return this.chat(messages, this.apiKey, model);
   }
 
-  transcribe(audio: Blob, apiKey?: string): Observable<string> {
+  transcribe(audio: Blob, apiKey?: string, prompt?: string): Observable<string> {
     const key = apiKey || this.apiKey;
     if (!key) return throwError(() => new Error('OpenAI API Key is required'));
 
@@ -108,6 +108,9 @@ export class OpenaiService {
     const formData = new FormData();
     formData.append('file', audio, 'recording.webm');
     formData.append('model', 'whisper-1');
+    if (prompt) {
+      formData.append('prompt', prompt);
+    }
 
     return this.http.post<any>(`${this.baseUrl}/audio/transcriptions`, formData, { headers }).pipe(
       map(response => response.text)
