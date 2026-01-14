@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-
+// If openai.types.ts exists and we want to use it, we could import it.
+// However, to be safe and self-contained as per the current file structure:
 export interface OpenAIMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -34,7 +35,7 @@ export interface OpenAIResponse {
   providedIn: 'root'
 })
 export class OpenaiService {
-  private readonly apiUrl = 'https://api.openai.com/v1/chat/completions';
+  private readonly baseUrl = 'https://api.openai.com/v1';
   private apiKey: string = '';
 
   constructor(private http: HttpClient) {
@@ -48,44 +49,37 @@ export class OpenaiService {
 
   setApiKey(apiKey: string): void {
     this.apiKey = apiKey;
-    // try {
-    //   localStorage.setItem('openai_api_key', apiKey);
-    // } catch (error) {
-    //   console.error('Error saving OpenAI API key:', error);
-    // }
   }
 
   removeApiKey(): void {
     this.apiKey = '';
-    // try {
-    //   localStorage.removeItem('openai_api_key');
-    // } catch (error) {
-    //   console.error('Error removing OpenAI API key:', error);
-    // }
   }
 
   isApiKeySet(): boolean {
     return !!this.apiKey;
   }
 
-  sendMessage(messages: OpenAIMessage[], model: string = 'gpt-3.5-turbo'): Observable<string> {
-    if (!this.apiKey) {
-      return throwError(() => new Error('OpenAI API key not set'));
+  /**
+   * Main method to send chat messages to OpenAI.
+   * @param messages Array of message objects
+   * @param apiKey Optional API key. If not provided, uses the stored key.
+   * @param model Model to use (default: gpt-3.5-turbo)
+   */
+  chat(messages: OpenAIMessage[], apiKey?: string, model: string = 'gpt-3.5-turbo'): Observable<string> {
+    const key = apiKey || this.apiKey;
+    if (!key) {
+      return throwError(() => new Error('OpenAI API Key is required'));
     }
 
-    const request: OpenAIRequest = {
+    const headers = this.getHeaders(key, true);
+    const body: OpenAIRequest = {
       model,
       messages,
       max_tokens: 1000,
       temperature: 0.7
     };
 
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${this.apiKey}`
-    });
-
-    return this.http.post<OpenAIResponse>(this.apiUrl, request, { headers }).pipe(
+    return this.http.post<OpenAIResponse>(`${this.baseUrl}/chat/completions`, body, { headers }).pipe(
       map(response => {
         if (response.choices && response.choices.length > 0) {
           return response.choices[0].message.content;
@@ -98,48 +92,96 @@ export class OpenaiService {
     );
   }
 
-  // Helper method to create a financial advisor system message
-  createFinancialAdvisorMessage(): OpenAIMessage {
-    return {
-      role: 'system',
-      content: `You are a helpful financial advisor AI assistant. You provide personalized financial advice, 
-      budget analysis, investment recommendations, tax optimization strategies, and debt management tips. 
-      Always provide practical, actionable advice while reminding users to consult with qualified financial 
-      professionals for personalized guidance. Be clear, concise, and focus on educational content that 
-      helps users make informed financial decisions.`
-    };
+  /**
+   * Alias for chat, used by OpenaiInteractionComponent.
+   * Uses the stored API key.
+   */
+  sendMessage(messages: OpenAIMessage[], model: string = 'gpt-3.5-turbo'): Observable<string> {
+    return this.chat(messages, this.apiKey, model);
   }
 
-  // Helper method to analyze spending patterns (placeholder for future integration)
-  analyzeSpendingPatterns(transactions: any[]): Observable<string> {
-    const systemMessage = this.createFinancialAdvisorMessage();
-    const userMessage: OpenAIMessage = {
-      role: 'user',
-      content: `Analyze these spending patterns and provide recommendations for budget optimization: ${JSON.stringify(transactions)}`
-    };
+  transcribe(audio: Blob, apiKey?: string): Observable<string> {
+    const key = apiKey || this.apiKey;
+    if (!key) return throwError(() => new Error('OpenAI API Key is required'));
 
-    return this.sendMessage([systemMessage, userMessage]);
+    const headers = this.getHeaders(key, false); // Content-Type handled by browser for FormData
+    const formData = new FormData();
+    formData.append('file', audio, 'recording.webm');
+    formData.append('model', 'whisper-1');
+
+    return this.http.post<any>(`${this.baseUrl}/audio/transcriptions`, formData, { headers }).pipe(
+      map(response => response.text)
+    );
   }
 
-  // Helper method to get investment advice (placeholder for future integration)
-  getInvestmentAdvice(financialProfile: any): Observable<string> {
-    const systemMessage = this.createFinancialAdvisorMessage();
-    const userMessage: OpenAIMessage = {
-      role: 'user',
-      content: `Based on this financial profile, provide investment recommendations: ${JSON.stringify(financialProfile)}`
+  speak(text: string, apiKey?: string): Observable<Blob> {
+    const key = apiKey || this.apiKey;
+    if (!key) return throwError(() => new Error('OpenAI API Key is required'));
+
+    const headers = this.getHeaders(key, true);
+    const body = {
+      model: 'tts-1',
+      input: text,
+      voice: 'alloy'
     };
 
-    return this.sendMessage([systemMessage, userMessage]);
+    return this.http.post(`${this.baseUrl}/audio/speech`, body, {
+      headers: headers,
+      responseType: 'blob'
+    });
   }
 
-  // Helper method to get tax optimization advice (placeholder for future integration)
-  getTaxOptimizationAdvice(financialData: any): Observable<string> {
-    const systemMessage = this.createFinancialAdvisorMessage();
-    const userMessage: OpenAIMessage = {
-      role: 'user',
-      content: `Provide tax optimization strategies based on this financial data: ${JSON.stringify(financialData)}`
-    };
-
-    return this.sendMessage([systemMessage, userMessage]);
+  private getHeaders(apiKey: string, json: boolean): HttpHeaders {
+    let headers = new HttpHeaders({
+      'Authorization': `Bearer ${apiKey}`
+    });
+    if (json) {
+      headers = headers.set('Content-Type', 'application/json');
+    }
+    return headers;
   }
-} 
+
+  // --- Commented out placeholders as requested ---
+
+  // // Helper method to create a financial advisor system message
+  // createFinancialAdvisorMessage(): OpenAIMessage {
+  //   return {
+  //     role: 'system',
+  //     content: `You are a helpful financial advisor AI assistant. You provide personalized financial advice, 
+  //     budget analysis, investment recommendations, tax optimization strategies, and debt management tips. 
+  //     Always provide practical, actionable advice while reminding users to consult with qualified financial 
+  //     professionals for personalized guidance. Be clear, concise, and focus on educational content that 
+  //     helps users make informed financial decisions.`
+  //   };
+  // }
+
+  // // Helper method to analyze spending patterns (placeholder for future integration)
+  // analyzeSpendingPatterns(transactions: any[]): Observable<string> {
+  //   const systemMessage = this.createFinancialAdvisorMessage();
+  //   const userMessage: OpenAIMessage = {
+  //     role: 'user',
+  //     content: `Analyze these spending patterns and provide recommendations for budget optimization: ${JSON.stringify(transactions)}`
+  //   };
+  //   return this.sendMessage([systemMessage, userMessage]);
+  // }
+
+  // // Helper method to get investment advice (placeholder for future integration)
+  // getInvestmentAdvice(financialProfile: any): Observable<string> {
+  //   const systemMessage = this.createFinancialAdvisorMessage();
+  //   const userMessage: OpenAIMessage = {
+  //     role: 'user',
+  //     content: `Based on this financial profile, provide investment recommendations: ${JSON.stringify(financialProfile)}`
+  //   };
+  //   return this.sendMessage([systemMessage, userMessage]);
+  // }
+
+  // // Helper method to get tax optimization advice (placeholder for future integration)
+  // getTaxOptimizationAdvice(financialData: any): Observable<string> {
+  //   const systemMessage = this.createFinancialAdvisorMessage();
+  //   const userMessage: OpenAIMessage = {
+  //     role: 'user',
+  //     content: `Provide tax optimization strategies based on this financial data: ${JSON.stringify(financialData)}`
+  //   };
+  //   return this.sendMessage([systemMessage, userMessage]);
+  // }
+}
