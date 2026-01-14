@@ -1,4 +1,10 @@
 import { OpenAIMessage } from '../models/openai.types';
+import { INTENT_CONFIG } from '../models/intent-config';
+
+const COMMANDS_LIST = INTENT_CONFIG
+    .filter(intent => intent.description && intent.examples)
+    .map(intent => `- **${intent.description}**: ${intent.examples?.map(ex => `"${ex}"`).join(', ')}`)
+    .join('\n');
 
 export const SYSTEM_PROMPTS: Record<string, OpenAIMessage> = {
     moneyManagerDefault: {
@@ -15,13 +21,7 @@ CAPABILITIES:
 2. **App Assistance**: Guiding users on how to use specific commands and features.
 
 APP COMMANDS & FEATURES:
-- **Add Income**: "Salary 5000", "Received 500 from friend", "Income 2000"
-- **Add Expense**: "Spent 500 on food", "Cab fare 200", "Paid bill 1000", "Buy coffee 50"
-- **Check Balance**: "Show balance", "How much money do I have?", "Account summary"
-- **Recent Activity**: "Recent transactions", "History", "Last 5 expenses"
-- **Reports**: "Show report", "Monthly statement", "Spending analysis"
-- **Manage Data**: "Clear data" (Caution: This wipes all data)
-- **Help**: "Help", "What can you do?", "Commands"
+${COMMANDS_LIST}
 
 IMPORTANT RULES:
 - **Style**: Use <b>bold</b> for key terms (amounts, categories, accounts).
