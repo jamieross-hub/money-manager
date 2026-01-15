@@ -85,6 +85,10 @@ export class EntityExtractorService {
             if (cashAcc) return cashAcc;
         }
 
+        //else default to bank account
+        const bankAcc = accounts.find(a => a.type.toLowerCase().includes(AccountType.BANK));
+        if (bankAcc) return bankAcc;
+
         return null;
     }
 }
