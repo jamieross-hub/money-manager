@@ -105,12 +105,12 @@
         class="flex items-center bg-gray-50 border border-gray-200 rounded-full px-2 py-1 focus-within:ring-2 focus-within:ring-primary-100 focus-within:border-primary-300 transition shadow-sm">
 
         <!-- Attachment Button -->
-        <button (click)="onAttachmentClick()"
+        <button (click)="breakpointService.device.isMobile ? onMicClick() : onAttachmentClick()"
           class="p-2 text-gray-400 hover:text-primary-500 transition rounded-full hover:bg-gray-100 relative top-[6px]">
           <mat-icon class="material-icons-outlined text-[20px] leading-[20px] w-[20px] h-[20px]"
             *ngIf="!breakpointService.device.isMobile">add</mat-icon>
           <mat-icon class="material-icons-outlined text-[20px] leading-[20px] w-[20px] h-[20px]"
-            *ngIf="breakpointService.device.isMobile" (click)="onMicClick()">mic</mat-icon>
+            *ngIf="breakpointService.device.isMobile">mic</mat-icon>
         </button>
 
         <!-- Input Field with Autocomplete -->
