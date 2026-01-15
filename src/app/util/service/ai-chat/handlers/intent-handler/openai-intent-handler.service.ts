@@ -32,7 +32,17 @@ export class OpenAiIntentHandler implements IntentHandler {
                     return of(ResponseBuilder.create().html('Please connect your OpenAI API key in the OpenAI Integration to use this OpenAI feature.').build());
                 }
 
-                const systemMessage: OpenAIMessage = SYSTEM_PROMPTS['moneyManagerDefault'];
+                const systemMessage: OpenAIMessage = { ...SYSTEM_PROMPTS['moneyManagerDefault'] };
+
+                // Append Chat History if available
+                if (context.history && context.history.length > 0) {
+                    const lastFive = context.history.slice(-5);
+                    const historyText = lastFive
+                        .map(msg => `${msg.sender === 'bot' ? 'AI' : 'User'}: ${msg.text || (msg.type === 'command' ? 'Executed Command' : 'Content')}`)
+                        .join('\n');
+
+                    systemMessage.content += `\n\nLAST 5 MESSAGES:\n${historyText}`;
+                }
 
                 const userMessage: OpenAIMessage = {
                     role: 'user',

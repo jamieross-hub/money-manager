@@ -33,6 +33,8 @@ export interface IntentContext {
         notes?: string;
         [key: string]: any;
     };
+    /** Optional chat history for context */
+    history?: Message[];
 }
 
 /**

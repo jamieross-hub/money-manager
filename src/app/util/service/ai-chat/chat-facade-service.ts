@@ -155,7 +155,8 @@ export class ChatFacadeService {
             accounts,
             intent,
             lowerText: userText.toLowerCase(),
-            extractedInfo
+            extractedInfo,
+            history: this.messages
         };
 
         // Special handling for CLEAR_DATA - need to clear messages array
