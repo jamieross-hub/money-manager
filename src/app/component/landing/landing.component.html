@@ -10,7 +10,8 @@
 		<div class="absolute inset-0 bg-gradient-to-b from-white/90 via-white/70 to-white/90 backdrop-blur-sm"></div>
 
 		<div class="relative z-10 text-center px-4 sm:px-6 hero-content max-w-5xl mx-auto">
-			<p class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-primary-900 leading-tight !mb-6 tracking-tight">
+			<p
+				class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-primary-900 leading-tight !mb-6 tracking-tight">
 				Manage & Track Your <span class="text-primary-600">Finances</span>
 			</p>
 
@@ -19,28 +20,37 @@
 			</p>
 
 			<div class="flex flex-col sm:flex-row gap-4 mt-10 sm:mt-16 justify-center items-center">
-				<button class="bg-primary hover:bg-primary-700 text-white px-8 py-4 rounded-full text-lg font-bold shadow-lg hover:shadow-primary/30 transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 min-w-[200px]" (click)="navigateToSignUp()">
-					Get Started Free 
-					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+				<button
+					class="bg-primary hover:bg-primary-700 text-white px-8 py-4 rounded-full text-lg font-bold shadow-lg hover:shadow-primary/30 transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 min-w-[200px]"
+					(click)="navigateToSignUp()">
+					Get Started Free
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+						stroke="currentColor" stroke-width="2.5">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
 					</svg>
 				</button>
 
-				<button class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-8 py-4 rounded-full text-lg font-semibold shadow-sm hover:shadow-md transform hover:-translate-y-1 transition-all duration-300 min-w-[200px]">
+				<button
+					class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-8 py-4 rounded-full text-lg font-semibold shadow-sm hover:shadow-md transform hover:-translate-y-1 transition-all duration-300 min-w-[200px]">
 					View Demo
 				</button>
 			</div>
 
-			<div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-gray-500 text-sm sm:text-base mt-8 justify-center font-medium">
+			<div
+				class="flex flex-wrap items-center gap-x-6 gap-y-2 text-gray-500 text-sm sm:text-base mt-8 justify-center font-medium">
 				<div class="flex items-center gap-2">
-					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none"
+						viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round"
+							d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 					</svg>
 					<span>Bank-grade security</span>
 				</div>
 				<div class="flex items-center gap-2">
-					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" fill="none"
+						viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round"
+							d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
 					</svg>
 					<span>Syncs securely</span>
 				</div>
@@ -65,7 +75,9 @@
 				@for (feature of features; track feature.title) {
 				<div
 					class="group p-8 rounded-3xl border border-gray-100 hover:border-primary-200 shadow-sm hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 bg-white relative overflow-hidden">
-					<div class="absolute inset-0 bg-gradient-to-br from-transparent to-primary-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+					<div
+						class="absolute inset-0 bg-gradient-to-br from-transparent to-primary-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+					</div>
 					<div
 						class="relative w-14 h-14 mb-6 rounded-2xl bg-primary-50 text-primary flex items-center justify-center text-3xl group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-primary/40">
 						<mat-icon>{{ feature.icon }}</mat-icon>
@@ -96,25 +108,29 @@
 				@for (step of howItWorks; track step.step) {
 				<div class="text-center relative">
 					<!-- Connector Line (Desktop only) -->
-					@if (step.step < 3) {
-						<div class="hidden md:block absolute top-8 left-1/2 w-full h-0.5 bg-gray-200 -z-10 transform translate-x-1/2"></div>
-					}
-					
-					<div
-						class="w-16 h-16 bg-white border-2 border-primary-100 text-primary rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-lg shadow-primary/10 relative z-10 transition-transform duration-300 hover:scale-110 active:scale-95">
-						{{ step.step }}
-					</div>
-					
-					<h3 class="text-xl font-bold text-gray-900 mb-3">
-						{{ step.title }}
-					</h3>
-					<p class="text-gray-600 leading-relaxed max-w-xs mx-auto">{{ step.description }}</p>
-
+					@if (step.step < 3) { <div
+						class="hidden md:block absolute top-8 left-1/2 w-full h-0.5 bg-gray-200 -z-10 transform translate-x-1/2">
 				</div>
 				}
+
+				<div
+					class="w-16 h-16 bg-white border-2 border-primary-100 text-primary rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-lg shadow-primary/10 relative z-10 transition-transform duration-300 hover:scale-110 active:scale-95">
+					{{ step.step }}
+				</div>
+
+				<h3 class="text-xl font-bold text-gray-900 mb-3">
+					{{ step.title }}
+				</h3>
+				<p class="text-gray-600 leading-relaxed max-w-xs mx-auto">{{ step.description }}</p>
+
 			</div>
+			}
 		</div>
-	</section>
+</div>
+</section>
+
+<!-- Contact Form -->
+<app-contact-form></app-contact-form>
 </div>
 
 <!-- Footer -->

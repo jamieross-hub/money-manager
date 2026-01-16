@@ -79,6 +79,7 @@ import { PrivacyPolicyComponent } from './component/privacy-policy/privacy-polic
 import { GoogleSheetsComponent } from './component/dashboard/google-sheets/google-sheets.component';
 import { OpenaiInteractionComponent } from './component/dashboard/openai-interaction/openai-interaction.component';
 import { ChatCategoryDropdownComponent } from './util/components/chat-category-dropdown/chat-category-dropdown.component';
+import { ContactFormComponent } from './component/landing/contact-form/contact-form.component';
 import { ChatComponent } from './component/dashboard/chat/chat.component';
 
 // Card Components
@@ -176,7 +177,7 @@ import { UpcomingTransactionsCardComponent } from './util/components/cards/upcom
     OpenaiInteractionComponent,
     ChatCategoryDropdownComponent,
     ChatComponent,
-
+    ContactFormComponent,
   ],
   imports: [
     BrowserModule,
@@ -188,18 +189,18 @@ import { UpcomingTransactionsCardComponent } from './util/components/cards/upcom
     // Utility
     IconModule,
     TranslatePipe,
-    
+
     // Charts
     NgxEchartsModule.forRoot({
       echarts: () => import('echarts')
     }),
-    
+
     // NgRx Store
     AppStoreModule,
-    
+
     // Splitwise Module
     SplitwiseModule,
-    
+
     // Card Components
     TopCategoriesCardComponent,
     KeyMetricsSummaryCardComponent,
@@ -208,20 +209,20 @@ import { UpcomingTransactionsCardComponent } from './util/components/cards/upcom
     MonthlyTrendsCardComponent,
     CategoryBreakdownCardComponent,
     UpcomingTransactionsCardComponent,
-    
+
     // Floating Action Button Components
     QuickActionsFabComponent,
-    
+
     // ngx-mat-select-search
     NgxMatSelectSearchModule,
-    
+
     // Enhanced Service Worker with offline support
     ServiceWorkerModule.register('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerImmediately',
       scope: './'
     }),
-         RouterModule,
+    RouterModule,
   ],
   providers: [
     provideAnimationsAsync(),
