@@ -39,6 +39,8 @@ jobs:
           FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
           VAPID_KEY: ${{ secrets.VAPID_KEY }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          CONTACT_SPREADSHEET_ID: ${{ secrets.CONTACT_SPREADSHEET_ID }}
 
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v3
