@@ -104,6 +104,7 @@ import { PwaInstallPromptComponent } from './util/components/pwa-install-prompt/
 
 // Common Sync Service (replaces BackgroundSyncService)
 import { CommonSyncService } from './util/service/common-sync.service';
+import { GoogleApiService } from './util/service/google-api.service';
 
 
 // NgRx Store
@@ -266,7 +267,6 @@ import { UpcomingTransactionsCardComponent } from './util/components/cards/upcom
       console.log("✅ Firebase Cloud Messaging initialized");
       return messaging;
     }),
-
   ],
   bootstrap: [AppComponent]
 })

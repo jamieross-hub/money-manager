@@ -93,6 +93,7 @@ interface RateLimitEntry {
 })
 export class UserService {
   public readonly userAuth$ = new BehaviorSubject<User | null>(null);
+  public readonly googleAccessToken$ = new BehaviorSubject<string | null>(null);
   public isAdmin: boolean = false;
 
   // Security tracking
@@ -593,6 +594,7 @@ export class UserService {
       const provider = new GoogleAuthProvider();
       provider.addScope('email');
       provider.addScope('profile');
+      provider.addScope('https://www.googleapis.com/auth/spreadsheets');
 
       // Rate limiting
       if (!this.checkRateLimit('google-signin')) {
@@ -600,6 +602,14 @@ export class UserService {
       }
 
       const result = await signInWithPopup(this.auth, provider);
+
+      // Extract Google Access Token
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (credential?.accessToken) {
+        this.googleAccessToken$.next(credential.accessToken);
+        console.log('✅ Google Access Token captured');
+      }
+
       await this.handleGoogleSignInResult(result);
 
       this.logAuditEvent('GOOGLE_LOGIN_SUCCESS', result.user.uid, {
