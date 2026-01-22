@@ -144,6 +144,12 @@ export class LandingComponent implements OnInit {
       this.notificationService.info('Logging in as demo user...');
       const userCredential = await this.userService.signIn('wadkarprashil@gmail.com', 'Prashil@n79');
       if (userCredential.user) {
+        if (!userCredential.user.emailVerified) {
+          await this.userService.signOut();
+          this.notificationService.error('Demo user email is not verified. Please contact support.');
+          return;
+        }
+
         this.notificationService.success('Welcome back, Demo User!');
         this.router.navigate(['/dashboard']);
       }

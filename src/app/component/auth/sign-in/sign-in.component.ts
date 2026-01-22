@@ -208,6 +208,7 @@ export class SignInComponent implements OnInit, OnDestroy {
       );
 
       if (!user.user?.emailVerified) {
+        await this.userService.signOut();
         this.notificationService.error('Please verify your email address for access!');
         return;
       }

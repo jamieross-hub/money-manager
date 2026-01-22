@@ -146,6 +146,14 @@ export class AuthGuard implements CanActivate, CanActivateChild {
 
         const hasPermission = await this.checkRoutePermissions(route, userData, firebaseUser);
         if (!hasPermission) {
+          const routeData = route.data as RoutePermission;
+          if (routeData?.requireEmailVerification && !firebaseUser.emailVerified) {
+            this.notificationService.error('Please verify your email address.');
+            await this.userService.signOut();
+            this.router.navigate(['/sign-in']);
+            return;
+          }
+
           await this.handleInsufficientPermissions(userData, state);
           return;
         }
@@ -153,14 +161,14 @@ export class AuthGuard implements CanActivate, CanActivateChild {
         this.updateSessionTimestamp(firebaseUser.uid);
       } catch (error) {
         console.error('[AuthGuard] Background error:', error);
-        
+
         // If we're offline and there's an error, allow access
         if (!this.commonSyncService.isCurrentlyOnline()) {
           console.warn('[AuthGuard] Offline mode - error occurred, allowing access for offline use');
           this.updateSessionTimestamp(firebaseUser.uid);
           return;
         }
-        
+
         await this.handleSecurityError(error, state);
       } finally {
         this.loaderService.hide();
