@@ -22,14 +22,14 @@ export class GoogleApiService {
     private initialized = false;
 
     constructor(private userService: UserService) {
-        this.userService.googleAccessToken$.subscribe(token => {
-            if (token) {
-                this.accessToken = token;
-                this.initialized = true;
-                console.log('✅ Google API Service: Token updated from Firebase');
-            }
-        });
-        this.loadApi();
+        // this.userService.googleAccessToken$.subscribe(token => {
+        //     if (token) {
+        //         this.accessToken = token;
+        //         this.initialized = true;
+        //         console.log('✅ Google API Service: Token updated from Firebase');
+        //     }
+        // });
+        // this.loadApi();
     }
 
     /**
@@ -73,6 +73,9 @@ export class GoogleApiService {
      * Legacy support for loadApi (if needed)
      */
     public async loadApi(): Promise<void> {
+        console.log('⚠️ Google API Service: loadApi disabled');
+        return Promise.resolve();
+        /*
         return new Promise((resolve, reject) => {
             // Only load 'client', avoiding 'auth2' which is deprecated
             gapi.load('client', async () => {
@@ -102,6 +105,7 @@ export class GoogleApiService {
                 reject(err);
             });
         });
+        */
     }
 
     /**

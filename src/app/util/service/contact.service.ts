@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, from } from 'rxjs';
+import { Observable, from, of } from 'rxjs';
 import { environment } from '@env/environment';
 import { GoogleApiService } from './google-api.service';
 import { catchError, switchMap } from 'rxjs/operators';
@@ -13,6 +13,11 @@ export class ContactService {
 
 
     sendMessage(name: string, email: string, message: string): Observable<any> {
+        // Logging to Google Sheets is temporarily disabled
+        console.log('📬 Contact Service: Message received (Google Sheets logging disabled)', { name, email, message });
+        return of({ success: true, message: 'Message sent successfully' });
+
+        /*
         const spreadsheetId = environment.contactSpreadsheetId;
         const range = 'Sheet1!A1'; // Adjust as needed
         const values = [[new Date().toISOString(), name, email, message]];
@@ -23,5 +28,6 @@ export class ContactService {
                 throw error;
             })
         );
+        */
     }
 }
