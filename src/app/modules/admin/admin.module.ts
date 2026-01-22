@@ -25,6 +25,8 @@ import { AdminUsersComponent } from './admin-users/admin-users.component';
 import { AdminFeedbackComponent } from './admin-feedback/admin-feedback.component';
 import { AdminAnalyticsComponent } from './admin-analytics/admin-analytics.component';
 import { AdminSettingsComponent } from './admin-settings/admin-settings.component';
+import { AdminContactComponent } from './admin-contact/admin-contact.component';
+import { MatTableModule } from '@angular/material/table';
 
 // Admin Services, Routing, and Shared
 import { AdminServicesModule } from './admin-services.module';
@@ -37,7 +39,8 @@ import { AdminSharedModule } from './admin-shared.module';
     AdminUsersComponent,
     AdminFeedbackComponent,
     AdminAnalyticsComponent,
-    AdminSettingsComponent
+    AdminSettingsComponent,
+    AdminContactComponent
   ],
   imports: [
     AdminSharedModule,
@@ -45,7 +48,7 @@ import { AdminSharedModule } from './admin-shared.module';
     FormsModule,
     AdminRoutingModule,
     AdminServicesModule,
-    
+
     // Additional Material Modules
     MatInputModule,
     MatFormFieldModule,
@@ -56,7 +59,8 @@ import { AdminSharedModule } from './admin-shared.module';
     MatDialogModule,
     MatDividerModule,
     MatBadgeModule,
-    MatChipsModule
+    MatChipsModule,
+    MatTableModule
   ],
   providers: [
     // Guards are provided at root level, but we can add admin-specific services here

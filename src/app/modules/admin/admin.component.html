@@ -14,7 +14,8 @@
           <button mat-icon-button (click)="goToDashboard()" class="back-button" matTooltip="Back to Dashboard">
             <mat-icon>arrow_back</mat-icon>
           </button>
-          <button mat-icon-button (click)="toggleSidebar()" class="menu-toggle" matTooltip="Toggle Menu" *ngIf="isMobile">
+          <button mat-icon-button (click)="toggleSidebar()" class="menu-toggle" matTooltip="Toggle Menu"
+            *ngIf="isMobile">
             <mat-icon>menu</mat-icon>
           </button>
           <div class="header-title">
@@ -38,22 +39,19 @@
     <div class="admin-content">
       <!-- Mobile Overlay -->
       <div *ngIf="isMobile && isSidebarOpen" class="mobile-overlay" (click)="closeSidebar()"></div>
-      
+
       <!-- Sidebar Navigation -->
       <aside class="admin-sidebar" [class.mobile-sidebar]="isMobile" [class.open]="isSidebarOpen">
         <div class="sidebar-header">
           <h3>Admin Navigation</h3>
         </div>
-        
+
         <nav class="sidebar-nav">
           <!-- Iterate through admin sections -->
           <div *ngFor="let section of adminSections" class="nav-section">
             <!-- Section Header -->
-            <div 
-              class="section-header"
-              [class.collapsible]="section.isCollapsible"
-              (click)="section.isCollapsible ? toggleSection(section.id) : null"
-            >
+            <div class="section-header" [class.collapsible]="section.isCollapsible"
+              (click)="section.isCollapsible ? toggleSection(section.id) : null">
               <div class="section-icon">
                 <mat-icon>{{ section.icon }}</mat-icon>
               </div>
@@ -67,13 +65,9 @@
 
             <!-- Section Items -->
             <div class="section-items" [class.expanded]="isSectionExpanded(section.id)">
-              <div 
-                *ngFor="let item of getSectionItems(section.id)"
-                class="nav-item"
-                [class.active]="activeSection === item.id"
-                (click)="setActiveSection(item.id)"
-                matTooltip="{{ item.description }}"
-              >
+              <div *ngFor="let item of getSectionItems(section.id)" class="nav-item"
+                [class.active]="activeSection === item.id" (click)="setActiveSection(item.id)"
+                matTooltip="{{ item.description }}">
                 <div class="nav-icon">
                   <mat-icon>{{ item.icon }}</mat-icon>
                 </div>
@@ -233,6 +227,16 @@
           <app-admin-feedback></app-admin-feedback>
         </div>
 
+        <!-- Contact Section -->
+        <div *ngIf="activeSection === 'contact'" class="contact-section">
+          <div class="section-header">
+            <h2>Get In Touch Messages</h2>
+            <p>View and respond to inquiries from the contact form</p>
+          </div>
+          <app-admin-contact></app-admin-contact>
+        </div>
+
+
         <!-- Users Section -->
         <div *ngIf="activeSection === 'users'" class="users-section">
           <div class="section-header">
@@ -262,4 +266,4 @@
       </main>
     </div>
   </div>
-</div> 
+</div>

@@ -67,6 +67,15 @@ export const ADMIN_SIDEBAR_CONFIG: AdminSidebarSection[] = [
         order: 2,
         route: 'feedback',
         permissions: ['admin']
+      },
+      {
+        id: 'contact',
+        label: 'Get In Touch',
+        icon: 'contact_mail',
+        description: 'View messages from contact form',
+        order: 3,
+        route: 'contact',
+        permissions: ['admin']
       }
     ]
   },
