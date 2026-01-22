@@ -81,6 +81,7 @@ import { OpenaiInteractionComponent } from './component/dashboard/openai-interac
 import { ChatCategoryDropdownComponent } from './util/components/chat-category-dropdown/chat-category-dropdown.component';
 import { ContactFormComponent } from './component/landing/contact-form/contact-form.component';
 import { ChatComponent } from './component/dashboard/chat/chat.component';
+import { DataDeletionComponent } from './component/data-deletion/data-deletion.component';
 
 // Card Components
 import { TopCategoriesCardComponent } from './util/components/cards/top-categories-card/top-categories-card.component';
@@ -178,6 +179,7 @@ import { UpcomingTransactionsCardComponent } from './util/components/cards/upcom
     ChatCategoryDropdownComponent,
     ChatComponent,
     ContactFormComponent,
+    DataDeletionComponent,
   ],
   imports: [
     BrowserModule,

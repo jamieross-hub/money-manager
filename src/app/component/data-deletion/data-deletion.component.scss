@@ -1,0 +1,29 @@
+.container {
+    max-width: 1200px;
+}
+
+// Reuse primary colors from the theme
+.from-primary {
+    --tw-gradient-from: #3b82f6; // Fallback to a nice blue if CSS variables are not available
+    --tw-gradient-to: rgb(59 130 246 / 0);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.to-primary-600 {
+    --tw-gradient-to: #2563eb;
+}
+
+section {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
