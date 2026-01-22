@@ -1,4 +1,4 @@
-<app-quick-actions-fab [config]="fabConfig"></app-quick-actions-fab>
+<!-- <app-quick-actions-fab [config]="fabConfig"></app-quick-actions-fab> -->
 
 
 <div class="profile-container">
@@ -22,12 +22,13 @@
 					<p class="user-role">Member since {{ getFormattedDate(userProfile?.createdAt) }}</p>
 				</div>
 			</div>
-			<!-- <div class="header-actions">
-				<button mat-raised-button color="primary" (click)="toggleEdit()" [disabled]="isLoading" class="edit-btn" *ngIf="!isMobile">
+			<div class="header-actions">
+				<button mat-raised-button color="primary" (click)="isEditing ? cancelEdit() : toggleEdit()"
+					[disabled]="isLoading" class="edit-btn">
 					<mat-icon>{{ isEditing ? 'close' : 'edit' }}</mat-icon>
 					{{ isEditing ? 'Cancel Edit' : 'Edit Profile' }}
 				</button>
-			</div> -->
+			</div>
 		</div>
 	</div>
 
@@ -45,7 +46,7 @@
 					<!-- First Name -->
 					<mat-form-field appearance="fill" class="form-field">
 						<mat-label>First Name *</mat-label>
-						<input matInput formControlName="firstName" [readonly]="!isEditing" autocomplete="given-name" />
+						<input matInput formControlName="firstName" [disabled]="!isEditing" autocomplete="given-name" />
 						<mat-error *ngIf="profileForm.get('firstName')?.hasError('required')">
 							First name is required
 						</mat-error>
@@ -57,7 +58,7 @@
 					<!-- Last Name -->
 					<mat-form-field appearance="fill" class="form-field">
 						<mat-label>Last Name *</mat-label>
-						<input matInput formControlName="lastName" [readonly]="!isEditing" autocomplete="family-name" />
+						<input matInput formControlName="lastName" [disabled]="!isEditing" autocomplete="family-name" />
 						<mat-error *ngIf="profileForm.get('lastName')?.hasError('required')">
 							Last name is required
 						</mat-error>
@@ -69,7 +70,8 @@
 					<!-- Email -->
 					<mat-form-field appearance="fill" class="form-field">
 						<mat-label>Email *</mat-label>
-						<input matInput type="email" formControlName="email" [readonly]="!isEditing" autocomplete="email" />
+						<input matInput type="email" formControlName="email" [disabled]="!isEditing"
+							autocomplete="email" />
 						<mat-error *ngIf="profileForm.get('email')?.hasError('required')">
 							Email is required
 						</mat-error>
@@ -81,7 +83,8 @@
 					<!-- Phone -->
 					<mat-form-field appearance="fill" class="form-field">
 						<mat-label>Phone Number</mat-label>
-						<input matInput formControlName="phone" [readonly]="!isEditing" placeholder="+1 (555) 123-4567" autocomplete="tel" />
+						<input matInput formControlName="phone" [disabled]="!isEditing" placeholder="+1 (555) 123-4567"
+							autocomplete="tel" />
 						<mat-error *ngIf="profileForm.get('phone')?.hasError('pattern')">
 							Please enter a valid phone number
 						</mat-error>
@@ -90,21 +93,25 @@
 					<!-- Date of Birth -->
 					<mat-form-field appearance="fill" class="form-field">
 						<mat-label>Date of Birth</mat-label>
-						<input matInput [matDatepicker]="dobPicker" formControlName="dateOfBirth" [readonly]="!isEditing" autocomplete="bday" />
-						<mat-datepicker-toggle matSuffix [for]="dobPicker" [disabled]="!isEditing"></mat-datepicker-toggle>
+						<input matInput [matDatepicker]="dobPicker" formControlName="dateOfBirth"
+							[disabled]="!isEditing" autocomplete="bday" />
+						<mat-datepicker-toggle matSuffix [for]="dobPicker"
+							[disabled]="!isEditing"></mat-datepicker-toggle>
 						<mat-datepicker #dobPicker></mat-datepicker>
 					</mat-form-field>
 
 					<!-- Occupation -->
 					<mat-form-field appearance="fill" class="form-field">
 						<mat-label>Occupation</mat-label>
-						<input matInput formControlName="occupation" [readonly]="!isEditing" placeholder="e.g., Software Engineer" autocomplete="organization-title" />
+						<input matInput formControlName="occupation" [disabled]="!isEditing"
+							placeholder="e.g., Software Engineer" autocomplete="organization-title" />
 					</mat-form-field>
 
 					<!-- Monthly Income -->
 					<mat-form-field appearance="fill" class="form-field">
 						<mat-label>Monthly Income</mat-label>
-						<input matInput type="number" formControlName="monthlyIncome" [readonly]="!isEditing" step="0.01" autocomplete="off" />
+						<input matInput type="number" formControlName="monthlyIncome" [disabled]="!isEditing"
+							step="0.01" autocomplete="off" />
 						<span matTextPrefix>{{ userProfile.preferences?.defaultCurrency }}&nbsp;</span>
 						<mat-error *ngIf="profileForm.get('monthlyIncome')?.hasError('min')">
 							Income cannot be negative
@@ -182,7 +189,8 @@
 					</div>
 
 					<div class="preference-item">
-						<mat-slide-toggle formControlName="categoryListViewMode" [disabled]="!isEditing" color="primary">
+						<mat-slide-toggle formControlName="categoryListViewMode" [disabled]="!isEditing"
+							color="primary">
 							<span class="toggle-label">Category List View</span>
 						</mat-slide-toggle>
 						<p class="preference-description">Display categories in list view instead of grid view</p>
@@ -192,10 +200,11 @@
 
 			<!-- Action Buttons -->
 			<div class="form-actions" *ngIf="isEditing">
-				<button type="button" mat-stroked-button (click)="cancelEdit()" [disabled]="isLoading" class="cancel-btn">
+				<button type="button" mat-stroked-button (click)="cancelEdit()" [disabled]="isLoading"
+					class="cancel-btn">
 					Cancel
 				</button>
-				<button type="submit" mat-raised-button color="primary" [disabled]="profileForm.invalid || isLoading" class="save-btn">
+				<button type="submit" mat-raised-button color="primary" [disabled]="isLoading" class="save-btn">
 					<mat-icon *ngIf="isLoading">hourglass_empty</mat-icon>
 					<mat-icon *ngIf="!isLoading">save</mat-icon>
 					{{ isLoading ? 'Saving...' : 'Save Changes' }}

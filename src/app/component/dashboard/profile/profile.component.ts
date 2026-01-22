@@ -16,16 +16,16 @@ import { AppState } from '../../../store/app.state';
 import * as ProfileActions from '../../../store/profile/profile.actions';
 import * as ProfileSelectors from '../../../store/profile/profile.selectors';
 import { DateService } from 'src/app/util/service/date.service';
-import { 
-  APP_CONFIG, 
-  ERROR_MESSAGES, 
-  SUCCESS_MESSAGES, 
+import {
+  APP_CONFIG,
+  ERROR_MESSAGES,
+  SUCCESS_MESSAGES,
   TIMEZONES
 } from 'src/app/util/config/config';
-import { 
-  UserRole, 
-  CurrencyCode, 
-  LanguageCode 
+import {
+  UserRole,
+  CurrencyCode,
+  LanguageCode
 } from 'src/app/util/config/enums';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
@@ -40,7 +40,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   profile$: Observable<User | null>;
   profileLoading$: Observable<boolean>;
   profileError$: Observable<any>;
-  
+
   profileForm: FormGroup;
   isLoading = false;
   isEditing = false;
@@ -51,7 +51,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   currencies = Object.values(CurrencyCode);
   defaultCurrency = APP_CONFIG.CURRENCY.DEFAULT;
 
- 
+
 
   languages = Object.entries(APP_CONFIG.LANGUAGE.NAMES).map(([code, name]) => ({
     code,
@@ -59,17 +59,17 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }));
 
   fabConfig: QuickActionsFabConfig = {
-      title: 'Profile',
-      mainButtonIcon: 'edit',
-      mainButtonColor: 'primary',
-      mainButtonTooltip: 'Edit Profile',
-      showLabels: false,
-      animations: true,
-      autoHide: false,
-      autoHideDelay: 3000,
-      theme: 'auto',
-      actions: [],
-      onMainButtonClick: () => this.toggleEdit(),
+    title: 'Profile',
+    mainButtonIcon: 'edit',
+    mainButtonColor: 'primary',
+    mainButtonTooltip: 'Edit Profile',
+    showLabels: false,
+    animations: true,
+    autoHide: false,
+    autoHideDelay: 3000,
+    theme: 'auto',
+    actions: [],
+    onMainButtonClick: () => this.toggleEdit(),
 
   };
 
@@ -98,23 +98,23 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.profile$ = this.store.select(ProfileSelectors.selectProfile);
     this.profileLoading$ = this.store.select(ProfileSelectors.selectProfileLoading);
     this.profileError$ = this.store.select(ProfileSelectors.selectProfileError);
-    
+
     this.profileForm = this.fb.group({
-      firstName: ['', this.validationService.getProfileNameValidators()],
-      lastName: ['', this.validationService.getProfileNameValidators()],
-      email: ['', this.validationService.getProfileEmailValidators()],
-      phone: ['', this.validationService.getProfilePhoneValidators()],
-      dateOfBirth: [''],
-      occupation: ['', this.validationService.getProfileOccupationValidators()],
-      monthlyIncome: [0, this.validationService.getProfileIncomeValidators()],
+      firstName: [{ value: '', disabled: true }, this.validationService.getProfileNameValidators()],
+      lastName: [{ value: '', disabled: true }, this.validationService.getProfileNameValidators()],
+      email: [{ value: '', disabled: true }, this.validationService.getProfileEmailValidators()],
+      phone: [{ value: '', disabled: true }, this.validationService.getProfilePhoneValidators()],
+      dateOfBirth: [{ value: '', disabled: true }],
+      occupation: [{ value: '', disabled: true }, this.validationService.getProfileOccupationValidators()],
+      monthlyIncome: [{ value: 0, disabled: true }, this.validationService.getProfileIncomeValidators()],
       preferences: this.fb.group({
-        defaultCurrency: [this.defaultCurrency, Validators.required],
-        timezone: ['UTC', Validators.required],
-        language: [APP_CONFIG.LANGUAGE.DEFAULT, Validators.required],
-        notifications: [true],
-        emailUpdates: [true],
-        budgetAlerts: [true],
-        categoryListViewMode: [false],
+        defaultCurrency: [{ value: this.defaultCurrency, disabled: true }, Validators.required],
+        timezone: [{ value: 'UTC', disabled: true }, Validators.required],
+        language: [{ value: APP_CONFIG.LANGUAGE.DEFAULT, disabled: true }, Validators.required],
+        notifications: [{ value: true, disabled: true }],
+        emailUpdates: [{ value: true, disabled: true }],
+        budgetAlerts: [{ value: true, disabled: true }],
+        categoryListViewMode: [{ value: false, disabled: true }],
       }),
     });
   }
@@ -163,7 +163,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       lastName: user.lastName || '',
       email: user.email,
       phone: user.phone || '',
-      dateOfBirth: this.dateService.toDate(user.dateOfBirth || 0 ) || new Date(),
+      dateOfBirth: this.dateService.toDate(user.dateOfBirth || 0) || new Date(),
       occupation: user.occupation || '',
       monthlyIncome: user.monthlyIncome || 0,
       preferences: {
@@ -231,17 +231,21 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   toggleEdit(): void {
-    this.isEditing = !this.isEditing;
     if (this.isEditing) {
+      // Trying to save
+      this.saveProfile();
+    } else {
+      // Trying to edit
+      this.isEditing = true;
+      this.profileForm.enable();
       this.fabConfig.mainButtonIcon = 'save';
       this.fabConfig.mainButtonTooltip = 'Save Profile';
-    } else {
-      this.saveProfile();
     }
   }
 
   async saveProfile(): Promise<void> {
     if (this.profileForm.invalid) {
+      this.profileForm.markAllAsTouched();
       this.notificationService.warning(
         ERROR_MESSAGES.VALIDATION.REQUIRED_FIELD
       );
@@ -268,13 +272,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
           updatedAt: new Date(),
         };
 
-        this.store.dispatch(ProfileActions.updateProfile({ 
-          userId: this.currentUser.uid, 
-          profile: updatedUser 
+        this.store.dispatch(ProfileActions.updateProfile({
+          userId: this.currentUser.uid,
+          profile: updatedUser
         }));
 
         this.notificationService.success(SUCCESS_MESSAGES.GENERAL.UPDATED);
         this.isEditing = false;
+        this.profileForm.disable();
       }
     } catch (error) {
       console.error('Error saving profile:', error);
@@ -287,6 +292,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
   cancelEdit(): void {
     this.populateForm();
     this.isEditing = false;
+    this.profileForm.disable();
+
+    // Reset FAB state
+    this.fabConfig.mainButtonIcon = 'edit';
+    this.fabConfig.mainButtonTooltip = 'Edit Profile';
+
     this.notificationService.info('Changes cancelled');
   }
 
@@ -332,7 +343,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.notificationService.warning(ERROR_MESSAGES.PERMISSION.FEATURE_NOT_AVAILABLE);
         return;
       }
-      
+
       // TODO: Implement data export functionality
       this.notificationService.info('Data export feature coming soon');
     } catch (error) {

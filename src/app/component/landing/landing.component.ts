@@ -139,6 +139,20 @@ export class LandingComponent implements OnInit {
 
   ngOnInit(): void { }
 
+  async loginDemoUser(): Promise<void> {
+    try {
+      this.notificationService.info('Logging in as demo user...');
+      const userCredential = await this.userService.signIn('wadkarprashil@gmail.com', 'Prashil@n79');
+      if (userCredential.user) {
+        this.notificationService.success('Welcome back, Demo User!');
+        this.router.navigate(['/dashboard']);
+      }
+    } catch (error: any) {
+      console.error('Demo login failed', error);
+      this.notificationService.error('Demo login failed. Please try again.');
+    }
+  }
+
   navigateToSignUp(): void {
     this.router.navigate(['/sign-in']);
   }
