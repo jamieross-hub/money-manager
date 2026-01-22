@@ -28,9 +28,11 @@ import { PrivacyPolicyComponent } from './component/privacy-policy/privacy-polic
 import { TermsConditionsComponent } from './component/terms-conditions/terms-conditions.component';
 import { OfflinePageComponent } from './util/components/offline-page/offline-page.component';
 import { DataDeletionComponent } from './component/data-deletion/data-deletion.component';
+import { ContactFormComponent } from './component/landing/contact-form/contact-form.component';
 
 export const routes: Routes = [
   { path: 'shell', component: AppShellComponent },
+  { path: 'feedback', component: ContactFormComponent },
   { path: 'landing', component: LandingComponent },
   { path: 'privacy-policy', component: PrivacyPolicyComponent },
   { path: 'terms-conditions', component: TermsConditionsComponent },
