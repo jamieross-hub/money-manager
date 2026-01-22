@@ -594,7 +594,7 @@ export class UserService {
       const provider = new GoogleAuthProvider();
       provider.addScope('email');
       provider.addScope('profile');
-      provider.addScope('https://www.googleapis.com/auth/spreadsheets');
+      // provider.addScope('https://www.googleapis.com/auth/spreadsheets');
 
       // Rate limiting
       if (!this.checkRateLimit('google-signin')) {

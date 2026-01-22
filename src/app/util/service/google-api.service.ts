@@ -12,7 +12,7 @@ declare var google: any;
 export class GoogleApiService {
     private clientId = environment.googleClientId;
     private scope = [
-        'https://www.googleapis.com/auth/spreadsheets',
+        //'https://www.googleapis.com/auth/spreadsheets',
         'profile',
         'email'
     ].join(' ');
