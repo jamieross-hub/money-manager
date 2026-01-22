@@ -458,10 +458,6 @@ export class UserService {
 
         await this.ensureUserDataCached(userCredential.user.uid);
 
-        // Check if email is verified
-        if (!userCredential.user.emailVerified) {
-          this.notificationService.warning('Please verify your email address for full access');
-        }
 
         this.logAuditEvent('LOGIN_SUCCESS', userCredential.user.uid, {
           email,

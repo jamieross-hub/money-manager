@@ -198,7 +198,7 @@ export class SignInComponent implements OnInit, OnDestroy {
       this.loginAttemptCount++;
       this.lastLoginAttempt = Date.now();
 
-      await this.userService.signIn(email, password);
+      const user = await this.userService.signIn(email, password);
 
       // Log successful login
       this.securityService.logSecurityEvent(
@@ -207,10 +207,15 @@ export class SignInComponent implements OnInit, OnDestroy {
         { email, timestamp: new Date().toISOString() }
       );
 
-      this.notificationService.success('Successfully signed in!');
+      if (!user.user?.emailVerified) {
+        this.notificationService.error('Please verify your email address for access!');
+        return;
+      }
 
       // Load user data
-      await this.loadUserData();
+      if (user.user?.uid) {
+        await this.loadUserData(user.user.uid);
+      }
 
       this.router.navigate(['/dashboard']);
 
@@ -347,21 +352,22 @@ export class SignInComponent implements OnInit, OnDestroy {
   /**
    * Load user data after successful authentication
    */
-  private async loadUserData(): Promise<void> {
+  private async loadUserData(specificUserId?: string): Promise<void> {
     try {
-      const currentUser = this.userService.userAuth$.value;
-      if (!currentUser?.uid) {
+      const uid = specificUserId || this.userService.userAuth$.value?.uid;
+
+      if (!uid) {
         console.warn('No user ID available for loading data');
         return;
       }
 
       await Promise.all([
-        this.store.dispatch(loadTransactions({ userId: currentUser.uid })),
-        this.store.dispatch(loadCategories({ userId: currentUser.uid })),
-        this.store.dispatch(loadAccounts({ userId: currentUser.uid })),
-        this.store.dispatch(loadBudgets({ userId: currentUser.uid })),
-        this.store.dispatch(loadGoals({ userId: currentUser.uid })),
-        this.store.dispatch(loadProfile({ userId: currentUser.uid }))
+        this.store.dispatch(loadTransactions({ userId: uid })),
+        this.store.dispatch(loadCategories({ userId: uid })),
+        this.store.dispatch(loadAccounts({ userId: uid })),
+        this.store.dispatch(loadBudgets({ userId: uid })),
+        this.store.dispatch(loadGoals({ userId: uid })),
+        this.store.dispatch(loadProfile({ userId: uid }))
       ]);
     } catch (error) {
       console.error('Error loading user data:', error);
