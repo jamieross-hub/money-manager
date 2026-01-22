@@ -8,7 +8,6 @@ import { Subject, takeUntil } from 'rxjs';
 import { APP_CONFIG } from './util/config/config';
 import { SsrService } from './util/service/ssr.service';
 import { FirebaseMessagingService } from './util/service/firebase-messaging.service';
-import { GoogleApiService } from './util/service/google-api.service';
 
 @Component({
   selector: 'app-root',
@@ -29,7 +28,6 @@ export class AppComponent implements OnInit, OnDestroy {
     private ssrService: SsrService,
     private firebaseMessagingService: FirebaseMessagingService,
     public themeSwitchingService: ThemeSwitchingService,
-    public googleApiService: GoogleApiService
   ) {
     this.navigationState = {
       canGoBack: false,
