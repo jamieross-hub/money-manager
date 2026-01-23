@@ -4,6 +4,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { Auth } from '@angular/fire/auth';
+import { UserService } from 'src/app/util/service/db/user.service';
 import { Transaction } from 'src/app/util/models/transaction.model';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { MobileAddTransactionComponent } from './add-transaction/mobile-add-transaction/mobile-add-transaction.component';
@@ -59,9 +60,10 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     private filterService: FilterService,
     private store: Store<AppState>,
     private dateService: DateService,
-    public breakpointService: BreakpointService,
+    public readonly breakpointService: BreakpointService,
     private router: Router,
-    private transactionsService: TransactionsService
+    private transactionsService: TransactionsService,
+    private userService: UserService
 
   ) {
     this.isTransactionsPage = this.router.url.includes('transactions') ? true : false;
@@ -89,7 +91,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.loaderService.show();
 
     // Load transactions and categories from store
-    const userId = this.auth.currentUser?.uid;
+    const userId = this.userService.getCurrentUserId();
     if (userId) {
       this.store.dispatch(TransactionsActions.loadTransactions({ userId }));
       this.store.dispatch(CategoriesActions.loadCategories({ userId }));
@@ -128,7 +130,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   }
 
   async deleteTransaction(transaction: Transaction) {
-    const userId = this.auth.currentUser?.uid;
+    const userId = this.userService.getCurrentUserId();
     if (userId && transaction.id) {
       this.store.dispatch(TransactionsActions.deleteTransaction({ userId, transactionId: transaction.id }));
       this.notificationService.success('Transaction deleted successfully');
@@ -176,7 +178,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     };
 
     // Save to database using store
-    const userId = this.auth.currentUser?.uid;
+    const userId = this.userService.getCurrentUserId();
     if (userId && element.id) {
       this.store.dispatch(TransactionsActions.updateTransaction({
         userId,
@@ -211,7 +213,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
   private async importTransactions(transactions: any[]) {
     this.loaderService.show();
-    const userId = this.auth.currentUser?.uid;
+    const userId = this.userService.getCurrentUserId();
 
     if (!userId) {
       this.notificationService.error('User not authenticated');
@@ -369,7 +371,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   }
 
   refreshTransactions(): void {
-    const userId = this.auth.currentUser?.uid;
+    const userId = this.userService.getCurrentUserId();
     if (userId) {
       this.store.dispatch(TransactionsActions.loadTransactions({ userId }));
       this.notificationService.success('Transactions refreshed');
@@ -387,7 +389,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   }
 
   addTransactionDialog(): void {
-   this._dialog.open(MobileAddTransactionComponent, {
+    this._dialog.open(MobileAddTransactionComponent, {
       panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
     }).afterClosed().subscribe((transaction: Transaction) => {
       if (transaction) {
@@ -425,8 +427,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     if (!transactions || transactions.length === 0) return;
 
     this.loaderService.show();
-    const userId = this.auth.currentUser?.uid;
-    
+    const userId = this.userService.getCurrentUserId();
+
     if (!userId) {
       this.notificationService.error('User not authenticated');
       this.loaderService.hide();
@@ -448,14 +450,14 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     }
   }
 
-  async bulkUpdateCategory(data: {transactions: Transaction[], categoryId: string}) {
+  async bulkUpdateCategory(data: { transactions: Transaction[], categoryId: string }) {
     const { transactions, categoryId } = data;
-    
+
     if (!transactions || transactions.length === 0 || !categoryId) return;
 
     this.loaderService.show();
     const userId = this.auth.currentUser?.uid;
-    
+
     if (!userId) {
       this.notificationService.error('User not authenticated');
       this.loaderService.hide();
@@ -468,7 +470,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         const updatedTransaction = {
           categoryId: categoryId
         };
-        
+
         await this.transactionsService.updateTransaction(userId, transaction.id!, updatedTransaction).toPromise();
       }
 

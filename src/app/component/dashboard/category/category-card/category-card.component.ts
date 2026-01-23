@@ -17,6 +17,7 @@ import { AppState } from 'src/app/store/app.state';
 import * as CategoriesActions from 'src/app/store/categories/categories.actions';
 import * as CategoriesSelectors from 'src/app/store/categories/categories.selectors';
 import { Auth } from '@angular/fire/auth';
+import { UserService } from 'src/app/util/service/db/user.service';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 
 @Component({
@@ -48,16 +49,17 @@ export class CategoryCardComponent {
     private budgetService: CategoryBudgetService,
     private store: Store<AppState>,
     private auth: Auth,
-    public breakpointService: BreakpointService
+    public breakpointService: BreakpointService,
+    private userService: UserService
   ) {
     this.initializeUserId();
     this.subCategoryCount = this.subCategories.length || 0;
   }
 
   private async initializeUserId(): Promise<void> {
-    const currentUser = await this.auth.currentUser;
-    if (currentUser) {
-      this.userId = currentUser.uid;
+    const userId = this.userService.getCurrentUserId();
+    if (userId) {
+      this.userId = userId;
     }
   }
 
@@ -348,12 +350,12 @@ Remaining: ${remainingDays} days`;
 
     return status;
 
-// ${status}
+    // ${status}
 
-// Spending: ${spendingProgress.toFixed(1)}% ($${spent.toFixed(2)} / $${budgetAmount.toFixed(2)})
-// Time: ${timeProgress.toFixed(1)}% (${remainingDays} days remaining)
+    // Spending: ${spendingProgress.toFixed(1)}% ($${spent.toFixed(2)} / $${budgetAmount.toFixed(2)})
+    // Time: ${timeProgress.toFixed(1)}% (${remainingDays} days remaining)
 
-// ${this.getTimeProgressTooltip(category.budget.budgetPeriod)}`;
+    // ${this.getTimeProgressTooltip(category.budget.budgetPeriod)}`;
   }
 
   /**

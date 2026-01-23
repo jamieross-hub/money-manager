@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 
 import { Auth } from '@angular/fire/auth';
+import { UserService } from 'src/app/util/service/db/user.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
   MAT_DIALOG_DATA,
@@ -79,7 +80,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   public recurringMaxDate: string;
   public categorySplits: CategorySplit[] = [];
   public isCategorySplit: boolean = false;
-  
+
   // ngx-mat-select-search properties
   public categoryFilterCtrl: FormControl = new FormControl();
   public filteredCategories: ReplaySubject<Category[]> = new ReplaySubject<Category[]>(1);
@@ -99,7 +100,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     private dateService: DateService,
     private validationService: ValidationService,
     private breakpointObserver: BreakpointObserver,
-    public breakpointService: BreakpointService
+    public breakpointService: BreakpointService,
+    private userService: UserService
   ) {
     this.recurringMinDate = moment().add(1, 'day').format('YYYY-MM-DD');
     this.recurringMaxDate = moment().add(1, 'year').format('YYYY-MM-DD');
@@ -107,12 +109,12 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     this.groups$ = this.store.select(selectGroups);
     this.categoryList$ = this.store.select(selectAllCategories);
     this.accountList$ = this.store.select(selectAllAccounts);
-    
+
     // Initialize filtered categories for ngx-mat-select-search
     this.categoryList$.subscribe(categories => {
       this.filteredCategories.next(categories.slice());
     });
-    
+
     // Listen for search input changes
     this.categoryFilterCtrl.valueChanges
       .pipe(takeUntil(this._onDestroy))
@@ -149,12 +151,12 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       // Category split fields
       isCategorySplit: [false],
     });
-    
+
     this.isMobile = this.breakpointObserver.isMatched('(max-width: 640px)');
   }
 
   ngOnInit(): void {
-    this.userId = this.auth.currentUser?.uid;
+    this.userId = this.userService.getCurrentUserId();
     this.initializeFormData();
 
     window.addEventListener('popstate', (event) => {
@@ -189,7 +191,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         moment(this.dateService.toDate(transaction.recurringEndDate)).format('YYYY-MM-DD') :
         moment().add(1, 'year').format('YYYY-MM-DD'),
     });
-    
+
     this.transactionForm.get('isSplitTransaction')?.setValue(transaction.isSplitTransaction || false);
     this.transactionForm.get('splitGroupId')?.setValue(transaction.splitGroupId || '');
     this.transactionForm.get('splitAmount')?.setValue(transaction.splitAmount || 0);
@@ -275,7 +277,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         this.loaderService.show();
 
         const formData = this.transactionForm.value;
-        
+
         const transactionData = {
           payee: formData.payee,
           accountId: formData.accountId,
@@ -347,7 +349,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         this.loaderService.hide();
       }
     } else {
-      
+
       // Show specific validation errors
       if (this.transactionForm.get('payee')?.errors) {
       }
@@ -405,20 +407,20 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
   onCategoryChange(categoryId: any): void {
     if (!categoryId) return;
-  
+
     this.categoryList$.pipe(
       take(1),
       map((categories: Category[]) => categories.find(c => c.id === categoryId)),
       filter((category): category is Category => !!category)
     ).subscribe((category: Category) => {
-      
+
       this.transactionForm.patchValue({
         categoryId: category.id,
         categoryName: category.name,
         categoryType: category.type,
         payee: this.editMode ? this.dialogData.payee : category.name,
       });
-      
+
     });
   }
 
@@ -483,7 +485,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
    * Toggle split transaction mode
    */
   toggleSplitTransaction(): void {
-   
+
     // this.transactionForm.patchValue({
     //   isSplitTransaction: !this.transactionForm.get('isSplitTransaction')?.value
     // });
@@ -546,7 +548,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     if (!this.categoryList$) {
       return;
     }
-    
+
     this.categoryList$.pipe(take(1)).subscribe(categories => {
       // get the search keyword
       let search = this.categoryFilterCtrl.value;
@@ -556,12 +558,12 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       } else {
         search = search.toLowerCase();
       }
-      
+
       // filter the categories
-      const filtered = categories.filter(category => 
+      const filtered = categories.filter(category =>
         category.name.toLowerCase().indexOf(search) > -1
       );
-      
+
       this.filteredCategories.next(filtered);
     });
   }

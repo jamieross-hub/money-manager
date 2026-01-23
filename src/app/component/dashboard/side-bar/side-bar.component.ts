@@ -21,7 +21,7 @@ export class SideBarComponent implements AfterViewInit {
     public router: Router,
     private elementRef: ElementRef,
     private userService: UserService
-  ){
+  ) {
     this.navigationSections = getAllNavigationItems();
   }
 
@@ -52,7 +52,7 @@ export class SideBarComponent implements AfterViewInit {
     if (this.drawer && this.drawer.opened) {
       const clickedElement = event.target as HTMLElement;
       const sidebarElement = this.elementRef.nativeElement;
-      
+
       // Check if click is outside the sidebar
       if (!sidebarElement.contains(clickedElement)) {
         // Check if it's not a click on the menu button (which should open the sidebar)
@@ -65,7 +65,7 @@ export class SideBarComponent implements AfterViewInit {
   }
 
   public async logout() {
-    await this.auth.signOut();
+    await this.userService.logout();
     this.router.navigate(['/sign-in'], { queryParams: { loggedOut: 'true' } });
   }
 

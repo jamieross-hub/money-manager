@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
+import { UserService } from 'src/app/util/service/db/user.service';
 import { Router } from '@angular/router';
 import { Timestamp } from '@angular/fire/firestore';
 import { Goal } from 'src/app/util/service/db/goals.service';
@@ -22,7 +23,7 @@ export class GoalsComponent implements OnInit, OnDestroy {
   goals$: Observable<Goal[]>;
   goalsLoading$: Observable<boolean>;
   goalsError$: Observable<any>;
-  
+
   userId: string = '';
   goals: Goal[] = [];
   newGoal: Goal = {
@@ -33,7 +34,7 @@ export class GoalsComponent implements OnInit, OnDestroy {
     currentAmount: 0,
     deadline: Timestamp.fromDate(new Date()),
   };
-  
+
   private destroy$ = new Subject<void>();
   private subscriptions = new Subscription();
 
@@ -42,7 +43,8 @@ export class GoalsComponent implements OnInit, OnDestroy {
     private router: Router,
     private notificationService: NotificationService,
     private store: Store<AppState>,
-    public dateService: DateService
+    public dateService: DateService,
+    private userService: UserService
   ) {
     // Initialize selectors
     this.goals$ = this.store.select(GoalsSelectors.selectAllGoals);
@@ -63,9 +65,9 @@ export class GoalsComponent implements OnInit, OnDestroy {
 
   // Load goals for the logged-in user
   loadGoals() {
-    const user = this.auth.currentUser;
-    if (user) {
-      this.userId = user.uid;
+    const userId = this.userService.getCurrentUserId();
+    if (userId) {
+      this.userId = userId;
       this.store.dispatch(GoalsActions.loadGoals({ userId: this.userId }));
     }
   }
@@ -95,18 +97,18 @@ export class GoalsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const user = this.auth.currentUser;
-    if (user) {
-      this.newGoal.userId = user.uid;
+    const userId = this.userService.getCurrentUserId();
+    if (userId) {
+      this.newGoal.userId = userId;
       this.newGoal.goalId = `${this.newGoal.userId}-${new Date().getTime()}`;
-      
-      this.store.dispatch(GoalsActions.createGoal({ 
-        userId: user.uid, 
-        goal: this.newGoal 
+
+      this.store.dispatch(GoalsActions.createGoal({
+        userId: userId,
+        goal: this.newGoal
       }));
-      
+
       this.notificationService.success('Goal created successfully');
-      
+
       // Reset form
       this.newGoal = {
         goalId: '',
@@ -121,9 +123,9 @@ export class GoalsComponent implements OnInit, OnDestroy {
 
   // Delete a goal
   deleteGoal(goalId: string) {
-    const user = this.auth.currentUser;
-    if (user) {
-      this.store.dispatch(GoalsActions.deleteGoal({ userId: user.uid, goalId }));
+    const userId = this.userService.getCurrentUserId();
+    if (userId) {
+      this.store.dispatch(GoalsActions.deleteGoal({ userId, goalId }));
       this.notificationService.success('Goal deleted successfully');
     }
   }
@@ -135,9 +137,9 @@ export class GoalsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const user = this.auth.currentUser;
-    if (user) {
-      this.store.dispatch(GoalsActions.updateCurrentAmount({ userId: user.uid, goalId, amount }));
+    const userId = this.userService.getCurrentUserId();
+    if (userId) {
+      this.store.dispatch(GoalsActions.updateCurrentAmount({ userId, goalId, amount }));
       this.notificationService.success('Goal progress updated successfully');
     }
   }

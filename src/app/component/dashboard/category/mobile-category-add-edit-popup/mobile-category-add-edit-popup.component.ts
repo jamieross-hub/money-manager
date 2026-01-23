@@ -1,5 +1,6 @@
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
+import { UserService } from 'src/app/util/service/db/user.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
   MAT_DIALOG_DATA,
@@ -48,7 +49,8 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
 
     private validationService: ValidationService,
-    private ssrService: SsrService
+    private ssrService: SsrService,
+    private userService: UserService
   ) {
     this.categoryForm = this.fb.group({
       name: ['', this.validationService.getCategoryNameValidators()],
@@ -65,7 +67,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.userId = this.auth.currentUser?.uid || '';
+    this.userId = this.userService.getCurrentUserId() || '';
     if (this.ssrService.isClientSide()) {
       // Handle browser back button
       window.addEventListener('popstate', (event) => {
@@ -89,7 +91,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
 
   async onSubmit(): Promise<void> {
 
-    
+
     if (this.categoryForm.valid && !this.isSubmitting && !this.isCategoryPresent()) {
       this.isSubmitting = true;
 

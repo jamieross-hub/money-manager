@@ -4,6 +4,7 @@ import { MatSort, Sort } from '@angular/material/sort';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { Transaction } from '../../../../util/models/transaction.model';
 import { Auth } from '@angular/fire/auth';
+import { UserService } from 'src/app/util/service/db/user.service';
 import { Subscription, Observable } from 'rxjs';
 import moment from 'moment';
 import { DateService } from 'src/app/util/service/date.service';
@@ -80,7 +81,8 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
     private store: Store<AppState>,
     private ssrService: SsrService,
     private dialog: MatDialog,
-    public breakpointService: BreakpointService
+    public breakpointService: BreakpointService,
+    private userService: UserService
   ) { }
 
   ngOnInit() {
@@ -351,7 +353,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   private loadCategories(): void {
-    const userId = this.auth.currentUser?.uid;
+    const userId = this.userService.getCurrentUserId();
     if (userId) {
       this.store.select(selectAllCategories).subscribe((categories: Category[]) => {
         for (const category of categories) {

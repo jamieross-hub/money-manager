@@ -353,14 +353,14 @@ export class SignInComponent implements OnInit, OnDestroy {
   /**
    * Continue as guest (Offline Mode)
    */
-  public continueAsGuest(): void {
+  public async continueAsGuest(): Promise<void> {
     this.isLoading = true;
     try {
-      this.userService.enableGuestMode();
+      await this.userService.enableGuestMode();
 
       // Load user data for the guest user
       const guestUid = 'offline-guest';
-      this.loadUserData(guestUid);
+      await this.loadUserData(guestUid);
 
       this.notificationService.success('Logged in as Guest (Offline Mode)');
       this.router.navigate(['/dashboard']);

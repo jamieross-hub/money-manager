@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
+import { UserService } from 'src/app/util/service/db/user.service';
 import { MatDialog } from '@angular/material/dialog';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Subject, Observable } from 'rxjs';
@@ -39,7 +40,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
     mainButtonIcon: 'add',
     mainButtonColor: 'primary',
     mainButtonTooltip: 'Add Category',
-    actions: [ ]
+    actions: []
   };
 
   @Input() isChildView: boolean = false;
@@ -72,6 +73,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
     public dateService: DateService,
     public breakpointService: BreakpointService,
     private categoryService: CategoryService,
+    private userService: UserService,
   ) {
 
     this.isLoading$ = this.store.select(CategoriesSelectors.selectCategoriesLoading);
@@ -91,13 +93,13 @@ export class CategoryComponent implements OnInit, OnDestroy {
   }
 
   private async initializeComponent(): Promise<void> {
-    const currentUser = await this.auth.currentUser;
-    if (!currentUser) {
+    const userId = this.userService.getCurrentUserId();
+    if (!userId) {
       this.errorMessage = 'User not authenticated';
       return;
     }
 
-    this.userId = currentUser.uid;
+    this.userId = userId;
     this.loadUserCategories();
     this.loadUserTransactions();
     this.loadUserProfile();
@@ -186,7 +188,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(MobileCategoryAddEditPopupComponent, {
       panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
       data: {
-        category: category ? {...category} : null,
+        category: category ? { ...category } : null,
         isEdit: category ? true : false,
         allCategories: this.categories
       }
@@ -298,7 +300,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
   public toggleListViewMode(): void {
     this.isListViewMode = !this.isListViewMode;
-    
+
     // Save the preference to user profile
     this.store.select(ProfileSelectors.selectUserPreferences).pipe(takeUntil(this.destroy$)).subscribe(preferences => {
       if (preferences) {
@@ -306,8 +308,8 @@ export class CategoryComponent implements OnInit, OnDestroy {
           ...preferences,
           categoryListViewMode: this.isListViewMode
         };
-        this.store.dispatch(ProfileActions.updatePreferences({ 
-          userId: this.userId, 
+        this.store.dispatch(ProfileActions.updatePreferences({
+          userId: this.userId,
           preferences: updatedPreferences
         }));
       }

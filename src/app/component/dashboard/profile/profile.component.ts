@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Auth } from '@angular/fire/auth';
+import { UserService } from 'src/app/util/service/db/user.service';
 import { Router } from '@angular/router';
 import { Subject, Observable, Subscription } from 'rxjs';
 import {
@@ -90,9 +91,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private dateService: DateService,
     private store: Store<AppState>,
-    private breakpointObserver: BreakpointObserver
+    private breakpointObserver: BreakpointObserver,
+    private userService: UserService
   ) {
-    this.currentUser = this.auth.currentUser;
+    this.currentUser = this.userService.getCurrentUserId();
     this.isMobile = this.breakpointObserver.isMatched('(max-width: 600px)');
     // Initialize selectors
     this.profile$ = this.store.select(ProfileSelectors.selectProfile);
@@ -273,7 +275,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         };
 
         this.store.dispatch(ProfileActions.updateProfile({
-          userId: this.currentUser.uid,
+          userId: this.userProfile.uid,
           profile: updatedUser
         }));
 
@@ -302,6 +304,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   async deleteAccount(): Promise<void> {
+    if (this.userService.isGuestUser()) {
+      this.notificationService.warning('Guest accounts cannot be deleted. Simply logout or clear browser data.');
+      return;
+    }
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {

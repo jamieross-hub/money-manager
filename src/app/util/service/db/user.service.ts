@@ -50,8 +50,8 @@ import { createAccount } from 'src/app/store/accounts/accounts.actions';
 import { createCategory } from 'src/app/store/categories/categories.actions';
 import { AccountType } from '../../config/enums';
 import { APP_CONFIG } from '../../config/config';
-import { AccountsService } from './accounts.service'; // Import AccountsService
-import { CategoryService } from './category.service'; // Import CategoryService
+import * as CategoriesActions from 'src/app/store/categories/categories.actions';
+import * as AccountsActions from 'src/app/store/accounts/accounts.actions';
 
 /**
  * Security configuration for user operations
@@ -108,8 +108,6 @@ export class UserService {
     private readonly afAuth: Auth,
     private readonly firestore: Firestore,
     private readonly store: Store<AppState>,
-    private readonly accountsService: AccountsService, // Inject AccountsService
-    private readonly categoryService: CategoryService, // Inject CategoryService
   ) {
     this.initializeAuthState();
     this.startSecurityMonitoring();
@@ -155,7 +153,7 @@ export class UserService {
   /**
    * Enable guest/offline mode
    */
-  public enableGuestMode(): void {
+  public async enableGuestMode(): Promise<void> {
     const guestUser: User = {
       uid: 'offline-guest',
       email: 'guest@offline.local',
@@ -170,8 +168,34 @@ export class UserService {
     localStorage.setItem('guest-mode', 'true');
     this.userAuth$.next(guestUser);
 
+    // Check if data is already initialized for guest
+    if (localStorage.getItem('guest-data-initialized') !== 'true') {
+      await this.setupDefaultData('offline-guest');
+      localStorage.setItem('guest-data-initialized', 'true');
+    }
+
     // We treat the guest user as logged in for the app state
     console.log('Guest mode enabled');
+  }
+
+  /**
+   * Logout from the application (Firebase or Guest)
+   */
+  public async logout(): Promise<void> {
+    if (this.isGuestUser()) {
+      localStorage.removeItem('guest-mode');
+      localStorage.removeItem('guest-data-initialized');
+      this.userAuth$.next(null);
+    } else {
+      await this.auth.signOut();
+    }
+  }
+
+  /**
+   * Get current user ID (Firebase or Guest)
+   */
+  public getCurrentUserId(): string | null {
+    return this.userAuth$.value?.uid || null;
   }
 
   /**
@@ -796,34 +820,50 @@ export class UserService {
    */
   private async setupDefaultData(uid: string): Promise<void> {
     try {
+      console.log(`🛠️ Setting up default data for user: ${uid}`);
+
+      // Create default categories first
+      for (const defaultCategory of defaultCategoriesForNewUser) {
+        this.store.dispatch(CategoriesActions.createCategory({
+          userId: uid,
+          name: defaultCategory.name,
+          categoryType: defaultCategory.type,
+          icon: defaultCategory.icon,
+          color: defaultCategory.color
+        }));
+      }
+
       // Create default bank accounts
       for (const defaultAccount of defaultBankAccounts) {
         const accountType = this.mapBankAccountType(defaultAccount.type);
 
-        await firstValueFrom(this.accountsService.createAccount(uid, {
-          name: defaultAccount.name,
-          type: accountType,
-          balance: defaultAccount.balance,
-          description: `${defaultAccount.type} account`,
-          institution: defaultAccount.institution,
-          currency: defaultAccount.currency,
+        this.store.dispatch(AccountsActions.createAccount({
+          userId: uid,
+          accountData: {
+            name: defaultAccount.name,
+            type: accountType,
+            balance: defaultAccount.balance,
+            description: `${defaultAccount.type} account`,
+            institution: defaultAccount.institution,
+            currency: defaultAccount.currency,
+          }
         }));
       }
 
-      // Create default categories
-      for (const defaultCategory of defaultCategoriesForNewUser) {
-        await firstValueFrom(this.categoryService.createCategory(
-          uid,
-          defaultCategory.name,
-          defaultCategory.type,
-          defaultCategory.icon,
-          defaultCategory.color
-        ));
+      // For guest mode, we don't strictly await Firestore success as it might be handled offline
+      if (uid === 'offline-guest') {
+        // Wait a small amount of time for the actions to be dispatched and processed by effects
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } else {
+        // For real users, we could wait for completion if needed, 
+        // but dispatching is usually sufficient as the store handles the state.
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
 
       this.logAuditEvent('DEFAULT_DATA_SETUP', uid, {
         timestamp: new Date().toISOString()
       });
+      console.log('✅ Default data setup complete');
     } catch (error) {
       console.error('Error setting up default data:', error);
       this.logAuditEvent('DEFAULT_DATA_SETUP_FAILED', uid, {

@@ -17,6 +17,9 @@ import { CreateSplitTransactionRequest } from '../../models/splitwise.model';
 import { SplitwiseService } from 'src/app/modules/splitwise/services/splitwise.service';
 import { CommonSyncService, SyncItem } from '../common-sync.service';
 import { BaseService } from '../base.service';
+import { LocalStorageUtilityService } from '../local-storage-utility.service';
+import { UserService } from './user.service';
+import { of } from 'rxjs';
 
 @Injectable({
     providedIn: 'root'
@@ -31,30 +34,52 @@ export class TransactionsService extends BaseService {
         private store: Store<AppState>,
         private accountsService: AccountsService,
         private splitwiseService: SplitwiseService,
-        private commonSyncService: CommonSyncService
+        private commonSyncService: CommonSyncService,
+        private localStorageUtility: LocalStorageUtilityService,
+        private userService: UserService
     ) {
         super(firestore, auth);
+    }
+
+    private isGuest(): boolean {
+        return this.userService.getCurrentUserId() === 'offline-guest';
     }
 
     /**
      * Create a new transaction
      */
     createTransaction(userId: string, transaction: Omit<Transaction, 'id'>): Observable<void> {
-        return new Observable<void>(observer => {
-            const transactionId = this.generateId();
-            const transactionData = {
-                ...transaction,
-                id: transactionId,
-                date: this.dateService.toDate(transaction.date),
-                syncStatus: this.commonSyncService.isCurrentlyOnline() ? 'synced' as const : 'pending' as const
-            };
+        const transactionId = this.generateId();
+        const transactionData: Transaction = {
+            ...transaction,
+            id: transactionId,
+            date: this.dateService.toDate(transaction.date) || new Date(),
+            syncStatus: SyncStatus.SYNCED
+        };
 
+        if (this.isGuest()) {
+            this.localStorageUtility.saveEntity('transactions', transactionData, 'id');
+            // Update store immediately
+            this.store.dispatch(TransactionsActions.createTransactionSuccess({
+                transaction: transactionData
+            }));
+            // Update account balance
+            this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
+                userId: userId,
+                accountId: transaction.accountId,
+                transactionType: 'create',
+                newTransaction: transactionData
+            }));
+            return of(undefined);
+        }
+
+        return new Observable<void>(observer => {
             const createTransactionAsync = async () => {
                 try {
                     if (this.commonSyncService.isCurrentlyOnline()) {
                         try {
-                           const transactionRef = doc(this.firestore, `users/${userId}/transactions/${transactionId}`);
-                           await setDoc(transactionRef, transactionData);
+                            const transactionRef = doc(this.firestore, `users/${userId}/transactions/${transactionId}`);
+                            await setDoc(transactionRef, transactionData);
 
                             if (transaction.isSplitTransaction && transaction.splitGroupId) {
                                 await this.createSplitTransaction(transaction.splitGroupId, transaction, transactionRef.id, userId);
@@ -72,10 +97,10 @@ export class TransactionsService extends BaseService {
                             }));
 
                             // Add to store immediately for online transactions
-                            this.store.dispatch(TransactionsActions.createTransactionSuccess({ 
-                                transaction: transactionData as Transaction 
+                            this.store.dispatch(TransactionsActions.createTransactionSuccess({
+                                transaction: transactionData as Transaction
                             }));
-                            
+
                             // Update cache
                             this.updateTransactionCache(userId, 'create', transactionData as Transaction);
 
@@ -86,10 +111,10 @@ export class TransactionsService extends BaseService {
                             // Fall back to offline mode
                             await this.addToSyncQueue('create', transactionData);
                             // Add to store immediately for offline transactions
-                            this.store.dispatch(TransactionsActions.createTransactionSuccess({ 
-                                transaction: transactionData as Transaction 
+                            this.store.dispatch(TransactionsActions.createTransactionSuccess({
+                                transaction: transactionData as Transaction
                             }));
-                            
+
                             // Update cache
                             this.updateTransactionCache(userId, 'create', transactionData as Transaction);
                             observer.next();
@@ -99,10 +124,10 @@ export class TransactionsService extends BaseService {
                         // Store offline
                         await this.addToSyncQueue('create', transactionData);
                         // Add to store immediately for offline transactions
-                        this.store.dispatch(TransactionsActions.createTransactionSuccess({ 
-                            transaction: transactionData as Transaction 
+                        this.store.dispatch(TransactionsActions.createTransactionSuccess({
+                            transaction: transactionData as Transaction
                         }));
-                        
+
                         // Update cache
                         this.updateTransactionCache(userId, 'create', transactionData as Transaction);
                         observer.next();
@@ -122,6 +147,34 @@ export class TransactionsService extends BaseService {
      * Update an existing transaction
      */
     updateTransaction(userId: string, transactionId: string, updatedTransaction: Partial<Transaction>): Observable<void> {
+        if (this.isGuest()) {
+            const transactions = this.localStorageUtility.getEntities<Transaction>('transactions');
+            const index = transactions.findIndex(t => t.id === transactionId);
+            if (index !== -1) {
+                const oldTransaction = { ...transactions[index] };
+                const newTransaction = { ...oldTransaction, ...updatedTransaction, updatedAt: new Date(), syncStatus: SyncStatus.SYNCED };
+                transactions[index] = newTransaction;
+                this.localStorageUtility.saveEntities('transactions', transactions);
+
+                // Update store immediately
+                this.store.dispatch(TransactionsActions.updateTransactionSuccess({
+                    transaction: newTransaction as Transaction
+                }));
+
+                // Update account balance if amount or account changed
+                if (updatedTransaction.amount || updatedTransaction.accountId) {
+                    this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
+                        userId: userId,
+                        accountId: updatedTransaction.accountId || oldTransaction.accountId,
+                        transactionType: 'update',
+                        oldTransaction: oldTransaction as Transaction,
+                        newTransaction: newTransaction as Transaction
+                    }));
+                }
+            }
+            return of(undefined);
+        }
+
         return new Observable<void>(observer => {
             const updateTransactionAsync = async () => {
                 try {
@@ -129,7 +182,7 @@ export class TransactionsService extends BaseService {
                         ...updatedTransaction,
                         updatedAt: new Date(),
                         updatedBy: userId,
-                        syncStatus: this.commonSyncService.isCurrentlyOnline() ? 'synced' as const : 'pending' as const
+                        syncStatus: this.commonSyncService.isCurrentlyOnline() ? SyncStatus.SYNCED : SyncStatus.PENDING
                     };
 
                     if (this.commonSyncService.isCurrentlyOnline()) {
@@ -149,10 +202,10 @@ export class TransactionsService extends BaseService {
                             }
 
                             // Update store immediately for online transactions
-                            this.store.dispatch(TransactionsActions.updateTransactionSuccess({ 
-                                transaction: { id: transactionId, ...updateData } as Transaction 
+                            this.store.dispatch(TransactionsActions.updateTransactionSuccess({
+                                transaction: { id: transactionId, ...updateData } as Transaction
                             }));
-                            
+
                             // Update cache
                             this.updateTransactionCache(userId, 'update', { id: transactionId, ...updateData } as Transaction);
 
@@ -162,10 +215,10 @@ export class TransactionsService extends BaseService {
                             console.error('Failed to update transaction online:', error);
                             await this.addToSyncQueue('update', { id: transactionId, ...updateData });
                             // Update store immediately for offline transactions
-                            this.store.dispatch(TransactionsActions.updateTransactionSuccess({ 
-                                transaction: { id: transactionId, ...updateData } as Transaction 
+                            this.store.dispatch(TransactionsActions.updateTransactionSuccess({
+                                transaction: { id: transactionId, ...updateData } as Transaction
                             }));
-                            
+
                             // Update cache
                             this.updateTransactionCache(userId, 'update', { id: transactionId, ...updateData } as Transaction);
                             observer.next();
@@ -174,10 +227,10 @@ export class TransactionsService extends BaseService {
                     } else {
                         await this.addToSyncQueue('update', { id: transactionId, ...updateData });
                         // Update store immediately for offline transactions
-                        this.store.dispatch(TransactionsActions.updateTransactionSuccess({ 
-                            transaction: { id: transactionId, ...updateData } as Transaction 
+                        this.store.dispatch(TransactionsActions.updateTransactionSuccess({
+                            transaction: { id: transactionId, ...updateData } as Transaction
                         }));
-                        
+
                         // Update cache
                         this.updateTransactionCache(userId, 'update', { id: transactionId, ...updateData } as Transaction);
                         observer.next();
@@ -196,10 +249,29 @@ export class TransactionsService extends BaseService {
      * Delete a transaction
      */
     deleteTransaction(userId: string, transactionId: string): Observable<void> {
+        if (this.isGuest()) {
+            const transactions = this.localStorageUtility.getEntities<Transaction>('transactions');
+            const transactionToDelete = transactions.find(t => t.id === transactionId);
+
+            if (transactionToDelete) {
+                this.localStorageUtility.deleteEntity('transactions', transactionId, 'id');
+                // Update store immediately
+                this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ transactionId }));
+                // Update account balance
+                this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
+                    userId: userId,
+                    accountId: transactionToDelete.accountId,
+                    transactionType: 'delete',
+                    oldTransaction: transactionToDelete
+                }));
+            }
+            return of(undefined);
+        }
+
         return new Observable<void>(observer => {
             // Get transaction data for balance update first
             const transactionRef = doc(this.firestore, `users/${userId}/transactions/${transactionId}`);
-            
+
             getDoc(transactionRef).then(transactionDoc => {
                 const transactionToDelete = transactionDoc.exists() ? { id: transactionDoc.id, ...transactionDoc.data() } as Transaction : null;
 
@@ -225,7 +297,7 @@ export class TransactionsService extends BaseService {
 
                         // Remove from store immediately
                         this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ transactionId }));
-                        
+
                         // Update cache
                         this.updateTransactionCache(userId, 'delete', { id: transactionId } as Transaction);
 
@@ -267,6 +339,12 @@ export class TransactionsService extends BaseService {
      * Get all transactions for a user
      */
     getTransactions(userId: string): Observable<Transaction[]> {
+        if (this.isGuest()) {
+            const transactions = this.localStorageUtility.getEntities<Transaction>('transactions');
+            this.transactionsSubject.next(transactions);
+            return of(transactions);
+        }
+
         const transactionsRef = query(
             collection(this.firestore, `users/${userId}/transactions`),
             orderBy('date', 'desc')
@@ -286,26 +364,25 @@ export class TransactionsService extends BaseService {
                     // If offline, also load any cached transactions
                     if (!this.commonSyncService.isCurrentlyOnline()) {
                         const cachedTransactions = this.getCachedTransactions(userId);
-                        const cachedTransactionIds = cachedTransactions.map(t => t.id);
-                        
+
                         // Merge online and cached transactions, avoiding duplicates
                         const onlineTransactionIds = transactions.map(t => t.id);
-                        const uniqueCachedTransactions = cachedTransactions.filter(t => 
+                        const uniqueCachedTransactions = cachedTransactions.filter(t =>
                             t.id && !onlineTransactionIds.includes(t.id)
                         );
-                        
+
                         transactions.push(...uniqueCachedTransactions);
                     }
 
                     // Cache transactions for offline use
                     this.cacheTransactions(userId, transactions);
-                    
+
                     this.transactionsSubject.next(transactions);
                     observer.next(transactions);
                 },
                 (error) => {
                     console.error('Failed to fetch transactions:', error);
-                    
+
                     // If offline and error, try to load from cache
                     if (!this.commonSyncService.isCurrentlyOnline()) {
                         const cachedTransactions = this.getCachedTransactions(userId);
@@ -325,6 +402,11 @@ export class TransactionsService extends BaseService {
      * Get a specific transaction
      */
     getTransaction(userId: string, transactionId: string): Observable<Transaction | undefined> {
+        if (this.isGuest()) {
+            const transactions = this.localStorageUtility.getEntities<Transaction>('transactions');
+            return of(transactions.find(t => t.id === transactionId));
+        }
+
         return new Observable<Transaction | undefined>(observer => {
             const getTransactionAsync = async () => {
                 try {
@@ -369,6 +451,12 @@ export class TransactionsService extends BaseService {
      * Get recurring transactions for a user
      */
     getRecurringTransactions(userId: string): Observable<Transaction[]> {
+        if (this.isGuest()) {
+            const transactions = this.localStorageUtility.getEntities<Transaction>('transactions');
+            const recurringTransactions = transactions.filter(t => t.isRecurring === true);
+            return of(recurringTransactions);
+        }
+
         const transactionsRef = query(
             collection(this.firestore, `users/${userId}/transactions`),
             orderBy('date', 'desc')
@@ -387,7 +475,7 @@ export class TransactionsService extends BaseService {
 
                     // Filter only recurring transactions
                     const recurringTransactions = transactions.filter(t => t.isRecurring === true);
-                    
+
                     observer.next(recurringTransactions);
                 },
                 (error) => {
@@ -407,63 +495,63 @@ export class TransactionsService extends BaseService {
         return this.getRecurringTransactions(userId).pipe(
             switchMap(recurringTransactions => {
                 console.log(`Checking ${recurringTransactions.length} recurring transactions for due status`);
-                
+
                 // Get all transactions to check for existing ones in current period
                 return this.getTransactions(userId).pipe(
                     map(allTransactions => {
                         const today = new Date();
                         today.setHours(0, 0, 0, 0);
-                        
+
                         return recurringTransactions.filter(transaction => {
                             // Additional check to ensure transaction is still recurring
                             if (!transaction.isRecurring) {
                                 console.log(`Transaction ${transaction.id} (${transaction.payee}) is no longer recurring, skipping`);
                                 return false;
                             }
-                            
+
                             if (!transaction.nextOccurrence) {
                                 console.log(`Transaction ${transaction.id} (${transaction.payee}) has no next occurrence, skipping`);
                                 return false;
                             }
-                            
-                            const nextOccurrence = transaction.nextOccurrence instanceof Date 
-                                ? transaction.nextOccurrence 
+
+                            const nextOccurrence = transaction.nextOccurrence instanceof Date
+                                ? transaction.nextOccurrence
                                 : this.dateService.toDate(transaction.nextOccurrence);
-                            
+
                             if (!nextOccurrence) {
                                 console.log(`Transaction ${transaction.id} (${transaction.payee}) has invalid next occurrence, skipping`);
                                 return false;
                             }
-                            
+
                             // Create a new Date object to avoid modifying the original
                             const normalizedNextOccurrence = new Date(nextOccurrence);
                             normalizedNextOccurrence.setHours(0, 0, 0, 0);
-                            
+
                             const isDue = normalizedNextOccurrence <= today;
-                            
+
                             if (!isDue) {
                                 console.log(`Transaction ${transaction.id} (${transaction.payee}) is not due yet, next occurrence: ${normalizedNextOccurrence}`);
                                 return false;
                             }
-                            
+
                             // Check if a transaction for this period already exists
                             const hasExistingTransaction = this.checkExistingTransactionInPeriod(
-                                allTransactions, 
-                                transaction, 
+                                allTransactions,
+                                transaction,
                                 today
                             );
-                            
+
                             if (hasExistingTransaction) {
                                 console.log(`Transaction ${transaction.id} (${transaction.payee}) already has an entry for current period, skipping`);
                                 return false;
                             }
-                            
+
                             // For monthly recurring transactions, check if next occurrence is in current month
                             if (transaction.recurringInterval === RecurringInterval.MONTHLY) {
-                                const nextOccurrence = transaction.nextOccurrence instanceof Date 
-                                    ? transaction.nextOccurrence 
+                                const nextOccurrence = transaction.nextOccurrence instanceof Date
+                                    ? transaction.nextOccurrence
                                     : this.dateService.toDate(transaction.nextOccurrence);
-                                
+
                                 if (nextOccurrence) {
                                     const isNextOccurrenceInCurrentMonth = this.isInSamePeriod(nextOccurrence, this.dateService.toDate(transaction.date), RecurringInterval.MONTHLY);
                                     console.log(`Monthly transaction ${transaction.id} (${transaction.payee}) next occurrence check:`, {
@@ -471,13 +559,13 @@ export class TransactionsService extends BaseService {
                                         currentMonth: today,
                                         isNextOccurrenceInCurrentMonth: isNextOccurrenceInCurrentMonth
                                     });
-                                    
+
                                     if (isNextOccurrenceInCurrentMonth) {
-                                         return false;
+                                        return false;
                                     }
                                 }
                             }
-                            
+
                             // Debug logging
                             console.log(`Transaction ${transaction.id} (${transaction.payee}):`, {
                                 isRecurring: transaction.isRecurring,
@@ -486,7 +574,7 @@ export class TransactionsService extends BaseService {
                                 isDue: isDue,
                                 hasExistingTransaction: hasExistingTransaction
                             });
-                            
+
                             return true;
                         });
                     })
@@ -554,7 +642,7 @@ export class TransactionsService extends BaseService {
 
                         await this.updateTransaction(userId, transaction.id!, updatedRecurringTransaction).toPromise();
                         console.log(`Successfully updated recurring transaction ${transaction.id} with next occurrence: ${nextOccurrence}`);
-                        
+
                         // Add a small delay to ensure Firestore update is reflected
                         await new Promise(resolve => setTimeout(resolve, 1000));
                     }
@@ -581,73 +669,73 @@ export class TransactionsService extends BaseService {
             if (transaction.id === recurringTransaction.id) {
                 return false;
             }
-            
+
             // Check if it's the same type of transaction (same payee, amount, category, account)
-            const isSameTransaction = 
+            const isSameTransaction =
                 transaction.payee === recurringTransaction.payee &&
                 transaction.amount === recurringTransaction.amount &&
                 transaction.categoryId === recurringTransaction.categoryId &&
                 transaction.accountId === recurringTransaction.accountId &&
                 transaction.type === recurringTransaction.type;
-            
+
             if (!isSameTransaction) {
                 return false;
             }
-            
+
             // Check if the transaction date falls within the current period
-            const transactionDate = transaction.date instanceof Date 
-                ? transaction.date 
+            const transactionDate = transaction.date instanceof Date
+                ? transaction.date
                 : this.dateService.toDate(transaction.date);
-            
+
             if (!transactionDate) {
                 return false;
             }
-            
+
             return this.isInSamePeriod(transactionDate, today, recurringTransaction.recurringInterval!);
         });
-        
-        console.log(`Found ${matchingTransactions.length} existing transactions for ${recurringTransaction.payee} in current period:`, 
+
+        console.log(`Found ${matchingTransactions.length} existing transactions for ${recurringTransaction.payee} in current period:`,
             matchingTransactions.map(t => ({ id: t.id, date: t.date, amount: t.amount })));
-        
+
         return matchingTransactions.length > 0;
     }
-    
+
     /**
      * Check if two dates are in the same period based on recurring interval
      */
     private isInSamePeriod(date1: Date, date2: Date | null, interval: RecurringInterval): boolean {
         const d1 = new Date(date1);
         const d2 = date2 ? new Date(date2) : new Date();
-        
+
         // Normalize both dates to start of day
         d1.setHours(0, 0, 0, 0);
         d2.setHours(0, 0, 0, 0);
-        
+
         switch (interval) {
             case RecurringInterval.DAILY:
                 // Same day
                 return d1.getTime() === d2.getTime();
-                
+
             case RecurringInterval.WEEKLY:
                 // Same week (Monday to Sunday)
                 const week1 = this.getWeekStart(d1);
                 const week2 = this.getWeekStart(d2);
                 return week1.getTime() === week2.getTime();
-                
+
             case RecurringInterval.MONTHLY:
                 // Same month and year
-                return d1.getFullYear() === d2.getFullYear() && 
-                       d1.getMonth() === d2.getMonth();
-                
+                return d1.getFullYear() === d2.getFullYear() &&
+                    d1.getMonth() === d2.getMonth();
+
             case RecurringInterval.YEARLY:
                 // Same year
                 return d1.getFullYear() === d2.getFullYear();
-                
+
             default:
                 return false;
         }
     }
-    
+
     /**
      * Get the start of the week (Monday) for a given date
      */
@@ -659,7 +747,7 @@ export class TransactionsService extends BaseService {
         d.setHours(0, 0, 0, 0);
         return d;
     }
-    
+
 
 
     /**
@@ -761,7 +849,7 @@ export class TransactionsService extends BaseService {
     private updateTransactionCache(userId: string, operation: 'create' | 'update' | 'delete', transaction?: Transaction): void {
         try {
             const cachedTransactions = this.getCachedTransactions(userId);
-            
+
             switch (operation) {
                 case 'create':
                     if (transaction) {
@@ -785,7 +873,7 @@ export class TransactionsService extends BaseService {
                     }
                     break;
             }
-            
+
             this.cacheTransactions(userId, cachedTransactions);
         } catch (error) {
             console.error('Error updating transaction cache:', error);

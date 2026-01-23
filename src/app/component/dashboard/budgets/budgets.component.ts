@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
+import { UserService } from 'src/app/util/service/db/user.service';
 import { Router } from '@angular/router';
 import { Timestamp } from '@angular/fire/firestore';
 import { Budget } from 'src/app/util/service/db/budgets.service';
@@ -59,7 +60,7 @@ export class BudgetsComponent implements OnInit, OnDestroy {
   categories$: Observable<Category[]>;
   categoriesLoading$: Observable<boolean>;
   monthlyIncome$: Observable<number>;
-  
+
   userId: string = '';
   budgets: Budget[] = [];
   categories: Category[] = [];
@@ -72,11 +73,11 @@ export class BudgetsComponent implements OnInit, OnDestroy {
     startDate: Timestamp.fromDate(new Date()),
     endDate: Timestamp.fromDate(new Date()),
   };
-  
+
   // Category budget sliders
   categoryBudgets: { [categoryId: string]: number } = {};
   showCategorySliders: boolean = true;
-  
+
   // Date models for form
   startDateModel: Date = new Date();
   endDateModel: Date = new Date();
@@ -86,7 +87,7 @@ export class BudgetsComponent implements OnInit, OnDestroy {
   totalSteps: number = 6;
   showMonthlyView: boolean = false;
   inputMode: 'slider' | 'input' = 'slider';
-  
+
   yearlyBudget: YearlyBudget = {
     totalIncome: 0,
     splitByMonth: false,
@@ -96,7 +97,7 @@ export class BudgetsComponent implements OnInit, OnDestroy {
 
   // Math object for template access
   Math = Math;
-  
+
   private destroy$ = new Subject<void>();
   private subscriptions = new Subscription();
 
@@ -105,7 +106,8 @@ export class BudgetsComponent implements OnInit, OnDestroy {
     private router: Router,
     private notificationService: NotificationService,
     private store: Store<AppState>,
-    public dateService: DateService
+    public dateService: DateService,
+    private userService: UserService
   ) {
     // Initialize selectors
     this.budgets$ = this.store.select(BudgetsSelectors.selectAllBudgets);
@@ -221,12 +223,12 @@ export class BudgetsComponent implements OnInit, OnDestroy {
   private adjustAllCategories(excessAmount: number) {
     const totalAllocated = this.getTotalAllocated();
     if (totalAllocated === 0) return;
-    
+
     Object.keys(this.categoryBudgets).forEach(categoryId => {
       const currentBudget = this.categoryBudgets[categoryId] || 0;
       const reductionRatio = (currentBudget * 12) / totalAllocated; // Convert monthly to yearly for ratio calculation
       const reduction = (excessAmount * reductionRatio) / 12; // Convert yearly excess to monthly reduction
-      
+
       this.categoryBudgets[categoryId] = Math.max(0, currentBudget - reduction);
     });
   }
@@ -272,7 +274,7 @@ export class BudgetsComponent implements OnInit, OnDestroy {
       if (monthlyBudget > 0) {
         // Convert monthly budget to yearly budget for storage
         const yearlyBudget = monthlyBudget * 12;
-        this.createBudgetForCategory(category.name, yearlyBudget,category);
+        this.createBudgetForCategory(category.name, yearlyBudget, category);
       }
     });
 
@@ -285,18 +287,18 @@ export class BudgetsComponent implements OnInit, OnDestroy {
 
   // Load budgets for the logged-in user
   loadBudgets() {
-    const user = this.auth.currentUser;
-    if (user) {
-      this.userId = user.uid;
+    const userId = this.userService.getCurrentUserId();
+    if (userId) {
+      this.userId = userId;
       this.store.dispatch(BudgetsActions.loadBudgets({ userId: this.userId }));
     }
   }
 
   // Load categories for the logged-in user
   loadCategories() {
-    const user = this.auth.currentUser;
-    if (user) {
-      this.store.dispatch(CategoriesActions.loadCategories({ userId: user.uid }));
+    const userId = this.userService.getCurrentUserId();
+    if (userId) {
+      this.store.dispatch(CategoriesActions.loadCategories({ userId }));
     }
   }
 
@@ -368,21 +370,21 @@ export class BudgetsComponent implements OnInit, OnDestroy {
     const currentTotal = this.getTotalAllocated();
     const currentCategoryBudget = this.categoryBudgets[categoryId] || 0;
     const difference = (newLimit - currentCategoryBudget) * 12; // Convert to yearly difference
-    
+
     // If the new total would exceed yearly budget, adjust other categories
     if (currentTotal + difference > this.yearlyBudget.totalIncome) {
       const excess = currentTotal + difference - this.yearlyBudget.totalIncome;
-      
+
       // Set the current category to the new limit
       this.categoryBudgets[categoryId] = newLimit;
-      
+
       // Distribute the excess reduction across other categories proportionally
       this.adjustOtherCategories(categoryId, excess);
     } else {
       // Simple case: just update the category budget
       this.categoryBudgets[categoryId] = newLimit;
     }
-    
+
     // Auto-save the category budget
     this.saveCategoryBudget(categoryId);
   }
@@ -404,20 +406,20 @@ export class BudgetsComponent implements OnInit, OnDestroy {
   private adjustOtherCategories(excludedCategoryId: string, excessAmount: number) {
     const otherCategories = Object.keys(this.categoryBudgets).filter(id => id !== excludedCategoryId);
     const otherCategoriesTotal = otherCategories.reduce((sum, id) => sum + (this.categoryBudgets[id] || 0), 0);
-    
+
     if (otherCategoriesTotal === 0) {
       // If no other categories have budgets, reduce the current category
       // excessAmount is yearly, so divide by 12 to get monthly reduction
       this.categoryBudgets[excludedCategoryId] = Math.max(0, this.categoryBudgets[excludedCategoryId] - (excessAmount / 12));
       return;
     }
-    
+
     // Reduce other categories proportionally
     otherCategories.forEach(categoryId => {
       const currentBudget = this.categoryBudgets[categoryId] || 0;
       const reductionRatio = currentBudget / otherCategoriesTotal;
       const reduction = (excessAmount * reductionRatio) / 12; // Convert yearly excess to monthly reduction
-      
+
       this.categoryBudgets[categoryId] = Math.max(0, currentBudget - reduction);
     });
   }
@@ -438,30 +440,30 @@ export class BudgetsComponent implements OnInit, OnDestroy {
       this.updateBudgetLimit(existingBudget.budgetId, yearlyLimit);
     } else {
       // Create new budget for this category
-      this.createBudgetForCategory(category.name, yearlyLimit,category);
+      this.createBudgetForCategory(category.name, yearlyLimit, category);
     }
   }
 
   // Create budget for a specific category
-  createBudgetForCategory(categoryName: string, yearlyLimit: number,category: Category) {
-    const user = this.auth.currentUser;
-    if (user && yearlyLimit > 0) {
+  createBudgetForCategory(categoryName: string, yearlyLimit: number, category: Category) {
+    const userId = this.userService.getCurrentUserId();
+    if (userId && yearlyLimit > 0) {
       const newBudget: Budget = {
-        budgetId: `${user.uid}-${categoryName}-${new Date().getTime()}`,
-        userId: user.uid,
+        budgetId: `${userId}-${categoryName}-${new Date().getTime()}`,
+        userId: userId,
         category: categoryName,
         limit: yearlyLimit,
         spent: 0,
         startDate: Timestamp.fromDate(new Date()),
         endDate: Timestamp.fromDate(new Date(new Date().getFullYear(), 11, 31)), // End of year
       };
-      
-      this.store.dispatch(BudgetsActions.createBudget({ 
-        userId: user.uid, 
-        budget: newBudget 
+
+      this.store.dispatch(BudgetsActions.createBudget({
+        userId: userId,
+        budget: newBudget
       }));
 
-      if(category.id && category.type === TransactionType.EXPENSE){
+      if (category.id && category.type === TransactionType.EXPENSE) {
         this.store.dispatch(CategoriesActions.updateCategory({
           userId: this.userId,
           categoryId: category.id,
@@ -479,24 +481,24 @@ export class BudgetsComponent implements OnInit, OnDestroy {
             budgetAlertEnabled: true
           }
         }));
-    
+
       }
-      
+
       this.notificationService.success(`Budget created for ${categoryName}`);
     }
   }
 
   // Update budget limit
   updateBudgetLimit(budgetId: string, newLimit: number) {
-    const user = this.auth.currentUser;
-    if (user) {
+    const userId = this.userService.getCurrentUserId();
+    if (userId) {
       const budget = this.budgets.find(b => b.budgetId === budgetId);
       if (budget) {
         const updatedBudget = { ...budget, limit: newLimit };
-        this.store.dispatch(BudgetsActions.updateBudget({ 
-          userId: user.uid, 
-          budgetId, 
-          budget: updatedBudget 
+        this.store.dispatch(BudgetsActions.updateBudget({
+          userId: userId,
+          budgetId,
+          budget: updatedBudget
         }));
         this.notificationService.success(`Budget limit updated for ${budget.category}`);
       }
@@ -540,20 +542,20 @@ export class BudgetsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const user = this.auth.currentUser;
-    if (user) {
-      this.newBudget.userId = user.uid;
+    const userId = this.userService.getCurrentUserId();
+    if (userId) {
+      this.newBudget.userId = userId;
       this.newBudget.budgetId = `${this.newBudget.userId}-${new Date().getTime()}`;
       this.newBudget.startDate = Timestamp.fromDate(this.startDateModel);
       this.newBudget.endDate = Timestamp.fromDate(this.endDateModel);
-      
-      this.store.dispatch(BudgetsActions.createBudget({ 
-        userId: user.uid, 
-        budget: this.newBudget 
+
+      this.store.dispatch(BudgetsActions.createBudget({
+        userId: userId,
+        budget: this.newBudget
       }));
-      
+
       this.notificationService.success('Budget created successfully');
-      
+
       // Reset form
       this.newBudget = {
         budgetId: '',
@@ -571,9 +573,9 @@ export class BudgetsComponent implements OnInit, OnDestroy {
 
   // Delete a budget
   deleteBudget(budgetId: string) {
-    const user = this.auth.currentUser;
-    if (user) {
-      this.store.dispatch(BudgetsActions.deleteBudget({ userId: user.uid, budgetId }));
+    const userId = this.userService.getCurrentUserId();
+    if (userId) {
+      this.store.dispatch(BudgetsActions.deleteBudget({ userId, budgetId }));
       this.notificationService.success('Budget deleted successfully');
     }
   }
@@ -585,9 +587,9 @@ export class BudgetsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const user = this.auth.currentUser;
-    if (user) {
-      this.store.dispatch(BudgetsActions.updateSpent({ userId: user.uid, budgetId, amount }));
+    const userId = this.userService.getCurrentUserId();
+    if (userId) {
+      this.store.dispatch(BudgetsActions.updateSpent({ userId, budgetId, amount }));
       this.notificationService.success('Budget spent amount updated successfully');
     }
   }
@@ -637,7 +639,7 @@ export class BudgetsComponent implements OnInit, OnDestroy {
   distributeRemainingBudget(): void {
     const remainingBudget = this.getRemainingBudget();
     const expenseCategories = this.getExpenseCategories();
-    
+
     if (remainingBudget <= 0 || expenseCategories.length === 0) {
       this.notificationService.warning('No remaining budget to distribute or no expense categories available');
       return;

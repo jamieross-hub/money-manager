@@ -1,5 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
+import { UserService } from 'src/app/util/service/db/user.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
@@ -57,7 +58,8 @@ export class AddAccountDialogComponent {
     private store: Store<AppState>,
     private transactionsService: TransactionsService,
     private categoryService: CategoryService,
-    private accountsService: AccountsService
+    private accountsService: AccountsService,
+    private userService: UserService
   ) {
     this.accountForm = this.fb.group({
       name: ['', this.validationService.getAccountNameValidators()],
@@ -140,7 +142,7 @@ export class AddAccountDialogComponent {
         const interestRateControl = this.accountForm.get('interestRate');
         const durationMonthsControl = this.accountForm.get('durationMonths');
         const nextDueDateControl = this.accountForm.get('nextDueDate');
-        
+
         // Credit card controls
         const dueDateControl = this.accountForm.get('dueDate');
         const billingCycleStartControl = this.accountForm.get('billingCycleStart');
@@ -153,7 +155,7 @@ export class AddAccountDialogComponent {
           interestRateControl?.setValidators([Validators.required, ...this.validationService.getInterestRateValidators()]);
           durationMonthsControl?.setValidators([Validators.required, ...this.validationService.getDurationMonthsValidators()]);
           nextDueDateControl?.setValidators([Validators.required]);
-          
+
           // Clear credit card validators
           dueDateControl?.clearValidators();
           billingCycleStartControl?.clearValidators();
@@ -166,7 +168,7 @@ export class AddAccountDialogComponent {
           interestRateControl?.clearValidators();
           durationMonthsControl?.clearValidators();
           nextDueDateControl?.clearValidators();
-          
+
           // Set credit card validators
           dueDateControl?.setValidators([Validators.required, Validators.min(1), Validators.max(31)]);
           billingCycleStartControl?.setValidators([Validators.required, Validators.min(1), Validators.max(31)]);
@@ -258,7 +260,7 @@ export class AddAccountDialogComponent {
   }
 
   ngOnInit(): void {
-    this.userId = this.auth.currentUser?.uid;
+    this.userId = this.userService.getCurrentUserId();
 
     // Initialize remaining balance for new loan accounts
     if (!this.dialogData && this.accountForm.get('type')?.value === 'loan') {
@@ -461,7 +463,8 @@ export class AddAccountDialogComponent {
     );
 
     console.log('Calculated remaining balance:', remainingBalance);
-    this.accountForm.patchValue({ remainingBalance,
+    this.accountForm.patchValue({
+      remainingBalance,
       balance: -remainingBalance
     }, { emitEvent: false });
   }
@@ -479,7 +482,7 @@ export class AddAccountDialogComponent {
     const start = new Date(startDate);
 
     // Calculate months elapsed since loan start
-    const monthsElapsed = Math.round(moment(today).diff(moment(start), 'months',true));
+    const monthsElapsed = Math.round(moment(today).diff(moment(start), 'months', true));
 
     // Calculate total payments made based on frequency
     let paymentsMade = 0;

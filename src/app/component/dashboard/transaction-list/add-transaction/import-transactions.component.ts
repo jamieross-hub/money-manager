@@ -9,6 +9,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import * as XLSX from 'xlsx';
 import { Auth } from '@angular/fire/auth';
+import { UserService } from 'src/app/util/service/db/user.service';
 import { Account } from 'src/app/util/models/account.model';
 import { Category } from 'src/app/util/models';
 import { AppState } from 'src/app/store/app.state';
@@ -67,31 +68,32 @@ export class ImportTransactionsComponent implements OnDestroy {
     private notificationService: NotificationService,
     private auth: Auth,
     private store: Store<AppState>,
-    private ssrService: SsrService
+    private ssrService: SsrService,
+    private userService: UserService
   ) {
     this.categories = this.data.categories;
     this.setupDragAndDrop();
     this.loadAccountsAndCategories();
-    
+
     // Initialize filtered categories for ngx-mat-select-search
     this.categories$.subscribe(categories => {
       this.filteredCategories.next(categories.slice());
     });
-    
+
     // Listen for search input changes
     this.categoryFilterCtrl.valueChanges
       .pipe(takeUntil(this._onDestroy))
       .subscribe(() => {
         this.filterCategories();
       });
-    
+
     // Check if data was passed from Google Sheets
     if (data && data.transactions && Array.isArray(data.transactions)) {
       this.parsedTransactions = this.setCategory(data.transactions);
       this.selectedToImport = new Set(this.parsedTransactions.map((_, index) => index));
       this.notificationService.success(`Loaded ${this.parsedTransactions.length} transactions from Google Sheets`);
     }
-   
+
   }
 
   ngOnDestroy() {
@@ -106,7 +108,7 @@ export class ImportTransactionsComponent implements OnDestroy {
     if (!this.categories$) {
       return;
     }
-    
+
     this.categories$.pipe(take(1)).subscribe(categories => {
       // get the search keyword
       let search = this.categoryFilterCtrl.value;
@@ -116,18 +118,18 @@ export class ImportTransactionsComponent implements OnDestroy {
       } else {
         search = search.toLowerCase();
       }
-      
+
       // filter the categories
-      const filtered = categories.filter(category => 
+      const filtered = categories.filter(category =>
         category.name.toLowerCase().indexOf(search) > -1
       );
-      
+
       this.filteredCategories.next(filtered);
     });
   }
 
   private async loadAccountsAndCategories() {
-    const userId = this.auth.currentUser?.uid;
+    const userId = this.userService.getCurrentUserId();
     if (!userId) return;
 
     try {
@@ -140,7 +142,7 @@ export class ImportTransactionsComponent implements OnDestroy {
       });
 
       // Load categories
-      this.categories$ =  this.store.select(selectAllCategories);
+      this.categories$ = this.store.select(selectAllCategories);
     } catch (error) {
       console.error('Error loading accounts and categories:', error);
     }
@@ -410,7 +412,7 @@ export class ImportTransactionsComponent implements OnDestroy {
       this.notificationService.error('Failed to download template');
     }
   }
-  
+
 
   importSelected() {
     const selected = this.parsedTransactions.filter((_, index) =>
@@ -492,7 +494,7 @@ export class ImportTransactionsComponent implements OnDestroy {
   setCategory(transactions: any[]) {
     // compair name of category in parsedTransactions and categories
     // if name is same, then update the categoryId
-    
+
     return transactions.map((tx) => {
       const category = this.categories.find((category) => category.name.toLowerCase() === tx.category.toLowerCase());
       if (category) {

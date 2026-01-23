@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { Router } from '@angular/router';
+import { UserService } from 'src/app/util/service/db/user.service';
 import { Subject, takeUntil, Observable, of } from 'rxjs';
 import { Account, LoanDetails } from 'src/app/util/models/account.model';
 import { MatDialog } from '@angular/material/dialog';
@@ -28,13 +29,13 @@ import { Transaction } from 'src/app/util/models/transaction.model';
   styleUrls: ['./accounts.component.scss']
 })
 export class AccountsComponent implements OnInit, OnDestroy {
-  
+
   quickActionsFabConfig: QuickActionsFabConfig = {
     title: 'Quick Actions',
     mainButtonIcon: 'add',
     mainButtonColor: 'primary',
     mainButtonTooltip: 'Add Account',
-    actions:[]
+    actions: []
   };
 
 
@@ -43,7 +44,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
   public isLoading$: Observable<boolean>;
   public error$: Observable<any>;
   public totalBalance$: Observable<number>;
-  
+
   // Component state
   public accounts: Account[] = [];
   public isLoading: boolean = false;
@@ -52,7 +53,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
   public expandedAccount: Account | null = null;
   public isListViewMode: boolean = false; // Add this property for list view toggle
   public transactions: Transaction[] = []; // Store transactions for access in template
-  
+
   // Private properties
   private userId: string = '';
   private destroy$ = new Subject<void>();
@@ -65,10 +66,11 @@ export class AccountsComponent implements OnInit, OnDestroy {
     private readonly notificationService: NotificationService,
     private readonly store: Store<AppState>,
     public readonly dateService: DateService,
-    public readonly breakpointService: BreakpointService
+    public readonly breakpointService: BreakpointService,
+    private readonly userService: UserService
   ) {
 
-    if(this.breakpointService.device.isMobile){
+    if (this.breakpointService.device.isMobile) {
       this.isListViewMode = true;
     }
 
@@ -92,14 +94,14 @@ export class AccountsComponent implements OnInit, OnDestroy {
    * Initialize the component by loading user accounts
    */
   private async initializeComponent(): Promise<void> {
-    const currentUser = this.auth.currentUser;
-    
-    if (!currentUser) {
+    const userId = this.userService.getCurrentUserId();
+
+    if (!userId) {
       this.errorMessage = 'User not authenticated';
       return;
     }
 
-    this.userId = currentUser.uid;
+    this.userId = userId;
     this.loadUserAccounts();
   }
 
@@ -109,7 +111,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
   private loadUserAccounts(): void {
     this.store.dispatch(AccountsActions.loadAccounts({ userId: this.userId }));
     this.store.dispatch(TransactionsActions.loadTransactions({ userId: this.userId }));
-    
+
     // Subscribe to store data for backward compatibility
     this.accounts$
       .pipe(takeUntil(this.destroy$))
@@ -240,7 +242,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
     if (account.type !== 'loan' || !account.loanDetails) {
       return 0;
     }
-    
+
     const { interestRate, remainingBalance } = account.loanDetails;
     // Monthly interest = (Annual Rate / 12) * Remaining Balance
     return (interestRate / 12 / 100) * remainingBalance;
@@ -287,15 +289,15 @@ export class AccountsComponent implements OnInit, OnDestroy {
     const today = new Date();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
-    
+
     // Calculate next due date
     let nextDueDate = new Date(currentYear, currentMonth, dueDate);
-    
+
     // If the due date has passed this month, move to next month
     if (nextDueDate < today) {
       nextDueDate = new Date(currentYear, currentMonth + 1, dueDate);
     }
-    
+
     return nextDueDate;
   }
 
@@ -308,15 +310,15 @@ export class AccountsComponent implements OnInit, OnDestroy {
     const today = new Date();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
-    
+
     // Calculate next billing date
     let nextBillingDate = new Date(currentYear, currentMonth, billingCycleStart);
-    
+
     // If the billing date has passed this month, move to next month
     if (nextBillingDate < today) {
       nextBillingDate = new Date(currentYear, currentMonth + 1, billingCycleStart);
     }
-    
+
     return nextBillingDate;
   }
 
@@ -376,7 +378,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
   public getRecentTransactions(account: Account): Transaction[] {
     // Filter transactions for this specific account
     const accountTransactions = this.transactions.filter(t => t.accountId === account.accountId);
-    
+
     // Sort by date (most recent first) and return the last 10 transactions
     return accountTransactions
       .filter(t => t.date)
@@ -397,7 +399,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
    */
   public getAccountStats(account: Account): any {
     const accountTransactions = this.transactions.filter(t => t.accountId === account.accountId);
-    
+
     if (accountTransactions.length === 0) {
       return {
         totalTransactions: 0,
@@ -424,8 +426,8 @@ export class AccountsComponent implements OnInit, OnDestroy {
       .filter(t => t.amount < 0)
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-    const averageTransaction = accountTransactions.length > 0 
-      ? accountTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0) / accountTransactions.length 
+    const averageTransaction = accountTransactions.length > 0
+      ? accountTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0) / accountTransactions.length
       : 0;
 
     const largestTransaction = accountTransactions.length > 0
@@ -470,7 +472,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
   public getAccountsByGroup(accounts: Account[], groupId: string): Account[] {
     const group = ACCOUNT_GROUPS.find(g => g.id === groupId);
     if (!group) return [];
-    
+
     return accounts.filter(account => group.accountTypes.includes(account.type));
   }
 
@@ -489,7 +491,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
     return ACCOUNT_GROUPS.map(group => {
       const groupAccounts = this.getAccountsByGroup(accounts, group.id);
       const totalBalance = this.getGroupTotalBalance(accounts, group.id);
-      
+
       return {
         group,
         accounts: groupAccounts,

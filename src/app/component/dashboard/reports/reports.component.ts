@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
+import { UserService } from 'src/app/util/service/db/user.service';
 import { Subscription, Observable } from 'rxjs';
 import { Transaction } from '../../../util/models/transaction.model';
 import { Account } from '../../../util/models/account.model';
@@ -111,14 +112,14 @@ export class ReportsComponent implements OnInit, OnDestroy {
   transactionsLoading$: Observable<boolean>;
   accountsLoading$: Observable<boolean>;
   categoriesLoading$: Observable<boolean>;
-  
+
   // Financial metrics
   totalIncome: number = 0;
   totalExpenses: number = 0;
   netSavings: number = 0;
   monthlyChange: number = 0;
   monthlyChangePercentage: number = 0;
-  
+
   // Key metrics for the card component
   keyMetricsConfig: KeyMetricsConfig = {
     title: '',
@@ -335,7 +336,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
   topCategories: CategorySpending[] = [];
   recentTransactions: Transaction[] = [];
   monthlyTrends: MonthlyData[] = [];
-  
+
   // Enhanced analytics data
   dailyData: DailyData[] = [];
   weeklyData: WeeklyData[] = [];
@@ -351,12 +352,12 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
   // Time period
   selectedPeriod: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'monthly';
-  
+
   // Chart and view options
   selectedChartType: 'pie' | 'bar' | 'line' | 'area' | 'radar' | 'funnel' | 'scatter' | 'heatmap' = 'pie';
   selectedAnalyticsView: 'overview' | 'trends' | 'categories' | 'accounts' | 'comparison' | 'forecast' = 'overview';
   showAdvancedAnalytics: boolean = false;
-  
+
   // Available options for UI
   availableChartTypes: ('pie' | 'bar' | 'line' | 'area' | 'radar' | 'funnel' | 'scatter' | 'heatmap')[] = ['pie', 'bar', 'line', 'area', 'radar', 'funnel', 'scatter', 'heatmap'];
   availableAnalyticsViews: ('overview' | 'trends' | 'categories' | 'accounts' | 'comparison' | 'forecast')[] = ['overview', 'trends', 'categories', 'accounts', 'comparison', 'forecast'];
@@ -374,7 +375,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
   funnelChartOption: EChartsOption = {};
   scatterChartOption: EChartsOption = {};
   heatmapChartOption: EChartsOption = {};
-  
+
   // Theme detection
   isDarkMode: boolean = false;
 
@@ -412,7 +413,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private store: Store<AppState>,
     public dateService: DateService,
-    private ssrService: SsrService
+    private ssrService: SsrService,
+    private userService: UserService
   ) {
     // Initialize selectors
     this.transactions$ = this.store.select(TransactionsSelectors.selectAllTransactions);
@@ -434,8 +436,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
   }
 
   private loadData(): void {
-    const currentUser = this.auth.currentUser;
-    if (!currentUser) {
+    const userId = this.userService.getCurrentUserId();
+    if (!userId) {
       this.isLoading = false;
       this.notificationService.error('User not authenticated');
       return;
@@ -475,15 +477,15 @@ export class ReportsComponent implements OnInit, OnDestroy {
     // Filter transactions for current month
     const currentMonthTransactions = this.transactions.filter(t => {
       const transactionDate = this.dateService.toDate(t.date);
-      return transactionDate?.getMonth() === currentMonth && 
-             transactionDate?.getFullYear() === currentYear;
+      return transactionDate?.getMonth() === currentMonth &&
+        transactionDate?.getFullYear() === currentYear;
     });
 
     // Filter transactions for last month
     const lastMonthTransactions = this.transactions.filter(t => {
       const transactionDate = this.dateService.toDate(t.date);
-      return transactionDate?.getMonth() === lastMonth && 
-             transactionDate?.getFullYear() === lastYear;
+      return transactionDate?.getMonth() === lastMonth &&
+        transactionDate?.getFullYear() === lastYear;
     });
 
     // Calculate current month metrics
@@ -510,8 +512,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
     // Calculate monthly change
     this.monthlyChange = this.netSavings - lastMonthSavings;
-    this.monthlyChangePercentage = lastMonthSavings !== 0 
-      ? ((this.monthlyChange / lastMonthSavings) * 100) 
+    this.monthlyChangePercentage = lastMonthSavings !== 0
+      ? ((this.monthlyChange / lastMonthSavings) * 100)
       : 0;
 
   }
@@ -524,13 +526,13 @@ export class ReportsComponent implements OnInit, OnDestroy {
     const currentMonthExpenses = this.transactions.filter(t => {
       const transactionDate = this.dateService.toDate(t.date);
       return t.type === 'expense' &&
-             transactionDate?.getMonth() === currentMonth && 
-             transactionDate?.getFullYear() === currentYear;
+        transactionDate?.getMonth() === currentMonth &&
+        transactionDate?.getFullYear() === currentYear;
     });
 
     // Group by category ID and calculate totals
     const categoryTotals = new Map<string, number>();
-    
+
     currentMonthExpenses.forEach(transaction => {
       const current = categoryTotals.get(transaction.categoryId) || 0;
       categoryTotals.set(transaction.categoryId, current + transaction.amount);
@@ -567,11 +569,11 @@ export class ReportsComponent implements OnInit, OnDestroy {
     for (let i = 5; i >= 0; i--) {
       const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthName = month.toLocaleDateString(APP_CONFIG.LANGUAGE.DEFAULT, { month: 'short' });
-      
+
       const monthTransactions = this.transactions.filter(t => {
         const transactionDate = this.dateService.toDate(t.date);
-        return transactionDate?.getMonth() === month.getMonth() && 
-               transactionDate?.getFullYear() === month.getFullYear();
+        return transactionDate?.getMonth() === month.getMonth() &&
+          transactionDate?.getFullYear() === month.getFullYear();
       });
 
       const income = monthTransactions
@@ -607,12 +609,12 @@ export class ReportsComponent implements OnInit, OnDestroy {
   private calculateDailyData(): void {
     const now = new Date();
     const dailyData: DailyData[] = [];
-    
+
     // Calculate data for last 30 days
     for (let i = 29; i >= 0; i--) {
       const date = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
       const dateStr = date.toISOString().split('T')[0];
-      
+
       const dayTransactions = this.transactions.filter(t => {
         const transactionDate = this.dateService.toDate(t.date);
         return transactionDate?.toDateString() === date.toDateString();
@@ -640,13 +642,13 @@ export class ReportsComponent implements OnInit, OnDestroy {
   private calculateWeeklyData(): void {
     const now = new Date();
     const weeklyData: WeeklyData[] = [];
-    
+
     // Calculate data for last 12 weeks
     for (let i = 11; i >= 0; i--) {
       const weekStart = new Date(now.getTime() - (i * 7 * 24 * 60 * 60 * 1000));
       const weekEnd = new Date(weekStart.getTime() + (6 * 24 * 60 * 60 * 1000));
       const weekStr = `Week ${Math.ceil((weekStart.getTime() - new Date(weekStart.getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000))}`;
-      
+
       const weekTransactions = this.transactions.filter(t => {
         const transactionDate = this.dateService.toDate(t.date);
         return transactionDate && transactionDate >= weekStart && transactionDate <= weekEnd;
@@ -674,12 +676,12 @@ export class ReportsComponent implements OnInit, OnDestroy {
   private calculateYearlyData(): void {
     const now = new Date();
     const yearlyData: YearlyData[] = [];
-    
+
     // Calculate data for last 5 years
     for (let i = 4; i >= 0; i--) {
       const year = now.getFullYear() - i;
       const yearStr = year.toString();
-      
+
       const yearTransactions = this.transactions.filter(t => {
         const transactionDate = this.dateService.toDate(t.date);
         return transactionDate?.getFullYear() === year;
@@ -706,7 +708,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
   private calculateAccountBalances(): void {
     const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
-    
+
     this.accountBalances = this.accounts.map((account, index) => {
       const accountTransactions = this.transactions.filter(t => t.accountId === account.accountId);
       let balance = accountTransactions.reduce((sum, t) => {
@@ -729,12 +731,12 @@ export class ReportsComponent implements OnInit, OnDestroy {
   private calculateSpendingTrends(): void {
     const periods = ['Last 7 Days', 'Last 30 Days', 'Last 3 Months', 'Last 6 Months', 'Last Year'];
     const trendData: SpendingTrend[] = [];
-    
+
     periods.forEach((period, index) => {
       const days = [7, 30, 90, 180, 365][index];
       const endDate = new Date();
       const startDate = new Date(endDate.getTime() - (days * 24 * 60 * 60 * 1000));
-      
+
       const periodTransactions = this.transactions.filter(t => {
         const transactionDate = this.dateService.toDate(t.date);
         return transactionDate && transactionDate >= startDate && transactionDate <= endDate;
@@ -783,9 +785,9 @@ export class ReportsComponent implements OnInit, OnDestroy {
       const currentMonthTransactions = this.transactions.filter(t => {
         const transactionDate = this.dateService.toDate(t.date);
         return t.categoryId === category.id &&
-               t.type === 'expense' &&
-               transactionDate?.getMonth() === currentMonth && 
-               transactionDate?.getFullYear() === currentYear;
+          t.type === 'expense' &&
+          transactionDate?.getMonth() === currentMonth &&
+          transactionDate?.getFullYear() === currentYear;
       });
 
       const currentAmount = currentMonthTransactions.reduce((sum, t) => sum + t.amount, 0);
@@ -794,9 +796,9 @@ export class ReportsComponent implements OnInit, OnDestroy {
       const previousMonthTransactions = this.transactions.filter(t => {
         const transactionDate = this.dateService.toDate(t.date);
         return t.categoryId === category.id &&
-               t.type === 'expense' &&
-               transactionDate?.getMonth() === lastMonth && 
-               transactionDate?.getFullYear() === lastYear;
+          t.type === 'expense' &&
+          transactionDate?.getMonth() === lastMonth &&
+          transactionDate?.getFullYear() === lastYear;
       });
 
       const previousAmount = previousMonthTransactions.reduce((sum, t) => sum + t.amount, 0);
@@ -822,10 +824,10 @@ export class ReportsComponent implements OnInit, OnDestroy {
     const totalExpenses = this.transactions
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
-    
-    const totalDays = this.transactions.length > 0 ? 
+
+    const totalDays = this.transactions.length > 0 ?
       Math.max(1, Math.ceil((new Date().getTime() - (this.dateService.toDate(this.transactions[0].date)?.getTime() || 0)) / (24 * 60 * 60 * 1000))) : 30;
-    
+
     this.averageDailySpending = totalExpenses / totalDays;
     this.averageMonthlySpending = this.averageDailySpending * 30;
 
@@ -833,7 +835,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     const totalIncome = this.transactions
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
-    
+
     this.savingsRate = totalIncome > 0 ? ((this.netSavings / totalIncome) * 100) : 0;
 
     // Calculate growth rates
@@ -844,12 +846,12 @@ export class ReportsComponent implements OnInit, OnDestroy {
         const lastMonth = new Date().getMonth() === 0 ? 11 : new Date().getMonth() - 1;
         const lastYear = new Date().getMonth() === 0 ? new Date().getFullYear() - 1 : new Date().getFullYear();
         return t.type === 'expense' &&
-               transactionDate?.getMonth() === lastMonth && 
-               transactionDate?.getFullYear() === lastYear;
+          transactionDate?.getMonth() === lastMonth &&
+          transactionDate?.getFullYear() === lastYear;
       })
       .reduce((sum, t) => sum + t.amount, 0);
 
-    this.expenseGrowthRate = lastMonthExpenses > 0 ? 
+    this.expenseGrowthRate = lastMonthExpenses > 0 ?
       ((currentMonthExpenses - lastMonthExpenses) / lastMonthExpenses) * 100 : 0;
 
     const currentMonthIncome = this.totalIncome;
@@ -859,12 +861,12 @@ export class ReportsComponent implements OnInit, OnDestroy {
         const lastMonth = new Date().getMonth() === 0 ? 11 : new Date().getMonth() - 1;
         const lastYear = new Date().getMonth() === 0 ? new Date().getFullYear() - 1 : new Date().getFullYear();
         return t.type === 'income' &&
-               transactionDate?.getMonth() === lastMonth && 
-               transactionDate?.getFullYear() === lastYear;
+          transactionDate?.getMonth() === lastMonth &&
+          transactionDate?.getFullYear() === lastYear;
       })
       .reduce((sum, t) => sum + t.amount, 0);
 
-    this.incomeGrowthRate = lastMonthIncome > 0 ? 
+    this.incomeGrowthRate = lastMonthIncome > 0 ?
       ((currentMonthIncome - lastMonthIncome) / lastMonthIncome) * 100 : 0;
   }
 
@@ -2044,13 +2046,13 @@ export class ReportsComponent implements OnInit, OnDestroy {
   // Detect current theme
   private detectTheme(): void {
     this.isDarkMode = document.documentElement.classList.contains('dark');
-    
+
     // Listen for theme changes
     const observer = new MutationObserver(() => {
       this.isDarkMode = document.documentElement.classList.contains('dark');
       this.updateCharts(); // Re-initialize charts with new theme
     });
-    
+
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class']
