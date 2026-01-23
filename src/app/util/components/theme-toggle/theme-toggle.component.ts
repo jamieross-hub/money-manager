@@ -10,7 +10,7 @@ import { ThemeType } from '../../models/theme.model';
 export class ThemeToggleComponent implements OnInit {
   isDarkTheme: boolean = false;
 
-  constructor(private _themeSwitchingService: ThemeSwitchingService) {}
+  constructor(private _themeSwitchingService: ThemeSwitchingService) { }
 
   ngOnInit() {
     // Subscribe to theme changes to update the toggle state
@@ -22,6 +22,5 @@ export class ThemeToggleComponent implements OnInit {
   public toggleTheme() {
     const newTheme: ThemeType = this.isDarkTheme ? 'light-theme' : 'dark-theme';
     this._themeSwitchingService.currentTheme.next(newTheme);
-    this.isDarkTheme = !this.isDarkTheme;
   }
 } 
