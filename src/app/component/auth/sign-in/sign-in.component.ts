@@ -14,6 +14,8 @@ import { NotificationService } from 'src/app/util/service/notification.service';
 import { ValidationService } from 'src/app/util/service/validation.service';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { SecurityService, SecurityEventType, SecurityLevel } from 'src/app/util/service/security.service';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 
 /**
  * Enhanced SignInComponent with comprehensive security validation
@@ -52,7 +54,8 @@ export class SignInComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private securityService: SecurityService,
     private validationService: ValidationService,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    public breakpointService: BreakpointService
   ) {
     this.initializeForm();
     this._setIsSignInPage(this.router.url.includes('/sign-in'));
