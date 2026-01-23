@@ -57,12 +57,33 @@ export class AdminContactComponent implements OnInit, OnDestroy {
         try {
             await this.contactService.update(contact.id, { status }).toPromise();
             this.notificationService.success(`Status updated to ${status}`);
-            // Optimistic update or reload? getAll is an observable, so it might auto-update if it was real-time. 
-            // User snippet showed collectionData(ref) which IS real-time. So no need to manual refresh if it works.
-            // But let's see. logic in service is observable.
+            this.loadContacts(); // Refresh list to update UI
         } catch (error) {
             console.error('Error updating status', error);
             this.notificationService.error('Failed to update status');
         }
+    }
+
+    deleteContact(contact: GetInTouch): void {
+        const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+            data: {
+                title: 'Delete Message',
+                message: `Are you sure you want to delete the message from "${contact.name}"?`
+            }
+        });
+
+        dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
+            if (result) {
+                this.isLoading = true;
+                this.contactService.delete(contact.id).subscribe(() => {
+                    this.notificationService.success('Message deleted successfully');
+                    this.loadContacts();
+                }, error => {
+                    console.error('Error deleting contact:', error);
+                    this.notificationService.error('Failed to delete message');
+                    this.isLoading = false;
+                });
+            }
+        });
     }
 }

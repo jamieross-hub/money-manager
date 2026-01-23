@@ -7,7 +7,8 @@ import {
     doc,
     collectionData,
     docData,
-    getDocs
+    getDocs,
+    deleteDoc
 } from '@angular/fire/firestore';
 import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -64,11 +65,20 @@ export class ContactService {
     }
 
     /** ✅ GET ALL (Admin / Dashboard) */
-    async getAll(): Promise<any[]> {
+    async getAll(): Promise<GetInTouch[]> {
         const ref = collection(this.firestore, this.collectionName);
         const querySnapshot = await getDocs(ref);
 
-        return querySnapshot.docs.map(doc => doc.data());
+        return querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        } as GetInTouch));
+    }
+
+    /** ✅ DELETE */
+    delete(id: string): Observable<void> {
+        const ref = doc(this.firestore, this.collectionName, id);
+        return from(deleteDoc(ref));
     }
 
     /** ✅ GET BY ID */
