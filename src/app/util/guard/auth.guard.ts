@@ -75,8 +75,8 @@ export class AuthGuard implements CanActivate, CanActivateChild {
     const auth = getAuth();
     const currentUser = auth.currentUser;
 
-    if (currentUser) {
-      this.backgroundSecurityCheck(route, state, currentUser);
+    if (currentUser || this.userService.isGuestUser()) {
+      this.backgroundSecurityCheck(route, state, currentUser as User);
       return of(true);
     }
 
@@ -110,11 +110,16 @@ export class AuthGuard implements CanActivate, CanActivateChild {
   private backgroundSecurityCheck(route: ActivatedRouteSnapshot, state: RouterStateSnapshot, firebaseUser: User): void {
     setTimeout(async () => {
       try {
-        if (!this.sessionStartTime.has(firebaseUser.uid)) {
+        if (firebaseUser && !this.sessionStartTime.has(firebaseUser.uid)) {
           this.updateSessionTimestamp(firebaseUser.uid);
         }
 
-        if (this.isSessionExpired(firebaseUser.uid)) {
+        if (this.userService.isGuestUser()) {
+          this.loaderService.hide();
+          return;
+        }
+
+        if (firebaseUser && this.isSessionExpired(firebaseUser.uid)) {
           await this.handleSessionExpired(firebaseUser, state);
           return;
         }

@@ -120,6 +120,15 @@ export class UserService {
    */
   private initializeAuthState(): void {
     onAuthStateChanged(getAuth(), async (user: any) => {
+      // Check for guest mode
+      const isGuest = localStorage.getItem('guest-mode') === 'true';
+
+      if (!user && isGuest) {
+        console.log('Restoring guest session');
+        this.enableGuestMode();
+        return;
+      }
+
       await this.checkIfAdmin(user);
       console.log(
         'Auth state changed:',
@@ -141,6 +150,35 @@ export class UserService {
         this.logAuditEvent('USER_LOGOUT', undefined, { timestamp: new Date().toISOString() });
       }
     });
+  }
+
+  /**
+   * Enable guest/offline mode
+   */
+  public enableGuestMode(): void {
+    const guestUser: User = {
+      uid: 'offline-guest',
+      email: 'guest@offline.local',
+      role: 'free',
+      firstName: 'Guest',
+      lastName: 'User',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      emailVerified: true
+    };
+
+    localStorage.setItem('guest-mode', 'true');
+    this.userAuth$.next(guestUser);
+
+    // We treat the guest user as logged in for the app state
+    console.log('Guest mode enabled');
+  }
+
+  /**
+   * Check if current user is guest
+   */
+  public isGuestUser(): boolean {
+    return this.userAuth$.value?.uid === 'offline-guest';
   }
 
   async checkIfAdmin(user: any): Promise<void> {
@@ -498,6 +536,9 @@ export class UserService {
         // Clear rate limits for this user
         this.rateLimitMap.delete(`signin:${currentUser.email}`);
       }
+
+      // Clear guest mode flag
+      localStorage.removeItem('guest-mode');
 
       await signOut(this.auth);
       console.log('User signed out');

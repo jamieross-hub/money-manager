@@ -351,6 +351,28 @@ export class SignInComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Continue as guest (Offline Mode)
+   */
+  public continueAsGuest(): void {
+    this.isLoading = true;
+    try {
+      this.userService.enableGuestMode();
+
+      // Load user data for the guest user
+      const guestUid = 'offline-guest';
+      this.loadUserData(guestUid);
+
+      this.notificationService.success('Logged in as Guest (Offline Mode)');
+      this.router.navigate(['/dashboard']);
+    } catch (error) {
+      console.error('Guest mode error:', error);
+      this.notificationService.error('Failed to enable guest mode');
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  /**
    * Load user data after successful authentication
    */
   private async loadUserData(specificUserId?: string): Promise<void> {
