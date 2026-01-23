@@ -1,7 +1,7 @@
 /* Auth Section */
 .auth-section {
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
   
   &::before {
     content: '';
@@ -15,10 +15,10 @@
   }
 }
 
-@keyframes pulse {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  50% { transform: scale(1.1) rotate(5deg); }
-}
+// @keyframes pulse {
+//   0%, 100% { transform: scale(1) rotate(0deg); }
+//   50% { transform: scale(1.1) rotate(5deg); }
+// }
 
 /* Auth Container */
 .auth-container {
@@ -74,16 +74,16 @@
   }
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+// @keyframes fadeInUp {
+//   from {
+//     opacity: 0;
+//     transform: translateY(10px);
+//   }
+//   to {
+//     opacity: 1;
+//     transform: translateY(0);
+//   }
+// }
 
 /* Security Notice Animation */
 .security-notice {
@@ -100,16 +100,6 @@
 
 /* Responsive Adjustments */
 @media (max-width: 640px) {
-  .auth-section {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-  
-  .auth-content {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-  
   /* Ensure inputs don't zoom on iOS */
   .auth-input {
     font-size: 16px !important;
