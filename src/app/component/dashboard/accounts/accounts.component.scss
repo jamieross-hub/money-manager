@@ -1,596 +1,173 @@
 // =============================================================================
-// ACCOUNTS COMPONENT STYLES
+// ACCOUNTS PAGE - CLEAN LIGHT THEME (FINANCIAL DASHBOARD)
 // =============================================================================
 
-// =============================================================================
-// ANIMATIONS
-// =============================================================================
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.accounts-page {
+  min-height: 100vh;
+  background-color: #f8fafc; // Off-white/slate-50
+  color: #1e293b; // slate-800
+  padding: clamp(1rem, 3vw, 2.5rem) 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@keyframes slideDown {
-  from {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+// Global Animation
+.fade-in {
+  animation: fadeIn 0.4s ease-out;
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-// =============================================================================
-// MAIN CONTAINER
-// =============================================================================
-.accounts-container {
-  padding: 1rem;
-  background: inherit;
-  overflow: auto;
-  
-  @media (max-width: 640px) {
-    padding: 0.5rem;
-  }
-}
-
-// =============================================================================
-// ERROR MESSAGE
-// =============================================================================
-.error-message {
-  animation: slideIn 0.3s ease;
-  
-  .error-close-button {
-    color: #dc2626;
-    min-width: 44px;
-    min-height: 44px;
-  }
-}
-
-// =============================================================================
-// FAB BUTTONS
-// =============================================================================
-.add-account-btn {
-  position: fixed;
-  bottom: 8rem;
-  right: 1rem;
-  z-index: 100;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s ease;
-  
-  &:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-  }
-}
-
-// =============================================================================
-// MAIN GRID LAYOUT
-// =============================================================================
-.accounts-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  // max-width: 1200px;
-  margin: 0 auto;
-  transition: opacity 0.3s ease;
-  
-  &.loading {
-    opacity: 0.7;
-    pointer-events: none;
-  }
-  
-  @media (min-width: 768px) {
-    gap: 2.5rem;
-  }
-  
-  @media (max-width: 640px) {
-    gap: 1.5rem;
-  }
-}
-
-// =============================================================================
-// ACCOUNT GROUP CONTAINERS
-// =============================================================================
-.account-group-container {
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-  
-  &:hover {
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-  }
-  
-  @media (max-width: 768px) {
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  @media (max-width: 480px) {
-    padding: 0.75rem;
-    margin-bottom: 1rem;
-  }
-}
-
-.group-accounts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.25rem;
-  margin-top: 1rem;
-  
-  @media (min-width: 1200px) {
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 1.5rem;
-  }
-  
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1rem;
-  }
-  
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr;
-    gap: 0.875rem;
-  }
-}
-
-// =============================================================================
-// ACCOUNT GROUP HEADERS
-// =============================================================================
-.account-group-header {
+// Page Header
+.page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px;
-  margin: 0 0 1rem 0;
+  margin-bottom: clamp(1rem, 3vw, 2rem);
+  padding: 0 clamp(0.75rem, 2vw, 1rem);
 
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-
-
-  .group-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex: 1;
-
-    .group-emoji {
-      font-size: 1.75rem;
-      line-height: 1;
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-    }
-
-    .group-name {
-      font-size: 1.1rem;
+  .header-left {
+    .page-title {
+      font-size: clamp(1.25rem, 5vw, 1.75rem);
       font-weight: 700;
-      color: var(--text-primary);
+      color: #0f172a;
       margin: 0;
       letter-spacing: -0.025em;
+      line-height: 1.2;
     }
-
-    .group-description {
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-      opacity: 0.8;
-      font-weight: 500;
-    }
-  }
-
-  .group-balance {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 1rem;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-
-    .group-balance-label {
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .group-balance-value {
-      padding: 0.25rem 0.75rem;
-      border-radius: 8px;
-
-      &.positive {
-        color: #059669;
-        background: rgba(5, 150, 105, 0.1);
-        border-color: rgba(5, 150, 105, 0.3);
-      }
-
-      &.negative {
-        color: #dc2626;
-        background: rgba(220, 38, 38, 0.1);
-        border-color: rgba(220, 38, 38, 0.3);
-      }
+    
+    .page-description {
+      color: #64748b;
+      font-size: clamp(0.85rem, 2vw, 0.95rem);
+      margin: 0.25rem 0 0 0;
     }
   }
 
-  
+  .add-account-btn {
+    border-radius: 10px;
+    height: clamp(44px, 10vw, 48px);
+    padding: 0 clamp(1rem, 3vw, 1.5rem);
+    font-weight: 600;
+    font-size: clamp(0.875rem, 2vw, 1rem);
+    background: #2563eb; // Primary Blue
+    color: white;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
 
+    &:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+    }
+    
+    mat-icon { margin-right: 0.5rem; font-size: 1.25rem; }
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0 1rem;
+    
+    .add-account-btn { 
+      width: 100%;
+      justify-content: center;
+    }
+  }
 }
 
-// =============================================================================
-// ACCOUNTS LIST SECTION
-// =============================================================================
-.accounts-list {
-  width: 100%;
-  padding: 0.2rem;
+// Main Summary Card
+.main-summary-section {
+  margin-bottom: clamp(1.5rem, 3vw, 2rem);
+  padding: 0 clamp(0.75rem, 2vw, 1rem);
 
-  @media (max-width: 640px) {
-    max-height: 100vh;
-  }
-  
-  // Section Header
-  .section-header {
-    margin-bottom: 2rem;
-    position: relative;
+  .net-worth-card {
+    background: white;
+    border-radius: clamp(12px, 2vw, 16px);
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02);
     
-    .header-content {
+    .net-worth-content {
       display: flex;
       justify-content: space-between;
-      align-items: flex-end;
-      flex: 1;
-    }
-    
-    .section-title {
-      font-size: clamp(1.25rem, 3vw, 2rem);
-      font-weight: 600;
-      color: #1f2937;
-      margin: 0 0 0.25rem 0;
-      height: 35px;
-    }
-    
-    .section-subtitle {
-      color: #6b7280;
-      font-size: clamp(0.75rem, 2vw, 1rem);
-      margin: 0;
-    }
-  }
-  
-  // Empty State
-  .empty-state {
-    text-align: center;
-    padding: 3rem 1rem;
-    background: white;
-    border-radius: 12px;
-    border: 2px dashed #d1d5db;
-    
-    .empty-icon {
-      margin-bottom: 1rem;
-      
-      mat-icon {
-        font-size: clamp(2.5rem, 6vw, 4rem);
-        width: clamp(2.5rem, 6vw, 4rem);
-        height: clamp(2.5rem, 6vw, 4rem);
-        color: #9ca3af;
-      }
-    }
-    
-    .empty-title {
-      font-size: clamp(1rem, 2.5vw, 1.5rem);
-      font-weight: 500;
-      color: #374151;
-      margin: 0 0 0.5rem 0;
-    }
-    
-    .empty-text {
-      color: #6b7280;
-      font-size: clamp(0.75rem, 2vw, 1rem);
-      margin: 0 0 1.5rem 0;
-    }
-    
-    .empty-state-button {
-      min-height: 44px;
-      padding: 0.75rem 1.5rem;
-      display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-    }
-  }
-  
-  // Accounts Grid List - Container for groups
-  .accounts-grid-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-    
-    @media (max-width: 640px) {
-      gap: 1.5rem;
-      max-height: 60vh;
-      overflow-y: auto;
-    }
-    
-    // Custom scrollbar styling
-    &::-webkit-scrollbar {
-      width: 6px;
-    }
-    
-    &::-webkit-scrollbar-track {
-      background: #f1f5f9;
-      border-radius: 3px;
-    }
-    
-    &::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 3px;
-      
-      &:hover {
-        background: #94a3b8;
-      }
-    }
-    
-    // Firefox scrollbar
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 #f1f5f9;
-  }
-  
-  // Account Item - Enhanced styling
-  .account-item {
-    background: white;
-    border-radius: 16px;
-    padding: 1.5rem;
-    border: 1px solid #e5e7eb;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border-left: 4px solid transparent;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    position: relative;
-    overflow: hidden;
-    
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--account-color, #3b82f6), var(--account-color-secondary, #8b5cf6));
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    
-    @media (max-width: 640px) {
-      padding: 1.25rem;
-      border-radius: 12px;
-    }
-    
-    &:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
-      border-color: #d1d5db;
-      
-      &::before {
-        opacity: 1;
-      }
-    }
-    
-    &.positive-balance {
-      border-left-color: #10b981;
-      --account-color: #10b981;
-      --account-color-secondary: #059669;
-    }
-    
-    &.negative-balance {
-      border-left-color: #ef4444;
-      --account-color: #ef4444;
-      --account-color-secondary: #dc2626;
-    }
-    
-    &.loan-account {
-      border-left-color: #f59e0b;
-      --account-color: #f59e0b;
-      --account-color-secondary: #d97706;
-    }
-    
-    // Account Content
-    .account-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 1rem;
-      position: relative;
-      
-      @media (max-width: 640px) {
-        gap: 0.75rem;
-      }
-    }
-    
-    // Account Info
-    .account-info {
-      padding: 0 10px 10px 10px;
-      flex: 1;
-      
-      .account-icon-name {
-        display: flex;
-        align-items: flex-start;
-        gap: 1rem;
-        
-        @media (max-width: 640px) {
-          gap: 0.75rem;
+
+      .left-info {
+        .label {
+          font-size: clamp(0.75rem, 2vw, 0.9rem);
+          color: #64748b;
+          font-weight: 500;
+          display: block;
+          margin-bottom: 0.5rem;
+          letter-spacing: 0.01em;
         }
-        
-        .account-icon-container {
-          width: 3rem;
-          height: 3rem;
-          border-radius: 12px;
+        .net-worth-value {
+          font-size: clamp(1.75rem, 8vw, 3.5rem);
+          font-weight: 800;
+          color: #0f172a;
+          letter-spacing: -0.03em;
+          line-height: 1.1;
+          font-variant-numeric: tabular-nums;
+        }
+      }
+
+      .right-info {
+        display: flex;
+        gap: 3rem;
+
+        .sub-indicator {
           display: flex;
           align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-          transition: all 0.3s ease;
-          
-          @media (max-width: 640px) {
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 10px;
-          }
-          
-          .account-icon {
-            font-size: 1.5rem;
-            width: 1.5rem;
-            height: 1.5rem;
-            color: #6b7280;
-            transition: color 0.3s ease;
-          }
-        }
-        
-        .account-details {
-          flex: 1;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 0.625rem;
-          
-          @media (max-width: 640px) {
-            gap: 0.5rem;
-          }
-          
-          .account-header {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-            
-            @media (max-width: 640px) {
-              gap: 0.125rem;
-            }
-            
-            .account-name {
-              padding-top: 8px;
-              font-size: clamp(1rem, 2.5vw, 1.25rem);
-              color: #1f2937;
-              margin: 0;
-              line-height: 1.2;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-              width: 80%;
-              
-              @media (max-width: 640px) {
-                font-size: 1rem;
-              }
-            }
-          }
+          gap: 0.75rem;
 
-          // Account Type Information
-          .account-type-info {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-            
-            .account-type {
-              font-size: 0.75rem;
-              color: #6b7280;
-              font-weight: 500;
-            }
-            
-            .loan-info {
-              display: flex;
-              align-items: center;
-              gap: 0.25rem;
-              flex-wrap: wrap;
-              
-              .loan-label {
-                font-size: 0.75rem;
-                color: #6b7280;
-                font-weight: 500;
-              }
-              
-              .loan-value {
-                font-size: 0.75rem;
-                color: #dc2626;
-                font-weight: 600;
-              }
-            }
-          }
-          
-          // Balance Information
-          .account-balance-info {
+          .indicator-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
-            gap: 0.25rem;
-            flex-wrap: wrap;
-
-            .balance-label {
-              font-size: 0.75rem;
-              color: #6b7280;
-              font-weight: 500;
-            }
+            justify-content: center;
             
-            .balance-value {
-              font-size: 0.875rem;
-              font-weight: 600;
-              
-              &.positive {
-                color: #10b981;
-              }
-              
-              &.negative {
-                color: #ef4444;
-              }
+            &.positive { background: #ecfdf5; color: #10b981; }
+            &.negative { background: #fef2f2; color: #ef4444; }
+
+            mat-icon { font-size: 1.25rem; }
+          }
+
+          .indicator-details {
+            display: flex;
+            flex-direction: column;
+            .label { font-size: clamp(0.7rem, 1.5vw, 0.8rem); color: #64748b; }
+            .value {
+              font-size: clamp(1rem, 2.5vw, 1.25rem);
+              font-weight: 700;
+              &.positive { color: #10b981; }
+              &.negative { color: #ef4444; }
             }
           }
         }
       }
     }
-    
-    // Account Actions
-    .account-actions {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+
+    @media (max-width: 768px) {
+      padding: 1.5rem;
       
-      .action-button {
-        &.edit-button {
-          color: #3b82f6;
-          
-          mat-icon {
-            color: #3b82f6;
-          }
-        }
+      .net-worth-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
         
-        &.delete-button {
-          color: #dc2626;
+        .right-info { 
+          gap: 1.5rem;
+          width: 100%;
           
-          mat-icon {
-            color: #dc2626;
+          .sub-indicator {
+            flex: 1;
           }
         }
       }
@@ -598,432 +175,273 @@
   }
 }
 
-// =============================================================================
-// EXPAND/COLLAPSE SECTION
-// =============================================================================
-.expand-section {
-  display: flex;
-  justify-content: center;
-  padding: 8px 0;
-  border-top: 1px solid #e5e7eb;
-  
-  .expand-btn {
-    color: #6b7280;
-    font-size: 0.875rem;
-    
-    &:hover {
-      color: #374151;
-      background: #f3f4f6;
-    }
-  }
-}
+// Category Summary Grid
+.category-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+  padding: 0 0;
 
-// =============================================================================
-// EXPANDED DETAILS
-// =============================================================================
-.account-details-expanded {
-  border-top: 1px solid #e5e7eb;
-  background: #f9fafb;
-  animation: slideDown 0.3s ease;
-  
-  .details-tabs {
-    ::ng-deep .mat-mdc-tab-header {
-      background: white;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    
-    ::ng-deep .mat-mdc-tab-label {
-      color: #6b7280;
-      font-weight: 500;
-      
-      &.mat-mdc-tab-label-active {
-        color: #3b82f6;
-      }
-    }
-    
-    ::ng-deep .mat-mdc-ink-bar {
-      background-color: #3b82f6;
-    }
-  }
-  
-  .tab-content {
-    padding: 16px;
+  .mini-card {
     background: white;
-    min-height: 200px;
-    
-    .detail-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid #f3f4f6;
-      
-      &:last-child {
-        border-bottom: none;
-      }
-      
-      .detail-label {
-        font-weight: 500;
-        color: #6b7280;
-        font-size: 0.875rem;
-      }
-      
-      .detail-value {
-        font-weight: 600;
-        color: #111827;
-        font-size: 0.875rem;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    border-radius: clamp(12px, 2vw, 16px);
+    border: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: clamp(0.75rem, 2vw, 1rem);
+    transition: all 0.2s ease;
+    cursor: pointer;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+      border-color: #e2e8f0;
+    }
+
+    .card-icon-container {
+      .icon-bg {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         
-        &.positive {
-          color: #10b981;
-        }
-        
-        &.negative {
-          color: #ef4444;
-        }
-        
-        &.interest-amount {
-          color: #dc2626;
-          font-weight: 700;
-        }
+        &.bank { background: #eff6ff; color: #3b82f6; }
+        &.cash { background: #f0fdf4; color: #22c55e; }
+        &.credit { background: #faf5ff; color: #a855f7; }
+        &.investment { background: #fffcf0; color: #eab308; }
+
+        mat-icon { font-size: 1.5rem; }
       }
     }
-    
-    .no-transactions {
-      text-align: center;
-      padding: 32px 16px;
-      color: #6b7280;
-      
-      mat-icon {
-        font-size: 2rem;
-        width: 2rem;
-        height: 2rem;
-        margin-bottom: 8px;
-        opacity: 0.5;
-      }
-      
-      p {
-        margin: 0;
-        font-size: 0.875rem;
-      }
-    }
-    
-    .transaction-list {
+
+    .card-info {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      
-      .transaction-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 12px;
-        background: #f9fafb;
-        border-radius: 6px;
-        transition: background 0.2s ease;
-        
-        &:hover {
-          background: #f3f4f6;
-        }
-        
-        .transaction-info {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          
-          .transaction-description {
-            font-weight: 500;
-            color: #111827;
-            font-size: 0.875rem;
-          }
-          
-          .transaction-date {
-            font-size: 0.75rem;
-            color: #6b7280;
-          }
-        }
-        
-        .transaction-amount-container {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-        
-        .transaction-amount {
-          font-weight: 600;
-          font-size: 0.875rem;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          padding: 4px 8px;
-          border-radius: 4px;
-          transition: all 0.2s ease;
-          cursor: pointer;
-          
-          &:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          }
-          
-          .amount-icon {
-            font-size: 1rem;
-            width: 1rem;
-            height: 1rem;
-          }
-          
-          .amount-sign {
-            font-weight: 700;
-            font-size: 0.75rem;
-          }
-          
-          &.positive {
-            color: #10b981;
-            background: rgba(16, 185, 129, 0.1);
-            
-            .amount-icon {
-              color: #059669;
-            }
-            
-            .amount-sign {
-              color: #059669;
-            }
-            
-            &:hover {
-              background: rgba(16, 185, 129, 0.15);
-              box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
-            }
-          }
-          
-          &.negative {
-            color: #ef4444;
-            background: rgba(239, 68, 68, 0.1);
-            
-            .amount-icon {
-              color: #dc2626;
-            }
-            
-            .amount-sign {
-              color: #dc2626;
-            }
-            
-            &:hover {
-              background: rgba(239, 68, 68, 0.15);
-              box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
-            }
-          }
-        }
-      }
+      .label { font-size: clamp(0.75rem, 1.8vw, 0.85rem); color: #64748b; font-weight: 500; }
+      .value { font-size: clamp(1.25rem, 3vw, 1.5rem); font-weight: 700; color: #0f172a; }
     }
   }
 }
 
+// Account Group Section
+.account-group {
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+  padding: 0 clamp(0.75rem, 2vw, 1rem);
 
-// =============================================================================
-// RESPONSIVE DESIGN
-// =============================================================================
-@media (max-width: 768px) {
-  .accounts-container {
-    padding: 0.5rem;
-  }
-  
-  .accounts-grid {
-    gap: 1rem;
-  }
-  
-
-}
-
-@media (max-width: 480px) {
-  .accounts-container {
-    padding: 0.25rem;
-  }
-  
-
-  
-  .account-item {
-    padding: 0.75rem;
-    
-    .account-content {
-      gap: 0.5rem;
-    }
-    
-    .account-info {
-      padding: 0 5px 5px 5px;
-    }
-  }
-}
-
-// =============================================================================
-// LIST VIEW STYLES
-// =============================================================================
-.list-view-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  
   .group-header {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-weight: 600;
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #e5e7eb;
-    
-    .group-emoji {
-      font-size: 1.25rem;
+    margin-bottom: 1.25rem;
+    position: relative;
+
+    .collapse-btn {
+      color: #94a3b8;
+      margin-left: -0.75rem;
+      transition: transform 0.2s ease;
+      
+      mat-icon {
+        transition: transform 0.2s ease;
+        
+        &.rotated {
+          transform: rotate(-90deg);
+        }
+      }
     }
-    
-    .group-balance {
-      font-weight: 400;
-      font-size: 0.875rem;
-      color: #6b7280;
+
+    .group-info {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      flex: 1;
+
+      .group-name {
+        font-size: clamp(0.9rem, 2vw, 1rem);
+        font-weight: 600;
+        color: #334155;
+        margin: 0;
+      }
+      .count {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        font-weight: 500;
+      }
+    }
+
+    .group-right {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+
+      .group-balance {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #0f172a;
+        &.negative { color: #ef4444; }
+      }
+
+      .add-inline-btn {
+        color: #2563eb;
+        font-weight: 600;
+        font-size: 0.85rem;
+        padding: 0 0.75rem;
+        
+        mat-icon { font-size: 1rem; width: 1rem; height: 1rem; margin-right: 0.25rem; }
+      }
+    }
+
+    // Border line across
+    &::after {
+      content: '';
+      display: none; // Hide for now or implement if needed
     }
   }
+}
+
+// Account Cards Grid
+.accounts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+
+  .account-card {
+    background: white;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    border-radius: clamp(12px, 2vw, 16px);
+    border: 1px solid #f1f5f9;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: transparent;
+      transition: background 0.2s;
+    }
+
+    &:hover {
+      box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+      border-color: #e2e8f0;
+      transform: translateY(-2px);
+      &::before { background: #2563eb; }
+    }
+    
+    &.negative-border:hover::before { background: #ef4444; }
+
+    .card-top {
+      display: flex;
+      gap: clamp(0.75rem, 2vw, 1rem);
+      margin-bottom: clamp(1.25rem, 3vw, 2rem);
+      align-items: flex-start;
+
+      .account-icon-wrap {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        color: #64748b;
+        
+        &.bank { background: #eff6ff; color: #3b82f6; }
+        &.cash { background: #f0fdf4; color: #22c55e; }
+        &.credit { background: #faf5ff; color: #a855f7; }
+        &.loan { background: #fef2f2; color: #ef4444; }
+
+        mat-icon { font-size: 1.25rem; }
+      }
+
+      .account-titles {
+        flex: 1;
+        .name { font-size: clamp(1rem, 2.2vw, 1.1rem); font-weight: 700; color: #0f172a; margin: 0; }
+        .institution { font-size: clamp(0.75rem, 1.8vw, 0.85rem); color: #64748b; margin: 0.125rem 0 0 0; }
+      }
+      
+      .menu-action {
+        margin-top: -0.5rem;
+        margin-right: -0.5rem;
+        .more-btn { color: #94a3b8; }
+      }
+    }
+
+    .card-details {
+      .balance-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        .label { font-size: clamp(0.65rem, 1.5vw, 0.75rem); font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+        .amount {
+          font-size: clamp(1.25rem, 3vw, 1.5rem);
+          font-weight: 800;
+          color: #0f172a;
+          &.negative { color: #ef4444; }
+        }
+      }
+
+      .meta-row {
+        margin-top: 0.5rem;
+        text-align: right;
+        .account-number {
+          font-family: monospace;
+          color: #cbd5e1;
+          font-size: 0.75rem;
+        }
+      }
+    }
+  }
+}
+
+// Empty State
+.empty-state-card {
+  background: white;
+  border-radius: clamp(16px, 2vw, 20px);
+  padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 3vw, 2rem);
+  text-align: center;
+  border: 1px dashed #e2e8f0;
+  margin: 0 clamp(0.75rem, 2vw, 1rem);
   
-  .list-view-item {
+  .empty-icon-box {
+    width: 80px;
+    height: 80px;
+    background: #f8fafc;
+    border-radius: 20px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 1rem;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-left: 4px solid;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-    margin-bottom: 0.5rem;
-    
-    &:hover {
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transform: translateY(-1px);
-    }
-    
-    .list-view-content {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      flex: 1;
-      
-      .list-view-icon {
-        font-size: 1.5rem;
-        width: 1.5rem;
-        height: 1.5rem;
-        min-width: 1.5rem;
-      }
-      
-      .list-view-details {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-        
-        .list-view-name {
-          font-weight: 600;
-          font-size: 1rem;
-          color: #111827;
-        }
-        
-        .list-view-type {
-          font-size: 0.875rem;
-          color: #6b7280;
-        }
-        
-        .list-view-balance {
-          font-weight: 600;
-          font-size: 0.875rem;
-          
-          &.positive {
-            color: #10b981;
-          }
-          
-          &.negative {
-            color: #ef4444;
-          }
-        }
-      }
-    }
-    
-    .list-view-actions {
-      display: flex;
-      align-items: center;
-      
-      .action-button {
-        &.edit-button {
-          color: #3b82f6;
-        }
-        
-        &.delete-button {
-          color: #ef4444;
-        }
-      }
-    }
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    mat-icon { font-size: 2.5rem; width: 2.5rem; height: 2.5rem; color: #cbd5e1; }
   }
+
+  .empty-title { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 0 0 0.5rem 0; }
+  .empty-text { color: #64748b; max-width: 300px; margin: 0 auto 2rem; }
+  .empty-btn { border-radius: 10px; padding: 0.5rem 2rem; }
 }
 
-// Dark theme support for list view
-@media (prefers-color-scheme: dark) {
-  .list-view-container {
-    .group-header {
-      border-bottom-color: #374151;
-      color: #f9fafb;
-      
-      .group-balance {
-        color: #9ca3af;
-      }
-    }
+// Custom Material Overrides
+::ng-deep .standard-menu {
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.08) !important;
+  border: 1px solid #f1f5f9 !important;
+  
+  .mat-mdc-menu-item {
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
     
-    .list-view-item {
-      background: #1f2937;
-      border-color: #374151;
-      
-      &:hover {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-      }
-      
-      .list-view-content {
-        .list-view-details {
-          .list-view-name {
-            color: #f9fafb;
-          }
-          
-          .list-view-type {
-            color: #9ca3af;
-          }
-        }
-      }
-    }
-  }
-}
-
-// Mobile responsive for list view
-@media (max-width: 768px) {
-  .list-view-container {
-    .list-view-item {
-      padding: 0.75rem;
-      
-      .list-view-content {
-        gap: 0.75rem;
-        
-        .list-view-icon {
-          font-size: 1.25rem;
-          width: 1.25rem;
-          height: 1.25rem;
-          min-width: 1.25rem;
-        }
-        
-        .list-view-details {
-          .list-view-name {
-            font-size: 0.875rem;
-          }
-          
-          .list-view-type {
-            font-size: 0.75rem;
-          }
-          
-          .list-view-balance {
-            font-size: 0.75rem;
-          }
-        }
-      }
-    }
+    mat-icon { color: #94a3b8 !important; }
+    
+    &:hover { background: #f8fafc !important; }
+    &.delete-item { color: #ef4444 !important; mat-icon { color: #ef4444 !important; } }
   }
 }

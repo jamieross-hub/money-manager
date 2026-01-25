@@ -60,9 +60,38 @@ export const selectTotalBalance = createSelector(
   }
 );
 
-export const selectTotalBalanceByType = (type: 'bank' | 'cash' | 'credit' | 'loan') => createSelector(
-  selectAccountsByType(type),
-  (accounts) => accounts.reduce((sum, account) => sum + account.balance, 0)
+export const selectTotalBalanceByType = (type: AccountType) => createSelector(
+  selectAllAccounts,
+  (accounts) => {
+    const filteredAccounts = accounts.filter(a => a.type === type);
+    return filteredAccounts.reduce((sum, account) => {
+      if (account.type === AccountType.LOAN) {
+        return sum + (account.loanDetails?.remainingBalance || 0);
+      }
+      return sum + account.balance;
+    }, 0);
+  }
+);
+
+export const selectTotalAssets = createSelector(
+  selectAllAccounts,
+  (accounts) => accounts
+    .filter(a => a.type !== AccountType.LOAN && a.type !== AccountType.CREDIT)
+    .reduce((sum, account) => sum + account.balance, 0)
+);
+
+export const selectTotalLiabilities = createSelector(
+  selectAllAccounts,
+  (accounts) => accounts
+    .reduce((sum, account) => {
+      if (account.type === AccountType.LOAN) {
+        return sum + (account.loanDetails?.remainingBalance || 0);
+      }
+      if (account.type === AccountType.CREDIT) {
+        return sum + (account.balance < 0 ? Math.abs(account.balance) : 0);
+      }
+      return sum;
+    }, 0)
 );
 
 export const selectAccountsByInstitution = (institution: string) => createSelector(

@@ -22,6 +22,7 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { ACCOUNT_GROUPS, AccountGroup, getAccountGroup } from 'src/app/util/config/account.config';
 import { Transaction } from 'src/app/util/models/transaction.model';
+import * as ProfileSelectors from '../../../store/profile/profile.selectors';
 
 @Component({
   selector: 'user-accounts',
@@ -44,6 +45,13 @@ export class AccountsComponent implements OnInit, OnDestroy {
   public isLoading$: Observable<boolean>;
   public error$: Observable<any>;
   public totalBalance$: Observable<number>;
+  public totalAssets$: Observable<number>;
+  public totalLiabilities$: Observable<number>;
+  public bankBalance$: Observable<number>;
+  public cashBalance$: Observable<number>;
+  public creditBalance$: Observable<number>;
+  public investmentBalance$: Observable<number>;
+  public userCurrency$: Observable<string | undefined>;
 
   // Component state
   public accounts: Account[] = [];
@@ -53,6 +61,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
   public expandedAccount: Account | null = null;
   public isListViewMode: boolean = false; // Add this property for list view toggle
   public transactions: Transaction[] = []; // Store transactions for access in template
+  public collapsedGroups: Map<string, boolean> = new Map(); // Track collapsed state of groups
 
   // Private properties
   private userId: string = '';
@@ -79,6 +88,13 @@ export class AccountsComponent implements OnInit, OnDestroy {
     this.isLoading$ = this.store.select(AccountsSelectors.selectAccountsLoading);
     this.error$ = this.store.select(AccountsSelectors.selectAccountsError);
     this.totalBalance$ = this.store.select(AccountsSelectors.selectTotalBalance);
+    this.totalAssets$ = this.store.select(AccountsSelectors.selectTotalAssets);
+    this.totalLiabilities$ = this.store.select(AccountsSelectors.selectTotalLiabilities);
+    this.bankBalance$ = this.store.select(AccountsSelectors.selectTotalBalanceByType(AccountType.BANK));
+    this.cashBalance$ = this.store.select(AccountsSelectors.selectTotalBalanceByType(AccountType.CASH));
+    this.creditBalance$ = this.store.select(AccountsSelectors.selectTotalBalanceByType(AccountType.CREDIT));
+    this.investmentBalance$ = this.store.select(AccountsSelectors.selectTotalBalanceByType(AccountType.INVESTMENT));
+    this.userCurrency$ = this.store.select(ProfileSelectors.selectUserCurrency);
   }
 
   ngOnInit(): void {
@@ -498,5 +514,20 @@ export class AccountsComponent implements OnInit, OnDestroy {
         totalBalance
       };
     }).filter(groupData => groupData.accounts.length > 0); // Only show groups with accounts
+  }
+
+  /**
+   * Toggle collapse state for a group
+   */
+  public toggleGroupCollapse(groupId: string): void {
+    const currentState = this.collapsedGroups.get(groupId) || false;
+    this.collapsedGroups.set(groupId, !currentState);
+  }
+
+  /**
+   * Check if a group is collapsed
+   */
+  public isGroupCollapsed(groupId: string): boolean {
+    return this.collapsedGroups.get(groupId) || false;
   }
 }

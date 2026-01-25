@@ -1,412 +1,165 @@
-<app-quick-actions-fab [config]="quickActionsFabConfig" (mainButtonClick)="addAccount()"></app-quick-actions-fab>
-<div class="accounts-container lg:mt-20 lg:mx-16 xl:mx-32  2xl:mx-48">
-	<!-- Error Message Display -->
-	<div *ngIf="errorMessage"
-		class="error-message mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
-		<p class="text-red-700 text-sm">{{ errorMessage }}</p>
-		<button mat-icon-button (click)="clearError()" class="error-close-button">
-			<mat-icon>close</mat-icon>
+<div class="accounts-page fade-in">
+	<!-- Header Section -->
+	<header class="page-header lg:mx-16 xl:mx-32 2xl:mx-48">
+		<div class="header-left">
+			<p class="page-title">Accounts</p>
+			<p class="page-description">Manage your financial accounts</p>
+		</div>
+		<button mat-flat-button color="primary" class="add-account-btn" (click)="addAccount()">
+			<mat-icon>add</mat-icon>
+			Add Account
 		</button>
-	</div>
+	</header>
 
-	<!-- Main Content -->
-	<div class="accounts-grid">
-		<!-- Accounts List Section -->
-		<section class="accounts-list" [ngClass]="{'!max-h-[100vh]': breakpointService.device.isTablePortrait}">
+	<div class="accounts-container lg:mx-16 xl:mx-32 2xl:mx-48">
+		<!-- Error Message Display -->
+		<div *ngIf="errorMessage"
+			class="error-message mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between shadow-sm">
+			<p class="text-red-700 text-sm font-medium">{{ errorMessage }}</p>
+			<button mat-icon-button (click)="clearError()" class="error-close-button text-red-500">
+				<mat-icon>close</mat-icon>
+			</button>
+		</div>
 
-			<!-- Loan Summary Card (only if loan accounts exist) -->
-			<div *ngIf="getAccountsByGroup((accounts$ | async) || [], 'loan').length > 0" class="mb-6">
-				<app-loan-summary-card
-					[loansInput]="getAccountsByGroup((accounts$ | async) || [], 'loan')"></app-loan-summary-card>
-			</div>
+		<!-- Main Summary Card -->
+		<app-account-summary-card></app-account-summary-card>
 
-			<div class="section-header">
-				<div class="header-content">
-					<h2 class="section-title">Manage Accounts</h2>
-					<span class="flex items-center gap-2">
-						<p class="section-subtitle">({{ (accounts$ | async)?.length || 0 }} account{{ ((accounts$ |
-							async)?.length || 0) !== 1 ? 's' : '' }})</p>
-						<mat-icon (click)="toggleListViewMode()" *ngIf="!breakpointService.device.isMobile"
-							[matTooltip]="isListViewMode ? 'Switch to detailed view' : 'Switch to list view'">{{
-							isListViewMode ? 'view_list' : 'list' }}</mat-icon>
-					</span>
-				</div>
-			</div>
-
-			<!-- Empty State -->
-			<div *ngIf="(accounts$ | async)?.length === 0" class="empty-state">
-				<div class="empty-icon">
-					<mat-icon>account_balance</mat-icon>
-				</div>
-				<h3 class="empty-title">No accounts yet</h3>
-				<p class="empty-text">Add your first account to get started</p>
-				<button *ngIf="breakpointService.device.isMobile" mat-raised-button color="primary"
-					(click)="addAccount()" class="empty-state-button">
-					<mat-icon>add</mat-icon>
-					Add Account
-				</button>
-			</div>
-
-			<!-- Accounts List -->
-			<div *ngIf="(accounts$ | async) as accounts" class="accounts-grid-list"
-				[ngClass]="{'!max-h-[100vh]': breakpointService.device.isTablePortrait}">
-
-				<!-- List View -->
-				<div *ngIf="isListViewMode" class="list-view-container pt-4">
-					@for (groupData of getGroupedAccounts(accounts); track groupData.group.id) {
-					<div class="group-header" [style.color]="groupData.group.color">
-						<span class="group-emoji">{{ groupData.group.emoji }}</span>
-						{{ groupData.group.name }}
-						<span class="group-balance" *ngIf="!breakpointService.device.isMobile">
-							({{ groupData.totalBalance | currency }})
-						</span>
+		<!-- Category Summary Grid -->
+		<div class="category-summary-grid mt-5">
+			<div class="mini-card bank">
+				<div class="card-icon-container">
+					<div class="icon-bg bank">
+						<mat-icon>account_balance</mat-icon>
 					</div>
+				</div>
+				<div class="card-info">
+					<span class="label">Banks</span>
+					<span class="value">{{ bankBalance$ | async | currency : { currency: (userCurrency$ | async) ||
+						'USD' } }}</span>
+				</div>
+			</div>
+			<div class="mini-card cash">
+				<div class="card-icon-container">
+					<div class="icon-bg cash">
+						<mat-icon>payments</mat-icon>
+					</div>
+				</div>
+				<div class="card-info">
+					<span class="label">Cash</span>
+					<span class="value">{{ cashBalance$ | async | currency : { currency: (userCurrency$ | async) ||
+						'USD' } }}</span>
+				</div>
+			</div>
+			<div class="mini-card credit">
+				<div class="card-icon-container">
+					<div class="icon-bg credit">
+						<mat-icon>credit_card</mat-icon>
+					</div>
+				</div>
+				<div class="card-info">
+					<span class="label">Credit</span>
+					<span class="value">{{ creditBalance$ | async | currency : { currency: (userCurrency$ | async) ||
+						'USD' } }}</span>
+				</div>
+			</div>
+			<div class="mini-card investment">
+				<div class="card-icon-container">
+					<div class="icon-bg investment">
+						<mat-icon>trending_up</mat-icon>
+					</div>
+				</div>
+				<div class="card-info">
+					<span class="label">Investments</span>
+					<span class="value">{{ investmentBalance$ | async | currency : { currency: (userCurrency$ | async)
+						|| 'USD' } }}</span>
+				</div>
+			</div>
+		</div>
+
+		<!-- Grouped Accounts List -->
+		<div *ngIf="(accounts$ | async) as accounts" class="accounts-list-container">
+			@for (groupData of getGroupedAccounts(accounts); track groupData.group.id) {
+			<div class="account-group">
+				<div class="group-header">
+					<button mat-icon-button class="collapse-btn" (click)="toggleGroupCollapse(groupData.group.id)">
+						<mat-icon [class.rotated]="isGroupCollapsed(groupData.group.id)">expand_more</mat-icon>
+					</button>
+					<div class="group-info">
+						<p class="group-name">{{ groupData.group.name }}</p>
+						<span class="count">{{ groupData.accounts.length }}</span>
+					</div>
+					<div class="group-right">
+						<span class="group-balance" [class.negative]="groupData.totalBalance < 0">
+							{{ groupData.totalBalance | currency }}
+						</span>
+						<button mat-button class="add-inline-btn" (click)="addAccount()">
+							<mat-icon>add</mat-icon>
+							<span>Add</span>
+						</button>
+					</div>
+				</div>
+
+				<div class="accounts-grid" *ngIf="!isGroupCollapsed(groupData.group.id)">
 					@for (account of groupData.accounts; track account.accountId) {
-					<div class="list-view-item" [style.border-left-color]="groupData.group.color">
-						<div class="list-view-content">
-							<mat-icon class="list-view-icon" [style.color]="groupData.group.color">{{
-								getAccountIcon(account.type) }}</mat-icon>
-							<div class="list-view-details">
-								<span class="list-view-name">{{ account.name | titlecase }}</span>
-								<span class="list-view-type">{{ account.type | titlecase }}</span>
-								<span class="list-view-balance"
-									[class]="isLoanAccount(account) ? 'negative' : (account.balance >= 0 ? 'positive' : 'negative')">
+					<div class="account-card" [class.negative-border]="getBalanceClass(account) === 'negative-balance'">
+						<div class="card-top">
+							<div class="account-icon-wrap" [class]="account.type">
+								<mat-icon>{{ getAccountIcon(account.type) }}</mat-icon>
+							</div>
+							<div class="account-titles">
+								<p class="name">{{ account.name | titlecase }}</p>
+								<p class="institution">{{ account.institution || account.type | titlecase }}</p>
+							</div>
+							<div class="menu-action">
+								<button mat-icon-button [matMenuTriggerFor]="menu" class="more-btn">
+									<mat-icon>more_vert</mat-icon>
+								</button>
+								<mat-menu #menu="matMenu" class="standard-menu">
+									<button mat-menu-item (click)="viewAccountStatement(account)">
+										<mat-icon>receipt_long</mat-icon>
+										<span>View Statement</span>
+									</button>
+									<button mat-menu-item (click)="editAccount(account)">
+										<mat-icon>edit</mat-icon>
+										<span>Edit</span>
+									</button>
+									<button mat-menu-item (click)="deleteAccount(account)" class="delete-item">
+										<mat-icon>delete</mat-icon>
+										<span>Delete</span>
+									</button>
+								</mat-menu>
+							</div>
+						</div>
+						<div class="card-details">
+							<div class="balance-row">
+								<span class="label">Balance</span>
+								<span class="amount" [class.negative]="isLoanAccount(account) || account.balance < 0">
 									{{ isLoanAccount(account) ? (-(getLoanDetails(account)?.remainingBalance || 0) |
 									currency) : account.balance | currency }}
 								</span>
 							</div>
-						</div>
-						<div class="list-view-actions">
-							<mat-menu #listMenu="matMenu">
-								<button mat-menu-item (click)="viewAccountStatement(account)"
-									class="action-button statement-button"><mat-icon>receipt_long</mat-icon> View
-									Statement</button>
-								<button mat-menu-item (click)="editAccount(account)"
-									class="action-button edit-button"><mat-icon>edit</mat-icon> Edit</button>
-								<button mat-menu-item (click)="deleteAccount(account)"
-									class="action-button delete-button"><mat-icon
-										class="!text-red-800">delete</mat-icon> Delete</button>
-							</mat-menu>
-							<button matIconButton [matMenuTriggerFor]="listMenu">
-								<mat-icon>more_vert</mat-icon>
-							</button>
-						</div>
-					</div>
-					}
-					}
-				</div>
-
-				<!-- Detailed View -->
-				<div *ngIf="!isListViewMode">
-					@for (groupData of getGroupedAccounts(accounts); track groupData.group.id) {
-					<div class="account-group-container" [style.--group-color]="groupData.group.color">
-						<!-- Account Group Header -->
-						<div class="account-group-header" [style.--group-color]="groupData.group.color"
-							[style.--group-color-secondary]="groupData.group.color + '80'">
-							<div class="group-info">
-								<span class="group-emoji">{{ groupData.group.emoji }}</span>
-								<h3 class="group-name">{{ groupData.group.name }}</h3>
-								<span class="group-description" *ngIf="!breakpointService.device.isMobile">{{
-									groupData.group.description }}</span>
+							<div class="meta-row" *ngIf="isLoanAccount(account) || isCreditCardAccount(account)">
+								<span class="account-number">****{{ account.accountId.slice(-4) }}</span>
 							</div>
-							<div class="group-balance" *ngIf="!breakpointService.device.isMobile">
-								<span class="group-balance-label">Total:</span>
-								<span class="group-balance-value"
-									[class]="groupData.totalBalance >= 0 ? 'positive' : 'negative'">
-									{{ groupData.totalBalance | currency }}
-								</span>
-							</div>
-						</div>
-
-						<!-- Accounts in this group -->
-						<div class="group-accounts-grid">
-							@for (account of groupData.accounts; track account.accountId) {
-							<div class="account-item" [class]="getBalanceClass(account)"
-								[class.expanded]="expandedAccount?.accountId === account.accountId"
-								[style.--account-color]="getAccountGroup(account)?.color"
-								[style.--account-color-secondary]="getAccountGroup(account)?.color + '80'">
-								<div class="account-content">
-									<div class="account-info">
-										<div class="account-icon-name">
-											<div class="account-icon-container">
-												<mat-icon class="account-icon">{{ getAccountIcon(account.type)
-													}}</mat-icon>
-											</div>
-											<div class="account-details">
-												<div class="account-header">
-													<h3 class="account-name">{{ account.name | titlecase }}</h3>
-												</div>
-
-												<!-- Account Type Information -->
-												<div class="account-type-info">
-													@if(isLoanAccount(account)){
-													<div class="loan-info">
-														<span class="loan-label">Loan Interest Rate:</span>
-														<span class="loan-value">{{
-															getLoanDetails(account)?.interestRate }}%</span>
-													</div>
-													}@else{
-													<span class="account-type">{{ account.type | titlecase }}</span>
-													}
-												</div>
-
-												<!-- Balance Information -->
-												<div class="account-balance-info">
-													<span class="balance-label">Balance:</span>
-													<span class="balance-value"
-														[class]="isLoanAccount(account) ? 'negative' : (account.balance >= 0 ? 'positive' : 'negative')">
-														{{ isLoanAccount(account) ?
-														(-(getLoanDetails(account)?.remainingBalance || 0) | currency) :
-														account.balance | currency }}
-													</span>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div class="account-actions">
-										<mat-menu #menu="matMenu">
-											<button mat-menu-item (click)="viewAccountStatement(account)"
-												class="action-button statement-button"
-												matTooltip="View account statement"><mat-icon>receipt_long</mat-icon>
-												View Statement</button>
-											<button mat-menu-item (click)="editAccount(account)"
-												class="action-button edit-button"
-												matTooltip="Edit account"><mat-icon>edit</mat-icon> Edit</button>
-											<button mat-menu-item (click)="deleteAccount(account)"
-												class="action-button delete-button"
-												matTooltip="Delete account"><mat-icon>delete</mat-icon> Delete</button>
-										</mat-menu>
-										<button matIconButton [matMenuTriggerFor]="menu">
-											<mat-icon>more_vert</mat-icon>
-										</button>
-									</div>
-								</div>
-
-								<!-- Expand/Collapse Button -->
-								<div class="expand-section" *ngIf="!breakpointService.device.isMobile">
-									<button mat-button (click)="toggleAccountExpansion(account)" class="expand-btn">
-										<mat-icon>{{ expandedAccount?.accountId === account.accountId ? 'expand_less' :
-											'expand_more' }}</mat-icon>
-										<span>{{ expandedAccount?.accountId === account.accountId ? 'Show Less' : 'Show
-											More' }}</span>
-									</button>
-								</div>
-
-								<!-- Expanded Details -->
-								<div *ngIf="expandedAccount?.accountId === account.accountId"
-									class="account-details-expanded">
-									<mat-tab-group class="details-tabs">
-										<!-- Basic Details Tab -->
-										<mat-tab label="Basic Details">
-											<div class="tab-content">
-												<div class="detail-row">
-													<span class="detail-label">Account Name:</span>
-													<span class="detail-value">{{ account.name }}</span>
-												</div>
-												<div class="detail-row">
-													<span class="detail-label">Account Type:</span>
-													<span class="detail-value">{{ account.type | titlecase }}</span>
-												</div>
-												<div class="detail-row">
-													<span class="detail-label">Current Balance:</span>
-													<span class="detail-value"
-														[class]="isLoanAccount(account) ? 'negative' : (account.balance >= 0 ? 'positive' : 'negative')">
-														{{ isLoanAccount(account) ?
-														(-(getLoanDetails(account)?.remainingBalance || 0) | currency) :
-														account.balance | currency }}
-													</span>
-												</div>
-												<div class="detail-row" *ngIf="account.description">
-													<span class="detail-label">Description:</span>
-													<span class="detail-value">{{ account.description }}</span>
-												</div>
-												<div class="detail-row" *ngIf="account.createdAt">
-													<span class="detail-label">Created:</span>
-													<span class="detail-value">{{ dateService.toDate(account.createdAt)
-														| date:'shortDate' }}</span>
-												</div>
-											</div>
-										</mat-tab>
-
-										<!-- Loan Details Tab (only for loan accounts) -->
-										<mat-tab label="Loan Details" *ngIf="isLoanAccount(account)">
-											<div class="tab-content">
-												<div class="detail-row">
-													<span class="detail-label">Lender Name:</span>
-													<span class="detail-value">{{ getLoanDetails(account)?.lenderName ||
-														'N/A' }}</span>
-												</div>
-												<div class="detail-row">
-													<span class="detail-label">Interest Rate:</span>
-													<span class="detail-value">{{ getLoanDetails(account)?.interestRate
-														}}%</span>
-												</div>
-												<div class="detail-row">
-													<span class="detail-label">Monthly Interest:</span>
-													<span class="detail-value interest-amount">{{
-														calculateMonthlyInterest(account) | currency }}</span>
-												</div>
-												<div class="detail-row">
-													<span class="detail-label">Next Due Date:</span>
-													<span class="detail-value">{{ getLoanDetails(account)?.nextDueDate |
-														date:'fullDate' }}</span>
-												</div>
-												<div class="detail-row">
-													<span class="detail-label">Remaining Balance:</span>
-													<span class="detail-value negative">{{
-														-(getLoanDetails(account)?.remainingBalance || 0) | currency
-														}}</span>
-												</div>
-												<div class="detail-row">
-													<span class="detail-label">Monthly Payment:</span>
-													<span class="detail-value">{{
-														getLoanDetails(account)?.monthlyPayment | currency }}</span>
-												</div>
-												<div class="detail-row" *ngIf="getLoanDetails(account)?.durationMonths">
-													<span class="detail-label">Loan Term:</span>
-													<span class="detail-value">{{
-														getLoanDetails(account)?.durationMonths }} months</span>
-												</div>
-											</div>
-										</mat-tab>
-
-										<!-- Credit Card Details Tab (only for credit card accounts) -->
-										<mat-tab label="Credit Card Details" *ngIf="isCreditCardAccount(account)">
-											<div class="tab-content">
-												<div class="detail-row">
-													<span class="detail-label">Payment Due Date:</span>
-													<span class="detail-value">{{ getCreditCardDetails(account)?.dueDate
-														}}{{ getDaySuffix(getCreditCardDetails(account)?.dueDate) }} of
-														each month</span>
-												</div>
-												<div class="detail-row">
-													<span class="detail-label">Billing Cycle Start:</span>
-													<span class="detail-value">{{
-														getCreditCardDetails(account)?.billingCycleStart }}{{
-														getDaySuffix(getCreditCardDetails(account)?.billingCycleStart)
-														}} of each month</span>
-												</div>
-												<div class="detail-row"
-													*ngIf="getCreditCardDetails(account)?.creditLimit">
-													<span class="detail-label">Credit Limit:</span>
-													<span class="detail-value">{{
-														getCreditCardDetails(account)?.creditLimit | currency }}</span>
-												</div>
-												<div class="detail-row"
-													*ngIf="getCreditCardDetails(account)?.minimumPayment">
-													<span class="detail-label">Minimum Payment:</span>
-													<span class="detail-value">{{
-														getCreditCardDetails(account)?.minimumPayment | currency
-														}}</span>
-												</div>
-												<div class="detail-row">
-													<span class="detail-label">Next Due Date:</span>
-													<span class="detail-value">{{ calculateNextDueDate(account) |
-														date:'fullDate' }}</span>
-												</div>
-												<div class="detail-row">
-													<span class="detail-label">Next Billing Date:</span>
-													<span class="detail-value">{{ calculateNextBillingDate(account) |
-														date:'fullDate' }}</span>
-												</div>
-											</div>
-										</mat-tab>
-
-										<!-- Transaction History Tab -->
-										<mat-tab label="Recent Transactions">
-											<div class="tab-content">
-												<div class="no-transactions"
-													*ngIf="!getRecentTransactions(account)?.length">
-													<mat-icon>receipt_long</mat-icon>
-													<p>No recent transactions</p>
-												</div>
-												<div class="transaction-list"
-													*ngIf="getRecentTransactions(account)?.length">
-													@for (transaction of getRecentTransactions(account); track
-													transaction.id) {
-													<div class="transaction-item">
-														<div class="transaction-info">
-															<span class="transaction-description">{{ transaction?.payee
-																}}</span>
-															<span class="transaction-date">{{
-																dateService.toDate(transaction?.date) | date:'shortDate'
-																}}</span>
-														</div>
-														<div class="transaction-amount-container">
-															<span class="transaction-amount"
-																[class]="transaction.type === 'income' ? 'positive' : 'negative'">
-																<mat-icon class="amount-icon">{{ transaction.type ===
-																	'income' ? 'trending_up' : 'trending_down'
-																	}}</mat-icon>
-																<span class="amount-sign">{{ transaction.type ===
-																	'income' ? '+' : '-' }}</span>
-																{{ transaction.amount >= 0 ? transaction.amount :
-																-transaction.amount | currency }}
-															</span>
-														</div>
-													</div>
-													}
-												</div>
-											</div>
-										</mat-tab>
-
-										<!-- Statistics Tab -->
-										<mat-tab label="Statistics">
-											<div class="tab-content">
-												<div class="detail-row">
-													<span class="detail-label">Total Transactions:</span>
-													<span class="detail-value">{{
-														getAccountStats(account)?.totalTransactions || 0 }}</span>
-												</div>
-												<div class="detail-row">
-													<span class="detail-label">Total Deposits:</span>
-													<span class="detail-value positive">{{
-														getAccountStats(account)?.totalDeposits | currency }}</span>
-												</div>
-												<div class="detail-row">
-													<span class="detail-label">Total Withdrawals:</span>
-													<span class="detail-value negative">{{
-														getAccountStats(account)?.totalWithdrawals | currency }}</span>
-												</div>
-												<div class="detail-row">
-													<span class="detail-label">Average Transaction:</span>
-													<span class="detail-value">{{
-														getAccountStats(account)?.averageTransaction | currency
-														}}</span>
-												</div>
-												<div class="detail-row">
-													<span class="detail-label">Largest Transaction:</span>
-													<span class="detail-value">{{
-														getAccountStats(account)?.largestTransaction | currency
-														}}</span>
-												</div>
-												<div class="detail-row">
-													<span class="detail-label">This Month:</span>
-													<span class="detail-value">{{ getAccountStats(account)?.thisMonth |
-														currency }}</span>
-												</div>
-												<div class="detail-row">
-													<span class="detail-label">Last Month:</span>
-													<span class="detail-value">{{ getAccountStats(account)?.lastMonth |
-														currency }}</span>
-												</div>
-											</div>
-										</mat-tab>
-									</mat-tab-group>
-								</div>
-							</div>
-							}
 						</div>
 					</div>
 					}
 				</div>
 			</div>
-			<div class="mt-5">
-				<!-- Total Balance Summary Card -->
-				<app-account-summary-card> </app-account-summary-card>
-			</div>
-		</section>
+			}
+		</div>
 
+		<!-- Empty State -->
+		<div *ngIf="(accounts$ | async)?.length === 0" class="empty-state-card">
+			<div class="empty-icon-box">
+				<mat-icon>account_balance</mat-icon>
+			</div>
+			<p class="empty-title">No accounts yet</p>
+			<p class="empty-text">Add your first account to get started tracking your net worth</p>
+			<button mat-flat-button color="primary" (click)="addAccount()" class="empty-btn">
+				<mat-icon>add</mat-icon>
+				Add First Account
+			</button>
+		</div>
 	</div>
-
 </div>
