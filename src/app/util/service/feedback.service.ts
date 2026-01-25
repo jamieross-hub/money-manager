@@ -4,6 +4,7 @@ import { Auth } from '@angular/fire/auth';
 import { Observable, from } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { FeedbackForm } from '../../component/feedback/feedback.component';
+import { UserService } from './db/user.service';
 
 export interface FeedbackData extends FeedbackForm {
   id?: string;
@@ -21,7 +22,8 @@ export class FeedbackService {
 
   constructor(
     private firestore: Firestore,
-    private auth: Auth
+    private auth: Auth,
+    private userService: UserService
   ) { }
 
   /**
@@ -32,11 +34,11 @@ export class FeedbackService {
       // Prepare feedback data
       const feedbackData: FeedbackData = {
         ...feedback,
-        userId: this.auth.currentUser?.uid || 'anonymous',
+        userId: this.userService.getCurrentUserId() || 'anonymous',
         timestamp: serverTimestamp(),
         status: 'pending',
         userAgent: navigator.userAgent,
-        appVersion:  '1.0.0'
+        appVersion: '1.0.0'
       };
 
       // Save to Firestore
@@ -72,7 +74,7 @@ export class FeedbackService {
       const feedbackRef = collection(this.firestore, 'feedback');
       const q = query(feedbackRef, orderBy('timestamp', 'desc'));
       const querySnapshot = await getDocs(q);
-      
+
       const feedbackList: FeedbackData[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data() as FeedbackData;
@@ -81,7 +83,7 @@ export class FeedbackService {
           id: doc.id
         });
       });
-      
+
       return feedbackList;
     } catch (error) {
       console.error('Error fetching feedback:', error);

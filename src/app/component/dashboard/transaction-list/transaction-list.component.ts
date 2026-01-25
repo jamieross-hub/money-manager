@@ -393,7 +393,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
     }).afterClosed().subscribe((transaction: Transaction) => {
       if (transaction) {
-        const userId = this.auth.currentUser?.uid;
+        const userId = this.userService.getCurrentUserId();
         if (userId) {
           this.store.dispatch(TransactionsActions.loadTransactions({ userId }));
         }
@@ -456,7 +456,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     if (!transactions || transactions.length === 0 || !categoryId) return;
 
     this.loaderService.show();
-    const userId = this.auth.currentUser?.uid;
+    const userId = this.userService.getCurrentUserId();
 
     if (!userId) {
       this.notificationService.error('User not authenticated');

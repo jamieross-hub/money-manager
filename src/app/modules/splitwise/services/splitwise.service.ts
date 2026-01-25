@@ -43,7 +43,7 @@ export class SplitwiseService {
     private dateService: DateService,
     private userService: UserService,
     private hapticFeedback: HapticFeedbackService
-  ) {}
+  ) { }
 
   // Groups - Now using common/shared groups
   getUserGroups(userId: string): Observable<SplitwiseGroup[]> {
@@ -68,8 +68,8 @@ export class SplitwiseService {
             id: doc.id,
             ...doc.data()
           } as SplitwiseGroup))
-          .filter(group => 
-            group.members.some(member => 
+          .filter(group =>
+            group.members.some(member =>
               member.email.toLowerCase() === currentUser.email?.toLowerCase() && member.isActive
             )
           );
@@ -127,9 +127,9 @@ export class SplitwiseService {
 
   deleteGroup(groupId: string, userId: string): Observable<void> {
     const groupRef = doc(this.firestore, 'splitwise-groups', groupId);
-    return from(updateDoc(groupRef, { 
-      isActive: false, 
-      updatedAt: new Date() 
+    return from(updateDoc(groupRef, {
+      isActive: false,
+      updatedAt: new Date()
     }));
   }
 
@@ -167,7 +167,7 @@ export class SplitwiseService {
    */
   private isInvitationExpired(invitation: GroupInvitation): boolean {
     let expiresAt: Date;
-    
+
     if (invitation.expiresAt instanceof Timestamp) {
       expiresAt = invitation.expiresAt.toDate();
     } else if (invitation.expiresAt instanceof Date) {
@@ -175,7 +175,7 @@ export class SplitwiseService {
     } else {
       expiresAt = new Date(invitation.expiresAt);
     }
-    
+
     return expiresAt < new Date();
   }
 
@@ -202,9 +202,9 @@ export class SplitwiseService {
       snapshot.docs.forEach(doc => {
         const invitation = doc.data() as GroupInvitation;
         if (this.isInvitationExpired(invitation)) {
-          batch.update(doc.ref, { 
-            status: InvitationStatus.EXPIRED, 
-            updatedAt: new Date() 
+          batch.update(doc.ref, {
+            status: InvitationStatus.EXPIRED,
+            updatedAt: new Date()
           });
           hasUpdates = true;
         }
@@ -226,7 +226,7 @@ export class SplitwiseService {
       // Get the invitation from common collection
       const invitationRef = doc(this.firestore, 'splitwise-invitations', invitationId);
       const invitationDoc = await getDoc(invitationRef);
-      
+
       if (!invitationDoc.exists()) {
         throw new Error('Invitation not found');
       }
@@ -234,15 +234,15 @@ export class SplitwiseService {
       const invitation = invitationDoc.data() as GroupInvitation;
 
       // Update invitation status
-      await updateDoc(invitationRef, { 
-        status: InvitationStatus.ACCEPTED, 
-        updatedAt: new Date() 
+      await updateDoc(invitationRef, {
+        status: InvitationStatus.ACCEPTED,
+        updatedAt: new Date()
       });
 
       // Get the group from the common collection
       const groupRef = doc(this.firestore, 'splitwise-groups', invitation.groupId);
       const groupDoc = await getDoc(groupRef);
-      
+
       if (!groupDoc.exists()) {
         throw new Error('Group not found');
       }
@@ -285,7 +285,7 @@ export class SplitwiseService {
       // Get the invitation from common collection
       const invitationRef = doc(this.firestore, 'splitwise-invitations', invitationId);
       const invitationDoc = await getDoc(invitationRef);
-      
+
       if (!invitationDoc.exists()) {
         throw new Error('Invitation not found');
       }
@@ -293,18 +293,18 @@ export class SplitwiseService {
       const invitation = invitationDoc.data() as GroupInvitation;
 
       // Update invitation status
-      await updateDoc(invitationRef, { 
-        status: InvitationStatus.DECLINED, 
-        updatedAt: new Date() 
+      await updateDoc(invitationRef, {
+        status: InvitationStatus.DECLINED,
+        updatedAt: new Date()
       });
 
       // Remove the member from the common group
       const groupRef = doc(this.firestore, 'splitwise-groups', invitation.groupId);
       const groupDoc = await getDoc(groupRef);
-      
+
       if (groupDoc.exists()) {
         const group = groupDoc.data() as SplitwiseGroup;
-        const updatedMembers = group.members.filter(member => 
+        const updatedMembers = group.members.filter(member =>
           member.email.toLowerCase() !== invitation.invitedEmail.toLowerCase()
         );
 
@@ -334,29 +334,29 @@ export class SplitwiseService {
       // Get the group from common collection
       const groupRef = doc(this.firestore, 'splitwise-groups', groupId);
       const groupDoc = await getDoc(groupRef);
-      
+
       if (!groupDoc.exists()) {
         throw new Error('Group not found');
       }
-      
+
       const group = groupDoc.data() as SplitwiseGroup;
 
       // Check if user is already a member
-      const existingMember = group.members.find(member => 
+      const existingMember = group.members.find(member =>
         member.email.toLowerCase() === request.email.toLowerCase()
       );
-      
+
       if (existingMember) {
         throw new Error('User is already a member of this group');
       }
 
       // Find if the user exists in the system
       const targetUser = await this.userService.findUserByEmail(request.email);
-      
+
       if (targetUser) {
         // User exists - send invitation
         await this.sendGroupInvitation(groupId, request.email, userId);
-        
+
         // Add member to group with pending status
         const newMember: GroupMember = {
           userId: targetUser.uid,
@@ -369,13 +369,13 @@ export class SplitwiseService {
         };
 
         const updatedMembers = [...group.members, newMember];
-        await updateDoc(groupRef, { 
-          members: updatedMembers, 
-          updatedAt: new Date() 
+        await updateDoc(groupRef, {
+          members: updatedMembers,
+          updatedAt: new Date()
         });
 
         this.notificationService.success(`Invitation sent to ${request.email}`);
-        
+
         return { id: groupId, ...group, members: updatedMembers, updatedAt: new Date() } as SplitwiseGroup;
       } else {
         // User doesn't exist - add as pending member
@@ -389,16 +389,16 @@ export class SplitwiseService {
         };
 
         const updatedMembers = [...group.members, newMember];
-        await updateDoc(groupRef, { 
-          members: updatedMembers, 
-          updatedAt: new Date() 
+        await updateDoc(groupRef, {
+          members: updatedMembers,
+          updatedAt: new Date()
         });
 
         // Send invitation for non-registered user
         await this.sendGroupInvitation(groupId, request.email, userId);
 
         this.notificationService.success(`Invitation sent to ${request.email}. They will be added when they register and accept.`);
-        
+
         return { id: groupId, ...group, members: updatedMembers, updatedAt: new Date() } as SplitwiseGroup;
       }
     } catch (error) {
@@ -526,7 +526,7 @@ export class SplitwiseService {
    */
   async updateGroup(groupId: string, request: UpdateGroupRequest): Promise<void> {
     try {
-      const userId = this.auth.currentUser?.uid;
+      const userId = this.userService.getCurrentUserId();
       if (!userId) throw new Error('User not authenticated');
 
       const updateData: any = {
@@ -600,7 +600,7 @@ export class SplitwiseService {
    */
   async updateSplitTransaction(transactionId: string, request: UpdateSplitTransactionRequest): Promise<void> {
     try {
-      const userId = this.auth.currentUser?.uid;
+      const userId = this.userService.getCurrentUserId();
       if (!userId) throw new Error('User not authenticated');
 
       const updateData: any = {
@@ -638,7 +638,7 @@ export class SplitwiseService {
         });
 
         updateData.splits = splitsWithDetails;
-        
+
         // Only update totalAmount if amount is provided
         if (request.amount) {
           updateData.totalAmount = request.amount;
@@ -668,7 +668,7 @@ export class SplitwiseService {
         where('originalTransactionId', '==', transactionId)
       );
 
- 
+
 
       const querySnapshot = await getDocs(transactionDoc);
 
@@ -683,7 +683,7 @@ export class SplitwiseService {
         ...split,
         amount: -split.amount
       }));
-    
+
       // Delete transaction
       await deleteDoc(querySnapshot.docs[0].ref);
 
@@ -710,11 +710,11 @@ export class SplitwiseService {
       );
 
       const settlementsSnapshot = await getDocs(settlementsQuery);
-      
+
       if (!settlementsSnapshot.empty) {
         const deletePromises = settlementsSnapshot.docs.map(doc => deleteDoc(doc.ref));
         await Promise.all(deletePromises);
-        
+
         console.log(`Cleaned up ${settlementsSnapshot.docs.length} settlements for transaction ${originalTransactionId}`);
       }
     } catch (error) {
@@ -730,7 +730,7 @@ export class SplitwiseService {
    */
   async createSettlement(request: CreateSettlementRequest): Promise<string> {
     try {
-      const userId = this.auth.currentUser?.uid;
+      const userId = this.userService.getCurrentUserId();
       if (!userId) throw new Error('User not authenticated');
 
       // Get group to get the currency
@@ -767,7 +767,7 @@ export class SplitwiseService {
    */
   async completeSettlement(settlementId: string): Promise<void> {
     try {
-      const userId = this.auth.currentUser?.uid;
+      const userId = this.userService.getCurrentUserId();
       if (!userId) throw new Error('User not authenticated');
 
       await updateDoc(doc(this.firestore, 'splitwise-settlements', settlementId), {
@@ -831,7 +831,7 @@ export class SplitwiseService {
    * Get group summary
    */
   async getGroupSummary(groupId: string): Promise<GroupSummary> {
-    const userId = this.auth.currentUser?.uid;
+    const userId = this.userService.getCurrentUserId();
     if (!userId) throw new Error('User not authenticated');
 
     const [transactions, settlements] = await Promise.all([
@@ -870,7 +870,7 @@ export class SplitwiseService {
    * Get member balances for a group
    */
   async getMemberBalances(groupId: string): Promise<MemberBalance[]> {
-    const userId = this.auth.currentUser?.uid;
+    const userId = this.userService.getCurrentUserId();
     if (!userId) throw new Error('User not authenticated');
 
     const groupDoc = await getDoc(doc(this.firestore, 'splitwise-groups', groupId));
@@ -919,7 +919,7 @@ export class SplitwiseService {
 
   sharePWA() {
     this.hapticFeedback.buttonClick();
-    
+
     const shareData = {
       title: 'Money Manager',
       text: 'Check out this amazing money management app!',

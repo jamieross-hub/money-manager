@@ -25,6 +25,7 @@ import { ReportIntentHandler } from './handlers/intent-handler/report-intent-han
 import { TransactionIntentHandler } from './handlers/intent-handler/transaction-intent-handler.service';
 import { OpenAiIntentHandler } from './handlers/intent-handler/openai-intent-handler.service';
 import { INTENTS } from "./models/intent-config";
+import { UserService } from "../db/user.service";
 
 // Message type now imported from models/message.types.ts
 
@@ -51,7 +52,8 @@ export class ChatFacadeService {
         private clearDataHandler: ClearDataIntentHandler,
         private reportIntentHandler: ReportIntentHandler,
         private transactionHandler: TransactionIntentHandler,
-        private openAiHandler: OpenAiIntentHandler
+        private openAiHandler: OpenAiIntentHandler,
+        private userService: UserService
     ) {
         this.registerHandlers();
         this.initWelcomeMessage();
@@ -86,7 +88,7 @@ export class ChatFacadeService {
 
     startBotReply(userText: string) {
         this.isTyping = true;
-        const userId = this.auth.currentUser?.uid;
+        const userId = this.userService.getCurrentUserId();
 
         if (userId) {
             const categories = this.categoryService.getCachedCategories();
@@ -145,7 +147,7 @@ export class ChatFacadeService {
     }
 
     private handleNewIntent(intent: string, userText: string, amount: number, accounts: Account[], extractedInfo?: any) {
-        const userId = this.auth.currentUser?.uid;
+        const userId = this.userService.getCurrentUserId();
         const categories = userId ? this.categoryService.getCachedCategories() : [];
 
         const context: IntentContext = {

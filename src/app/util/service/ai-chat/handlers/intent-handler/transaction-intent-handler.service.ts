@@ -10,7 +10,7 @@ import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AppState } from 'src/app/store/app.state';
 import { Store } from '@ngrx/store';
-import { Auth } from '@angular/fire/auth';
+import { UserService } from '../../../../service/db/user.service';
 import { NotificationService } from '../../../notification.service';
 import { HapticFeedbackService } from '../../../haptic-feedback.service';
 import { Account, Category } from "src/app/util/models";
@@ -28,7 +28,7 @@ export class TransactionIntentHandler implements IntentHandler {
     constructor(
         private flowService: ChatFlowService,
         private store: Store<AppState>,
-        private auth: Auth,
+        private userService: UserService,
         private notificationService: NotificationService,
         private hapticFeedback: HapticFeedbackService,
         private extractor: EntityExtractorService
@@ -49,7 +49,7 @@ export class TransactionIntentHandler implements IntentHandler {
      * Shared logic for adding a transaction
      */
     private async executeTransaction(type: TransactionType, category: Category, account: Account, amount: number) {
-        const userId = this.auth.currentUser?.uid;
+        const userId = this.userService.getCurrentUserId();
 
         if (!userId) {
             console.warn(`No authenticated user - cannot create ${type}`);

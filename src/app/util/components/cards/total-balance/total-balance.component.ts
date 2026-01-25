@@ -8,6 +8,7 @@ import moment from 'moment';
 import { AppState } from 'src/app/store/app.state';
 import * as TransactionsActions from 'src/app/store/transactions/transactions.actions';
 import * as TransactionsSelectors from 'src/app/store/transactions/transactions.selectors';
+import { UserService } from 'src/app/util/service/db/user.service';
 
 @Component({
   selector: 'total-balance',
@@ -31,10 +32,10 @@ export class TotalBalanceComponent implements OnInit, OnDestroy {
   private subscriptions = new Subscription();
 
   constructor(
-    private auth: Auth,
     private notificationService: NotificationService,
     private currencyService: CurrencyService,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private userService: UserService
   ) {
     // Initialize selectors
     this.totalIncome$ = this.store.select(TransactionsSelectors.selectTotalIncome);
@@ -53,7 +54,7 @@ export class TotalBalanceComponent implements OnInit, OnDestroy {
     );
 
     // Load transactions from store
-    const userId = this.auth.currentUser?.uid;
+    const userId = this.userService.getCurrentUserId();
     if (userId) {
       this.store.dispatch(TransactionsActions.loadTransactions({ userId }));
     }

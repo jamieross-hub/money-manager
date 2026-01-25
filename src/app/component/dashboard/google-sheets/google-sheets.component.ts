@@ -270,7 +270,7 @@ export class GoogleSheetsComponent implements OnInit, OnDestroy {
   }
 
   private createTransactionsFromImport(importedTransactions: any[]): void {
-    const userId = this.auth.currentUser?.uid;
+    const userId = this.userService.getCurrentUserId();
     if (!userId) {
       this.showSnackBar('User not authenticated', 'error');
       return;

@@ -8,6 +8,7 @@ import { NotificationService } from '../../../util/service/notification.service'
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import * as TransactionsSelectors from '../../../store/transactions/transactions.selectors';
+import { UserService } from 'src/app/util/service/db/user.service';
 
 @Component({
   selector: 'app-tax',
@@ -34,7 +35,7 @@ export class TaxComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   constructor(
-    private auth: Auth,
+    private userService: UserService,
     private taxService: TaxService,
     private notificationService: NotificationService,
     private store: Store<AppState>,
@@ -57,7 +58,7 @@ export class TaxComponent implements OnInit, OnDestroy {
    * Load transactions from the service
    */
   private loadTransactions(): void {
-    const userId = this.auth.currentUser?.uid;
+    const userId = this.userService.getCurrentUserId();
     if (userId) {
       const sub = this.store.select(TransactionsSelectors.selectAllTransactions).pipe(take(1)).subscribe({
         next: (transactions) => {
@@ -82,7 +83,7 @@ export class TaxComponent implements OnInit, OnDestroy {
     try {
       // Calculate total income from current year transactions
       this.totalIncome = this.taxService.calculateTotalIncome(this.transactions, this.currentYear);
-      
+
       // Calculate new regime tax
       this.calculateTax();
 
@@ -111,7 +112,7 @@ export class TaxComponent implements OnInit, OnDestroy {
    */
   toggleIncomeSource(): void {
     this.useManualIncome = !this.useManualIncome;
-    
+
     if (this.useManualIncome) {
       // Set manual income to current total income if available, otherwise 0
       const initialValue = this.totalIncome > 0 ? this.totalIncome : 0;
@@ -174,16 +175,16 @@ export class TaxComponent implements OnInit, OnDestroy {
    */
   getCurrentTaxSlab(): string {
     if (!this.taxCalculation) return 'N/A';
-    
+
     const slabs = this.taxService.getTaxSlabs('new');
     const taxableIncome = this.taxCalculation.taxableIncome;
-    
+
     for (const slab of slabs) {
       if (taxableIncome <= slab.maxIncome) {
         return `${slab.description} (${slab.rate}%)`;
       }
     }
-    
+
     return 'Above ₹15,00,000 (30%)';
   }
 
