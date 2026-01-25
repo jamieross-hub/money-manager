@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { IntentHandler } from './base-intent-handler';
 import { IntentContext, HandlerResult } from '../../models/intent-context.types';
 import { ChatFlowService } from '../../chat-flow.service';
-import { CHAT_CONSTANTS } from '../../chat-constants';
+import { CHAT_CONSTANTS } from '../../models/chat-constants';
 import { Message } from '../../models/message.types';
 import { ResponseBuilder } from '../../response-builder';
 import { AccountType, SyncStatus, TransactionStatus, TransactionType } from 'src/app/util/config/enums';

@@ -2,17 +2,16 @@ import { Injectable } from '@angular/core';
 import { IntentHandler } from './base-intent-handler';
 import { IntentContext, HandlerResult } from '../../models/intent-context.types';
 import { ResponseBuilder } from '../../response-builder';
-import { CHAT_CONSTANTS } from '../../models/chat-constants';
+import { INTENTS } from '../../models/intent-config';
 
 /**
- * Handles CLEAR_DATA intent - clears chat messages
- * Note: Actual message clearing is handled by facade
+ * Handles LOAN_SUMMARY_CARD intent - displays loan summary UI component
  */
 @Injectable({ providedIn: 'root' })
-export class ClearDataIntentHandler implements IntentHandler {
+export class LoanSummaryIntentHandler implements IntentHandler {
     handle(context: IntentContext): HandlerResult {
         return ResponseBuilder.create()
-            .html(CHAT_CONSTANTS.MSGS.DATA_CLEARED)
+            .uiElement(INTENTS.LOAN_SUMMARY_CARD)
             .build();
     }
 }

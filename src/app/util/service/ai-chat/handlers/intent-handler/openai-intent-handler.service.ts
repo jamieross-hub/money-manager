@@ -4,7 +4,7 @@ import { catchError, map, switchMap } from 'rxjs/operators';
 import { IntentHandler } from './base-intent-handler';
 import { IntentContext, HandlerResult } from '../../models/intent-context.types';
 import { ResponseBuilder } from '../../response-builder';
-import { CHAT_CONSTANTS } from '../../chat-constants';
+import { CHAT_CONSTANTS } from '../../models/chat-constants';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { OpenAIMessage } from '../../models/openai.types';
 import { OpenaiService } from '../../openai.service';

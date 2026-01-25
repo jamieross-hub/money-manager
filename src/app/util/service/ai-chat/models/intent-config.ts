@@ -1,4 +1,4 @@
-import { CHAT_CONSTANTS } from '../chat-constants';
+import { CHAT_CONSTANTS } from './chat-constants';
 
 export interface IntentDefinition {
     id: string;

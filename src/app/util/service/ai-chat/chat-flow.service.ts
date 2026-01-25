@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { CHAT_CONSTANTS } from './chat-constants';
+import { CHAT_CONSTANTS } from './models/chat-constants';
 import { TransactionType } from 'src/app/util/config/enums';
 import { Account } from "src/app/util/models";
 import { ConversationStateMachine, ChatState, ChatEvent } from './state/conversation-state-machine.service';

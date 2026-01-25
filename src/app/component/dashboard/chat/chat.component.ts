@@ -3,7 +3,7 @@ import { TransactionType } from 'src/app/util/config/enums';
 import { Category } from 'src/app/util/models';
 import { ChatFacadeService } from 'src/app/util/service/ai-chat/chat-facade-service';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
-import { CHAT_CONSTANTS } from 'src/app/util/service/ai-chat/chat-constants';
+import { CHAT_CONSTANTS } from 'src/app/util/service/ai-chat/models/chat-constants';
 import { AudioRecordingService } from 'src/app/util/service/ai-chat/audio-recording.service';
 import { OpenAiIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/openai-intent-handler.service';
 import { take } from 'rxjs/operators';

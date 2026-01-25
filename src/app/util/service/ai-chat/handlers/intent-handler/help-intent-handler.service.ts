@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { IntentHandler } from './base-intent-handler';
 import { IntentContext, HandlerResult } from '../../models/intent-context.types';
 import { ResponseBuilder } from '../../response-builder';
-import { CHAT_CONSTANTS } from '../../chat-constants';
+import { CHAT_CONSTANTS } from '../../models/chat-constants';
 
 /**
  * Handles HELP intent - displays available commands to user

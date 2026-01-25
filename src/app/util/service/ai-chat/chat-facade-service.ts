@@ -8,7 +8,7 @@ import { AccountType, TransactionType } from "../../config/enums";
 import { CategoryService } from "../db/category.service";
 import { AccountsService } from "../db/accounts.service";
 import { Auth } from "@angular/fire/auth";
-import { CHAT_CONSTANTS } from "./chat-constants";
+import { CHAT_CONSTANTS } from "./models/chat-constants";
 import { AppState } from "src/app/store/app.state";
 import { Store } from "@ngrx/store";
 import { selectAllAccounts } from "src/app/store/accounts/accounts.selectors";
@@ -24,6 +24,7 @@ import { ClearDataIntentHandler } from './handlers/intent-handler/clear-data-int
 import { ReportIntentHandler } from './handlers/intent-handler/report-intent-handler.service';
 import { TransactionIntentHandler } from './handlers/intent-handler/transaction-intent-handler.service';
 import { OpenAiIntentHandler } from './handlers/intent-handler/openai-intent-handler.service';
+import { LoanSummaryIntentHandler } from './handlers/intent-handler/loan-summary-intent-handler.service';
 import { INTENTS } from "./models/intent-config";
 import { UserService } from "../db/user.service";
 
@@ -53,6 +54,7 @@ export class ChatFacadeService {
         private reportIntentHandler: ReportIntentHandler,
         private transactionHandler: TransactionIntentHandler,
         private openAiHandler: OpenAiIntentHandler,
+        private loanSummaryHandler: LoanSummaryIntentHandler,
         private userService: UserService
     ) {
         this.registerHandlers();
@@ -73,6 +75,7 @@ export class ChatFacadeService {
         this.registry.register(INTENTS.GET_REPORT, this.reportIntentHandler);
         this.registry.register(INTENTS.ADD_INCOME, this.transactionHandler);
         this.registry.register(INTENTS.ADD_EXPENSE, this.transactionHandler);
+        this.registry.register(INTENTS.LOAN_SUMMARY_CARD, this.loanSummaryHandler);
         this.registry.register(INTENTS.AI_REPLY, this.openAiHandler);
     }
 
