@@ -24,6 +24,14 @@
           </div>
           }
 
+          @if(msg.type === 'UI-ELEMENT' && msg.text === 'LOAN_SUMMARY_CARD') {
+          <div class="relative top-0 z-10 w-full my-2">
+            <app-loan-summary-card></app-loan-summary-card>
+          </div>
+          }
+
+
+
           <!-- Recent Activity Card -->
           @if(msg.type === 'UI-ELEMENT' && msg.text === 'RECENT_ACTIVITY_CARD') {
           <div class="relative top-0 z-10 w-full my-2">

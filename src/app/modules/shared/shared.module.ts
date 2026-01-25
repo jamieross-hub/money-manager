@@ -46,6 +46,7 @@ import { AnalyticsSummaryCardComponent } from '../../util/components/cards/analy
 import { CurrencyPipe } from 'src/app/util/pipes';
 import { SafeHtmlPipe } from 'src/app/util/pipes/safe-html.pipe';
 import { FinancialMetricsCardComponent } from 'src/app/util/components/cards/financial-metrics-card/financial-metrics-card.component';
+import { LoanSummaryCardComponent } from '../../util/components/cards/loan-summary-card/loan-summary-card.component';
 
 @NgModule({
   declarations: [
@@ -55,9 +56,7 @@ import { FinancialMetricsCardComponent } from 'src/app/util/components/cards/fin
     CommonBodyContentComponent,
     CategorySplitDialogComponent,
     BudgetCardComponent,
-    AccountSummaryCardComponent,
-    CurrencyPipe,
-    SafeHtmlPipe
+    AccountSummaryCardComponent
   ],
   imports: [
     CommonModule,
@@ -66,7 +65,10 @@ import { FinancialMetricsCardComponent } from 'src/app/util/components/cards/fin
     KeyMetricsSummaryCardComponent,
     AnalyticsSummaryCardComponent,
     FinancialMetricsCardComponent,
-    
+    LoanSummaryCardComponent,
+    CurrencyPipe,
+    SafeHtmlPipe,
+
     // Material Modules
     MatCardModule,
     MatListModule,
@@ -102,7 +104,7 @@ import { FinancialMetricsCardComponent } from 'src/app/util/components/cards/fin
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    
+
     // Material Modules
     MatCardModule,
     MatListModule,
@@ -133,7 +135,7 @@ import { FinancialMetricsCardComponent } from 'src/app/util/components/cards/fin
     MatChipsModule,
     MatSnackBarModule,
     MatSliderModule,
-    
+
     // Components
     ConfirmDialogComponent,
     RecurringTransactionConfirmationDialogComponent,
@@ -145,6 +147,7 @@ import { FinancialMetricsCardComponent } from 'src/app/util/components/cards/fin
     KeyMetricsSummaryCardComponent,
     AnalyticsSummaryCardComponent,
     FinancialMetricsCardComponent,
+    LoanSummaryCardComponent,
 
     // Pipes
     CurrencyPipe,

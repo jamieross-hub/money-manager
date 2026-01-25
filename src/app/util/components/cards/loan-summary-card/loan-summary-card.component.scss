@@ -1,0 +1,177 @@
+.loan-dashboard-container {
+  width: 100%;
+  margin: 0 auto;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.hero-card {
+  position: relative;
+  background: linear-gradient(135deg, #22c1c3 0%, #2dbd6e 100%);
+  border-radius: 20px;
+  padding: 20px;
+  color: white;
+  overflow: hidden;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  @media (min-width: 640px) {
+    border-radius: 24px;
+    padding: 24px;
+    min-height: 220px;
+  }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.top-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.journey-section {
+  margin-top: auto;
+  margin-bottom: 12px;
+
+  @media (min-width: 640px) {
+    margin-bottom: 20px;
+  }
+}
+
+.progress-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.progress-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+
+  @media (min-width: 640px) {
+    gap: 12px;
+  }
+}
+
+.progress-bar-container {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  flex: 1;
+  max-width: 150px;
+
+  @media (min-width: 640px) {
+    height: 8px;
+  }
+}
+
+.progress-bar {
+  height: 100%;
+  background: white;
+  border-radius: 10px;
+  transition: width 0.5s ease;
+}
+
+.hiker-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-image: url('../../../../../assets/images/loan-hero.jpg');
+  background-repeat: no-repeat;
+  background-position: center left;
+  background-size: cover;
+  opacity: 0.15;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border: 1px solid #f0f0f0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  @media (min-width: 640px) {
+    border-radius: 20px;
+    padding: 20px;
+  }
+}
+
+.dark .stat-card {
+  background: #1a1a1a;
+  border-color: #2a2a2a;
+}
+
+.icon-wrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  @media (min-width: 640px) {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+.debt-icon { background-color: #f0f7ff; color: #007bff; }
+.monthly-icon { background-color: #f0fff4; color: #28a745; }
+.paid-icon { background-color: #fffaf0; color: #fd7e14; }
+.target-icon { background-color: #f5f3ff; color: #7c3aed; }
+
+.dark .debt-icon { background-color: rgba(0, 123, 255, 0.1); }
+.dark .monthly-icon { background-color: rgba(40, 167, 69, 0.1); }
+.dark .paid-icon { background-color: rgba(253, 126, 20, 0.1); }
+.dark .target-icon { background-color: rgba(124, 58, 237, 0.1); }
+

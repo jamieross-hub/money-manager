@@ -1,0 +1,87 @@
+<div class="loan-dashboard-container">
+    <!-- Hero Card -->
+    <div class="hero-card shadow-lg">
+        <div class="hero-content">
+            <div class="top-section">
+                <div class="greeting">
+                    <p class="text-xs opacity-90 m-0">{{ greeting }},</p>
+                    <h2 class="text-2xl font-bold m-0">{{ userName }}</h2>
+                </div>
+                <!-- <div class="avatar">
+                    <span>A</span>
+                </div> -->
+            </div>
+
+            <div class="journey-section">
+                <p class="text-sm opacity-90 m-0">Your journey to</p>
+                <p class="text-3xl font-extrabold m-0 text-wrap">{{ journeyTarget }}</p>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-info">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" [style.width.%]="paidPercentage"></div>
+                    </div>
+                    <span class="text-sm font-semibold">{{ paidPercentage }}%</span>
+                </div>
+                <div class="paid-info text-right">
+                    <p class="text-xs opacity-90 m-0">Paid so far</p>
+                    <p class="text-2xl font-bold m-0">{{ totalPaid | currency:{ currency: userCurrency, decimalPlaces: 0
+                        } }}</p>
+                </div>
+            </div>
+        </div>
+        <!-- Hiker background element -->
+        <div class="hiker-overlay"></div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mt-6">
+        <!-- Total Debt -->
+        <div class="stat-card">
+            <div class="icon-wrapper debt-icon">
+                <mat-icon>account_balance_wallet</mat-icon>
+            </div>
+            <div class="stat-content">
+                <p class="text-lg sm:text-xl font-bold m-0">{{ totalRemaining | currency:{ currency: userCurrency,
+                    decimalPlaces: 0 } }}</p>
+                <p class="text-[10px] sm:text-xs text-gray-500 m-0">Total Debt</p>
+            </div>
+        </div>
+
+        <!-- Monthly Payment -->
+        <div class="stat-card">
+            <div class="icon-wrapper monthly-icon">
+                <mat-icon>trending_down</mat-icon>
+            </div>
+            <div class="stat-content">
+                <p class="text-lg sm:text-xl font-bold m-0">{{ monthlyPayment | currency:{ currency: userCurrency,
+                    decimalPlaces: 0 } }}</p>
+                <p class="text-[10px] sm:text-xs text-gray-500 m-0">Monthly</p>
+            </div>
+        </div>
+
+        <!-- Total Paid -->
+        <div class="stat-card">
+            <div class="icon-wrapper paid-icon">
+                <mat-icon>piggy_bank</mat-icon>
+            </div>
+            <div class="stat-content">
+                <p class="text-lg sm:text-xl font-bold m-0">{{ totalPaid | currency:{ currency: userCurrency,
+                    decimalPlaces: 0 } }}</p>
+                <p class="text-[10px] sm:text-xs text-gray-500 m-0">Total Paid</p>
+            </div>
+        </div>
+
+        <!-- Debt Free Year -->
+        <div class="stat-card">
+            <div class="icon-wrapper target-icon">
+                <mat-icon>ads_click</mat-icon>
+            </div>
+            <div class="stat-content">
+                <p class="text-lg sm:text-xl font-bold m-0">{{ debtFreeYear }}</p>
+                <p class="text-[10px] sm:text-xs text-gray-500 m-0">Debt Free</p>
+            </div>
+        </div>
+    </div>
+</div>

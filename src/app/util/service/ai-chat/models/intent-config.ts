@@ -15,6 +15,7 @@ export const INTENTS = {
     ADD_EXPENSE: 'ADD_EXPENSE',
     CHECK_BALANCE: 'CHECK_BALANCE',
     ACCOUNT_SUMMARY_CARD: 'ACCOUNT_SUMMARY_CARD',
+    LOAN_SUMMARY_CARD: 'LOAN_SUMMARY_CARD',
     RECENT_ACTIVITY_CARD: 'RECENT_ACTIVITY_CARD',
     CLEAR_DATA: 'CLEAR_DATA',
     GET_REPORT: 'GET_REPORT',
@@ -124,5 +125,12 @@ export const INTENT_CONFIG: IntentDefinition[] = [
         priority: 110, // Highest priority to always catch help requests
         description: 'Help',
         examples: ['Help', 'What can you do?', 'Commands']
+    },
+    {
+        id: INTENTS.LOAN_SUMMARY_CARD,
+        keywords: CHAT_CONSTANTS.PATTERNS.LOAN_SUMMARY_KEYWORDS,
+        priority: 80,
+        description: 'Loan Summary',
+        examples: ['Loan summary', 'Loan details', 'Loan balance']
     }
 ];

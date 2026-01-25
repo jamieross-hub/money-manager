@@ -46,6 +46,10 @@ export const CHAT_CONSTANTS = {
             'account summary', 'account-summary', 'accountsummary', 'account summary card', 'account card',
             'show accounts', 'my accounts', 'list accounts'
         ],
+        LOAN_SUMMARY_KEYWORDS: [
+            'loan summary', 'loan-summary', 'loansummary', 'loan summary card', 'loan card',
+            'show loans', 'my loans', 'list loans'
+        ],
         RECENT_ACTIVITY_KEYWORDS: [
             'recent activity', 'recent-activity', 'recentactivity', 'activity card', 'recent transactions',
             'last transactions', 'transaction history', 'show history', 'show recent'
