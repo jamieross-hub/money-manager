@@ -297,6 +297,7 @@ export class AddAccountDialogComponent {
             remainingBalance: Number(formData.remainingBalance) + this.getCalculatedMonthlyPayment() || 0,
             nextDueDate: formData.nextDueDate,
             showReminder: formData.showReminder,
+            monthlyPayment: this.getCalculatedMonthlyPayment(),
           };
         }
 

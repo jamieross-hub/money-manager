@@ -80,21 +80,48 @@ export class LoanSummaryCardComponent implements OnInit, OnDestroy {
 
     get totalPaid(): number {
         return this.loans.reduce((total, loan) => {
-            return total + (loan.loanDetails?.totalPaid || 0);
+            const loanAmount = loan.loanDetails?.loanAmount || 0;
+            const remainingBalance = loan.loanDetails?.remainingBalance || 0;
+            return total + (loanAmount - remainingBalance);
         }, 0);
     }
 
     get monthlyPayment(): number {
         return this.loans.reduce((total, loan) => {
-            return total + (loan.loanDetails?.monthlyPayment || 0);
+            const storedPayment = loan.loanDetails?.monthlyPayment;
+            if (storedPayment && storedPayment > 0) {
+                return total + storedPayment;
+            }
+            // Fallback calculation if field is missing or 0
+            return total + this.calculateMonthlyPayment(loan);
         }, 0);
+    }
+
+    private calculateMonthlyPayment(loan: Account): number {
+        const details = loan.loanDetails;
+        if (!details) return 0;
+
+        const { loanAmount, interestRate, durationMonths } = details;
+        if (durationMonths <= 0) return 0;
+        if (interestRate <= 0) return loanAmount / durationMonths;
+
+        // Monthly interest rate (annual rate / 12)
+        const monthlyRate = interestRate / (12 * 100);
+
+        // Amortization formula: P = L[c(1 + c)^n]/[(1 + c)^n - 1]
+        const numerator = monthlyRate * Math.pow(1 + monthlyRate, durationMonths);
+        const denominator = Math.pow(1 + monthlyRate, durationMonths) - 1;
+
+        if (denominator === 0) return loanAmount / durationMonths;
+
+        const monthlyPayment = loanAmount * (numerator / denominator);
+        return Math.round(monthlyPayment * 100) / 100;
     }
 
     get paidPercentage(): number {
         if (this.totalDebt === 0) return 0;
         return Math.round((this.totalPaid / this.totalDebt) * 100);
     }
-
     get debtFreeYear(): number {
         if (this.loans.length === 0) return new Date().getFullYear();
 
@@ -106,6 +133,24 @@ export class LoanSummaryCardComponent implements OnInit, OnDestroy {
         });
 
         return Math.max(...dates.map(d => d.getFullYear()));
+    }
+
+    get remainingMonths(): number {
+        if (this.loans.length === 0) return 0;
+
+        const now = new Date();
+        const dates = this.loans.map(loan => {
+            const start = new Date(loan.loanDetails?.startDate || new Date());
+            const duration = loan.loanDetails?.durationMonths || 0;
+            return new Date(start.setMonth(start.getMonth() + duration));
+        });
+
+        const latestDate = new Date(Math.max(...dates.map(d => d.getTime())));
+
+        // Calculate months between now and latestDate
+        const diffInMonths = (latestDate.getFullYear() - now.getFullYear()) * 12 + (latestDate.getMonth() - now.getMonth());
+
+        return Math.max(0, diffInMonths);
     }
 
     get greeting(): string {
