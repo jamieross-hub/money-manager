@@ -1,136 +1,225 @@
-<app-quick-actions-fab [config]="quickActionsFabConfig" (mainButtonClick)="openAddMobileDialog()"></app-quick-actions-fab>
-<div class="categories-container lg:mt-20 lg:px-16 xl:px-32  2xl:px-48">
+<app-quick-actions-fab [config]="quickActionsFabConfig"
+	(mainButtonClick)="openAddMobileDialog()"></app-quick-actions-fab>
+
+<div class="categories-container lg:px-16 xl:px-32 2xl:px-48">
 	<!-- Error Message Display -->
-	<div *ngIf="errorMessage" class="error-message mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+	<div *ngIf="errorMessage"
+		class="error-message mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
 		<p class="text-red-700 text-sm">{{ errorMessage }}</p>
 		<button mat-icon-button (click)="clearError()" class="error-close-button">
 			<mat-icon>close</mat-icon>
 		</button>
 	</div>
-	
-	<!-- Main Content -->
-	<div class="categories-grid" [ngClass]="{'px-10': !breakpointService.device.isMobile}">
-		<!-- Categories List Section -->
-		<section class="categories-list">
-			<div class="section-header" >
-				<div class="header-content">
-					<h2 class="section-title">Manage Categories</h2>
-					<span class="flex items-center gap-2">
-						<p class="section-subtitle">({{ categories.length }} categor{{ categories.length !== 1 ? 'ies' : 'y' }})</p>
-						<mat-icon (click)="toggleListViewMode()" [matTooltip]="isListViewMode ? 'Switch to detailed view' : 'Switch to list view'">{{ isListViewMode ? 'view_list' : 'list' }}</mat-icon>
-					</span>
+
+	<div class="main-content" [ngClass]="{'mobile-padding': breakpointService.device.isMobile}">
+
+		<!-- Header -->
+		<div class="page-header">
+			<div class="header-text">
+				<h1 class="page-title">Categories</h1>
+				<p class="page-subtitle">Manage your budget categories</p>
+			</div>
+			<button mat-button color="primary" class="add-category-btn" (click)="openAddMobileDialog()">
+				<mat-icon>add</mat-icon>
+				Add Category
+			</button>
+		</div>
+
+		<!-- Summary Cards -->
+		<section class="summary-section">
+			<!-- Expenses Card -->
+			<div class="summary-card expenses-card">
+				<div class="card-icon-wrapper">
+					<mat-icon>account_balance_wallet</mat-icon>
+					<span class="card-label">Expenses</span>
 				</div>
+				<div class="card-amount">{{ totalExpenseAmount | currency : { currency: (userCurrency$ | async ) ||
+					'USD' } }}
+				</div>
+				<div class="card-count">{{ expenseCategoryCount }} categories</div>
 			</div>
 
-			<!-- Empty State -->
-			<div *ngIf="categories && categories.length === 0" class="empty-state">
-				<div class="empty-icon">
-					<mat-icon>local_offer</mat-icon>
+			<!-- Income Card -->
+			<div class="summary-card income-card">
+				<div class="card-icon-wrapper">
+					<mat-icon>savings</mat-icon>
+					<span class="card-label">Income</span>
 				</div>
-				<h3 class="empty-title">No categories yet</h3>
-				<p class="empty-text">Add your first category to get started</p>
-				<button *ngIf="breakpointService.device.isMobile" mat-raised-button color="primary" (click)="openAddMobileDialog()" class="empty-state-button">
-					<mat-icon>add</mat-icon>
-					Add Category
-				</button>
-			</div>
-			<!-- Overall Budget Card -->
-			<app-budget-card [isHomeView]="false" [isChildView]="isChildView"></app-budget-card>
-
-			<!-- Categories List -->
-			<div *ngIf="categories.length > 0" class="categories-grid-list mt-5" [ngClass]="{'!max-h-[100vh]': breakpointService.device.isTablePortrait, '!max-h-[75vh]': !isChildView}">
-				
-
-
-				<!-- List View -->
-				<div *ngIf="isListViewMode" class="list-view-container pt-4">
-					@for (category of categories; track category.id) {
-					<!-- Only show main categories (not sub-categories) in the main list -->
-					@if(!category.isSubCategory && !category.parentCategoryId) {
-					<div class="list-view-item" [style.border-left-color]="category.color">
-						<div class="list-view-content">
-							<mat-icon class="list-view-icon" [style.color]="category.color">{{ category.icon || 'category' }}</mat-icon>
-							<span class="list-view-name">{{ category.name }}</span>
-							<span class="list-view-type">{{ category.type | titlecase }}</span>
-						</div>
-						<div class="list-view-actions">
-							<mat-menu #listMenu="matMenu">
-								<button mat-menu-item (click)="openMobileDialog(category)" class="action-button edit-button"><mat-icon>edit</mat-icon> Edit</button>
-								<button mat-menu-item (click)="deleteCategory(category)" class="action-button delete-button"><mat-icon class="!text-red-800">delete</mat-icon> Delete</button>
-							</mat-menu>
-							<button matIconButton [matMenuTriggerFor]="listMenu">
-								<mat-icon>more_vert</mat-icon>
-							</button>
-						</div>
-					</div>
-					}
-
-					<!-- Display sub-categories under their parent in list view -->
-					@if(getSubCategoriesForCategory(category.id!).length > 0 && breakpointService.device.isMobile) {
-					<div class="sub-category-list-wrapper">
-						<div class="group-header">Sub-categories</div>
-						@for (subCategory of getSubCategoriesForCategory(category.id!); track subCategory.id) {
-						<div class="list-view-item sub-category-item" [style.border-left-color]="subCategory.color">
-							<div class="list-view-content">
-								<mat-icon class="list-view-icon" [style.color]="subCategory.color">{{ subCategory.icon || 'category' }}</mat-icon>
-								<span class="list-view-name">{{ subCategory.name }}</span>
-								<span class="list-view-type">{{ subCategory.type | titlecase }}</span>
-							</div>
-							<div class="list-view-actions">
-								<mat-menu #subListMenu="matMenu">
-									<button mat-menu-item (click)="openMobileDialog(subCategory)" class="action-button edit-button"><mat-icon>edit</mat-icon> Edit</button>
-									<button mat-menu-item (click)="openMobileDialog(subCategory)" class="action-button delete-button"><mat-icon class="!text-red-800">delete</mat-icon> Delete</button>
-								</mat-menu>
-								<button matIconButton [matMenuTriggerFor]="subListMenu">
-									<mat-icon>more_vert</mat-icon>
-								</button>
-							</div>
-						</div>
-						}
-					</div>
-					} } 
+				<div class="card-amount">{{ totalIncomeAmount | currency : { currency: (userCurrency$ | async ) || 'USD'
+					} }}
 				</div>
-
-				<!-- Detailed View -->
-				<div *ngIf="!isListViewMode" class="grid lg:grid-cols-2 xxl:grid-cols-3 gap-4 lg:gap-10  lg:my-16 pt-4 lg:px-0" [ngClass]="{'lg:grid-cols-4': !isChildView}">
-					@for (category of categories; track category.id) {
-					<!-- Only show main categories (not sub-categories) in the main list -->
-					@if(!category.isSubCategory && !category.parentCategoryId) {
-					<app-category-card
-						[category]="category"
-						[isMobile]="breakpointService.device.isMobile"
-						[recentTransactions]="getRecentTransactions(category)"
-						[categoryStats]="getCategoryStats(category)"
-						[allTransactions]="transactions"
-						[subCategories]="getSubCategoriesForCategory(category.id!)"
-						[Math]="Math"
-					>
-					</app-category-card>
-					}
-
-					<!-- Display sub-categories under their parent -->
-					@if(getSubCategoriesForCategory(category.id!).length > 0 && breakpointService.device.isMobile) {
-					<div class="sub-category-wrapper">
-						<div class="group-header">Sub-categories</div>
-						<div class="sub-categories-container">
-							@for (subCategory of getSubCategoriesForCategory(category.id!); track subCategory.id) {
-							<app-category-card
-								[category]="subCategory"
-								[isMobile]="breakpointService.device.isMobile"
-								[recentTransactions]="getRecentTransactions(subCategory)"
-								[categoryStats]="getCategoryStats(subCategory)"
-								[allTransactions]="transactions"
-								[subCategories]="getSubCategoriesForCategory(category.id!)"
-								[subCategoryCount]="0"
-								[Math]="Math"
-							>
-							</app-category-card>
-							}
-						</div>
-					</div>
-					} } 
-				</div>
+				<div class="card-count">{{ incomeCategoryCount }} categories</div>
 			</div>
 		</section>
+
+		<!-- Controls: Search & Filter -->
+		<section class="controls-section">
+			<div class="search-bar">
+				<mat-icon class="search-icon">search</mat-icon>
+				<input type="text" [formControl]="searchControl" placeholder="Search categories...">
+			</div>
+			<div class="filter-pills">
+				<button class="filter-pill" [class.active]="filterType === 'all'"
+					(click)="setFilterType('all')">All</button>
+				<button class="filter-pill" [class.active]="filterType === 'expense'"
+					(click)="setFilterType('expense')">Expense</button>
+				<button class="filter-pill" [class.active]="filterType === 'income'"
+					(click)="setFilterType('income')">Income</button>
+
+			</div>
+		</section>
+
+		<!-- Categories List -->
+		<section class="categories-list-section">
+			<div *ngIf="filteredCategories.length === 0" class="empty-state">
+				<mat-icon>search_off</mat-icon>
+				<p>No categories found.</p>
+			</div>
+
+			<div class="categories-list">
+				@for (category of filteredCategories; track category.id) {
+				<!-- Main Categories -->
+				@if(!category.isSubCategory && !category.parentCategoryId) {
+				<div class="category-item">
+					<div class="item-left">
+						<div class="category-icon" [style.background-color]="category.color + '20'"
+							[style.color]="category.color">
+							<mat-icon>{{ category.icon || 'category' }}</mat-icon>
+						</div>
+						<div class="category-details">
+							<span class="category-name">{{ category.name }}</span>
+							<span class="category-type">{{ category.type | titlecase }}</span>
+
+
+						</div>
+					</div>
+
+					<div class="item-right">
+						<span class="category-amount">
+							{{ calculateTotalSpentPerMonth(category) | currency : { currency: (userCurrency$ | async) ||
+							'USD' } }}
+							<span class="period">/ month</span>
+
+							<!-- Budget Progress -->
+							<div class="budget-progress-wrapper" *ngIf="category.budget?.hasBudget">
+								<div class="progress-bar">
+									<div class="progress-fill"
+										[style.width.%]="calculateBudgetProgressPercentage(category)"
+										[ngClass]="getBudgetStatusClass(category)"></div>
+								</div>
+								<!-- <span class="budget-text">
+									{{ calculateBudgetSpent(category) | currency : { currency: (userCurrency$ | async)
+									|| 'USD' } }}
+									of {{ category.budget?.budgetAmount | currency : { currency: (userCurrency$ | async)
+									|| 'USD' } }}
+								</span> -->
+							</div>
+						</span>
+
+
+
+						<button matIconButton [matMenuTriggerFor]="itemMenu">
+							<mat-icon class="text-black">more_vert</mat-icon>
+						</button>
+						<mat-menu #itemMenu="matMenu">
+							<button mat-menu-item (click)="openBudgetDialog(category)"
+								*ngIf="category.type === 'expense'">
+								<mat-icon>account_balance_wallet</mat-icon> {{ category.budget?.hasBudget ? 'Edit
+								Budget' : 'Set Budget' }}
+							</button>
+							<button mat-menu-item (click)="removeBudget(category)" *ngIf="category.budget?.hasBudget">
+								<mat-icon>money_off</mat-icon> Remove Budget
+							</button>
+							<button mat-menu-item (click)="openMobileDialog(category)">
+								<mat-icon>edit</mat-icon> Edit
+							</button>
+							<button mat-menu-item *ngIf="!category.isSubCategory && !category.subCategories?.length"
+								(click)="openParentCategorySelector(category)">
+								<mat-icon>account_tree</mat-icon> Select Parent Category
+							</button>
+							<button mat-menu-item *ngIf="category.isSubCategory || category.parentCategoryId"
+								(click)="removeFromParentCategory(category)">
+								<mat-icon>account_tree_off</mat-icon> Remove from Parent
+							</button>
+							<button mat-menu-item (click)="deleteCategory(category)">
+								<mat-icon class="text-red-600">delete</mat-icon> <span
+									class="text-red-600">Delete</span>
+							</button>
+						</mat-menu>
+					</div>
+				</div>
+
+				<!-- Subcategories (if any, rendered slightly indented or just listed if we want flat look) -->
+				<!-- For now, simplifying to just show parents as per design, but if user has subcats, they might be missed. -->
+				<!-- Let's render subcategories using existing logic but new style -->
+				@if(getSubCategoriesForCategory(category.id!).length > 0) {
+				<div class="subcategories-container">
+					@for (subCategory of getSubCategoriesForCategory(category.id!); track subCategory.id) {
+					<div class="category-item subcategory-item">
+						<div class="item-left">
+							<!-- <div class="connector-line"></div> -->
+							<div class="category-icon small" [style.background-color]="subCategory.color + '20'"
+								[style.color]="subCategory.color">
+								<mat-icon>{{ subCategory.icon || 'category' }}</mat-icon>
+							</div>
+							<div class="category-details">
+								<span class="category-name">{{ subCategory.name }}</span>
+								<span class="category-type">{{ subCategory.type | titlecase }}</span>
+
+
+							</div>
+						</div>
+						<div class="item-right">
+							<span class="category-amount">
+								{{ calculateTotalSpentPerMonth(subCategory)| currency : { currency: (userCurrency$ |
+								async) || 'USD' } }}
+								<span class="period">/ month</span>
+
+								<!-- Budget Progress for Subcategory -->
+								<div class="budget-progress-wrapper" *ngIf="subCategory.budget?.hasBudget">
+									<div class="progress-bar">
+										<div class="progress-fill"
+											[style.width.%]="calculateBudgetProgressPercentage(subCategory)"
+											[ngClass]="getBudgetStatusClass(subCategory)"></div>
+									</div>
+									<span class="budget-text">
+										{{ calculateBudgetSpent(subCategory) | currency : { currency: (userCurrency$ |
+										async) || 'USD' } }}
+										of {{ subCategory.budget?.budgetAmount | currency : { currency: (userCurrency$ |
+										async) || 'USD' } }}
+									</span>
+								</div>
+							</span>
+							<button matIconButton [matMenuTriggerFor]="subItemMenu">
+								<mat-icon>more_vert</mat-icon>
+							</button>
+							<mat-menu #subItemMenu="matMenu">
+								<button mat-menu-item (click)="openBudgetDialog(subCategory)"
+									*ngIf="subCategory.type === 'expense'">
+									<mat-icon>account_balance_wallet</mat-icon> {{ subCategory.budget?.hasBudget ? 'Edit
+									Budget' : 'Set Budget' }}
+								</button>
+								<button mat-menu-item (click)="removeBudget(subCategory)"
+									*ngIf="subCategory.budget?.hasBudget">
+									<mat-icon>money_off</mat-icon> Remove Budget
+								</button>
+								<button mat-menu-item (click)="openMobileDialog(subCategory)">
+									<mat-icon>edit</mat-icon> Edit
+								</button>
+								<button mat-menu-item (click)="deleteCategory(subCategory)">
+									<mat-icon class="text-red-600">delete</mat-icon> <span
+										class="text-red-600">Delete</span>
+								</button>
+							</mat-menu>
+						</div>
+					</div>
+					}
+				</div>
+				}
+				}
+				}
+			</div>
+		</section>
+
 	</div>
 </div>

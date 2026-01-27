@@ -11,6 +11,8 @@ import { MobileCategoryAddEditPopupComponent } from './mobile-category-add-edit-
 
 import { Category, Budget } from 'src/app/util/models';
 import { CategoryBudgetService } from 'src/app/util/service/category-budget.service';
+import { CategoryBudgetDialogComponent } from './category-budget-dialog/category-budget-dialog.component';
+import { ParentCategorySelectorDialogComponent } from './parent-category-selector-dialog/parent-category-selector-dialog.component';
 import { Store } from '@ngrx/store';
 import { AppState } from '../../../store/app.state';
 import * as CategoriesActions from '../../../store/categories/categories.actions';
@@ -26,6 +28,8 @@ import moment from 'moment';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { CategoryService } from 'src/app/util/service/db/category.service';
 import { Router } from '@angular/router';
+import { FormControl } from '@angular/forms';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 
 @Component({
@@ -58,9 +62,21 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
   public isListViewMode: boolean = false; // Add this property for list view toggle
 
+  // Search and Filter
+  public searchControl = new FormControl('');
+  public searchText: string = '';
+  public filterType: 'all' | 'expense' | 'income' = 'all';
+
+  // Summary Data
+  public totalExpenseAmount: number = 0;
+  public totalIncomeAmount: number = 0;
+  public expenseCategoryCount: number = 0;
+  public incomeCategoryCount: number = 0;
+
 
   public userId: string = '';
   private destroy$ = new Subject<void>();
+  public userCurrency$: Observable<string | undefined>;
 
   constructor(
     private auth: Auth,
@@ -79,12 +95,13 @@ export class CategoryComponent implements OnInit, OnDestroy {
     this.isLoading$ = this.store.select(CategoriesSelectors.selectCategoriesLoading);
     // this.error$ = this.store.select(CategoriesSelectors.selectCategoriesError);
     this.transactions$ = this.store.select(TransactionsSelectors.selectAllTransactions);
-
+    this.userCurrency$ = this.store.select(ProfileSelectors.selectUserCurrency);
   }
 
   ngOnInit(): void {
     this.initializeComponent();
     this.subscribeToStoreData();
+    this.setupSearch();
   }
 
   ngOnDestroy(): void {
@@ -141,10 +158,12 @@ export class CategoryComponent implements OnInit, OnDestroy {
         // 3. Alphabetical order by name
         return a.name.localeCompare(b.name);
       });
+      this.calculateSummaryData();
     });
 
     this.transactions$.pipe(takeUntil(this.destroy$)).subscribe(transactions => {
       this.transactions = transactions;
+      this.calculateSummaryData();
     });
 
     this.isLoading$.pipe(takeUntil(this.destroy$)).subscribe(loading => {
@@ -419,9 +438,12 @@ export class CategoryComponent implements OnInit, OnDestroy {
   }
 
   public calculateTotalSpentPerMonth(category: Category): number {
-    const categoryTransactions = this.transactions.filter(t => t.categoryId === category.id);
-    const totalSpent = categoryTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
-    return totalSpent;
+    const now = new Date();
+    const categoryTransactions = this.transactions.filter(t => {
+      const date = this.dateService.toDate(t.date);
+      return t.categoryId === category.id && date && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+    });
+    return categoryTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
   }
 
   public calculateTotalIncomePerMonth(category: Category): number {
@@ -434,5 +456,138 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
   public deleteCategory(category: Category): void {
     this.categoryService.performDelete(category, this.userId);
+  }
+
+  public openBudgetDialog(category: Category): void {
+    const dialogRef = this.dialog.open(CategoryBudgetDialogComponent, {
+      panelClass: 'responsive-dialog',
+      data: {
+        category: category,
+        budget: category.budget
+      }
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
+      if (result) {
+        this.loadUserCategories();
+      }
+    });
+  }
+
+  public openParentCategorySelector(category: Category): void {
+    const dialogRef = this.dialog.open(ParentCategorySelectorDialogComponent, {
+      panelClass: 'responsive-dialog',
+      data: {
+        category: category,
+        allCategories: this.categories
+      }
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
+      if (result) {
+        this.loadUserCategories();
+      }
+    });
+  }
+
+  public removeFromParentCategory(category: Category): void {
+    if (!category.parentCategoryId && !category.isSubCategory) return;
+
+    // Logic to removing parent requires updating the category object
+    // Assuming we update the category to set parentCategoryId to null/undefined and isSubCategory to false
+    // But verify API/Model support. Usually backend handles it or we update object.
+    // Based on `categoryService`, updateCategory method likely exists.
+
+    const updatedCategory = { ...category };
+    updatedCategory.parentCategoryId = undefined;
+    updatedCategory.isSubCategory = false;
+
+    this.store.dispatch(CategoriesActions.updateCategory({
+      userId: this.userId,
+      categoryId: category.id!,
+      name: category.name,
+      categoryType: category.type,
+      icon: category.icon,
+      color: category.color,
+      budgetData: category.budget,
+      parentCategoryId: null, // Set to null to remove parent
+      isSubCategory: false
+    }));
+  }
+
+  public removeBudget(category: Category): void {
+    if (!category.budget) return;
+
+    const updatedBudget: any = { ...category.budget, hasBudget: false, budgetAmount: 0 };
+
+    this.store.dispatch(CategoriesActions.updateCategory({
+      userId: this.userId,
+      categoryId: category.id!,
+      name: category.name,
+      categoryType: category.type,
+      icon: category.icon,
+      color: category.color,
+      budgetData: updatedBudget,
+      parentCategoryId: category.parentCategoryId,
+      isSubCategory: category.isSubCategory
+    }));
+  }
+
+  private setupSearch(): void {
+    this.searchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(value => {
+      this.searchText = value || '';
+    });
+  }
+
+  public setFilterType(type: 'all' | 'expense' | 'income'): void {
+    this.filterType = type;
+  }
+
+  get filteredCategories(): Category[] {
+    if (!this.categories) return [];
+
+    return this.categories.filter(category => {
+      const matchesSearch = !this.searchText || category.name.toLowerCase().includes(this.searchText.toLowerCase());
+      const matchesType = this.filterType === 'all' || category.type.toLowerCase() === this.filterType;
+
+      // Also check subcategories if you want search to include them or just parent categories matching?
+      // For now let's modify the view to handle subcategories correctly or filter them out here if needed.
+      // Assuming we want to show hierarchical structure, we might need a more complex filter.
+      // But for the flat list view requested in the redesign, maybe we flatten it or stick to parents?
+      // let's stick to existing logic where we show parents and then subcategories inside, 
+      // OR if the user asked for a flat list, we might need to adjust.
+      // The design shows a flat list but with Indentation maybe? No, the design shows just a list.
+      // Let's implement simple filtering first.
+
+      return matchesSearch && matchesType;
+    });
+  }
+
+  public calculateSummaryData(): void {
+    if (!this.categories || !this.transactions) return;
+
+    // Filter transactions for the current month
+    const now = new Date();
+    const currentMonthTransactions = this.transactions.filter(t => {
+      const date = this.dateService.toDate(t.date);
+      return date && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+    });
+
+    // Calculate totals
+    this.totalExpenseAmount = currentMonthTransactions
+      .filter(t => t.type === TransactionType.EXPENSE)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+    this.totalIncomeAmount = currentMonthTransactions
+      .filter(t => t.type === TransactionType.INCOME)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+    // Calculate category counts
+    this.expenseCategoryCount = this.categories.filter(c => c.type === 'expense').length;
+    this.incomeCategoryCount = this.categories.filter(c => c.type === 'income').length;
   }
 }
