@@ -20,7 +20,7 @@
   }
   
   :host-context(.dark-theme) & {
-    background-color: mat.get-theme-color(dark.$dark-theme, neutral, 6);
+    background-color: mat.get-theme-color(dark.$dark-theme, primary, 0);
   }
 }
 
@@ -33,6 +33,6 @@
 
 .dashboard-container {
   :host-context(.dark-theme) & {
-    background-color: transparent;
+    background-color: mat.get-theme-color(dark.$dark-theme, primary, 0);
   }
 }
