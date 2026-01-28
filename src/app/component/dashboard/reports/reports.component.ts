@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
-import { Subscription, Observable } from 'rxjs';
+import { Subscription, Observable, map } from 'rxjs';
 import { Transaction } from '../../../util/models/transaction.model';
 import { Account } from '../../../util/models/account.model';
 import { NotificationService } from '../../../util/service/notification.service';

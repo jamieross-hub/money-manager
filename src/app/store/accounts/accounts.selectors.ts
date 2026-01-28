@@ -7,7 +7,13 @@ export const selectAccountsState = createFeatureSelector<AccountsState>('account
 
 export const selectAllAccounts = createSelector(
   selectAccountsState,
-  (state) => state.ids.map(id => state.entities[id]).filter(account => account)
+  (state) => {
+    // Only emit if there are actual accounts loaded
+    if (!state.ids || state.ids.length === 0) {
+      return [];
+    }
+    return state.ids.map(id => state.entities[id]).filter(account => account);
+  }
 );
 
 export const selectAccountsLoading = createSelector(
@@ -38,17 +44,18 @@ export const selectAccountById = (accountId: string) => createSelector(
 
 export const selectAccountsByType = (type: 'bank' | 'cash' | 'credit' | 'loan') => createSelector(
   selectAllAccounts,
-  (accounts) => accounts.filter(a => a.type === type)
+  (accounts) => accounts?.filter(a => a.type === type) || []
 );
 
 export const selectActiveAccounts = createSelector(
   selectAllAccounts,
-  (accounts) => accounts.filter(a => a.isActive !== false)
+  (accounts) => accounts?.filter(a => a.isActive !== false) || []
 );
 
 export const selectTotalBalance = createSelector(
   selectAllAccounts,
   (accounts) => {
+    if (!accounts) return 0;
     const totalBalance = accounts.reduce((sum, account) => {
       if (account.type === AccountType.LOAN) {
         const loanDetails = account.loanDetails as LoanDetails;
@@ -63,6 +70,7 @@ export const selectTotalBalance = createSelector(
 export const selectTotalBalanceByType = (type: AccountType) => createSelector(
   selectAllAccounts,
   (accounts) => {
+    if (!accounts) return 0;
     const filteredAccounts = accounts.filter(a => a.type === type);
     return filteredAccounts.reduce((sum, account) => {
       if (account.type === AccountType.LOAN) {
@@ -76,14 +84,14 @@ export const selectTotalBalanceByType = (type: AccountType) => createSelector(
 export const selectTotalAssets = createSelector(
   selectAllAccounts,
   (accounts) => accounts
-    .filter(a => a.type !== AccountType.LOAN && a.type !== AccountType.CREDIT)
-    .reduce((sum, account) => sum + account.balance, 0)
+    ?.filter(a => a.type !== AccountType.LOAN && a.type !== AccountType.CREDIT)
+    .reduce((sum, account) => sum + account.balance, 0) || 0
 );
 
 export const selectTotalLiabilities = createSelector(
   selectAllAccounts,
   (accounts) => accounts
-    .reduce((sum, account) => {
+    ?.reduce((sum, account) => {
       if (account.type === AccountType.LOAN) {
         return sum + (account.loanDetails?.remainingBalance || 0);
       }
@@ -91,10 +99,10 @@ export const selectTotalLiabilities = createSelector(
         return sum + (account.balance < 0 ? Math.abs(account.balance) : 0);
       }
       return sum;
-    }, 0)
+    }, 0) || 0
 );
 
 export const selectAccountsByInstitution = (institution: string) => createSelector(
   selectAllAccounts,
-  (accounts) => accounts.filter(a => a.institution === institution)
+  (accounts) => accounts?.filter(a => a.institution === institution) || []
 ); 

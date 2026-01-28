@@ -12,7 +12,7 @@ import { CHAT_CONSTANTS } from "./models/chat-constants";
 import { AppState } from "src/app/store/app.state";
 import { Store } from "@ngrx/store";
 import { selectAllAccounts } from "src/app/store/accounts/accounts.selectors";
-import { Subscription, Observable, isObservable, take } from "rxjs";
+import { Subscription, Observable, isObservable, take, filter } from "rxjs";
 import { Message } from './models/message.types';
 import { IntentContext } from './models/intent-context.types';
 import { ResponseBuilder } from './response-builder';
@@ -80,28 +80,25 @@ export class ChatFacadeService {
     }
 
     private initWelcomeMessage() {
-        // We use take(1) to get the current accounts and then push the messages
-        this.store.select(selectAllAccounts).pipe(take(2)).subscribe(accounts => {
-            if (accounts.length === 0) {
-                return;
-            }
-            const hasLoans = accounts.some(account => account.type === 'loan');
+        this.store.select(selectAllAccounts).pipe(filter((accounts) => accounts?.length > 0),
+            take(1)).subscribe(accounts => {
+                const hasLoans = accounts.some(account => account.type === 'loan');
 
-            if (this.breakpointService.device.isMobile || this.breakpointService.device.isLaptop) {
-                if (hasLoans) {
-                    this.pushBot(ResponseBuilder.create().uiElement(INTENTS.LOAN_SUMMARY_CARD).build());
+                if (this.breakpointService.device.isMobile || this.breakpointService.device.isLaptop) {
+                    if (hasLoans) {
+                        this.pushBot(ResponseBuilder.create().uiElement(INTENTS.LOAN_SUMMARY_CARD).build());
+                    } else {
+                        this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build());
+                    }
                 } else {
+                    if (hasLoans) {
+                        this.pushBot(ResponseBuilder.create().uiElement(INTENTS.LOAN_SUMMARY_CARD).build());
+                    }
                     this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build());
+                    this.pushBot(ResponseBuilder.create().uiElement(INTENTS.RECENT_ACTIVITY_CARD).build());
+                    this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.GREETING).build());
                 }
-            } else {
-                if (hasLoans) {
-                    this.pushBot(ResponseBuilder.create().uiElement(INTENTS.LOAN_SUMMARY_CARD).build());
-                }
-                this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build());
-                this.pushBot(ResponseBuilder.create().uiElement(INTENTS.RECENT_ACTIVITY_CARD).build());
-                this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.GREETING).build());
-            }
-        });
+            });
     }
 
     startBotReply(userText: string) {
