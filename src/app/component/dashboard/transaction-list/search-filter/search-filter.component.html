@@ -1,6 +1,6 @@
 <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 pb-0 ">
   <!-- Header Section -->
-  <div class="flex items-center justify-between mb-2" >
+  <div class="flex items-center justify-between mb-2">
 
     <div class="flex items-center space-x-4">
       <div class="flex items-center space-x-2">
@@ -13,7 +13,7 @@
         <span class="text-sm font-semibold text-gray-900">{{ filteredCount }}</span>
       </div>
     </div>
-    
+
     <!-- <div class="flex items-center space-x-2">
        
     
@@ -36,7 +36,7 @@
   </div>
 
   <!-- Active Filters Indicator -->
-  <div *ngIf="hasActiveFilters()" class="mb-3 pb-2 border-b border-gray-100 absolute top-10">
+  <div *ngIf="hasActiveFilters()" class="mb-3 pb-2 border-b border-gray-100  top-10">
 
     <div class="flex flex-wrap gap-1">
       <div class="flex items-center space-x-1 ml-2">
@@ -44,11 +44,8 @@
         <span class="text-xs text-gray-600 font-medium">Active Filters</span> -->
       </div>
       @for (filter of getActiveFilters(); track filter.type) {
-      <mat-chip 
-        [removable]="true" 
-        (removed)="filter.onRemove()"
-        class="bg-blue-50 text-blue-700 border-blue-200 text-xs h-6"
-      >
+      <mat-chip [removable]="true" (removed)="filter.onRemove()"
+        class="bg-blue-50 text-blue-700 border-blue-200 text-xs h-6">
         {{ filter.label }}
         <mat-icon matChipRemove class="text-blue-500 text-xs">cancel</mat-icon>
       </mat-chip>
@@ -59,15 +56,11 @@
   <!-- Filters Section -->
   <div class="grid grid-cols-1 md:grid-cols-5 gap-4 w-full">
     <!-- Search Input -->
-    <div >
+    <div>
       <mat-form-field appearance="fill" class="w-full">
         <mat-label>Search transactions...</mat-label>
-        <input 
-          matInput 
-          [ngModel]="searchTerm"
-          (ngModelChange)="onSearchChange($event)"
-          placeholder="Search transactions..."
-        />
+        <input matInput [ngModel]="searchTerm" (ngModelChange)="onSearchChange($event)"
+          placeholder="Search transactions..." />
         <mat-icon matSuffix class="text-gray-400 text-sm">search</mat-icon>
       </mat-form-field>
     </div>
@@ -132,4 +125,4 @@
       </mat-form-field>
     </div>
   </div>
-</div> 
+</div>

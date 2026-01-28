@@ -1,10 +1,6 @@
 @if (breakpointService.device.isMobile || (breakpointService.device.isTablePortrait && isTransactionsPage)) {
-<mobile-transaction-list
-	(editTransaction)="editTransaction($event)"
-	(deleteTransaction)="deleteTransaction($event)"
-	(addTransaction)="addTransactionDialog()"
-	(importTransactions)="openImportDialog()"
->
+<mobile-transaction-list (editTransaction)="editTransaction($event)" (deleteTransaction)="deleteTransaction($event)"
+	(addTransaction)="addTransactionDialog()" (importTransactions)="openImportDialog()">
 </mobile-transaction-list>
 
 } @else if (!isHome && !breakpointService.device.isMobile && !breakpointService.device.isTablePortrait) {
@@ -15,34 +11,25 @@
 	<div class="col-span-12">
 		<!-- <total-balance ></total-balance> -->
 		<!-- Search and Filter Section -->
-		<search-filter
-			(addTransaction)="addTransactionDialog()"
-			(importTransactions)="openImportDialog()"
-			(openFilterDialog)="openFilterDialog()"
-			(viewAnalytics)="viewAnalytics()"
-			(expandTable)="expandTable()"
-		></search-filter>
+		<search-filter (addTransaction)="addTransactionDialog()" (importTransactions)="openImportDialog()"
+			(openFilterDialog)="openFilterDialog()" (viewAnalytics)="viewAnalytics()"
+			(expandTable)="expandTable()"></search-filter>
 
 		<hr class="mt-5">
 		<!-- Table Container -->
-		<transaction-table
-			(editTransaction)="editTransaction($event)"
-			(deleteTransaction)="deleteTransaction($event)"
-			(startRowEdit)="startRowEdit($event)"
-			(saveRowEdit)="saveRowEdit($event)"
-			(cancelRowEdit)="cancelRowEdit($event)"
-			(addTransaction)="addTransactionDialog()"
-			(bulkDeleteTransactions)="bulkDeleteTransactions($event)"
-			(bulkUpdateCategory)="bulkUpdateCategory($event)"
-			[isHome]="isHome"
-		>
+		<transaction-table (editTransaction)="editTransaction($event)" (deleteTransaction)="deleteTransaction($event)"
+			(startRowEdit)="startRowEdit($event)" (saveRowEdit)="saveRowEdit($event)"
+			(cancelRowEdit)="cancelRowEdit($event)" (addTransaction)="addTransactionDialog()"
+			(bulkDeleteTransactions)="bulkDeleteTransactions($event)" (bulkUpdateCategory)="bulkUpdateCategory($event)"
+			[isHome]="isHome">
 		</transaction-table>
 	</div>
 </div>
 } @else {
 
 <mat-card class="p-2 shadow-lg border-0 rounded-xl transaction-list-container">
-	<mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start" class="custom-tabs" [(selectedIndex)]="selectedTabIndex">
+	<mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start" class="custom-tabs"
+		[(selectedIndex)]="selectedTabIndex">
 		<mat-tab class="max-h-full">
 			<ng-template mat-tab-label>
 				<div class="flex items-center space-x-2 px-4 py-2">
@@ -53,26 +40,16 @@
 			@if(selectedTabIndex === 0) {
 			<div class="p-2 overflow-hidden">
 				<!-- Search and Filter Section -->
-				<search-filter
-					(addTransaction)="addTransactionDialog()"
-					(importTransactions)="openImportDialog()"
-					(openFilterDialog)="openFilterDialog()"
-					(viewAnalytics)="viewAnalytics()"
-					(expandTable)="expandTable()"
-				></search-filter>
+				<search-filter (addTransaction)="addTransactionDialog()" (importTransactions)="openImportDialog()"
+					(openFilterDialog)="openFilterDialog()" (viewAnalytics)="viewAnalytics()"
+					(expandTable)="expandTable()"></search-filter>
 
 				<!-- Table Container -->
-				<transaction-table
-					(editTransaction)="editTransaction($event)"
-					(deleteTransaction)="deleteTransaction($event)"
-					(startRowEdit)="startRowEdit($event)"
-					(saveRowEdit)="saveRowEdit($event)"
-					(cancelRowEdit)="cancelRowEdit($event)"
-					(addTransaction)="addTransactionDialog()"
-					(bulkDeleteTransactions)="bulkDeleteTransactions($event)"
-					(bulkUpdateCategory)="bulkUpdateCategory($event)"
-					[isHome]="isHome"
-				>
+				<transaction-table (editTransaction)="editTransaction($event)"
+					(deleteTransaction)="deleteTransaction($event)" (startRowEdit)="startRowEdit($event)"
+					(saveRowEdit)="saveRowEdit($event)" (cancelRowEdit)="cancelRowEdit($event)"
+					(addTransaction)="addTransactionDialog()" (bulkDeleteTransactions)="bulkDeleteTransactions($event)"
+					(bulkUpdateCategory)="bulkUpdateCategory($event)" [isHome]="isHome">
 				</transaction-table>
 			</div>
 			}
