@@ -1,3 +1,7 @@
+@use '@angular/material' as mat;
+@use '../../../../styles/light-theme' as light;
+@use '../../../../styles/dark-theme' as dark;
+
 .language-switcher {
   position: relative;
   display: inline-block;
@@ -15,14 +19,20 @@
   gap: 4px;
   padding: 4px 8px;
   border-radius: 4px;
-  background: var(--surface-color, #ffffff);
-  border: 1px solid var(--border-color, #e5e7eb);
+  :host-context(.light-theme) & {
+    background: mat.get-theme-color(light.$light-theme, primary, 100);
+    border: 1px solid mat.get-theme-color(light.$light-theme, neutral, 90);
+  }
+  :host-context(.dark-theme) & {
+    background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+    border: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+  }
   transition: all 0.2s ease;
   min-width: 80px;
 
   &:hover {
-    background: var(--surface-hover-color, #f9fafb);
-    border-color: var(--border-hover-color, #d1d5db);
+    :host-context(.light-theme) & { background: mat.get-theme-color(light.$light-theme, neutral, 95); border-color: mat.get-theme-color(light.$light-theme, neutral, 80); }
+    :host-context(.dark-theme) & { background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20); border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30); }
   }
 
   .language-flag {
@@ -33,12 +43,14 @@
   .language-name {
     font-size: 11px;
     font-weight: 500;
-    color: var(--text-primary-color, #111827);
+    :host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 10); }
+    :host-context(.dark-theme) & { color: mat.get-theme-color(dark.$dark-theme, primary, 100); }
     flex: 1;
   }
 
   .dropdown-arrow {
-    color: var(--text-secondary-color, #6b7280);
+    :host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 40); }
+    :host-context(.dark-theme) & { color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 70); }
     transition: transform 0.2s ease;
   }
 }
@@ -52,8 +64,14 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: var(--surface-color, #ffffff);
-  border: 1px solid var(--border-color, #e5e7eb);
+  :host-context(.light-theme) & {
+    background: mat.get-theme-color(light.$light-theme, primary, 100);
+    border: 1px solid mat.get-theme-color(light.$light-theme, neutral, 90);
+  }
+  :host-context(.dark-theme) & {
+    background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+    border: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+  }
   border-radius: 4px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   z-index: 1000;
@@ -76,12 +94,13 @@
   }
 
   &:hover {
-    background: var(--surface-hover-color, #f9fafb);
+    :host-context(.light-theme) & { background: mat.get-theme-color(light.$light-theme, neutral, 95); }
+    :host-context(.dark-theme) & { background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20); }
   }
 
   &.active {
-    background: var(--primary-color, #3b82f6);
-    color: white;
+    :host-context(.light-theme) & { background: mat.get-theme-color(light.$light-theme, primary, 40); color: white; }
+    :host-context(.dark-theme) & { background: mat.get-theme-color(dark.$dark-theme, primary, 80); color: mat.get-theme-color(dark.$dark-theme, primary, 10); }
 
     .language-english {
       color: rgba(255, 255, 255, 0.8);

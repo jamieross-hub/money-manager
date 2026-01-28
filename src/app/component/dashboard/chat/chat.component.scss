@@ -1,3 +1,7 @@
+@use '@angular/material' as mat;
+@use '../../../../styles/light-theme' as light;
+@use '../../../../styles/dark-theme' as dark;
+
 .typing-dots span {
   display: inline-block;
   width: .4rem;
@@ -7,11 +11,11 @@
   animation: blink 1s infinite;
   
   :host-context(.light-theme) & {
-    background: #9ca3af;
+    background: mat.get-theme-color(light.$light-theme, neutral, 60);
   }
   
   :host-context(.dark-theme) & {
-    background: #64748b;
+    background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 50);
   }
 }
 .typing-dots span:nth-child(2){animation-delay:.2s}
@@ -76,33 +80,33 @@
 // Dark Theme Support
 :host-context(.dark-theme) {
   .chat-bubble-bot {
-    background-color: #1e293b !important;
-    color: #f1f5f9 !important;
+    background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20) !important;
+    color: mat.get-theme-color(dark.$dark-theme, primary, 100) !important;
   }
   
   .input-bar-container {
     background-color: inherit;
-    border-top: 1px solid #1e293b !important;
+    border-top: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20) !important;
   }
   
   .search-input-wrap {
-    background-color: #1e293b !important;
-    border-color: #334155 !important;
+    background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20) !important;
+    border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30) !important;
     
     input {
-      color: #f1f5f9 !important;
+      color: mat.get-theme-color(dark.$dark-theme, primary, 100) !important;
       &::placeholder {
-        color: #475569 !important;
+        color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 50) !important;
       }
     }
   }
 
   .voice-overlay {
-    background-color: rgba(30, 41, 59, 0.9) !important;
-    border-color: #334155 !important;
+    background-color: rgba(mat.get-theme-color(dark.$dark-theme, neutral-variant, 20), 0.9) !important;
+    border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30) !important;
     
     .text-primary-700, .text-primary-600 {
-      color: #60a5fa !important;
+      color: mat.get-theme-color(dark.$dark-theme, primary, 70) !important;
     }
   }
 
@@ -133,18 +137,18 @@
 // Light theme explicit styles for consistency
 :host-context(.light-theme) {
   .chat-bubble-bot {
-    background-color: #f3f4f6 !important;
-    color: #1f2937 !important;
+    background-color: mat.get-theme-color(light.$light-theme, neutral, 95) !important;
+    color: mat.get-theme-color(light.$light-theme, neutral, 20) !important;
   }
   
   .input-bar-container {
     background-color: inherit;
-    border-top: 1px solid #f1f5f9 !important;
+    border-top: 1px solid mat.get-theme-color(light.$light-theme, neutral, 90) !important;
   }
   
   .search-input-wrap {
-    background-color: #f9fafb !important;
-    border-color: #e5e7eb !important;
+    background-color: mat.get-theme-color(light.$light-theme, neutral, 60) !important;
+    border-color: mat.get-theme-color(light.$light-theme, neutral, 90) !important;
   }
 }
 

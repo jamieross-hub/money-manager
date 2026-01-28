@@ -1,3 +1,7 @@
+@use '@angular/material' as mat;
+@use '../../../../../styles/light-theme' as light;
+@use '../../../../../styles/dark-theme' as dark;
+
 // Table Container Styles
 .table-container {
 
@@ -9,22 +13,22 @@
     }
 
     &::-webkit-scrollbar-track {
-      background: #f1f5f9;
+      background: mat.get-theme-color(light.$light-theme, neutral, 95);
       border-radius: 4px;
     }
 
     &::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
+      background: mat.get-theme-color(light.$light-theme, neutral, 80);
       border-radius: 4px;
       
       &:hover {
-        background: #94a3b8;
+        background: mat.get-theme-color(light.$light-theme, neutral, 70);
       }
     }
 
     // Firefox scrollbar
     scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 #f1f5f9;
+    scrollbar-color: mat.get-theme-color(light.$light-theme, neutral, 80) mat.get-theme-color(light.$light-theme, neutral, 95);
   }
 
   // Custom scrollbar styling - Dark Theme
@@ -35,22 +39,22 @@
     }
 
     &::-webkit-scrollbar-track {
-      background: #1e293b;
+      background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
       border-radius: 4px;
     }
 
     &::-webkit-scrollbar-thumb {
-      background: #475569;
+      background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
       border-radius: 4px;
       
       &:hover {
-        background: #64748b;
+        background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 40);
       }
     }
 
     // Firefox scrollbar
     scrollbar-width: thin;
-    scrollbar-color: #475569 #1e293b;
+    scrollbar-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30) mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
   }
 
   // Responsive container
@@ -85,23 +89,23 @@ table {
   
   // Light theme
   :host-context(.light-theme) & {
-    background: #f8fafc;
-    border-bottom: 2px solid #e2e8f0;
-    color: #374151;
+    background: mat.get-theme-color(light.$light-theme, neutral, 98);
+    border-bottom: 2px solid mat.get-theme-color(light.$light-theme, neutral, 90);
+    color: mat.get-theme-color(light.$light-theme, neutral, 20);
     
     &:hover {
-      background: #f1f5f9;
+      background: mat.get-theme-color(light.$light-theme, neutral, 95);
     }
   }
   
   // Dark theme
   :host-context(.dark-theme) & {
-    background: #1e293b;
-    border-bottom: 2px solid #334155;
-    color: #e2e8f0;
+    background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+    border-bottom: 2px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
+    color: mat.get-theme-color(dark.$dark-theme, primary, 90);
     
     &:hover {
-      background: #334155;
+      background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
     }
   }
   
@@ -190,11 +194,11 @@ table {
   vertical-align: middle;
   
   :host-context(.light-theme) & {
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid mat.get-theme-color(light.$light-theme, neutral, 95);
   }
   
   :host-context(.dark-theme) & {
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
   }
   
   @media (min-width: 768px) {
@@ -215,7 +219,7 @@ table {
   :host-context(.light-theme) & {
     // Alternate striping for readability
     &:nth-child(even) {
-      background-color: #f8fafc;
+      background-color: mat.get-theme-color(light.$light-theme, neutral, 98);
     }
 
     // Hover elevation
@@ -232,12 +236,12 @@ table {
   :host-context(.dark-theme) & {
     // Alternate striping for readability
     &:nth-child(even) {
-      background-color: #1e293b;
+      background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
     }
 
     // Hover elevation
     &:hover {
-      background-color: #334155 !important;
+      background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20) !important;
       transform: translateY(-2px) scale(1.001);
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
       z-index: 10;
@@ -722,14 +726,14 @@ table {
   
   // Light theme
   :host-context(.light-theme) & {
-    background: #f9fafb;
-    border-top: 1px solid #e5e7eb;
+    background: mat.get-theme-color(light.$light-theme, neutral, 98);
+    border-top: 1px solid mat.get-theme-color(light.$light-theme, neutral, 90);
   }
   
   // Dark theme
   :host-context(.dark-theme) & {
-    background: #1e293b;
-    border-top: 1px solid #334155;
+    background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+    border-top: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
   }
   
   

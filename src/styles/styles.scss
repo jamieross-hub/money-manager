@@ -1,3 +1,7 @@
+@use '@angular/material' as mat;
+@use './light-theme' as light;
+@use './dark-theme' as dark;
+
 @import './notification.scss';
 @import './dialog.scss';
 
@@ -15,7 +19,7 @@
     letter-spacing: -0.025em;
 
     .dark-theme & {
-      color: #f1f5f9;
+      color: mat.get-theme-color(dark.$dark-theme, primary, 100);
     }
   }
   
@@ -150,13 +154,13 @@ body {
   box-sizing: border-box;
   
   &.light-theme {
-    background-color: #ffffff;
-    color: #1e293b;
+    background-color: mat.get-theme-color(light.$light-theme, primary, 100);
+    color: mat.get-theme-color(light.$light-theme, neutral, 10);
   }
 
   &.dark-theme {
-    background-color: #020617;
-    color: #f1f5f9;
+    background-color: mat.get-theme-color(dark.$dark-theme, primary, 0);
+    color: mat.get-theme-color(dark.$dark-theme, primary, 100);
   }
 
   /* Prevent pull-to-refresh */
@@ -265,14 +269,15 @@ app-root {
 
 .header-title {
   font-size: clamp(1rem, 2.5vw, 1.5rem);
-  .light-theme & { color: #64748b; }
-  .dark-theme & { color: #94a3b8; }
+  .light-theme & { color: mat.get-theme-color(light.$light-theme, neutral, 35); }
+  .dark-theme & { color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 70); }
 }
 
 .header-amount {
   font-size: clamp(2rem, 5vw, 4rem);
   font-weight: bold;
-  color: #4caf50;
+  color: mat.get-theme-color(light.$light-theme, tertiary, 40);
+  .dark-theme & { color: mat.get-theme-color(dark.$dark-theme, tertiary, 80); }
   font-family: 'JetBrains Mono', monospace;
   letter-spacing: 0.025em;
 }
@@ -291,8 +296,8 @@ app-root {
 .item-subtitle {
   font-family: 'Inter', system-ui, sans-serif;
   font-weight: 400;
-  .light-theme & { color: #64748b; }
-  .dark-theme & { color: #94a3b8; }
+  .light-theme & { color: mat.get-theme-color(light.$light-theme, neutral, 35); }
+  .dark-theme & { color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 70); }
 }
 
 .item-amount {
@@ -318,8 +323,8 @@ app-footer {
 }
 
 app-chat {
-  .light-theme & { background-color: #f0f2f4; }
-  .dark-theme & { background-color: #020617; }
+  .light-theme & { background-color: mat.get-theme-color(light.$light-theme, neutral, 98); }
+  .dark-theme & { background-color: mat.get-theme-color(dark.$dark-theme, primary, 0); }
 }
 
 .safe-h-screen {

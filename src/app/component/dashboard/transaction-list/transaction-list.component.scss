@@ -1,3 +1,7 @@
+@use '@angular/material' as mat;
+@use '../../../../styles/light-theme' as light;
+@use '../../../../styles/dark-theme' as dark;
+
 /* Hide scrollbar for all browsers */
 .hide-scrollbar {
   -ms-overflow-style: none; /* Internet Explorer 10+ */
@@ -16,7 +20,10 @@
 .custom-tabs {
   .mat-mdc-tab-group {
     .mat-mdc-tab-header {
-      border-bottom: 2px solid #e5e7eb;
+      border-bottom: 2px solid mat.get-theme-color(light.$light-theme, neutral, 90);
+      :host-context(.dark-theme) & {
+        border-bottom-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
+      }
       
       .mat-mdc-tab-label-container {
         .mat-mdc-tab-label {
@@ -24,7 +31,10 @@
           padding: 0;
           
           &.mat-mdc-tab-label-active {
-            background-color: #f3f4f6;
+            background-color: mat.get-theme-color(light.$light-theme, neutral, 95);
+            :host-context(.dark-theme) & {
+              background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+            }
             border-radius: 8px 8px 0 0;
           }
         }
@@ -38,9 +48,15 @@
   background-color: white;
   .mat-mdc-header-cell {
     font-weight: 600;
-    color: #374151;
-    background-color: white;
-    border-bottom: 2px solid #e5e7eb;
+    color: mat.get-theme-color(light.$light-theme, neutral, 20);
+    background-color: mat.get-theme-color(light.$light-theme, primary, 100);
+    border-bottom: 2px solid mat.get-theme-color(light.$light-theme, neutral, 90);
+
+    :host-context(.dark-theme) & {
+      color: mat.get-theme-color(dark.$dark-theme, primary, 100);
+      background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+      border-bottom-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
+    }
     position: sticky;
     top: 0;
     z-index: 10;
@@ -48,7 +64,11 @@
   
   .mat-mdc-cell {
     padding: 16px 24px;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid mat.get-theme-color(light.$light-theme, neutral, 95);
+
+    :host-context(.dark-theme) & {
+      border-bottom-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+    }
   }
   
   .mat-mdc-row {

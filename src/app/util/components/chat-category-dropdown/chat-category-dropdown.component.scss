@@ -1,3 +1,7 @@
+@use '@angular/material' as mat;
+@use '../../../../styles/light-theme' as light;
+@use '../../../../styles/dark-theme' as dark;
+
 .chat-category-dropdown {
   display: block;
   font-family: 'Inter', sans-serif; // Ensure clean typography
@@ -6,11 +10,17 @@
 .action-bar {
   display: flex;
   align-items: center;
-  background: #ffffff;
+  :host-context(.light-theme) & {
+    background: mat.get-theme-color(light.$light-theme, primary, 100);
+    border: 1px solid mat.get-theme-color(light.$light-theme, neutral, 95);
+  }
+  :host-context(.dark-theme) & {
+    background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+    border: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+  }
   border-radius: 999px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   padding: 4px;
-  border: 1px solid #f3f4f6;
   width: fit-content;
   max-width: 100%;
   transition: all 0.2s ease;
@@ -33,7 +43,8 @@
   transition: background-color 0.2s;
 
   &:hover {
-    background-color: #f9fafb;
+    :host-context(.light-theme) & { background-color: mat.get-theme-color(light.$light-theme, neutral, 98); }
+    :host-context(.dark-theme) & { background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20); }
   }
 }
 
@@ -65,7 +76,8 @@
 .divider {
   width: 1px;
   height: 24px;
-  background-color: #e5e7eb;
+  :host-context(.light-theme) & { background-color: mat.get-theme-color(light.$light-theme, neutral, 90); }
+  :host-context(.dark-theme) & { background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30); }
   margin: 0 4px;
 }
 
@@ -74,7 +86,8 @@
   align-items: center;
   gap: 10px;
   font-size: 14px;
-  color: #374151;
+  :host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 20); }
+  :host-context(.dark-theme) & { color: mat.get-theme-color(dark.$dark-theme, primary, 100); }
 }
 
 .avatar {
@@ -84,8 +97,14 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #eff6ff;
-  color: #3b82f6;
+  :host-context(.light-theme) & {
+    background: mat.get-theme-color(light.$light-theme, primary, 95);
+    color: mat.get-theme-color(light.$light-theme, primary, 40);
+  }
+  :host-context(.dark-theme) & {
+    background: mat.get-theme-color(dark.$dark-theme, primary, 20);
+    color: mat.get-theme-color(dark.$dark-theme, primary, 100);
+  }
   font-weight: 600;
   font-size: 13px;
   flex-shrink: 0;
@@ -106,16 +125,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #3b82f6; // Primary color
+  background-color: mat.get-theme-color(light.$light-theme, primary, 40);
+  :host-context(.dark-theme) & { background-color: mat.get-theme-color(dark.$dark-theme, primary, 60); }
   color: white;
   border: none;
   margin-left: 4px;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.1s;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 
   &:hover {
-    background-color: #2563eb;
+    background-color: mat.get-theme-color(light.$light-theme, primary, 30);
+    :host-context(.dark-theme) & { background-color: mat.get-theme-color(dark.$dark-theme, primary, 70); }
   }
 
   &:active {
@@ -155,27 +176,39 @@
 // Chip-based category selection styles
 .category-chip {
   cursor: pointer;
-  background: #f9fafb;
+  :host-context(.light-theme) & {
+    background: mat.get-theme-color(light.$light-theme, neutral, 98);
+  }
+  :host-context(.dark-theme) & {
+    background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+    border: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+  }
   border: none;
-  // border-radius: 999px;
   height: 3rem;
   transition: all 0.2s ease;
   
   &:hover:not([disabled]) {
-    background: #f3f4f6;
-    border-color: #d1d5db;
+    :host-context(.light-theme) & { background: mat.get-theme-color(light.$light-theme, neutral, 95); border-color: mat.get-theme-color(light.$light-theme, neutral, 80); }
+    :host-context(.dark-theme) & { background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20); border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30); }
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
   
   &.selected-chip {
-    background: #eff6ff;
-    border-color: #3b82f6;
-    color: #1e40af;
+    :host-context(.light-theme) & {
+      background: mat.get-theme-color(light.$light-theme, primary, 95);
+      border-color: mat.get-theme-color(light.$light-theme, primary, 40);
+      color: mat.get-theme-color(light.$light-theme, primary, 20);
+    }
+    :host-context(.dark-theme) & {
+      background: mat.get-theme-color(dark.$dark-theme, primary, 20);
+      border-color: mat.get-theme-color(dark.$dark-theme, primary, 100);
+      color: mat.get-theme-color(dark.$dark-theme, primary, 100);
+    }
     
     .chip-avatar {
-      background: #3b82f6;
-      color: white;
+      :host-context(.light-theme) & { background: mat.get-theme-color(light.$light-theme, primary, 40); color: white; }
+      :host-context(.dark-theme) & { background: mat.get-theme-color(dark.$dark-theme, primary, 80); color: mat.get-theme-color(dark.$dark-theme, primary, 10); }
     }
   }
   
@@ -192,8 +225,14 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #e5e7eb;
-  color: #6b7280;
+  :host-context(.light-theme) & {
+    background: mat.get-theme-color(light.$light-theme, neutral, 90);
+    color: mat.get-theme-color(light.$light-theme, neutral, 40);
+  }
+  :host-context(.dark-theme) & {
+    background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+    color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 70);
+  }
   font-weight: 600;
   font-size: 12px;
   flex-shrink: 0;
@@ -202,6 +241,7 @@
 .chip-label {
   font-weight: 500;
   font-size: 14px;
-  color: #374151;
+  :host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 20); }
+  :host-context(.dark-theme) & { color: mat.get-theme-color(dark.$dark-theme, primary, 100); }
 }
 

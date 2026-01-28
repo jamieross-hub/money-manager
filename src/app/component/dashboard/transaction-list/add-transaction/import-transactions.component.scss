@@ -1,3 +1,7 @@
+@use '@angular/material' as mat;
+@use '../../../../../styles/light-theme' as light;
+@use '../../../../../styles/dark-theme' as dark;
+
 mat-dialog-content {
   min-width: 350px;
 }
@@ -22,7 +26,10 @@ mat-dialog-content {
 .import-header {
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid mat.get-theme-color(light.$light-theme, neutral, 90);
+  :host-context(.dark-theme) & {
+    border-bottom-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+  }
 }
 
 .header-content {
@@ -46,7 +53,10 @@ mat-dialog-content {
 }
 
 .title-icon {
-  color: #3b82f6;
+  color: mat.get-theme-color(light.$light-theme, primary, 40);
+  :host-context(.dark-theme) & {
+    color: mat.get-theme-color(dark.$dark-theme, primary, 100);
+  }
   font-size: 1.75rem;
   width: 1.75rem;
   height: 1.75rem;
@@ -67,7 +77,8 @@ mat-dialog-content {
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #111827;
+  :host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 10); }
+  :host-context(.dark-theme) & { color: mat.get-theme-color(dark.$dark-theme, primary, 100); }
   line-height: 1.2;
   
   @media (max-width: 640px) {
@@ -78,7 +89,8 @@ mat-dialog-content {
 .dialog-subtitle {
   margin: 0.25rem 0 0 0;
   font-size: 0.875rem;
-  color: #6b7280;
+  :host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 40); }
+  :host-context(.dark-theme) & { color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 70); }
   line-height: 1.4;
   
   @media (max-width: 640px) {
@@ -103,9 +115,13 @@ mat-dialog-content {
   border-radius: 8px;
   font-weight: 500;
   transition: all 0.2s ease;
-  border: 2px solid #3b82f6;
+  border: 2px solid mat.get-theme-color(light.$light-theme, primary, 40);
   background: transparent;
-  color: #3b82f6;
+  color: mat.get-theme-color(light.$light-theme, primary, 40);
+  :host-context(.dark-theme) & {
+    border-color: mat.get-theme-color(dark.$dark-theme, primary, 100);
+    color: mat.get-theme-color(dark.$dark-theme, primary, 100);
+  }
   
   &:hover {
     background: #3b82f6;
@@ -143,12 +159,18 @@ mat-dialog-content {
 // File Upload Section
 .file-upload-container {
   position: relative;
-  border: 2px dashed #d1d5db;
+  :host-context(.light-theme) & {
+    border: 2px dashed mat.get-theme-color(light.$light-theme, neutral, 80);
+    background: mat.get-theme-color(light.$light-theme, neutral, 98);
+  }
+  :host-context(.dark-theme) & {
+    border: 2px dashed mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
+    background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+  }
   border-radius: 8px;
   padding: 2rem;
   text-align: center;
   transition: all 0.3s ease;
-  background: #f9fafb;
   cursor: pointer;
   
   &:hover {
@@ -185,8 +207,14 @@ mat-dialog-content {
   gap: 0.5rem;
   margin-top: 0.5rem;
   padding: 0.75rem;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  :host-context(.light-theme) & {
+    background: mat.get-theme-color(light.$light-theme, error, 95);
+    border: 1px solid mat.get-theme-color(light.$light-theme, error, 90);
+  }
+  :host-context(.dark-theme) & {
+    background: rgba(mat.get-theme-color(dark.$dark-theme, error, 40), 0.1);
+    border: 1px solid rgba(mat.get-theme-color(dark.$dark-theme, error, 40), 0.2);
+  }
   border-radius: 6px;
 }
 
@@ -232,10 +260,16 @@ mat-dialog-content {
 
 // Table Container
 .table-container {
-  border: 1px solid #e5e7eb;
+  :host-context(.light-theme) & {
+    border: 1px solid mat.get-theme-color(light.$light-theme, neutral, 90);
+    background: mat.get-theme-color(light.$light-theme, primary, 100);
+  }
+  :host-context(.dark-theme) & {
+    border: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+    background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+  }
   border-radius: 8px;
   overflow: hidden;
-  background: white;
   overflow-x: auto;
 }
 
@@ -248,13 +282,20 @@ mat-dialog-content {
   th, td {
     padding: 0.75rem;
     text-align: left;
-    border-bottom: 1px solid #f3f4f6;
+    :host-context(.light-theme) & { border-bottom: 1px solid mat.get-theme-color(light.$light-theme, neutral, 95); }
+    :host-context(.dark-theme) & { border-bottom: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20); }
   }
   
   th {
-    background: #f9fafb;
+    :host-context(.light-theme) & {
+      background: mat.get-theme-color(light.$light-theme, neutral, 98);
+      color: mat.get-theme-color(light.$light-theme, neutral, 20);
+    }
+    :host-context(.dark-theme) & {
+      background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+      color: mat.get-theme-color(dark.$dark-theme, primary, 100);
+    }
     font-weight: 600;
-    color: #374151;
     position: sticky;
     top: 0;
     z-index: 10;
@@ -297,13 +338,13 @@ mat-dialog-content {
     text-transform: capitalize;
     
     &.income {
-      background: #d1fae5;
-      color: #065f46;
+      :host-context(.light-theme) & { background: mat.get-theme-color(light.$light-theme, tertiary, 90); color: mat.get-theme-color(light.$light-theme, tertiary, 20); }
+      :host-context(.dark-theme) & { background: rgba(mat.get-theme-color(dark.$dark-theme, tertiary, 40), 0.2); color: mat.get-theme-color(dark.$dark-theme, tertiary, 80); }
     }
     
     &.expense {
-      background: #fee2e2;
-      color: #991b1b;
+      :host-context(.light-theme) & { background: mat.get-theme-color(light.$light-theme, error, 95); color: mat.get-theme-color(light.$light-theme, error, 20); }
+      :host-context(.dark-theme) & { background: rgba(mat.get-theme-color(dark.$dark-theme, error, 40), 0.2); color: mat.get-theme-color(dark.$dark-theme, error, 80); }
     }
   }
   
@@ -417,7 +458,8 @@ mat-dialog-content {
 // Dialog Actions
 .dialog-actions {
   padding: 1rem 0 0 0;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid mat.get-theme-color(light.$light-theme, neutral, 90);
+  :host-context(.dark-theme) & { border-top-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20); }
   margin-top: 1rem;
   
   @media (max-width: 640px) {

@@ -1,6 +1,10 @@
+@use '@angular/material' as mat;
+@use '../../../../styles/light-theme' as light;
+@use '../../../../styles/dark-theme' as dark;
+
 // Reports component styles
 .reports-container {
-  // Add any specific styles for the reports component here
+  display: block; // Added display: block to avoid empty ruleset warning
 }
 
 // Custom styles for the compact analytics UI
@@ -17,11 +21,11 @@
     padding: 0 16px;
     
     &:hover {
-      background-color: rgba(59, 130, 246, 0.1);
+      background-color: rgba(mat.get-theme-color(light.$light-theme, primary, 40), 0.1);
     }
     
     &.mat-menu-item-highlighted {
-      background-color: rgba(59, 130, 246, 0.15);
+      background-color: rgba(mat.get-theme-color(light.$light-theme, primary, 40), 0.15);
     }
   }
 }
@@ -30,7 +34,7 @@
 .mat-button-toggle-group {
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #e5e7eb;
+  border: 1px solid mat.get-theme-color(light.$light-theme, neutral, 90);
   
   .mat-button-toggle {
     border: none;
@@ -44,16 +48,16 @@
     }
     
     &.mat-button-toggle-checked {
-      background-color: #3b82f6;
-      color: white;
+      background-color: mat.get-theme-color(light.$light-theme, primary, 40);
+      color: mat.get-theme-color(light.$light-theme, primary, 100);
     }
     
     &:not(.mat-button-toggle-checked) {
-      background-color: white;
-      color: #6b7280;
+      background-color: mat.get-theme-color(light.$light-theme, primary, 100);
+      color: mat.get-theme-color(light.$light-theme, neutral, 40);
       
       &:hover {
-        background-color: #f3f4f6;
+        background-color: mat.get-theme-color(light.$light-theme, neutral, 95);
       }
     }
   }
@@ -62,15 +66,15 @@
 // Dark theme support
 .dark {
   .mat-button-toggle-group {
-    border-color: #4b5563;
+    border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
     
     .mat-button-toggle {
       &:not(.mat-button-toggle-checked) {
-        background-color: #374151;
-        color: #d1d5db;
+        background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+        color: mat.get-theme-color(dark.$dark-theme, primary, 90);
         
         &:hover {
-          background-color: #4b5563;
+          background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
         }
       }
     }
@@ -81,11 +85,11 @@
   .more-options-menu {
     .mat-menu-item {
       &:hover {
-        background-color: rgba(59, 130, 246, 0.2);
+        background-color: rgba(mat.get-theme-color(dark.$dark-theme, primary, 80), 0.2);
       }
       
       &.mat-menu-item-highlighted {
-        background-color: rgba(59, 130, 246, 0.25);
+        background-color: rgba(mat.get-theme-color(dark.$dark-theme, primary, 80), 0.25);
       }
     }
   }
@@ -180,8 +184,12 @@
   .loading-spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid #f3f4f6;
-    border-top: 3px solid #3b82f6;
+    border: 3px solid mat.get-theme-color(light.$light-theme, neutral, 95);
+    border-top: 3px solid mat.get-theme-color(light.$light-theme, primary, 40);
+    :host-context(.dark-theme) & {
+      border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+      border-top-color: mat.get-theme-color(dark.$dark-theme, primary, 60);
+    }
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }

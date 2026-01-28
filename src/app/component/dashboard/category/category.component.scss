@@ -1,3 +1,7 @@
+@use '@angular/material' as mat;
+@use '../../../../styles/light-theme' as light;
+@use '../../../../styles/dark-theme' as dark;
+
 // =============================================================================
 // CATEGORIES COMPONENT STYLES
 // =============================================================================
@@ -7,29 +11,29 @@
   padding-bottom: 5rem; // Space for bottom nav or FAB if needed
   
   :host-context(.dark-theme) & {
-    color: #f1f5f9;
+    color: mat.get-theme-color(dark.$dark-theme, primary, 100);
   }
 }
 
 // Error Message (Consistent with Accounts)
 .error-message {
   :host-context(.light-theme) & {
-    background-color: #fef2f2;
-    border: 1px solid #fee2e2;
+    background-color: mat.get-theme-color(light.$light-theme, error, 95);
+    border: 1px solid mat.get-theme-color(light.$light-theme, error, 90);
   }
 
   :host-context(.dark-theme) & {
-    background-color: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    background-color: rgba(mat.get-theme-color(dark.$dark-theme, error, 40), 0.1);
+    border: 1px solid rgba(mat.get-theme-color(dark.$dark-theme, error, 40), 0.2);
   }
 
   .error-text {
     :host-context(.light-theme) & {
-      color: #b91c1c;
+      color: mat.get-theme-color(light.$light-theme, error, 30);
     }
 
     :host-context(.dark-theme) & {
-      color: #fca5a5;
+      color: mat.get-theme-color(dark.$dark-theme, error, 80);
     }
   }
 }
@@ -125,13 +129,13 @@
     transition: transform 0.2s, box-shadow 0.2s;
 
     :host-context(.light-theme) & {
-      background: #ffffff;
-      border: 1px solid #f3f4f6;
+      background: mat.get-theme-color(light.$light-theme, primary, 100);
+      border: 1px solid mat.get-theme-color(light.$light-theme, neutral, 95);
     }
 
     :host-context(.dark-theme) & {
-      background: #0f172a;
-      border: 1px solid #1e293b;
+      background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+      border: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
     }
 
     &:hover {
@@ -237,10 +241,10 @@
       transition: all 0.2s;
 
       :host-context(.light-theme) & {
-        background: #f3f4f6;
+        background: mat.get-theme-color(light.$light-theme, neutral, 95);
       }
       :host-context(.dark-theme) & {
-        background: #1e293b;
+        background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
       }
       
       .search-icon {
@@ -368,13 +372,13 @@
         border-radius: 16px;
 
         :host-context(.light-theme) & {
-          background: #fff;
-          border: 1px solid #f3f4f6;
+          background: mat.get-theme-color(light.$light-theme, primary, 100);
+          border: 1px solid mat.get-theme-color(light.$light-theme, neutral, 95);
         }
 
         :host-context(.dark-theme) & {
-          background: #0f172a;
-          border: 1px solid #1e293b;
+          background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+          border: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
         }
         
         .category-item {
@@ -385,11 +389,11 @@
             transition: background 0.1s;
 
             :host-context(.light-theme) & {
-              border-bottom: 1px solid #f3f4f6;
+              border-bottom: 1px solid mat.get-theme-color(light.$light-theme, neutral, 95);
             }
 
             :host-context(.dark-theme) & {
-              border-bottom: 1px solid #1e293b;
+              border-bottom: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
             }
             
             &:last-child {
@@ -501,7 +505,10 @@
                         
                         .progress-bar {
                             height: 4px;
-                            background: #e5e7eb;
+                            background: mat.get-theme-color(light.$light-theme, neutral, 90);
+                            :host-context(.dark-theme) & {
+                                background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
+                            }
                             border-radius: 2px;
                             overflow: hidden;
                             margin-bottom: 2px;

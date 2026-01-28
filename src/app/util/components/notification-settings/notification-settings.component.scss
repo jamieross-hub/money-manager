@@ -1,3 +1,7 @@
+@use '@angular/material' as mat;
+@use '../../../../styles/light-theme' as light;
+@use '../../../../styles/dark-theme' as dark;
+
 .notification-settings {
 	max-width: 900px;
 	margin: 0 auto;
@@ -7,12 +11,15 @@
 
 /* Header Styles */
 .settings-header {
-	background: linear-gradient(135deg, var(--primary-color, #3b82f6) 0%, var(--accent-color, #8b5cf6) 100%);
+	background: linear-gradient(135deg, mat.get-theme-color(light.$light-theme, primary, 40) 0%, mat.get-theme-color(light.$light-theme, primary, 60) 100%);
+	:host-context(.dark-theme) & {
+		background: linear-gradient(135deg, mat.get-theme-color(dark.$dark-theme, primary, 30) 0%, mat.get-theme-color(dark.$dark-theme, primary, 50) 100%);
+	}
 	border-radius: 16px;
 	padding: 32px;
 	margin-bottom: 32px;
 	color: white;
-	box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
+	box-shadow: 0 8px 32px rgba(mat.get-theme-color(light.$light-theme, primary, 40), 0.3);
 }
 
 .header-content {
@@ -55,8 +62,14 @@
 
 /* Section Styles */
 .setting-section {
-	background: var(--surface-color, #ffffff);
-	border: 1px solid var(--border-color, #e2e8f0);
+	:host-context(.light-theme) & {
+		background: mat.get-theme-color(light.$light-theme, primary, 100);
+		border: 1px solid mat.get-theme-color(light.$light-theme, neutral, 90);
+	}
+	:host-context(.dark-theme) & {
+		background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+		border: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+	}
 	border-radius: 16px;
 	padding: 24px;
 	margin-bottom: 24px;
@@ -104,13 +117,13 @@
 }
 
 .status-icon.granted {
-	background: #dcfce7;
-	color: #166534;
+	:host-context(.light-theme) & { background: mat.get-theme-color(light.$light-theme, tertiary, 95); color: mat.get-theme-color(light.$light-theme, tertiary, 40); }
+	:host-context(.dark-theme) & { background: rgba(mat.get-theme-color(dark.$dark-theme, tertiary, 40), 0.2); color: mat.get-theme-color(dark.$dark-theme, tertiary, 80); }
 }
 
 .status-icon.denied {
-	background: #fef2f2;
-	color: #dc2626;
+	:host-context(.light-theme) & { background: mat.get-theme-color(light.$light-theme, error, 95); color: mat.get-theme-color(light.$light-theme, error, 40); }
+	:host-context(.dark-theme) & { background: rgba(mat.get-theme-color(dark.$dark-theme, error, 40), 0.2); color: mat.get-theme-color(dark.$dark-theme, error, 80); }
 }
 
 .status-icon.default {
@@ -121,13 +134,15 @@
 .header-info h3 {
 	font-size: 20px;
 	font-weight: 600;
-	color: var(--text-color, #1e293b);
+	:host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 10); }
+	:host-context(.dark-theme) & { color: mat.get-theme-color(dark.$dark-theme, primary, 100); }
 	margin: 0 0 4px 0;
 }
 
 .status-text {
 	font-size: 14px;
-	color: var(--text-muted, #64748b);
+	:host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 40); }
+	:host-context(.dark-theme) & { color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 70); }
 	margin: 0;
 }
 
@@ -141,13 +156,13 @@
 }
 
 .permission-badge.granted {
-	background: #dcfce7;
-	color: #166534;
+	:host-context(.light-theme) & { background: mat.get-theme-color(light.$light-theme, tertiary, 95); color: mat.get-theme-color(light.$light-theme, tertiary, 40); }
+	:host-context(.dark-theme) & { background: rgba(mat.get-theme-color(dark.$dark-theme, tertiary, 40), 0.2); color: mat.get-theme-color(dark.$dark-theme, tertiary, 80); }
 }
 
 .permission-badge.denied {
-	background: #fef2f2;
-	color: #dc2626;
+	:host-context(.light-theme) & { background: mat.get-theme-color(light.$light-theme, error, 95); color: mat.get-theme-color(light.$light-theme, error, 40); }
+	:host-context(.dark-theme) & { background: rgba(mat.get-theme-color(dark.$dark-theme, error, 40), 0.2); color: mat.get-theme-color(dark.$dark-theme, error, 80); }
 }
 
 .permission-badge.default {
@@ -215,25 +230,39 @@
 }
 
 .btn-primary {
-	background: var(--primary-color, #3b82f6);
+	background: mat.get-theme-color(light.$light-theme, primary, 40);
+	:host-context(.dark-theme) & {
+		background: mat.get-theme-color(dark.$dark-theme, primary, 60);
+	}
 	color: white;
-	box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+	box-shadow: 0 4px 12px rgba(mat.get-theme-color(light.$light-theme, primary, 40), 0.3);
 }
 
 .btn-primary:hover:not(:disabled) {
-	background: var(--primary-color-dark, #2563eb);
+	background: mat.get-theme-color(light.$light-theme, primary, 30);
+	:host-context(.dark-theme) & {
+		background: mat.get-theme-color(dark.$dark-theme, primary, 70);
+	}
 	transform: translateY(-1px);
-	box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+	box-shadow: 0 6px 16px rgba(mat.get-theme-color(light.$light-theme, primary, 40), 0.4);
 }
 
 .btn-secondary {
-	background: var(--surface-hover-color, #f1f5f9);
-	color: var(--text-color, #1e293b);
-	border: 1px solid var(--border-color, #e2e8f0);
+	:host-context(.light-theme) & {
+		background: mat.get-theme-color(light.$light-theme, neutral, 95);
+		color: mat.get-theme-color(light.$light-theme, neutral, 10);
+		border: 1px solid mat.get-theme-color(light.$light-theme, neutral, 90);
+	}
+	:host-context(.dark-theme) & {
+		background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+		color: mat.get-theme-color(dark.$dark-theme, primary, 100);
+		border: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
+	}
 }
 
 .btn-secondary:hover:not(:disabled) {
-	background: var(--surface-hover-color-dark, #e2e8f0);
+	:host-context(.light-theme) & { background: mat.get-theme-color(light.$light-theme, neutral, 90); }
+	:host-context(.dark-theme) & { background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30); }
 	transform: translateY(-1px);
 }
 
@@ -299,15 +328,27 @@
 	justify-content: space-between;
 	align-items: center;
 	padding: 20px;
-	border: 1px solid var(--border-color, #e2e8f0);
+	:host-context(.light-theme) & {
+		border: 1px solid mat.get-theme-color(light.$light-theme, neutral, 90);
+		background: mat.get-theme-color(light.$light-theme, neutral, 98);
+	}
+	:host-context(.dark-theme) & {
+		border: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+		background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+	}
 	border-radius: 12px;
-	background: var(--surface-hover-color, #f8fafc);
 	transition: all 0.2s ease;
 }
 
 .notification-type:hover {
-	background: var(--surface-hover-color-dark, #f1f5f9);
-	border-color: var(--primary-color, #3b82f6);
+	:host-context(.light-theme) & {
+		background: mat.get-theme-color(light.$light-theme, neutral, 95);
+		border-color: mat.get-theme-color(light.$light-theme, primary, 40);
+	}
+	:host-context(.dark-theme) & {
+		background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+		border-color: mat.get-theme-color(dark.$dark-theme, primary, 100);
+	}
 }
 
 .type-content {
@@ -351,8 +392,14 @@
 }
 
 .token-display {
-	background: var(--surface-hover-color, #f8fafc);
-	border: 1px solid var(--border-color, #e2e8f0);
+	:host-context(.light-theme) & {
+		background: mat.get-theme-color(light.$light-theme, neutral, 98);
+		border: 1px solid mat.get-theme-color(light.$light-theme, neutral, 90);
+	}
+	:host-context(.dark-theme) & {
+		background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+		border: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 25);
+	}
 	border-radius: 12px;
 	padding: 16px;
 }
@@ -360,7 +407,8 @@
 .token-label {
 	font-size: 12px;
 	font-weight: 600;
-	color: var(--text-muted, #64748b);
+	:host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 40); }
+	:host-context(.dark-theme) & { color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 70); }
 	margin-bottom: 8px;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
@@ -376,9 +424,9 @@
 	flex: 1;
 	font-family: "Courier New", monospace;
 	font-size: 12px;
-	color: var(--text-color, #1e293b);
+	:host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 10); background: rgba(0, 0, 0, 0.05); }
+	:host-context(.dark-theme) & { color: mat.get-theme-color(dark.$dark-theme, primary, 100); background: rgba(255, 255, 255, 0.05); }
 	word-break: break-all;
-	background: rgba(0, 0, 0, 0.05);
 	padding: 8px 12px;
 	border-radius: 6px;
 }
@@ -443,13 +491,15 @@
 .setting-info h4 {
 	font-size: 16px;
 	font-weight: 600;
-	color: var(--text-color, #1e293b);
+	:host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 10); }
+	:host-context(.dark-theme) & { color: mat.get-theme-color(dark.$dark-theme, primary, 100); }
 	margin: 0 0 4px 0;
 }
 
 .setting-info p {
 	font-size: 14px;
-	color: var(--text-muted, #64748b);
+	:host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 40); }
+	:host-context(.dark-theme) & { color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 70); }
 	margin: 0;
 	line-height: 1.4;
 }
@@ -458,12 +508,21 @@
 ::ng-deep .mat-mdc-slide-toggle {
 	.mdc-switch {
 		.mdc-switch__track {
-			background-color: #cbd5e1;
-			border-color: #cbd5e1;
+			:host-context(.light-theme) & {
+				background-color: mat.get-theme-color(light.$light-theme, neutral, 90);
+				border-color: mat.get-theme-color(light.$light-theme, neutral, 90);
+			}
+			:host-context(.dark-theme) & {
+				background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
+				border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
+			}
 		}
 
 		.mdc-switch__handle-track {
-			background-color: var(--primary-color, #3b82f6);
+			background-color: mat.get-theme-color(light.$light-theme, primary, 40);
+			:host-context(.dark-theme) & {
+				background-color: mat.get-theme-color(dark.$dark-theme, primary, 80);
+			}
 		}
 
 		.mdc-switch__handle {
@@ -474,8 +533,12 @@
 
 	&.mat-mdc-slide-toggle-checked .mdc-switch {
 		.mdc-switch__track {
-			background-color: var(--primary-color, #3b82f6);
-			border-color: var(--primary-color, #3b82f6);
+			background-color: mat.get-theme-color(light.$light-theme, primary, 40);
+			border-color: mat.get-theme-color(light.$light-theme, primary, 40);
+			:host-context(.dark-theme) & {
+				background-color: mat.get-theme-color(dark.$dark-theme, primary, 80);
+				border-color: mat.get-theme-color(dark.$dark-theme, primary, 80);
+			}
 		}
 	}
 
@@ -523,13 +586,15 @@
 .disabled-content h3 {
 	font-size: 20px;
 	font-weight: 600;
-	color: var(--text-color, #1e293b);
+	:host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 10); }
+	:host-context(.dark-theme) & { color: mat.get-theme-color(dark.$dark-theme, primary, 100); }
 	margin: 0 0 12px 0;
 }
 
 .disabled-content p {
 	font-size: 14px;
-	color: var(--text-muted, #64748b);
+	:host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 40); }
+	:host-context(.dark-theme) & { color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 70); }
 	margin: 0;
 	line-height: 1.5;
 }

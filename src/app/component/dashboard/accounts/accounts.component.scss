@@ -1,3 +1,7 @@
+@use '@angular/material' as mat;
+@use '../../../../styles/light-theme' as light;
+@use '../../../../styles/dark-theme' as dark;
+
 // =============================================================================
 // ACCOUNTS PAGE - CLEAN LIGHT THEME (FINANCIAL DASHBOARD)
 // =============================================================================
@@ -10,13 +14,13 @@
   -moz-osx-font-smoothing: grayscale;
 
   :host-context(.light-theme) & {
-    background-color: #f8fafc;
-    color: #1e293b;
+    background-color: mat.get-theme-color(light.$light-theme, neutral, 98);
+    color: mat.get-theme-color(light.$light-theme, neutral, 10);
   }
 
   :host-context(.dark-theme) & {
-    background-color: #020617;
-    color: #f1f5f9;
+    background-color: mat.get-theme-color(dark.$dark-theme, primary, 0);
+    color: mat.get-theme-color(dark.$dark-theme, primary, 100);
   }
 }
 
@@ -37,13 +41,13 @@ mat-card.error-message {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
 
   :host-context(.light-theme) & {
-    background-color: #fef2f2;
-    border: 1px solid #fee2e2;
+    background-color: mat.get-theme-color(light.$light-theme, error, 95);
+    border: 1px solid mat.get-theme-color(light.$light-theme, error, 90);
   }
 
   :host-context(.dark-theme) & {
-    background-color: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    background-color: rgba(mat.get-theme-color(dark.$dark-theme, error, 40), 0.1);
+    border: 1px solid rgba(mat.get-theme-color(dark.$dark-theme, error, 40), 0.2);
   }
 
   .mat-mdc-card-content {
@@ -52,11 +56,11 @@ mat-card.error-message {
 
   .error-text {
     :host-context(.light-theme) & {
-      color: #b91c1c;
+      color: mat.get-theme-color(light.$light-theme, error, 30);
     }
 
     :host-context(.dark-theme) & {
-      color: #fca5a5;
+      color: mat.get-theme-color(dark.$dark-theme, error, 80);
     }
   }
 }
@@ -78,11 +82,11 @@ mat-card.error-message {
       line-height: 1.1;
 
       :host-context(.light-theme) & {
-        color: #0f172a;
+        color: mat.get-theme-color(light.$light-theme, neutral, 10);
       }
 
       :host-context(.dark-theme) & {
-        color: #f8fafc;
+        color: mat.get-theme-color(dark.$dark-theme, primary, 100);
       }
     }
     
@@ -92,11 +96,11 @@ mat-card.error-message {
       font-weight: 400;
 
       :host-context(.light-theme) & {
-        color: #64748b;
+        color: mat.get-theme-color(light.$light-theme, neutral, 40);
       }
 
       :host-context(.dark-theme) & {
-        color: #94a3b8;
+        color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 70);
       }
     }
   }
@@ -361,16 +365,22 @@ mat-card.error-message {
           font-weight: 700;
           margin: 0;
           letter-spacing: -0.01em;
-          :host-context(.light-theme) & { color: #334155; }
-          :host-context(.dark-theme) & { color: #f1f5f9; }
+          :host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 20); }
+          :host-context(.dark-theme) & { color: mat.get-theme-color(dark.$dark-theme, primary, 100); }
         }
         .count {
           font-size: 0.85rem;
           font-weight: 600;
           padding: 0.1rem 0.5rem;
           border-radius: 999px; // Pill shape
-          :host-context(.light-theme) & { background: #f1f5f9; color: #94a3b8; }
-          :host-context(.dark-theme) & { background: #1e293b; color: #64748b; }
+          :host-context(.light-theme) & { 
+            background: mat.get-theme-color(light.$light-theme, neutral, 95); 
+            color: mat.get-theme-color(light.$light-theme, neutral, 40); 
+          }
+          :host-context(.dark-theme) & { 
+            background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20); 
+            color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 60); 
+          }
         }
       }
 
@@ -383,9 +393,9 @@ mat-card.error-message {
           font-size: 1rem;
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          &.negative { color: #ef4444; }
-          :host-context(.light-theme) & { color: #0f172a; }
-          :host-context(.dark-theme) & { color: #f1f5f9; }
+          &.negative { color: mat.get-theme-color(light.$light-theme, error, 40); }
+          :host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 10); }
+          :host-context(.dark-theme) & { color: mat.get-theme-color(dark.$dark-theme, primary, 100); }
         }
 
         .expansion-arrow {
@@ -445,26 +455,26 @@ mat-card.error-message {
     }
 
     :host-context(.light-theme) & {
-      background: white;
-      border: 1px solid rgba(241, 245, 249, 0.8);
+      background: mat.get-theme-color(light.$light-theme, primary, 100);
+      border: 1px solid mat.get-theme-color(light.$light-theme, neutral, 95);
       
       &:hover {
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01) !important;
-        border-color: #e2e8f0;
+        border-color: mat.get-theme-color(light.$light-theme, neutral, 90);
         transform: translateY(-4px);
-        &::before { background: #2563eb; content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+        &::before { background: mat.get-theme-color(light.$light-theme, primary, 40); content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
       }
     }
 
     :host-context(.dark-theme) & {
-      background: #0f172a;
-      border: 1px solid #1e293b;
+      background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+      border: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
       
       &:hover {
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
-        border-color: #334155;
+        border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
         transform: translateY(-4px);
-        &::before { background: #3b82f6; content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+        &::before { background: mat.get-theme-color(dark.$dark-theme, primary, 60); content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
       }
     }
     
@@ -583,15 +593,24 @@ mat-card.error-message {
 
 // Empty State
 mat-card.empty-state-card {
-  background: white;
+  :host-context(.light-theme) & {
+    background: mat.get-theme-color(light.$light-theme, primary, 100);
+    border: 2px dashed mat.get-theme-color(light.$light-theme, neutral, 90);
+  }
+  :host-context(.dark-theme) & {
+    background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+    border: 2px dashed mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+  }
   border-radius: 24px;
   text-align: center;
-  border: 2px dashed #e2e8f0; // Thicker dash
   margin: 0 clamp(1rem, 3vw, 1.5rem);
   transition: border-color 0.3s;
   box-shadow: none !important;
   
-  &:hover { border-color: #cbd5e1; }
+  &:hover { 
+    :host-context(.light-theme) & { border-color: mat.get-theme-color(light.$light-theme, neutral, 80); }
+    :host-context(.dark-theme) & { border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30); }
+  }
 
   .mat-mdc-card-content {
       padding: clamp(3rem, 6vw, 5rem) 2rem !important;
@@ -644,13 +663,13 @@ mat-card.empty-state-card {
   padding: 0.5rem !important;
 
   :host-context(.light-theme) & {
-    background: white !important;
-    border: 1px solid #f1f5f9 !important;
+    background: mat.get-theme-color(light.$light-theme, primary, 100) !important;
+    border: 1px solid mat.get-theme-color(light.$light-theme, neutral, 95) !important;
   }
 
   :host-context(.dark-theme) & {
-    background: #1e293b !important;
-    border: 1px solid #334155 !important;
+    background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20) !important;
+    border: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 30) !important;
   }
   
   .mat-mdc-menu-item {

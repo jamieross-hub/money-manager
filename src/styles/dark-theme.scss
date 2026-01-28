@@ -149,7 +149,7 @@ $dark-theme: mat.define-theme(
   /* ----------------------------------------------------------------------------------------------------- */
   /*  @ Write Common code for Dark Theme
   /* ----------------------------------------------------------------------------------------------------- */
-  @include mat.all-component-themes($dark-theme);
+  @include mat.all-component-colors($dark-theme);
 
   background-color: mat.get-theme-color($dark-theme, primary, 0);
   color: mat.get-theme-color($dark-theme, primary, 100);
