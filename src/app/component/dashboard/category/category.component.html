@@ -101,7 +101,8 @@
 							<span class="period">/ month</span>
 
 							<!-- Budget Progress -->
-							<div class="budget-progress-wrapper" *ngIf="category.budget?.hasBudget">
+							<div class="budget-progress-wrapper"
+								*ngIf="category.budget?.hasBudget && !breakpointService.device.isMobile">
 								<div class="progress-bar">
 									<div class="progress-fill"
 										[style.width.%]="calculateBudgetProgressPercentage(category)"

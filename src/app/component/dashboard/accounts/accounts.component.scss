@@ -27,41 +27,42 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: clamp(1rem, 3vw, 2rem);
-  padding: 0 clamp(0.75rem, 2vw, 1rem);
+  margin-bottom: clamp(2rem, 4vw, 3rem); // Increased spacing
+  padding: 0 clamp(1rem, 3vw, 1.5rem); // Increased padding
 
   .header-left {
     .page-title {
-      font-size: clamp(1.25rem, 5vw, 1.75rem);
-      font-weight: 700;
+      font-size: clamp(1.5rem, 4vw, 2rem); // Slightly larger
+      font-weight: 800; // Heavier weight
       color: #0f172a;
       margin: 0;
-      letter-spacing: -0.025em;
-      line-height: 1.2;
+      letter-spacing: -0.03em; // Tighter tracking
+      line-height: 1.1;
     }
     
     .page-description {
       color: #64748b;
-      font-size: clamp(0.85rem, 2vw, 0.95rem);
-      margin: 0.25rem 0 0 0;
+      font-size: clamp(0.9rem, 2vw, 1rem);
+      margin: 0.5rem 0 0 0;
+      font-weight: 400;
     }
   }
 
   .add-account-btn {
-    border-radius: 10px;
-    height: clamp(44px, 10vw, 48px);
-    padding: 0 clamp(1rem, 3vw, 1.5rem);
+    border-radius: 12px; // Slightly rounder
+    height: clamp(48px, 10vw, 52px); // Taller button
+    padding: 0 clamp(1.25rem, 3vw, 2rem);
     font-weight: 600;
-    font-size: clamp(0.875rem, 2vw, 1rem);
-    background: #2563eb; // Primary Blue
+    font-size: 1rem;
+    background: #2563eb;
     color: white;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2), 0 2px 4px -1px rgba(37, 99, 235, 0.1); // Softer shadow
 
     &:hover {
       background: #1d4ed8;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3), 0 4px 6px -2px rgba(37, 99, 235, 0.15);
     }
     
     mat-icon { margin-right: 0.5rem; font-size: 1.25rem; }
@@ -70,7 +71,7 @@
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 1.25rem;
     padding: 0 1rem;
     
     .add-account-btn { 
@@ -82,15 +83,15 @@
 
 // Main Summary Card
 .main-summary-section {
-  margin-bottom: clamp(1.5rem, 3vw, 2rem);
-  padding: 0 clamp(0.75rem, 2vw, 1rem);
+  margin-bottom: clamp(2rem, 4vw, 3rem); // Increased spacing
+  padding: 0 clamp(1rem, 3vw, 1.5rem);
 
   .net-worth-card {
     background: white;
-    border-radius: clamp(12px, 2vw, 16px);
-    padding: clamp(1.5rem, 4vw, 2.5rem);
-    border: 1px solid #f1f5f9;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02);
+    border-radius: 20px; // Larger radius
+    padding: clamp(2rem, 5vw, 3rem); // More internal breathing room
+    border: 1px solid rgba(241, 245, 249, 0.8);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01); // Soft, deep shadow
     
     .net-worth-content {
       display: flex;
@@ -99,55 +100,58 @@
 
       .left-info {
         .label {
-          font-size: clamp(0.75rem, 2vw, 0.9rem);
+          font-size: 0.875rem;
           color: #64748b;
-          font-weight: 500;
-          display: block;
-          margin-bottom: 0.5rem;
-          letter-spacing: 0.01em;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 0.75rem;
         }
         .net-worth-value {
-          font-size: clamp(1.75rem, 8vw, 3.5rem);
+          font-size: clamp(2.5rem, 6vw, 4rem); // Larger value
           font-weight: 800;
           color: #0f172a;
-          letter-spacing: -0.03em;
-          line-height: 1.1;
-          font-variant-numeric: tabular-nums;
+          letter-spacing: -0.04em;
+          line-height: 1;
         }
       }
 
       .right-info {
         display: flex;
-        gap: 3rem;
+        gap: clamp(2rem, 4vw, 4rem);
 
         .sub-indicator {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
+          gap: 1rem; // More gap inside indicator
 
           .indicator-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            border-radius: 14px; // Softer shape
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: transform 0.2s ease;
             
-            &.positive { background: #ecfdf5; color: #10b981; }
-            &.negative { background: #fef2f2; color: #ef4444; }
+            &.positive { background: #ecfdf5; color: #059669; }
+            &.negative { background: #fef2f2; color: #dc2626; }
 
-            mat-icon { font-size: 1.25rem; }
+            mat-icon { font-size: 1.5rem; }
           }
+          
+          &:hover .indicator-icon { transform: scale(1.05); }
 
           .indicator-details {
             display: flex;
             flex-direction: column;
-            .label { font-size: clamp(0.7rem, 1.5vw, 0.8rem); color: #64748b; }
+            .label { font-size: 0.8rem; color: #64748b; font-weight: 500; }
             .value {
-              font-size: clamp(1rem, 2.5vw, 1.25rem);
+              font-size: 1.25rem;
               font-weight: 700;
-              &.positive { color: #10b981; }
-              &.negative { color: #ef4444; }
+              margin-top: 2px;
+              &.positive { color: #059669; }
+              &.negative { color: #dc2626; }
             }
           }
         }
@@ -156,18 +160,22 @@
 
     @media (max-width: 768px) {
       padding: 1.5rem;
+      border-radius: 16px;
       
       .net-worth-content {
         flex-direction: column;
         align-items: flex-start;
-        gap: 1.5rem;
+        gap: 2rem;
         
         .right-info { 
           gap: 1.5rem;
           width: 100%;
+          flex-direction: row;
+          flex-wrap: wrap;
           
           .sub-indicator {
             flex: 1;
+            min-width: 140px;
           }
         }
       }
@@ -179,32 +187,33 @@
 .category-summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
-  gap: clamp(0.75rem, 2vw, 1.25rem);
-  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+  gap: clamp(1rem, 3vw, 1.5rem); // Increased gap
+  margin-bottom: clamp(2rem, 4vw, 3rem);
   padding: 0 0;
 
   .mini-card {
     background: white;
-    padding: clamp(1rem, 3vw, 1.5rem);
-    border-radius: clamp(12px, 2vw, 16px);
-    border: 1px solid #f1f5f9;
+    padding: clamp(1.25rem, 3vw, 1.5rem);
+    border-radius: 16px; // Consistent radius
+    border: 1px solid rgba(241, 245, 249, 0.8);
     display: flex;
     align-items: center;
-    gap: clamp(0.75rem, 2vw, 1rem);
-    transition: all 0.2s ease;
+    gap: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
 
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 16px -4px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
       border-color: #e2e8f0;
     }
 
     .card-icon-container {
       .icon-bg {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
+        width: 52px; // Slightly larger
+        height: 52px;
+        border-radius: 14px; // Softer
         display: flex;
         align-items: center;
         justify-content: center;
@@ -214,38 +223,50 @@
         &.credit { background: #faf5ff; color: #a855f7; }
         &.investment { background: #fffcf0; color: #eab308; }
 
-        mat-icon { font-size: 1.5rem; }
+        mat-icon { font-size: 1.75rem; width: 1.75rem; height: 1.75rem; }
       }
     }
 
     .card-info {
       display: flex;
       flex-direction: column;
-      .label { font-size: clamp(0.75rem, 1.8vw, 0.85rem); color: #64748b; font-weight: 500; }
-      .value { font-size: clamp(1.25rem, 3vw, 1.5rem); font-weight: 700; color: #0f172a; }
+      .label { 
+          font-size: 0.875rem; 
+          color: #64748b; 
+          font-weight: 500; 
+      }
+      .value { 
+          font-size: 1.25rem; 
+          font-weight: 700; 
+          color: #0f172a; 
+          margin-top: 2px;
+      }
     }
   }
 }
 
 // Account Group Section
 .account-group {
-  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+  margin-bottom: clamp(2rem, 4vw, 3rem);
   padding: 0 clamp(0.75rem, 2vw, 1rem);
 
   .group-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 1.25rem;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
     position: relative;
+    padding-bottom: 0.5rem;
 
     .collapse-btn {
       color: #94a3b8;
       margin-left: -0.75rem;
       transition: transform 0.2s ease;
       
+      &:hover { color: #64748b; background: rgba(0,0,0,0.03); }
+
       mat-icon {
-        transition: transform 0.2s ease;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         
         &.rotated {
           transform: rotate(-90deg);
@@ -256,19 +277,23 @@
     .group-info {
       display: flex;
       align-items: baseline;
-      gap: 0.5rem;
+      gap: 0.75rem;
       flex: 1;
 
       .group-name {
-        font-size: clamp(0.9rem, 2vw, 1rem);
-        font-weight: 600;
+        font-size: 1.1rem;
+        font-weight: 700;
         color: #334155;
         margin: 0;
+        letter-spacing: -0.01em;
       }
       .count {
         font-size: 0.85rem;
         color: #94a3b8;
-        font-weight: 500;
+        font-weight: 600;
+        background: #f1f5f9;
+        padding: 0.1rem 0.5rem;
+        border-radius: 999px; // Pill shape
       }
     }
 
@@ -278,19 +303,25 @@
       gap: 1.5rem;
 
       .group-balance {
-        font-size: 0.95rem;
-        font-weight: 600;
+        font-size: 1rem;
+        font-weight: 700;
         color: #0f172a;
+        font-variant-numeric: tabular-nums;
         &.negative { color: #ef4444; }
       }
 
       .add-inline-btn {
         color: #2563eb;
         font-weight: 600;
-        font-size: 0.85rem;
+        font-size: 0.875rem;
         padding: 0 0.75rem;
+        height: 32px;
+        line-height: 32px;
+        border-radius: 8px;
         
-        mat-icon { font-size: 1rem; width: 1rem; height: 1rem; margin-right: 0.25rem; }
+        &:hover { background: #eff6ff; }
+        
+        mat-icon { font-size: 1.1rem; width: 1.1rem; height: 1.1rem; margin-right: 0.25rem; }
       }
     }
 
@@ -306,14 +337,14 @@
 .accounts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
-  gap: clamp(0.75rem, 2vw, 1.25rem);
+  gap: clamp(1.25rem, 3vw, 1.5rem); // Increased gap
 
   .account-card {
     background: white;
-    padding: clamp(1rem, 3vw, 1.5rem);
-    border-radius: clamp(12px, 2vw, 16px);
-    border: 1px solid #f1f5f9;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: clamp(1.5rem, 3vw, 2rem); // Increased padding
+    border-radius: 24px; // Modern, large radius
+    border: 1px solid rgba(241, 245, 249, 0.8);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
 
@@ -329,9 +360,9 @@
     }
 
     &:hover {
-      box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
       border-color: #e2e8f0;
-      transform: translateY(-2px);
+      transform: translateY(-4px);
       &::before { background: #2563eb; }
     }
     
@@ -339,62 +370,94 @@
 
     .card-top {
       display: flex;
-      gap: clamp(0.75rem, 2vw, 1rem);
-      margin-bottom: clamp(1.25rem, 3vw, 2rem);
+      gap: 1rem;
+      margin-bottom: 2rem; // Increased spacing
       align-items: flex-start;
 
       .account-icon-wrap {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
+        width: 56px; // Larger icon
+        height: 56px;
+        border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
         background: #f8fafc;
         color: #64748b;
+        transition: transform 0.3s ease;
         
         &.bank { background: #eff6ff; color: #3b82f6; }
         &.cash { background: #f0fdf4; color: #22c55e; }
         &.credit { background: #faf5ff; color: #a855f7; }
         &.loan { background: #fef2f2; color: #ef4444; }
 
-        mat-icon { font-size: 1.25rem; }
+        mat-icon { font-size: 1.75rem; width: 1.75rem; height: 1.75rem; }
       }
 
       .account-titles {
         flex: 1;
-        .name { font-size: clamp(1rem, 2.2vw, 1.1rem); font-weight: 700; color: #0f172a; margin: 0; }
-        .institution { font-size: clamp(0.75rem, 1.8vw, 0.85rem); color: #64748b; margin: 0.125rem 0 0 0; }
+        .name { 
+            font-size: 1.125rem; 
+            font-weight: 700; 
+            color: #0f172a; 
+            margin: 0;
+            line-height: 1.3;
+        }
+        .institution { 
+            font-size: 0.875rem; 
+            color: #64748b; 
+            margin: 0.25rem 0 0 0; 
+            font-weight: 500;
+        }
       }
       
       .menu-action {
-        margin-top: -0.5rem;
+        margin-top: -0.25rem;
         margin-right: -0.5rem;
-        .more-btn { color: #94a3b8; }
+        .more-btn { 
+            color: #94a3b8;
+            opacity: 0; // Hide by default on desktop
+            transition: all 0.2s;
+            &:hover { background: #f1f5f9; color: #64748b; }
+        }
       }
     }
+    
+    // Show menu button on hover or mobile
+    &:hover .menu-action .more-btn { opacity: 1; }
+    @media (max-width: 768px) { .menu-action .more-btn { opacity: 1; } }
 
     .card-details {
       .balance-row {
         display: flex;
         justify-content: space-between;
         align-items: flex-end;
-        .label { font-size: clamp(0.65rem, 1.5vw, 0.75rem); font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+        .label { 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            color: #94a3b8; 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em; 
+            margin-bottom: 0.35rem;
+        }
         .amount {
-          font-size: clamp(1.25rem, 3vw, 1.5rem);
+          font-size: 1rem; // Larger balance
           font-weight: 800;
           color: #0f172a;
+          letter-spacing: -0.02em;
           &.negative { color: #ef4444; }
         }
       }
 
       .meta-row {
-        margin-top: 0.5rem;
+        margin-top: 0.75rem;
         text-align: right;
         .account-number {
           font-family: monospace;
           color: #cbd5e1;
           font-size: 0.75rem;
+          background: #f8fafc;
+          padding: 0.2rem 0.5rem;
+          border-radius: 6px;
         }
       }
     }
@@ -404,44 +467,63 @@
 // Empty State
 .empty-state-card {
   background: white;
-  border-radius: clamp(16px, 2vw, 20px);
-  padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 3vw, 2rem);
+  border-radius: 24px;
+  padding: clamp(3rem, 6vw, 5rem) 2rem;
   text-align: center;
-  border: 1px dashed #e2e8f0;
-  margin: 0 clamp(0.75rem, 2vw, 1rem);
+  border: 2px dashed #e2e8f0; // Thicker dash
+  margin: 0 clamp(1rem, 3vw, 1.5rem);
+  transition: border-color 0.3s;
+  
+  &:hover { border-color: #cbd5e1; }
   
   .empty-icon-box {
-    width: 80px;
-    height: 80px;
+    width: 96px;
+    height: 96px;
     background: #f8fafc;
-    border-radius: 20px;
+    border-radius: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1.5rem;
-    mat-icon { font-size: 2.5rem; width: 2.5rem; height: 2.5rem; color: #cbd5e1; }
+    margin: 0 auto 2rem;
+    mat-icon { font-size: 3rem; width: 3rem; height: 3rem; color: #cbd5e1; }
   }
 
-  .empty-title { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 0 0 0.5rem 0; }
-  .empty-text { color: #64748b; max-width: 300px; margin: 0 auto 2rem; }
-  .empty-btn { border-radius: 10px; padding: 0.5rem 2rem; }
+  .empty-title { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0 0 0.75rem 0; letter-spacing: -0.02em; }
+  .empty-text { color: #64748b; max-width: 400px; margin: 0 auto 2.5rem; font-size: 1.1rem; line-height: 1.6; }
+  .empty-btn { 
+      border-radius: 12px; 
+      padding: 0 2.5rem; 
+      height: 48px;
+      font-size: 1rem;
+      font-weight: 600;
+      box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+  }
 }
 
 // Custom Material Overrides
 ::ng-deep .standard-menu {
   background: white !important;
-  border-radius: 12px !important;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.08) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
   border: 1px solid #f1f5f9 !important;
+  min-width: 200px !important;
+  padding: 0.5rem !important;
   
   .mat-mdc-menu-item {
-    font-size: 0.9rem !important;
+    font-size: 0.95rem !important;
     font-weight: 500 !important;
     color: #475569 !important;
+    border-radius: 8px !important;
+    margin-bottom: 2px !important;
+    min-height: 44px !important;
     
-    mat-icon { color: #94a3b8 !important; }
+    mat-icon { color: #94a3b8 !important; margin-right: 1rem !important; }
     
-    &:hover { background: #f8fafc !important; }
-    &.delete-item { color: #ef4444 !important; mat-icon { color: #ef4444 !important; } }
+    &:hover { background: #f8fafc !important; color: #1e293b !important; mat-icon { color: #64748b !important; } }
+    &.delete-item { 
+        color: #ef4444 !important; 
+        mat-icon { color: #ef4444 !important; } 
+        &:hover { background: #fef2f2 !important; }
+    }
   }
 }
