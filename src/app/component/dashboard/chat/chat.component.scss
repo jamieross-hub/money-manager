@@ -1,4 +1,19 @@
-.typing-dots span{display:inline-block;width:.4rem;height:.4rem;margin:.05rem;border-radius:50%;background:#9ca3af;animation:blink 1s infinite}
+.typing-dots span {
+  display: inline-block;
+  width: .4rem;
+  height: .4rem;
+  margin: .05rem;
+  border-radius: 50%;
+  animation: blink 1s infinite;
+  
+  :host-context(.light-theme) & {
+    background: #9ca3af;
+  }
+  
+  :host-context(.dark-theme) & {
+    background: #64748b;
+  }
+}
 .typing-dots span:nth-child(2){animation-delay:.2s}
 .typing-dots span:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%{opacity:.2}50%{opacity:1}100%{opacity:.2}}
@@ -57,3 +72,79 @@
 		box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
 	}
 }
+
+// Dark Theme Support
+:host-context(.dark-theme) {
+  .chat-bubble-bot {
+    background-color: #1e293b !important;
+    color: #f1f5f9 !important;
+  }
+  
+  .input-bar-container {
+    background-color: inherit;
+    border-top: 1px solid #1e293b !important;
+  }
+  
+  .search-input-wrap {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    
+    input {
+      color: #f1f5f9 !important;
+      &::placeholder {
+        color: #475569 !important;
+      }
+    }
+  }
+
+  .voice-overlay {
+    background-color: rgba(30, 41, 59, 0.9) !important;
+    border-color: #334155 !important;
+    
+    .text-primary-700, .text-primary-600 {
+      color: #60a5fa !important;
+    }
+  }
+
+  .quick-action-chip {
+    &.bg-red-50 {
+      background-color: rgba(239, 68, 68, 0.1) !important;
+      color: #fca5a5 !important;
+      border: 1px solid rgba(239, 68, 68, 0.2) !important;
+      mat-icon { color: #fca5a5 !important; }
+    }
+    
+    &.border-green-100 {
+      background-color: rgba(34, 197, 94, 0.1) !important;
+      color: #4ade80 !important;
+      border: 1px solid rgba(34, 197, 94, 0.2) !important;
+      mat-icon { color: #4ade80 !important; }
+    }
+    
+    &.border-blue-100 {
+      background-color: rgba(59, 130, 246, 0.1) !important;
+      color: #60a5fa !important;
+      border: 1px solid rgba(59, 130, 246, 0.2) !important;
+      mat-icon { color: #60a5fa !important; }
+    }
+  }
+}
+
+// Light theme explicit styles for consistency
+:host-context(.light-theme) {
+  .chat-bubble-bot {
+    background-color: #f3f4f6 !important;
+    color: #1f2937 !important;
+  }
+  
+  .input-bar-container {
+    background-color: inherit;
+    border-top: 1px solid #f1f5f9 !important;
+  }
+  
+  .search-input-wrap {
+    background-color: #f9fafb !important;
+    border-color: #e5e7eb !important;
+  }
+}
+

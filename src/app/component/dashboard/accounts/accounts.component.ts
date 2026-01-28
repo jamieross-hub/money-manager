@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { Router } from '@angular/router';
 import { UserService } from 'src/app/util/service/db/user.service';
@@ -23,11 +23,36 @@ import { QuickActionsFabConfig } from 'src/app/util/components/floating-action-b
 import { ACCOUNT_GROUPS, AccountGroup, getAccountGroup } from 'src/app/util/config/account.config';
 import { Transaction } from 'src/app/util/models/transaction.model';
 import * as ProfileSelectors from '../../../store/profile/profile.selectors';
+import { BehaviorSubject, combineLatest, map, distinctUntilChanged } from 'rxjs';
+
+interface AccountViewModel {
+  account: Account;
+  icon: string;
+  balanceClass: string;
+  isLoan: boolean;
+  loanRemainingBalance?: number;
+  isCreditCard: boolean;
+  maskedId: string;
+  formattedName: string;
+  formattedInstitution: string;
+  formattedBalance: string;
+}
+
+interface GroupViewModel {
+  id: string;
+  name: string;
+  accounts: AccountViewModel[];
+  totalBalance: number;
+  formattedTotalBalance: string;
+  isCollapsed: boolean;
+  count: number;
+}
 
 @Component({
   selector: 'user-accounts',
   templateUrl: './accounts.component.html',
-  styleUrls: ['./accounts.component.scss']
+  styleUrls: ['./accounts.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AccountsComponent implements OnInit, OnDestroy {
 
@@ -61,7 +86,8 @@ export class AccountsComponent implements OnInit, OnDestroy {
   public expandedAccount: Account | null = null;
   public isListViewMode: boolean = false; // Add this property for list view toggle
   public transactions: Transaction[] = []; // Store transactions for access in template
-  public collapsedGroups: Map<string, boolean> = new Map(); // Track collapsed state of groups
+  public collapsedGroups$ = new BehaviorSubject<Map<string, boolean>>(new Map());
+  public groupedAccountsViewModel: GroupViewModel[] = [];
 
   // Private properties
   private userId: string = '';
@@ -76,7 +102,8 @@ export class AccountsComponent implements OnInit, OnDestroy {
     private readonly store: Store<AppState>,
     public readonly dateService: DateService,
     public readonly breakpointService: BreakpointService,
-    private readonly userService: UserService
+    private readonly userService: UserService,
+    private readonly cdr: ChangeDetectorRef
   ) {
 
     if (this.breakpointService.device.isMobile) {
@@ -99,6 +126,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.initializeComponent();
+    this.setupViewModel();
   }
 
   ngOnDestroy(): void {
@@ -156,6 +184,68 @@ export class AccountsComponent implements OnInit, OnDestroy {
       .subscribe(transactions => {
         this.transactions = transactions || [];
       });
+  }
+
+  private setupViewModel(): void {
+    combineLatest([
+      this.accounts$.pipe(distinctUntilChanged()),
+      this.collapsedGroups$.pipe(distinctUntilChanged()),
+      this.userCurrency$.pipe(distinctUntilChanged())
+    ]).pipe(
+      takeUntil(this.destroy$),
+      map(([accounts, collapsedMap, currencyCode]) => {
+        const currency = currencyCode || 'USD';
+
+        return ACCOUNT_GROUPS.map(group => {
+          const groupAccounts = accounts.filter(account => group.accountTypes.includes(account.type));
+          if (groupAccounts.length === 0) return null;
+
+          const totalBalance = groupAccounts.reduce((total, account) => {
+            let balance = account.balance;
+            if (account.type === AccountType.LOAN && account.loanDetails) {
+              balance = -(account.loanDetails.remainingBalance || 0);
+            }
+            return total + balance;
+          }, 0);
+
+          const accountViewModels: AccountViewModel[] = groupAccounts.map(account => {
+            const rawBalance = account.type === AccountType.LOAN && account.loanDetails
+              ? -(account.loanDetails.remainingBalance || 0)
+              : account.balance;
+
+            return {
+              account,
+              icon: this.getAccountIcon(account.type),
+              balanceClass: this.getBalanceClass(account),
+              isLoan: account.type === AccountType.LOAN && !!account.loanDetails,
+              loanRemainingBalance: account.loanDetails?.remainingBalance,
+              isCreditCard: account.type === AccountType.CREDIT,
+              maskedId: account.accountId.slice(-4),
+              formattedName: this.toTitleCase(account.name),
+              formattedInstitution: this.toTitleCase(account.institution || account.type),
+              formattedBalance: new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(rawBalance)
+            };
+          });
+
+          return {
+            id: group.id,
+            name: group.name,
+            accounts: accountViewModels,
+            totalBalance,
+            formattedTotalBalance: new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(totalBalance),
+            isCollapsed: collapsedMap.get(group.id) || false,
+            count: groupAccounts.length
+          } as GroupViewModel;
+        }).filter((g): g is GroupViewModel => g !== null);
+      })
+    ).subscribe(viewModel => {
+      this.groupedAccountsViewModel = viewModel;
+      this.cdr.markForCheck();
+    });
+  }
+
+  private toTitleCase(str: string): string {
+    return str ? str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : '';
   }
 
 
@@ -520,14 +610,17 @@ export class AccountsComponent implements OnInit, OnDestroy {
    * Toggle collapse state for a group
    */
   public toggleGroupCollapse(groupId: string): void {
-    const currentState = this.collapsedGroups.get(groupId) || false;
-    this.collapsedGroups.set(groupId, !currentState);
+    const currentMap = this.collapsedGroups$.value;
+    const newMap = new Map(currentMap);
+    const currentState = newMap.get(groupId) || false;
+    newMap.set(groupId, !currentState);
+    this.collapsedGroups$.next(newMap);
   }
 
   /**
    * Check if a group is collapsed
    */
   public isGroupCollapsed(groupId: string): boolean {
-    return this.collapsedGroups.get(groupId) || false;
+    return this.collapsedGroups$.value.get(groupId) || false;
   }
 }

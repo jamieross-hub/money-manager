@@ -10,8 +10,8 @@
 
           <!-- Text/HTML Messages -->
           <ng-container *ngIf="msg.type === 'text' || msg.type === 'html'">
-            <div class="px-4 py-2 my-2 rounded-2xl max-w-[80%] sm:max-w-[60%] text-sm sm:text-base bg-white"
-              [ngClass]="msg.sender === 'user' ? '!bg-primary-500 text-white rounded-br-md' : 'bg-gray-100 text-gray-800 rounded-bl-md'"
+            <div class="px-4 py-2 my-2 rounded-2xl max-w-[80%] sm:max-w-[60%] text-sm sm:text-base shadow-sm"
+              [ngClass]="msg.sender === 'user' ? '!bg-primary-500 text-white rounded-br-md shadow-primary-500/20' : 'chat-bubble-bot rounded-bl-md'"
               [innerHTML]="msg.text | safeHtml"
               style="-webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text;">
             </div>
@@ -49,7 +49,7 @@
 
         <!-- Typing Loader -->
         <div *ngIf="chatFacadeService.isTyping" class="flex justify-start fade-in">
-          <div class="bg-gray-100 px-4 py-2 rounded-2xl rounded-bl-md">
+          <div class="chat-bubble-bot px-4 py-2 rounded-2xl rounded-bl-md shadow-sm">
             <span class="typing-dots">
               <span></span><span></span><span></span>
             </span>
@@ -61,8 +61,7 @@
   </div>
 
   <!-- Input Bar -->
-  <div
-    class="p-4 mt-auto z-10 absolute bottom-0 left-0 w-full flex flex-col gap-3 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)] lg:px-20">
+  <div class="p-4 mt-auto z-10 absolute bottom-0 left-0 w-full flex flex-col gap-3 input-bar-container lg:px-20">
 
 
     <!-- Input Container -->
@@ -70,7 +69,7 @@
 
       <!-- Voice Interaction Overlay -->
       <div *ngIf="isRecording || voiceBlob"
-        class="flex items-center justify-between bg-primary-50 border border-primary-200 rounded-full px-4 py-2 shadow-md animate-fade-in">
+        class="flex items-center justify-between voice-overlay border rounded-full px-4 py-2 shadow-md animate-fade-in">
 
         <!-- Recording State -->
         <div *ngIf="isRecording" class="flex items-center gap-3 w-full">
@@ -88,7 +87,7 @@
 
           <div class="flex items-center gap-2">
             <button (click)="discardVoice()" matTooltip="Discharge"
-              class="p-2 border border-gray-300 text-gray-500 rounded-full hover:bg-gray-200 transition bg-white">
+              class="p-2 border border-slate-200 text-slate-500 rounded-full hover:bg-slate-100 transition search-input-wrap">
               <mat-icon>close</mat-icon>
             </button>
             <button (click)="confirmVoice()" matTooltip="Okay"
@@ -109,7 +108,7 @@
 
       <!-- Standard Input Bar (Hidden during voice interaction) -->
       <div *ngIf="!isRecording && !voiceBlob"
-        class="flex items-center bg-gray-50 border border-gray-200 rounded-full px-2 py-1 focus-within:ring-2 focus-within:ring-primary-100 focus-within:border-primary-300 transition shadow-sm">
+        class="flex items-center search-input-wrap border rounded-full px-2 py-1 focus-within:ring-2 focus-within:ring-primary-100 focus-within:border-primary-300 transition shadow-sm">
 
         <!-- Attachment Button -->
         <button (click)="breakpointService.device.isMobile ? onMicClick() : onAttachmentClick()"
@@ -123,7 +122,7 @@
         <!-- Input Field with Autocomplete -->
         <div class="flex-1 relative">
           <!-- Suggestion Overlay -->
-          <div class="absolute inset-0 px-2 text-sm sm:text-base text-gray-300 flex items-center"
+          <div class="absolute inset-0 px-2 text-sm sm:text-base text-slate-400 opacity-40 flex items-center"
             [class.pointer-events-none]="!suggestion" [class.cursor-pointer]="suggestion">
             <span class="invisible">{{chatInput.value}}</span><span>{{suggestion}}</span>
           </div>
@@ -132,7 +131,7 @@
           <input #chatInput type="text" placeholder="Ask AI or enter transaction..."
             (keydown.enter)="sendMessage(chatInput)" (keydown)="onTabKey($event, chatInput)"
             (input)="onInputChange(chatInput)" (click)="completeSuggestion(chatInput)"
-            class="w-full bg-transparent border-none focus:outline-none px-2 text-sm sm:text-base text-gray-700 placeholder-gray-400 relative z-10">
+            class="w-full bg-transparent border-none focus:outline-none px-2 text-sm sm:text-base relative z-10">
         </div>
         <!-- Mic Button -->
         <button *ngIf="!breakpointService.device.isMobile" (click)="onMicClick()"

@@ -13,6 +13,10 @@
     font-family: 'Poppins', system-ui, sans-serif;
     font-weight: 600;
     letter-spacing: -0.025em;
+
+    .dark-theme & {
+      color: #f1f5f9;
+    }
   }
   
   /* Financial data styling */
@@ -144,6 +148,17 @@ body {
   text-rendering: optimizeLegibility;
   overscroll-behavior: none;
   box-sizing: border-box;
+  
+  &.light-theme {
+    background-color: #ffffff;
+    color: #1e293b;
+  }
+
+  &.dark-theme {
+    background-color: #020617;
+    color: #f1f5f9;
+  }
+
   /* Prevent pull-to-refresh */
  
   -webkit-user-select: none;
@@ -250,7 +265,8 @@ app-root {
 
 .header-title {
   font-size: clamp(1rem, 2.5vw, 1.5rem);
-  color: gray;
+  .light-theme & { color: #64748b; }
+  .dark-theme & { color: #94a3b8; }
 }
 
 .header-amount {
@@ -273,9 +289,10 @@ app-root {
 }
 
 .item-subtitle {
-  color: gray;
   font-family: 'Inter', system-ui, sans-serif;
   font-weight: 400;
+  .light-theme & { color: #64748b; }
+  .dark-theme & { color: #94a3b8; }
 }
 
 .item-amount {
@@ -301,7 +318,8 @@ app-footer {
 }
 
 app-chat {
-  background-color: #f0f2f4;
+  .light-theme & { background-color: #f0f2f4; }
+  .dark-theme & { background-color: #020617; }
 }
 
 .safe-h-screen {

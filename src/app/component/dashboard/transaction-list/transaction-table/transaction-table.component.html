@@ -1,8 +1,8 @@
 <!-- Table Container -->
-<div class="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col"
+<div class="table-container-wrapper rounded-lg border overflow-hidden flex flex-col"
   [ngClass]="{'max-h-[calc(75vh-210px)]': isHome && !breakpointService.device.isTablePortrait,'max-h-[65vh]':isHome && breakpointService.device.isTablePortrait,'max-h-[75vh]': !isHome}">
   <!-- View Toggle Header -->
-  <div class="flex justify-between items-center p-3 border-b border-gray-200 bg-gray-50"
+  <div class="header-section flex justify-between items-center p-3 border-b"
     *ngIf="hasSelection() && (breakpointService.device.isTablePortrait || breakpointService.device.isDesktop) && !isHome">
     <!-- <div class="flex items-center space-x-2">
       <span class="text-sm font-medium text-gray-700">View:</span>
@@ -237,8 +237,7 @@
   <div *ngIf="isListView" class="hidden sm:flex flex-1 overflow-auto list-container">
     <div class="w-full p-4 space-y-3">
       @for (element of dataSource.data; track element?.id) {
-      <div
-        class="list-item bg-white border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+      <div class="list-item list-item-bg border rounded-lg p-4 hover-effect transition-colors cursor-pointer"
         (click)="onRowClick(element)">
         <div class="flex items-center justify-between">
           <!-- Left Section -->
@@ -396,8 +395,7 @@
   <div *ngIf="isListView" class="sm:hidden flex-1 overflow-auto max-h-full mobile-list-view">
     <div class="p-3 space-y-2">
       @for (element of dataSource.data; track element.id) {
-      <div
-        class="list-item bg-white border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors cursor-pointer"
+      <div class="list-item list-item-bg border rounded-lg p-3 hover-effect transition-colors cursor-pointer"
         (click)="onRowClick(element)">
         <div class="flex items-center space-x-3">
           <!-- Category Icon -->

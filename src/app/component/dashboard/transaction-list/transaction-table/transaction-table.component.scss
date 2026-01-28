@@ -1,29 +1,57 @@
 // Table Container Styles
 .table-container {
 
-  // Custom scrollbar styling
-  &::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 4px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
-    
-    &:hover {
-      background: #94a3b8;
+  // Custom scrollbar styling - Light Theme
+  :host-context(.light-theme) & {
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
     }
+
+    &::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+      
+      &:hover {
+        background: #94a3b8;
+      }
+    }
+
+    // Firefox scrollbar
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
   }
 
-  // Firefox scrollbar
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 #f1f5f9;
+  // Custom scrollbar styling - Dark Theme
+  :host-context(.dark-theme) & {
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 4px;
+      
+      &:hover {
+        background: #64748b;
+      }
+    }
+
+    // Firefox scrollbar
+    scrollbar-width: thin;
+    scrollbar-color: #475569 #1e293b;
+  }
 
   // Responsive container
   @media (max-width: 768px) {
@@ -46,10 +74,7 @@ table {
 
 // Header Styles
 .mat-header-cell {
-  background: #f8fafc;
-  border-bottom: 2px solid #e2e8f0;
   font-weight: 600;
-  color: #374151;
   padding: 12px 16px;
   position: sticky;
   top: 0;
@@ -58,12 +83,30 @@ table {
   transition: all 0.2s ease;
   white-space: nowrap;
   
-  @media (min-width: 768px) {
-    padding: 16px 24px;
+  // Light theme
+  :host-context(.light-theme) & {
+    background: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
+    color: #374151;
+    
+    &:hover {
+      background: #f1f5f9;
+    }
   }
   
-  &:hover {
-    background: #f1f5f9;
+  // Dark theme
+  :host-context(.dark-theme) & {
+    background: #1e293b;
+    border-bottom: 2px solid #334155;
+    color: #e2e8f0;
+    
+    &:hover {
+      background: #334155;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    padding: 16px 24px;
   }
   
   .flex {
@@ -80,7 +123,14 @@ table {
     font-size: 14px;
     width: 14px;
     height: 14px;
-    color: #6b7280;
+    
+    :host-context(.light-theme) & {
+      color: #6b7280;
+    }
+    
+    :host-context(.dark-theme) & {
+      color: #94a3b8;
+    }
     
     @media (min-width: 768px) {
       font-size: 16px;
@@ -137,8 +187,15 @@ table {
 // Cell Styles
 .mat-cell {
   padding: 12px 16px;
-  border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
+  
+  :host-context(.light-theme) & {
+    border-bottom: 1px solid #f1f5f9;
+  }
+  
+  :host-context(.dark-theme) & {
+    border-bottom: 1px solid #334155;
+  }
   
   @media (min-width: 768px) {
     padding: 16px 24px;
@@ -154,18 +211,38 @@ table {
   transition: all 0.2s ease;
   border-bottom: 1px solid transparent; // Prevent border collapse jumping
 
-  // Alternate striping for readability
-  &:nth-child(even) {
-    background-color: #f8fafc; // A very subtle slate/gray
-  }
+  // Light theme
+  :host-context(.light-theme) & {
+    // Alternate striping for readability
+    &:nth-child(even) {
+      background-color: #f8fafc;
+    }
 
-  // Hover elevation
-  &:hover {
-    background-color: #ffffff !important; // Ensure hover is white to make shadow pop
-    transform: translateY(-2px) scale(1.001); // Subtle lift
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); // Tailwind shadow-md equivalent
-    z-index: 10;
-    position: relative; // Needed for z-index
+    // Hover elevation
+    &:hover {
+      background-color: #ffffff !important;
+      transform: translateY(-2px) scale(1.001);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      z-index: 10;
+      position: relative;
+    }
+  }
+  
+  // Dark theme
+  :host-context(.dark-theme) & {
+    // Alternate striping for readability
+    &:nth-child(even) {
+      background-color: #1e293b;
+    }
+
+    // Hover elevation
+    &:hover {
+      background-color: #334155 !important;
+      transform: translateY(-2px) scale(1.001);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+      z-index: 10;
+      position: relative;
+    }
   }
 }
 
@@ -379,17 +456,32 @@ table {
 // Mobile Card View Styles
 .mobile-card-view {
   .transaction-card {
-    background: white;
-    border: 1px solid #e5e7eb;
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
     
-    &:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      transform: translateY(-1px);
+    // Light theme
+    :host-context(.light-theme) & {
+      background: white;
+      border: 1px solid #e5e7eb;
+      
+      &:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-1px);
+      }
+    }
+    
+    // Dark theme
+    :host-context(.dark-theme) & {
+      background: #1e293b;
+      border: 1px solid #334155;
+      
+      &:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        transform: translateY(-1px);
+      }
     }
     
     .card-header {
@@ -422,14 +514,28 @@ table {
         .transaction-info {
           .payee-name {
             font-weight: 600;
-            color: #1f2937;
             font-size: 14px;
             margin-bottom: 2px;
+            
+            :host-context(.light-theme) & {
+              color: #1f2937;
+            }
+            
+            :host-context(.dark-theme) & {
+              color: #e2e8f0;
+            }
           }
           
           .category-name {
             font-size: 12px;
-            color: #6b7280;
+            
+            :host-context(.light-theme) & {
+              color: #6b7280;
+            }
+            
+            :host-context(.dark-theme) & {
+              color: #94a3b8;
+            }
           }
         }
       }
@@ -453,7 +559,14 @@ table {
         
         .date {
           font-size: 11px;
-          color: #9ca3af;
+          
+          :host-context(.light-theme) & {
+            color: #9ca3af;
+          }
+          
+          :host-context(.dark-theme) & {
+            color: #64748b;
+          }
         }
       }
     }
@@ -601,13 +714,23 @@ table {
 
 // Footer Styles
 .fixed-footer {
-  background: #f9fafb;
-  border-top: 1px solid #e5e7eb;
   padding: 10px 12px;
   position: sticky;
   bottom: 0;
   z-index: 10;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  
+  // Light theme
+  :host-context(.light-theme) & {
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+  }
+  
+  // Dark theme
+  :host-context(.dark-theme) & {
+    background: #1e293b;
+    border-top: 1px solid #334155;
+  }
   
   
  
@@ -644,10 +767,17 @@ table {
     }
     
     mat-icon {
-      color: #6b7280;
       font-size: 14px;
       width: 14px;
       height: 14px;
+      
+      :host-context(.light-theme) & {
+        color: #6b7280;
+      }
+      
+      :host-context(.dark-theme) & {
+        color: #94a3b8;
+      }
       
       @media (max-width: 1024px) {
         font-size: 12px;
@@ -665,7 +795,14 @@ table {
     .count-text {
       font-size: 13px;
       font-weight: 500;
-      color: #374151;
+      
+      :host-context(.light-theme) & {
+        color: #374151;
+      }
+      
+      :host-context(.dark-theme) & {
+        color: #e2e8f0;
+      }
       
       @media (max-width: 1024px) {
         font-size: 12px;
@@ -741,7 +878,14 @@ table {
       
       .total-label {
         font-size: 11px;
-        color: #6b7280;
+        
+        :host-context(.light-theme) & {
+          color: #6b7280;
+        }
+        
+        :host-context(.dark-theme) & {
+          color: #94a3b8;
+        }
         
         @media (max-width: 1024px) {
           font-size: 10px;
@@ -784,9 +928,16 @@ table {
     }
     
     .net-separator {
-      border-left: 1px solid #d1d5db;
       padding-left: 16px;
       margin-left: 6px;
+      
+      :host-context(.light-theme) & {
+        border-left: 1px solid #d1d5db;
+      }
+      
+      :host-context(.dark-theme) & {
+        border-left: 1px solid #475569;
+      }
       
       @media (max-width: 1200px) {
         padding-left: 12px;
@@ -898,5 +1049,155 @@ table {
   .actions-cell .action-button {
     width: 28px;
     height: 28px;
+  }
+}
+
+// Theme-aware utility classes
+.table-container-wrapper {
+  :host-context(.light-theme) & {
+    background: white;
+    border-color: #e5e7eb;
+  }
+  
+  :host-context(.dark-theme) & {
+    background: #0f172a;
+    border-color: #334155;
+  }
+}
+
+.header-section {
+  :host-context(.light-theme) & {
+    background: #f9fafb;
+    border-color: #e5e7eb;
+  }
+  
+  :host-context(.dark-theme) & {
+    background: #1e293b;
+    border-color: #334155;
+  }
+}
+
+.list-item-bg {
+  :host-context(.light-theme) & {
+    background: white;
+    border-color: #e5e7eb;
+  }
+  
+  :host-context(.dark-theme) & {
+    background: #1e293b;
+    border-color: #334155;
+  }
+}
+
+.hover-effect {
+  :host-context(.light-theme) & {
+    &:hover {
+      background: #f9fafb;
+    }
+  }
+  
+  :host-context(.dark-theme) & {
+    &:hover {
+      background: #334155;
+    }
+  }
+}
+
+// List view items
+.list-container {
+  .list-item {
+    :host-context(.light-theme) & {
+      background: white;
+      border-color: #e5e7eb;
+      
+      &:hover {
+        background: #f9fafb;
+      }
+    }
+    
+    :host-context(.dark-theme) & {
+      background: #1e293b;
+      border-color: #334155;
+      
+      &:hover {
+        background: #334155;
+      }
+    }
+  }
+}
+
+// Category icon background
+.category-icon {
+  :host-context(.light-theme) & {
+    background: #f3f4f6;
+  }
+  
+  :host-context(.dark-theme) & {
+    background: #334155;
+  }
+}
+
+// Text colors
+.text-gray-900 {
+  :host-context(.dark-theme) & {
+    color: #e2e8f0 !important;
+  }
+}
+
+.text-gray-600 {
+  :host-context(.dark-theme) & {
+    color: #94a3b8 !important;
+  }
+}
+
+.text-gray-500 {
+  :host-context(.dark-theme) & {
+    color: #64748b !important;
+  }
+}
+
+.text-gray-400 {
+  :host-context(.dark-theme) & {
+    color: #475569 !important;
+  }
+}
+
+.text-gray-700 {
+  :host-context(.dark-theme) & {
+    color: #cbd5e0 !important;
+  }
+}
+
+// Badge backgrounds
+.bg-gray-100 {
+  :host-context(.dark-theme) & {
+    background: #334155 !important;
+  }
+}
+
+.text-gray-800 {
+  :host-context(.dark-theme) & {
+    color: #e2e8f0 !important;
+  }
+}
+
+// Empty state
+.empty-state {
+  mat-icon {
+    :host-context(.dark-theme) & {
+      color: #475569;
+    }
+  }
+  
+  h3 {
+    :host-context(.dark-theme) & {
+      color: #e2e8f0;
+    }
+  }
+  
+  p {
+    :host-context(.dark-theme) & {
+      color: #94a3b8;
+    }
   }
 }

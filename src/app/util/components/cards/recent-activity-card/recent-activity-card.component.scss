@@ -1,75 +1,135 @@
 .recent-activity-card {
   transition: all 0.3s ease;
-  
-  // &:hover {
-  //   transform: translateY(-2px);
-  //   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  // }
-  
+
   .mat-card {
     border-radius: 12px;
     overflow: hidden;
   }
-  
-  // Animation for transaction items
-  .transaction-item {
-    transition: all 0.2s ease;
-    
+}
+
+.activity-card-container {
+  :host-context(.light-theme) & {
+    background-color: #ffffff;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  }
+
+  :host-context(.dark-theme) & {
+    background-color: #0f172a;
+    border: 1px solid #1e293b !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.activity-card-title {
+  :host-context(.light-theme) & { color: #111827; }
+  :host-context(.dark-theme) & { color: #f8fafc; }
+}
+
+.activity-card-subtitle, .loading-text, .item-category, .empty-text, .footer-text {
+  :host-context(.light-theme) & { color: #4b5563; }
+  :host-context(.dark-theme) & { color: #94a3b8; }
+}
+
+.header-icon-wrap {
+  background-color: rgba(249, 115, 22, 0.1);
+}
+
+.header-icon {
+  :host-context(.light-theme) & { color: #ea580c; }
+  :host-context(.dark-theme) & { color: #fb923c; }
+}
+
+.loading-icon-wrap {
+  :host-context(.light-theme) & { background-color: #dbeafe; }
+  :host-context(.dark-theme) & { background-color: rgba(30, 58, 138, 0.2); }
+}
+
+.loading-spinner {
+  :host-context(.light-theme) & { border-color: #2563eb; }
+  :host-context(.dark-theme) & { border-color: #60a5fa; }
+}
+
+.error-icon-wrap {
+  :host-context(.light-theme) & { background-color: #fee2e2; }
+  :host-context(.dark-theme) & { background-color: rgba(127, 29, 29, 0.2); }
+}
+
+.error-icon, .error-text {
+  :host-context(.light-theme) & { color: #dc2626; }
+  :host-context(.dark-theme) & { color: #f87171; }
+}
+
+.activity-item {
+  :host-context(.light-theme) & {
+    background-color: #f9fafb;
     &:hover {
-      transform: translateX(4px);
+      background-color: #f3f4f6;
+      border-color: #e5e7eb;
     }
   }
-  
-  // Custom scrollbar for long lists
-  .transactions-list {
-    max-height: 400px;
-    overflow-y: auto;
-    padding-right: 4px; // Prevent content hiding behind scrollbar
 
-    @media (max-width: 640px) {
-      max-height: 300px; // Smaller height on mobile to prevent full screen takeover
+  :host-context(.dark-theme) & {
+    background-color: rgba(30, 41, 59, 0.5);
+    &:hover {
+      background-color: #1e293b;
+      border-color: #334155;
     }
-    
-    &::-webkit-scrollbar {
-      width: 4px;
-    }
-    
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    
-    &::-webkit-scrollbar-thumb {
-      background: rgba(156, 163, 175, 0.3);
-      border-radius: 2px;
-      
-      &:hover {
-        background: rgba(156, 163, 175, 0.5);
-      }
-    }
-
-    // Firefox scrollbar
-    scrollbar-width: thin;
-    scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
   }
-  
-  // Responsive adjustments
+}
+
+.item-icon-box {
+  :host-context(.light-theme) & {
+    background-color: #ffffff;
+    border: 1px solid #f3f4f6;
+  }
+
+  :host-context(.dark-theme) & {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+  }
+}
+
+.item-payee, .empty-title {
+  :host-context(.light-theme) & { color: #111827; }
+  :host-context(.dark-theme) & { color: #f1f5f9; }
+}
+
+.item-date {
+  :host-context(.light-theme) & { color: #9ca3af; }
+  :host-context(.dark-theme) & { color: #64748b; }
+}
+
+.empty-icon-wrap {
+  :host-context(.light-theme) & { background-color: #f3f4f6; }
+  :host-context(.dark-theme) & { background-color: #1e293b; }
+}
+
+.empty-icon {
+  color: #9ca3af;
+}
+
+.footer-divider {
+  :host-context(.light-theme) & { border-color: #f1f5f9; }
+  :host-context(.dark-theme) & { border-color: #1e293b; }
+}
+
+// Custom scrollbar for long lists
+.transactions-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+
   @media (max-width: 640px) {
-    .transaction-item {
-      padding: 0.75rem;
-    }
-    
-    .transaction-icon {
-      width: 1.5rem;
-      height: 1.5rem;
-    }
+    max-height: 300px;
   }
   
-  // Dark mode enhancements
-  .dark & {
-    .transaction-item {
-      &:hover {
-        background-color: rgba(75, 85, 99, 0.8);
-      }
-    }
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.3);
+    border-radius: 2px;
+    &:hover { background: rgba(156, 163, 175, 0.5); }
   }
-} 
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+}

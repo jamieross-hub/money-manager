@@ -13,153 +13,179 @@
 
 	<div class="accounts-container max-w-8xl mx-auto">
 		<!-- Error Message Display -->
-		<div *ngIf="errorMessage"
-			class="error-message mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between shadow-sm">
-			<p class="text-red-700 text-sm font-medium">{{ errorMessage }}</p>
-			<button mat-icon-button (click)="clearError()" class="error-close-button text-red-500">
-				<mat-icon>close</mat-icon>
-			</button>
-		</div>
+		<mat-card *ngIf="errorMessage" class="error-message mb-4 shadow-sm">
+			<mat-card-content class="flex items-center justify-between p-3">
+				<p class="error-text text-sm font-medium m-0">{{ errorMessage }}</p>
+				<button mat-icon-button (click)="clearError()" class="error-close-button text-red-500">
+					<mat-icon>close</mat-icon>
+				</button>
+			</mat-card-content>
+		</mat-card>
 
 		<!-- Main Summary Card -->
 		<app-account-summary-card></app-account-summary-card>
 
 		<!-- Category Summary Grid -->
 		<div class="category-summary-grid mt-5">
-			<div class="mini-card bank">
-				<div class="card-icon-container">
-					<div class="icon-bg bank">
-						<mat-icon>account_balance</mat-icon>
+			<mat-card class="mini-card bank">
+				<mat-card-content>
+					<div class="card-icon-container">
+						<div class="icon-bg bank">
+							<mat-icon>account_balance</mat-icon>
+						</div>
 					</div>
-				</div>
-				<div class="card-info">
-					<span class="label">Banks</span>
-					<span class="value">{{ bankBalance$ | async | currency : { currency: (userCurrency$ | async) ||
-						'USD' } }}</span>
-				</div>
-			</div>
-			<div class="mini-card cash">
-				<div class="card-icon-container">
-					<div class="icon-bg cash">
-						<mat-icon>payments</mat-icon>
+					<div class="card-info">
+						<span class="label">Banks</span>
+						<span class="value">{{ bankBalance$ | async | currency : { currency: (userCurrency$ | async) ||
+							'USD' } }}</span>
 					</div>
-				</div>
-				<div class="card-info">
-					<span class="label">Cash</span>
-					<span class="value">{{ cashBalance$ | async | currency : { currency: (userCurrency$ | async) ||
-						'USD' } }}</span>
-				</div>
-			</div>
-			<div class="mini-card credit">
-				<div class="card-icon-container">
-					<div class="icon-bg credit">
-						<mat-icon>credit_card</mat-icon>
+				</mat-card-content>
+			</mat-card>
+			<mat-card class="mini-card cash">
+				<mat-card-content>
+					<div class="card-icon-container">
+						<div class="icon-bg cash">
+							<mat-icon>payments</mat-icon>
+						</div>
 					</div>
-				</div>
-				<div class="card-info">
-					<span class="label">Credit</span>
-					<span class="value">{{ creditBalance$ | async | currency : { currency: (userCurrency$ | async) ||
-						'USD' } }}</span>
-				</div>
-			</div>
-			<div class="mini-card investment">
-				<div class="card-icon-container">
-					<div class="icon-bg investment">
-						<mat-icon>trending_up</mat-icon>
+					<div class="card-info">
+						<span class="label">Cash</span>
+						<span class="value">{{ cashBalance$ | async | currency : { currency: (userCurrency$ | async) ||
+							'USD' } }}</span>
 					</div>
-				</div>
-				<div class="card-info">
-					<span class="label">Investments</span>
-					<span class="value">{{ investmentBalance$ | async | currency : { currency: (userCurrency$ | async)
-						|| 'USD' } }}</span>
-				</div>
-			</div>
+				</mat-card-content>
+			</mat-card>
+			<mat-card class="mini-card credit">
+				<mat-card-content>
+					<div class="card-icon-container">
+						<div class="icon-bg credit">
+							<mat-icon>credit_card</mat-icon>
+						</div>
+					</div>
+					<div class="card-info">
+						<span class="label">Credit</span>
+						<span class="value">{{ creditBalance$ | async | currency : { currency: (userCurrency$ | async)
+							||
+							'USD' } }}</span>
+					</div>
+				</mat-card-content>
+			</mat-card>
+			<mat-card class="mini-card investment">
+				<mat-card-content>
+					<div class="card-icon-container">
+						<div class="icon-bg investment">
+							<mat-icon>trending_up</mat-icon>
+						</div>
+					</div>
+					<div class="card-info">
+						<span class="label">Investments</span>
+						<span class="value">{{ investmentBalance$ | async | currency : { currency: (userCurrency$ |
+							async)
+							|| 'USD' } }}</span>
+					</div>
+				</mat-card-content>
+			</mat-card>
 		</div>
 
-		<!-- Grouped Accounts List -->
-		<div *ngIf="(accounts$ | async) as accounts" class="accounts-list-container">
-			@for (groupData of getGroupedAccounts(accounts); track groupData.group.id) {
-			<div class="account-group">
-				<div class="group-header">
-					<button mat-icon-button class="collapse-btn" (click)="toggleGroupCollapse(groupData.group.id)">
-						<mat-icon [class.rotated]="isGroupCollapsed(groupData.group.id)">expand_more</mat-icon>
-					</button>
+		<!-- Grouped Accounts List (Simplified for Performance) -->
+		<div *ngIf="groupedAccountsViewModel.length > 0" class="accounts-accordion-list">
+			@for (groupData of groupedAccountsViewModel; track groupData.id) {
+			<div class="account-group-container" [class.is-expanded]="!groupData.isCollapsed">
+				<div class="group-header" (click)="toggleGroupCollapse(groupData.id)">
 					<div class="group-info">
-						<p class="group-name">{{ groupData.group.name }}</p>
-						<span class="count">{{ groupData.accounts.length }}</span>
+						<p class="group-name">{{ groupData.name }}</p>
+						<span class="count">{{ groupData.count }}</span>
 					</div>
 					<div class="group-right">
 						<span class="group-balance" [class.negative]="groupData.totalBalance < 0">
-							{{ groupData.totalBalance | currency }}
+							{{ groupData.formattedTotalBalance }}
 						</span>
-						<button mat-button class="add-inline-btn" (click)="addAccount()">
-							<mat-icon>add</mat-icon>
-							<span>Add</span>
-						</button>
+						<mat-icon class="expansion-arrow">{{ groupData.isCollapsed ? 'expand_more' : 'expand_less'
+							}}</mat-icon>
 					</div>
 				</div>
 
-				<div class="accounts-grid" *ngIf="!isGroupCollapsed(groupData.group.id)">
-					@for (account of groupData.accounts; track account.accountId) {
-					<div class="account-card" [class.negative-border]="getBalanceClass(account) === 'negative-balance'">
-						<div class="card-top">
-							<div class="account-icon-wrap" [class]="account.type">
-								<mat-icon>{{ getAccountIcon(account.type) }}</mat-icon>
-							</div>
-							<div class="account-titles">
-								<p class="name">{{ account.name | titlecase }}</p>
-								<p class="institution">{{ account.institution || account.type | titlecase }}</p>
-							</div>
-							<div class="menu-action">
-								<button mat-icon-button [matMenuTriggerFor]="menu" class="more-btn">
-									<mat-icon>more_vert</mat-icon>
-								</button>
-								<mat-menu #menu="matMenu" class="standard-menu">
-									<button mat-menu-item (click)="viewAccountStatement(account)">
-										<mat-icon>receipt_long</mat-icon>
-										<span>View Statement</span>
-									</button>
-									<button mat-menu-item (click)="editAccount(account)">
-										<mat-icon>edit</mat-icon>
-										<span>Edit</span>
-									</button>
-									<button mat-menu-item (click)="deleteAccount(account)" class="delete-item">
-										<mat-icon>delete</mat-icon>
-										<span>Delete</span>
-									</button>
-								</mat-menu>
-							</div>
-						</div>
-						<div class="card-details">
-							<div class="balance-row">
-								<span class="label">Balance</span>
-								<span class="amount" [class.negative]="isLoanAccount(account) || account.balance < 0">
-									{{ isLoanAccount(account) ? (-(getLoanDetails(account)?.remainingBalance || 0) |
-									currency) : account.balance | currency }}
-								</span>
-							</div>
-							<div class="meta-row" *ngIf="isLoanAccount(account) || isCreditCardAccount(account)">
-								<span class="account-number">****{{ account.accountId.slice(-4) }}</span>
-							</div>
-						</div>
+				<div class="panel-content" *ngIf="!groupData.isCollapsed">
+					<div class="accounts-grid">
+						@for (accountVM of groupData.accounts; track accountVM.account.accountId) {
+						<mat-card class="account-card"
+							[class.negative-border]="accountVM.balanceClass === 'negative-balance'">
+							<mat-card-content>
+								<div class="card-top">
+									<div class="account-icon-wrap" [class]="accountVM.account.type">
+										<mat-icon>{{ accountVM.icon }}</mat-icon>
+									</div>
+									<div class="account-titles">
+										<p class="name">{{ accountVM.formattedName }}</p>
+										<p class="institution">{{ accountVM.formattedInstitution }}</p>
+									</div>
+									<div class="menu-action">
+										<button mat-icon-button [matMenuTriggerFor]="sharedMenu"
+											[matMenuTriggerData]="{ account: accountVM.account }" class="more-btn">
+											<mat-icon>more_vert</mat-icon>
+										</button>
+									</div>
+								</div>
+								<div class="card-details">
+									<div class="balance-row">
+										<span class="label">Balance</span>
+										<span class="amount"
+											[class.negative]="accountVM.isLoan || accountVM.account.balance < 0">
+											{{ accountVM.formattedBalance }}
+										</span>
+									</div>
+									<div class="meta-row" *ngIf="accountVM.isLoan || accountVM.isCreditCard">
+										<span class="account-number">****{{ accountVM.maskedId }}</span>
+									</div>
+								</div>
+							</mat-card-content>
+						</mat-card>
+						}
 					</div>
-					}
+
+					<div class="action-row">
+						<button mat-button color="primary" class="add-inline-btn"
+							(click)="addAccount(); $event.stopPropagation()">
+							<mat-icon>add</mat-icon>
+							<span>Add Account</span>
+						</button>
+					</div>
 				</div>
 			</div>
 			}
 		</div>
 
+		<!-- Shared Context Menu for all cards -->
+		<mat-menu #sharedMenu="matMenu" class="standard-menu">
+			<ng-template matMenuContent let-account="account">
+				<button mat-menu-item (click)="viewAccountStatement(account)">
+					<mat-icon>receipt_long</mat-icon>
+					<span>View Statement</span>
+				</button>
+				<button mat-menu-item (click)="editAccount(account)">
+					<mat-icon>edit</mat-icon>
+					<span>Edit</span>
+				</button>
+				<button mat-menu-item (click)="deleteAccount(account)" class="delete-item">
+					<mat-icon>delete</mat-icon>
+					<span>Delete</span>
+				</button>
+			</ng-template>
+		</mat-menu>
+
 		<!-- Empty State -->
-		<div *ngIf="(accounts$ | async)?.length === 0" class="empty-state-card">
-			<div class="empty-icon-box">
-				<mat-icon>account_balance</mat-icon>
-			</div>
-			<p class="empty-title">No accounts yet</p>
-			<p class="empty-text">Add your first account to get started tracking your net worth</p>
-			<button mat-flat-button color="primary" (click)="addAccount()" class="empty-btn">
-				<mat-icon>add</mat-icon>
-				Add First Account
-			</button>
-		</div>
+		<mat-card *ngIf="(accounts$ | async)?.length === 0" class="empty-state-card mt-5">
+			<mat-card-content>
+				<div class="empty-icon-box">
+					<mat-icon>account_balance</mat-icon>
+				</div>
+				<p class="empty-title">No accounts yet</p>
+				<p class="empty-text">Add your first account to get started tracking your net worth</p>
+				<button mat-flat-button color="primary" (click)="addAccount()" class="empty-btn">
+					<mat-icon>add</mat-icon>
+					Add First Account
+				</button>
+			</mat-card-content>
+		</mat-card>
 	</div>
 </div>

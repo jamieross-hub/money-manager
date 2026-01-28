@@ -4,12 +4,20 @@
 
 .accounts-page {
   min-height: 100vh;
-  background-color: #f8fafc; // Off-white/slate-50
-  color: #1e293b; // slate-800
   padding: clamp(1rem, 3vw, 2.5rem) 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  :host-context(.light-theme) & {
+    background-color: #f8fafc;
+    color: #1e293b;
+  }
+
+  :host-context(.dark-theme) & {
+    background-color: #020617;
+    color: #f1f5f9;
+  }
 }
 
 // Global Animation
@@ -20,6 +28,37 @@
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+// Error Message
+mat-card.error-message {
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+
+  :host-context(.light-theme) & {
+    background-color: #fef2f2;
+    border: 1px solid #fee2e2;
+  }
+
+  :host-context(.dark-theme) & {
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+  }
+
+  .mat-mdc-card-content {
+    padding: 0.75rem 1rem !important;
+  }
+
+  .error-text {
+    :host-context(.light-theme) & {
+      color: #b91c1c;
+    }
+
+    :host-context(.dark-theme) & {
+      color: #fca5a5;
+    }
+  }
 }
 
 // Page Header
@@ -34,17 +73,31 @@
     .page-title {
       font-size: clamp(1.5rem, 4vw, 2rem); // Slightly larger
       font-weight: 800; // Heavier weight
-      color: #0f172a;
       margin: 0;
       letter-spacing: -0.03em; // Tighter tracking
       line-height: 1.1;
+
+      :host-context(.light-theme) & {
+        color: #0f172a;
+      }
+
+      :host-context(.dark-theme) & {
+        color: #f8fafc;
+      }
     }
     
     .page-description {
-      color: #64748b;
       font-size: clamp(0.9rem, 2vw, 1rem);
       margin: 0.5rem 0 0 0;
       font-weight: 400;
+
+      :host-context(.light-theme) & {
+        color: #64748b;
+      }
+
+      :host-context(.dark-theme) & {
+        color: #94a3b8;
+      }
     }
   }
 
@@ -191,22 +244,42 @@
   margin-bottom: clamp(2rem, 4vw, 3rem);
   padding: 0 0;
 
-  .mini-card {
-    background: white;
-    padding: clamp(1.25rem, 3vw, 1.5rem);
-    border-radius: 16px; // Consistent radius
-    border: 1px solid rgba(241, 245, 249, 0.8);
+  mat-card.mini-card {
+    padding: 0;
+    border-radius: 16px;
     display: flex;
-    align-items: center;
-    gap: 1rem;
+    flex-direction: column;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+    box-shadow: none !important;
 
-    &:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 16px -4px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-      border-color: #e2e8f0;
+    .mat-mdc-card-content {
+      padding: clamp(1.25rem, 3vw, 1.5rem) !important;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    :host-context(.light-theme) & {
+      background: white;
+      border: 1px solid rgba(241, 245, 249, 0.8);
+      
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 16px -4px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04) !important;
+        border-color: #e2e8f0;
+      }
+    }
+
+    :host-context(.dark-theme) & {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 16px -4px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
+        border-color: #334155;
+      }
     }
 
     .card-icon-container {
@@ -218,10 +291,22 @@
         align-items: center;
         justify-content: center;
         
-        &.bank { background: #eff6ff; color: #3b82f6; }
-        &.cash { background: #f0fdf4; color: #22c55e; }
-        &.credit { background: #faf5ff; color: #a855f7; }
-        &.investment { background: #fffcf0; color: #eab308; }
+        &.bank { 
+          :host-context(.light-theme) & { background: #eff6ff; color: #3b82f6; }
+          :host-context(.dark-theme) & { background: rgba(59, 130, 246, 0.1); color: #60a5fa; }
+        }
+        &.cash { 
+          :host-context(.light-theme) & { background: #f0fdf4; color: #22c55e; }
+          :host-context(.dark-theme) & { background: rgba(34, 197, 94, 0.1); color: #4ade80; }
+        }
+        &.credit { 
+          :host-context(.light-theme) & { background: #faf5ff; color: #a855f7; }
+          :host-context(.dark-theme) & { background: rgba(168, 85, 247, 0.1); color: #c084fc; }
+        }
+        &.investment { 
+          :host-context(.light-theme) & { background: #fffcf0; color: #eab308; }
+          :host-context(.dark-theme) & { background: rgba(234, 179, 8, 0.1); color: #facc15; }
+        }
 
         mat-icon { font-size: 1.75rem; width: 1.75rem; height: 1.75rem; }
       }
@@ -238,97 +323,105 @@
       .value { 
           font-size: 1.25rem; 
           font-weight: 700; 
-          color: #0f172a; 
           margin-top: 2px;
+          :host-context(.light-theme) & { color: #0f172a; }
+          :host-context(.dark-theme) & { color: #f1f5f9; }
       }
     }
   }
 }
 
-// Account Group Section
-.account-group {
+// Account Group Section (Optimized Div Structure)
+.accounts-accordion-list {
   margin-bottom: clamp(2rem, 4vw, 3rem);
-  padding: 0 clamp(0.75rem, 2vw, 1rem);
 
-  .group-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-    position: relative;
-    padding-bottom: 0.5rem;
-
-    .collapse-btn {
-      color: #94a3b8;
-      margin-left: -0.75rem;
-      transition: transform 0.2s ease;
+  .account-group-container {
+    margin-bottom: 2rem;
+    
+    .group-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 clamp(0.75rem, 2vw, 1rem) 1rem;
+      cursor: pointer;
+      user-select: none;
+      transition: opacity 0.2s;
       
-      &:hover { color: #64748b; background: rgba(0,0,0,0.03); }
+      &:hover {
+        opacity: 0.8;
+      }
 
-      mat-icon {
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        
-        &.rotated {
-          transform: rotate(-90deg);
+      .group-info {
+        display: flex;
+        align-items: baseline;
+        gap: 0.75rem;
+
+        .group-name {
+          font-size: 1.1rem;
+          font-weight: 700;
+          margin: 0;
+          letter-spacing: -0.01em;
+          :host-context(.light-theme) & { color: #334155; }
+          :host-context(.dark-theme) & { color: #f1f5f9; }
+        }
+        .count {
+          font-size: 0.85rem;
+          font-weight: 600;
+          padding: 0.1rem 0.5rem;
+          border-radius: 999px; // Pill shape
+          :host-context(.light-theme) & { background: #f1f5f9; color: #94a3b8; }
+          :host-context(.dark-theme) & { background: #1e293b; color: #64748b; }
+        }
+      }
+
+      .group-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        .group-balance {
+          font-size: 1rem;
+          font-weight: 700;
+          font-variant-numeric: tabular-nums;
+          &.negative { color: #ef4444; }
+          :host-context(.light-theme) & { color: #0f172a; }
+          :host-context(.dark-theme) & { color: #f1f5f9; }
+        }
+
+        .expansion-arrow {
+          color: #94a3b8;
+          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
       }
     }
 
-    .group-info {
-      display: flex;
-      align-items: baseline;
-      gap: 0.75rem;
-      flex: 1;
-
-      .group-name {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #334155;
-        margin: 0;
-        letter-spacing: -0.01em;
-      }
-      .count {
-        font-size: 0.85rem;
-        color: #94a3b8;
-        font-weight: 600;
-        background: #f1f5f9;
-        padding: 0.1rem 0.5rem;
-        border-radius: 999px; // Pill shape
-      }
+    &.is-expanded .group-header {
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      :host-context(.dark-theme) & { border-color: rgba(255,255,255,0.05); }
+      margin-bottom: 1.5rem;
     }
 
-    .group-right {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
+    .panel-content {
+      padding: 0;
+      
+      .action-row {
+        margin-top: 1.5rem;
+        padding: 1rem 0;
+        display: flex;
+        justify-content: flex-end;
+        border-top: 1px solid rgba(0,0,0,0.05);
+        :host-context(.dark-theme) & { border-color: rgba(255,255,255,0.05); }
 
-      .group-balance {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #0f172a;
-        font-variant-numeric: tabular-nums;
-        &.negative { color: #ef4444; }
+        .add-inline-btn {
+          color: #2563eb;
+          font-weight: 600;
+          font-size: 0.875rem;
+          
+          &:hover { background: #eff6ff !important; }
+          
+          mat-icon { font-size: 1.1rem; width: 1.1rem; height: 1.1rem; margin-right: 0.25rem; }
+        }
       }
-
-      .add-inline-btn {
-        color: #2563eb;
-        font-weight: 600;
-        font-size: 0.875rem;
-        padding: 0 0.75rem;
-        height: 32px;
-        line-height: 32px;
-        border-radius: 8px;
-        
-        &:hover { background: #eff6ff; }
-        
-        mat-icon { font-size: 1.1rem; width: 1.1rem; height: 1.1rem; margin-right: 0.25rem; }
-      }
-    }
-
-    // Border line across
-    &::after {
-      content: '';
-      display: none; // Hide for now or implement if needed
     }
   }
 }
@@ -339,31 +432,40 @@
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: clamp(1.25rem, 3vw, 1.5rem); // Increased gap
 
-  .account-card {
-    background: white;
-    padding: clamp(1.5rem, 3vw, 2rem); // Increased padding
-    border-radius: 24px; // Modern, large radius
-    border: 1px solid rgba(241, 245, 249, 0.8);
+  mat-card.account-card {
+    padding: 0;
+    border-radius: 24px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+    box-shadow: none !important;
 
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: transparent;
-      transition: background 0.2s;
+    .mat-mdc-card-content {
+      padding: clamp(1.5rem, 3vw, 2rem) !important;
     }
 
-    &:hover {
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-      border-color: #e2e8f0;
-      transform: translateY(-4px);
-      &::before { background: #2563eb; }
+    :host-context(.light-theme) & {
+      background: white;
+      border: 1px solid rgba(241, 245, 249, 0.8);
+      
+      &:hover {
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01) !important;
+        border-color: #e2e8f0;
+        transform: translateY(-4px);
+        &::before { background: #2563eb; content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+      }
+    }
+
+    :host-context(.dark-theme) & {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      
+      &:hover {
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+        border-color: #334155;
+        transform: translateY(-4px);
+        &::before { background: #3b82f6; content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+      }
     }
     
     &.negative-border:hover::before { background: #ef4444; }
@@ -385,10 +487,22 @@
         color: #64748b;
         transition: transform 0.3s ease;
         
-        &.bank { background: #eff6ff; color: #3b82f6; }
-        &.cash { background: #f0fdf4; color: #22c55e; }
-        &.credit { background: #faf5ff; color: #a855f7; }
-        &.loan { background: #fef2f2; color: #ef4444; }
+        &.bank { 
+          :host-context(.light-theme) & { background: #eff6ff; color: #3b82f6; }
+          :host-context(.dark-theme) & { background: rgba(59, 130, 246, 0.1); color: #60a5fa; }
+        }
+        &.cash { 
+          :host-context(.light-theme) & { background: #f0fdf4; color: #22c55e; }
+          :host-context(.dark-theme) & { background: rgba(34, 197, 94, 0.1); color: #4ade80; }
+        }
+        &.credit { 
+          :host-context(.light-theme) & { background: #faf5ff; color: #a855f7; }
+          :host-context(.dark-theme) & { background: rgba(168, 85, 247, 0.1); color: #c084fc; }
+        }
+        &.loan { 
+          :host-context(.light-theme) & { background: #fef2f2; color: #ef4444; }
+          :host-context(.dark-theme) & { background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
+        }
 
         mat-icon { font-size: 1.75rem; width: 1.75rem; height: 1.75rem; }
       }
@@ -398,9 +512,10 @@
         .name { 
             font-size: 1.125rem; 
             font-weight: 700; 
-            color: #0f172a; 
             margin: 0;
             line-height: 1.3;
+            :host-context(.light-theme) & { color: #0f172a; }
+            :host-context(.dark-theme) & { color: #f1f5f9; }
         }
         .institution { 
             font-size: 0.875rem; 
@@ -442,9 +557,11 @@
         .amount {
           font-size: 1rem; // Larger balance
           font-weight: 800;
-          color: #0f172a;
           letter-spacing: -0.02em;
           &.negative { color: #ef4444; }
+          
+          :host-context(.light-theme) & { color: #0f172a; }
+          :host-context(.dark-theme) & { color: #f1f5f9; }
         }
       }
 
@@ -453,11 +570,11 @@
         text-align: right;
         .account-number {
           font-family: monospace;
-          color: #cbd5e1;
           font-size: 0.75rem;
-          background: #f8fafc;
           padding: 0.2rem 0.5rem;
           border-radius: 6px;
+          :host-context(.light-theme) & { background: #f8fafc; color: #cbd5e1; }
+          :host-context(.dark-theme) & { background: #1e293b; color: #64748b; }
         }
       }
     }
@@ -465,31 +582,50 @@
 }
 
 // Empty State
-.empty-state-card {
+mat-card.empty-state-card {
   background: white;
   border-radius: 24px;
-  padding: clamp(3rem, 6vw, 5rem) 2rem;
   text-align: center;
   border: 2px dashed #e2e8f0; // Thicker dash
   margin: 0 clamp(1rem, 3vw, 1.5rem);
   transition: border-color 0.3s;
+  box-shadow: none !important;
   
   &:hover { border-color: #cbd5e1; }
+
+  .mat-mdc-card-content {
+      padding: clamp(3rem, 6vw, 5rem) 2rem !important;
+  }
   
   .empty-icon-box {
     width: 96px;
     height: 96px;
-    background: #f8fafc;
     border-radius: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 2rem;
+    :host-context(.light-theme) & { background: #f8fafc; }
+    :host-context(.dark-theme) & { background: #1e293b; }
     mat-icon { font-size: 3rem; width: 3rem; height: 3rem; color: #cbd5e1; }
   }
 
-  .empty-title { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0 0 0.75rem 0; letter-spacing: -0.02em; }
-  .empty-text { color: #64748b; max-width: 400px; margin: 0 auto 2.5rem; font-size: 1.1rem; line-height: 1.6; }
+  .empty-title { 
+    font-size: 1.5rem; 
+    font-weight: 800; 
+    margin: 0 0 0.75rem 0; 
+    letter-spacing: -0.02em; 
+    :host-context(.light-theme) & { color: #0f172a; }
+    :host-context(.dark-theme) & { color: #f1f5f9; }
+  }
+  .empty-text { 
+    max-width: 400px; 
+    margin: 0 auto 2.5rem; 
+    font-size: 1.1rem; 
+    line-height: 1.6; 
+    :host-context(.light-theme) & { color: #64748b; }
+    :host-context(.dark-theme) & { color: #94a3b8; }
+  }
   .empty-btn { 
       border-radius: 12px; 
       padding: 0 2.5rem; 
@@ -502,28 +638,49 @@
 
 // Custom Material Overrides
 ::ng-deep .standard-menu {
-  background: white !important;
   border-radius: 16px !important;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-  border: 1px solid #f1f5f9 !important;
   min-width: 200px !important;
   padding: 0.5rem !important;
+
+  :host-context(.light-theme) & {
+    background: white !important;
+    border: 1px solid #f1f5f9 !important;
+  }
+
+  :host-context(.dark-theme) & {
+    background: #1e293b !important;
+    border: 1px solid #334155 !important;
+  }
   
   .mat-mdc-menu-item {
     font-size: 0.95rem !important;
     font-weight: 500 !important;
-    color: #475569 !important;
     border-radius: 8px !important;
     margin-bottom: 2px !important;
     min-height: 44px !important;
     
-    mat-icon { color: #94a3b8 !important; margin-right: 1rem !important; }
+    :host-context(.light-theme) & {
+      color: #475569 !important;
+      mat-icon { color: #94a3b8 !important; }
+      &:hover { background: #f8fafc !important; color: #1e293b !important; mat-icon { color: #64748b !important; } }
+    }
+
+    :host-context(.dark-theme) & {
+      color: #cbd5e1 !important;
+      mat-icon { color: #64748b !important; }
+      &:hover { background: #334155 !important; color: #f1f5f9 !important; mat-icon { color: #94a3b8 !important; } }
+    }
     
-    &:hover { background: #f8fafc !important; color: #1e293b !important; mat-icon { color: #64748b !important; } }
+    mat-icon { margin-right: 1rem !important; }
+    
     &.delete-item { 
         color: #ef4444 !important; 
         mat-icon { color: #ef4444 !important; } 
-        &:hover { background: #fef2f2 !important; }
+        &:hover { 
+          :host-context(.light-theme) & { background: #fef2f2 !important; }
+          :host-context(.dark-theme) & { background: rgba(239, 68, 68, 0.1) !important; }
+        }
     }
   }
 }

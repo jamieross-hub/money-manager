@@ -1,1 +1,203 @@
- 
+// Filter Container
+.filter-container {
+  :host-context(.light-theme) & {
+    background: white;
+    border-color: #f3f4f6;
+  }
+  
+  :host-context(.dark-theme) & {
+    background: #0f172a;
+    border-color: #334155;
+  }
+}
+
+// Filter Text
+.filter-text {
+  :host-context(.light-theme) & {
+    color: #374151;
+  }
+  
+  :host-context(.dark-theme) & {
+    color: #94a3b8;
+  }
+}
+
+// Filter Count
+.filter-count {
+  :host-context(.light-theme) & {
+    color: #111827;
+  }
+  
+  :host-context(.dark-theme) & {
+    color: #e2e8f0;
+  }
+}
+
+// Filter Border
+.filter-border {
+  border-bottom: 1px solid;
+  
+  :host-context(.light-theme) & {
+    border-color: #f3f4f6;
+  }
+  
+  :host-context(.dark-theme) & {
+    border-color: #334155;
+  }
+}
+
+// Material Form Fields - Dark Theme Support
+:host-context(.dark-theme) {
+  ::ng-deep {
+    // Form field fill appearance
+    .mat-mdc-form-field {
+      .mat-mdc-text-field-wrapper {
+        background-color: #1e293b !important;
+      }
+      
+      // Label color
+      .mat-mdc-floating-label {
+        color: #94a3b8 !important;
+      }
+      
+      // Input text color
+      .mat-mdc-input-element {
+        color: #e2e8f0 !important;
+        caret-color: #3b82f6 !important;
+      }
+      
+      // Suffix icon color
+      .mat-mdc-form-field-icon-suffix {
+        color: #64748b !important;
+      }
+      
+      // Bottom line
+      .mdc-line-ripple::before {
+        border-bottom-color: #475569 !important;
+      }
+      
+      // Active bottom line
+      .mdc-line-ripple::after {
+        border-bottom-color: #3b82f6 !important;
+      }
+    }
+    
+    // Select dropdown
+    .mat-mdc-select {
+      .mat-mdc-select-value {
+        color: #e2e8f0 !important;
+      }
+      
+      .mat-mdc-select-arrow {
+        color: #64748b !important;
+      }
+    }
+    
+    // Dropdown panel
+    .mat-mdc-select-panel {
+      background-color: #1e293b !important;
+      
+      .mat-mdc-option {
+        color: #e2e8f0 !important;
+        
+        &:hover {
+          background-color: #334155 !important;
+        }
+        
+        &.mat-mdc-option-active {
+          background-color: #334155 !important;
+        }
+        
+        &.mdc-list-item--selected {
+          background-color: rgba(59, 130, 246, 0.1) !important;
+          color: #60a5fa !important;
+        }
+      }
+    }
+    
+    // Chips
+    mat-chip {
+      &.bg-blue-50 {
+        background-color: rgba(59, 130, 246, 0.15) !important;
+        border-color: rgba(59, 130, 246, 0.3) !important;
+        
+        .mat-mdc-chip-action-label {
+          color: #60a5fa !important;
+        }
+        
+        mat-icon {
+          color: #60a5fa !important;
+        }
+      }
+    }
+  }
+}
+
+// Light theme form fields (for consistency)
+:host-context(.light-theme) {
+  ::ng-deep {
+    .mat-mdc-form-field {
+      .mat-mdc-text-field-wrapper {
+        background-color: #f9fafb !important;
+      }
+      
+      .mat-mdc-floating-label {
+        color: #6b7280 !important;
+      }
+      
+      .mat-mdc-input-element {
+        color: #111827 !important;
+      }
+      
+      .mat-mdc-form-field-icon-suffix {
+        color: #9ca3af !important;
+      }
+    }
+    
+    .mat-mdc-select {
+      .mat-mdc-select-value {
+        color: #111827 !important;
+      }
+      
+      .mat-mdc-select-arrow {
+        color: #9ca3af !important;
+      }
+    }
+    
+    .mat-mdc-select-panel {
+      background-color: white !important;
+      
+      .mat-mdc-option {
+        color: #111827 !important;
+        
+        &:hover {
+          background-color: #f3f4f6 !important;
+        }
+        
+        &.mat-mdc-option-active {
+          background-color: #f3f4f6 !important;
+        }
+        
+        &.mdc-list-item--selected {
+          background-color: rgba(59, 130, 246, 0.1) !important;
+          color: #2563eb !important;
+        }
+      }
+    }
+  }
+}
+
+// Icon colors
+.text-gray-400 {
+  :host-context(.dark-theme) & {
+    color: #64748b !important;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .filter-container {
+    padding: 12px;
+    padding-bottom: 0;
+  }
+}

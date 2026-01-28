@@ -16,19 +16,38 @@
   }
 }
 
+.home-wrapper {
+  :host-context(.light-theme) & {
+    background-color: white;
+    color: #1f2937; // gray-800
+  }
+  
+  :host-context(.dark-theme) & {
+    background-color: #020617; // Very dark slate
+    color: #f1f5f9; // slate-100
+  }
+}
+
 /* typing dots loader */
 .typing-dots {
   display: flex;
   gap: 5px;
   align-items: center;
-}
-
-.typing-dots span {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: gray;
-  animation: blink 1.4s infinite both;
+  
+  span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    animation: blink 1.4s infinite both;
+    
+    :host-context(.light-theme) & {
+      background: gray;
+    }
+    
+    :host-context(.dark-theme) & {
+      background: #475569; // slate-500
+    }
+  }
 }
 
 .typing-dots span:nth-child(2) {

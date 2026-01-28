@@ -1,139 +1,82 @@
-// Balance Summary Card
-.balance-summary-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  border: 1px solid #e5e7eb;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid #4d98a4;
-  
-  &.loading {
-    .loading-content {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 1rem 0;
-      color: #6b7280;
-      font-size: 0.875rem;
-      
-      mat-spinner {
-        ::ng-deep .mat-mdc-progress-spinner-circle {
-          stroke: #4d98a4;
-        }
-      }
-    }
-  }
-  
-  @media (max-width: 640px) {
-    padding: 0.5rem;
-  }
-  
-  .balance-summary-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    
-    .balance-icon {
-      @apply text-primary;
-      font-size: 1.5rem;
-      width: 1.5rem;
-      height: 1.5rem;
-    }
-    
-    .balance-summary-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #1f2937;
-      margin: 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      
-      .balance-stat-value {
-        font-size: 1.125rem;
-        font-weight: 700;
-        
-        &.positive {
-          color: #10b981;
-        }
-        
-        &.negative {
-          color: #ef4444;
-        }
-      }
-    }
-  }
-  
-  .balance-breakdown {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    
-    .breakdown-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 0.75rem;
-      border-radius: 6px;
-      font-size: 0.875rem;
+.account-summary-card {
+  transition: all 0.3s ease;
 
-      @media (max-width: 640px) {
-        justify-content: space-between;
-      }
-      
-      &.positive {
-        background: #f0fdf4;
-        color: #166534;
-        
-        .breakdown-label {
-          font-weight: 500;
-        }
-        
-        .breakdown-value {
-          font-weight: 600;
-        }
-      }
-      
-      &.negative {
-        background: #fef2f2;
-        color: #dc2626;
-        
-        .breakdown-label {
-          font-weight: 500;
-        }
-        
-        .breakdown-value {
-          font-weight: 600;
-        }
-      }
-    }
+  :host-context(.light-theme) & {
+    background: white;
+    border: 1px solid #f3f4f6;
+  }
+
+  :host-context(.dark-theme) & {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
   }
 }
 
-// Responsive Design
-@media (max-width: 768px) {
-  .balance-summary-card {
-    padding: 1rem;
-    
-    .balance-breakdown {
-      flex-direction: column;
-      gap: 0.5rem;
-    }
+.summary-icon-wrap {
+  :host-context(.light-theme) & {
+    background-color: #f0f7ff;
+    color: #3b82f6;
+  }
+  :host-context(.dark-theme) & {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #60a5fa;
   }
 }
 
-@media (max-width: 480px) {
-  .balance-summary-card {
-    padding: 0.5rem;
-    margin: 0;
-    
-    .balance-summary-header {
-      .balance-summary-title {
-        font-size: 1rem;
-      }
-    }
+.balance-title {
+  :host-context(.light-theme) & { color: #1e293b; }
+  :host-context(.dark-theme) & { color: #f1f5f9; }
+}
+
+.balance-subtitle, .balance-period, .breakdown-subtitle {
+  :host-context(.light-theme) & { color: #64748b; }
+  :host-context(.dark-theme) & { color: #94a3b8; }
+}
+
+.card-divider {
+  border-top: 1px solid;
+  :host-context(.light-theme) & { border-color: #f1f5f9; }
+  :host-context(.dark-theme) & { border-color: #1e293b; }
+}
+
+.breakdown-label {
+  font-weight: 500;
+  :host-context(.light-theme) & { color: #475569; }
+  :host-context(.dark-theme) & { color: #cbd5e1; }
+}
+
+.asset-icon-wrap {
+  :host-context(.light-theme) & {
+    background-color: #f0fdf4;
+    color: #22c55e;
   }
-} 
+  :host-context(.dark-theme) & {
+    background-color: rgba(34, 197, 94, 0.1);
+    color: #4ade80;
+  }
+}
+
+.liability-icon-wrap {
+  :host-context(.light-theme) & {
+    background-color: #fef2f2;
+    color: #ef4444;
+  }
+  :host-context(.dark-theme) & {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #fca5a5;
+  }
+}
+
+// Ensure global currency color classes respect theme or are overridden
+.text-green-600 {
+  :host-context(.dark-theme) & {
+    color: #4ade80 !important;
+  }
+}
+
+.text-red-500 {
+  :host-context(.dark-theme) & {
+    color: #fca5a5 !important;
+  }
+}

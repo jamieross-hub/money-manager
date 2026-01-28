@@ -1,16 +1,16 @@
-<div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 pb-0 ">
+<div class="filter-container rounded-xl border shadow-sm p-4 pb-0 ">
   <!-- Header Section -->
   <div class="flex items-center justify-between mb-2">
 
     <div class="flex items-center space-x-4">
       <div class="flex items-center space-x-2">
         <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-        <span class="text-sm font-medium text-gray-700">
+        <span class="text-sm font-medium filter-text">
           {{ selectedYear }} Transactions
         </span>
       </div>
       <div class="flex items-center space-x-1">
-        <span class="text-sm font-semibold text-gray-900">{{ filteredCount }}</span>
+        <span class="text-sm font-semibold filter-count">{{ filteredCount }}</span>
       </div>
     </div>
 
@@ -36,7 +36,7 @@
   </div>
 
   <!-- Active Filters Indicator -->
-  <div *ngIf="hasActiveFilters()" class="mb-3 pb-2 border-b border-gray-100  top-10">
+  <div *ngIf="hasActiveFilters()" class="mb-3 pb-2 filter-border top-10">
 
     <div class="flex flex-wrap gap-1">
       <div class="flex items-center space-x-1 ml-2">
