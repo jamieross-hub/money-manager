@@ -478,7 +478,30 @@ mat-card.error-message {
       }
     }
     
-    &.negative-border:hover::before { background: #ef4444; }
+    &.selected {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      
+      :host-context(.light-theme) & {
+          background: #f0f7ff;
+      }
+      
+      :host-context(.dark-theme) & {
+          background: rgba(59, 130, 246, 0.1);
+      }
+
+      &::before {
+        background: mat.get-theme-color(light.$light-theme, primary, 40);
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+      }
+    }
+
+    &.negative-border:hover::before, &.negative-border.selected::before { background: #ef4444; }
 
     .card-top {
       display: flex;
@@ -701,5 +724,142 @@ mat-card.empty-state-card {
           :host-context(.dark-theme) & { background: rgba(239, 68, 68, 0.1) !important; }
         }
     }
+  }
+}
+
+// =============================================================================
+// EXPANDABLE MOBILE ACTIONS & DETAILS (ACCOUNTS)
+// =============================================================================
+
+.account-actions {
+  background: #f8fafc;
+  border-top: 1px solid #e5e7eb;
+  padding: 8px 12px;
+  animation: slideDown 0.2s ease;
+  margin-top: -1.25rem; // Pull up to connect with card
+  margin-bottom: 1.25rem;
+  border-radius: 0 0 16px 16px;
+
+  :host-context(.dark-theme) & {
+    background: mat.get-theme-color(dark.$dark-theme, neutral, 6);
+    border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
+  }
+
+  .actions-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  .action-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+
+    &.edit-btn {
+      border: 1px dashed gray;
+      color: gray;
+      &:hover { background: #f1f5f9; transform: scale(1.05); }
+    }
+
+    &.statement-btn {
+      border: 1px dashed #3b82f6;
+      color: #3b82f6;
+      &:hover { background: #eff6ff; transform: scale(1.05); }
+    }
+
+    &.delete-btn {
+      border: 1px solid #ef4444;
+      color: #ef4444;
+      &:hover { background: #fee2e2; transform: scale(1.05); }
+    }
+  }
+}
+
+.account-details-expanded {
+  background: #f8fafc;
+  border-top: 1px solid #e5e7eb;
+  padding: 16px 12px;
+  animation: slideDown 0.3s ease;
+  margin-top: -1.25rem;
+  margin-bottom: 1.5rem;
+  border-radius: 0 0 16px 16px;
+
+  :host-context(.dark-theme) & {
+    background: mat.get-theme-color(dark.$dark-theme, neutral, 6);
+    border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
+  }
+
+  .details-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .detail-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid #f1f5f9;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    :host-context(.dark-theme) & {
+      border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+    }
+  }
+
+  .detail-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    .detail-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #64748b;
+      
+      &.positive { color: #059669; }
+      &.negative { color: #dc2626; }
+    }
+
+    span {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #334155;
+
+      :host-context(.dark-theme) & {
+        color: mat.get-theme-color(dark.$dark-theme, neutral, 90);
+      }
+    }
+  }
+
+  .detail-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #0f172a;
+
+    &.positive { color: #059669; }
+    &.negative { color: #dc2626; }
+
+    :host-context(.dark-theme) & {
+      color: mat.get-theme-color(dark.$dark-theme, neutral, 95);
+    }
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

@@ -66,6 +66,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
   public searchControl = new FormControl('');
   public searchText: string = '';
   public filterType: 'all' | 'expense' | 'income' = 'all';
+  public selectedCategoryId: string | null = null;
 
   // Summary Data
   public totalExpenseAmount: number = 0;
@@ -229,10 +230,31 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
 
 
-  public getSubCategoriesForCategory(categoryId: string): Category[] {
+  public getSubCategoriesForCategory(categoryId: string | null | undefined): Category[] {
+    if (!categoryId || !this.categories) return [];
     return this.categories.filter(cat =>
       cat.isSubCategory && cat.parentCategoryId === categoryId
     );
+  }
+
+  public toggleExpandCategory(category: Category, event: Event): void {
+    // Only toggle on mobile
+    if (!this.breakpointService.device.isMobile) return;
+
+    event.stopPropagation();
+
+    if (this.selectedCategoryId === category.id) {
+      this.selectedCategoryId = null;
+    } else {
+      this.selectedCategoryId = category.id || null;
+      if (this.selectedCategoryId) {
+        this.hapticFeedback.lightVibration();
+      }
+    }
+  }
+
+  public isCategoryExpanded(categoryId: string | undefined): boolean {
+    return this.selectedCategoryId === categoryId;
   }
 
 

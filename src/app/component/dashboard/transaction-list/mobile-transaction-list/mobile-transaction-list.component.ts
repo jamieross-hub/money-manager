@@ -39,8 +39,7 @@ interface SortOption {
   styleUrls: ['./mobile-transaction-list.component.scss'],
 })
 export class MobileTransactionListComponent
-  implements OnInit, OnDestroy
-{
+  implements OnInit, OnDestroy {
   @Output() editTransaction = new EventEmitter<Transaction>();
   @Output() deleteTransaction = new EventEmitter<Transaction>();
   @Output() addTransaction = new EventEmitter<void>();
@@ -84,7 +83,7 @@ export class MobileTransactionListComponent
     private readonly store: Store<AppState>,
     private readonly filterService: FilterService,
     private readonly categoryService: CategoryService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.setupFilterServiceSubscriptions();
@@ -159,10 +158,10 @@ export class MobileTransactionListComponent
     let filteredData: Transaction[];
 
     // Check if we have specific date filters applied
-    const hasDateFilters = this.filterService.getSelectedDate() || 
-                          this.filterService.getSelectedDateRange() || 
-                          this.filterService.getSelectedYear();
-    
+    const hasDateFilters = this.filterService.getSelectedDate() ||
+      this.filterService.getSelectedDateRange() ||
+      this.filterService.getSelectedYear();
+
     if (!hasDateFilters) {
       // Filter to show only current year transactions when no specific date filter is applied
       filteredData = this.filterService.filterCurrentYearTransactions(
@@ -179,7 +178,7 @@ export class MobileTransactionListComponent
 
     // Apply sorting using FilterService
     const sortedData = this.filterService.sortTransactions(filteredData, this.selectedSort);
-    
+
     this.filteredTransactions = sortedData;
   }
 
@@ -300,7 +299,7 @@ export class MobileTransactionListComponent
     if (this.selectedCategory.includes('all')) {
       return 'All Categories';
     }
-    
+
     const category = this.categories.find(cat => cat.id === this.selectedCategory[0]);
     return category ? category.name : 'Unknown Category';
   }
@@ -318,7 +317,12 @@ export class MobileTransactionListComponent
   }
 
   onLongPress(transaction: Transaction) {
-    this.selectedTx = transaction;
+
+    if (this.selectedTx?.id == transaction.id) {
+      this.selectedTx = null;
+    } else {
+      this.selectedTx = transaction;
+    }
   }
 
   onEditTransaction(transaction: Transaction) {
@@ -491,9 +495,9 @@ export class MobileTransactionListComponent
   }
 
   isCustomDateRange(): boolean {
-    return !!(this.selectedDate || (this.selectedDateRange && 
-      (this.selectedDateRange.startDate !== moment().startOf('month').toDate() || 
-       this.selectedDateRange.endDate !== moment().endOf('month').toDate())));
+    return !!(this.selectedDate || (this.selectedDateRange &&
+      (this.selectedDateRange.startDate !== moment().startOf('month').toDate() ||
+        this.selectedDateRange.endDate !== moment().endOf('month').toDate())));
   }
 
   openCustomDateRangeDialog() {

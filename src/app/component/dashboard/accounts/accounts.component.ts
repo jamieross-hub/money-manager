@@ -24,6 +24,7 @@ import { ACCOUNT_GROUPS, AccountGroup, getAccountGroup } from 'src/app/util/conf
 import { Transaction } from 'src/app/util/models/transaction.model';
 import * as ProfileSelectors from '../../../store/profile/profile.selectors';
 import { BehaviorSubject, combineLatest, map, distinctUntilChanged } from 'rxjs';
+import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 
 interface AccountViewModel {
   account: Account;
@@ -103,7 +104,8 @@ export class AccountsComponent implements OnInit, OnDestroy {
     public readonly dateService: DateService,
     public readonly breakpointService: BreakpointService,
     private readonly userService: UserService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly hapticFeedback: HapticFeedbackService
   ) {
 
     if (this.breakpointService.device.isMobile) {
@@ -471,10 +473,13 @@ export class AccountsComponent implements OnInit, OnDestroy {
    * Toggle account expansion to show/hide details
    */
   public toggleAccountExpansion(account: Account): void {
+    if (!this.breakpointService.device.isMobile) return;
+
     if (this.expandedAccount?.accountId === account.accountId) {
       this.expandedAccount = null;
     } else {
       this.expandedAccount = account;
+      this.hapticFeedback.lightVibration();
     }
   }
 

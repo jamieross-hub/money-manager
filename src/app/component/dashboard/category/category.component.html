@@ -88,7 +88,8 @@
 					@for (category of filteredCategories; track category.id) {
 					<!-- Main Categories -->
 					@if(!category.isSubCategory && !category.parentCategoryId) {
-					<mat-list-item class="category-item-wrapper">
+					<mat-list-item class="category-item-wrapper" [class.selected]="selectedCategoryId === category.id"
+						(click)="toggleExpandCategory(category, $event)">
 						<div matListItemAvatar class="category-icon" [style.background-color]="category.color + '20'"
 							[style.color]="category.color">
 							<mat-icon>{{ category.icon || 'category' }}</mat-icon>
@@ -149,11 +150,72 @@
 						</div>
 					</mat-list-item>
 
+					<!-- Action Buttons & Expanded Details (Mobile only) -->
+					<ng-container *ngIf="selectedCategoryId === category.id && breakpointService.device.isMobile">
+						<div class="category-actions">
+							<div class="actions-container">
+								<button mat-icon-button class="action-button edit-btn"
+									(click)="openMobileDialog(category)" matTooltip="Edit category">
+									<mat-icon>edit</mat-icon>
+								</button>
+								<button mat-icon-button class="action-button delete-btn"
+									(click)="deleteCategory(category)" matTooltip="Delete category">
+									<mat-icon>delete</mat-icon>
+								</button>
+							</div>
+						</div>
+
+						<div class="category-details-expanded">
+							<div class="details-container" *ngIf="getCategoryStats(category) as stats">
+								<div class="detail-row">
+									<div class="detail-label">
+										<mat-icon class="detail-icon">analytics</mat-icon>
+										<span>Total Spent</span>
+									</div>
+									<div class="detail-value">
+										{{ stats.totalSpent | currency : { currency: (userCurrency$ | async) || 'USD' }
+										}}
+									</div>
+								</div>
+								<div class="detail-row">
+									<div class="detail-label">
+										<mat-icon class="detail-icon">calendar_month</mat-icon>
+										<span>This Month</span>
+									</div>
+									<div class="detail-value">
+										{{ stats.thisMonth | currency : { currency: (userCurrency$ | async) || 'USD' }
+										}}
+									</div>
+								</div>
+								<div class="detail-row">
+									<div class="detail-label">
+										<mat-icon class="detail-icon">receipt_long</mat-icon>
+										<span>Transactions</span>
+									</div>
+									<div class="detail-value">{{ stats.totalTransactions }}</div>
+								</div>
+								<div class="detail-row" *ngIf="category.budget?.hasBudget">
+									<div class="detail-label">
+										<mat-icon class="detail-icon">account_balance_wallet</mat-icon>
+										<span>Budget</span>
+									</div>
+									<div class="detail-value">
+										{{ category.budget?.budgetAmount | currency : { currency: (userCurrency$ |
+										async) || 'USD' } }}
+										({{ calculateBudgetProgressPercentage(category).toFixed(0) }}%)
+									</div>
+								</div>
+							</div>
+						</div>
+					</ng-container>
+
 					<!-- Subcategories -->
 					@if(getSubCategoriesForCategory(category.id!).length > 0) {
 					<div class="subcategories-container">
 						@for (subCategory of getSubCategoriesForCategory(category.id!); track subCategory.id) {
-						<mat-list-item class="subcategory-item-wrapper">
+						<mat-list-item class="subcategory-item-wrapper"
+							[class.selected]="selectedCategoryId === subCategory.id"
+							(click)="toggleExpandCategory(subCategory, $event)">
 							<div matListItemAvatar class="category-icon small"
 								[style.background-color]="subCategory.color + '20'" [style.color]="subCategory.color">
 								<mat-icon>{{ subCategory.icon || 'category' }}</mat-icon>
@@ -203,6 +265,59 @@
 								</mat-menu>
 							</div>
 						</mat-list-item>
+
+						<!-- Subcategory Action Buttons & Expanded Details (Mobile only) -->
+						<ng-container
+							*ngIf="selectedCategoryId === subCategory.id && breakpointService.device.isMobile">
+							<div class="category-actions subcategory-actions">
+								<div class="actions-container">
+									<button mat-icon-button class="action-button edit-btn"
+										(click)="openMobileDialog(subCategory)" matTooltip="Edit subcategory">
+										<mat-icon>edit</mat-icon>
+									</button>
+									<button mat-icon-button class="action-button delete-btn"
+										(click)="deleteCategory(subCategory)" matTooltip="Delete subcategory">
+										<mat-icon>delete</mat-icon>
+									</button>
+								</div>
+							</div>
+
+							<div class="category-details-expanded subcategory-details-expanded">
+								<div class="details-container" *ngIf="getCategoryStats(subCategory) as stats">
+									<div class="detail-row">
+										<div class="detail-label">
+											<mat-icon class="detail-icon">analytics</mat-icon>
+											<span>Total Spent</span>
+										</div>
+										<div class="detail-value">
+											{{ stats.totalSpent | currency : { currency: (userCurrency$ | async) ||
+											'USD' } }}
+										</div>
+									</div>
+									<div class="detail-row">
+										<div class="detail-label">
+											<mat-icon class="detail-icon">calendar_month</mat-icon>
+											<span>This Month</span>
+										</div>
+										<div class="detail-value">
+											{{ stats.thisMonth | currency : { currency: (userCurrency$ | async) || 'USD'
+											} }}
+										</div>
+									</div>
+									<div class="detail-row" *ngIf="subCategory.budget?.hasBudget">
+										<div class="detail-label">
+											<mat-icon class="detail-icon">account_balance_wallet</mat-icon>
+											<span>Budget</span>
+										</div>
+										<div class="detail-value">
+											{{ subCategory.budget?.budgetAmount | currency : { currency: (userCurrency$
+											| async) || 'USD' } }}
+											({{ calculateBudgetProgressPercentage(subCategory).toFixed(0) }}%)
+										</div>
+									</div>
+								</div>
+							</div>
+						</ng-container>
 						}
 					</div>
 					}

@@ -109,7 +109,9 @@
 					<div class="accounts-grid">
 						@for (accountVM of groupData.accounts; track accountVM.account.accountId) {
 						<mat-card class="account-card"
-							[class.negative-border]="accountVM.balanceClass === 'negative-balance'">
+							[class.negative-border]="accountVM.balanceClass === 'negative-balance'"
+							[class.selected]="expandedAccount?.accountId === accountVM.account.accountId"
+							(click)="toggleAccountExpansion(accountVM.account)">
 							<mat-card-content>
 								<div class="card-top">
 									<div class="account-icon-wrap" [class]="accountVM.account.type">
@@ -140,6 +142,73 @@
 								</div>
 							</mat-card-content>
 						</mat-card>
+
+						<!-- Account Action Buttons & Expanded Details (Mobile only) -->
+						<ng-container
+							*ngIf="expandedAccount?.accountId === accountVM.account.accountId && breakpointService.device.isMobile">
+							<div class="account-actions">
+								<div class="actions-container">
+									<button mat-icon-button class="action-button statement-btn"
+										(click)="viewAccountStatement(accountVM.account)" matTooltip="View statement">
+										<mat-icon>receipt_long</mat-icon>
+									</button>
+									<button mat-icon-button class="action-button edit-btn"
+										(click)="editAccount(accountVM.account)" matTooltip="Edit account">
+										<mat-icon>edit</mat-icon>
+									</button>
+									<button mat-icon-button class="action-button delete-btn"
+										(click)="deleteAccount(accountVM.account)" matTooltip="Delete account">
+										<mat-icon>delete</mat-icon>
+									</button>
+								</div>
+							</div>
+
+							<div class="account-details-expanded">
+								<div class="details-container" *ngIf="getAccountStats(accountVM.account) as stats">
+									<div class="detail-row">
+										<div class="detail-label">
+											<mat-icon class="detail-icon">trending_up</mat-icon>
+											<span>Deposits</span>
+										</div>
+										<div class="detail-value">
+											{{ stats.totalDeposits | currency : { currency: (userCurrency$ | async) ||
+											'USD' } }}
+										</div>
+									</div>
+									<div class="detail-row">
+										<div class="detail-label">
+											<mat-icon class="detail-icon">trending_down</mat-icon>
+											<span>Withdrawals</span>
+										</div>
+										<div class="detail-value">
+											{{ stats.totalWithdrawals | currency : { currency: (userCurrency$ | async)
+											|| 'USD' } }}
+										</div>
+									</div>
+									<div class="detail-row">
+										<div class="detail-label">
+											<mat-icon class="detail-icon" [class.positive]="stats.thisMonth >= 0"
+												[class.negative]="stats.thisMonth < 0">
+												{{ stats.thisMonth >= 0 ? 'arrow_upward' : 'arrow_downward' }}
+											</mat-icon>
+											<span>This Month</span>
+										</div>
+										<div class="detail-value" [class.positive]="stats.thisMonth >= 0"
+											[class.negative]="stats.thisMonth < 0">
+											{{ stats.thisMonth | currency : { currency: (userCurrency$ | async) || 'USD'
+											} }}
+										</div>
+									</div>
+									<div class="detail-row">
+										<div class="detail-label">
+											<mat-icon class="detail-icon">receipt_long</mat-icon>
+											<span>Transactions</span>
+										</div>
+										<div class="detail-value">{{ stats.totalTransactions }}</div>
+									</div>
+								</div>
+							</div>
+						</ng-container>
 						}
 					</div>
 
