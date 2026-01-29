@@ -1,3 +1,7 @@
+@use '@angular/material' as mat;
+@use '../../../../styles/light-theme' as light;
+@use '../../../../styles/dark-theme' as dark;
+
 :host {
 	display: block;
 }
@@ -21,9 +25,19 @@ footer {
 }
 
 .active-icon-box {
-  background-color: #2563eb; // primary
+  :host-context(.light-theme) & {
+    background-color: mat.get-theme-color(light.$light-theme, primary, 60);
+  }
+
+  :host-context(.dark-theme) & {
+    background-color: mat.get-theme-color(dark.$dark-theme, primary, 60);
+  }
+  
   color: white;
-  &:hover { background-color: #1d4ed8; }
+  &:hover { 
+    :host-context(.light-theme) & { background-color: mat.get-theme-color(light.$light-theme, primary, 50); }
+    :host-context(.dark-theme) & { background-color: mat.get-theme-color(dark.$dark-theme, primary, 70); }
+  }
 }
 
 .inactive-icon-box {
