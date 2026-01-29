@@ -36,6 +36,25 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+
+  .expansion-indicator {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  }
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }
 
 .avatar {
@@ -198,5 +217,20 @@
 .stat-label {
   :host-context(.light-theme) & { color: #64748b; }
   :host-context(.dark-theme) & { color: #94a3b8; }
+}
+
+.grid {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 

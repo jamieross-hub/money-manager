@@ -90,12 +90,13 @@ export class ChatFacadeService {
                     } else {
                         this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build());
                     }
+
                 } else {
                     if (hasLoans) {
                         this.pushBot(ResponseBuilder.create().uiElement(INTENTS.LOAN_SUMMARY_CARD).build());
                     }
                     this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build());
-                    this.pushBot(ResponseBuilder.create().uiElement(INTENTS.RECENT_ACTIVITY_CARD).build());
+                    // this.pushBot(ResponseBuilder.create().uiElement(INTENTS.RECENT_ACTIVITY_CARD).build());
                     this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.GREETING).build());
                 }
             });

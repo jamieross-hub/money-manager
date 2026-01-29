@@ -122,10 +122,21 @@
 										<p class="institution">{{ accountVM.formattedInstitution }}</p>
 									</div>
 									<div class="menu-action">
-										<button mat-icon-button [matMenuTriggerFor]="sharedMenu"
-											[matMenuTriggerData]="{ account: accountVM.account }" class="more-btn">
+										<button mat-icon-button [matMenuTriggerFor]="itemMenu"
+											(click)="$event.stopPropagation()">
 											<mat-icon>more_vert</mat-icon>
 										</button>
+										<mat-menu #itemMenu="matMenu">
+											<button mat-menu-item (click)="editAccount(accountVM.account)">
+												<mat-icon>edit</mat-icon>
+												<span>Edit</span>
+											</button>
+											<button mat-menu-item (click)="deleteAccount(accountVM.account)"
+												class="delete-item">
+												<mat-icon>delete</mat-icon>
+												<span class="text-red-600">Delete</span>
+											</button>
+										</mat-menu>
 									</div>
 								</div>
 								<div class="card-details">

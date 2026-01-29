@@ -28,6 +28,7 @@ export class LoanSummaryCardComponent implements OnInit, OnDestroy {
     public loans: Account[] = [];
     public userName: string = '';
     public userCurrency: string = 'USD';
+    public isExpanded = false;
     private destroy$ = new Subject<void>();
 
     constructor(private store: Store<AppState>) {
@@ -165,5 +166,9 @@ export class LoanSummaryCardComponent implements OnInit, OnDestroy {
             return this.loans[0].name;
         }
         return 'Debt Freedom';
+    }
+
+    public toggleExpand(): void {
+        this.isExpanded = !this.isExpanded;
     }
 }
