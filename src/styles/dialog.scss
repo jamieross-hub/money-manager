@@ -1,3 +1,6 @@
+@use '@angular/material' as mat;
+@use './dark-theme' as dark;
+
 /* Dialog Styles */
 
 /* Mobile Dialog Styles */
@@ -12,6 +15,10 @@
 		width: 100vw !important;
 		height: 100vh !important;
 		overflow: hidden;
+
+		.dark-theme & {
+			background-color: mat.get-theme-color(dark.$dark-theme, neutral, 6) !important;
+		}
 	}
 
 	.mat-dialog-overlay {
@@ -25,9 +32,18 @@
 		max-height: 90vh !important;
 		overflow: hidden !important;
 		width: 60vw !important;
+
+		.dark-theme & {
+			background-color: mat.get-theme-color(dark.$dark-theme, neutral, 10) !important;
+		}
 	}
 	.mat-mdc-dialog-surface {
 		overflow: hidden !important;
+		
+		.dark-theme & {
+			background-color: mat.get-theme-color(dark.$dark-theme, neutral, 10) !important;
+			color: mat.get-theme-color(dark.$dark-theme, neutral, 95) !important;
+		}
 	}
 }
 
@@ -38,6 +54,14 @@
 		border-radius: 16px !important;
 		max-height: 90vh !important;
 		overflow: hidden !important;
+
+		.dark-theme & {
+			background-color: mat.get-theme-color(dark.$dark-theme, neutral, 10) !important;
+		}
+	}
+
+	.dark-theme & .mat-mdc-dialog-surface {
+		background-color: mat.get-theme-color(dark.$dark-theme, neutral, 10) !important;
 	}
 }
 
@@ -48,6 +72,11 @@
 		padding: 0 !important;
 		overflow: hidden;
 		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+
+		.dark-theme & {
+			background-color: mat.get-theme-color(dark.$dark-theme, neutral, 10) !important;
+			box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4) !important;
+		}
 	}
 
 	.mat-dialog-overlay {
@@ -121,6 +150,10 @@
 		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
 		height: 85vh !important;
 		max-height: 85vh !important;
+
+		.dark-theme & {
+			background-color: mat.get-theme-color(dark.$dark-theme, neutral, 10) !important;
+		}
 	}
 
 	.mat-mdc-dialog-surface {
@@ -129,6 +162,10 @@
 		height: 100% !important;
 		display: flex !important;
 		flex-direction: column !important;
+
+		.dark-theme & {
+			background-color: mat.get-theme-color(dark.$dark-theme, neutral, 10) !important;
+		}
 	}
 
 	.mat-mdc-dialog-content {
@@ -138,6 +175,10 @@
 		height: 100% !important;
 		display: flex !important;
 		flex-direction: column !important;
+
+		.dark-theme & {
+			background-color: mat.get-theme-color(dark.$dark-theme, neutral, 10) !important;
+		}
 	}
 }
 
@@ -145,6 +186,10 @@
 .dialog-backdrop {
 	background-color: rgba(0, 0, 0, 0.4) !important;
 	backdrop-filter: blur(4px);
+
+	.dark-theme & {
+		background-color: rgba(0, 0, 0, 0.6) !important;
+	}
 }
 
 /* Mobile responsive for category details dialog */

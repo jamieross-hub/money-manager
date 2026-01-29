@@ -1,9 +1,17 @@
+@use '@angular/material' as mat;
+@use '../../../../../styles/light-theme' as light;
+@use '../../../../../styles/dark-theme' as dark;
+
 .mobile-transaction-container {
 	height: 100%;
 	display: flex;
 	flex-direction: column;
 	background: #f8fafc;
 	position: relative;
+
+	:host-context(.dark-theme) & {
+		background: mat.get-theme-color(dark.$dark-theme, neutral, 10);
+	}
 }
 
 // Mobile Filter Header
@@ -13,6 +21,11 @@
 	padding: 12px;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	z-index: 10;
+
+	:host-context(.dark-theme) & {
+		background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+		border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+	}
 }
 
 // Active Filters Indicator
@@ -27,17 +40,30 @@
 	margin-bottom: 8px;
 	animation: fadeIn 0.3s ease;
 
+	:host-context(.dark-theme) & {
+		background: rgba(mat.get-theme-color(dark.$dark-theme, primary, 40), 0.2);
+		border-color: mat.get-theme-color(dark.$dark-theme, primary, 40);
+	}
+
 	.filter-icon {
 		color: #2563eb;
 		font-size: 16px;
 		width: 16px;
 		height: 16px;
+
+		:host-context(.dark-theme) & {
+			color: #60a5fa;
+		}
 	}
 
 	.filter-text {
 		font-size: 12px;
 		font-weight: 500;
 		color: #2563eb;
+
+		:host-context(.dark-theme) & {
+			color: #60a5fa;
+		}
 	}
 }
 
@@ -66,10 +92,20 @@
 	padding: 0 12px;
 	transition: all 0.2s ease;
 
+	:host-context(.dark-theme) & {
+		background: mat.get-theme-color(dark.$dark-theme, neutral, 10);
+		border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
+	}
+
 	&:focus-within {
 		border-color: #3b82f6;
 		background: white;
 		box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+
+		:host-context(.dark-theme) & {
+			background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+			border-color: mat.get-theme-color(dark.$dark-theme, primary, 40);
+		}
 	}
 }
 
@@ -89,6 +125,10 @@
 	font-size: 16px;
 	color: #1f2937;
 	outline: none;
+
+	:host-context(.dark-theme) & {
+		color: #f9fafb;
+	}
 
 	&::placeholder {
 		color: #9ca3af;
@@ -129,11 +169,22 @@
 	align-items: center;
 	justify-content: center;
 
+	:host-context(.dark-theme) & {
+		background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+		border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
+		color: mat.get-theme-color(dark.$dark-theme, neutral, 95);
+	}
+
 	&:hover {
 		background: #f8fafc;
 		border-color: #cbd5e1;
 		transform: translateY(-1px);
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+		:host-context(.dark-theme) & {
+			background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+			border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 40);
+		}
 	}
 
 	&:active {
@@ -160,6 +211,11 @@
 		background: #f0f9ff;
 		border-color: #0ea5e9;
 		color: #0ea5e9;
+
+		:host-context(.dark-theme) & {
+			background: rgba(14, 165, 233, 0.1);
+			border-color: #0ea5e9;
+		}
 
 		&:hover {
 			background: #e0f2fe;
@@ -246,6 +302,14 @@
 		color: #374151;
 		transition: all 0.2s ease;
 
+		:host-context(.dark-theme) & {
+			color: mat.get-theme-color(dark.$dark-theme, neutral, 95);
+
+			&:hover {
+				background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+			}
+		}
+
 		&:hover {
 			background: #f8fafc;
 		}
@@ -253,6 +317,15 @@
 		&.active-menu-item {
 			background: #eff6ff;
 			color: #1d4ed8;
+
+			:host-context(.dark-theme) & {
+				background: rgba(mat.get-theme-color(dark.$dark-theme, primary, 40), 0.3);
+				color: mat.get-theme-color(dark.$dark-theme, primary, 80);
+
+				mat-icon {
+					color: mat.get-theme-color(dark.$dark-theme, primary, 80);
+				}
+			}
 
 			mat-icon {
 				color: #1d4ed8;
@@ -294,6 +367,11 @@
 	background: white;
 	border-bottom: 1px solid #e2e8f0;
 	padding: 8px 12px;
+
+	:host-context(.dark-theme) & {
+		background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+		border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+	}
 }
 
 .summary-stats {
@@ -315,6 +393,10 @@
 	font-size: 14px;
 	font-weight: 600;
 	color: #1f2937;
+
+	:host-context(.dark-theme) & {
+		color: mat.get-theme-color(dark.$dark-theme, neutral, 95);
+	}
 
 	&.income {
 		color: #10b981;
@@ -368,6 +450,10 @@
 	font-weight: 600;
 	color: #374151;
 	margin-bottom: 8px;
+
+	:host-context(.dark-theme) & {
+		color: mat.get-theme-color(dark.$dark-theme, neutral, 95);
+	}
 }
 
 .empty-description {
@@ -412,6 +498,11 @@
 	overflow: hidden;
 	transition: all 0.2s ease;
 	cursor: pointer;
+
+	:host-context(.dark-theme) & {
+		background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+		border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+	}
 
 	&:hover {
 		transform: translateY(-1px);
@@ -481,6 +572,10 @@
 	line-height: 1.3;
 	font-size: 0.9rem;
 	margin: 0;
+
+	:host-context(.dark-theme) & {
+		color: mat.get-theme-color(dark.$dark-theme, neutral, 95);
+	}
 }
 
 .transaction-category {
@@ -533,6 +628,14 @@
 	&.expense-text {
 		color: #dc2626;
 	}
+
+	:host-context(.dark-theme) &.income-text {
+		color: #34d399;
+	}
+
+	:host-context(.dark-theme) &.expense-text {
+		color: #f87171;
+	}
 }
 
 .amount-type {
@@ -553,6 +656,12 @@
     top: 5px;
     left: 4px;
     border: 0.5px dotted;
+
+	:host-context(.dark-theme) & {
+		background-color: mat.get-theme-color(dark.$dark-theme, neutral, 6);
+		color: mat.get-theme-color(dark.$dark-theme, neutral, 80);
+		border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
+	}
 }
 
 // Action Buttons
@@ -561,6 +670,11 @@
 	border-top: 1px solid #e5e7eb;
 	padding: 8px 12px;
 	animation: slideDown 0.2s ease;
+
+	:host-context(.dark-theme) & {
+		background: mat.get-theme-color(dark.$dark-theme, neutral, 6);
+		border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
+	}
 }
 
 .actions-container {
@@ -604,6 +718,11 @@
 	border-top: 1px solid #e5e7eb;
 	padding: 16px 12px;
 	animation: slideDown 0.3s ease;
+
+	:host-context(.dark-theme) & {
+		background: mat.get-theme-color(dark.$dark-theme, neutral, 6);
+		border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
+	}
 }
 
 .details-container {
@@ -621,6 +740,10 @@
 
 	&:last-child {
 		border-bottom: none;
+	}
+
+	:host-context(.dark-theme) & {
+		border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
 	}
 }
 
@@ -643,6 +766,10 @@
 	font-size: 14px;
 	font-weight: 500;
 	color: #374151;
+
+	:host-context(.dark-theme) & {
+		color: mat.get-theme-color(dark.$dark-theme, neutral, 90);
+	}
 }
 
 .detail-value {
@@ -658,6 +785,10 @@
 	font-size: 14px;
 	font-weight: 600;
 	color: #1f2937;
+
+	:host-context(.dark-theme) & {
+		color: mat.get-theme-color(dark.$dark-theme, neutral, 95);
+	}
 }
 
 .account-type {
@@ -673,6 +804,11 @@
 	background: #f3f4f6;
 	padding: 2px 6px;
 	border-radius: 4px;
+
+	:host-context(.dark-theme) & {
+		background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+		color: mat.get-theme-color(dark.$dark-theme, neutral, 80);
+	}
 }
 
 .recurring-info {
@@ -702,6 +838,10 @@
 	text-align: left;
 	max-width: 200px;
 	word-wrap: break-word;
+
+	:host-context(.dark-theme) & {
+		color: mat.get-theme-color(dark.$dark-theme, neutral, 90);
+	}
 }
 
 // Floating Action Button
@@ -784,6 +924,11 @@
 	border: 1px solid #bae6fd;
 	border-radius: 6px;
 	font-size: 14px;
+
+	:host-context(.dark-theme) & {
+		background: rgba(mat.get-theme-color(dark.$dark-theme, primary, 40), 0.1);
+		border-color: mat.get-theme-color(dark.$dark-theme, primary, 40);
+	}
 
 	.split-category {
 		font-weight: 500;

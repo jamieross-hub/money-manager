@@ -1,2 +1,21 @@
-// Common header component styles
-// Additional custom styles can be added here if needed 
+@use '@angular/material' as mat;
+@use '../../../../../styles/dark-theme' as dark;
+
+.common-header-container {
+	:host-context(.dark-theme) & {
+		background-color: mat.get-theme-color(dark.$dark-theme, neutral, 10) !important;
+		border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20) !important;
+		
+		h6 {
+			color: mat.get-theme-color(dark.$dark-theme, neutral, 95) !important;
+		}
+
+		.mat-icon-button {
+			color: mat.get-theme-color(dark.$dark-theme, neutral, 70);
+			
+			&:hover {
+				color: mat.get-theme-color(dark.$dark-theme, neutral, 95);
+			}
+		}
+	}
+}

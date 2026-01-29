@@ -1,3 +1,6 @@
+@use '@angular/material' as mat;
+@use '../../../../../../styles/dark-theme' as dark;
+
 /* Base styles */
 :host {
   display: flex;
@@ -8,17 +11,62 @@
 }
 
 /* Dark theme */
-.dark :host {
-  background-color: #111827;
+:host-context(.dark-theme) {
+  background-color: mat.get-theme-color(dark.$dark-theme, neutral, 6);
 }
 
 /* Form field focus states - optimized for performance */
-input:focus,
-select:focus,
-textarea:focus {
-  outline: none;
-  transform: scale(1.01);
-  transition: transform 0.15s ease-out;
+input,
+select,
+textarea {
+  &:focus {
+    outline: none;
+    transform: scale(1.01);
+    transition: transform 0.15s ease-out;
+  }
+
+  :host-context(.dark-theme) & {
+    color: mat.get-theme-color(dark.$dark-theme, neutral, 95) !important;
+    border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30) !important;
+
+    &::placeholder {
+      color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 60) !important;
+    }
+  }
+}
+
+label {
+  :host-context(.dark-theme) & {
+    color: mat.get-theme-color(dark.$dark-theme, neutral, 90) !important;
+  }
+}
+
+.text-gray-500, .text-gray-400 {
+  :host-context(.dark-theme) & {
+    color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 70) !important;
+  }
+}
+
+.text-gray-700, .text-gray-600 {
+  :host-context(.dark-theme) & {
+    color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 80) !important;
+  }
+}
+
+.text-gray-900 {
+  :host-context(.dark-theme) & {
+    color: mat.get-theme-color(dark.$dark-theme, neutral, 95) !important;
+  }
+}
+
+.text-blue-600 {
+  :host-context(.dark-theme) & {
+    color: mat.get-theme-color(dark.$dark-theme, secondary, 80) !important;
+    
+    &:hover {
+      color: mat.get-theme-color(dark.$dark-theme, secondary, 90) !important;
+    }
+  }
 }
 
 /* Button interactions - optimized */
@@ -58,15 +106,56 @@ input[type="number"]::-webkit-inner-spin-button {
 
 /* Card interactions - optimized */
 .bg-white,
-.dark .bg-gray-800 {
+:host-context(.dark-theme) .bg-gray-800 {
   transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
   will-change: transform;
+
+  :host-context(.dark-theme) & {
+    background-color: mat.get-theme-color(dark.$dark-theme, neutral, 10) !important;
+  }
+}
+
+.bg-green-50 {
+  :host-context(.dark-theme) & {
+    background-color: rgba(mat.get-theme-color(dark.$dark-theme, primary, 40), 0.1) !important;
+    border: 1px solid rgba(mat.get-theme-color(dark.$dark-theme, primary, 40), 0.2);
+
+    span, p, mat-icon {
+      color: mat.get-theme-color(dark.$dark-theme, primary, 80) !important;
+    }
+  }
+}
+
+.bg-blue-50 {
+  :host-context(.dark-theme) & {
+    background-color: rgba(mat.get-theme-color(dark.$dark-theme, secondary, 40), 0.1) !important;
+    border: 1px solid rgba(mat.get-theme-color(dark.$dark-theme, secondary, 40), 0.2);
+
+    span, p, mat-icon {
+      color: mat.get-theme-color(dark.$dark-theme, secondary, 80) !important;
+    }
+  }
+}
+
+.bg-gray-50 {
+  :host-context(.dark-theme) & {
+    background-color: mat.get-theme-color(dark.$dark-theme, neutral, 12) !important;
+    border: 1px solid mat.get-theme-color(dark.$dark-theme, neutral, 20);
+
+    span, p, mat-icon {
+      color: mat.get-theme-color(dark.$dark-theme, neutral, 90) !important;
+    }
+  }
 }
 
 .bg-white:hover,
-.dark .bg-gray-800:hover {
+:host-context(.dark-theme) .bg-gray-800:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+  :host-context(.dark-theme) & {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
 }
 
 /* Loading state */
@@ -135,7 +224,7 @@ button:disabled {
   }
   
   .bg-white:hover,
-  .dark .bg-gray-800:hover {
+  :host-context(.dark-theme) .bg-gray-800:hover {
     transform: none;
   }
 }
@@ -172,7 +261,7 @@ button:disabled {
   }
   
   .bg-white:hover,
-  .dark .bg-gray-800:hover {
+  :host-context(.dark-theme) .bg-gray-800:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   }
@@ -189,7 +278,7 @@ button:disabled {
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
   /* Optimize for retina displays */
   .bg-white,
-  .dark .bg-gray-800 {
+  :host-context(.dark-theme) .bg-gray-800 {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 }
@@ -210,7 +299,7 @@ button:disabled {
   textarea:focus,
   button,
   .bg-white,
-  .dark .bg-gray-800 {
+  :host-context(.dark-theme) .bg-gray-800 {
     transform: none !important;
     transition: none !important;
   }
