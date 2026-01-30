@@ -28,21 +28,21 @@ import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 })
 export class CalendarViewComponent implements OnInit, OnDestroy {
 
-  @ViewChild('calendar') calendar!: MatCalendar<Date>;  
+  @ViewChild('calendar') calendar!: MatCalendar<Date>;
 
   isMobile = false;
   transactions: Transaction[] = [];
   categories: Category[] = [];
   selectedDate: Date | null = null;
   selectedDateTransactions: Transaction[] = [];
-  
-  
+
+
   // Date range selection properties
   isRangeMode = false;
   startDate: Date | null = null;
   endDate: Date | null = null;
   rangeTransactions: Transaction[] = [];
-  
+
   // Collapsible controls
   isControlsExpanded = false;
 
@@ -55,10 +55,10 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
   showPieChart = false;
   showCalendar = true;
   chartViewMode: 'income-expense' | 'category' = 'category';
-  
+
   // Calendar navigation
   currentViewDate = new Date();
-  
+
   // Date filter options
   selectedYear = new Date().getFullYear();
   selectedMonth = new Date().getMonth();
@@ -97,7 +97,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     '#1F2937', // Dark Gray
     '#DC2626'  // Dark Red
   ];
-  
+
   private subscription = new Subscription();
 
   constructor(
@@ -255,19 +255,19 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
   }
 
   loadTransactions() {
-      this.subscription.add(
-        this.store.select(TransactionsSelectors.selectAllTransactions).subscribe({
-          next: (transactions) => {
-            this.transactions = transactions;
-            this.updatePieChart();
-            this.updateCalendar();
-          },
-          error: (error) => {
-            console.error('Error loading transactions:', error);
-            this.notificationService.error('Failed to load calendar data');
-          }
-        })
-      );
+    this.subscription.add(
+      this.store.select(TransactionsSelectors.selectAllTransactions).subscribe({
+        next: (transactions) => {
+          this.transactions = transactions;
+          this.updatePieChart();
+          this.updateCalendar();
+        },
+        error: (error) => {
+          console.error('Error loading transactions:', error);
+          this.notificationService.error('Failed to load calendar data');
+        }
+      })
+    );
   }
 
   loadCategories() {
@@ -305,12 +305,12 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
   updateCategoryChart() {
     const filteredTransactions = this.getFilteredTransactions();
     const categoryData = this.getCategorySpendingData(filteredTransactions);
-    
+
     this.browserOnly(() => {
       if (this.series1 && this.series2 && this.chart) {
         // Get the maximum amount for scaling
         const maxAmount = Math.max(...categoryData.map(item => item.value), 1);
-        
+
         // Update x-axis max value
         const xAxis = this.chart.xAxes.getIndex(0);
         if (xAxis) {
@@ -331,7 +331,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
         // Set data for both series
         this.series1.data.setAll(gaugeData);
         this.series2.data.setAll(gaugeData);
-        
+
         // Update y-axis data
         const yAxis = this.chart.yAxes.getIndex(0);
         if (yAxis) {
@@ -351,15 +351,15 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     // Find the category name for display
     const category = this.categories.find(c => c.id === categoryId);
     const categoryName = category ? category.name : categoryId;
-    
+
     // Set category filter using the FilterService
     this.filterService.setSelectedCategory([categoryId]);
-    
+
     // Also set the date range to the current month/year for context
     const startDate = moment([this.selectedYear, this.selectedMonth, 1]).startOf('month').toDate();
     const endDate = moment([this.selectedYear, this.selectedMonth, 1]).endOf('month').toDate();
     this.filterService.setSelectedDateRange(startDate, endDate);
-    
+
     // Show success notification
     this.notificationService.success(`Filtering transactions for ${categoryName} in ${this.availableMonths[this.selectedMonth].label} ${this.selectedYear}`);
   }
@@ -381,17 +381,17 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     const maxAmount = Math.max(income, expenses, 1);
 
     const data = [
-      { 
-        category: 'Income', 
-        value: income, 
+      {
+        category: 'Income',
+        value: income,
         full: maxAmount,
         columnSettings: {
           fill: am5.color('#10b981')
         }
       },
-      { 
-        category: 'Expenses', 
-        value: expenses, 
+      {
+        category: 'Expenses',
+        value: expenses,
         full: maxAmount,
         columnSettings: {
           fill: am5.color('#ef4444')
@@ -410,7 +410,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
         // Set data for both series
         this.series1.data.setAll(data);
         this.series2.data.setAll(data);
-        
+
         // Update y-axis data
         const yAxis = this.chart.yAxes.getIndex(0);
         if (yAxis) {
@@ -429,23 +429,23 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
   getFilteredTransactions(): Transaction[] {
     const startOfMonth = moment([this.selectedYear, this.selectedMonth, 1]);
     const endOfMonth = moment(startOfMonth).endOf('month');
-    
+
     return this.transactions.filter(transaction => {
       const transactionDate = moment(this.dateService.toDate(transaction.date));
-      return transactionDate.isBetween(startOfMonth, endOfMonth, 'day', '[]') && 
-             transaction.type === 'expense';
+      return transactionDate.isBetween(startOfMonth, endOfMonth, 'day', '[]') &&
+        transaction.type === 'expense';
     });
   }
 
   // Get category-wise spending data
   getCategorySpendingData(transactions: Transaction[]): any[] {
     const categoryMap = new Map<string, { name: string; id: string; amount: number }>();
-    
+
     transactions.forEach(transaction => {
       const categoryId = transaction.categoryId;
       const category = this.categories.find(c => c.id === categoryId);
       const categoryName = category ? category.name : '';
-      
+
       if (categoryName && categoryId) {
         if (categoryMap.has(categoryId)) {
           const existing = categoryMap.get(categoryId)!;
@@ -485,7 +485,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
   // Toggle calendar visibility
   toggleCalendar() {
     this.showCalendar = !this.showCalendar;
-    this.showPieChart =  !this.showCalendar ;
+    this.showPieChart = !this.showCalendar;
   }
 
   // Toggle chart view mode
@@ -509,14 +509,23 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
   // Calendar navigation methods
   goToPreviousMonth() {
     this.currentViewDate = moment(this.currentViewDate).subtract(1, 'month').toDate();
+    if (this.calendar) {
+      this.calendar.activeDate = this.currentViewDate;
+    }
   }
 
   goToNextMonth() {
     this.currentViewDate = moment(this.currentViewDate).add(1, 'month').toDate();
+    if (this.calendar) {
+      this.calendar.activeDate = this.currentViewDate;
+    }
   }
 
   goToToday() {
     this.currentViewDate = new Date();
+    if (this.calendar) {
+      this.calendar.activeDate = this.currentViewDate;
+    }
   }
 
   // Custom date class function to highlight dates with transactions and range selection using Moment.js
@@ -524,7 +533,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     if (view === 'month') {
       const cellMoment = moment(cellDate).startOf('day');
       let classes = '';
-      
+
       // Check if date has transactions
       const isIncomeTx = this.transactions.some(transaction => {
         const transactionMoment = moment(this.dateService.toDate(transaction.date)).startOf('day');
@@ -535,15 +544,15 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
         const transactionMoment = moment(this.dateService.toDate(transaction.date)).startOf('day');
         return transactionMoment.isSame(cellMoment, 'day');
       });
-      
+
       if (hasTransactions) {
-        if(isIncomeTx){
+        if (isIncomeTx) {
           classes += 'has-transactions has-income ';
-        }else{
+        } else {
           classes += 'has-transactions has-expense ';
         }
       }
-      
+
       // Range mode highlighting
       if (this.isRangeMode) {
         if (this.startDate && moment(this.startDate).startOf('day').isSame(cellMoment, 'day')) {
@@ -565,7 +574,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
           classes += 'selected-date ';
         }
       }
-      
+
       return classes.trim();
     }
     return '';
@@ -621,7 +630,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
   // Get transactions for a specific date using Moment.js
   getTransactionsForDate(date: Date): Transaction[] {
     const targetMoment = moment(date).startOf('day');
-    
+
     return this.transactions.filter(transaction => {
       const transactionMoment = moment(this.dateService.toDate(transaction.date)).startOf('day');
       return transactionMoment.isSame(targetMoment, 'day');
@@ -632,12 +641,12 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
   getTransactionsForDateRange(startDate: Date, endDate: Date): Transaction[] {
     const startMoment = moment(startDate).startOf('day');
     const endMoment = moment(endDate).endOf('day');
-    
+
     return this.transactions.filter(transaction => {
       const transactionMoment = moment(this.dateService.toDate(transaction.date));
       return transactionMoment.isBetween(startMoment, endMoment, 'day', '[]'); // inclusive
     });
-    
+
   }
 
   // Format date to string for comparison using Moment.js
@@ -719,10 +728,10 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     if (!this.startDate || !this.endDate) {
       return '';
     }
-    
+
     const startMoment = moment(this.startDate);
     const endMoment = moment(this.endDate);
-    
+
     if (startMoment.isSame(endMoment, 'day')) {
       return startMoment.format('MMM DD, YYYY');
     } else if (startMoment.isSame(endMoment, 'year')) {
@@ -737,7 +746,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     if (!this.startDate || !this.endDate) {
       return 0;
     }
-    
+
     const startMoment = moment(this.startDate);
     const endMoment = moment(this.endDate);
     return endMoment.diff(startMoment, 'days') + 1; // +1 to include both start and end dates
@@ -765,68 +774,53 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
   }
 
   private subscribeToFilterService() {
-    // // Subscribe to date selection changes from FilterService
-    // this.subscription.add(
-    //   this.filterService.selectedDate$.subscribe(date => {
-    //     if (date && !this.isRangeMode) {
-    //       this.selectedDate = date;
-    //       this.handleSingleDateSelection(date);
-    //       this.updatePieChart();
-    //     }
-    //   })
-    // );
+    // Subscribe to year changes
+    this.subscription.add(
+      this.filterService.selectedYear$.subscribe(yearRange => {
+        if (yearRange) {
+          const newYear = yearRange.startYear;
+          if (this.selectedYear !== newYear) {
+            this.selectedYear = newYear;
+            // Update the calendar's active view to the selected year
+            const currentMonth = moment(this.currentViewDate).month();
+            this.currentViewDate = moment([newYear, currentMonth, 1]).toDate();
+            if (this.calendar) {
+              this.calendar.activeDate = this.currentViewDate;
+            }
+          }
+        }
+        this.updatePieChart();
+      })
+    );
 
-    // // Subscribe to date range changes from FilterService
-    // this.subscription.add(
-    //   this.filterService.selectedDateRange$.subscribe(dateRange => {
-    //     if (dateRange && this.isRangeMode) {
-    //       this.startDate = dateRange.startDate;
-    //       this.endDate = dateRange.endDate;
-    //       this.rangeTransactions = this.getTransactionsForDateRange(dateRange.startDate, dateRange.endDate);
-    //       this.updatePieChart();
-    //     }
-    //   })
-    // );
+    // Subscribe to date range changes (which includes month selections)
+    this.subscription.add(
+      this.filterService.selectedDateRange$.subscribe(dateRange => {
+        if (dateRange) {
+          const startMoment = moment(dateRange.startDate);
+          const endMoment = moment(dateRange.endDate);
 
-    // // Subscribe to search term changes
-    // this.subscription.add(
-    //   this.filterService.searchTerm$.subscribe(searchTerm => {
-    //     // Update pie chart when search term changes
-    //     this.updatePieChart();
-    //   })
-    // );
+          this.selectedYear = startMoment.year();
 
-    // // Subscribe to category filter changes
-    // this.subscription.add(
-    //   this.filterService.selectedCategory$.subscribe(categories => {
-    //     // Update pie chart when category filter changes
-    //     this.updatePieChart();
-    //   })
-    // );
-
-    // // Subscribe to type filter changes
-    // this.subscription.add(
-    //   this.filterService.selectedType$.subscribe(type => {
-    //     // Update pie chart when type filter changes
-    //     this.updatePieChart();
-    //   })
-    // );
-    
-   // subscribe to month change
-   this.subscription.add(
-    this.filterService.selectedDateRange$.subscribe(dateRange => {
-      if(dateRange){
-        this.selectedMonth = dateRange.startDate.getMonth();
-        this.selectedYear = dateRange.startDate.getFullYear();
-      }
-      this.updatePieChart();
-    })
-   );
-    
+          // Check if the range represents a full month
+          if (startMoment.isSame(startMoment.clone().startOf('month')) &&
+            endMoment.isSame(endMoment.clone().endOf('month')) &&
+            startMoment.month() === endMoment.month()) {
+            this.selectedMonth = startMoment.month();
+            // Update the calendar's active view to this month
+            this.currentViewDate = startMoment.toDate();
+            if (this.calendar) {
+              this.calendar.activeDate = this.currentViewDate;
+            }
+          }
+        }
+        this.updatePieChart();
+      })
+    );
   }
 
   updateCalendar() {
-    if(this.calendar){
+    if (this.calendar) {
       this.calendar.updateTodaysDate();
     }
   }

@@ -1,5 +1,3 @@
-
-
 <mat-card class="demo-inline-calendar-card">
   <div class="m-4 flex justify-around" *ngIf="!isRangeMode && !selectedDate">
     <total-balance class="md:col-span-2 lg:col-span-7"></total-balance>
@@ -9,70 +7,54 @@
     <div class="header-main">
       <div class="header-title sm:text-sm text-xs">
         <mat-icon>calendar_today</mat-icon>
-        <span>Calendar</span>
+        <span>{{ selectedYear }}</span>
       </div>
       <div class="header-actions">
-        <button mat-icon-button 
-                color="warn" 
-                (click)="clearAll()"
-                matTooltip="Clear selection"
-                *ngIf="hasSelection()">
+        <button mat-icon-button color="warn" (click)="clearAll()" matTooltip="Clear selection" *ngIf="hasSelection()">
           <mat-icon>clear</mat-icon>
         </button>
-        <button mat-icon-button 
-                (click)="togglePieChart()"
-                [color]="showPieChart ? 'primary' : 'basic'"
-                matTooltip="{{ showPieChart ? 'Hide gauge chart' : 'Show gauge chart' }}">
+        <button mat-icon-button (click)="togglePieChart()" [color]="showPieChart ? 'primary' : 'basic'"
+          matTooltip="{{ showPieChart ? 'Hide gauge chart' : 'Show gauge chart' }}">
           <mat-icon>pie_chart</mat-icon>
         </button>
-        <button mat-icon-button 
-                (click)="toggleCalendar()"
-                [color]="showCalendar && !showPieChart ? 'primary' : 'basic'"
-                matTooltip="{{ showCalendar && !showPieChart ? 'Hide calendar' : 'Show calendar' }}">
+        <button mat-icon-button (click)="toggleCalendar()" [color]="showCalendar && !showPieChart ? 'primary' : 'basic'"
+          matTooltip="{{ showCalendar && !showPieChart ? 'Hide calendar' : 'Show calendar' }}">
           <mat-icon>calendar_month</mat-icon>
         </button>
-        <button mat-icon-button *ngIf="!isMobile"
-                (click)="toggleControls()"
-                [class.rotated]="isControlsExpanded"
-                matTooltip="{{ isControlsExpanded ? 'Hide controls' : 'Show controls' }}">
+        <button mat-icon-button *ngIf="!isMobile" (click)="toggleControls()" [class.rotated]="isControlsExpanded"
+          matTooltip="{{ isControlsExpanded ? 'Hide controls' : 'Show controls' }}">
           <mat-icon>expand_more</mat-icon>
         </button>
       </div>
     </div>
-    
+
     <!-- Collapsible Controls Section -->
     <div class="controls-section" [class.expanded]="isControlsExpanded">
       <div class="mode-toggle">
-        <button mat-raised-button 
-                [color]="!isRangeMode ? 'primary' : 'basic'"
-                (click)="toggleRangeMode()">
+        <button mat-raised-button [color]="!isRangeMode ? 'primary' : 'basic'" (click)="toggleRangeMode()">
           <mat-icon>event</mat-icon>
           Single Date
         </button>
-        <button mat-raised-button 
-                [color]="isRangeMode ? 'primary' : 'basic'"
-                (click)="toggleRangeMode()">
+        <button mat-raised-button [color]="isRangeMode ? 'primary' : 'basic'" (click)="toggleRangeMode()">
           <mat-icon>date_range</mat-icon>
           Date Range
         </button>
       </div>
-      
+
       <!-- Chart View Mode Toggle -->
       <div class="chart-mode-toggle" *ngIf="showPieChart">
-        <button mat-raised-button 
-                [color]="chartViewMode === 'category' ? 'primary' : 'basic'"
-                (click)="toggleChartViewMode()">
+        <button mat-raised-button [color]="chartViewMode === 'category' ? 'primary' : 'basic'"
+          (click)="toggleChartViewMode()">
           <mat-icon>category</mat-icon>
           Category View
         </button>
-        <button mat-raised-button 
-                [color]="chartViewMode === 'income-expense' ? 'primary' : 'basic'"
-                (click)="toggleChartViewMode()">
+        <button mat-raised-button [color]="chartViewMode === 'income-expense' ? 'primary' : 'basic'"
+          (click)="toggleChartViewMode()">
           <mat-icon>compare_arrows</mat-icon>
           Income vs Expense
         </button>
       </div>
-      
+
       <!-- Date Filters for Category Chart -->
       <div class="date-filters" *ngIf="showPieChart && chartViewMode === 'category'">
         <div class="filter-row">
@@ -86,7 +68,7 @@
               }
             </mat-select>
           </mat-form-field>
-          
+
           <mat-form-field appearance="fill" class="month-select">
             <mat-label>Month</mat-label>
             <mat-select [(value)]="selectedMonth" (selectionChange)="onMonthChange($event.value)">
@@ -99,24 +81,17 @@
           </mat-form-field>
         </div>
       </div>
-      
+
       <!-- Calendar Navigation Controls -->
       <div class="calendar-navigation" *ngIf="showCalendar">
-        <button mat-icon-button 
-                (click)="goToPreviousMonth()"
-                matTooltip="Previous month">
+        <button mat-icon-button (click)="goToPreviousMonth()" matTooltip="Previous month">
           <mat-icon>chevron_left</mat-icon>
         </button>
-        <button mat-raised-button 
-                color="primary"
-                (click)="goToToday()"
-                matTooltip="Go to today">
+        <button mat-raised-button color="primary" (click)="goToToday()" matTooltip="Go to today">
           <mat-icon>today</mat-icon>
           Today
         </button>
-        <button mat-icon-button 
-                (click)="goToNextMonth()"
-                matTooltip="Next month">
+        <button mat-icon-button (click)="goToNextMonth()" matTooltip="Next month">
           <mat-icon>chevron_right</mat-icon>
         </button>
       </div>
@@ -150,7 +125,7 @@
           <span *ngIf="!endDate" class="date-placeholder">Not selected</span>
         </div>
       </div>
-      
+
       <!-- Range Summary -->
       <div *ngIf="startDate && endDate" class="range-summary">
         <div class="summary-grid">
@@ -170,7 +145,8 @@
           </div>
         </div>
         <div class="transaction-count">
-          {{ rangeTransactions.length }} transactions in {{ getDaysInRange() }} day{{ getDaysInRange() !== 1 ? 's' : '' }}
+          {{ rangeTransactions.length }} transactions in {{ getDaysInRange() }} day{{ getDaysInRange() !== 1 ? 's' : ''
+          }}
         </div>
       </div>
     </div>
@@ -209,11 +185,7 @@
 
   <!-- Calendar -->
   <div class="calendar-container" *ngIf="showCalendar && !showPieChart">
-    <mat-calendar 
-      #calendar
-      [dateClass]="dateClass"
-      [selected]="selectedDate"
-      (selectedChange)="onDateSelected($event)">
+    <mat-calendar #calendar [dateClass]="dateClass" [selected]="selectedDate" (selectedChange)="onDateSelected($event)">
     </mat-calendar>
   </div>
 </mat-card>
@@ -229,8 +201,8 @@
       </mat-card-title>
     </mat-card-header>
     <mat-card-content> -->
-      <!-- Summary -->
-      <!-- <div class="grid grid-cols-3 gap-4 mb-4">
+<!-- Summary -->
+<!-- <div class="grid grid-cols-3 gap-4 mb-4">
         <div class="text-center p-3 bg-green-100 rounded-lg">
           <div class="text-sm text-gray-600">Income</div>
           <div class="text-lg font-bold text-green-600">${{ getTotalIncome() | number:'1.2-2' }}</div>
@@ -247,8 +219,8 @@
         </div>
       </div> -->
 
-      <!-- Transaction list -->
-      <!-- <div class="space-y-2">
+<!-- Transaction list -->
+<!-- <div class="space-y-2">
         <div *ngFor="let transaction of selectedDateTransactions" 
              class="flex items-center justify-between p-3 border rounded-lg"
              [ngClass]="transaction.type === 'income' ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'">
