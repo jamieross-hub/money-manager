@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main  # Change if needed
+      - main
 
 permissions:
   contents: read
@@ -38,14 +38,27 @@ jobs:
           FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
           FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
           VAPID_KEY: ${{ secrets.VAPID_KEY }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           CONTACT_SPREADSHEET_ID: ${{ secrets.CONTACT_SPREADSHEET_ID }}
 
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
-            path: dist/money-manager/browser  # Your actual output folder
+          path: dist/money-manager/browser
+
+      # ❌ Slack on build failure
+      - name: Notify Slack on build failure
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{
+            \"text\": \"❌ *Build Failed*\n\
+            *Repo:* ${{ github.repository }}\n\
+            *Branch:* ${{ github.ref_name }}\n\
+            *Commit:* <${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|View Commit>\n\
+            *Logs:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>\"
+          }" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
 
   deploy:
     needs: build-deploy
@@ -54,3 +67,30 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
+
+      # ✅ Slack on successful deploy
+      - name: Notify Slack on success
+        if: success()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{
+            \"text\": \"✅ *Deployment Successful!*\n\
+            *Repo:* ${{ github.repository }}\n\
+            *Branch:* ${{ github.ref_name }}\n\
+            *Live URL:* <https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}>\n\
+            *Commit:* <${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|View Commit>\"
+          }" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      # ❌ Slack on deploy failure
+      - name: Notify Slack on deploy failure
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{
+            \"text\": \"❌ *Deployment Failed*\n\
+            *Repo:* ${{ github.repository }}\n\
+            *Branch:* ${{ github.ref_name }}\n\
+            *Logs:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>\"
+          }" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
