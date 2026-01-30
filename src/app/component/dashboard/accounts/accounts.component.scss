@@ -106,15 +106,10 @@ mat-card.error-message {
   }
 
   .add-account-btn {
-    border-radius: 12px; // Slightly rounder
-    height: clamp(48px, 10vw, 52px); // Taller button
-    padding: 0 clamp(1.25rem, 3vw, 2rem);
     font-weight: 600;
     font-size: 1rem;
-    background: #2563eb;
     color: white;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2), 0 2px 4px -1px rgba(37, 99, 235, 0.1); // Softer shadow
 
     &:hover {
       background: #1d4ed8;
