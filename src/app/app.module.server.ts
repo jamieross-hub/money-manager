@@ -17,6 +17,6 @@ import { AppShellComponent } from './app-shell/app-shell.component';
     AppRoutingModule
   ],
   bootstrap: [AppComponent],
- 
+
 })
-export class AppServerModule {}
+export class AppServerModule { }

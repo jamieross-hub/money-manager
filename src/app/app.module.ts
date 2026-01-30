@@ -90,6 +90,7 @@ import { AnalyticsSummaryCardComponent } from './util/components/cards/analytics
 import { RecentActivityCardComponent } from './util/components/cards/recent-activity-card/recent-activity-card.component';
 import { MonthlyTrendsCardComponent } from './util/components/cards/monthly-trends-card/monthly-trends-card.component';
 import { CategoryBreakdownCardComponent } from './util/components/cards/category-breakdown-card/category-breakdown-card.component';
+import { MonthlyExpenditureCardComponent } from './util/components/cards/monthly-expenditure-card/monthly-expenditure-card.component';
 import { QuickActionsFabComponent } from './util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 
 // Notification Components
@@ -211,6 +212,7 @@ import { UpcomingTransactionsCardComponent } from './util/components/cards/upcom
     MonthlyTrendsCardComponent,
     CategoryBreakdownCardComponent,
     UpcomingTransactionsCardComponent,
+    MonthlyExpenditureCardComponent,
 
     // Floating Action Button Components
     QuickActionsFabComponent,

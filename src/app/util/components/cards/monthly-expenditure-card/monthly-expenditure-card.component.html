@@ -1,0 +1,36 @@
+<mat-card class="trend-card">
+    <div class="trend-header">
+        <div class="title-section">
+            <h3 class="card-title text-uppercase">Monthly Expenditure</h3>
+            <div class="metrics-row">
+                <div class="metric-item">
+                    <span class="dot peak-dot"></span>
+                    <span class="label">Peak:</span>
+                    <span class="value">{{ peakValue | number:'1.0-0' }}</span>
+                </div>
+                <div class="metric-item">
+                    <span class="dot avg-dot"></span>
+                    <span class="label">Avg:</span>
+                    <span class="value">{{ avgValue | number:'1.0-0' }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="action-section">
+            <div class="toggle-group">
+                <button mat-icon-button [class.active]="chartType === 'line'" (click)="toggleChartType('line')"
+                    matTooltip="Line Chart">
+                    <mat-icon>show_chart</mat-icon>
+                </button>
+                <button mat-icon-button [class.active]="chartType === 'bar'" (click)="toggleChartType('bar')"
+                    matTooltip="Bar Chart">
+                    <mat-icon>bar_chart</mat-icon>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <mat-card-content>
+        <div [id]="chartId" class="chart-container"></div>
+        <p class="chart-footer text-center mt-2">Expenditure per month</p>
+    </mat-card-content>
+</mat-card>

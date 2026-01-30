@@ -4,9 +4,10 @@
 </mobile-transaction-list>
 
 } @else if (!isHome && !breakpointService.device.isMobile && !breakpointService.device.isTablePortrait) {
-<div class="grid grid-cols-12 gap-2 lg:mt-20 lg:px-16 xl:px-32  2xl:px-48">
+<div class="grid grid-cols-12 gap-5  lg:px-16 xl:px-32  2xl:px-48">
 	<div class="col-span-3">
 		<calendar-view></calendar-view>
+		<app-monthly-expenditure-card></app-monthly-expenditure-card>
 	</div>
 	<div class="col-span-9">
 		<!-- <total-balance ></total-balance> -->
