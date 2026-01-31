@@ -1,8 +1,20 @@
+@use '@angular/material' as mat;
+@use '../../../../styles/light-theme' as light;
+@use '../../../../styles/dark-theme' as dark;
+
 /* Auth Section */
 .auth-section {
   position: relative;
   overflow-x: hidden;
   
+  :host-context(.dark-theme) & {
+    background: linear-gradient(to bottom right, 
+      mat.get-theme-color(dark.$dark-theme, primary, 0),
+      mat.get-theme-color(dark.$dark-theme, primary, 10),
+      mat.get-theme-color(dark.$dark-theme, primary, 20)
+    );
+  }
+
   &::before {
     content: '';
     position: absolute;
@@ -12,6 +24,10 @@
     height: 200%;
     background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
     animation: pulse 15s ease-in-out infinite;
+
+    :host-context(.dark-theme) & {
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+    }
   }
 }
 
@@ -25,6 +41,12 @@
   position: relative;
   z-index: 10;
   backdrop-filter: blur(10px);
+
+  :host-context(.dark-theme) & {
+    background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+    border: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
 }
 
 /* Auth Content Scrolling */
@@ -48,6 +70,18 @@
       background-color: rgba(156, 163, 175, 0.5);
     }
   }
+
+  :host-context(.dark-theme) & {
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.1);
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+    }
+  }
 }
 
 /* Form Input Styles */
@@ -60,6 +94,22 @@
   
   &:focus {
     transform: translateY(-1px);
+  }
+
+  :host-context(.dark-theme) & {
+    background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+    border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
+    color: mat.get-theme-color(dark.$dark-theme, neutral, 100);
+
+    &:focus {
+      background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+      border-color: mat.get-theme-color(dark.$dark-theme, primary, 50);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+    }
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
   }
 }
 
@@ -90,6 +140,11 @@
   opacity: 0;
   transform: translateY(10px);
   animation: fadeInUp 0.3s ease-out 0.5s forwards;
+
+  :host-context(.dark-theme) & {
+    background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+    border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
+  }
 }
 
 /* Form Container Optimization */

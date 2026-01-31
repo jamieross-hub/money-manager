@@ -2,9 +2,9 @@
   *ngIf="!breakpointService.device.isMobileSmall && !breakpointService.device.isMobile"></app-pre-login-header>
 
 <section
-  class="auth-section flex items-center justify-center min-h-[100dvh] bg-gradient-to-br from-primary-50 via-white to-primary-100 p-0 sm:px-4 sm:py-12">
+  class="auth-section flex items-center justify-center min-h-[100dvh] bg-gradient-to-br from-primary-50 via-white to-primary-100 dark:from-gray-900 dark:via-black dark:to-gray-950 p-0 sm:px-4 sm:py-12">
   <div
-    class="auth-container w-full sm:h-auto sm:max-w-md lg:max-w-lg bg-white sm:rounded-2xl sm:shadow-2xl lg:overflow-hidden min-h-[100dvh] sm:min-h-0">
+    class="auth-container w-full sm:h-auto sm:max-w-md lg:max-w-lg bg-white dark:bg-neutral-900 dark:border-neutral-800 sm:rounded-2xl sm:shadow-2xl lg:overflow-hidden min-h-[100dvh] sm:min-h-0">
     <div
       class="auth-content px-6 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12 sm:overflow-y-auto sm:max-h-[calc(100vh-8rem)]">
 
@@ -14,25 +14,28 @@
       </div>
 
       <!-- Welcome Text -->
-      <p class="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-2">
+      <p class="text-2xl sm:text-3xl font-bold text-center text-gray-900 dark:text-white mb-2">
         {{ isSignInPage ? 'Welcome Back!' : 'Create Account' }}
       </p>
-      <!-- <p class="text-sm sm:text-base text-center text-gray-600 mb-6">
+      <!-- <p class="text-sm sm:text-base text-center text-gray-600 dark:text-gray-400 mb-6">
         {{ isSignInPage ? ('welcomeBack' | translate) : 'Join us to manage your finances better' }}
       </p> -->
 
       <!-- Security Status Alerts -->
-      <div *ngIf="isAccountLocked" class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+      <div *ngIf="isAccountLocked"
+        class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 dark:border-red-600 rounded-lg">
         <div class="flex items-start">
-          <svg class="w-5 h-5 mr-3 mt-0.5 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <svg class="w-5 h-5 mr-3 mt-0.5 text-red-500 dark:text-red-400 flex-shrink-0" fill="currentColor"
+            viewBox="0 0 20 20">
             <path fill-rule="evenodd"
               d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
               clip-rule="evenodd"></path>
           </svg>
           <div class="flex-1">
-            <p class="font-semibold text-red-800 text-sm sm:text-base">Account Temporarily Locked</p>
-            <p class="mt-1 text-sm text-red-700">Too many failed login attempts. Please try again later.</p>
-            <p *ngIf="lockoutTimeRemaining > 0" class="mt-1 text-sm text-red-700 font-medium">
+            <p class="font-semibold text-red-800 dark:text-red-200 text-sm sm:text-base">Account Temporarily Locked</p>
+            <p class="mt-1 text-sm text-red-700 dark:text-red-300">Too many failed login attempts. Please try again
+              later.</p>
+            <p *ngIf="lockoutTimeRemaining > 0" class="mt-1 text-sm text-red-700 dark:text-red-300 font-medium">
               Time remaining: {{ getLockoutTimeRemaining() }} minutes
             </p>
           </div>
@@ -41,16 +44,17 @@
 
       <!-- Login Attempts Warning -->
       <div *ngIf="!isAccountLocked && loginAttempts > 0"
-        class="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-lg">
+        class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 dark:border-yellow-600 rounded-lg">
         <div class="flex items-start">
-          <svg class="w-5 h-5 mr-3 mt-0.5 text-yellow-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <svg class="w-5 h-5 mr-3 mt-0.5 text-yellow-500 dark:text-yellow-400 flex-shrink-0" fill="currentColor"
+            viewBox="0 0 20 20">
             <path fill-rule="evenodd"
               d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
               clip-rule="evenodd"></path>
           </svg>
           <div class="flex-1">
-            <p class="font-semibold text-yellow-800 text-sm sm:text-base">Login Attempts</p>
-            <p class="mt-1 text-sm text-yellow-700">
+            <p class="font-semibold text-yellow-800 dark:text-yellow-200 text-sm sm:text-base">Login Attempts</p>
+            <p class="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
               Failed attempts: {{ loginAttempts }} / {{ maxLoginAttempts }}
             </p>
           </div>
@@ -62,7 +66,7 @@
 
         <!-- Email Field -->
         <div class="form-group">
-          <label class="block mb-2 text-sm font-semibold text-gray-700" for="LoggingEmailAddress">
+          <label class="block mb-2 text-sm font-semibold text-gray-700 dark:text-white" for="LoggingEmailAddress">
             {{ 'email' | translate }} Address
           </label>
           <input id="LoggingEmailAddress" formControlName="email"
@@ -86,7 +90,7 @@
 
         <!-- Name field for sign-up -->
         <div *ngIf="!isSignInPage" class="form-group">
-          <label class="block mb-2 text-sm font-semibold text-gray-700" for="userName">
+          <label class="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300" for="userName">
             Full Name
           </label>
           <input id="userName" formControlName="name"
@@ -108,11 +112,11 @@
         <!-- Password Field -->
         <div class="form-group">
           <div class="flex justify-between items-center mb-2">
-            <label class="block text-sm font-semibold text-gray-700" for="loggingPassword">
+            <label class="block text-sm font-semibold text-gray-700 dark:text-white " for="loggingPassword">
               {{ 'password' | translate }}
             </label>
             <a *ngIf="isSignInPage"
-              class="text-xs text-primary hover:text-primary-700 font-medium transition-colors cursor-pointer">
+              class="text-xs text-primary dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium transition-colors cursor-pointer">
               Forgot Password?
             </a>
           </div>
@@ -142,10 +146,10 @@
           <!-- Password Strength Indicator (for sign-up) -->
           <div *ngIf="!isSignInPage && signInForm.get('password')?.value" class="mt-3">
             <div class="flex items-center justify-between text-sm mb-1">
-              <span class="text-gray-600">Password strength:</span>
+              <span class="text-gray-600 dark:text-gray-400">Password strength:</span>
               <span [class]="getPasswordStrengthColor()" class="font-semibold">{{ getPasswordStrengthText() }}</span>
             </div>
-            <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div class="w-full bg-gray-200 dark:bg-neutral-800 rounded-full h-2 overflow-hidden">
               <div class="h-2 rounded-full transition-all duration-300" [ngClass]="{
                   'bg-red-500': passwordStrength <= 1,
                   'bg-yellow-500': passwordStrength === 2,
@@ -176,7 +180,7 @@
 
         <!-- Confirm Password field for sign-up -->
         <div *ngIf="!isSignInPage" class="form-group">
-          <label class="block mb-2 text-sm font-semibold text-gray-700" for="confirmPassword">
+          <label class="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300" for="confirmPassword">
             {{ 'confirmPassword' | translate }}
           </label>
 
@@ -229,7 +233,7 @@
           </button>
 
           <button type="button" (click)="signInWithGoogle()" [disabled]="isLoading || isAccountLocked"
-            class="w-full px-6 py-3.5 text-base font-medium text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-4 focus:ring-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg">
+            class="w-full px-6 py-3.5 text-base font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-neutral-800 border-2 border-gray-300 dark:border-neutral-700 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 hover:border-gray-400 dark:hover:border-neutral-600 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg">
             <div class="flex items-center justify-center">
               <svg *ngIf="!isLoading" class="w-5 h-5 mr-2 flex-shrink-0" viewBox="0 0 40 40">
                 <path
@@ -252,7 +256,7 @@
           </button>
 
           <button type="button" (click)="continueAsGuest()" [disabled]="isLoading || isAccountLocked"
-            class="w-full px-6 py-3.5 text-base font-medium text-primary bg-primary-50 border-2 border-primary-200 rounded-lg hover:bg-primary-100 hover:border-primary-300 focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md">
+            class="w-full px-6 py-3.5 text-base font-medium text-primary dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 border-2 border-primary-200 dark:border-primary-800 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/30 hover:border-primary-300 dark:hover:border-primary-700 focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md">
             <div class="flex items-center justify-center">
               <mat-icon>wifi_off</mat-icon>
               <span class="ml-2">Use Offline</span>
@@ -262,25 +266,27 @@
 
         <!-- Divider -->
         <div class="flex items-center justify-center my-6">
-          <span class="flex-1 border-b border-gray-300"></span>
+          <span class="flex-1 border-b border-gray-300 dark:border-neutral-700"></span>
           <a (click)="gotoPage()"
-            class="px-4 text-sm text-gray-600 hover:text-primary font-medium cursor-pointer transition-colors">
+            class="px-4 text-sm text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary-400 font-medium cursor-pointer transition-colors">
             or {{isSignInPage ? ('signUp' | translate) : ('signIn' | translate)}}
           </a>
-          <span class="flex-1 border-b border-gray-300"></span>
+          <span class="flex-1 border-b border-gray-300 dark:border-neutral-700"></span>
         </div>
 
         <!-- Security Notice -->
-        <div *ngIf="showSecurityNotice" class="mt-6 p-3 bg-gray-50 border border-gray-200 rounded-lg security-notice">
+        <div *ngIf="showSecurityNotice"
+          class="mt-6 p-3 bg-gray-50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-lg security-notice">
           <div class="flex items-center mb-1">
-            <svg class="w-4 h-4 mr-2 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 16 16">
+            <svg class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400 flex-shrink-0" fill="currentColor"
+              viewBox="0 0 16 16">
               <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0-1A6 6 0 1 0 8 2a6 6 0 0 0 0 12z" />
               <path
                 d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z" />
             </svg>
-            <span class="text-xs font-semibold text-gray-700">Security</span>
+            <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">Security</span>
           </div>
-          <p class="text-xs text-gray-600 leading-relaxed">
+          <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
             Enterprise-grade encryption and secure authentication protect your data.
           </p>
         </div>
