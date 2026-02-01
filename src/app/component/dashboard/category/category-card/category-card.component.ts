@@ -614,6 +614,12 @@ Remaining: ${remainingDays} days`;
       budgetData: budgetData
     }));
 
+    // Update local category object to reflect changes immediately
+    this.category = {
+      ...this.category,
+      budget: budgetData
+    };
+
     this.notificationService.success(
       budgetData.hasBudget
         ? 'Budget set successfully for ' + this.category.name

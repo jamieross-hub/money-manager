@@ -1,142 +1,130 @@
-<div class="budget-dialog-container">
-  <div class="dialog-header">
-    <h2 mat-dialog-title>
-      <mat-icon class="header-icon">account_balance_wallet</mat-icon>
-      {{ data.isEdit ? 'Edit' : 'Set' }} Budget
-    </h2>
-    <button mat-icon-button (click)="onCancel()" class="close-button">
-      <mat-icon>close</mat-icon>
-    </button>
-  </div>
+<app-common-header [title]="(data.isEdit ? 'Edit' : 'Set') + ' Budget'" [showAddButton]="true"
+  [addButtonDisabled]="!isFormValid" (addButtonClick)="onSave()" (closeButtonClick)="onCancel()">
+</app-common-header>
 
-  <mat-dialog-content class="dialog-content">
-    <form [formGroup]="budgetForm" class="budget-form">
-      
+<app-common-body-content>
+  <div class="px-2 py-4">
+    <div
+      class="flex items-center gap-3 mb-6 p-4 rounded-2xl bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800">
+      <mat-icon class="text-brand text-3xl h-8 w-8">account_balance_wallet</mat-icon>
+      <div class="flex flex-col">
+        <span class="text-sm font-bold text-primary-900 dark:text-primary-100">{{ data.category.name }}</span>
+        <span class="text-xs text-primary-700 dark:text-primary-300">Category Budget Configuration</span>
+      </div>
+    </div>
+
+    <form [formGroup]="budgetForm" class="flex flex-col gap-6">
+
       <!-- Enable Budget Toggle -->
-      <div class="form-field-toggle">
-        <span class="toggle-label text-sm font-semibold">Set budget for {{ data.category.name }}</span> <mat-slide-toggle 
-          formControlName="hasBudget" 
-          color="primary"
-          class="budget-toggle">
-         
+      <div
+        class="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-700">
+        <div class="flex flex-col">
+          <span class="text-sm font-semibold">Enable Tracking</span>
+          <span class="text-xs text-neutral-500">Track spending and set limits</span>
+        </div>
+        <mat-slide-toggle formControlName="hasBudget" color="primary">
         </mat-slide-toggle>
       </div>
 
-      <!-- Budget Amount -->
-      <div class="form-field" *ngIf="budgetForm.get('hasBudget')?.value">
-        <label class="field-label">Budget Amount</label>
-        <mat-form-field appearance="fill" class="form-input-field">
-          <input matInput
-                 type="number"
-                 formControlName="budgetAmount"
-                 placeholder="0.00"
-                 step="0.01"
-                 class="form-input" />
-          <mat-error *ngIf="budgetAmountControl?.hasError('required')">
-            Budget amount is required
-          </mat-error>
-          <mat-error *ngIf="budgetAmountControl?.hasError('min')">
-            Budget amount must be greater than 0
-          </mat-error>
-        </mat-form-field>
-      </div>
+      @if (budgetForm.get('hasBudget')?.value) {
+      <div class="space-y-4 fade-in">
+        <!-- Budget Amount -->
+        <div class="form-field-group">
+          <label class="field-label-standard">Budget Amount</label>
+          <mat-form-field appearance="outline" class="w-full">
+            <span matPrefix class="pl-2 pr-1">$</span>
+            <input matInput type="number" formControlName="budgetAmount" placeholder="0.00" step="0.01" />
+            <mat-error *ngIf="budgetAmountControl?.hasError('required')">
+              Budget amount is required
+            </mat-error>
+            <mat-error *ngIf="budgetAmountControl?.hasError('min')">
+              Budget amount must be greater than 0
+            </mat-error>
+          </mat-form-field>
+        </div>
 
-      <!-- Budget Period -->
-      <div class="form-field" *ngIf="budgetForm.get('hasBudget')?.value">
-        <label class="field-label">Budget Period</label>
-        <mat-form-field appearance="fill" class="form-input-field">
-          <mat-select formControlName="budgetPeriod" class="form-select">
-            @for (period of budgetPeriods; track period.value) {
-            <mat-option [value]="period.value">
-              {{ period.label }}
-            </mat-option>
-            }
-          </mat-select>
-          <mat-error *ngIf="budgetPeriodControl?.hasError('required')">
-            Budget period is required
-          </mat-error>
-        </mat-form-field>
-      </div>
+        <!-- Budget Period -->
+        <div class="form-field-group">
+          <label class="field-label-standard">Budget Period</label>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-select formControlName="budgetPeriod">
+              @for (period of budgetPeriods; track period.value) {
+              <mat-option [value]="period.value">
+                {{ period.label }}
+              </mat-option>
+              }
+            </mat-select>
+            <mat-error *ngIf="budgetPeriodControl?.hasError('required')">
+              Budget period is required
+            </mat-error>
+          </mat-form-field>
+        </div>
 
-      <!-- Start Date -->
-      <div class="form-field" *ngIf="budgetForm.get('hasBudget')?.value">
-        <label class="field-label">Start Date</label>
-        <mat-form-field appearance="fill" class="form-input-field">
-          <input matInput
-                 [matDatepicker]="startPicker"
-                 [min]="minDate"
-                 [max]="maxDate"
-                 formControlName="budgetStartDate"
-                 placeholder="Choose start date"
-                 class="form-input" />
-          <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-          <mat-datepicker #startPicker></mat-datepicker>
-          <mat-error *ngIf="budgetForm.get('budgetStartDate')?.hasError('required')">
-            Start date is required
-          </mat-error>
-        </mat-form-field>
-      </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Start Date -->
+          <div class="form-field-group">
+            <label class="field-label-standard">Start Date</label>
+            <mat-form-field appearance="outline" class="w-full">
+              <input matInput [matDatepicker]="startPicker" formControlName="budgetStartDate" />
+              <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+              <mat-datepicker #startPicker></mat-datepicker>
+              <mat-error *ngIf="budgetForm.get('budgetStartDate')?.hasError('required')">
+                Start date is required
+              </mat-error>
+            </mat-form-field>
+          </div>
 
-      <!-- End Date (Optional) -->
-      <div class="form-field" *ngIf="budgetForm.get('hasBudget')?.value">
-        <label class="field-label">End Date (Optional)</label>
-        <mat-form-field appearance="fill" class="form-input-field">
-          <input matInput
-                 [matDatepicker]="endPicker"
-                 [min]="minDate"
-                 [max]="maxDate"
-                 formControlName="budgetEndDate"
-                 placeholder="Choose end date (optional)"
-                 class="form-input" />
-          <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-          <mat-datepicker #endPicker></mat-datepicker>
-        </mat-form-field>
-      </div>
+          <!-- End Date (Optional) -->
+          <div class="form-field-group">
+            <label class="field-label-standard">End Date (Optional)</label>
+            <mat-form-field appearance="outline" class="w-full">
+              <input matInput [matDatepicker]="endPicker" formControlName="budgetEndDate" />
+              <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+              <mat-datepicker #endPicker></mat-datepicker>
+            </mat-form-field>
+          </div>
+        </div>
 
-      <!-- Alert Threshold -->
-      <div class="form-field" *ngIf="budgetForm.get('hasBudget')?.value">
-        <label class="field-label">Alert Threshold (%)</label>
-        <mat-form-field appearance="fill" class="form-input-field">
-          <input matInput
-                 type="number"
-                 formControlName="budgetAlertThreshold"
-                 placeholder="80"
-                 class="form-input" />
-          <mat-hint>Get notified when you reach this percentage of your budget</mat-hint>
-          <mat-error *ngIf="budgetForm.get('budgetAlertThreshold')?.hasError('min')">
-            Threshold must be at least 0%
-          </mat-error>
-          <mat-error *ngIf="budgetForm.get('budgetAlertThreshold')?.hasError('max')">
-            Threshold cannot exceed 100%
-          </mat-error>
-        </mat-form-field>
-      </div>
+        <!-- Alert Threshold -->
+        <div class="form-field-group">
+          <div class="flex justify-between items-center mb-1">
+            <label class="field-label-standard">Alert Threshold (%)</label>
+            <span class="text-xs font-bold text-primary-500">{{ budgetForm.get('budgetAlertThreshold')?.value }}%</span>
+          </div>
+          <mat-form-field appearance="outline" class="w-full">
+            <input matInput type="number" formControlName="budgetAlertThreshold" placeholder="80" />
+            <mat-hint>Notify when reaching this % of budget</mat-hint>
+            <mat-error *ngIf="budgetForm.get('budgetAlertThreshold')?.hasError('min')">
+              Threshold must be at least 0%
+            </mat-error>
+            <mat-error *ngIf="budgetForm.get('budgetAlertThreshold')?.hasError('max')">
+              Threshold cannot exceed 100%
+            </mat-error>
+          </mat-form-field>
+        </div>
 
-      <!-- Enable Alerts -->
-      <div class="form-field" *ngIf="budgetForm.get('hasBudget')?.value">
-        <mat-slide-toggle 
-          formControlName="budgetAlertEnabled" 
-          color="primary"
-          class="alert-toggle">
-          <span class="toggle-label">Enable budget alerts</span>
-        </mat-slide-toggle>
+        <!-- Enable Alerts -->
+        <div class="flex items-center justify-between p-4 rounded-xl border border-neutral-200 dark:border-neutral-700">
+          <div class="flex items-center gap-3">
+            <div class="p-2 rounded-lg bg-neutral-100 dark:bg-neutral-800">
+              <mat-icon class="text-neutral-500">notifications_active</mat-icon>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-sm font-semibold">Budget Alerts</span>
+              <span class="text-xs text-neutral-500">Enable notifications</span>
+            </div>
+          </div>
+          <mat-slide-toggle formControlName="budgetAlertEnabled" color="primary">
+          </mat-slide-toggle>
+        </div>
       </div>
-
+      }
     </form>
-  </mat-dialog-content>
 
-  <mat-dialog-actions class="dialog-actions">
-    <button mat-button (click)="onCancel()" class="cancel-button">
-      <mat-icon>cancel</mat-icon>
-      Cancel
-    </button>
-    <button mat-raised-button
-            color="primary"
-            (click)="onSave()"
-            [disabled]="!isFormValid"
-            class="save-button">
-      <mat-icon>save</mat-icon>
-      {{ data.isEdit ? 'Update' : 'Set' }} Budget
-    </button>
-  </mat-dialog-actions>
-</div> 
+    <div class="mt-8 flex justify-center">
+      <button mat-button (click)="onCancel()" class="px-8 text-neutral-500">
+        Cancel and Go Back
+      </button>
+    </div>
+  </div>
+</app-common-body-content>

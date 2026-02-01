@@ -238,16 +238,13 @@ export class CategoryComponent implements OnInit, OnDestroy {
   }
 
   public toggleExpandCategory(category: Category, event: Event): void {
-    // Only toggle on mobile
-    if (!this.breakpointService.device.isMobile) return;
-
     event.stopPropagation();
 
     if (this.selectedCategoryId === category.id) {
       this.selectedCategoryId = null;
     } else {
       this.selectedCategoryId = category.id || null;
-      if (this.selectedCategoryId) {
+      if (this.selectedCategoryId && this.breakpointService.device.isMobile) {
         this.hapticFeedback.lightVibration();
       }
     }
@@ -485,13 +482,33 @@ export class CategoryComponent implements OnInit, OnDestroy {
       panelClass: 'responsive-dialog',
       data: {
         category: category,
-        budget: category.budget
+        isEdit: category.budget?.hasBudget || false // Pass isEdit correctly
       }
     });
 
     dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
       if (result) {
-        this.loadUserCategories();
+        // Dispatch update action to save the budget
+        this.store.dispatch(CategoriesActions.updateCategory({
+          userId: this.userId,
+          categoryId: category.id!,
+          name: category.name,
+          categoryType: category.type,
+          icon: category.icon,
+          color: category.color,
+          budgetData: result, // This contains the new budget data
+          parentCategoryId: category.parentCategoryId,
+          isSubCategory: category.isSubCategory
+        }));
+
+        // Update local category object to reflect changes immediately
+        const categoryIndex = this.categories.findIndex(c => c.id === category.id);
+        if (categoryIndex !== -1) {
+          this.categories[categoryIndex] = {
+            ...this.categories[categoryIndex],
+            budget: result
+          };
+        }
       }
     });
   }

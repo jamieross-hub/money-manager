@@ -417,13 +417,12 @@
 
 
 // =============================================================================
-// EXPANDABLE MOBILE ACTIONS & DETAILS
+// EXPANDABLE ACTIONS & DETAILS
 // =============================================================================
 
-.category-actions {
+.category-actions-expansion {
   background: var(--surface-100);
   border-top: 1px solid var(--neutral-200);
-  padding: 8px 12px;
   animation: slideDown 0.2s ease;
 
   &.subcategory-actions {
@@ -431,44 +430,95 @@
     border-left: 1px solid var(--neutral-200);
   }
 
-  .actions-container {
+  .expansion-header {
     display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-  }
+    align-items: center;
+    justify-content: end;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--neutral-100);
 
-  .action-button {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    transition: all 0.2s ease;
+    .expansion-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--neutral-500);
 
-    &.edit-btn {
-      border: 1px dashed var(--neutral-400);
-      color: var(--neutral-400);
-
-      &:hover {
-        background: var(--neutral-100);
-        transform: scale(1.05);
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
       }
     }
 
-    &.delete-btn {
-      border: 1px solid var(--error-500);
-      color: var(--error-500);
+    .action-buttons-compact {
+      display: flex;
+      gap: 8px;
+    }
+  }
+}
 
-      &:hover {
-        background: var(--error-alpha-10);
-        transform: scale(1.05);
-      }
+.expansion-action-btn {
+  width: 36px !important;
+  height: 36px !important;
+  line-height: 36px !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+  background: var(--surface-50) !important;
+  border: 1px solid var(--neutral-200) !important;
+  color: var(--neutral-500) !important;
+
+  mat-icon {
+    font-size: 18px !important;
+    
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  &.budget-btn {
+    color: var(--primary-600) !important;
+    border-color: var(--primary-200) !important;
+    &:hover { background: var(--primary-alpha-10) !important; }
+  }
+
+  &.remove-budget-btn {
+    color: var(--error-400) !important;
+    &:hover { background: var(--error-alpha-10) !important; }
+  }
+
+  &.tree-btn {
+    color: var(--info-600) !important;
+    border-color: var(--info-200) !important;
+    &:hover { background: var(--info-alpha-10) !important; }
+  }
+
+  &.tree-off-btn {
+    color: var(--neutral-400) !important;
+    &:hover { background: var(--neutral-alpha-10) !important; }
+  }
+
+  &.edit-btn {
+    color: var(--neutral-600) !important;
+    &:hover { background: var(--neutral-100) !important; }
+  }
+
+  &.delete-btn {
+    color: var(--error-600) !important;
+    border-color: var(--error-200) !important;
+    &:hover { 
+      background: var(--error-alpha-10) !important;
+      border-color: var(--error-500) !important;
     }
   }
 }
 
 .category-details-expanded {
   background: var(--surface-100);
-  border-top: 1px solid var(--neutral-200);
-  padding: 16px 12px;
+  padding: 16px;
   animation: slideDown 0.3s ease;
 
   &.subcategory-details-expanded {
@@ -477,21 +527,24 @@
   }
 
   .details-container {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+
+    @media (max-width: 640px) {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
   }
 
   .detail-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--neutral-100);
-
-    &:last-child {
-      border-bottom: none;
-    }
+    padding: 8px 12px;
+    background: var(--surface-50);
+    border-radius: 10px;
+    border: 1px solid var(--neutral-100);
   }
 
   .detail-label {
@@ -507,15 +560,15 @@
     }
 
     span {
-      font-size: 14px;
+      font-size: 0.8125rem;
       font-weight: 500;
-      color: var(--neutral-700);
+      color: var(--neutral-500);
     }
   }
 
   .detail-value {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 0.875rem;
+    font-weight: 700;
     color: var(--neutral-900);
   }
 }

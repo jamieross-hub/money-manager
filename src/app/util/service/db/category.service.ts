@@ -170,7 +170,88 @@ export class CategoryService {
 
         return new Observable<void>(observer => {
             const categoryRef = doc(this.firestore, `users/${userId}/categories/${categoryId}`);
-            // ... existing Firestore implementation ...
+
+            getDoc(categoryRef).then((categoryDoc) => {
+                if (categoryDoc.exists()) {
+                    const currentCategory = categoryDoc.data() as Category;
+
+                    // Prepare update data
+                    const updateData: any = {
+                        name,
+                        type,
+                        icon,
+                        color
+                    };
+
+                    // Add budget data if provided
+                    if (budgetData !== undefined) {
+                        updateData.budget = budgetData;
+                    }
+
+                    // Handle parent category updates
+                    if (parentCategoryId !== undefined) {
+                        if (parentCategoryId === null) {
+                            // Removing from parent
+                            updateData.parentCategoryId = deleteField();
+                            updateData.isSubCategory = false;
+
+                            // Remove from old parent's subCategories array
+                            if (currentCategory.parentCategoryId) {
+                                const oldParentRef = doc(this.firestore, `users/${userId}/categories/${currentCategory.parentCategoryId}`);
+                                getDoc(oldParentRef).then((parentDoc) => {
+                                    if (parentDoc.exists()) {
+                                        const parentData = parentDoc.data() as Category;
+                                        const updatedSubCategories = (parentData.subCategories || []).filter(id => id !== categoryId);
+                                        updateDoc(oldParentRef, { subCategories: updatedSubCategories });
+                                    }
+                                });
+                            }
+                        } else {
+                            // Adding to new parent
+                            updateData.parentCategoryId = parentCategoryId;
+                            updateData.isSubCategory = true;
+
+                            // Remove from old parent if exists
+                            if (currentCategory.parentCategoryId && currentCategory.parentCategoryId !== parentCategoryId) {
+                                const oldParentRef = doc(this.firestore, `users/${userId}/categories/${currentCategory.parentCategoryId}`);
+                                getDoc(oldParentRef).then((parentDoc) => {
+                                    if (parentDoc.exists()) {
+                                        const parentData = parentDoc.data() as Category;
+                                        const updatedSubCategories = (parentData.subCategories || []).filter(id => id !== categoryId);
+                                        updateDoc(oldParentRef, { subCategories: updatedSubCategories });
+                                    }
+                                });
+                            }
+
+                            // Add to new parent's subCategories array
+                            const newParentRef = doc(this.firestore, `users/${userId}/categories/${parentCategoryId}`);
+                            getDoc(newParentRef).then((parentDoc) => {
+                                if (parentDoc.exists()) {
+                                    const parentData = parentDoc.data() as Category;
+                                    const subCats = parentData.subCategories || [];
+                                    if (!subCats.includes(categoryId)) {
+                                        updateDoc(newParentRef, { subCategories: [...subCats, categoryId] });
+                                    }
+                                }
+                            });
+                        }
+                    } else if (isSubCategory !== undefined) {
+                        updateData.isSubCategory = isSubCategory;
+                    }
+
+                    // Update the category document
+                    updateDoc(categoryRef, updateData).then(() => {
+                        observer.next();
+                        observer.complete();
+                    }).catch(error => {
+                        observer.error(error);
+                    });
+                } else {
+                    observer.error(new Error('Category not found'));
+                }
+            }).catch(error => {
+                observer.error(error);
+            });
         });
     }
 
