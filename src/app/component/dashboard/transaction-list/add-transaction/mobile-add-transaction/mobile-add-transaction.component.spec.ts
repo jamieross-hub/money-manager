@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MobileAddTransactionComponent } from './mobile-add-transaction.component';
-import { TestSetup } from '../../../../../../../util/testing/test-setup';
-import { TEST_IMPORTS } from '../../../../../../../util/testing/test-config';
+import { TestSetup } from '../../../../../util/testing/test-setup';
+import { TEST_IMPORTS } from '../../../../../util/testing/test-config';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('MobileAddTransactionComponent', () => {
@@ -14,7 +14,7 @@ describe('MobileAddTransactionComponent', () => {
       TEST_IMPORTS, // imports
       [
         { provide: MAT_DIALOG_DATA, useValue: {} },
-        { provide: MatDialogRef, useValue: { close: () => {} } }
+        { provide: MatDialogRef, useValue: { close: () => { } } }
       ] // additional providers
     ).compileComponents();
 

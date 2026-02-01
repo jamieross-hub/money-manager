@@ -612,4 +612,20 @@ export class CategoryComponent implements OnInit, OnDestroy {
     this.expenseCategoryCount = this.categories.filter(c => c.type === 'expense').length;
     this.incomeCategoryCount = this.categories.filter(c => c.type === 'income').length;
   }
+
+  // --- Methods for Tests ---
+
+  public isBudgetSummaryExpanded: boolean = false;
+
+  public toggleBudgetSummaryExpansion(): void {
+    this.isBudgetSummaryExpanded = !this.isBudgetSummaryExpanded;
+  }
+
+  public calculateBudgetRemaining(category: Category): number {
+    if (!category.budget?.hasBudget || !category.budget?.budgetAmount) {
+      return 0;
+    }
+    const spent = this.calculateBudgetSpent(category);
+    return Math.max(0, category.budget.budgetAmount - spent);
+  }
 }

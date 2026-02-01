@@ -16,7 +16,7 @@ import * as CategoriesSelectors from './categories/categories.selectors';
 import * as AccountsSelectors from './accounts/accounts.selectors';
 
 // Import models
-import { Transaction } from '../util/service/db/transactions.service';
+import { Transaction } from '../util/models/transaction.model';
 import { Category } from '../util/models/category.model';
 import { Account } from '../util/models/account.model';
 import { TransactionType } from '../util/config/enums';
@@ -55,59 +55,59 @@ import { TransactionType } from '../util/config/enums';
   `
 })
 export class ExampleComponent implements OnInit {
-  
+
   // Observables from store
   transactions$: Observable<Transaction[]>;
   transactionsLoading$: Observable<boolean>;
   transactionsError$: Observable<any>;
-  
+
   categories$: Observable<Category[]>;
   categoriesLoading$: Observable<boolean>;
   categoriesError$: Observable<any>;
-  
+
   accounts$: Observable<Account[]>;
   accountsLoading$: Observable<boolean>;
   accountsError$: Observable<any>;
-  
+
   // Computed values
   totalIncome$: Observable<number>;
   totalExpenses$: Observable<number>;
   netBalance$: Observable<number>;
-  
+
   constructor(private store: Store<AppState>) {
     // Initialize selectors
     this.transactions$ = this.store.select(TransactionsSelectors.selectAllTransactions);
     this.transactionsLoading$ = this.store.select(TransactionsSelectors.selectTransactionsLoading);
     this.transactionsError$ = this.store.select(TransactionsSelectors.selectTransactionsError);
-    
+
     this.categories$ = this.store.select(CategoriesSelectors.selectAllCategories);
     this.categoriesLoading$ = this.store.select(CategoriesSelectors.selectCategoriesLoading);
     this.categoriesError$ = this.store.select(CategoriesSelectors.selectCategoriesError);
-    
+
     this.accounts$ = this.store.select(AccountsSelectors.selectAllAccounts);
     this.accountsLoading$ = this.store.select(AccountsSelectors.selectAccountsLoading);
     this.accountsError$ = this.store.select(AccountsSelectors.selectAccountsError);
-    
+
     // Computed selectors
     this.totalIncome$ = this.store.select(TransactionsSelectors.selectTotalIncome);
     this.totalExpenses$ = this.store.select(TransactionsSelectors.selectTotalExpenses);
     this.netBalance$ = this.store.select(TransactionsSelectors.selectNetBalance);
   }
-  
+
   ngOnInit() {
     // Load initial data
     this.loadData();
   }
-  
+
   loadData() {
     const userId = 'current-user-id'; // Get from auth service
-    
+
     // Dispatch actions to load data
     this.store.dispatch(TransactionsActions.loadTransactions({ userId }));
     this.store.dispatch(CategoriesActions.loadCategories({ userId }));
     this.store.dispatch(AccountsActions.loadAccounts({ userId }));
   }
-  
+
   createTransaction() {
     const userId = 'current-user-id';
     const newTransaction = {
@@ -120,16 +120,16 @@ export class ExampleComponent implements OnInit {
       date: new Date() as any,
       notes: 'Test transaction'
     };
-    
-    this.store.dispatch(TransactionsActions.createTransaction({ 
-      userId, 
+
+    this.store.dispatch(TransactionsActions.createTransaction({
+      userId,
       transaction: newTransaction as any
     }));
   }
-  
+
   createCategory() {
     const userId = 'current-user-id';
-    
+
     this.store.dispatch(CategoriesActions.createCategory({
       userId,
       name: 'New Category',
@@ -138,7 +138,7 @@ export class ExampleComponent implements OnInit {
       color: '#FF5722'
     }));
   }
-  
+
   createAccount() {
     const userId = 'current-user-id';
     const accountData = {
@@ -148,30 +148,30 @@ export class ExampleComponent implements OnInit {
       description: 'Test account',
       currency: 'USD'
     };
-    
+
     this.store.dispatch(AccountsActions.createAccount({
       userId,
       accountData: accountData as any
     }));
   }
-  
+
   updateTransaction(transactionId: string) {
     const userId = 'current-user-id';
     const updates = {
       amount: 150,
       notes: 'Updated transaction'
     };
-    
+
     this.store.dispatch(TransactionsActions.updateTransaction({
       userId,
       transactionId,
       transaction: updates
     }));
   }
-  
+
   deleteTransaction(transactionId: string) {
     const userId = 'current-user-id';
-    
+
     this.store.dispatch(TransactionsActions.deleteTransaction({
       userId,
       transactionId

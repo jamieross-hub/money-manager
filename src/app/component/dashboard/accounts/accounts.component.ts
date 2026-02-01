@@ -625,7 +625,28 @@ export class AccountsComponent implements OnInit, OnDestroy {
   /**
    * Check if a group is collapsed
    */
+  /**
+   * Check if a group is collapsed
+   */
   public isGroupCollapsed(groupId: string): boolean {
     return this.collapsedGroups$.value.get(groupId) || false;
+  }
+
+  // --- Methods for Tests ---
+
+  public getPositiveAccounts(): Account[] {
+    return this.accounts.filter(a => a.balance > 0);
+  }
+
+  public getNegativeAccounts(): Account[] {
+    return this.accounts.filter(a => a.balance <= 0);
+  }
+
+  public getTotalPositiveBalance(): number {
+    return this.getPositiveAccounts().reduce((sum, a) => sum + a.balance, 0);
+  }
+
+  public getTotalNegativeBalance(): number {
+    return this.getNegativeAccounts().reduce((sum, a) => sum + a.balance, 0);
   }
 }
