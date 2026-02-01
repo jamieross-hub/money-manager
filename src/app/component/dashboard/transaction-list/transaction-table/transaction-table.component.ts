@@ -54,7 +54,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   @ViewChild(MatSort) sort!: MatSort;
 
   dataSource: MatTableDataSource<Transaction> = new MatTableDataSource<Transaction>();
-  displayedColumns: string[] = ['Date', 'Type', 'Payee', 'Amount', 'Status', 'Actions'];
+  displayedColumns: string[] = ['Date', 'Type', 'Amount', 'Status', 'Actions'];
   isListView: boolean = false;
 
   // Selection properties
@@ -118,17 +118,17 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
       const screenWidth = window.innerWidth;
       if (screenWidth < this.MOBILE_BREAKPOINT) {
         // Mobile: Show only essential columns (no select column)
-        this.displayedColumns = ['Date', 'Payee', 'Amount', 'Actions'];
+        this.displayedColumns = ['Date', 'Amount', 'Actions'];
       } else if (screenWidth < this.TABLET_BREAKPOINT) {
         // Small tablet: Show more columns but hide status (include select column only if not home)
         this.displayedColumns = this.isHome ?
-          ['Date', 'Type', 'Payee', 'Amount', 'Actions'] :
-          ['Date', 'Type', 'Payee', 'Amount', 'Actions'];
+          ['Date', 'Type', 'Amount', 'Actions'] :
+          ['Date', 'Type', 'Amount', 'Actions'];
       } else {
         // Desktop: Show all columns (include select column only if not home)
         this.displayedColumns = this.isHome ?
-          ['Date', 'Type', 'Payee', 'Amount', 'Status', 'Actions'] :
-          ['Date', 'Type', 'Payee', 'Amount', 'Status', 'Account', 'Actions'];
+          ['Date', 'Type', 'Amount', 'Status', 'Actions'] :
+          ['Date', 'Type', 'Amount', 'Status', 'Account', 'Actions'];
       }
     }
   }
@@ -223,8 +223,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
         return direction === 'asc' ? 'date-asc' : 'date-desc';
       case 'Amount':
         return direction === 'asc' ? 'amount-asc' : 'amount-desc';
-      case 'Payee':
-        return 'payee-asc';
+
       case 'Type':
         return 'category-asc';
       default:
@@ -240,8 +239,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
           return (this.dateService.toDate(item?.date) || new Date()).getTime();
         case 'Type':
           return (item?.category.toString().toLowerCase() || '');
-        case 'Payee':
-          return (item?.payee || '').toLowerCase();
+
         case 'Amount':
           return item?.amount;
         case 'Status':

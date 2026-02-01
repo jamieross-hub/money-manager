@@ -213,42 +213,7 @@ table {
   }
 }
 
-// Payee Column Styles
-.payee-cell {
-  .payee-name {
-    font-weight: 500;
-    color: var(--neutral-800);
-    max-width: 80px;
-    word-wrap: break-word;
-    line-height: 1.4;
-    font-size: 12px;
-    
-    @media (min-width: 768px) {
-      max-width: 120px;
-      font-size: 14px;
-    }
-  }
-  
-  input {
-    width: 100%;
-    padding: 6px 8px;
-    border: 2px solid var(--primary-500);
-    border-radius: 6px;
-    font-size: 12px;
-    transition: all 0.2s ease;
-    
-    @media (min-width: 768px) {
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-    
-    &:focus {
-      outline: none;
-      box-shadow: 0 0 0 3px var(--primary-alpha-10);
-    }
-  }
-}
+
 
 // Amount Column Styles
 .amount-cell {

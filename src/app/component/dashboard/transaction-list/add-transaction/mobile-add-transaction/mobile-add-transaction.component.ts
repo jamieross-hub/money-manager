@@ -124,7 +124,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       });
 
     this.transactionForm = this.fb.group({
-      payee: ['', this.validationService.getTransactionPayeeValidators()],
+      payee: [''],
       amount: ['', this.validationService.getTransactionAmountValidators()],
       date: [moment().format('YYYY-MM-DD'), Validators.required],
       description: [''],

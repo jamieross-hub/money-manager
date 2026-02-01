@@ -87,9 +87,9 @@ export class ChatFacadeService {
                 if (this.breakpointService.device.isMobile || this.breakpointService.device.isLaptop) {
                     if (hasLoans) {
                         this.pushBot(ResponseBuilder.create().uiElement(INTENTS.LOAN_SUMMARY_CARD).build());
-                    } else {
-                        this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build());
                     }
+                    this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build());
+
 
                 } else {
                     if (hasLoans) {
