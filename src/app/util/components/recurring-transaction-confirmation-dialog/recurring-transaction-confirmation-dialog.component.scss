@@ -1,9 +1,8 @@
+@use '../../../../styles/dialog-mixins' as mixins;
+
 :host {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background-color: #f9fafb;
-  max-width: 100vw;
+  @include mixins.dialog-host-responsive;
+  max-width: 100%;
   overflow: hidden;
 }
 
@@ -374,6 +373,29 @@
         }
       }
     }
+  }
+
+  .item-actions {
+    margin-top: -0.25rem;
+    margin-right: -0.5rem;
+
+    .action-btn {
+      color: #6b7280;
+      
+      .dark & {
+        color: #9ca3af;
+      }
+    }
+  }
+}
+
+.delete-action-item {
+  ::ng-deep .mat-icon {
+    color: #ef4444 !important;
+  }
+  
+  .warn-text {
+    color: #ef4444;
   }
 }
 

@@ -45,6 +45,7 @@ import { KeyMetricsSummaryCardComponent } from '../../util/components/cards/key-
 import { AnalyticsSummaryCardComponent } from '../../util/components/cards/analytics-summary-card/analytics-summary-card.component';
 import { CurrencyPipe } from 'src/app/util/pipes';
 import { SafeHtmlPipe } from 'src/app/util/pipes/safe-html.pipe';
+import { TranslatePipe } from 'src/app/util/pipes/translate.pipe';
 import { FinancialMetricsCardComponent } from 'src/app/util/components/cards/financial-metrics-card/financial-metrics-card.component';
 import { LoanSummaryCardComponent } from '../../util/components/cards/loan-summary-card/loan-summary-card.component';
 
@@ -68,6 +69,7 @@ import { LoanSummaryCardComponent } from '../../util/components/cards/loan-summa
     LoanSummaryCardComponent,
     CurrencyPipe,
     SafeHtmlPipe,
+    TranslatePipe,
 
     // Material Modules
     MatCardModule,
@@ -151,7 +153,8 @@ import { LoanSummaryCardComponent } from '../../util/components/cards/loan-summa
 
     // Pipes
     CurrencyPipe,
-    SafeHtmlPipe
+    SafeHtmlPipe,
+    TranslatePipe
   ]
 })
 export class SharedModule { } 

@@ -32,6 +32,7 @@ export interface TransactionFilter {
   amountRange: { min: number | null; max: number | null };
   statusFilter: string[];
   tags: string[];
+  isRecurring?: boolean | null;
 }
 
 export interface FilterPreset {
@@ -64,10 +65,11 @@ export class FilterService {
   private amountRangeSubject = new BehaviorSubject<{ min: number | null; max: number | null }>({ min: null, max: null });
   private statusFilterSubject = new BehaviorSubject<string[]>([]);
   private tagsSubject = new BehaviorSubject<string[]>([]);
+  private isRecurringSubject = new BehaviorSubject<boolean | null>(null);
 
   // Combined filter state
   private filterStateSubject = new BehaviorSubject<TransactionFilter>(this.getDefaultFilterState());
-  
+
   // Filter history and presets
   private filterHistorySubject = new BehaviorSubject<FilterHistory[]>([]);
   private filterPresetsSubject = new BehaviorSubject<FilterPreset[]>([]);
@@ -85,6 +87,7 @@ export class FilterService {
   public amountRange$ = this.amountRangeSubject.asObservable();
   public statusFilter$ = this.statusFilterSubject.asObservable();
   public tags$ = this.tagsSubject.asObservable();
+  public isRecurring$ = this.isRecurringSubject.asObservable();
   public filterState$ = this.filterStateSubject.asObservable();
   public filterHistory$ = this.filterHistorySubject.asObservable();
   public filterPresets$ = this.filterPresetsSubject.asObservable();
@@ -125,22 +128,22 @@ export class FilterService {
     }
     this.selectedDateRangeSubject.next({ startDate, endDate });
     this.selectedDateSubject.next(null);
-    
+
     // If the date range represents a full month within a specific year,
     // keep the year filter to maintain context
     const startMoment = moment(startDate);
     const endMoment = moment(endDate);
     const startYear = startMoment.year();
     const endYear = endMoment.year();
-    
+
     // Check if this is a full month range (same year, start of month to end of month)
-    if (startYear === endYear && 
-        startMoment.isSame(startMoment.clone().startOf('month')) && 
-        endMoment.isSame(endMoment.clone().endOf('month'))) {
+    if (startYear === endYear &&
+      startMoment.isSame(startMoment.clone().startOf('month')) &&
+      endMoment.isSame(endMoment.clone().endOf('month'))) {
       // Don't clear the year filter in this case
       return;
     }
-    
+
     // For other date ranges, clear the year filter as they might conflict
     this.selectedYearSubject.next(null);
   }
@@ -157,7 +160,7 @@ export class FilterService {
     }
     this.selectedYearSubject.next({ startYear, endYear });
     this.selectedDateSubject.next(null);
-    
+
     // Check if there's an existing date range that represents a month within this year
     const currentDateRange = this.selectedDateRangeSubject.value;
     if (currentDateRange) {
@@ -165,16 +168,16 @@ export class FilterService {
       const endMoment = moment(currentDateRange.endDate);
       const rangeStartYear = startMoment.year();
       const rangeEndYear = endMoment.year();
-      
+
       // If the date range is within the selected year and represents a full month, keep it
-      if (rangeStartYear === rangeEndYear && 
-          rangeStartYear === startYear && 
-          startMoment.isSame(startMoment.clone().startOf('month')) && 
-          endMoment.isSame(endMoment.clone().endOf('month'))) {
+      if (rangeStartYear === rangeEndYear &&
+        rangeStartYear === startYear &&
+        startMoment.isSame(startMoment.clone().startOf('month')) &&
+        endMoment.isSame(endMoment.clone().endOf('month'))) {
         return;
       }
     }
-    
+
     // Clear date range for other cases
     this.selectedDateRangeSubject.next(null);
   }
@@ -274,6 +277,14 @@ export class FilterService {
     return this.tagsSubject.value;
   }
 
+  setIsRecurring(value: boolean | null): void {
+    this.isRecurringSubject.next(value);
+  }
+
+  getIsRecurring(): boolean | null {
+    return this.isRecurringSubject.value;
+  }
+
   // ===== CLEAR METHODS =====
   clearSelectedDate(): void {
     this.selectedDateSubject.next(null);
@@ -316,6 +327,10 @@ export class FilterService {
     this.tagsSubject.next([]);
   }
 
+  clearIsRecurring(): void {
+    this.isRecurringSubject.next(null);
+  }
+
   // ===== CLEAR ALL FILTERS =====
   clearAllFilters(): void {
     this.clearSelectedDate();
@@ -328,6 +343,7 @@ export class FilterService {
     this.clearAmountRange();
     this.clearStatusFilter();
     this.clearTags();
+    this.clearIsRecurring();
     this.activePresetSubject.next(null);
   }
 
@@ -345,8 +361,9 @@ export class FilterService {
       this.accountFilter$,
       this.amountRange$,
       this.statusFilter$,
-      this.tags$
-    ]).subscribe(([date, dateRange, year, categoryFilter, searchTerm, categories, type, accounts, amountRange, statuses, tags]) => {
+      this.tags$,
+      this.isRecurring$
+    ]).subscribe(([date, dateRange, year, categoryFilter, searchTerm, categories, type, accounts, amountRange, statuses, tags, isRecurring]) => {
       const filterState: TransactionFilter = {
         searchTerm,
         selectedCategory: categories,
@@ -358,7 +375,8 @@ export class FilterService {
         accountFilter: accounts,
         amountRange,
         statusFilter: statuses,
-        tags
+        tags,
+        isRecurring
       };
       this.filterStateSubject.next(filterState);
       this.addToHistory(filterState);
@@ -371,7 +389,7 @@ export class FilterService {
       console.warn('Preset name and description are required');
       return;
     }
-    
+
     const currentState = this.getCurrentFilterState();
     const preset: FilterPreset = {
       id: this.generatePresetId(),
@@ -379,7 +397,7 @@ export class FilterService {
       description,
       filter: currentState
     };
-    
+
     const presets = [...this.filterPresetsSubject.value, preset];
     this.filterPresetsSubject.next(presets);
     this.savePresetsToStorage(presets);
@@ -388,7 +406,7 @@ export class FilterService {
   applyPreset(presetId: string): void {
     const presets = this.filterPresetsSubject.value;
     const preset = presets.find(p => p.id === presetId);
-    
+
     if (preset) {
       this.applyFilterState(preset.filter);
       this.activePresetSubject.next(presetId);
@@ -410,7 +428,7 @@ export class FilterService {
       filter: filterState,
       description: this.generateFilterDescription(filterState)
     };
-    
+
     const currentHistory = this.filterHistorySubject.value;
     const newHistory = [history, ...currentHistory.slice(0, 9)]; // Keep last 10 entries
     this.filterHistorySubject.next(newHistory);
@@ -443,14 +461,15 @@ export class FilterService {
       state.amountRange.max !== null ||
       state.statusFilter.length > 0 ||
       state.tags.length > 0 ||
-      state.selectedYear
+      state.selectedYear ||
+      state.isRecurring !== null && state.isRecurring !== undefined
     );
   }
 
   getActiveFiltersCount(filterState?: TransactionFilter): number {
     const state = filterState || this.getCurrentFilterState();
     let count = 0;
-    
+
     if (state.searchTerm) count++;
     if (!state.selectedCategory.includes('all')) count++;
     if (state.selectedType !== 'all') count++;
@@ -462,7 +481,8 @@ export class FilterService {
     if (state.statusFilter.length > 0) count++;
     if (state.tags.length > 0) count++;
     if (state.selectedYear) count++;
-    
+    if (state.isRecurring !== null && state.isRecurring !== undefined) count++;
+
     return count;
   }
 
@@ -480,6 +500,7 @@ export class FilterService {
     if (filterState.amountRange !== undefined) this.setAmountRange(filterState.amountRange.min, filterState.amountRange.max);
     if (filterState.statusFilter !== undefined) this.setStatusFilter(filterState.statusFilter);
     if (filterState.tags !== undefined) this.setTags(filterState.tags);
+    if (filterState.isRecurring !== undefined) this.setIsRecurring(filterState.isRecurring ?? null);
   }
 
   resetToDefaults(): void {
@@ -499,7 +520,8 @@ export class FilterService {
       accountFilter: [],
       amountRange: { min: null, max: null },
       statusFilter: [],
-      tags: []
+      tags: [],
+      isRecurring: null
     };
   }
 
@@ -538,7 +560,7 @@ export class FilterService {
 
   private generateFilterDescription(filterState: TransactionFilter): string {
     const parts: string[] = [];
-    
+
     if (filterState.searchTerm) parts.push(`Search: "${filterState.searchTerm}"`);
     if (!filterState.selectedCategory.includes('all')) parts.push(`Category: ${filterState.selectedCategory.join(', ')}`);
     if (filterState.selectedType !== 'all') parts.push(`Type: ${filterState.selectedType}`);
@@ -546,7 +568,8 @@ export class FilterService {
     if (filterState.selectedDateRange) parts.push(`Date Range: ${filterState.selectedDateRange.startDate.toLocaleDateString()} - ${filterState.selectedDateRange.endDate.toLocaleDateString()}`);
     if (filterState.categoryFilter) parts.push(`Category Filter: ${filterState.categoryFilter.categoryId} (${filterState.categoryFilter.monthName} ${filterState.categoryFilter.year})`);
     if (filterState.selectedYear) parts.push(`Year Range: ${filterState.selectedYear.startYear} - ${filterState.selectedYear.endYear}`);
-    
+    if (filterState.isRecurring !== null && filterState.isRecurring !== undefined) parts.push(`Is Recurring: ${filterState.isRecurring}`);
+
     return parts.length > 0 ? parts.join(', ') : 'No filters applied';
   }
 
@@ -569,7 +592,7 @@ export class FilterService {
   }
 
   // ===== COMMON FILTERING LOGIC =====
-  
+
   /**
    * Apply filters to a transaction array using the current filter state
    * @param transactions Array of transactions to filter
@@ -583,7 +606,7 @@ export class FilterService {
     // Apply search filter
     if (state.searchTerm && state.searchTerm.trim()) {
       const searchLower = state.searchTerm.toLowerCase().trim();
-      filtered = filtered.filter(transaction => 
+      filtered = filtered.filter(transaction =>
         transaction.payee?.toLowerCase().includes(searchLower) ||
         transaction.category?.toLowerCase().includes(searchLower) ||
         (transaction.notes && transaction.notes.toLowerCase().includes(searchLower))
@@ -592,14 +615,14 @@ export class FilterService {
 
     // Apply category filter - handle multi-select
     if (state.selectedCategory && !state.selectedCategory.includes('all')) {
-      filtered = filtered.filter(transaction => 
+      filtered = filtered.filter(transaction =>
         state.selectedCategory.includes(transaction.categoryId)
       );
     }
 
     // Apply type filter
     if (state.selectedType && state.selectedType !== 'all') {
-      filtered = filtered.filter(transaction => 
+      filtered = filtered.filter(transaction =>
         transaction.type === state.selectedType
       );
     }
@@ -639,7 +662,7 @@ export class FilterService {
 
     // Apply account filter
     if (state.accountFilter && state.accountFilter.length > 0) {
-      filtered = filtered.filter(transaction => 
+      filtered = filtered.filter(transaction =>
         state.accountFilter.includes(transaction.accountId)
       );
     }
@@ -650,21 +673,28 @@ export class FilterService {
         filtered = filtered.filter(transaction => transaction.amount >= (state.amountRange.min || 0));
       }
       if (state.amountRange.max !== null) {
-        filtered = filtered.filter(transaction => transaction.amount <= (state.amountRange.max || 0)); 
+        filtered = filtered.filter(transaction => transaction.amount <= (state.amountRange.max || 0));
       }
     }
 
     // Apply status filter
     if (state.statusFilter && state.statusFilter.length > 0) {
-      filtered = filtered.filter(transaction => 
+      filtered = filtered.filter(transaction =>
         state.statusFilter.includes(transaction.status)
       );
     }
 
     // Apply tags filter
     if (state.tags && state.tags.length > 0) {
-      filtered = filtered.filter(transaction => 
+      filtered = filtered.filter(transaction =>
         transaction.tags && state.tags.some(tag => transaction.tags.includes(tag))
+      );
+    }
+
+    // Apply recurring filter
+    if (state.isRecurring !== null && state.isRecurring !== undefined) {
+      filtered = filtered.filter(transaction =>
+        transaction.isRecurring === state.isRecurring
       );
     }
 
@@ -752,8 +782,8 @@ export class FilterService {
    * @returns Filtered and sorted transaction array
    */
   filterAndSortTransactions(
-    transactions: any[], 
-    filterState?: TransactionFilter, 
+    transactions: any[],
+    filterState?: TransactionFilter,
     sortBy: string = 'date-desc'
   ): any[] {
     const filtered = this.filterTransactions(transactions, filterState);
@@ -767,7 +797,7 @@ export class FilterService {
    */
   private getTransactionDate(date: any): Date | null {
     if (!date) return null;
-    
+
     if (date && typeof date === 'object' && 'seconds' in date) {
       // Handle Firestore Timestamp
       return new Date(date.seconds * 1000);
@@ -782,7 +812,7 @@ export class FilterService {
       // Handle timestamp
       return new Date(date);
     }
-    
+
     return null;
   }
 
@@ -799,7 +829,7 @@ export class FilterService {
       if (!txDate) return false;
       return moment(txDate).year() === currentYear;
     });
-    
+
     return this.filterTransactions(yearFiltered, filterState);
   }
 
@@ -816,7 +846,7 @@ export class FilterService {
       if (!txDate) return false;
       return moment(txDate).year() === year;
     });
-    
+
     return this.filterTransactions(yearFiltered, filterState);
   }
 

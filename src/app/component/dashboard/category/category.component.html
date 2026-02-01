@@ -1,5 +1,5 @@
-<app-quick-actions-fab [config]="quickActionsFabConfig"
-	(mainButtonClick)="openAddMobileDialog()"></app-quick-actions-fab>
+<!-- <app-quick-actions-fab [config]="quickActionsFabConfig"
+	(mainButtonClick)="openAddMobileDialog()"></app-quick-actions-fab> -->
 
 <div class="categories-container lg:px-16 xl:px-32 2xl:px-48">
 	<!-- Error Message Display -->
@@ -13,16 +13,17 @@
 	<div class="main-content" [ngClass]="{'mobile-padding': breakpointService.device.isMobile}">
 
 		<!-- Header -->
-		<div class="page-header">
-			<div class="header-text">
-				<h1 class="page-title">Categories</h1>
-				<p class="page-subtitle">Manage your budget categories</p>
+		<!-- Header Section -->
+		<header class="page-header max-w-8xl mx-auto">
+			<div class="header-left">
+				<p class="page-title dark:text-white">Categories</p>
+				<p class="page-description dark:text-slate-400">Manage your budget categories</p>
 			</div>
 			<button mat-flat-button color="primary" class="add-category-btn" (click)="openAddMobileDialog()">
 				<mat-icon>add</mat-icon>
 				Add Category
 			</button>
-		</div>
+		</header>
 
 		<!-- Summary Cards -->
 		<section class="summary-section">

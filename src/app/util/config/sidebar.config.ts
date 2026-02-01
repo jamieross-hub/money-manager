@@ -4,6 +4,7 @@ export interface SidebarNavChild {
   icon: string;
   order: number;
   isPremium?: boolean;
+  queryParams?: any;
 }
 
 export interface SidebarNavParent {
@@ -42,23 +43,24 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         order: 3
       },
       {
+        label: 'recurring',
+        route: '/dashboard/transactions',
+        queryParams: { tab: 'recurring' },
+        icon: 'repeat',
+        order: 4
+      },
+      {
         label: 'categories',
         route: '/dashboard/category',
         icon: 'category',
-        order: 4
+        order: 5
       },
       {
         label: 'budgets',
         route: '/dashboard/budgets',
         icon: 'pie_chart',
-        order: 5
+        order: 6
       },
-      // {
-      //   label: 'goals',
-      //   route: '/dashboard/goals',
-      //   icon: 'flag',
-      //   order: 6
-      // },
       {
         label: 'reports',
         route: '/dashboard/reports',

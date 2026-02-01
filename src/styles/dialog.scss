@@ -1,5 +1,6 @@
 @use '@angular/material' as mat;
 @use './dark-theme' as dark;
+@use './dialog-mixins' as mixins;
 
 /* Dialog Styles */
 
@@ -221,4 +222,9 @@
 		padding: 1rem !important;
 		gap: 0.75rem !important;
 	}
+}
+
+/* Common Responsive Dialog Host Class */
+.dialog-host-responsive {
+  @include mixins.dialog-host-responsive;
 }

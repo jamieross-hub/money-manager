@@ -23,7 +23,7 @@ import { DateService } from 'src/app/util/service/date.service';
 import { RecurringInterval, SyncStatus, TransactionStatus, TransactionType } from 'src/app/util/config/enums';
 import { APP_CONFIG } from 'src/app/util/config/config';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TransactionsService } from 'src/app/util/service/db/transactions.service';
 
 @Component({
@@ -63,7 +63,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     public readonly breakpointService: BreakpointService,
     private router: Router,
     private transactionsService: TransactionsService,
-    private userService: UserService
+    private userService: UserService,
+    private route: ActivatedRoute
 
   ) {
     this.isTransactionsPage = this.router.url.includes('transactions') ? true : false;
@@ -81,6 +82,30 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.loadTransactions();
     this.subscribeToStoreData();
+    this.checkQueryParams();
+  }
+
+  private checkQueryParams() {
+    this.route.queryParams.subscribe(params => {
+      if (params['tab'] === 'recurring') {
+        this.selectedTabIndex = 3;
+        this.onTabChange(3);
+      }
+      if (params['search']) {
+        this.filterService.setSearchTerm(params['search']);
+      }
+    });
+  }
+
+  onTabChange(index: number) {
+    if (index === 3) {
+      // Recurring tab selected, filter for recurring transactions
+      this.filterService.setIsRecurring(true);
+    } else {
+      // For all other tabs (including the main Transaction list),
+      // we clear the recurring filter so they work as intended.
+      this.filterService.setIsRecurring(null);
+    }
   }
 
   ngOnDestroy() {

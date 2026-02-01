@@ -41,24 +41,25 @@
 // PAGE HEADER
 // =============================================================================
 .page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 2rem !important;
+  padding: 0 !important;
 
-  .header-text {
+  .header-left {
     .page-title {
-      font-size: 1.75rem;
-      font-weight: 700;
-      margin: 0;
-      line-height: 1.2;
-      color: var(--neutral-900);
+      font-size: 1.75rem !important;
+      font-weight: 700 !important;
+      margin: 0 !important;
+      line-height: 1.2 !important;
+      color: var(--neutral-900) !important;
     }
 
-    .page-subtitle {
-      font-size: 0.875rem;
-      margin: 0.25rem 0 0 0;
-      color: var(--neutral-500);
+    .page-description {
+      font-size: 0.875rem !important;
+      margin: 0.25rem 0 0 0 !important;
+      color: var(--neutral-500) !important;
     }
   }
 
@@ -71,10 +72,15 @@
     mat-icon {
       margin-right: 0.5rem;
     }
+  }
 
-    // Hide on mobile as FAB is used
-    @media (max-width: 640px) {
-      display: none;
+  @media (max-width: 640px) {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+
+    .add-category-btn {
+      width: 100% !important;
     }
   }
 }

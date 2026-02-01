@@ -1,13 +1,12 @@
 @use '@angular/material' as mat;
 @use '../../../../../../styles/dark-theme' as dark;
+@use '../../../../../../styles/dialog-mixins' as mixins;
 
 /* Base styles */
 :host {
+  @include mixins.dialog-host-responsive;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background-color: #f9fafb;
-  font-size: 16px; /* Prevents zoom on iOS */
 }
 
 /* Dark theme */

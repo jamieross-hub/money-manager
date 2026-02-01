@@ -16,7 +16,7 @@ interface Translations {
 })
 export class TranslationService {
   private currentLanguage = new BehaviorSubject<Language>('en');
-  
+
   private translations: Translations = {
     // Common
     'loading': { en: 'Loading...', hi: 'लोड हो रहा है...' },
@@ -30,6 +30,7 @@ export class TranslationService {
     'close': { en: 'Close', hi: 'बंद करें' },
     'logout': { en: 'Logout', hi: 'लॉगआउट' },
     'login': { en: 'Login', hi: 'लॉगिन' },
+    'manage': { en: 'Manage', hi: 'प्रबंधन' },
     'signup': { en: 'Sign Up', hi: 'साइन अप' },
     'email': { en: 'Email', hi: 'ईमेल' },
     'password': { en: 'Password', hi: 'पासवर्ड' },
@@ -47,7 +48,7 @@ export class TranslationService {
     'filter': { en: 'Filter', hi: 'फ़िल्टर' },
     'clear': { en: 'Clear', hi: 'साफ़ करें' },
     'settings': { en: 'Settings', hi: 'सेटिंग्स' },
-    
+
     // Navigation
     'dashboard': { en: 'Dashboard', hi: 'डैशबोर्ड' },
     'home': { en: 'Home', hi: 'होम' },
@@ -60,8 +61,10 @@ export class TranslationService {
     'calendar': { en: 'Calendar', hi: 'कैलेंडर' },
     'notes': { en: 'Notes', hi: 'नोट्स' },
     'tax': { en: 'Tax', hi: 'कर' },
+    'recurring': { en: 'Recurring', hi: 'आवर्ती' },
+    'recurring_transactions': { en: 'Recurring Transactions', hi: 'आवर्ती लेन-देन' },
     'tools': { en: 'Tools', hi: 'उपकरण' },
-    
+
     // Dashboard
     'moneyManager': { en: `${APP_CONFIG.APP_NAME}`, hi: 'मनी मैनेजर' },
     'manageFinances': { en: 'Manage your finances', hi: 'अपने वित्त का प्रबंधन करें' },
@@ -75,7 +78,7 @@ export class TranslationService {
     'recentTransactions': { en: 'Recent Transactions', hi: 'हाल के लेन-देन' },
     'upcomingBills': { en: 'Upcoming Bills', hi: 'आगामी बिल' },
     'savingsGoal': { en: 'Savings Goal', hi: 'बचत लक्ष्य' },
-    
+
     // Auth
     'signIn': { en: 'Sign In', hi: 'साइन इन' },
     'signUp': { en: 'Sign Up', hi: 'साइन अप' },
@@ -96,7 +99,7 @@ export class TranslationService {
     'emailRequired': { en: 'Email is required', hi: 'ईमेल आवश्यक है' },
     'passwordRequired': { en: 'Password is required', hi: 'पासवर्ड आवश्यक है' },
     'nameRequired': { en: 'Name is required', hi: 'नाम आवश्यक है' },
-    
+
     // Transactions
     'addTransaction': { en: 'Add Transaction', hi: 'लेन-देन जोड़ें' },
     'editTransaction': { en: 'Edit Transaction', hi: 'लेन-देन संपादित करें' },
@@ -116,7 +119,7 @@ export class TranslationService {
     'transactionDeleted': { en: 'Transaction deleted successfully', hi: 'लेन-देन सफलतापूर्वक हटाया गया' },
     'confirmDelete': { en: 'Delete Transaction', hi: 'लेन-देन हटाएं' },
     'confirmDeleteMessage': { en: 'Are you sure you want to delete this transaction?', hi: 'क्या आप वाकई इस लेन-देन को हटाना चाहते हैं?' },
-    
+
     // Messages
     'networkError': { en: 'Network error. Please check your connection.', hi: 'नेटवर्क त्रुटि। कृपया अपना कनेक्शन जांचें।' },
     'serverError': { en: 'Server error. Please try again later.', hi: 'सर्वर त्रुटि। कृपया बाद में पुनः प्रयास करें।' },
@@ -171,7 +174,7 @@ export class TranslationService {
   // Get translation with parameters
   translateWithParams(key: string, params: Record<string, string>): string {
     let translation = this.translate(key);
-    
+
     // Replace parameters in translation
     Object.keys(params).forEach(param => {
       translation = translation.replace(`{{${param}}}`, params[param]);

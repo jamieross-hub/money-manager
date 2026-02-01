@@ -1,89 +1,96 @@
-<app-common-header
-	[title]="dialogData?.category?.id ? 'Edit' : 'Add' + ' Category'"
-	(addButtonClick)="onSubmit()"
-	(closeButtonClick)="onCancel()"
-	[isSubmitting]="isSubmitting"
-	[showCloseButton]="true"
-	[showAddButton]="true"
+<app-common-header [title]="dialogData?.category?.id ? 'Edit' : 'Add' + ' Category'" (addButtonClick)="onSubmit()"
+	(closeButtonClick)="onCancel()" [isSubmitting]="isSubmitting" [showCloseButton]="true" [showAddButton]="true"
 	[addButtonTooltip]="isSubmitting ? 'Saving...' : 'Save Category'"
 	[addButtonDisabled]="categoryForm.invalid || isSubmitting"
-	[closeButtonTooltip]="isSubmitting ? 'Saving...' : 'Close'"
-></app-common-header>
+	[closeButtonTooltip]="isSubmitting ? 'Saving...' : 'Close'"></app-common-header>
 
 <!-- Mobile Form Content -->
 <app-common-body-content>
 	<div class="mobile-content">
 		<div class="form-container">
 			<form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" class="category-form">
-				<!-- Category Name Field -->
-				<div class="form-field">
-					<label class="field-label">
-						<mat-icon class="field-icon">label</mat-icon>
-						Category Name *
-					</label>
-					<input type="text" formControlName="name" autofocus placeholder="e.g., Groceries" autofocus class="form-input" />
-					<div class="field-footer">
-						@if(getNameError() && categoryForm.get('name')?.touched) {
-						<p class="error-message">{{ getNameError() }}</p>
+				<!-- Name and Type Grid -->
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+					<!-- Category Name Field -->
+					<div class="form-field h-full !mb-0">
+						<label class="field-label">
+							<mat-icon class="field-icon">label</mat-icon>
+							Category Name *
+						</label>
+						<input type="text" formControlName="name" autofocus placeholder="e.g., Groceries"
+							class="form-input" />
+						<div class="field-footer">
+							@if(getNameError() && categoryForm.get('name')?.touched) {
+							<p class="error-message">{{ getNameError() }}</p>
+							}
+							<span class="character-count">
+								{{ categoryForm.get('name')?.value?.length || 0 }}/50
+							</span>
+						</div>
+					</div>
+
+					<!-- Category Type Field -->
+					<div class="form-field h-full !mb-0">
+						<label class="field-label">
+							<mat-icon class="field-icon">category</mat-icon>
+							Category Type *
+						</label>
+						<div class="type-selector">
+							<button type="button" (click)="selectType('expense')" class="type-option"
+								[class.selected]="categoryForm.get('type')?.value === 'expense'">
+								<mat-icon>trending_down</mat-icon>
+								<span>Expense</span>
+							</button>
+							<button type="button" (click)="selectType('income')" class="type-option"
+								[class.selected]="categoryForm.get('type')?.value === 'income'">
+								<mat-icon>trending_up</mat-icon>
+								<span>Income</span>
+							</button>
+						</div>
+						@if(getTypeError() && categoryForm.get('type')?.touched) {
+						<p class="error-message">{{ getTypeError() }}</p>
 						}
-						<span class="character-count">
-							{{ categoryForm.get('name')?.value?.length || 0 }}/50
-						</span>
 					</div>
 				</div>
 
-				<!-- Category Type Field -->
-				<div class="form-field">
-					<label class="field-label">
-						<mat-icon class="field-icon">category</mat-icon>
-						Category Type *
-					</label>
-					<div class="type-selector">
-						<button type="button" (click)="selectType('expense')" class="type-option" [class.selected]="categoryForm.get('type')?.value === 'expense'">
-							<mat-icon>trending_down</mat-icon>
-							<span>Expense</span>
-						</button>
-						<button type="button" (click)="selectType('income')" class="type-option" [class.selected]="categoryForm.get('type')?.value === 'income'">
-							<mat-icon>trending_up</mat-icon>
-							<span>Income</span>
-						</button>
+				<!-- Icon and Color Grid -->
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+					<!-- Category Icon Field -->
+					<div class="form-field h-full !mb-0">
+						<label class="field-label">
+							<mat-icon class="field-icon">emoji_emotions</mat-icon>
+							Category Icon *
+						</label>
+						<div class="icon-selector">
+							<button type="button" (click)="openIconSelectorDialog()" class="icon-preview-button"
+								[class.active]="categoryForm.get('icon')?.value">
+								<div class="icon-preview">
+									<mat-icon class="selected-icon">{{ categoryForm.get('icon')?.value || 'category'
+										}}</mat-icon>
+									<span class="icon-name">{{ categoryForm.get('icon')?.value || 'category' }}</span>
+								</div>
+								<mat-icon class="dropdown-icon">expand_more</mat-icon>
+							</button>
+						</div>
 					</div>
-					@if(getTypeError() && categoryForm.get('type')?.touched) {
-					<p class="error-message">{{ getTypeError() }}</p>
-					}
-				</div>
 
-				<!-- Category Icon Field -->
-				<div class="form-field">
-					<label class="field-label">
-						<mat-icon class="field-icon">emoji_emotions</mat-icon>
-						Category Icon *
-					</label>
-					<div class="icon-selector">
-						<button type="button" (click)="openIconSelectorDialog()" class="icon-preview-button" [class.active]="categoryForm.get('icon')?.value">
-							<div class="icon-preview">
-								<mat-icon class="selected-icon">{{ categoryForm.get('icon')?.value || 'category' }}</mat-icon>
-								<span class="icon-name">{{ categoryForm.get('icon')?.value || 'category' }}</span>
-							</div>
-							<mat-icon class="dropdown-icon">expand_more</mat-icon>
-						</button>
-					</div>
-				</div>
-
-				<!-- Category Color Field -->
-				<div class="form-field">
-					<label class="field-label">
-						<mat-icon class="field-icon">palette</mat-icon>
-						Category Color *
-					</label>
-					<div class="color-selector">
-						<button type="button" (click)="openColorSelectorDialog()" class="color-preview-button" [class.active]="categoryForm.get('color')?.value">
-							<div class="color-preview">
-								<div class="color-swatch" [style.background-color]="categoryForm.get('color')?.value || '#005cbb'"></div>
-								<span class="color-name">{{ categoryForm.get('color')?.value || '#005cbb' }}</span>
-							</div>
-							<mat-icon class="dropdown-icon">expand_more</mat-icon>
-						</button>
+					<!-- Category Color Field -->
+					<div class="form-field h-full !mb-0">
+						<label class="field-label">
+							<mat-icon class="field-icon">palette</mat-icon>
+							Category Color *
+						</label>
+						<div class="color-selector">
+							<button type="button" (click)="openColorSelectorDialog()" class="color-preview-button"
+								[class.active]="categoryForm.get('color')?.value">
+								<div class="color-preview">
+									<div class="color-swatch"
+										[style.background-color]="categoryForm.get('color')?.value || '#005cbb'"></div>
+									<span class="color-name">{{ categoryForm.get('color')?.value || '#005cbb' }}</span>
+								</div>
+								<mat-icon class="dropdown-icon">expand_more</mat-icon>
+							</button>
+						</div>
 					</div>
 				</div>
 

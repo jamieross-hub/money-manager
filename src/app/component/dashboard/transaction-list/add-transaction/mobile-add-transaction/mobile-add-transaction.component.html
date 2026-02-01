@@ -1,16 +1,12 @@
 <!-- Mobile Header -->
-<app-common-header
-	[title]="viewMode ? 'View' : (dialogData?.id ? 'Edit' : 'Add') + ' Transaction'"
-	[showAddButton]="!viewMode"
-	[addButtonDisabled]="transactionForm.invalid"
-	[isSubmitting]="isSubmitting"
-	addButtonTooltip="Save Transaction"
-	(addButtonClick)="onSubmit()"
-	(closeButtonClick)="onClose()"
-></app-common-header>
+<app-common-header [title]="viewMode ? 'View' : (dialogData?.id ? 'Edit' : 'Add') + ' Transaction'"
+	[showAddButton]="!viewMode" [addButtonDisabled]="transactionForm.invalid" [isSubmitting]="isSubmitting"
+	addButtonTooltip="Save Transaction" (addButtonClick)="onSubmit()"
+	(closeButtonClick)="onClose()"></app-common-header>
 
 <app-common-body-content>
-	<form [formGroup]="transactionForm" (ngSubmit)="onSubmit()" (keydown.enter)="!viewMode && onSubmit()" class="space-y-6">
+	<form [formGroup]="transactionForm" (ngSubmit)="onSubmit()" (keydown.enter)="!viewMode && onSubmit()"
+		class="space-y-6">
 		<!-- Amount, Description, Category, and Date Field - Combined Card -->
 		<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm space-y-4">
 			<!-- Amount Field -->
@@ -18,17 +14,10 @@
 				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
 					Amount *
 				</label>
-				<input
-					#amountInput
-					type="number"
-					formControlName="amount"
-					placeholder="0.00"
-					step="0.01"
-					(input)="onAmountChange()"
-					[disabled]="viewMode"
+				<input #amountInput type="number" formControlName="amount" placeholder="0.00" step="0.01"
+					(input)="onAmountChange()" [disabled]="viewMode"
 					class="w-full text-2xl font-bold text-center py-3 px-4 border-0 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg"
-					[class.bg-gray-100]="viewMode"
-				/>
+					[class.bg-gray-100]="viewMode" />
 				@if(getAmountError() && transactionForm.get('amount')?.touched) {
 				<p class="text-red-500 text-sm mt-1">{{ getAmountError() }}</p>
 				}
@@ -39,15 +28,10 @@
 				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
 					Description *
 				</label>
-				<input
-					type="text"
-					formControlName="payee"
-					[maxlength]="45"
-					placeholder="Enter description"
+				<input type="text" formControlName="payee" [maxlength]="45" placeholder="Enter description"
 					[disabled]="viewMode"
 					class="w-full py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-					[class.bg-gray-100]="viewMode"
-				/>
+					[class.bg-gray-100]="viewMode" />
 				<div class="flex justify-between items-center mt-1">
 					@if(transactionForm.get('payee')?.hasError('required') && transactionForm.get('payee')?.touched) {
 					<p class="text-red-500 text-sm">Description is required</p>
@@ -58,129 +42,110 @@
 				</div>
 			</div>
 
-			<!-- Category Field -->
-			<div>
+			<!-- Category and Date Grid -->
+			<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+				<!-- Category Field -->
+				<div>
+					<div class="flex items-center justify-between mb-2">
+						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+							Category
+						</label>
+						<button *ngIf="!viewMode" type="button" (click)="openNewCategoryDialog()"
+							class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium flex items-center gap-1">
+							<mat-icon class="text-sm">add</mat-icon>Add
+						</button>
+					</div>
+					<mat-form-field appearance="fill" class="w-full">
+						<mat-label>Select a category</mat-label>
+						<mat-select formControlName="categoryId" [disabled]="viewMode"
+							(selectionChange)="onCategoryChange($event.value)">
+							<mat-option>
+								<ngx-mat-select-search [formControl]="categoryFilterCtrl"
+									placeholderLabel="Search categories..." noEntriesFoundLabel="No categories found">
+								</ngx-mat-select-search>
+							</mat-option>
+							<mat-option *ngFor="let category of filteredCategories | async" [value]="category.id">
+								{{ category.name }}
+							</mat-option>
+						</mat-select>
+					</mat-form-field>
+				</div>
+
+				<!-- Date Field -->
+				<div>
+					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+						Date *
+					</label>
+					<div class="relative">
+						<input type="date" formControlName="date" [disabled]="viewMode"
+							class="w-full py-3 px-4 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [&::-webkit-calendar-picker-indicator]:bg-none [&::-webkit-calendar-picker-indicator]:bg-transparent [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:top-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+							[class.bg-gray-100]="viewMode" />
+						<mat-icon
+							class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+							calendar_today
+						</mat-icon>
+					</div>
+					@if(getDateError()) {
+					<p class="text-red-500 text-sm mt-1">{{ getDateError() }}</p>
+					}
+				</div>
+			</div>
+		</div>
+
+		<!-- Account and Payment Method Grid -->
+		<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+			<!-- Account Field -->
+			<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm h-full">
 				<div class="flex items-center justify-between mb-2">
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-						Category
+						Account *
 					</label>
-					<button
-						*ngIf="!viewMode"
-						type="button"
-						(click)="openNewCategoryDialog()"
-						class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium flex items-center gap-1"
-					>
-						<mat-icon class="text-sm">add</mat-icon>Add
+					<button *ngIf="!viewMode" type="button" (click)="openNewAccountDialog()"
+						class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium flex items-center gap-1">
+						<mat-icon class="text-sm">add</mat-icon>
+						Add
 					</button>
 				</div>
-				<mat-form-field appearance="fill" class="w-full">
-					<mat-label>Select a category</mat-label>
-					<mat-select formControlName="categoryId" [disabled]="viewMode" (selectionChange)="onCategoryChange($event.value)">
-						<mat-option>
-							<ngx-mat-select-search 
-								[formControl]="categoryFilterCtrl"
-								placeholderLabel="Search categories..."
-								noEntriesFoundLabel="No categories found">
-							</ngx-mat-select-search>
-						</mat-option>
-						<mat-option *ngFor="let category of filteredCategories | async" [value]="category.id">
-							{{ category.name }}
-						</mat-option>
-					</mat-select>
-				</mat-form-field>
-			</div>
 
-			<!-- Date Field -->
-			<div>
-				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-					Date *
-				</label>
-				<div class="relative">
-					<input
-						type="date"
-						formControlName="date"
-						[disabled]="viewMode"
-						class="w-full py-3 px-4 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [&::-webkit-calendar-picker-indicator]:bg-none [&::-webkit-calendar-picker-indicator]:bg-transparent [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:top-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-						[class.bg-gray-100]="viewMode"
-					/>
-					<mat-icon class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-						calendar_today
-					</mat-icon>
+				<div class="space-y-2">
+					<mat-form-field appearance="fill" class="w-full">
+						<mat-label>Select an account</mat-label>
+						<mat-select formControlName="accountId" [disabled]="viewMode">
+							@for (account of accountList$ | async; track account.accountId) {
+							<mat-option [value]="account.accountId">{{ account.name }} ({{ account.type | titlecase
+								}})</mat-option>
+							}
+						</mat-select>
+
+						@if(transactionForm.get('accountId')?.hasError('required') &&
+						transactionForm.get('accountId')?.touched) {
+						<mat-error>Account is required</mat-error>
+						}
+					</mat-form-field>
 				</div>
-				@if(getDateError()) {
-				<p class="text-red-500 text-sm mt-1">{{ getDateError() }}</p>
-				}
 			</div>
-		</div>
 
-		<!-- Account Field -->
-		<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-			<div class="flex items-center justify-between mb-2">
-				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-					Account *
+			<!-- Payment Method Field -->
+			<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm h-full"
+				*ngIf="this.transactionForm.get('type')?.value === TransactionType.EXPENSE">
+				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+					Payment Method
 				</label>
-				<!-- @if(transactionForm.get('accountId')?.value) {
-				@for (account of accountList; track account.accountId) {
-					@if(account.accountId === transactionForm.get('accountId')?.value) {
-						<button 
-							matSuffix 
-							mat-icon-button 
-							type="button"
-							(click)="openEditAccountDialog(account)"
-							matTooltip="Edit {{ account.name }}"
-							class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-						>
-							<mat-icon class="text-sm">edit</mat-icon>
-						</button>
-					}
-				}
-			} -->
-				<button
-					*ngIf="!viewMode"
-					type="button"
-					(click)="openNewAccountDialog()"
-					class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium flex items-center gap-1"
-				>
-					<mat-icon class="text-sm">add</mat-icon>
-					Add
-				</button>
-			</div>
-
-			<div class="space-y-2">
 				<mat-form-field appearance="fill" class="w-full">
-					<mat-label>Select an account</mat-label>
-					<mat-select formControlName="accountId" [disabled]="viewMode">
-						@for (account of accountList$ | async; track account.accountId) {
-						<mat-option [value]="account.accountId">{{ account.name }} ({{ account.type | titlecase }})</mat-option>
+					<mat-label>Select payment method</mat-label>
+					<mat-select formControlName="paymentMethod" [disabled]="viewMode">
+						<mat-option value="">None</mat-option>
+						@for (method of paymentMethods; track method.value) {
+						<mat-option [value]="method.value">
+							<div class="flex items-center gap-2">
+								<mat-icon class="text-sm">{{ method.icon }}</mat-icon>
+								<span>{{ method.label }}</span>
+							</div>
+						</mat-option>
 						}
 					</mat-select>
-
-					@if(transactionForm.get('accountId')?.hasError('required') && transactionForm.get('accountId')?.touched) {
-					<mat-error>Account is required</mat-error>
-					}
 				</mat-form-field>
 			</div>
-		</div>
-
-		<!-- Payment Method Field -->
-		<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm" *ngIf="this.transactionForm.get('type')?.value === TransactionType.EXPENSE">
-			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-				Payment Method
-			</label>
-			<mat-form-field appearance="fill" class="w-full">
-				<mat-label>Select payment method</mat-label>
-				<mat-select formControlName="paymentMethod" [disabled]="viewMode">
-					<mat-option value="">None</mat-option>
-					@for (method of paymentMethods; track method.value) {
-					<mat-option [value]="method.value">
-						<div class="flex items-center gap-2">
-							<mat-icon class="text-sm">{{ method.icon }}</mat-icon>
-							<span>{{ method.label }}</span>
-						</div>
-					</mat-option>
-					}
-				</mat-select>
-			</mat-form-field>
 		</div>
 
 		<!-- Notes Field -->
@@ -188,14 +153,10 @@
 			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
 				Notes
 			</label>
-			<textarea
-				formControlName="description"
-				[rows]="3"
-				placeholder="Add any additional notes..."
+			<textarea formControlName="description" [rows]="3" placeholder="Add any additional notes..."
 				[disabled]="viewMode"
 				class="w-full py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-				[class.bg-gray-100]="viewMode"
-			></textarea>
+				[class.bg-gray-100]="viewMode"></textarea>
 		</div>
 
 		<!-- Split Transaction Section -->
@@ -205,7 +166,8 @@
 					Split with Group
 				</label>
 
-				<mat-slide-toggle formControlName="isSplitTransaction" (change)="toggleSplitTransaction()" [disabled]="viewMode"></mat-slide-toggle>
+				<mat-slide-toggle formControlName="isSplitTransaction" (change)="toggleSplitTransaction()"
+					[disabled]="viewMode"></mat-slide-toggle>
 				<!-- <button 
 				type="button"
 				(click)="toggleSplitTransaction()"
@@ -249,7 +211,8 @@
 								</button>
 							</mat-hint>
 						} -->
-						@if(transactionForm.get('splitGroupId')?.hasError('required') && transactionForm.get('splitGroupId')?.touched) {
+						@if(transactionForm.get('splitGroupId')?.hasError('required') &&
+						transactionForm.get('splitGroupId')?.touched) {
 						<mat-error>Please select a group for split transaction</mat-error>
 						}
 					</mat-form-field>
@@ -280,7 +243,9 @@
 				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
 					Split by Category
 				</label>
-				<mat-slide-toggle formControlName="isCategorySplit" (change)="transactionForm.get('isCategorySplit')?.value ? openCategorySplitDialog() : clearCategorySplits()" [disabled]="viewMode"></mat-slide-toggle>
+				<mat-slide-toggle formControlName="isCategorySplit"
+					(change)="transactionForm.get('isCategorySplit')?.value ? openCategorySplitDialog() : clearCategorySplits()"
+					[disabled]="viewMode"></mat-slide-toggle>
 			</div>
 
 			<!-- Category Split Options -->
@@ -296,7 +261,8 @@
 						@for (split of categorySplits; track split.categoryId) {
 						<div class="flex justify-between items-center">
 							<span>{{ split.categoryName }}</span>
-							<span class="font-medium">₹{{ split.amount.toFixed(2) }} ({{ split.percentage.toFixed(1) }}%)</span>
+							<span class="font-medium">₹{{ split.amount.toFixed(2) }} ({{ split.percentage.toFixed(1)
+								}}%)</span>
 						</div>
 						}
 						<div class="border-t border-green-200 dark:border-green-700 mt-2 pt-2">
@@ -310,11 +276,8 @@
 
 				<!-- Edit Splits Button -->
 				<div class="flex justify-center">
-					<button 
-						type="button"
-						(click)="openCategorySplitDialog()"
-						class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 rounded-lg transition-colors duration-200"
-					>
+					<button type="button" (click)="openCategorySplitDialog()"
+						class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 rounded-lg transition-colors duration-200">
 						<mat-icon class="text-sm">edit</mat-icon>
 						Edit Category Splits
 					</button>
@@ -356,15 +319,10 @@
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
 						Start Date
 					</label>
-					<input
-						type="date"
-						formControlName="recurringStartDate"
-						[min]="recurringMinDate"
-						[max]="recurringMaxDate"
-						[disabled]="viewMode"
+					<input type="date" formControlName="recurringStartDate" [min]="recurringMinDate"
+						[max]="recurringMaxDate" [disabled]="viewMode"
 						class="w-full py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-						[class.bg-gray-100]="viewMode"
-					/>
+						[class.bg-gray-100]="viewMode" />
 				</div>
 
 				<!-- End Date -->
@@ -372,15 +330,10 @@
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
 						End Date (Optional)
 					</label>
-					<input
-						type="date"
-						formControlName="recurringEndDate"
-						[min]="recurringMinDate"
-						[max]="recurringMaxDate"
-						[disabled]="viewMode"
+					<input type="date" formControlName="recurringEndDate" [min]="recurringMinDate"
+						[max]="recurringMaxDate" [disabled]="viewMode"
 						class="w-full py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-						[class.bg-gray-100]="viewMode"
-					/>
+						[class.bg-gray-100]="viewMode" />
 					<p class="text-xs text-gray-500 mt-1">Leave empty for unlimited recurrence</p>
 				</div>
 
@@ -391,7 +344,8 @@
 						<span class="text-sm font-medium text-blue-800 dark:text-blue-200">Recurring Details</span>
 					</div>
 					<div class="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-						<p>• Transaction will repeat {{ transactionForm.get('recurringInterval')?.value || 'monthly' }}</p>
+						<p>• Transaction will repeat {{ transactionForm.get('recurringInterval')?.value || 'monthly' }}
+						</p>
 						<p>• Starting from {{ transactionForm.get('recurringStartDate')?.value || 'today' }}</p>
 						@if(transactionForm.get('recurringEndDate')?.value) {
 						<p>• Until {{ transactionForm.get('recurringEndDate')?.value }}</p>
@@ -411,8 +365,10 @@
 					<span class="text-sm font-medium text-gray-700 dark:text-gray-300">
 						Tax Information (Optional)
 					</span>
-					@if((transactionForm.get('taxAmount')?.value || 0) > 0 || (transactionForm.get('taxPercentage')?.value || 0) > 0) {
-					<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+					@if((transactionForm.get('taxAmount')?.value || 0) > 0 ||
+					(transactionForm.get('taxPercentage')?.value || 0) > 0) {
+					<span
+						class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
 						₹{{ (transactionForm.get('taxAmount')?.value || 0).toFixed(2) }}
 					</span>
 					}
@@ -436,10 +392,12 @@
 							+₹{{ (transactionForm.get('taxAmount')?.value || 0).toFixed(2) }}
 						</span>
 					</div>
-					<div class="flex justify-between items-center text-sm mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+					<div
+						class="flex justify-between items-center text-sm mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
 						<span class="font-medium text-gray-700 dark:text-gray-300">Total Amount:</span>
 						<span class="font-bold text-green-600 dark:text-green-400">
-							₹{{ ((transactionForm.get('amount')?.value || 0) + (transactionForm.get('taxAmount')?.value || 0)).toFixed(2) }}
+							₹{{ ((transactionForm.get('amount')?.value || 0) + (transactionForm.get('taxAmount')?.value
+							|| 0)).toFixed(2) }}
 						</span>
 					</div>
 					}
@@ -451,17 +409,12 @@
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
 						Tax Amount
 					</label>
-					<input
-						type="number"
-						formControlName="taxAmount"
-						placeholder="0.00"
-						step="0.01"
-						(input)="onTaxAmountChange()"
-						[disabled]="viewMode"
+					<input type="number" formControlName="taxAmount" placeholder="0.00" step="0.01"
+						(input)="onTaxAmountChange()" [disabled]="viewMode"
 						class="w-full py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-						[class.bg-gray-100]="viewMode"
-					/>
-					@if(transactionForm.get('taxAmount')?.hasError('min') && transactionForm.get('taxAmount')?.touched) {
+						[class.bg-gray-100]="viewMode" />
+					@if(transactionForm.get('taxAmount')?.hasError('min') && transactionForm.get('taxAmount')?.touched)
+					{
 					<p class="text-red-500 text-sm mt-1">Tax amount cannot be negative</p>
 					}
 				</div>
@@ -471,22 +424,16 @@
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
 						Tax Percentage (%)
 					</label>
-					<input
-						type="number"
-						formControlName="taxPercentage"
-						placeholder="0"
-						step="0.01"
-						min="0"
-						max="100"
-						(input)="onTaxPercentageChange()"
-						[disabled]="viewMode"
+					<input type="number" formControlName="taxPercentage" placeholder="0" step="0.01" min="0" max="100"
+						(input)="onTaxPercentageChange()" [disabled]="viewMode"
 						class="w-full py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-						[class.bg-gray-100]="viewMode"
-					/>
+						[class.bg-gray-100]="viewMode" />
 					<div class="flex justify-between items-center mt-1">
-						@if(transactionForm.get('taxPercentage')?.hasError('min') && transactionForm.get('taxPercentage')?.touched) {
+						@if(transactionForm.get('taxPercentage')?.hasError('min') &&
+						transactionForm.get('taxPercentage')?.touched) {
 						<p class="text-red-500 text-sm">Tax percentage cannot be negative</p>
-						} @if(transactionForm.get('taxPercentage')?.hasError('max') && transactionForm.get('taxPercentage')?.touched) {
+						} @if(transactionForm.get('taxPercentage')?.hasError('max') &&
+						transactionForm.get('taxPercentage')?.touched) {
 						<p class="text-red-500 text-sm">Tax percentage cannot exceed 100%</p>
 						}
 						<span class="text-xs text-gray-500">
@@ -496,14 +443,11 @@
 				</div>
 
 				<!-- Clear Tax Button -->
-				@if((transactionForm.get('taxAmount')?.value || 0) > 0 || (transactionForm.get('taxPercentage')?.value || 0) > 0) {
+				@if((transactionForm.get('taxAmount')?.value || 0) > 0 || (transactionForm.get('taxPercentage')?.value
+				|| 0) > 0) {
 				<div class="pt-2">
-					<button
-						*ngIf="!viewMode"
-						type="button"
-						(click)="clearTaxFields()"
-						class="w-full py-2 px-4 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-					>
+					<button *ngIf="!viewMode" type="button" (click)="clearTaxFields()"
+						class="w-full py-2 px-4 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
 						<mat-icon class="text-sm mr-2">clear</mat-icon>
 						Clear Tax Fields
 					</button>

@@ -1,50 +1,9 @@
-<!-- Mobile Header -->
-<div class="mobile-header">
-  <div class="header-content">
-    <div class="header-left">
-      <button 
-        mat-icon-button 
-        type="button" 
-        (click)="cancel()" 
-        matTooltip="Close" 
-        class="close-button mobile-only"
-      >
-        <mat-icon>arrow_back</mat-icon>
-      </button>
-      <h6 class="header-title">
-        Recurring Transactions
-      </h6>
-    </div>
-    
-    <!-- Desktop Close Button -->
-    <button 
-      mat-icon-button 
-      type="button" 
-      (click)="cancel()" 
-      matTooltip="Close" 
-      class="close-button desktop-only"
-    >
-      <mat-icon>close</mat-icon>
-    </button>
-    
-    <!-- <button 
-      mat-raised-button 
-      color="primary" 
-      (click)="confirm()" 
-      [disabled]="getSelectedTransactions().length === 0" 
-      matTooltip="Process Selected" 
-      class="save-button"
-    >
-      <mat-icon>check</mat-icon>
-      Process ({{ getSelectedTransactions().length }})
-    </button> -->
-  </div>
-</div>
+<app-common-header [title]="'recurring_transactions' | translate" [showCloseButton]="true"
+  (closeButtonClick)="cancel()"></app-common-header>
 
-<!-- Mobile Form Content -->
-<div class="mobile-content">
+<app-common-body-content>
   <div class="form-container">
-    
+
     <!-- Description -->
     <div class="form-field">
       <label class="field-label">
@@ -58,10 +17,7 @@
 
     <!-- Select All -->
     <div class="form-field">
-      <mat-checkbox 
-        [checked]="allSelected" 
-        (change)="allSelected ? deselectAll() : selectAll()"
-        color="primary"
+      <mat-checkbox [checked]="allSelected" (change)="allSelected ? deselectAll() : selectAll()" color="primary"
         class="select-all-checkbox">
         Select All Transactions
       </mat-checkbox>
@@ -70,26 +26,22 @@
     <!-- Transactions List -->
     <div class="form-field">
       <div class="transactions-list">
-        <div 
-          *ngFor="let transaction of data.transactions; trackBy: trackByTransactionId" 
-          class="transaction-item"
+        <div *ngFor="let transaction of data.transactions; trackBy: trackByTransactionId" class="transaction-item"
           [class.selected]="transaction.id && selectedTransactions.has(transaction.id)">
-          
-          <mat-checkbox 
-            [checked]="transaction.id && selectedTransactions.has(transaction.id)"
-            (change)="transaction.id && toggleTransaction(transaction.id)"
-            color="primary"
-            class="transaction-checkbox">
+
+          <mat-checkbox [checked]="transaction.id && selectedTransactions.has(transaction.id)"
+            (change)="transaction.id && toggleTransaction(transaction.id)" color="primary" class="transaction-checkbox">
           </mat-checkbox>
 
           <div class="transaction-details">
             <div class="transaction-header">
               <span class="payee">{{ transaction.payee }}</span>
-              <span class="amount" [class.income]="transaction.type === 'income'" [class.expense]="transaction.type === 'expense'">
+              <span class="amount" [class.income]="transaction.type === 'income'"
+                [class.expense]="transaction.type === 'expense'">
                 {{ formatAmount(transaction.amount) }}
               </span>
             </div>
-            
+
             <div class="transaction-meta">
               <span class="category">{{ transaction.category }}</span>
               <span class="interval">{{ getRecurringIntervalText(transaction.recurringInterval!) }}</span>
@@ -111,6 +63,27 @@
               <mat-icon class="note-icon">note</mat-icon>
               <span>{{ transaction.notes }}</span>
             </div>
+          </div>
+
+          <!-- Transaction Actions -->
+          <div class="item-actions">
+            <button mat-icon-button [matMenuTriggerFor]="itemMenu" class="action-btn">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #itemMenu="matMenu" class="transaction-item-menu">
+              <button mat-menu-item (click)="manageTransaction(transaction)">
+                <mat-icon>open_in_new</mat-icon>
+                <span>{{ 'manage' | translate }}</span>
+              </button>
+              <button mat-menu-item (click)="editTransaction(transaction)">
+                <mat-icon>edit</mat-icon>
+                <span>{{ 'edit' | translate }}</span>
+              </button>
+              <button mat-menu-item (click)="deleteTransaction(transaction)" class="delete-action-item">
+                <mat-icon color="warn">delete</mat-icon>
+                <span class="warn-text">{{ 'delete' | translate }}</span>
+              </button>
+            </mat-menu>
           </div>
         </div>
       </div>
@@ -137,18 +110,14 @@
     <!-- Action Buttons -->
     <div class="form-field">
       <div class="action-buttons">
-        <button 
-          mat-stroked-button 
-          (click)="skip()"
-          class="skip-button">
+        <button mat-stroked-button (click)="manage()" class="manage-button">
+          {{ 'manage' | translate }}
+        </button>
+        <button mat-stroked-button (click)="skip()" class="skip-button">
           Skip All
         </button>
-        <button 
-          mat-raised-button 
-          color="primary" 
-          (click)="confirm()"
-          [disabled]="getSelectedTransactions().length === 0"
-          class="confirm-button">
+        <button mat-raised-button color="primary" (click)="confirm()"
+          [disabled]="getSelectedTransactions().length === 0" class="confirm-button">
           Process Selected
         </button>
       </div>
@@ -157,4 +126,4 @@
     <!-- Bottom Spacing for Mobile -->
     <div class="bottom-spacing"></div>
   </div>
-</div> 
+</app-common-body-content>

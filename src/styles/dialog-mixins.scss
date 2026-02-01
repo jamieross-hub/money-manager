@@ -1,0 +1,19 @@
+@use '@angular/material' as mat;
+@use './dark-theme' as dark;
+
+@mixin dialog-host-responsive {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  background-color: #f9fafb;
+  font-size: 16px;
+
+  .dark-theme & {
+    background-color: mat.get-theme-color(dark.$dark-theme, neutral, 6) !important;
+  }
+
+  @media (max-width: 640px) {
+    height: 100vh !important;
+  }
+}

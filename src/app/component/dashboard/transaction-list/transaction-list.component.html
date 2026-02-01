@@ -31,12 +31,13 @@
 <mat-card
 	class="p-2 shadow-lg border-0 rounded-xl transaction-list-container dark:bg-slate-900 dark:border-slate-800 dark:shadow-none">
 	<mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start" class="custom-tabs"
-		[(selectedIndex)]="selectedTabIndex">
+		[(selectedIndex)]="selectedTabIndex" (selectedIndexChange)="onTabChange($event)">
 		<mat-tab class="max-h-full">
 			<ng-template mat-tab-label>
 				<div class="flex items-center space-x-2 px-4 py-2">
 					<mat-icon class="text-primary">compare_arrows</mat-icon>
-					<span class="font-semibold text-gray-700 text-xs dark:text-slate-400">Transactions</span>
+					<span class="font-semibold text-gray-700 text-xs dark:text-slate-400">{{ 'transactions' | translate
+						}}</span>
 				</div>
 			</ng-template>
 			@if(selectedTabIndex === 0) {
@@ -60,7 +61,8 @@
 			<ng-template mat-tab-label>
 				<div class="flex items-center space-x-2 px-4 py-2">
 					<mat-icon class="text-primary">attach_money</mat-icon>
-					<span class="font-semibold text-gray-700 text-xs dark:text-slate-400">Accounts</span>
+					<span class="font-semibold text-gray-700 text-xs dark:text-slate-400">{{ 'accounts' | translate
+						}}</span>
 				</div>
 			</ng-template>
 			@if(selectedTabIndex === 1) {
@@ -74,7 +76,8 @@
 			<ng-template mat-tab-label>
 				<div class="flex items-center space-x-2 px-4 py-2">
 					<mat-icon class="text-primary">local_offer</mat-icon>
-					<span class="font-semibold text-gray-700 text-xs dark:text-slate-400">Categories</span>
+					<span class="font-semibold text-gray-700 text-xs dark:text-slate-400">{{ 'categories' | translate
+						}}</span>
 				</div>
 			</ng-template>
 			@if(selectedTabIndex === 2) {
@@ -87,11 +90,38 @@
 		<mat-tab>
 			<ng-template mat-tab-label>
 				<div class="flex items-center space-x-2 px-4 py-2">
-					<mat-icon class="text-primary">analytics</mat-icon>
-					<span class="font-semibold text-gray-700 text-xs dark:text-slate-400">Reports</span>
+					<mat-icon class="text-primary">repeat</mat-icon>
+					<span class="font-semibold text-gray-700 text-xs dark:text-slate-400">{{ 'recurring' | translate
+						}}</span>
 				</div>
 			</ng-template>
 			@if(selectedTabIndex === 3) {
+			<div class="p-2 overflow-hidden">
+				<!-- Search and Filter Section -->
+				<search-filter (addTransaction)="addTransactionDialog()" (importTransactions)="openImportDialog()"
+					(openFilterDialog)="openFilterDialog()" (viewAnalytics)="viewAnalytics()"
+					(expandTable)="expandTable()"></search-filter>
+
+				<!-- Table Container -->
+				<transaction-table (editTransaction)="editTransaction($event)"
+					(deleteTransaction)="deleteTransaction($event)" (startRowEdit)="startRowEdit($event)"
+					(saveRowEdit)="saveRowEdit($event)" (cancelRowEdit)="cancelRowEdit($event)"
+					(addTransaction)="addTransactionDialog()" (bulkDeleteTransactions)="bulkDeleteTransactions($event)"
+					(bulkUpdateCategory)="bulkUpdateCategory($event)" [isHome]="isHome">
+				</transaction-table>
+			</div>
+			}
+		</mat-tab>
+
+		<mat-tab>
+			<ng-template mat-tab-label>
+				<div class="flex items-center space-x-2 px-4 py-2">
+					<mat-icon class="text-primary">analytics</mat-icon>
+					<span class="font-semibold text-gray-700 text-xs dark:text-slate-400">{{ 'reports' | translate
+						}}</span>
+				</div>
+			</ng-template>
+			@if(selectedTabIndex === 4) {
 			<app-reports></app-reports>
 			}
 		</mat-tab>
@@ -100,10 +130,10 @@
 			<ng-template mat-tab-label>
 				<div class="flex items-center space-x-2 px-4 py-2">
 					<mat-icon class="text-primary">receipt_long</mat-icon>
-					<span class="font-semibold text-gray-700 text-xs dark:text-slate-400">Tax</span>
+					<span class="font-semibold text-gray-700 text-xs dark:text-slate-400">{{ 'tax' | translate }}</span>
 				</div>
 			</ng-template>
-			@if(selectedTabIndex === 4) {
+			@if(selectedTabIndex === 5) {
 			<app-tax></app-tax>
 			}
 		</mat-tab>
@@ -112,10 +142,11 @@
 			<ng-template mat-tab-label>
 				<div class="flex items-center space-x-2 px-4 py-2">
 					<mat-icon class="text-yellow-600">note</mat-icon>
-					<span class="font-semibold text-gray-700 text-xs dark:text-slate-400">Notes</span>
+					<span class="font-semibold text-gray-700 text-xs dark:text-slate-400">{{ 'notes' | translate
+						}}</span>
 				</div>
 			</ng-template>
-			@if(selectedTabIndex === 4) {
+			@if(selectedTabIndex === 6) {
 			<app-notes></app-notes>
 			}
 		</mat-tab>

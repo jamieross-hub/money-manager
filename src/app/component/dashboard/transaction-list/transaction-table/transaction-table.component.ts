@@ -185,21 +185,24 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
     let filteredData: Transaction[];
 
     // Check if we have specific date filters applied
+    const filterState = this.filterService.getCurrentFilterState();
     const hasDateFilters = this.filterService.getSelectedDate() ||
       this.filterService.getSelectedDateRange() ||
       this.filterService.getSelectedYear();
 
-    if (!hasDateFilters) {
-      // Filter to show only current year transactions when no specific date filter is applied
+    const hasSearchOrSpecificFilter = filterState.searchTerm || filterState.isRecurring;
+
+    if (!hasDateFilters && !hasSearchOrSpecificFilter) {
+      // Filter to show only current year transactions when no specific filters are applied
       filteredData = this.filterService.filterCurrentYearTransactions(
         this.allTransactions,
-        this.filterService.getCurrentFilterState()
+        filterState
       );
     } else {
-      // Use all filters including date filters
+      // Use all filters
       filteredData = this.filterService.filterTransactions(
         this.allTransactions,
-        this.filterService.getCurrentFilterState()
+        filterState
       );
     }
 

@@ -1,7 +1,10 @@
+@use '../../../../../styles/dialog-mixins' as mixins;
+
 :host {
-  display: block;
-  max-width: 600px;
-  width: 100%;
+  @include mixins.dialog-host-responsive;
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
 }
 
 /* Form field styling */
