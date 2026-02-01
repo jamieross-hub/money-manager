@@ -13,10 +13,8 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  :host-context(.light-theme) & {
-    background-color: mat.get-theme-color(light.$light-theme, neutral, 98);
-    color: mat.get-theme-color(light.$light-theme, neutral, 10);
-  }
+  background-color: var(--surface-100);
+  color: var(--neutral-900);
 
 
 }
@@ -31,29 +29,19 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-// Error Message
 mat-card.error-message {
   margin-bottom: 1rem;
   border-radius: 12px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
-
-  :host-context(.light-theme) & {
-    background-color: mat.get-theme-color(light.$light-theme, error, 95);
-    border: 1px solid mat.get-theme-color(light.$light-theme, error, 90);
-  }
-
-
+  background-color: var(--error-50);
+  border: 1px solid var(--error-100);
 
   .mat-mdc-card-content {
     padding: 0.75rem 1rem !important;
   }
 
   .error-text {
-    :host-context(.light-theme) & {
-      color: mat.get-theme-color(light.$light-theme, error, 30);
-    }
-
-
+    color: var(--error-600);
   }
 }
 
@@ -67,29 +55,19 @@ mat-card.error-message {
 
   .header-left {
     .page-title {
-      font-size: clamp(1.5rem, 4vw, 2rem); // Slightly larger
-      font-weight: 800; // Heavier weight
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 800;
       margin: 0;
-      letter-spacing: -0.03em; // Tighter tracking
+      letter-spacing: -0.03em;
       line-height: 1.1;
-
-      :host-context(.light-theme) & {
-        color: mat.get-theme-color(light.$light-theme, neutral, 10);
-      }
-
-
+      color: var(--neutral-900);
     }
     
     .page-description {
       font-size: clamp(0.9rem, 2vw, 1rem);
       margin: 0.5rem 0 0 0;
       font-weight: 400;
-
-      :host-context(.light-theme) & {
-        color: mat.get-theme-color(light.$light-theme, neutral, 40);
-      }
-
-
+      color: var(--neutral-500);
     }
   }
 
@@ -98,11 +76,12 @@ mat-card.error-message {
     font-size: 1rem;
     color: white;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color: var(--primary-500);
 
     &:hover {
-      background: #1d4ed8;
+      background-color: var(--primary-600);
       transform: translateY(-2px);
-      box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3), 0 4px 6px -2px rgba(37, 99, 235, 0.15);
+      box-shadow: 0 10px 15px -3px rgba(var(--primary-500), 0.3), 0 4px 6px -2px rgba(var(--primary-500), 0.15);
     }
     
     mat-icon { margin-right: 0.5rem; font-size: 1.25rem; }
@@ -127,11 +106,11 @@ mat-card.error-message {
   padding: 0 clamp(1rem, 3vw, 1.5rem);
 
   .net-worth-card {
-    background: white;
-    border-radius: 20px; // Larger radius
-    padding: clamp(2rem, 5vw, 3rem); // More internal breathing room
-    border: 1px solid rgba(241, 245, 249, 0.8);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01); // Soft, deep shadow
+    background: var(--surface-50);
+    border-radius: 20px;
+    padding: clamp(2rem, 5vw, 3rem);
+    border: 1px solid var(--neutral-100);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
     
     .net-worth-content {
       display: flex;
@@ -141,16 +120,16 @@ mat-card.error-message {
       .left-info {
         .label {
           font-size: 0.875rem;
-          color: #64748b;
+          color: var(--neutral-500);
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.05em;
           margin-bottom: 0.75rem;
         }
         .net-worth-value {
-          font-size: clamp(2.5rem, 6vw, 4rem); // Larger value
+          font-size: clamp(2.5rem, 6vw, 4rem);
           font-weight: 800;
-          color: #0f172a;
+          color: var(--neutral-900);
           letter-spacing: -0.04em;
           line-height: 1;
         }
@@ -174,8 +153,8 @@ mat-card.error-message {
             justify-content: center;
             transition: transform 0.2s ease;
             
-            &.positive { background: #ecfdf5; color: #059669; }
-            &.negative { background: #fef2f2; color: #dc2626; }
+            &.positive { background: var(--success-50); color: var(--success-600); }
+            &.negative { background: var(--error-50); color: var(--error-600); }
 
             mat-icon { font-size: 1.5rem; }
           }
@@ -185,13 +164,13 @@ mat-card.error-message {
           .indicator-details {
             display: flex;
             flex-direction: column;
-            .label { font-size: 0.8rem; color: #64748b; font-weight: 500; }
+            .label { font-size: 0.8rem; color: var(--neutral-500); font-weight: 500; }
             .value {
               font-size: 1.25rem;
               font-weight: 700;
               margin-top: 2px;
-              &.positive { color: #059669; }
-              &.negative { color: #dc2626; }
+              &.positive { color: var(--success-600); }
+              &.negative { color: var(--error-600); }
             }
           }
         }
@@ -248,13 +227,24 @@ mat-card.error-message {
     }
 
     :host-context(.light-theme) & {
-      background: white;
-      border: 1px solid rgba(241, 245, 249, 0.8);
+      background: var(--surface-50);
+      border: 1px solid var(--neutral-100);
       
       &:hover {
         transform: translateY(-4px);
         box-shadow: 0 12px 16px -4px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04) !important;
-        border-color: #e2e8f0;
+        border-color: var(--neutral-200);
+      }
+    }
+
+    :host-context(.dark-theme) & {
+      background: var(--surface-100);
+      border: 1px solid var(--neutral-800);
+      
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 16px -4px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
+        border-color: var(--neutral-700);
       }
     }
 
@@ -270,20 +260,16 @@ mat-card.error-message {
         justify-content: center;
         
         &.bank { 
-          :host-context(.light-theme) & { background: #eff6ff; color: #3b82f6; }
-          :host-context(.dark-theme) & { background: rgba(59, 130, 246, 0.1); color: #60a5fa; }
+          background: var(--primary-50); color: var(--primary-500);
         }
         &.cash { 
-          :host-context(.light-theme) & { background: #f0fdf4; color: #22c55e; }
-          :host-context(.dark-theme) & { background: rgba(34, 197, 94, 0.1); color: #4ade80; }
+          background: var(--success-50); color: var(--success-500);
         }
         &.credit { 
-          :host-context(.light-theme) & { background: #faf5ff; color: #a855f7; }
-          :host-context(.dark-theme) & { background: rgba(168, 85, 247, 0.1); color: #c084fc; }
+          background: var(--secondary-50); color: var(--secondary-500);
         }
         &.investment { 
-          :host-context(.light-theme) & { background: #fffcf0; color: #eab308; }
-          :host-context(.dark-theme) & { background: rgba(234, 179, 8, 0.1); color: #facc15; }
+          background: var(--warning-50); color: var(--warning-500);
         }
 
         mat-icon { font-size: 1.75rem; width: 1.75rem; height: 1.75rem; }
@@ -295,14 +281,14 @@ mat-card.error-message {
       flex-direction: column;
       .label { 
           font-size: 0.875rem; 
-          color: #64748b; 
+          color: var(--neutral-500); 
           font-weight: 500; 
       }
       .value { 
           font-size: 1.25rem; 
           font-weight: 700; 
           margin-top: 2px;
-          :host-context(.light-theme) & { color: #0f172a; }
+          color: var(--neutral-900);
 
       }
     }
@@ -339,19 +325,15 @@ mat-card.error-message {
           font-weight: 700;
           margin: 0;
           letter-spacing: -0.01em;
-          :host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 20); }
-
+          color: var(--neutral-800);
         }
         .count {
           font-size: 0.85rem;
           font-weight: 600;
           padding: 0.1rem 0.5rem;
-          border-radius: 999px; // Pill shape
-          :host-context(.light-theme) & { 
-            background: mat.get-theme-color(light.$light-theme, neutral, 95); 
-            color: mat.get-theme-color(light.$light-theme, neutral, 40); 
-          }
-
+          border-radius: 999px;
+          background: var(--neutral-100); 
+          color: var(--neutral-500); 
         }
       }
 
@@ -364,20 +346,20 @@ mat-card.error-message {
           font-size: 1rem;
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          &.negative { color: mat.get-theme-color(light.$light-theme, error, 40); }
-          :host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 10); }
-
+          color: var(--neutral-900);
+          
+          &.negative { color: var(--error-600); }
         }
 
         .expansion-arrow {
-          color: #94a3b8;
+          color: var(--neutral-400);
           transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
       }
     }
 
     &.is-expanded .group-header {
-      border-bottom: 1px solid rgba(0,0,0,0.05);
+      border-bottom: 1px solid var(--neutral-100);
 
       margin-bottom: 1.5rem;
     }
@@ -390,14 +372,14 @@ mat-card.error-message {
         padding: 1rem 0;
         display: flex;
         justify-content: flex-end;
-        border-top: 1px solid rgba(0,0,0,0.05);
+        border-top: 1px solid var(--neutral-100);
 
         .add-inline-btn {
-          color: #2563eb;
+          color: var(--primary-600);
           font-weight: 600;
           font-size: 0.875rem;
           
-          &:hover { background: #eff6ff !important; }
+          &:hover { background: var(--primary-50) !important; }
           
           mat-icon { font-size: 1.1rem; width: 1.1rem; height: 1.1rem; margin-right: 0.25rem; }
         }
@@ -425,33 +407,38 @@ mat-card.error-message {
     }
 
     :host-context(.light-theme) & {
-      background: mat.get-theme-color(light.$light-theme, primary, 100);
-      border: 1px solid mat.get-theme-color(light.$light-theme, neutral, 95);
+      background: var(--primary-50);
+      border: 1px solid var(--neutral-100);
       
       &:hover {
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01) !important;
-        border-color: mat.get-theme-color(light.$light-theme, neutral, 90);
+        border-color: var(--neutral-200);
         transform: translateY(-4px);
-        &::before { background: mat.get-theme-color(light.$light-theme, primary, 40); content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+        &::before { background: var(--primary-500); content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+      }
+    }
+
+    :host-context(.dark-theme) & {
+      background: var(--surface-100);
+      border: 1px solid var(--neutral-800);
+      
+      &:hover {
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2) !important;
+        border-color: var(--neutral-700);
+        transform: translateY(-4px);
+        &::before { background: var(--primary-500); content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
       }
     }
 
 
     
     &.selected {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-      
-      :host-context(.light-theme) & {
-          background: #f0f7ff;
-      }
-      
-      :host-context(.dark-theme) & {
-          background: rgba(59, 130, 246, 0.1);
-      }
+      border-color: var(--primary-500);
+      box-shadow: 0 0 0 3px rgba(var(--primary-500), 0.1);
+      background: var(--primary-50) !important;
 
       &::before {
-        background: mat.get-theme-color(light.$light-theme, primary, 40);
+        background: var(--primary-500);
         content: '';
         position: absolute;
         top: 0;
@@ -461,7 +448,7 @@ mat-card.error-message {
       }
     }
 
-    &.negative-border:hover::before, &.negative-border.selected::before { background: #ef4444; }
+    &.negative-border:hover::before, &.negative-border.selected::before { background: var(--error-500); }
 
     .card-top {
       display: flex;
@@ -476,25 +463,21 @@ mat-card.error-message {
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #f8fafc;
-        color: #64748b;
+        background: var(--surface-200);
+        color: var(--neutral-500);
         transition: transform 0.3s ease;
         
         &.bank { 
-          :host-context(.light-theme) & { background: #eff6ff; color: #3b82f6; }
-          :host-context(.dark-theme) & { background: rgba(59, 130, 246, 0.1); color: #60a5fa; }
+          background: var(--primary-50); color: var(--primary-500);
         }
         &.cash { 
-          :host-context(.light-theme) & { background: #f0fdf4; color: #22c55e; }
-          :host-context(.dark-theme) & { background: rgba(34, 197, 94, 0.1); color: #4ade80; }
+          background: var(--success-50); color: var(--success-500);
         }
         &.credit { 
-          :host-context(.light-theme) & { background: #faf5ff; color: #a855f7; }
-          :host-context(.dark-theme) & { background: rgba(168, 85, 247, 0.1); color: #c084fc; }
+          background: var(--secondary-50); color: var(--secondary-500);
         }
         &.loan { 
-          :host-context(.light-theme) & { background: #fef2f2; color: #ef4444; }
-          :host-context(.dark-theme) & { background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
+          background: var(--error-50); color: var(--error-500);
         }
 
         mat-icon { font-size: 1.75rem; width: 1.75rem; height: 1.75rem; }
@@ -507,12 +490,12 @@ mat-card.error-message {
             font-weight: 700; 
             margin: 0;
             line-height: 1.3;
-            :host-context(.light-theme) & { color: #0f172a; }
+            color: var(--neutral-900);
 
         }
         .institution { 
             font-size: 0.875rem; 
-            color: #64748b; 
+            color: var(--neutral-500); 
             margin: 0.25rem 0 0 0; 
             font-weight: 500;
         }
@@ -522,10 +505,10 @@ mat-card.error-message {
         margin-top: -0.25rem;
         margin-right: -0.5rem;
         .more-btn { 
-            color: #94a3b8;
-            opacity: 0; // Hide by default on desktop
+            color: var(--neutral-400);
+            opacity: 0;
             transition: all 0.2s;
-            &:hover { background: #f1f5f9; color: #64748b; }
+            &:hover { background: var(--surface-200); color: var(--neutral-600); }
         }
       }
     }
@@ -542,7 +525,7 @@ mat-card.error-message {
         .label { 
             font-size: 0.75rem; 
             font-weight: 700; 
-            color: #94a3b8; 
+            color: var(--neutral-400); 
             text-transform: uppercase; 
             letter-spacing: 0.05em; 
             margin-bottom: 0.35rem;
@@ -551,9 +534,8 @@ mat-card.error-message {
           font-size: 1rem; // Larger balance
           font-weight: 800;
           letter-spacing: -0.02em;
-          &.negative { color: #ef4444; }
-          
-          :host-context(.light-theme) & { color: #0f172a; }
+          &.negative { color: var(--error-600); }
+          color: var(--neutral-900);
 
         }
       }
@@ -566,7 +548,7 @@ mat-card.error-message {
           font-size: 0.75rem;
           padding: 0.2rem 0.5rem;
           border-radius: 6px;
-          :host-context(.light-theme) & { background: #f8fafc; color: #cbd5e1; }
+          :host-context(.light-theme) & { background: var(--surface-200); color: var(--neutral-400); }
 
         }
       }
@@ -576,11 +558,8 @@ mat-card.error-message {
 
 // Empty State
 mat-card.empty-state-card {
-  :host-context(.light-theme) & {
-    background: mat.get-theme-color(light.$light-theme, primary, 100);
-    border: 2px dashed mat.get-theme-color(light.$light-theme, neutral, 90);
-  }
-
+  background: var(--primary-50);
+  border: 2px dashed var(--neutral-200);
   border-radius: 24px;
   text-align: center;
   margin: 0 clamp(1rem, 3vw, 1.5rem);
@@ -588,8 +567,7 @@ mat-card.empty-state-card {
   box-shadow: none !important;
   
   &:hover { 
-    :host-context(.light-theme) & { border-color: mat.get-theme-color(light.$light-theme, neutral, 80); }
-
+    border-color: var(--neutral-400);
   }
 
   .mat-mdc-card-content {
@@ -604,9 +582,9 @@ mat-card.empty-state-card {
     align-items: center;
     justify-content: center;
     margin: 0 auto 2rem;
-    :host-context(.light-theme) & { background: #f8fafc; }
+    background: var(--neutral-100);
 
-    mat-icon { font-size: 3rem; width: 3rem; height: 3rem; color: #cbd5e1; }
+    mat-icon { font-size: 3rem; width: 3rem; height: 3rem; color: var(--neutral-300); }
   }
 
   .empty-title { 
@@ -614,16 +592,14 @@ mat-card.empty-state-card {
     font-weight: 800; 
     margin: 0 0 0.75rem 0; 
     letter-spacing: -0.02em; 
-    :host-context(.light-theme) & { color: #0f172a; }
-
+    color: var(--neutral-900);
   }
   .empty-text { 
     max-width: 400px; 
     margin: 0 auto 2.5rem; 
     font-size: 1.1rem; 
     line-height: 1.6; 
-    :host-context(.light-theme) & { color: #64748b; }
-
+    color: var(--neutral-500);
   }
   .empty-btn { 
       border-radius: 12px; 
@@ -631,21 +607,18 @@ mat-card.empty-state-card {
       height: 48px;
       font-size: 1rem;
       font-weight: 600;
-      box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+      box-shadow: 0 4px 6px -1px var(--primary-alpha-20);
   }
 }
 
 // Custom Material Overrides
 ::ng-deep .standard-menu {
   border-radius: 16px !important;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 0 20px 25px -5px var(--primary-alpha-10), 0 10px 10px -5px var(--primary-alpha-5) !important;
   min-width: 200px !important;
   padding: 0.5rem !important;
-
-  :host-context(.light-theme) & {
-    background: mat.get-theme-color(light.$light-theme, primary, 100) !important;
-    border: 1px solid mat.get-theme-color(light.$light-theme, neutral, 95) !important;
-  }
+  background: var(--surface-50) !important;
+  border: 1px solid var(--neutral-200) !important;
 
 
   
@@ -655,24 +628,22 @@ mat-card.empty-state-card {
     border-radius: 8px !important;
     margin-bottom: 2px !important;
     min-height: 44px !important;
+    color: var(--neutral-700) !important;
     
-    :host-context(.light-theme) & {
-      color: #475569 !important;
-      mat-icon { color: #94a3b8 !important; }
-      &:hover { background: #f8fafc !important; color: #1e293b !important; mat-icon { color: #64748b !important; } }
+    mat-icon { color: var(--neutral-400) !important; }
+    
+    &:hover { 
+      background: var(--neutral-100) !important; 
+      color: var(--neutral-900) !important; 
+      mat-icon { color: var(--neutral-600) !important; } 
     }
-
-
     
     mat-icon { margin-right: 1rem !important; }
     
     &.delete-item { 
-        color: #ef4444 !important; 
-        mat-icon { color: #ef4444 !important; } 
-        &:hover { 
-          :host-context(.light-theme) & { background: #fef2f2 !important; }
-
-        }
+        color: var(--error-600) !important; 
+        mat-icon { color: var(--error-600) !important; } 
+        &:hover { background: var(--error-50) !important; }
     }
   }
 }
@@ -682,18 +653,13 @@ mat-card.empty-state-card {
 // =============================================================================
 
 .account-actions {
-  background: #f8fafc;
-  border-top: 1px solid #e5e7eb;
+  background: var(--surface-100);
+  border-top: 1px solid var(--neutral-200);
   padding: 8px 12px;
   animation: slideDown 0.2s ease;
-  margin-top: -1.25rem; // Pull up to connect with card
+  margin-top: -1.25rem;
   margin-bottom: 1.25rem;
   border-radius: 0 0 16px 16px;
-
-  :host-context(.dark-theme) & {
-    background: mat.get-theme-color(dark.$dark-theme, neutral, 6);
-    border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
-  }
 
   .actions-container {
     display: flex;
@@ -708,28 +674,28 @@ mat-card.empty-state-card {
     transition: all 0.2s ease;
 
     &.edit-btn {
-      border: 1px dashed gray;
-      color: gray;
-      &:hover { background: #f1f5f9; transform: scale(1.05); }
+      border: 1px dashed var(--neutral-400);
+      color: var(--neutral-400);
+      &:hover { background: var(--neutral-100); transform: scale(1.05); }
     }
 
     &.statement-btn {
-      border: 1px dashed #3b82f6;
-      color: #3b82f6;
-      &:hover { background: #eff6ff; transform: scale(1.05); }
+      border: 1px dashed var(--primary-500);
+      color: var(--primary-500);
+      &:hover { background: var(--primary-50); transform: scale(1.05); }
     }
 
     &.delete-btn {
-      border: 1px solid #ef4444;
-      color: #ef4444;
-      &:hover { background: #fee2e2; transform: scale(1.05); }
+      border: 1px solid var(--error-500);
+      color: var(--error-500);
+      &:hover { background: var(--error-50); transform: scale(1.05); }
     }
   }
 }
 
 .account-details-expanded {
-  background: #f8fafc;
-  border-top: 1px solid #e5e7eb;
+  background: var(--surface-100);
+  border-top: 1px solid var(--neutral-200);
   padding: 16px 12px;
   animation: slideDown 0.3s ease;
   margin-top: -1.25rem;
@@ -748,8 +714,7 @@ mat-card.empty-state-card {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 0;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--neutral-100);
 
     &:last-child {
       border-bottom: none;
@@ -767,30 +732,26 @@ mat-card.empty-state-card {
       font-size: 18px;
       width: 18px;
       height: 18px;
-      color: #64748b;
+      color: var(--neutral-400);
       
-      &.positive { color: #059669; }
-      &.negative { color: #dc2626; }
+      &.positive { color: var(--success-600); }
+      &.negative { color: var(--error-600); }
     }
 
     span {
       font-size: 0.875rem;
       font-weight: 500;
-      color: #334155;
-
-
+      color: var(--neutral-600);
     }
   }
 
   .detail-value {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #0f172a;
+    color: var(--neutral-900);
 
-    &.positive { color: #059669; }
-    &.negative { color: #dc2626; }
-
-
+    &.positive { color: var(--success-600); }
+    &.negative { color: var(--error-600); }
   }
 }
 

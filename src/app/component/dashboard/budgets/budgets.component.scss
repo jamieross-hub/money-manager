@@ -10,8 +10,8 @@
   margin-bottom: 32px;
 
   .welcome-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-800) 100%);
+    color: var(--surface-50);
     border-radius: 16px;
     overflow: hidden;
 
@@ -68,11 +68,13 @@
 .section-card {
   margin-bottom: 24px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
+  background: var(--surface-50);
+  border: 1px solid var(--neutral-100);
   transition: all 0.3s ease;
 
   &:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-md);
     transform: translateY(-2px);
   }
 
@@ -86,17 +88,18 @@
       gap: 12px;
       font-size: 24px;
       font-weight: 600;
-      color: #333;
+      color: var(--neutral-900);
 
       mat-icon {
         font-size: 28px;
         width: 28px;
         height: 28px;
+        color: var(--primary-500);
       }
     }
 
     mat-card-subtitle {
-      color: #666;
+      color: var(--neutral-500);
       font-size: 16px;
       margin-top: 8px;
     }
@@ -120,14 +123,14 @@
       .monthly-breakdown {
         margin-top: 16px;
         padding: 16px;
-        background: #f8f9fa;
+        background: var(--surface-100);
         border-radius: 8px;
-        border-left: 4px solid #2196f3;
+        border-left: 4px solid var(--primary-500);
 
         .breakdown-text {
           margin: 0;
           font-size: 16px;
-          color: #333;
+          color: var(--neutral-800);
           font-weight: 500;
         }
       }
@@ -141,11 +144,11 @@
           gap: 8px;
           margin: 0;
           padding: 12px;
-          background: #e3f2fd;
+          background: var(--primary-50);
           border-radius: 6px;
-          border-left: 3px solid #1976d2;
+          border-left: 3px solid var(--primary-500);
           font-size: 14px;
-          color: #1565c0;
+          color: var(--primary-700);
           font-weight: 500;
           flex-wrap: wrap;
 
@@ -153,7 +156,7 @@
             font-size: 16px;
             width: 16px;
             height: 16px;
-            color: #1976d2;
+            color: var(--primary-600);
           }
 
           button {
@@ -194,14 +197,14 @@
         gap: 8px;
         margin: 0;
         font-size: 14px;
-        color: #666;
+        color: var(--neutral-500);
         font-style: italic;
 
         mat-icon {
           font-size: 16px;
           width: 16px;
           height: 16px;
-          color: #2196f3;
+          color: var(--primary-500);
         }
       }
     }
@@ -230,7 +233,7 @@
         }
 
         &:hover {
-          background: rgba(33, 150, 243, 0.05);
+          background: var(--primary-alpha-10);
           border-radius: 6px;
         }
 
@@ -248,7 +251,7 @@
         .category-name {
           font-size: 14px;
           font-weight: 600;
-          color: #333;
+          color: var(--neutral-800);
         }
       }
 
@@ -283,7 +286,7 @@
             input {
               text-align: right;
               font-weight: 600;
-              color: #2196f3;
+              color: var(--primary-600);
             }
           }
         }
@@ -295,13 +298,13 @@
 
           .budget-percentage {
             font-size: 12px;
-            color: #666;
+            color: var(--neutral-500);
             font-weight: 500;
           }
 
           .budget-monthly {
             font-size: 12px;
-            color: #4caf50;
+            color: var(--success-600);
             font-weight: 600;
           }
         }
@@ -313,14 +316,14 @@
 
   .budget-summary {
     padding: 20px;
-    background: #f8f9fa;
+    background: var(--surface-100);
     border-radius: 12px;
-    border-left: 4px solid #4caf50;
+    border-left: 4px solid var(--success-500);
     transition: all 0.3s ease;
 
     &.over-budget {
-      border-left-color: #f44336;
-      background: #fff5f5;
+      border-left-color: var(--error-500);
+      background: var(--error-50);
     }
 
     .summary-row {
@@ -332,28 +335,28 @@
       &:last-child {
         margin-bottom: 0;
         padding-top: 12px;
-        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        border-top: 1px solid var(--neutral-200);
         font-weight: 600;
         font-size: 18px;
       }
 
       .label {
         font-size: 16px;
-        color: #333;
+        color: var(--neutral-800);
       }
 
       .amount {
         font-weight: 600;
         font-size: 18px;
-        color: #4caf50;
+        color: var(--success-600);
         transition: color 0.3s ease;
 
         &.negative {
-          color: #f44336;
+          color: var(--error-600);
         }
 
         &.over-budget {
-          color: #f44336;
+          color: var(--error-600);
           font-weight: 700;
         }
       }
@@ -365,13 +368,13 @@
       gap: 8px;
       margin-top: 12px;
       padding: 12px;
-      background: #fff3cd;
-      border: 1px solid #ffeaa7;
+      background: var(--warning-50);
+      border: 1px solid var(--warning-100);
       border-radius: 8px;
-      color: #856404;
+      color: var(--warning-700);
 
       mat-icon {
-        color: #f39c12;
+        color: var(--warning-500);
         font-size: 20px;
         width: 20px;
         height: 20px;
@@ -388,7 +391,7 @@
       gap: 12px;
       margin-top: 20px;
       padding-top: 20px;
-      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      border-top: 1px solid var(--neutral-200);
       flex-wrap: wrap;
 
       button {
@@ -434,12 +437,12 @@
       border: 1px solid rgba(0, 0, 0, 0.08);
       border-radius: 8px;
       margin-bottom: 12px;
-      background: #fafafa;
+      background: var(--surface-50);
       transition: all 0.3s ease;
 
       &:hover {
-        background: #f5f5f5;
-        border-color: #4caf50;
+        background: var(--surface-100);
+        border-color: var(--success-500);
       }
 
       @media (max-width: 768px) {
@@ -470,8 +473,8 @@
       transition: all 0.3s ease;
 
       &:hover {
-        background: #f5f5f5;
-        border-color: #ff9800;
+        background: var(--surface-100);
+        border-color: var(--warning-500);
       }
 
       @media (max-width: 768px) {
@@ -502,7 +505,7 @@
       padding: 20px;
       border-radius: 12px;
       border-left: 4px solid;
-      background: #fafafa;
+      background: var(--surface-50);
       transition: all 0.3s ease;
 
       &:hover {
@@ -511,33 +514,33 @@
       }
 
       &.income-summary {
-        border-left-color: #4caf50;
+        border-left-color: var(--success-500);
       }
 
       &.expenses-summary {
-        border-left-color: #ff9800;
+        border-left-color: var(--warning-500);
       }
 
       &.savings-summary {
-        border-left-color: #2196f3;
+        border-left-color: var(--primary-500);
       }
 
       &.debt-summary {
-        border-left-color: #f44336;
+        border-left-color: var(--error-500);
       }
 
       h3 {
         font-size: 18px;
         font-weight: 600;
         margin: 0 0 16px 0;
-        color: #333;
+        color: var(--neutral-900);
       }
 
       .summary-amount {
         font-size: 24px;
         font-weight: 700;
         margin-bottom: 16px;
-        color: #333;
+        color: var(--neutral-900);
       }
 
       .summary-breakdown {
@@ -558,9 +561,9 @@
 
   .final-summary {
     padding: 24px;
-    background: #f8f9fa;
+    background: var(--surface-100);
     border-radius: 12px;
-    border-left: 4px solid #333;
+    border-left: 4px solid var(--neutral-800);
 
     .summary-row {
       display: flex;
@@ -572,7 +575,7 @@
       &:last-child {
         margin-bottom: 0;
         padding-top: 16px;
-        border-top: 2px solid rgba(0, 0, 0, 0.1);
+        border-top: 2px solid var(--neutral-200);
         font-weight: 700;
         font-size: 20px;
       }
@@ -587,34 +590,34 @@
       }
 
       .label {
-        color: #333;
+        color: var(--neutral-800);
       }
 
       .amount {
         font-weight: 600;
 
         &.income {
-          color: #4caf50;
+          color: var(--success-600);
         }
 
         &.expenses {
-          color: #ff9800;
+          color: var(--warning-600);
         }
 
         &.savings {
-          color: #2196f3;
+          color: var(--primary-600);
         }
 
         &.debt {
-          color: #f44336;
+          color: var(--error-600);
         }
 
         &.positive {
-          color: #4caf50;
+          color: var(--success-600);
         }
 
         &.negative {
-          color: #f44336;
+          color: var(--error-600);
         }
       }
     }
@@ -631,23 +634,23 @@
       padding: 20px;
       border-radius: 12px;
       margin-bottom: 24px;
-      background: #e8f5e8;
-      border-left: 4px solid #4caf50;
+      background: var(--success-50);
+      border-left: 4px solid var(--success-500);
 
       &.warning {
-        background: #fff3e0;
-        border-left-color: #ff9800;
+        background: var(--warning-50);
+        border-left-color: var(--warning-500);
       }
 
       .success-icon {
-        color: #4caf50;
+        color: var(--success-500);
         font-size: 24px;
         width: 24px;
         height: 24px;
       }
 
       .warning-icon {
-        color: #ff9800;
+        color: var(--warning-500);
         font-size: 24px;
         width: 24px;
         height: 24px;
@@ -656,7 +659,7 @@
       p {
         margin: 0;
         font-size: 16px;
-        color: #333;
+        color: var(--neutral-800);
       }
     }
 
@@ -669,7 +672,7 @@
         font-size: 20px;
         font-weight: 600;
         margin-bottom: 20px;
-        color: #333;
+        color: var(--neutral-900);
       }
 
       .monthly-grid {
@@ -683,13 +686,13 @@
 
         .month-item {
           padding: 16px;
-          border: 1px solid rgba(0, 0, 0, 0.08);
+          border: 1px solid var(--neutral-100);
           border-radius: 8px;
-          background: #fafafa;
+          background: var(--surface-50);
           transition: all 0.3s ease;
 
           &:hover {
-            background: #f5f5f5;
+            background: var(--surface-100);
             transform: translateY(-2px);
           }
 
@@ -697,7 +700,7 @@
             font-size: 16px;
             font-weight: 600;
             margin: 0 0 12px 0;
-            color: #333;
+            color: var(--neutral-900);
             text-align: center;
           }
 
@@ -712,7 +715,7 @@
               &:last-child {
                 margin-bottom: 0;
                 padding-top: 8px;
-                border-top: 1px solid rgba(0, 0, 0, 0.1);
+                border-top: 1px solid var(--neutral-200);
                 font-weight: 600;
               }
 
@@ -722,11 +725,11 @@
               }
 
               .positive {
-                color: #4caf50;
+                color: var(--success-600);
               }
 
               .negative {
-                color: #f44336;
+                color: var(--error-600);
               }
             }
           }
@@ -740,7 +743,7 @@
 .navigation-section {
   margin-top: 32px;
   padding: 24px 0;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid var(--neutral-200);
 
   .nav-buttons {
     display: flex;

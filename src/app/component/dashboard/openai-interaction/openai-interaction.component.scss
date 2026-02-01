@@ -4,16 +4,15 @@
   max-width: 1000px;
   margin: 0 auto;
   padding: 2rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   line-height: 1.6;
-  color: #1a202c;
+  color: var(--neutral-900);
 }
 
 .main-card {
-  background: white;
+  background: var(--surface-100);
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--neutral-200);
   overflow: hidden;
 }
 
@@ -23,8 +22,8 @@
   justify-content: space-between;
   align-items: flex-start;
   padding: 2.5rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, var(--surface-100) 0%, var(--surface-200) 100%);
+  border-bottom: 1px solid var(--neutral-200);
 
   .header-content {
     flex: 1;
@@ -40,12 +39,12 @@
         justify-content: center;
         width: 60px;
         height: 60px;
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
         border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        box-shadow: var(--shadow-md);
 
         .header-icon {
-          color: white;
+          color: var(--surface-50);
           font-size: 2rem;
           width: 2rem;
           height: 2rem;
@@ -56,7 +55,7 @@
         h1 {
           font-size: 2.25rem;
           font-weight: 700;
-          color: #1e293b;
+          color: var(--neutral-900);
           margin: 0 0 0.75rem 0;
           letter-spacing: -0.025em;
           line-height: 1.2;
@@ -64,7 +63,7 @@
 
         .subtitle {
           font-size: 1.125rem;
-          color: #64748b;
+          color: var(--neutral-500);
           margin: 0;
           font-weight: 400;
         }
@@ -124,14 +123,14 @@
   h2 {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--neutral-900);
     margin: 0 0 0.5rem 0;
     letter-spacing: -0.025em;
   }
 
   p {
     font-size: 1rem;
-    color: #64748b;
+    color: var(--neutral-500);
     margin: 0;
     font-weight: 400;
   }
@@ -142,8 +141,8 @@
   padding: 2.5rem;
 
   .status-card {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: var(--surface-200);
+    border: 1px solid var(--neutral-200);
     border-radius: 12px;
     padding: 2rem;
     margin-bottom: 2rem;
@@ -162,13 +161,13 @@
           width: 12px;
           height: 12px;
           border-radius: 50%;
-          background: #ef4444;
+          background: var(--error-500);
           transition: background 0.3s ease;
-          box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+          box-shadow: 0 0 0 4px var(--error-alpha-10);
 
           &.connected {
-            background: #10b981;
-            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+            background: var(--success-500);
+            box-shadow: 0 0 0 4px var(--success-alpha-10);
           }
         }
 
@@ -180,12 +179,12 @@
           .status-text {
             font-size: 1.125rem;
             font-weight: 600;
-            color: #1e293b;
+            color: var(--neutral-900);
           }
 
           .status-description {
             font-size: 0.875rem;
-            color: #64748b;
+            color: var(--neutral-500);
           }
         }
       }
@@ -207,9 +206,9 @@
           transition: all 0.3s ease;
 
           &.primary {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: white;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+            color: var(--surface-50);
+            box-shadow: var(--shadow-md);
 
             &:hover {
               transform: translateY(-2px);
@@ -233,7 +232,7 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.875rem 1.5rem;
-            border: 1px solid #d1d5db;
+            border: 1px solid var(--neutral-300);
             border-radius: 10px;
             font-size: 0.875rem;
             font-weight: 600;
@@ -241,12 +240,12 @@
             transition: all 0.3s ease;
 
             &.secondary {
-              background: white;
-              color: #374151;
+              background: var(--surface-50);
+              color: var(--neutral-700);
 
               &:hover {
-                background: #f9fafb;
-                border-color: #9ca3af;
+                background: var(--surface-200);
+                border-color: var(--neutral-400);
               }
             }
 
@@ -262,7 +261,7 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.875rem 1.5rem;
-            border: 1px solid #fecaca;
+            border: 1px solid var(--error-200);
             border-radius: 10px;
             font-size: 0.875rem;
             font-weight: 600;
@@ -270,12 +269,12 @@
             transition: all 0.3s ease;
 
             &.danger {
-              background: white;
-              color: #dc2626;
+              background: var(--surface-50);
+              color: var(--error-600);
 
               &:hover {
-                background: #fef2f2;
-                border-color: #fca5a5;
+                background: var(--error-50);
+                border-color: var(--error-300);
               }
             }
 
@@ -291,8 +290,8 @@
   }
 
   .form-section {
-    background: white;
-    border: 1px solid #e2e8f0;
+    background: var(--surface-100);
+    border: 1px solid var(--neutral-200);
     border-radius: 12px;
     padding: 2rem;
 
@@ -302,13 +301,13 @@
       h3 {
         font-size: 1.5rem;
         font-weight: 600;
-        color: #1e293b;
+        color: var(--neutral-900);
         margin: 0 0 0.5rem 0;
       }
 
       p {
         font-size: 1rem;
-        color: #64748b;
+        color: var(--neutral-500);
         margin: 0;
       }
     }
@@ -319,7 +318,7 @@
       label {
         display: block;
         font-weight: 600;
-        color: #374151;
+        color: var(--neutral-700);
         margin-bottom: 0.75rem;
         font-size: 0.875rem;
       }
@@ -331,22 +330,22 @@
           width: 100%;
           padding: 1rem 1.25rem;
           padding-right: 3rem;
-          border: 2px solid #e2e8f0;
+          border: 2px solid var(--neutral-200);
           border-radius: 10px;
           font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Courier New', monospace;
           font-size: 0.875rem;
           transition: all 0.3s ease;
-          background: #f8fafc;
+          background: var(--surface-100);
 
           &:focus {
             outline: none;
-            border-color: #3b82f6;
-            background: white;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            border-color: var(--primary-500);
+            background: var(--surface-50);
+            box-shadow: 0 0 0 4px var(--primary-alpha-10);
           }
 
           &::placeholder {
-            color: #94a3b8;
+            color: var(--neutral-400);
           }
         }
 
@@ -355,7 +354,7 @@
           right: 1rem;
           top: 50%;
           transform: translateY(-50%);
-          color: #94a3b8;
+          color: var(--neutral-400);
           font-size: 1.25rem;
         }
       }
@@ -396,18 +395,18 @@
         align-items: center;
         gap: 0.5rem;
         padding: 0.875rem 1.5rem;
-        background: white;
-        border: 2px solid #e2e8f0;
+        background: var(--surface-100);
+        border: 2px solid var(--neutral-200);
         border-radius: 10px;
-        color: #475569;
+        color: var(--neutral-600);
         font-size: 0.875rem;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
 
         &:hover {
-          background: #f8fafc;
-          border-color: #cbd5e1;
+          background: var(--surface-200);
+          border-color: var(--neutral-300);
         }
 
         span {
@@ -511,7 +510,7 @@
 // Features Section
 .features-section {
   padding: 2.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--neutral-200);
 
   .features-grid {
     display: grid;
@@ -539,7 +538,7 @@
         justify-content: center;
         width: 50px;
         height: 50px;
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
         border-radius: 10px;
         flex-shrink: 0;
 
@@ -573,7 +572,7 @@
 // Security Section
 .security-section {
   padding: 2.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--neutral-200);
 
   .security-grid {
     display: grid;
@@ -585,8 +584,8 @@
       align-items: flex-start;
       gap: 1rem;
       padding: 1.5rem;
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
+      background: var(--success-50);
+      border: 1px solid var(--success-200);
       border-radius: 12px;
       transition: all 0.3s ease;
 
@@ -601,7 +600,7 @@
         justify-content: center;
         width: 50px;
         height: 50px;
-        background: linear-gradient(135deg, #10b981, #059669);
+        background: linear-gradient(135deg, var(--success-500), var(--success-600));
         border-radius: 10px;
         flex-shrink: 0;
 
@@ -662,8 +661,8 @@
         justify-content: center;
         width: 40px;
         height: 40px;
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
-        color: white;
+        background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+        color: var(--surface-50);
         border-radius: 10px;
         font-size: 1rem;
         font-weight: 700;
@@ -682,7 +681,7 @@
 
         p {
           font-size: 0.875rem;
-          color: #64748b;
+          color: var(--neutral-500);
           margin: 0 0 1rem 0;
           line-height: 1.5;
         }
@@ -691,14 +690,14 @@
           display: inline-flex;
           align-items: center;
           gap: 0.5rem;
-          color: #3b82f6;
+          color: var(--primary-500);
           text-decoration: none;
           font-weight: 500;
           font-size: 0.875rem;
           transition: all 0.3s ease;
 
           &:hover {
-            color: #2563eb;
+            color: var(--primary-600);
             transform: translateX(2px);
           }
 

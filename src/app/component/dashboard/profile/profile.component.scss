@@ -3,8 +3,8 @@
   margin: 0 auto;
   padding: 24px;
   min-height: 100vh;
-  background: var(--background-color);
-  color: var(--text-color);
+  background: var(--surface-200);
+  color: var(--neutral-900);
 
   @media (max-width: 1024px) {
     padding: 20px;
@@ -25,18 +25,18 @@
   align-items: center;
   justify-content: center;
   min-height: 400px;
-  background: var(--background-color);
+  background: var(--surface-100);
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .profile-header {
-  background: var(--card-background);
+  background: var(--surface-100);
   border-radius: 16px;
   padding: 32px;
   margin-bottom: 32px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--neutral-200);
 
   @media (max-width: 1024px) {
     padding: 28px;
@@ -95,11 +95,11 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
   flex-shrink: 0;
 
   @media (max-width: 1024px) {
@@ -152,7 +152,7 @@
   font-size: 28px;
   font-weight: 700;
   margin: 0 0 8px 0;
-  color: var(--text-color);
+  color: var(--neutral-900);
   word-wrap: break-word;
 
   @media (max-width: 1024px) {
@@ -170,7 +170,7 @@
 
 .user-email {
   font-size: 16px;
-  color: var(--text-secondary);
+  color: var(--neutral-500);
   margin: 0 0 4px 0;
   word-wrap: break-word;
 
@@ -181,7 +181,7 @@
 
 .user-role {
   font-size: 14px;
-  color: var(--text-muted);
+  color: var(--neutral-400);
   margin: 0;
 
   @media (max-width: 480px) {
@@ -237,11 +237,11 @@
 }
 
 .form-section {
-  background: var(--card-background);
+  background: var(--surface-100);
   border-radius: 16px;
   padding: 32px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--neutral-200);
 
   @media (max-width: 1024px) {
     padding: 28px;
@@ -262,7 +262,7 @@
   gap: 12px;
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 2px solid var(--border-color);
+  border-bottom: 2px solid var(--neutral-100);
 
   @media (max-width: 768px) {
     margin-bottom: 20px;
@@ -277,7 +277,7 @@
 }
 
 .section-icon {
-  color: var(--primary-color);
+  color: var(--primary-500);
   font-size: 24px;
   width: 24px;
   height: 24px;
@@ -294,7 +294,7 @@
   font-size: 20px;
   font-weight: 600;
   margin: 0;
-  color: var(--text-color);
+  color: var(--neutral-900);
 
   @media (max-width: 768px) {
     font-size: 18px;
@@ -353,9 +353,9 @@
 
 .preference-item {
   padding: 20px;
-  background: var(--background-color);
+  background: var(--surface-50);
   border-radius: 12px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--neutral-200);
   transition: all 0.3s ease;
 
   &:hover {
@@ -377,7 +377,7 @@
 
 .preference-description {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--neutral-500);
   margin: 8px 0 0 0;
   line-height: 1.4;
 
@@ -388,7 +388,7 @@
 
 .toggle-label {
   font-weight: 500;
-  color: var(--text-color);
+  color: var(--neutral-800);
   
   @media (max-width: 480px) {
     font-size: 14px;
@@ -400,7 +400,7 @@
   gap: 16px;
   justify-content: flex-end;
   padding: 24px 0;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--neutral-200);
 
   @media (max-width: 768px) {
     flex-direction: column;
@@ -437,11 +437,11 @@
 }
 
 .account-actions-section {
-  background: var(--card-background);
+  background: var(--surface-100);
   border-radius: 16px;
   padding: 32px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--neutral-200);
 
   @media (max-width: 1024px) {
     padding: 28px;
@@ -480,9 +480,9 @@
 
 .action-card {
   padding: 24px;
-  background: var(--background-color);
+  background: var(--surface-50);
   border-radius: 12px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--neutral-200);
   text-align: center;
   transition: all 0.3s ease;
 
@@ -492,11 +492,11 @@
   }
 
   &.danger {
-    border-color: var(--warn-color);
-    background: rgba(244, 67, 54, 0.05);
+    border-color: var(--error-500);
+    background: var(--error-50);
 
     .action-icon {
-      color: var(--warn-color);
+      color: var(--error-600);
     }
   }
 
@@ -513,7 +513,7 @@
   font-size: 32px;
   width: 32px;
   height: 32px;
-  color: var(--primary-color);
+  color: var(--primary-500);
   margin-bottom: 16px;
 
   @media (max-width: 768px) {
@@ -535,7 +535,7 @@
   font-size: 18px;
   font-weight: 600;
   margin: 0 0 12px 0;
-  color: var(--text-color);
+  color: var(--neutral-900);
 
   @media (max-width: 768px) {
     font-size: 16px;
@@ -550,7 +550,7 @@
 
 .action-card p {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--neutral-500);
   margin: 0 0 20px 0;
   line-height: 1.5;
 
@@ -578,53 +578,7 @@
   }
 }
 
-// Dark theme adjustments
-:host-context(.dark-theme) {
-  .profile-container {
-    background: var(--dark-background);
-  }
-
-  .profile-header,
-  .form-section,
-  .account-actions-section {
-    background: var(--dark-card-background);
-    border-color: var(--dark-border-color);
-  }
-
-  .preference-item,
-  .action-card {
-    background: var(--dark-background);
-    border-color: var(--dark-border-color);
-  }
-
-  .user-name {
-    color: var(--dark-text-color);
-  }
-
-  .user-email {
-    color: var(--dark-text-secondary);
-  }
-
-  .user-role {
-    color: var(--dark-text-muted);
-  }
-
-  .section-header h2 {
-    color: var(--dark-text-color);
-  }
-
-  .action-card h3 {
-    color: var(--dark-text-color);
-  }
-
-  .action-card p {
-    color: var(--dark-text-secondary);
-  }
-
-  .preference-description {
-    color: var(--dark-text-secondary);
-  }
-}
+// Dark theme adjustments removed as global variables handle both themes
 
 // Animation for form transitions
 .form-field {

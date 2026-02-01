@@ -9,14 +9,7 @@
   margin: .05rem;
   border-radius: 50%;
   animation: blink 1s infinite;
-  
-  :host-context(.light-theme) & {
-    background: mat.get-theme-color(light.$light-theme, neutral, 60);
-  }
-  
-  :host-context(.dark-theme) & {
-    background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 50);
-  }
+  background: var(--neutral-400);
 }
 .typing-dots span:nth-child(2){animation-delay:.2s}
 .typing-dots span:nth-child(3){animation-delay:.4s}
@@ -77,78 +70,62 @@
 	}
 }
 
-// Dark Theme Support
-:host-context(.dark-theme) {
-  .chat-bubble-bot {
-    background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20) !important;
-    color: mat.get-theme-color(dark.$dark-theme, primary, 100) !important;
-  }
-  
-  .input-bar-container {
-    background-color: inherit;
-    border-top: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20) !important;
-  }
-  
-  .search-input-wrap {
-    background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20) !important;
-    border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30) !important;
-    
-    input {
-      color: mat.get-theme-color(dark.$dark-theme, primary, 100) !important;
-      &::placeholder {
-        color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 50) !important;
-      }
-    }
-  }
+// Theme Support
+.chat-bubble-bot {
+  background-color: var(--surface-100) !important;
+  color: var(--neutral-800) !important;
+}
 
-  .voice-overlay {
-    background-color: rgba(mat.get-theme-color(dark.$dark-theme, neutral-variant, 20), 0.9) !important;
-    border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30) !important;
-    
-    .text-primary-700, .text-primary-600 {
-      color: mat.get-theme-color(dark.$dark-theme, primary, 70) !important;
-    }
-  }
+.input-bar-container {
+  background-color: inherit;
+  border-top: 1px solid var(--neutral-200) !important;
+}
 
-  .quick-action-chip {
-    &.bg-red-50 {
-      background-color: rgba(239, 68, 68, 0.1) !important;
-      color: #fca5a5 !important;
-      border: 1px solid rgba(239, 68, 68, 0.2) !important;
-      mat-icon { color: #fca5a5 !important; }
-    }
-    
-    &.border-green-100 {
-      background-color: rgba(34, 197, 94, 0.1) !important;
-      color: #4ade80 !important;
-      border: 1px solid rgba(34, 197, 94, 0.2) !important;
-      mat-icon { color: #4ade80 !important; }
-    }
-    
-    &.border-blue-100 {
-      background-color: rgba(59, 130, 246, 0.1) !important;
-      color: #60a5fa !important;
-      border: 1px solid rgba(59, 130, 246, 0.2) !important;
-      mat-icon { color: #60a5fa !important; }
+.search-input-wrap {
+  background-color: var(--surface-200) !important;
+  border-color: var(--neutral-300) !important;
+  
+  input {
+    color: var(--neutral-900) !important;
+    &::placeholder {
+      color: var(--neutral-400) !important;
     }
   }
 }
 
-// Light theme explicit styles for consistency
-:host-context(.light-theme) {
-  .chat-bubble-bot {
-    background-color: mat.get-theme-color(light.$light-theme, neutral, 95) !important;
-    color: mat.get-theme-color(light.$light-theme, neutral, 20) !important;
-  }
+.voice-overlay {
+  background-color: var(--surface-alpha-80) !important;
+  border-color: var(--neutral-300) !important;
   
-  .input-bar-container {
-    background-color: inherit;
+  .text-primary-700, .text-primary-600 {
+    color: var(--primary-700) !important;
+  }
+}
 
+.quick-action-chip {
+  background-color: var(--surface-50);
+  color: var(--neutral-700);
+  border: 1px solid var(--neutral-200);
+
+  &.border-red-50, &.bg-red-50 {
+    background-color: var(--error-50) !important;
+    color: var(--error-700) !important;
+    border: 1px solid var(--error-100) !important;
+    mat-icon { color: var(--error-600) !important; }
   }
   
-  .search-input-wrap {
-    background-color: mat.get-theme-color(light.$light-theme, neutral, 60) !important;
-    border-color: mat.get-theme-color(light.$light-theme, neutral, 90) !important;
+  &.border-green-100 {
+    background-color: var(--success-50) !important;
+    color: var(--success-700) !important;
+    border: 1px solid var(--success-100) !important;
+    mat-icon { color: var(--success-600) !important; }
+  }
+  
+  &.border-blue-100 {
+    background-color: var(--primary-50) !important;
+    color: var(--primary-700) !important;
+    border: 1px solid var(--primary-100) !important;
+    mat-icon { color: var(--primary-600) !important; }
   }
 }
 

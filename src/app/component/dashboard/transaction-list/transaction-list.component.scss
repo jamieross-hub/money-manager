@@ -20,10 +20,7 @@
 .custom-tabs {
   .mat-mdc-tab-group {
     .mat-mdc-tab-header {
-      border-bottom: 2px solid mat.get-theme-color(light.$light-theme, neutral, 90);
-      :host-context(.dark-theme) & {
-        border-bottom-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
-      }
+      border-bottom: 2px solid var(--neutral-200);
       
       .mat-mdc-tab-label-container {
         .mat-mdc-tab-label {
@@ -31,10 +28,7 @@
           padding: 0;
           
           &.mat-mdc-tab-label-active {
-            background-color: mat.get-theme-color(light.$light-theme, neutral, 95);
-            :host-context(.dark-theme) & {
-              background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
-            }
+            background-color: var(--surface-100);
             border-radius: 8px 8px 0 0;
           }
         }
@@ -45,18 +39,12 @@
 
 /* Table styling improvements */
 .mat-mdc-table {
-  background-color: white;
+  background-color: var(--surface-50);
   .mat-mdc-header-cell {
     font-weight: 600;
-    color: mat.get-theme-color(light.$light-theme, neutral, 20);
-    background-color: mat.get-theme-color(light.$light-theme, primary, 100);
-    border-bottom: 2px solid mat.get-theme-color(light.$light-theme, neutral, 90);
-
-    :host-context(.dark-theme) & {
-      color: mat.get-theme-color(dark.$dark-theme, primary, 100);
-      background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
-      border-bottom-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
-    }
+    color: var(--neutral-800);
+    background-color: var(--surface-100);
+    border-bottom: 2px solid var(--neutral-200);
     position: sticky;
     top: 0;
     z-index: 10;
@@ -64,20 +52,17 @@
   
   .mat-mdc-cell {
     padding: 16px 24px;
-    border-bottom: 1px solid mat.get-theme-color(light.$light-theme, neutral, 95);
-
-    :host-context(.dark-theme) & {
-      border-bottom-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
-    }
+    border-bottom: 1px solid var(--neutral-100);
+    color: var(--neutral-700);
   }
   
   .mat-mdc-row {
     transition: all 0.2s ease;
     
     &:hover {
-      background-color: inherit;
+      background-color: var(--surface-100);
       transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--shadow-sm);
     }
   }
 }
@@ -92,16 +77,16 @@
   }
   
   &::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: var(--neutral-100);
     border-radius: 4px;
   }
   
   &::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
+    background: var(--neutral-300);
     border-radius: 4px;
     
     &:hover {
-      background: #a8a8a8;
+      background: var(--neutral-400);
     }
   }
 }
@@ -120,9 +105,10 @@
 
 /* Card styling */
 .mat-mdc-card {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  box-shadow: var(--shadow-md) !important;
   border-radius: 16px !important;
-  border: none !important;
+  border: 1px solid var(--neutral-200) !important;
+  background: var(--surface-50);
 }
 
 /* Button styling */
@@ -130,10 +116,10 @@
   border-radius: 8px !important;
   font-weight: 500 !important;
   text-transform: none !important;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 1px 3px 0 var(--primary-alpha-10), 0 1px 2px 0 var(--primary-alpha-5) !important;
   
   &:hover {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    box-shadow: 0 4px 6px -1px var(--primary-alpha-10), 0 2px 4px -1px var(--primary-alpha-5) !important;
   }
 }
 
@@ -143,7 +129,7 @@ input, select {
   
   &:focus {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 4px 12px var(--primary-alpha-15);
   }
 }
 
@@ -158,21 +144,21 @@ input, select {
   text-transform: capitalize;
   
   &.income {
-    background-color: #dcfce7;
-    color: #166534;
+    background-color: var(--success-50);
+    color: var(--success-700);
   }
   
   &.expense {
-    background-color: #fee2e2;
-    color: #991b1b;
+    background-color: var(--error-50);
+    color: var(--error-700);
   }
 }
 
 /* Animation for row editing */
 .mat-mdc-row {
   &.editing {
-    background-color: #eff6ff;
-    border-left: 4px solid #3b82f6;
+    background-color: var(--primary-50);
+    border-left: 4px solid var(--primary-500);
   }
 }
 

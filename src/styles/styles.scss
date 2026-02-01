@@ -19,7 +19,7 @@
     letter-spacing: -0.025em;
 
     .dark-theme & {
-      color: mat.get-theme-color(dark.$dark-theme, primary, 100);
+      color: var(--primary-100);
     }
   }
   
@@ -154,37 +154,183 @@ body {
   box-sizing: border-box;
   
   &.light-theme {
-    background-color: mat.get-theme-color(light.$light-theme, primary, 100);
-    color: mat.get-theme-color(light.$light-theme, neutral, 10);
+    background-color: var(--surface-100);
+    color: var(--neutral-900);
 
-    // Dynamic Primary Palette for Tailwind
+    // Dynamic Primary Palette
     --primary-50: #{mat.get-theme-color(light.$light-theme, primary, 99)};
     --primary-100: #{mat.get-theme-color(light.$light-theme, primary, 95)};
     --primary-200: #{mat.get-theme-color(light.$light-theme, primary, 90)};
     --primary-300: #{mat.get-theme-color(light.$light-theme, primary, 80)};
     --primary-400: #{mat.get-theme-color(light.$light-theme, primary, 70)};
     --primary-500: #{mat.get-theme-color(light.$light-theme, primary, 40)};
-    --primary-600: #{mat.get-theme-color(light.$light-theme, primary, 35)};
-    --primary-700: #{mat.get-theme-color(light.$light-theme, primary, 30)};
-    --primary-800: #{mat.get-theme-color(light.$light-theme, primary, 20)};
-    --primary-900: #{mat.get-theme-color(light.$light-theme, primary, 10)};
+    --primary-600: #{mat.get-theme-color(light.$light-theme, primary, 30)};
+    --primary-700: #{mat.get-theme-color(light.$light-theme, primary, 20)};
+    --primary-800: #{mat.get-theme-color(light.$light-theme, primary, 10)};
+    --primary-900: #{mat.get-theme-color(light.$light-theme, primary, 0)};
+
+    // Dynamic Secondary Palette
+    --secondary-50: #{mat.get-theme-color(light.$light-theme, secondary, 99)};
+    --secondary-100: #{mat.get-theme-color(light.$light-theme, secondary, 95)};
+    --secondary-200: #{mat.get-theme-color(light.$light-theme, secondary, 90)};
+    --secondary-300: #{mat.get-theme-color(light.$light-theme, secondary, 80)};
+    --secondary-400: #{mat.get-theme-color(light.$light-theme, secondary, 70)};
+    --secondary-500: #{mat.get-theme-color(light.$light-theme, secondary, 40)};
+    --secondary-600: #{mat.get-theme-color(light.$light-theme, secondary, 30)};
+    --secondary-700: #{mat.get-theme-color(light.$light-theme, secondary, 20)};
+    --secondary-800: #{mat.get-theme-color(light.$light-theme, secondary, 10)};
+    --secondary-900: #{mat.get-theme-color(light.$light-theme, secondary, 0)};
+
+    // Dynamic Tertiary Palette
+    --tertiary-50: #{mat.get-theme-color(light.$light-theme, tertiary, 99)};
+    --tertiary-100: #{mat.get-theme-color(light.$light-theme, tertiary, 95)};
+    --tertiary-200: #{mat.get-theme-color(light.$light-theme, tertiary, 90)};
+    --tertiary-300: #{mat.get-theme-color(light.$light-theme, tertiary, 80)};
+    --tertiary-400: #{mat.get-theme-color(light.$light-theme, tertiary, 70)};
+    --tertiary-500: #{mat.get-theme-color(light.$light-theme, tertiary, 40)};
+    --tertiary-600: #{mat.get-theme-color(light.$light-theme, tertiary, 30)};
+    --tertiary-700: #{mat.get-theme-color(light.$light-theme, tertiary, 20)};
+    --tertiary-800: #{mat.get-theme-color(light.$light-theme, tertiary, 10)};
+    --tertiary-900: #{mat.get-theme-color(light.$light-theme, tertiary, 0)};
+
+    // Error Palette
+    --error-50: #{mat.get-theme-color(light.$light-theme, error, 99)};
+    --error-100: #{mat.get-theme-color(light.$light-theme, error, 95)};
+    --error-200: #{mat.get-theme-color(light.$light-theme, error, 90)};
+    --error-300: #{mat.get-theme-color(light.$light-theme, error, 80)};
+    --error-400: #{mat.get-theme-color(light.$light-theme, error, 70)};
+    --error-500: #{mat.get-theme-color(light.$light-theme, error, 40)};
+    --error-600: #{mat.get-theme-color(light.$light-theme, error, 30)};
+    --error-700: #{mat.get-theme-color(light.$light-theme, error, 20)};
+    --error-800: #{mat.get-theme-color(light.$light-theme, error, 10)};
+    --error-900: #{mat.get-theme-color(light.$light-theme, error, 0)};
+
+    // Success Palette (Using custom green)
+    --success-50: #f0fdf4;
+    --success-100: #dcfce7;
+    --success-200: #bbf7d0;
+    --success-300: #86efac;
+    --success-400: #4ade80;
+    --success-500: #22c55e;
+    --success-600: #16a34a;
+    --success-700: #15803d;
+    --success-800: #166534;
+    --success-900: #052e16;
+
+    // Warning Palette (Using custom amber)
+    --warning-50: #fffbeb;
+    --warning-100: #fef3c7;
+    --warning-200: #fef08a;
+    --warning-300: #fde047;
+    --warning-400: #facc15;
+    --warning-500: #eab308;
+    --warning-600: #ca8a04;
+    --warning-700: #a16207;
+    --warning-800: #92400e;
+    --warning-900: #78350f;
+
+    // Neutral Palette
+    --neutral-50: #{mat.get-theme-color(light.$light-theme, neutral, 99)};
+    --neutral-100: #{mat.get-theme-color(light.$light-theme, neutral, 95)};
+    --neutral-200: #{mat.get-theme-color(light.$light-theme, neutral, 90)};
+    --neutral-300: #{mat.get-theme-color(light.$light-theme, neutral, 80)};
+    --neutral-400: #{mat.get-theme-color(light.$light-theme, neutral, 70)};
+    --neutral-500: #{mat.get-theme-color(light.$light-theme, neutral, 40)};
+    --neutral-600: #{mat.get-theme-color(light.$light-theme, neutral, 30)};
+    --neutral-700: #{mat.get-theme-color(light.$light-theme, neutral, 20)};
+    --neutral-800: #{mat.get-theme-color(light.$light-theme, neutral, 10)};
+    --neutral-900: #{mat.get-theme-color(light.$light-theme, neutral, 0)};
+
+    // Surface Palette
+    --surface-50: #{mat.get-theme-color(light.$light-theme, neutral, 100)};
+    --surface-100: #{mat.get-theme-color(light.$light-theme, neutral, 98)};
+    --surface-200: #{mat.get-theme-color(light.$light-theme, neutral, 95)};
+    --surface-300: #{mat.get-theme-color(light.$light-theme, neutral, 90)};
+    --surface-400: #{mat.get-theme-color(light.$light-theme, neutral, 80)};
+    --surface-500: #{mat.get-theme-color(light.$light-theme, neutral, 70)};
   }
 
   &.dark-theme {
-    background-color: mat.get-theme-color(dark.$dark-theme, primary, 0);
-    color: mat.get-theme-color(dark.$dark-theme, primary, 100);
+    background-color: var(--surface-50);
+    color: var(--primary-100);
 
-    // Dynamic Primary Palette for Tailwind
-    --primary-50: #{mat.get-theme-color(dark.$dark-theme, primary, 90)};
-    --primary-100: #{mat.get-theme-color(dark.$dark-theme, primary, 80)};
-    --primary-200: #{mat.get-theme-color(dark.$dark-theme, primary, 70)};
-    --primary-300: #{mat.get-theme-color(dark.$dark-theme, primary, 60)};
-    --primary-400: #{mat.get-theme-color(dark.$dark-theme, primary, 50)};
-    --primary-500: #{mat.get-theme-color(dark.$dark-theme, primary, 0)}; // Use 50 for dark mode better visibility
-    --primary-600: #{mat.get-theme-color(dark.$dark-theme, primary, 10)};
-    --primary-700: #{mat.get-theme-color(dark.$dark-theme, primary, 20)};
-    --primary-800: #{mat.get-theme-color(dark.$dark-theme, primary, 30)};
-    --primary-900: #{mat.get-theme-color(dark.$dark-theme, primary, 40)};
+    // Dynamic Primary Palette
+    --primary-50: #{mat.get-theme-color(dark.$dark-theme, primary, 95)};
+    --primary-100: #{mat.get-theme-color(dark.$dark-theme, primary, 90)};
+    --primary-200: #{mat.get-theme-color(dark.$dark-theme, primary, 80)};
+    --primary-300: #{mat.get-theme-color(dark.$dark-theme, primary, 70)};
+    --primary-400: #{mat.get-theme-color(dark.$dark-theme, primary, 60)};
+    --primary-500: #{mat.get-theme-color(dark.$dark-theme, primary, 50)};
+    --primary-600: #{mat.get-theme-color(dark.$dark-theme, primary, 40)};
+    --primary-700: #{mat.get-theme-color(dark.$dark-theme, primary, 30)};
+    --primary-800: #{mat.get-theme-color(dark.$dark-theme, primary, 20)};
+    --primary-900: #{mat.get-theme-color(dark.$dark-theme, primary, 10)};
+
+    // Dynamic Secondary Palette
+    --secondary-50: #{mat.get-theme-color(dark.$dark-theme, secondary, 95)};
+    --secondary-100: #{mat.get-theme-color(dark.$dark-theme, secondary, 90)};
+    --secondary-200: #{mat.get-theme-color(dark.$dark-theme, secondary, 80)};
+    --secondary-300: #{mat.get-theme-color(dark.$dark-theme, secondary, 70)};
+    --secondary-400: #{mat.get-theme-color(dark.$dark-theme, secondary, 60)};
+    --secondary-500: #{mat.get-theme-color(dark.$dark-theme, secondary, 50)};
+    --secondary-600: #{mat.get-theme-color(dark.$dark-theme, secondary, 40)};
+    --secondary-700: #{mat.get-theme-color(dark.$dark-theme, secondary, 30)};
+    --secondary-800: #{mat.get-theme-color(dark.$dark-theme, secondary, 20)};
+    --secondary-900: #{mat.get-theme-color(dark.$dark-theme, secondary, 10)};
+
+    // Dynamic Tertiary Palette
+    --tertiary-50: #{mat.get-theme-color(dark.$dark-theme, tertiary, 95)};
+    --tertiary-100: #{mat.get-theme-color(dark.$dark-theme, tertiary, 90)};
+    --tertiary-200: #{mat.get-theme-color(dark.$dark-theme, tertiary, 80)};
+    --tertiary-300: #{mat.get-theme-color(dark.$dark-theme, tertiary, 70)};
+    --tertiary-400: #{mat.get-theme-color(dark.$dark-theme, tertiary, 60)};
+    --tertiary-500: #{mat.get-theme-color(dark.$dark-theme, tertiary, 50)};
+    --tertiary-600: #{mat.get-theme-color(dark.$dark-theme, tertiary, 40)};
+    --tertiary-700: #{mat.get-theme-color(dark.$dark-theme, tertiary, 30)};
+    --tertiary-800: #{mat.get-theme-color(dark.$dark-theme, tertiary, 20)};
+    --tertiary-900: #{mat.get-theme-color(dark.$dark-theme, tertiary, 10)};
+
+    // Error Palette
+    --error-50: #{mat.get-theme-color(dark.$dark-theme, error, 95)};
+    --error-100: #{mat.get-theme-color(dark.$dark-theme, error, 90)};
+    --error-200: #{mat.get-theme-color(dark.$dark-theme, error, 80)};
+    --error-300: #{mat.get-theme-color(dark.$dark-theme, error, 70)};
+    --error-400: #{mat.get-theme-color(dark.$dark-theme, error, 60)};
+    --error-500: #{mat.get-theme-color(dark.$dark-theme, error, 50)};
+    --error-600: #{mat.get-theme-color(dark.$dark-theme, error, 40)};
+    --error-700: #{mat.get-theme-color(dark.$dark-theme, error, 30)};
+    --error-800: #{mat.get-theme-color(dark.$dark-theme, error, 20)};
+    --error-900: #{mat.get-theme-color(dark.$dark-theme, error, 10)};
+
+    // Success (Fallback if not in map)
+    --success-400: #86efac;
+    --success-500: #4ade80;
+    --success-600: #22c55e;
+
+    // Warning (Fallback if not in map)
+    --warning-400: #fde047;
+    --warning-500: #facc15;
+    --warning-600: #eab308;
+
+    // Neutral Palette
+    --neutral-50: #{mat.get-theme-color(dark.$dark-theme, neutral, 95)};
+    --neutral-100: #{mat.get-theme-color(dark.$dark-theme, neutral, 90)};
+    --neutral-200: #{mat.get-theme-color(dark.$dark-theme, neutral, 80)};
+    --neutral-300: #{mat.get-theme-color(dark.$dark-theme, neutral, 70)};
+    --neutral-400: #{mat.get-theme-color(dark.$dark-theme, neutral, 60)};
+    --neutral-500: #{mat.get-theme-color(dark.$dark-theme, neutral, 50)};
+    --neutral-600: #{mat.get-theme-color(dark.$dark-theme, neutral, 40)};
+    --neutral-700: #{mat.get-theme-color(dark.$dark-theme, neutral, 30)};
+    --neutral-800: #{mat.get-theme-color(dark.$dark-theme, neutral, 20)};
+    --neutral-900: #{mat.get-theme-color(dark.$dark-theme, neutral, 10)};
+
+    // Surface Palette
+    --surface-50: #{mat.get-theme-color(dark.$dark-theme, neutral, 4)};
+    --surface-100: #{mat.get-theme-color(dark.$dark-theme, neutral, 6)};
+    --surface-200: #{mat.get-theme-color(dark.$dark-theme, neutral, 10)};
+    --surface-300: #{mat.get-theme-color(dark.$dark-theme, neutral, 12)};
+    --surface-400: #{mat.get-theme-color(dark.$dark-theme, neutral, 17)};
+    --surface-500: #{mat.get-theme-color(dark.$dark-theme, neutral, 20)};
   }
 
   /* Prevent pull-to-refresh */
@@ -293,15 +439,13 @@ app-root {
 
 .header-title {
   font-size: clamp(1rem, 2.5vw, 1.5rem);
-  .light-theme & { color: mat.get-theme-color(light.$light-theme, neutral, 35); }
-  .dark-theme & { color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 70); }
+  color: var(--neutral-500);
 }
 
 .header-amount {
   font-size: clamp(2rem, 5vw, 4rem);
   font-weight: bold;
-  color: mat.get-theme-color(light.$light-theme, tertiary, 40);
-  .dark-theme & { color: mat.get-theme-color(dark.$dark-theme, tertiary, 80); }
+  color: var(--tertiary-500);
   font-family: 'JetBrains Mono', monospace;
   letter-spacing: 0.025em;
 }
@@ -320,8 +464,7 @@ app-root {
 .item-subtitle {
   font-family: 'Inter', system-ui, sans-serif;
   font-weight: 400;
-  .light-theme & { color: mat.get-theme-color(light.$light-theme, neutral, 35); }
-  .dark-theme & { color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 70); }
+  color: var(--neutral-500);
 }
 
 .item-amount {
@@ -347,8 +490,7 @@ app-footer {
 }
 
 app-chat {
-  .light-theme & { background-color: mat.get-theme-color(light.$light-theme, neutral, 98); }
-  .dark-theme & { background-color: mat.get-theme-color(dark.$dark-theme, primary, 0); }
+  background-color: var(--surface-100);
 }
 
 .safe-h-screen {

@@ -12,18 +12,17 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem ;
+    padding: 1rem;
     
     .header-title {
       display: flex;
       align-items: center;
       gap: 0.5rem;
       font-weight: 600;
-      color: #374151;
-      // font-size: 1.2rem;
+      color: var(--neutral-800);
       
       mat-icon {
-        color: #6b7280;
+        color: var(--neutral-500);
       }
     }
     
@@ -50,7 +49,7 @@
     &.expanded {
       max-height: 400px;
       padding: 1rem;
-      background-color: aliceblue;
+      background-color: var(--surface-50);
     }
     
     .mode-toggle {
@@ -126,8 +125,8 @@
 // Solid Gauge Chart Section
 .gauge-chart-section {
   padding: 1rem 0;
-  border-bottom: 1px solid #f3f4f6;
-  background: #f4f3f6;
+  border-bottom: 1px solid var(--neutral-100);
+  background: var(--surface-100);
   
   .chart-container {
     display: flex;
@@ -170,8 +169,8 @@
       
       // Tooltip styling
       ::ng-deep .am5-tooltip {
-        background: rgba(0, 0, 0, 0.9) !important;
-        color: white !important;
+        background: var(--neutral-900) !important;
+        color: var(--neutral-50) !important;
         border-radius: 8px !important;
         padding: 8px 12px !important;
         font-size: 12px !important;
@@ -183,7 +182,7 @@
 // Status Sections
 .status-section {
   padding: 1rem;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--neutral-100);
   
   .range-status, .single-date-status {
     .date-range-display, .selected-date-display {
@@ -199,7 +198,7 @@
         
         .date-label {
           font-size: 0.875rem;
-          color: #6b7280;
+          color: var(--neutral-500);
           font-weight: 500;
         }
         
@@ -211,12 +210,12 @@
           }
           
           &.end-date {
-            color: #10b981;
+            color: var(--success-600);
           }
         }
         
         .date-placeholder {
-          color: #9ca3af;
+          color: var(--neutral-400);
           font-style: italic;
         }
       }
@@ -227,17 +226,17 @@
       }
       
       .date-icon {
-        color: #10b981;
+        color: var(--success-500);
       }
       
       .selected-date-text {
         font-weight: 600;
-        color: #374151;
+        color: var(--neutral-800);
       }
     }
     
     .range-summary, .date-summary {
-      background: #f8fafc;
+      background: var(--surface-50);
       border-radius: 8px;
       padding: 1rem;
       
@@ -257,7 +256,7 @@
           
           .summary-label {
             font-size: 0.75rem;
-            color: #6b7280;
+            color: var(--neutral-500);
             margin-bottom: 0.25rem;
           }
           
@@ -266,11 +265,11 @@
             font-size: 0.875rem;
             
             &.income {
-              color: #10b981;
+              color: var(--success-600);
             }
             
             &.expense {
-              color: #ef4444;
+              color: var(--error-600);
             }
             
             &.positive {
@@ -278,7 +277,7 @@
             }
             
             &.negative {
-              color: #f59e0b;
+              color: var(--warning-600);
             }
           }
         }
@@ -287,7 +286,7 @@
       .transaction-count {
         text-align: center;
         font-size: 0.75rem;
-        color: #6b7280;
+        color: var(--neutral-500);
       }
     }
   }
@@ -306,12 +305,12 @@
 ::ng-deep .mat-calendar-body-cell.has-transactions {
   &.has-income {
     .mat-calendar-body-cell-content {
-      background-color: #a6eeb3 !important;
+      background-color: var(--success-100) !important;
     }
   }
   &.has-expense {
     .mat-calendar-body-cell-content {
-      background-color: #c8dbdf !important;
+      background-color: var(--primary-100) !important;
     }
     color: white !important;
     font-weight: bold;
@@ -337,32 +336,32 @@
 // Range selection styling
 ::ng-deep .mat-calendar-body-cell.range-start {
   .mat-calendar-body-cell-content {
-    background-color: #059669 !important; // Green for start date
-    color: white !important;
+    background-color: var(--success-500) !important;
+    color: var(--surface-50) !important;
     font-weight: bold;
   }
 }
 
 ::ng-deep .mat-calendar-body-cell.range-end {
   .mat-calendar-body-cell-content {
-    background-color: #dc2626 !important; // Red for end date
-    color: white !important;
+    background-color: var(--error-500) !important;
+    color: var(--surface-50) !important;
     font-weight: bold;
   }
 }
 
 ::ng-deep .mat-calendar-body-cell.range-in-between {
   .mat-calendar-body-cell-content {
-    background-color: #fbbf24 !important; // Yellow for dates in between
-    color: #1f2937 !important;
+    background-color: var(--warning-200) !important;
+    color: var(--neutral-900) !important;
     font-weight: 500;
   }
 }
 
 ::ng-deep .mat-calendar-body-cell.selected-date {
   .mat-calendar-body-cell-content {
-    background-color: #7c3aed !important; // Purple for single selected date
-    color: white !important;
+    background-color: var(--secondary-500) !important;
+    color: var(--surface-50) !important;
     font-weight: bold;
   }
 }
@@ -370,15 +369,15 @@
 // Transaction summary cards
 .transaction-summary {
   .income-card {
-    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    background: linear-gradient(135deg, var(--success-50) 0%, var(--success-100) 100%);
   }
   
   .expense-card {
-    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    background: linear-gradient(135deg, var(--error-50) 0%, var(--error-100) 100%);
   }
   
   .net-card {
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-100) 100%);
   }
 }
 

@@ -6,7 +6,7 @@
 	height: 100%;
 	display: flex;
 	flex-direction: column;
-	background: #f8fafc;
+	background: var(--surface-100);
 	position: relative;
 
 	:host-context(.dark-theme) & {
@@ -16,10 +16,10 @@
 
 // Mobile Filter Header
 .mobile-filter-header {
-	background: white;
-	border-bottom: 1px solid #e2e8f0;
+	background: var(--surface-50);
+	border-bottom: 1px solid var(--neutral-200);
 	padding: 12px;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	box-shadow: var(--shadow-sm);
 	z-index: 10;
 
 	:host-context(.dark-theme) & {
@@ -34,8 +34,8 @@
 	align-items: center;
 	gap: 6px;
 	padding: 6px 12px;
-	background: #eff6ff;
-	border: 1px solid #bfdbfe;
+	background: var(--primary-50);
+	border: 1px solid var(--primary-200);
 	border-radius: 8px;
 	margin-bottom: 8px;
 	animation: fadeIn 0.3s ease;
@@ -46,7 +46,7 @@
 	}
 
 	.filter-icon {
-		color: #2563eb;
+		color: var(--primary-600);
 		font-size: 16px;
 		width: 16px;
 		height: 16px;
@@ -86,8 +86,8 @@
 	position: relative;
 	display: flex;
 	align-items: center;
-	background: #f8fafc;
-	border: 1px solid #e2e8f0;
+	background: var(--surface-100);
+	border: 1px solid var(--neutral-200);
 	border-radius: 12px;
 	padding: 0 12px;
 	transition: all 0.2s ease;
@@ -98,9 +98,9 @@
 	}
 
 	&:focus-within {
-		border-color: #3b82f6;
-		background: white;
-		box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+		border-color: var(--primary-500);
+		background: var(--surface-50);
+		box-shadow: 0 0 0 3px var(--primary-alpha-10);
 
 		:host-context(.dark-theme) & {
 			background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
@@ -208,9 +208,9 @@
 	}
 
 	&.import-btn {
-		background: #f0f9ff;
-		border-color: #0ea5e9;
-		color: #0ea5e9;
+		background: var(--primary-50);
+		border-color: var(--primary-500);
+		color: var(--primary-500);
 
 		:host-context(.dark-theme) & {
 			background: rgba(14, 165, 233, 0.1);
@@ -260,12 +260,12 @@
 }
 
 .clear-filters-btn {
-	color: #ef4444;
+	color: var(--error-600);
 	width: 40px;
 	height: 40px;
 	border-radius: 8px;
-	background: #fef2f2;
-	border: 1px solid #fecaca;
+	background: var(--error-50);
+	border: 1px solid var(--error-200);
 	flex-shrink: 0;
 
 	&:hover {
@@ -315,8 +315,8 @@
 		}
 
 		&.active-menu-item {
-			background: #eff6ff;
-			color: #1d4ed8;
+			background: var(--primary-50);
+			color: var(--primary-700);
 
 			:host-context(.dark-theme) & {
 				background: rgba(mat.get-theme-color(dark.$dark-theme, primary, 40), 0.3);
@@ -622,11 +622,11 @@
 	margin: 0;
 
 	&.income-text {
-		color: #059669;
+		color: var(--success-600);
 	}
 
 	&.expense-text {
-		color: #dc2626;
+		color: var(--error-600);
 	}
 
 	:host-context(.dark-theme) &.income-text {

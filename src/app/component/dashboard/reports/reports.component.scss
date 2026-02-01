@@ -21,11 +21,11 @@
     padding: 0 16px;
     
     &:hover {
-      background-color: rgba(mat.get-theme-color(light.$light-theme, primary, 40), 0.1);
+      background-color: var(--primary-50);
     }
     
     &.mat-menu-item-highlighted {
-      background-color: rgba(mat.get-theme-color(light.$light-theme, primary, 40), 0.15);
+      background-color: var(--primary-100);
     }
   }
 }
@@ -34,7 +34,7 @@
 .mat-button-toggle-group {
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid mat.get-theme-color(light.$light-theme, neutral, 90);
+  border: 1px solid var(--neutral-200);
   
   .mat-button-toggle {
     border: none;
@@ -48,52 +48,22 @@
     }
     
     &.mat-button-toggle-checked {
-      background-color: mat.get-theme-color(light.$light-theme, primary, 40);
-      color: mat.get-theme-color(light.$light-theme, primary, 100);
+      background-color: var(--primary-500);
+      color: var(--surface-50);
     }
     
     &:not(.mat-button-toggle-checked) {
-      background-color: mat.get-theme-color(light.$light-theme, primary, 100);
-      color: mat.get-theme-color(light.$light-theme, neutral, 40);
+      background-color: var(--surface-50);
+      color: var(--neutral-500);
       
       &:hover {
-        background-color: mat.get-theme-color(light.$light-theme, neutral, 95);
+        background-color: var(--neutral-50);
       }
     }
   }
 }
 
-// Dark theme support
-.dark {
-  .mat-button-toggle-group {
-    border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
-    
-    .mat-button-toggle {
-      &:not(.mat-button-toggle-checked) {
-        background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
-        color: mat.get-theme-color(dark.$dark-theme, primary, 90);
-        
-        &:hover {
-          background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
-        }
-      }
-    }
-  }
-  
-  .chart-type-menu,
-  .analytics-view-menu,
-  .more-options-menu {
-    .mat-menu-item {
-      &:hover {
-        background-color: rgba(mat.get-theme-color(dark.$dark-theme, primary, 80), 0.2);
-      }
-      
-      &.mat-menu-item-highlighted {
-        background-color: rgba(mat.get-theme-color(dark.$dark-theme, primary, 80), 0.25);
-      }
-    }
-  }
-}
+// Dark theme support removed as global variables handle both themes
 
 // Compact control bar styling
 .compact-control-bar {
@@ -158,13 +128,8 @@
 // Enhanced menu styling
 .mat-menu-panel {
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  border: 1px solid #e5e7eb;
-  
-  .dark & {
-    border-color: #4b5563;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-  }
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--neutral-200);
 }
 
 // Tooltip styling
@@ -184,12 +149,8 @@
   .loading-spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid mat.get-theme-color(light.$light-theme, neutral, 95);
-    border-top: 3px solid mat.get-theme-color(light.$light-theme, primary, 40);
-    :host-context(.dark-theme) & {
-      border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
-      border-top-color: mat.get-theme-color(dark.$dark-theme, primary, 60);
-    }
+    border: 3px solid var(--neutral-100);
+    border-top: 3px solid var(--primary-500);
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
@@ -206,7 +167,7 @@
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    box-shadow: var(--shadow-lg);
   }
 }
 
@@ -269,16 +230,12 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--surface-alpha-90);
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: inherit;
   z-index: 10;
-  
-  .dark & {
-    background: rgba(17, 24, 39, 0.9);
-  }
 }
 
 // Enhanced responsive design

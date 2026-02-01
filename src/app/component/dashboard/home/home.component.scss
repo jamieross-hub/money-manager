@@ -21,15 +21,8 @@
 }
 
 .home-wrapper {
-  :host-context(.light-theme) & {
-    background-color: mat.get-theme-color(light.$light-theme, primary, 100);
-    color: mat.get-theme-color(light.$light-theme, neutral, 20);
-  }
-  
-  :host-context(.dark-theme) & {
-    background-color: mat.get-theme-color(dark.$dark-theme, primary, 0);
-    color: mat.get-theme-color(dark.$dark-theme, primary, 100);
-  }
+  background-color: var(--surface-200);
+  color: var(--neutral-900);
 }
 
 /* typing dots loader */
@@ -43,14 +36,7 @@
     height: 6px;
     border-radius: 50%;
     animation: blink 1.4s infinite both;
-    
-    :host-context(.light-theme) & {
-      background: mat.get-theme-color(light.$light-theme, neutral, 40);
-    }
-    
-    :host-context(.dark-theme) & {
-      background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 40);
-    }
+    background: var(--neutral-400);
   }
 }
 

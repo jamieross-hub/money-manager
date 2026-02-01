@@ -1,8 +1,8 @@
 // Filter Container
 .filter-container {
   :host-context(.light-theme) & {
-    background: white;
-    border-color: #f3f4f6;
+    background: var(--surface-50);
+    border-color: var(--neutral-100);
   }
   
 
@@ -11,7 +11,7 @@
 // Filter Text
 .filter-text {
   :host-context(.light-theme) & {
-    color: #374151;
+    color: var(--neutral-700);
   }
   
 
@@ -20,7 +20,7 @@
 // Filter Count
 .filter-count {
   :host-context(.light-theme) & {
-    color: #111827;
+    color: var(--neutral-900);
   }
   
 
@@ -31,7 +31,7 @@
   border-bottom: 1px solid;
   
   :host-context(.light-theme) & {
-    border-color: #f3f4f6;
+    border-color: var(--neutral-100);
   }
   
 
@@ -43,65 +43,65 @@
     // Form field fill appearance
     .mat-mdc-form-field {
       .mat-mdc-text-field-wrapper {
-        background-color: #1e293b !important;
+        background-color: var(--surface-200) !important;
       }
       
       // Label color
       .mat-mdc-floating-label {
-        color: #94a3b8 !important;
+        color: var(--neutral-400) !important;
       }
       
       // Input text color
       .mat-mdc-input-element {
-        color: #e2e8f0 !important;
-        caret-color: #3b82f6 !important;
+        color: var(--neutral-100) !important;
+        caret-color: var(--primary-400) !important;
       }
       
       // Suffix icon color
       .mat-mdc-form-field-icon-suffix {
-        color: #64748b !important;
+        color: var(--neutral-500) !important;
       }
       
       // Bottom line
       .mdc-line-ripple::before {
-        border-bottom-color: #475569 !important;
+        border-bottom-color: var(--neutral-600) !important;
       }
       
       // Active bottom line
       .mdc-line-ripple::after {
-        border-bottom-color: #3b82f6 !important;
+        border-bottom-color: var(--primary-500) !important;
       }
     }
     
     // Select dropdown
     .mat-mdc-select {
       .mat-mdc-select-value {
-        color: #e2e8f0 !important;
+        color: var(--neutral-100) !important;
       }
       
       .mat-mdc-select-arrow {
-        color: #64748b !important;
+        color: var(--neutral-500) !important;
       }
     }
     
     // Dropdown panel
     .mat-mdc-select-panel {
-      background-color: #1e293b !important;
+      background-color: var(--surface-200) !important;
       
       .mat-mdc-option {
-        color: #e2e8f0 !important;
+        color: var(--neutral-100) !important;
         
         &:hover {
-          background-color: #334155 !important;
+          background-color: var(--surface-300) !important;
         }
         
         &.mat-mdc-option-active {
-          background-color: #334155 !important;
+          background-color: var(--surface-300) !important;
         }
         
         &.mdc-list-item--selected {
-          background-color: rgba(59, 130, 246, 0.1) !important;
-          color: #60a5fa !important;
+          background-color: rgba(var(--primary-500), 0.1) !important;
+          color: var(--primary-300) !important;
         }
       }
     }
@@ -115,19 +115,19 @@
   ::ng-deep {
     .mat-mdc-form-field {
       .mat-mdc-text-field-wrapper {
-        background-color: #f9fafb !important;
+        background-color: var(--surface-100) !important;
       }
       
       .mat-mdc-floating-label {
-        color: #6b7280 !important;
+        color: var(--neutral-500) !important;
       }
       
       .mat-mdc-input-element {
-        color: #111827 !important;
+        color: var(--neutral-900) !important;
       }
       
       .mat-mdc-form-field-icon-suffix {
-        color: #9ca3af !important;
+        color: var(--neutral-400) !important;
       }
     }
     
@@ -142,22 +142,22 @@
     }
     
     .mat-mdc-select-panel {
-      background-color: white !important;
+      background-color: var(--surface-50) !important;
       
       .mat-mdc-option {
-        color: #111827 !important;
+        color: var(--neutral-900) !important;
         
         &:hover {
-          background-color: #f3f4f6 !important;
+          background-color: var(--neutral-100) !important;
         }
         
         &.mat-mdc-option-active {
-          background-color: #f3f4f6 !important;
+          background-color: var(--neutral-100) !important;
         }
         
         &.mdc-list-item--selected {
-          background-color: rgba(59, 130, 246, 0.1) !important;
-          color: #2563eb !important;
+          background-color: rgba(var(--primary-500), 0.1) !important;
+          color: var(--primary-600) !important;
         }
       }
     }
