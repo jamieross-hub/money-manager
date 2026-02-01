@@ -5,6 +5,7 @@
 			{{ title }}
 		</h6>
 		<div class="flex items-center gap-2">
+
 			<!-- Add Button -->
 			<button *ngIf="showAddButton" mat-icon-button color="primary" (click)="onAddButtonClick()"
 				[disabled]="addButtonDisabled || isSubmitting" [matTooltip]="addButtonTooltip"
@@ -13,6 +14,13 @@
 					{{ isSubmitting ? 'hourglass_empty' : 'check' }}
 				</mat-icon>
 			</button>
+
+			<!-- Edit Button -->
+			<button *ngIf="showEditButton" mat-icon-button color="primary" (click)="onEditButtonClick()"
+				matTooltip="Edit" class="w-10 h-10 !bg-primary">
+				<mat-icon class="text-white">edit</mat-icon>
+			</button>
+
 
 			<!-- Close Button -->
 			<button *ngIf="showCloseButton" mat-icon-button type="button" (click)="onCloseButtonClick()"

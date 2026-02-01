@@ -25,6 +25,7 @@ import { ReportIntentHandler } from './handlers/intent-handler/report-intent-han
 import { TransactionIntentHandler } from './handlers/intent-handler/transaction-intent-handler.service';
 import { OpenAiIntentHandler } from './handlers/intent-handler/openai-intent-handler.service';
 import { LoanSummaryIntentHandler } from './handlers/intent-handler/loan-summary-intent-handler.service';
+import { MonthlyExpenditureIntentHandler } from './handlers/intent-handler/monthly-expenditure-intent-handler.service';
 import { INTENTS } from "./models/intent-config";
 import { UserService } from "../db/user.service";
 
@@ -55,6 +56,7 @@ export class ChatFacadeService {
         private transactionHandler: TransactionIntentHandler,
         private openAiHandler: OpenAiIntentHandler,
         private loanSummaryHandler: LoanSummaryIntentHandler,
+        private monthlyExpenditureHandler: MonthlyExpenditureIntentHandler,
         private userService: UserService
     ) {
         this.registerHandlers();
@@ -76,6 +78,7 @@ export class ChatFacadeService {
         this.registry.register(INTENTS.ADD_INCOME, this.transactionHandler);
         this.registry.register(INTENTS.ADD_EXPENSE, this.transactionHandler);
         this.registry.register(INTENTS.LOAN_SUMMARY_CARD, this.loanSummaryHandler);
+        this.registry.register(INTENTS.MONTHLY_EXPENDITURE_CARD, this.monthlyExpenditureHandler);
         this.registry.register(INTENTS.AI_REPLY, this.openAiHandler);
     }
 

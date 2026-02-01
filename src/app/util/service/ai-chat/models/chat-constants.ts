@@ -26,6 +26,10 @@ const PATTERNS = {
         'clear data', 'reset data', 'delete all', 'clear all', 'wipe data', 'erase data', 'reset app', 'factory reset'
     ],
     REPORT_KEYWORDS: ['report', 'statement'],
+    MONTHLY_EXPENDITURE_KEYWORDS: [
+        'monthly expenditure', 'spending trend', 'expenditure chart', 'monthly trend',
+        'monthly spending', 'expense trend', 'expenditure trend'
+    ],
     INSIGHTS_KEYWORDS: ['advice', 'suggest', 'tips', 'insight', 'analyze'],
     HELP_KEYWORDS: ['help', 'usage', 'command', 'guide', 'instruction', 'what can you do', 'support', 'assist', 'help', 'usage', 'command', 'guide', 'instruction', 'support', 'assist', 'what can you do',
         'how to use', 'features', 'available commands', 'commands list', 'bot commands']
@@ -77,7 +81,8 @@ export const CHAT_CONSTANTS = {
         capitalize(PATTERNS.RECENT_ACTIVITY_KEYWORDS[0]),
         capitalize(PATTERNS.REPORT_KEYWORDS[0]),
         capitalize(PATTERNS.CLEAR_DATA_KEYWORDS[0]),
-        capitalize(PATTERNS.HELP_KEYWORDS[0])
+        capitalize(PATTERNS.HELP_KEYWORDS[0]),
+        capitalize(PATTERNS.MONTHLY_EXPENDITURE_KEYWORDS[0])
     ],
     EXIT_KEYWORDS: ['cancel', 'exit', 'quit', 'stop', 'nevermind', 'never mind', 'back', 'abort']
 };

@@ -4,14 +4,14 @@
             <h3 class="card-title text-uppercase">Monthly Expenditure</h3>
             <div class="metrics-row">
                 <div class="metric-item">
-                    <span class="dot peak-dot"></span>
-                    <span class="label">Peak:</span>
-                    <span class="value">{{ peakValue | number:'1.0-0' }}</span>
+                    <span class="dot income-dot"></span>
+                    <span class="label">Income:</span>
+                    <span class="value">{{ totalIncome | number:'1.0-0' }}</span>
                 </div>
                 <div class="metric-item">
-                    <span class="dot avg-dot"></span>
-                    <span class="label">Avg:</span>
-                    <span class="value">{{ avgValue | number:'1.0-0' }}</span>
+                    <span class="dot expense-dot"></span>
+                    <span class="label">Expenses:</span>
+                    <span class="value text-red-600">{{ totalExpenses | number:'1.0-0' }}</span>
                 </div>
             </div>
         </div>

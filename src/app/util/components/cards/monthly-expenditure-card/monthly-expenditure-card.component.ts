@@ -29,8 +29,8 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
     private xAxis: am5xy.CategoryAxis<any> | undefined;
 
     chartType: 'line' | 'bar' = 'line';
-    peakValue = 0;
-    avgValue = 0;
+    totalIncome = 0;
+    totalExpenses = 0;
 
     selectedYear = moment().year();
     selectedMonth = moment().month();
@@ -92,6 +92,7 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
     }
 
     private initChart() {
+        //this.chartId = 'daily-trend-chart-' + Math.random().toString(36).substr(2, 9);
         this.root = am5.Root.new(this.chartId);
         this.root.setThemes([am5themes_Animated.new(this.root)]);
 
@@ -233,11 +234,19 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
         const totals: { [month: string]: number } = {};
         months.forEach(m => totals[m] = 0);
 
+        let incomeTotal = 0;
+        let expenseTotal = 0;
+
         transactions.forEach(t => {
             const txDate = moment(this.convertToDate(t.date));
-            if (txDate.year() === year && t.type === 'expense') {
-                const monthName = txDate.format('MMM');
-                totals[monthName] += t.amount;
+            if (txDate.year() === year) {
+                if (t.type === 'expense') {
+                    const monthName = txDate.format('MMM');
+                    totals[monthName] += t.amount;
+                    expenseTotal += t.amount;
+                } else if (t.type === 'income') {
+                    incomeTotal += t.amount;
+                }
             }
         });
 
@@ -246,9 +255,8 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
             value: totals[month]
         }));
 
-        const values = data.map(d => d.value).filter(v => v > 0);
-        this.peakValue = values.length > 0 ? Math.max(...values) : 0;
-        this.avgValue = data.reduce((sum, d) => sum + d.value, 0) / 12;
+        this.totalIncome = incomeTotal;
+        this.totalExpenses = expenseTotal;
 
         return data;
     }
@@ -274,7 +282,7 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
 
         this.browserOnly(() => {
             if (this.root) {
-                this.root.container.children.clear();
+                this.root.dispose();
                 this.initChart();
                 this.updateData();
             }

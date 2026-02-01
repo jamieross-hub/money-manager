@@ -409,6 +409,13 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     }
   }
 
+  enableEditing(): void {
+    this.viewMode = false;
+    this.editMode = true;
+    this.transactionForm.enable();
+    this.hapticFeedback.lightVibration();
+  }
+
   onClose(): void {
     this.dialogRef.close();
   }

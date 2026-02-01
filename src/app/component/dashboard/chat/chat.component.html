@@ -30,6 +30,12 @@
           </div>
           }
 
+          @if(msg.type === 'UI-ELEMENT' && msg.text === 'MONTHLY_EXPENDITURE_CARD') {
+          <div class="relative top-0 z-10 w-full my-2">
+            <app-monthly-expenditure-card></app-monthly-expenditure-card>
+          </div>
+          }
+
 
 
           <!-- Recent Activity Card -->

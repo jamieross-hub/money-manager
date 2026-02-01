@@ -1,8 +1,8 @@
 <!-- Mobile Header -->
 <app-common-header [title]="viewMode ? 'View' : (dialogData?.id ? 'Edit' : 'Add') + ' Transaction'"
-	[showAddButton]="!viewMode" [addButtonDisabled]="transactionForm.invalid" [isSubmitting]="isSubmitting"
-	addButtonTooltip="Save Transaction" (addButtonClick)="onSubmit()"
-	(closeButtonClick)="onClose()"></app-common-header>
+	[showAddButton]="!viewMode" [showEditButton]="viewMode" [addButtonDisabled]="transactionForm.invalid"
+	[isSubmitting]="isSubmitting" addButtonTooltip="Save Transaction" (addButtonClick)="onSubmit()"
+	(editButtonClick)="enableEditing()" (closeButtonClick)="onClose()"></app-common-header>
 
 <app-common-body-content>
 	<form [formGroup]="transactionForm" (ngSubmit)="onSubmit()" (keydown.enter)="!viewMode && onSubmit()"
