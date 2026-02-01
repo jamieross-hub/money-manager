@@ -80,6 +80,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   public recurringMaxDate: string;
   public categorySplits: CategorySplit[] = [];
   public isCategorySplit: boolean = false;
+  public formattedAmount: string = '';
 
   // ngx-mat-select-search properties
   public categoryFilterCtrl: FormControl = new FormControl();
@@ -226,6 +227,50 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         paymentMethod: '',
       });
       this.getRecentTransaction();
+    }
+
+    // Subscribe to amount changes to keep formattedAmount in sync
+    this.transactionForm.get('amount')?.valueChanges.subscribe(value => {
+      if (value !== null && value !== undefined && value !== '') {
+        const numericValue = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
+        if (!isNaN(numericValue) && this.formattedAmount !== this.formatCurrency(numericValue)) {
+          this.formattedAmount = this.formatCurrency(numericValue);
+        }
+      } else {
+        this.formattedAmount = '';
+      }
+    });
+  }
+
+  private formatCurrency(value: number): string {
+    if (value === null || value === undefined || isNaN(value)) return '';
+    return new Intl.NumberFormat('en-IN', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    }).format(value);
+  }
+
+  onFormattedAmountInput(event: any): void {
+    const input = event.target.value;
+    // Remove all non-numeric characters except decimal point
+    const numericString = input.replace(/[^0-9.]/g, '');
+
+    if (numericString || numericString === '0') {
+      const numericValue = parseFloat(numericString);
+      if (!isNaN(numericValue)) {
+        this.transactionForm.get('amount')?.setValue(numericValue, { emitEvent: false });
+        // Don't format while typing to avoid cursor jumps, but we could if we handle selection
+        // However, user specifically asked for visibility. Let's format on blur or smartly.
+      }
+    } else {
+      this.transactionForm.get('amount')?.setValue('', { emitEvent: false });
+    }
+  }
+
+  onAmountBlur(): void {
+    const amount = this.transactionForm.get('amount')?.value;
+    if (amount !== null && amount !== undefined && amount !== '') {
+      this.formattedAmount = this.formatCurrency(parseFloat(amount));
     }
   }
 

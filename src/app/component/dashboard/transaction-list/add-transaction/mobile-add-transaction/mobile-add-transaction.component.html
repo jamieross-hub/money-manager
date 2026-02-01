@@ -14,8 +14,9 @@
 				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
 					Amount *
 				</label>
-				<input #amountInput type="number" formControlName="amount" placeholder="0.00" step="0.01"
-					(input)="onAmountChange()" [disabled]="viewMode"
+				<input #amountInput type="text" [(ngModel)]="formattedAmount" [ngModelOptions]="{standalone: true}"
+					(input)="onFormattedAmountInput($event)" (blur)="onAmountBlur()" placeholder="0.00"
+					[disabled]="viewMode"
 					class="w-full text-2xl font-bold text-center py-3 px-4 border-0 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg"
 					[class.bg-gray-100]="viewMode" />
 				@if(getAmountError() && transactionForm.get('amount')?.touched) {
