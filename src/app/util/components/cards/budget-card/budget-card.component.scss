@@ -1,12 +1,12 @@
 // ===================================================
-// OVERALL BUDGET SUMMARY CARD
+// BUDGET SUMMARY CARD - REDESIGNED
 // ===================================================
 .budget-summary-card {
   width: 100%;
-  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
-  border-radius: 14px;
-  padding: 1.25rem;
-  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   position: relative;
 
   // -------------------------------------------------
@@ -16,85 +16,50 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
 
-    .budget-title-wrap {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
+    .budget-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #9ca3af;
+      letter-spacing: 0.5px;
     }
 
-    .budget-icon {
-      border-radius: 10px;
-      padding: 0.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      font-size: 3rem;
-      width: 3rem;
-      height: 3rem;
-      top: -6px;
-    }
-
-    .budget-title {
-      font-size: 1.1rem;
+    .budget-status {
+      font-size: 0.75rem;
       font-weight: 600;
-      margin: 0;
-      color: #1e293b;
-    }
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
 
-    .budget-subtitle {
-      font-size: 0.7rem;
-      color: #64748b;
-      top: -15px;
-      position: relative;
-    }
-
-    // HEALTH BADGE
-    .budget-health {
-      font-size: 0.7rem;
-      font-weight: 600;
-      padding: 0.25rem 0.6rem;
-      border-radius: 999px;
-      white-space: nowrap;
-
-      &.safe {
-        color: #065f46;
-        background: #ecfdf5;
+      &.status-safe {
+        color: #059669;
+        background: #d1fae5;
       }
 
-      &.warning {
-        color: #92400e;
-        background: #fffbeb;
-      }
-
-      &.danger {
-        color: #7f1d1d;
-        background: #fef2f2;
+      &.status-over {
+        color: #dc2626;
+        background: #fee2e2;
       }
     }
   }
 
   // -------------------------------------------------
-  // MAIN SPENT INFO
+  // MAIN AMOUNT
   // -------------------------------------------------
-  .budget-main {
-    margin-bottom: 1rem;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+  .budget-amount {
+    margin-bottom: 1.25rem;
 
-    .spent-amount {
-      font-size: 1.9rem;
+    .amount-primary {
+      font-size: 2.25rem;
       font-weight: 700;
-      color: #0f172a;
-      line-height: 1.1;
+      color: #111827;
+      line-height: 1.2;
+      margin-bottom: 0.25rem;
     }
 
-    .budget-context {
-      font-size: 0.75rem;
-      color: #64748b;
+    .amount-secondary {
+      font-size: 0.875rem;
+      color: #6b7280;
     }
   }
 
@@ -102,129 +67,91 @@
   // PROGRESS
   // -------------------------------------------------
   .budget-progress {
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 
     .progress-bar {
-      height: 8px;
+      height: 6px;
       background: #e5e7eb;
       border-radius: 999px;
       overflow: hidden;
+      margin-bottom: 0.5rem;
 
       .progress-fill {
         height: 100%;
         border-radius: inherit;
-        transition: width 0.35s ease;
+        transition: width 0.4s ease;
+
+        &.fill-safe {
+          background: #d1d5db;
+        }
+
+        &.fill-over {
+          background: #ef4444;
+        }
       }
     }
 
-    .progress-meta {
+    .progress-info {
       display: flex;
       justify-content: space-between;
-      margin-top: 0.4rem;
-      font-size: 0.7rem;
-      color: #64748b;
-    }
-  }
+      font-size: 0.875rem;
 
-  // -------------------------------------------------
-  // QUICK STATS
-  // -------------------------------------------------
-  .budget-quick-stats {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-
-    .quick-stat {
-      background: #f8fafc;
-      border-radius: 10px;
-      padding: 0.6rem 0.75rem;
-
-      .label {
-        font-size: 0.65rem;
-        color: #64748b;
+      .progress-percent {
+        color: #6b7280;
       }
 
-      .value {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #1e293b;
+      .progress-remaining {
+        font-weight: 500;
+
+        &.text-danger {
+          color: #dc2626;
+        }
+
+        &.text-safe {
+          color: #6b7280;
+        }
       }
     }
   }
 
   // -------------------------------------------------
-  // EXPAND BUTTON
+  // CATEGORIES SECTION
   // -------------------------------------------------
-  .expand-section {
-    border-top: 1px solid #e5e7eb;
-    padding-top: 0.75rem;
-    display: flex;
-    justify-content: center;
+  .categories-section {
+    border-top: 1px solid #f3f4f6;
+    padding-top: 1rem;
 
-    .expand-btn {
-      font-size: 0.75rem;
-      color: #475569;
+    .categories-header {
+      width: 100%;
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 0.35rem;
+      padding: 0.5rem 0;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+
+      .categories-title {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+      }
 
       mat-icon {
-        transition: transform 0.25s ease;
-      }
+        font-size: 1.25rem;
+        color: #9ca3af;
+        transition: transform 0.3s ease;
 
-      &.expanded mat-icon {
-        transform: rotate(180deg);
-      }
-    }
-  }
-
-  // -------------------------------------------------
-  // EXPANDED DETAILS
-  // -------------------------------------------------
-  .budget-details {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #e5e7eb;
-
-    // Tabs
-    .details-tabs {
-      ::ng-deep .mat-tab-label {
-        font-size: 0.75rem;
-        min-width: 90px;
-        color: #64748b;
-
-        &.mat-tab-label-active {
-          color: #2563eb;
+        &.expanded {
+          transform: rotate(180deg);
         }
       }
 
-      ::ng-deep .mat-ink-bar {
-        background-color: #2563eb;
-      }
-    }
-
-    // Tab Content
-    .tab-content {
-      padding: 0.75rem 0;
-    }
-
-    // SUMMARY ROWS
-    .detail-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.6rem 0;
-      border-bottom: 1px dashed #e5e7eb;
-      font-size: 0.75rem;
-
-      strong {
-        color: #0f172a;
-        font-weight: 600;
-      }
-
-      mat-icon {
-        font-size: 0.9rem;
-        margin-right: 0.25rem;
+      &:hover {
+        .categories-title {
+          color: #111827;
+        }
       }
     }
 
@@ -234,93 +161,194 @@
     .category-list {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 1.25rem;
+      margin-top: 1rem;
     }
 
-    .category-card {
-      background: #ffffff;
-      border-radius: 12px;
-      border: 1px solid #e5e7eb;
-      padding: 0.75rem;
-      transition: all 0.2s ease;
+    .category-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
 
-      &.warning {
-        border-left: 4px solid #f59e0b;
-        background: #fffbeb;
-      }
-
-      &.danger {
-        border-left: 4px solid #ef4444;
-        background: #fef2f2;
-      }
-
-      .category-header {
+      .category-info {
         display: flex;
+        justify-content: space-between;
         align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 0.5rem;
 
         .category-name {
-          font-size: 0.85rem;
-          font-weight: 600;
-          color: #1e293b;
+          font-size: 0.9375rem;
+          font-weight: 500;
+          color: #111827;
         }
 
-        mat-icon {
-          font-size: 1.1rem;
-        }
-      }
+        .category-amounts {
+          font-size: 0.9375rem;
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
 
-      .category-stats {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.5rem;
-        font-size: 0.7rem;
+          .amount-spent {
+            font-weight: 600;
+            color: #111827;
 
-        span {
-          color: #64748b;
-        }
+            &.text-danger {
+              color: #dc2626;
+            }
 
-        strong {
-          display: block;
-          font-size: 0.75rem;
-          color: #0f172a;
-
-          &.spent {
-            color: #dc2626;
+            &.text-warning {
+              color: #f59e0b;
+            }
           }
 
-          &.danger {
-            color: #dc2626;
+          .amount-divider {
+            color: #d1d5db;
+            margin: 0 0.125rem;
           }
 
-          &.safe {
-            color: #16a34a;
+          .amount-budget {
+            color: #6b7280;
           }
         }
       }
 
       .category-progress {
-        margin-top: 0.5rem;
-
         .progress-bar {
-          height: 6px;
+          height: 4px;
           background: #e5e7eb;
           border-radius: 999px;
           overflow: hidden;
 
           .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #3b82f6, #2563eb);
-            transition: width 0.3s ease;
+            border-radius: inherit;
+            transition: width 0.4s ease;
+
+            &.fill-safe {
+              background: #d1d5db;
+            }
+
+            &.fill-warning {
+              background: #f59e0b;
+            }
+
+            &.fill-danger {
+              background: #ef4444;
+            }
+          }
+        }
+      }
+
+      .category-status {
+        font-size: 0.8125rem;
+
+        span {
+          &.text-danger {
+            color: #dc2626;
+          }
+
+          &.text-safe {
+            color: #6b7280;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ===================================================
+// DARK MODE SUPPORT
+// ===================================================
+:host-context(.dark-theme) {
+  .budget-summary-card {
+    background: #1f2937;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+    .budget-header {
+      .budget-label {
+        color: #9ca3af;
+      }
+
+      .budget-status {
+        &.status-safe {
+          color: #10b981;
+          background: rgba(16, 185, 129, 0.1);
+        }
+
+        &.status-over {
+          color: #ef4444;
+          background: rgba(239, 68, 68, 0.1);
+        }
+      }
+    }
+
+    .budget-amount {
+      .amount-primary {
+        color: #f9fafb;
+      }
+
+      .amount-secondary {
+        color: #9ca3af;
+      }
+    }
+
+    .budget-progress {
+      .progress-bar {
+        background: #374151;
+      }
+
+      .progress-info {
+        .progress-percent {
+          color: #9ca3af;
+        }
+
+        .progress-remaining {
+          &.text-safe {
+            color: #9ca3af;
+          }
+        }
+      }
+    }
+
+    .categories-section {
+      border-top-color: #374151;
+
+      .categories-header {
+        .categories-title {
+          color: #9ca3af;
+        }
+
+        &:hover .categories-title {
+          color: #f9fafb;
+        }
+      }
+
+      .category-item {
+        .category-info {
+          .category-name {
+            color: #f9fafb;
+          }
+
+          .category-amounts {
+            .amount-spent {
+              color: #f9fafb;
+            }
+
+            .amount-budget {
+              color: #9ca3af;
+            }
           }
         }
 
-        .progress-text {
-          font-size: 0.65rem;
-          color: #64748b;
-          text-align: right;
-          margin-top: 0.25rem;
+        .category-progress {
+          .progress-bar {
+            background: #374151;
+          }
+        }
+
+        .category-status {
+          span.text-safe {
+            color: #9ca3af;
+          }
         }
       }
     }
@@ -332,18 +360,21 @@
 // ===================================================
 @media (max-width: 640px) {
   .budget-summary-card {
-    padding: 1rem;
+    padding: 1.25rem;
 
-    .budget-main .spent-amount {
-      font-size: 1.6rem;
+    .budget-amount {
+      .amount-primary {
+        font-size: 2rem;
+      }
     }
 
-    .budget-quick-stats {
-      grid-template-columns: 1fr;
-    }
-
-    .category-card .category-stats {
-      grid-template-columns: repeat(2, 1fr);
+    .category-item {
+      .category-info {
+        .category-name,
+        .category-amounts {
+          font-size: 0.875rem;
+        }
+      }
     }
   }
 }

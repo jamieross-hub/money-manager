@@ -69,7 +69,7 @@ export class BudgetCardComponent implements OnInit, OnDestroy {
       this.transactions$
     ]).pipe(
       map(([categories, transactions]) => ({ categories, transactions })),
-      distinctUntilChanged((prev, curr) => 
+      distinctUntilChanged((prev, curr) =>
         JSON.stringify(prev) === JSON.stringify(curr)
       )
     );
@@ -92,7 +92,7 @@ export class BudgetCardComponent implements OnInit, OnDestroy {
     this.overallBudgetProgressColor$ = this.overallBudgetStats$.pipe(
       map(stats => {
         const progress = stats?.overallProgress || 0;
-        
+
         if (progress >= 100) {
           return '#ef4444'; // red - over budget
         } else if (progress >= 80) {
@@ -113,64 +113,46 @@ export class BudgetCardComponent implements OnInit, OnDestroy {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    
+
     // Start of current month
     const startDate = new Date(currentYear, currentMonth, 1);
-    
+
     // End of current month
     const endDate = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59);
-    
+
     return { startDate, endDate };
   }
 
   /**
-   * Check if a transaction falls within the current budget period
+   * Check if a transaction falls within the current month only
    */
-  private isTransactionInBudgetPeriod(transaction: Transaction, budgetStartDate?: Date | any, budgetEndDate?: Date | any): boolean {
+  private isTransactionInCurrentMonth(transaction: Transaction): boolean {
     const txDate = this.dateService.toDate(transaction.date);
     if (!txDate) return false;
 
     const { startDate, endDate } = this.getCurrentBudgetPeriod();
-    
-    // Use custom budget period if provided, otherwise use current month
-    let periodStart: Date | null;
-    let periodEnd: Date | null;
-    
-    if (budgetStartDate) {
-      periodStart = this.dateService.toDate(budgetStartDate);
-    } else {
-      periodStart = startDate;
-    }
-    
-    if (budgetEndDate) {
-      periodEnd = this.dateService.toDate(budgetEndDate);
-    } else {
-      periodEnd = endDate;
-    }
-    
-    if (!periodStart || !periodEnd) return false;
-    
-    const isInPeriod = txDate >= periodStart && txDate <= periodEnd;
-    
+
+    const isInPeriod = txDate >= startDate && txDate <= endDate;
+
     return isInPeriod;
   }
 
   /**
-   * Calculate budget spent for a category based on transactions (dynamic version)
+   * Calculate budget spent for a category based on current month transactions only
    */
   private calculateBudgetSpent(category: Category, transactions: Transaction[]): number {
     if (!category.budget?.hasBudget || !category.budget?.budgetAmount) {
       return 0;
     }
 
-    const categoryTransactions = transactions.filter(t => 
-      t.categoryId === category.id && 
+    const categoryTransactions = transactions.filter(t =>
+      t.categoryId === category.id &&
       t.type === TransactionType.EXPENSE &&
-      this.isTransactionInBudgetPeriod(t, category.budget?.budgetStartDate, category.budget?.budgetEndDate)
+      this.isTransactionInCurrentMonth(t)
     );
 
     const totalSpent = categoryTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
-    
+
     return totalSpent;
   }
 
@@ -181,7 +163,7 @@ export class BudgetCardComponent implements OnInit, OnDestroy {
     if (!category.budget?.hasBudget || !category.budget?.budgetAmount) {
       return 0;
     }
-    
+
     const spent = this.calculateBudgetSpent(category, transactions);
     return Math.max(0, (category.budget.budgetAmount || 0) - spent);
   }
@@ -193,12 +175,12 @@ export class BudgetCardComponent implements OnInit, OnDestroy {
     if (!category.budget?.hasBudget || !category.budget?.budgetAmount) {
       return 0;
     }
-    
+
     const spent = this.calculateBudgetSpent(category, transactions);
     const budgetAmount = category.budget.budgetAmount || 0;
-    
+
     if (budgetAmount === 0) return 0;
-    
+
     return Math.min(100, (spent / budgetAmount) * 100);
   }
 
@@ -258,7 +240,7 @@ export class BudgetCardComponent implements OnInit, OnDestroy {
     this.overallBudgetStats$.pipe(takeUntil(this.destroy$)).subscribe(stats => {
       currentStats = stats;
     });
-    
+
     if (currentStats.overallProgress >= 90) return 'danger';
     if (currentStats.overallProgress >= 75) return 'warning';
     return 'safe';

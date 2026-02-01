@@ -17,6 +17,7 @@ export const INTENTS = {
     ACCOUNT_SUMMARY_CARD: 'ACCOUNT_SUMMARY_CARD',
     LOAN_SUMMARY_CARD: 'LOAN_SUMMARY_CARD',
     RECENT_ACTIVITY_CARD: 'RECENT_ACTIVITY_CARD',
+    BUDGET_CARD: 'BUDGET_CARD',
     CLEAR_DATA: 'CLEAR_DATA',
     GET_REPORT: 'GET_REPORT',
     MONTHLY_EXPENDITURE_CARD: 'MONTHLY_EXPENDITURE_CARD',
@@ -140,5 +141,12 @@ export const INTENT_CONFIG: IntentDefinition[] = [
         priority: 80,
         description: 'Monthly Expenditure',
         examples: ['Monthly expenditure', 'Spending trend', 'Expenditure chart']
+    },
+    {
+        id: INTENTS.BUDGET_CARD,
+        keywords: CHAT_CONSTANTS.PATTERNS.BUDGET_KEYWORDS,
+        priority: 80,
+        description: 'Budget Overview',
+        examples: ['Budget summary', 'Show budget', 'Budget overview', 'Category budgets']
     }
 ];
