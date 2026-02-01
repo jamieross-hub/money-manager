@@ -1,8 +1,9 @@
 <!-- Table Container -->
-<div class="table-container-wrapper rounded-lg border overflow-hidden flex flex-col"
+<div
+  class="table-container-wrapper rounded-lg border overflow-hidden flex flex-col dark:bg-slate-900 dark:border-slate-800"
   [ngClass]="{'max-h-[calc(75vh-210px)]': isHome && !breakpointService.device.isTablePortrait,'max-h-[65vh]':isHome && breakpointService.device.isTablePortrait,'max-h-[75vh]': !isHome}">
   <!-- View Toggle Header -->
-  <div class="header-section flex justify-between items-center p-3 border-b"
+  <div class="header-section flex justify-between items-center p-3 border-b dark:border-slate-800"
     *ngIf="hasSelection() && (breakpointService.device.isTablePortrait || breakpointService.device.isDesktop) && !isHome">
     <!-- <div class="flex items-center space-x-2">
       <span class="text-sm font-medium text-gray-700">View:</span>
@@ -49,12 +50,14 @@
       <!-- Checkbox Column - Only for tablet portrait and desktop, and not on home page -->
       <ng-container matColumnDef="select"
         *ngIf="(breakpointService.device.isTablePortrait || breakpointService.device.isDesktop) && !isHome">
-        <th mat-header-cell *matHeaderCellDef class="bg-gray-50 px-3 md:px-4 py-4 sticky top-0 z-10 w-[48px]">
+        <th mat-header-cell *matHeaderCellDef
+          class="bg-gray-50 dark:bg-slate-950 px-3 md:px-4 py-4 sticky top-0 z-10 w-[48px]">
           <mat-checkbox (change)="$event ? toggleAllSelection() : null" [checked]="isAllSelected"
             [indeterminate]="isIndeterminate" [disabled]="!dataSource.data.length" class="text-gray-700">
           </mat-checkbox>
         </th>
-        <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100 w-[48px]">
+        <td mat-cell *matCellDef="let element"
+          class="px-3 md:px-4 py-4 border-b border-gray-100 dark:border-slate-800 w-[48px]">
           <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? toggleSelection(element) : null"
             [checked]="isSelected(element)" class="text-gray-700">
           </mat-checkbox>
@@ -63,14 +66,15 @@
 
       <!-- Date Column -->
       <ng-container matColumnDef="Date">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header class="bg-gray-50 px-3 md:px-4 py-4 sticky top-0 z-10">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header
+          class="bg-gray-50 dark:bg-slate-950 px-3 md:px-4 py-4 sticky top-0 z-10">
           <div class="flex items-center space-x-1 md:space-x-2">
             <mat-icon class="text-gray-500 text-xs md:text-sm">schedule</mat-icon>
-            <span class="font-semibold text-gray-700 text-xs md:text-sm">Date</span>
+            <span class="font-semibold text-gray-700 dark:text-slate-200 text-xs md:text-sm">Date</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100">
-          <div class="text-xs md:text-sm text-gray-600">
+        <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100 dark:border-slate-800">
+          <div class="text-xs md:text-sm text-gray-600 dark:text-slate-400">
 
             @if(breakpointService.device.isTablePortrait) {
             {{ element.date.seconds * 1000 | date:'MMM dd' }}
@@ -89,20 +93,22 @@
       <!-- Type Column -->
       <ng-container matColumnDef="Type">
         <th mat-header-cell *matHeaderCellDef mat-sort-header
-          class="px-3 md:px-4 py-4 hidden sm:table-cell sticky top-0 z-10 bg-gray-50">
+          class="px-3 md:px-4 py-4 hidden sm:table-cell sticky top-0 z-10 bg-gray-50 dark:bg-slate-950">
           <div class="flex items-center space-x-1 ">
             <mat-icon class="text-gray-500 text-xs md:text-sm">category</mat-icon>
-            <span class="font-semibold text-gray-700 text-xs md:text-sm">Category</span>
+            <span class="font-semibold text-gray-700 dark:text-slate-200 text-xs md:text-sm">Category</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100 hidden sm:table-cell">
+        <td mat-cell *matCellDef="let element"
+          class="px-3 md:px-4 py-4 border-b border-gray-100 dark:border-slate-800 hidden sm:table-cell">
           <div class="flex items-center ">
-            <div class="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center bg-gray-100">
+            <div
+              class="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center bg-gray-100 dark:bg-slate-800">
               <mat-icon class="text-xs md:text-sm" [style.color]="getCategoryColor(element.categoryId)">{{
                 getCategoryIcon(element.categoryId) }}</mat-icon>
             </div>
             <span
-              class="inline-flex items-center px-1.5 md:px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+              class="inline-flex items-center px-1.5 md:px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200">
               {{getCategoryName(element.categoryId)}}
             </span>
           </div>
@@ -112,18 +118,18 @@
       <!-- Payee Column -->
       <ng-container matColumnDef="Payee">
         <th mat-header-cell *matHeaderCellDef mat-sort-header
-          class="px-3 md:px-4 py-4 sticky top-0 z-10 bg-gray-50 min-w-[200px] max-w-[200px]"
+          class="px-3 md:px-4 py-4 sticky top-0 z-10 bg-gray-50 dark:bg-slate-950 min-w-[200px] max-w-[200px]"
           [ngClass]="{'min-w-[150px] max-w-[150px]': breakpointService.device.isTablePortrait}">
           <div class="flex items-center space-x-1 md:space-x-2">
             <mat-icon class="text-gray-500 text-xs md:text-sm">description</mat-icon>
-            <span class="font-semibold text-gray-700 text-xs md:text-sm">Description</span>
+            <span class="font-semibold text-gray-700 dark:text-slate-200 text-xs md:text-sm">Description</span>
           </div>
         </th>
         <td mat-cell *matCellDef="let element"
-          class="px-3 md:px-4 py-4 border-b border-gray-100 min-w-[200px] max-w-[200px]"
+          class="px-3 md:px-4 py-4 border-b border-gray-100 dark:border-slate-800 min-w-[200px] max-w-[200px]"
           [ngClass]="{'min-w-[150px] max-w-[150px]': breakpointService.device.isTablePortrait}">
           <div *ngIf="!element.isEditing"
-            class="font-medium text-gray-900 text-xs md:text-sm w-full overflow-hidden text-ellipsis whitespace-nowrap"
+            class="font-medium text-gray-900 dark:text-slate-100 text-xs md:text-sm w-full overflow-hidden text-ellipsis whitespace-nowrap"
             [matTooltip]="element.payee">{{element.payee}}</div>
           <input *ngIf="element.isEditing" [(ngModel)]="element.payee"
             class="w-full px-2 md:px-3 py-1 md:py-2 border border-blue-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -133,13 +139,14 @@
 
       <!-- Amount Column -->
       <ng-container matColumnDef="Amount">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header class="bg-gray-50 px-3 md:px-4 py-4 sticky top-0 z-10">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header
+          class="bg-gray-50 dark:bg-slate-950 px-3 md:px-4 py-4 sticky top-0 z-10">
           <div class="flex items-center space-x-1 md:space-x-2">
             <mat-icon class="text-gray-500 text-xs md:text-sm">account_balance_wallet</mat-icon>
-            <span class="font-semibold text-gray-700 text-xs md:text-sm">Amount</span>
+            <span class="font-semibold text-gray-700 dark:text-slate-200 text-xs md:text-sm">Amount</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100">
+        <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100 dark:border-slate-800">
           <span *ngIf="!element.isEditing" class="font-bold text-xs md:text-sm"
             [class]="element.type === 'income' ? 'text-green-700' : 'text-red-800'">
             {{ (element.type == 'income' ? '+':'-' ) + ' ₹' + element?.amount?.toLocaleString() }}
@@ -153,16 +160,17 @@
       <!-- Status Column -->
       <ng-container matColumnDef="Status">
         <th mat-header-cell *matHeaderCellDef mat-sort-header
-          class="bg-gray-50 px-3 md:px-4 py-4 hidden md:table-cell sticky top-0 z-10">
+          class="bg-gray-50 dark:bg-slate-950 px-3 md:px-4 py-4 hidden md:table-cell sticky top-0 z-10">
           <div class="flex items-center space-x-1 md:space-x-2">
             <mat-icon class="text-gray-500 text-xs md:text-sm">swap_horiz</mat-icon>
-            <span class="font-semibold text-gray-700 text-xs md:text-sm">Type</span>
+            <span class="font-semibold text-gray-700 dark:text-slate-200 text-xs md:text-sm">Type</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100 hidden md:table-cell">
+        <td mat-cell *matCellDef="let element"
+          class="px-3 md:px-4 py-4 border-b border-gray-100 dark:border-slate-800 hidden md:table-cell">
           <span *ngIf="!element.isEditing">
             <span class="inline-flex items-center px-2 md:px-3 py-1 rounded-full text-xs font-medium"
-              [class]="element.type === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+              [class]="element.type === 'income' ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'">
               <mat-icon class="text-xs mr-1">{{element.type === 'income' ? 'trending_up' : 'trending_down'}}</mat-icon>
               {{element.type}}
             </span>
@@ -177,14 +185,15 @@
 
       <!-- Account Column -->
       <ng-container matColumnDef="Account">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header class="bg-gray-50 px-3 md:px-4 py-4 sticky top-0 z-10">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header
+          class="bg-gray-50 dark:bg-slate-950 px-3 md:px-4 py-4 sticky top-0 z-10">
           <div class="flex items-center space-x-1 md:space-x-2">
             <mat-icon class="text-gray-500 text-xs md:text-sm">account_balance</mat-icon>
-            <span class="font-semibold text-gray-700 text-xs md:text-sm">Account</span>
+            <span class="font-semibold text-gray-700 dark:text-slate-200 text-xs md:text-sm">Account</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100">
-          <div class="text-xs md:text-sm text-gray-600">
+        <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100 dark:border-slate-800">
+          <div class="text-xs md:text-sm text-gray-600 dark:text-slate-400">
             {{ getAccountName(element.accountId) }}
           </div>
         </td>
@@ -192,13 +201,15 @@
 
       <!-- Actions Column -->
       <ng-container matColumnDef="Actions">
-        <th mat-header-cell *matHeaderCellDef class="bg-gray-50 px-3 md:px-4 py-4 text-center sticky top-0 z-10">
+        <th mat-header-cell *matHeaderCellDef
+          class="bg-gray-50 dark:bg-slate-950 px-3 md:px-4 py-4 text-center sticky top-0 z-10">
           <div class="flex items-center justify-center space-x-1 md:space-x-2">
             <mat-icon class="text-gray-500 text-xs md:text-sm">settings</mat-icon>
-            <span class="font-semibold text-gray-700 text-xs md:text-sm">Actions</span>
+            <span class="font-semibold text-gray-700 dark:text-slate-200 text-xs md:text-sm">Actions</span>
           </div>
         </th>
-        <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100 text-center">
+        <td mat-cell *matCellDef="let element"
+          class="px-3 md:px-4 py-4 border-b border-gray-100 dark:border-slate-800 text-center">
           <!-- Normal state -->
           <div *ngIf="!element.isEditing" class="flex justify-center space-x-1 md:space-x-2">
             <button mat-icon-button class="text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
@@ -229,7 +240,8 @@
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns" class="h-12 md:h-16 sticky top-0 z-10"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-        class="hover:bg-gray-50 transition-colors cursor-pointer" (click)="onRowClick(row)"></tr>
+        class="hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors cursor-pointer" (click)="onRowClick(row)">
+      </tr>
     </table>
   </div>
 
@@ -237,7 +249,8 @@
   <div *ngIf="isListView" class="hidden sm:flex flex-1 overflow-auto list-container">
     <div class="w-full p-4 space-y-3">
       @for (element of dataSource.data; track element?.id) {
-      <div class="list-item list-item-bg border rounded-lg p-4 hover-effect transition-colors cursor-pointer"
+      <div
+        class="list-item list-item-bg border dark:border-slate-800 rounded-lg p-4 hover-effect transition-colors dark:bg-slate-900 dark:hover:bg-slate-800 cursor-pointer"
         (click)="onRowClick(element)">
         <div class="flex items-center justify-between">
           <!-- Left Section -->
@@ -251,7 +264,7 @@
             </div>
 
             <!-- Category Icon -->
-            <div class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-slate-800">
               <mat-icon class="text-lg" [style.color]="getCategoryColor(element.categoryId)">{{
                 getCategoryIcon(element?.categoryId) }}</mat-icon>
             </div>
@@ -259,14 +272,15 @@
             <!-- Transaction Details -->
             <div class="flex-1 min-w-0">
               <div class="flex items-center space-x-3">
-                <h4 class="font-medium text-gray-900 text-sm truncate" [matTooltip]="element.payee">{{element.payee}}
+                <h4 class="font-medium text-gray-900 dark:text-slate-100 text-sm truncate" [matTooltip]="element.payee">
+                  {{element.payee}}
                 </h4>
                 <span
-                  class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200">
                   {{getCategoryName(element?.categoryId)}}
                 </span>
               </div>
-              <div class="flex items-center space-x-4 mt-1 text-xs text-gray-500">
+              <div class="flex items-center space-x-4 mt-1 text-xs text-gray-500 dark:text-slate-500">
                 <span>{{ getDateDisplay(element.date) }}</span>
                 <span class="inline-flex items-center"
                   [class]="element.type === 'income' ? 'text-green-600' : 'text-red-600'">
@@ -306,7 +320,7 @@
   </div>
 
   <!-- Fixed Footer with Totals -->
-  <div class="hidden sm:flex fixed-footer">
+  <div class="hidden sm:flex fixed-footer dark:bg-slate-900 dark:border-slate-800 border-t">
     <div class="footer-content">
       <!-- Transaction Count -->
       <div class="transaction-count">
@@ -319,21 +333,21 @@
         <!-- Income Total -->
         <div class="total-item">
           <mat-icon class="income">trending_up</mat-icon>
-          <span class="total-label">Income:</span>
+          <span class="total-label dark:text-slate-400">Income:</span>
           <span class="total-value income">₹{{ getTotalIncome().toLocaleString() }}</span>
         </div>
 
         <!-- Expense Total -->
         <div class="total-item">
           <mat-icon class="expense">trending_down</mat-icon>
-          <span class="total-label">Expense:</span>
+          <span class="total-label dark:text-slate-400">Expense:</span>
           <span class="total-value expense">₹{{ getTotalExpense().toLocaleString() }}</span>
         </div>
 
         <!-- Net Amount -->
         <div class="total-item net-separator">
           <mat-icon>account_balance_wallet</mat-icon>
-          <span class="total-label">Net:</span>
+          <span class="total-label dark:text-slate-400">Net:</span>
           <span class="total-value" [class]="getNetAmount() >= 0 ? 'net-positive' : 'net-negative'">
             {{ getNetAmount() >= 0 ? '+' : '' }}₹{{ getNetAmount().toLocaleString() }}
           </span>
@@ -346,7 +360,7 @@
   <div *ngIf="!isListView" class="sm:hidden flex-1 overflow-auto max-h-full mobile-card-view">
     <div class="p-4 space-y-3">
       @for (element of dataSource.data; track element.id) {
-      <div class="transaction-card" (click)="onRowClick(element)">
+      <div class="transaction-card dark:bg-slate-900 dark:border-slate-800 dark:border" (click)="onRowClick(element)">
         <!-- Header Row -->
         <div class="card-header">
           <div class="left-section">
@@ -355,20 +369,20 @@
                 }}</mat-icon>
             </div>
             <div class="transaction-info">
-              <div class="payee-name">{{element.payee}}</div>
-              <div class="category-name">{{getCategoryName(element.categoryId)}}</div>
+              <div class="payee-name dark:text-slate-100">{{element.payee}}</div>
+              <div class="category-name dark:text-slate-400">{{getCategoryName(element.categoryId)}}</div>
             </div>
           </div>
           <div class="right-section">
             <div class="amount" [class]="element.type === 'income' ? 'income' : 'expense'">
               {{ (element.type == 'income' ? '+':'-' ) + ' ₹' + element.amount.toLocaleString() }}
             </div>
-            <div class="date">{{ getDateDisplay(element.date) }}</div>
+            <div class="date dark:text-slate-500">{{ getDateDisplay(element.date) }}</div>
           </div>
         </div>
 
         <!-- Footer Row -->
-        <div class="card-footer">
+        <div class="card-footer dark:border-slate-800">
           <span class="type-badge" [class]="element.type === 'income' ? 'income' : 'expense'">
             <mat-icon>{{element.type === 'income' ? 'trending_up' : 'trending_down'}}</mat-icon>
             {{element.type}}
@@ -395,11 +409,13 @@
   <div *ngIf="isListView" class="sm:hidden flex-1 overflow-auto max-h-full mobile-list-view">
     <div class="p-3 space-y-2">
       @for (element of dataSource.data; track element.id) {
-      <div class="list-item list-item-bg border rounded-lg p-3 hover-effect transition-colors cursor-pointer"
+      <div
+        class="list-item list-item-bg border dark:border-slate-800 rounded-lg p-3 hover-effect transition-colors dark:bg-slate-900 cursor-pointer"
         (click)="onRowClick(element)">
         <div class="flex items-center space-x-3">
           <!-- Category Icon -->
-          <div class="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 flex-shrink-0">
+          <div
+            class="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 dark:bg-slate-800 flex-shrink-0">
             <mat-icon class="text-sm" [style.color]="getCategoryColor(element.categoryId)">{{
               getCategoryIcon(element.categoryId) }}</mat-icon>
           </div>
@@ -407,17 +423,18 @@
           <!-- Transaction Details -->
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between">
-              <h4 class="font-medium text-gray-900 text-sm truncate" [matTooltip]="element.payee">{{element.payee}}</h4>
+              <h4 class="font-medium text-gray-900 dark:text-slate-100 text-sm truncate" [matTooltip]="element.payee">
+                {{element.payee}}</h4>
               <div class="font-bold text-sm ml-2"
                 [class]="element.type === 'income' ? 'text-green-700' : 'text-red-800'">
                 {{ (element.type == 'income' ? '+':'-' ) + ' ₹' + element.amount.toLocaleString() }}
               </div>
             </div>
-            <div class="flex items-center justify-between mt-1">
+            <div class="flex items-center justify-between mt-1 text-gray-500 dark:text-slate-500">
               <div class="flex items-center space-x-2 text-xs text-gray-500">
                 <span>{{ getDateDisplay(element.date) }}</span>
                 <span
-                  class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200">
                   {{getCategoryName(element.categoryId)}}
                 </span>
               </div>
@@ -440,7 +457,7 @@
   </div>
 
   <!-- Mobile Footer with Totals -->
-  <div class="sm:hidden fixed-footer">
+  <div class="sm:hidden fixed-footer dark:bg-slate-900 dark:border-slate-800 border-t">
     <div class="footer-content">
       <!-- Transaction Count -->
       <div class="transaction-count">
@@ -453,21 +470,21 @@
         <!-- Income Total -->
         <div class="total-item">
           <mat-icon class="income">trending_up</mat-icon>
-          <span class="total-label">Income:</span>
+          <span class="total-label dark:text-slate-400">Income:</span>
           <span class="total-value income">₹{{ getTotalIncome().toLocaleString() }}</span>
         </div>
 
         <!-- Expense Total -->
         <div class="total-item">
           <mat-icon class="expense">trending_down</mat-icon>
-          <span class="total-label">Expense:</span>
+          <span class="total-label dark:text-slate-400">Expense:</span>
           <span class="total-value expense">₹{{ getTotalExpense().toLocaleString() }}</span>
         </div>
 
         <!-- Net Amount -->
         <div class="total-item net-separator">
           <mat-icon>account_balance_wallet</mat-icon>
-          <span class="total-label">Net:</span>
+          <span class="total-label dark:text-slate-400">Net:</span>
           <span class="total-value" [class]="getNetAmount() >= 0 ? 'net-positive' : 'net-negative'">
             {{ getNetAmount() >= 0 ? '+' : '' }}₹{{ getNetAmount().toLocaleString() }}
           </span>
@@ -478,9 +495,11 @@
 
   <!-- Empty State -->
   <div *ngIf="!dataSource.data?.length" class="text-center py-8 md:py-12 px-4">
-    <mat-icon class="text-gray-400 text-4xl md:text-6xl mb-4">receipt_long</mat-icon>
-    <h3 class="text-base md:text-lg font-medium text-gray-900 mb-2">No transactions for {{ getCurrentYear() }}</h3>
-    <p class="text-gray-500 mb-4 text-sm md:text-base">No transactions found for the current year. Start by adding your
+    <mat-icon class="text-gray-400 dark:text-slate-600 text-4xl md:text-6xl mb-4">receipt_long</mat-icon>
+    <h3 class="text-base md:text-lg font-medium text-gray-900 dark:text-slate-100 mb-2">No transactions for {{
+      getCurrentYear() }}</h3>
+    <p class="text-gray-500 dark:text-slate-400 mb-4 text-sm md:text-base">No transactions found for the current year.
+      Start by adding your
       first transaction to track your finances.</p>
     <button mat-raised-button color="primary" class="flex items-center space-x-2 mx-auto text-sm md:text-base"
       (click)="onAddTransaction()">

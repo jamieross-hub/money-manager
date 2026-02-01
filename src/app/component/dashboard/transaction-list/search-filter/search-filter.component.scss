@@ -5,10 +5,7 @@
     border-color: #f3f4f6;
   }
   
-  :host-context(.dark-theme) & {
-    background: #0f172a;
-    border-color: #334155;
-  }
+
 }
 
 // Filter Text
@@ -17,9 +14,7 @@
     color: #374151;
   }
   
-  :host-context(.dark-theme) & {
-    color: #94a3b8;
-  }
+
 }
 
 // Filter Count
@@ -28,9 +23,7 @@
     color: #111827;
   }
   
-  :host-context(.dark-theme) & {
-    color: #e2e8f0;
-  }
+
 }
 
 // Filter Border
@@ -41,9 +34,7 @@
     border-color: #f3f4f6;
   }
   
-  :host-context(.dark-theme) & {
-    border-color: #334155;
-  }
+
 }
 
 // Material Form Fields - Dark Theme Support
@@ -115,21 +106,7 @@
       }
     }
     
-    // Chips
-    mat-chip {
-      &.bg-blue-50 {
-        background-color: rgba(59, 130, 246, 0.15) !important;
-        border-color: rgba(59, 130, 246, 0.3) !important;
-        
-        .mat-mdc-chip-action-label {
-          color: #60a5fa !important;
-        }
-        
-        mat-icon {
-          color: #60a5fa !important;
-        }
-      }
-    }
+
   }
 }
 

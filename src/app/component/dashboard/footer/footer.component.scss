@@ -14,10 +14,7 @@ footer {
     border-color: #e2e8f0;
   }
 
-  :host-context(.dark-theme) & {
-    background-color: #020617;
-    border-color: #1e293b;
-  }
+
 
   &:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -29,9 +26,7 @@ footer {
     background-color: mat.get-theme-color(light.$light-theme, primary, 60);
   }
 
-  :host-context(.dark-theme) & {
-    background-color: mat.get-theme-color(dark.$dark-theme, primary, 60);
-  }
+
   
   color: white;
   &:hover { 
@@ -47,11 +42,7 @@ footer {
     &:hover { background-color: #e2e8f0; }
   }
 
-  :host-context(.dark-theme) & {
-    background-color: #1e293b;
-    color: #94a3b8;
-    &:hover { background-color: #334155; }
-  }
+
 }
 
 .active-icon {
@@ -60,7 +51,7 @@ footer {
 
 .inactive-icon {
   :host-context(.light-theme) & { color: #475569 !important; }
-  :host-context(.dark-theme) & { color: #94a3b8 !important; }
+
 }
 
 .active-label {
@@ -69,7 +60,7 @@ footer {
 
 .inactive-label {
   :host-context(.light-theme) & { color: #334155; }
-  :host-context(.dark-theme) & { color: #94a3b8; }
+
 }
 
 .add-button-box {
@@ -79,7 +70,7 @@ footer {
 
 .add-label {
   :host-context(.light-theme) & { color: #334155; }
-  :host-context(.dark-theme) & { color: #cbd5e1; }
+
 }
 
 // Desktop Footer Styles

@@ -1,9 +1,9 @@
-<div class="accounts-page fade-in">
+<div class="accounts-page fade-in dark:bg-slate-950">
 	<!-- Header Section -->
 	<header class="page-header max-w-8xl mx-auto">
 		<div class="header-left">
-			<p class="page-title">Accounts</p>
-			<p class="page-description">Manage your financial accounts</p>
+			<p class="page-title dark:text-white">Accounts</p>
+			<p class="page-description dark:text-slate-400">Manage your financial accounts</p>
 		</div>
 		<button mat-flat-button color="primary" class="add-account-btn" (click)="addAccount()">
 			<mat-icon>add</mat-icon>
@@ -27,7 +27,7 @@
 
 		<!-- Category Summary Grid -->
 		<div class="category-summary-grid mt-5">
-			<mat-card class="mini-card bank">
+			<mat-card class="mini-card bank dark:bg-slate-900 dark:border-slate-800">
 				<mat-card-content>
 					<div class="card-icon-container">
 						<div class="icon-bg bank">
@@ -35,13 +35,14 @@
 						</div>
 					</div>
 					<div class="card-info">
-						<span class="label">Banks</span>
-						<span class="value">{{ bankBalance$ | async | currency : { currency: (userCurrency$ | async) ||
+						<span class="label dark:text-slate-400">Banks</span>
+						<span class="value dark:text-white">{{ bankBalance$ | async | currency : { currency:
+							(userCurrency$ | async) ||
 							'USD' } }}</span>
 					</div>
 				</mat-card-content>
 			</mat-card>
-			<mat-card class="mini-card cash">
+			<mat-card class="mini-card cash dark:bg-slate-900 dark:border-slate-800">
 				<mat-card-content>
 					<div class="card-icon-container">
 						<div class="icon-bg cash">
@@ -49,13 +50,14 @@
 						</div>
 					</div>
 					<div class="card-info">
-						<span class="label">Cash</span>
-						<span class="value">{{ cashBalance$ | async | currency : { currency: (userCurrency$ | async) ||
+						<span class="label dark:text-slate-400">Cash</span>
+						<span class="value dark:text-white">{{ cashBalance$ | async | currency : { currency:
+							(userCurrency$ | async) ||
 							'USD' } }}</span>
 					</div>
 				</mat-card-content>
 			</mat-card>
-			<mat-card class="mini-card credit">
+			<mat-card class="mini-card credit dark:bg-slate-900 dark:border-slate-800">
 				<mat-card-content>
 					<div class="card-icon-container">
 						<div class="icon-bg credit">
@@ -63,14 +65,15 @@
 						</div>
 					</div>
 					<div class="card-info">
-						<span class="label">Credit</span>
-						<span class="value">{{ creditBalance$ | async | currency : { currency: (userCurrency$ | async)
+						<span class="label dark:text-slate-400">Credit</span>
+						<span class="value dark:text-white">{{ creditBalance$ | async | currency : { currency:
+							(userCurrency$ | async)
 							||
 							'USD' } }}</span>
 					</div>
 				</mat-card-content>
 			</mat-card>
-			<mat-card class="mini-card investment">
+			<mat-card class="mini-card investment dark:bg-slate-900 dark:border-slate-800">
 				<mat-card-content>
 					<div class="card-icon-container">
 						<div class="icon-bg investment">
@@ -78,8 +81,9 @@
 						</div>
 					</div>
 					<div class="card-info">
-						<span class="label">Investments</span>
-						<span class="value">{{ investmentBalance$ | async | currency : { currency: (userCurrency$ |
+						<span class="label dark:text-slate-400">Investments</span>
+						<span class="value dark:text-white">{{ investmentBalance$ | async | currency : { currency:
+							(userCurrency$ |
 							async)
 							|| 'USD' } }}</span>
 					</div>
@@ -93,11 +97,11 @@
 			<div class="account-group-container" [class.is-expanded]="!groupData.isCollapsed">
 				<div class="group-header" (click)="toggleGroupCollapse(groupData.id)">
 					<div class="group-info">
-						<p class="group-name">{{ groupData.name }}</p>
-						<span class="count">{{ groupData.count }}</span>
+						<p class="group-name dark:text-slate-200">{{ groupData.name }}</p>
+						<span class="count dark:bg-slate-800 dark:text-slate-400">{{ groupData.count }}</span>
 					</div>
 					<div class="group-right">
-						<span class="group-balance" [class.negative]="groupData.totalBalance < 0">
+						<span class="group-balance dark:text-slate-200" [class.negative]="groupData.totalBalance < 0">
 							{{ groupData.formattedTotalBalance }}
 						</span>
 						<mat-icon class="expansion-arrow">{{ groupData.isCollapsed ? 'expand_more' : 'expand_less'
@@ -108,7 +112,7 @@
 				<div class="panel-content" *ngIf="!groupData.isCollapsed">
 					<div class="accounts-grid">
 						@for (accountVM of groupData.accounts; track accountVM.account.accountId) {
-						<mat-card class="account-card"
+						<mat-card class="account-card dark:bg-slate-900 dark:border-slate-800"
 							[class.negative-border]="accountVM.balanceClass === 'negative-balance'"
 							[class.selected]="expandedAccount?.accountId === accountVM.account.accountId"
 							(click)="toggleAccountExpansion(accountVM.account)">
@@ -118,8 +122,9 @@
 										<mat-icon>{{ accountVM.icon }}</mat-icon>
 									</div>
 									<div class="account-titles">
-										<p class="name">{{ accountVM.formattedName }}</p>
-										<p class="institution">{{ accountVM.formattedInstitution }}</p>
+										<p class="name dark:text-slate-100">{{ accountVM.formattedName }}</p>
+										<p class="institution dark:text-slate-400">{{ accountVM.formattedInstitution }}
+										</p>
 									</div>
 									<div class="menu-action">
 										<button mat-icon-button [matMenuTriggerFor]="itemMenu"
@@ -141,14 +146,15 @@
 								</div>
 								<div class="card-details">
 									<div class="balance-row">
-										<span class="label">Balance</span>
-										<span class="amount"
+										<span class="label dark:text-slate-500">Balance</span>
+										<span class="amount dark:text-slate-100"
 											[class.negative]="accountVM.isLoan || accountVM.account.balance < 0">
 											{{ accountVM.formattedBalance }}
 										</span>
 									</div>
 									<div class="meta-row" *ngIf="accountVM.isLoan || accountVM.isCreditCard">
-										<span class="account-number">****{{ accountVM.maskedId }}</span>
+										<span class="account-number dark:bg-slate-800 dark:text-slate-400">****{{
+											accountVM.maskedId }}</span>
 									</div>
 								</div>
 							</mat-card-content>
@@ -157,7 +163,7 @@
 						<!-- Account Action Buttons & Expanded Details (Mobile only) -->
 						<ng-container
 							*ngIf="expandedAccount?.accountId === accountVM.account.accountId && breakpointService.device.isMobile">
-							<div class="account-actions">
+							<div class="account-actions dark:bg-slate-900/50 dark:border-slate-800">
 								<div class="actions-container">
 									<button mat-icon-button class="action-button statement-btn"
 										(click)="viewAccountStatement(accountVM.account)" matTooltip="View statement">
@@ -174,7 +180,7 @@
 								</div>
 							</div>
 
-							<div class="account-details-expanded">
+							<div class="account-details-expanded dark:bg-slate-900/50 dark:border-slate-800">
 								<div class="details-container" *ngIf="getAccountStats(accountVM.account) as stats">
 									<div class="detail-row">
 										<div class="detail-label">
@@ -254,13 +260,15 @@
 		</mat-menu>
 
 		<!-- Empty State -->
-		<mat-card *ngIf="(accounts$ | async)?.length === 0" class="empty-state-card mt-5">
+		<mat-card *ngIf="(accounts$ | async)?.length === 0"
+			class="empty-state-card mt-5 dark:bg-slate-900 dark:border-slate-800 dark:border-dashed">
 			<mat-card-content>
-				<div class="empty-icon-box">
-					<mat-icon>account_balance</mat-icon>
+				<div class="empty-icon-box dark:bg-slate-800">
+					<mat-icon class="dark:text-slate-600">account_balance</mat-icon>
 				</div>
-				<p class="empty-title">No accounts yet</p>
-				<p class="empty-text">Add your first account to get started tracking your net worth</p>
+				<p class="empty-title dark:text-white">No accounts yet</p>
+				<p class="empty-text dark:text-slate-400">Add your first account to get started tracking your net worth
+				</p>
 				<button mat-flat-button color="primary" (click)="addAccount()" class="empty-btn">
 					<mat-icon>add</mat-icon>
 					Add First Account

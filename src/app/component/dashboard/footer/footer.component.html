@@ -1,38 +1,40 @@
 <!-- Footer for all devices -->
 @if(!hideFooter || (breakpointService.device.isMobile || breakpointService.device.isTablePortrait)){
-<footer class="footer-container flex-shrink-0 border-t">
+<footer class="footer-container flex-shrink-0 border-t dark:bg-slate-950 dark:border-slate-800">
 	<!-- Professional Action Bar -->
 	<div class="px-2 py-3 lg:px-5 lg:py-2 " [ngClass]="{'lg:pb-2 mt-2': breakpointService.device.isDesktop}">
 		<!-- Quick Actions Grid -->
 		<div class="grid grid-cols-5 gap-2 lg:max-w-md lg:mx-auto lg:gap-1" style="    align-items: flex-end;">
 			<button (click)="home()" class="group flex flex-col items-center gap-2 lg:gap-1">
-				<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg"
-					[ngClass]="isHomeActive() ? 'active-icon-box' : 'inactive-icon-box'" (click)="home()">
+				<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
+					[ngClass]="isHomeActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'"
+					(click)="home()">
 					<mat-icon class="text-lg lg:text-base relative bottom-1"
-						[ngClass]="isHomeActive() ? 'active-icon' : 'inactive-icon'">home</mat-icon>
+						[ngClass]="isHomeActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">home</mat-icon>
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
-					[ngClass]="isHomeActive() ? 'active-label' : 'inactive-label'">Home</span>
+					[ngClass]="isHomeActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">Home</span>
 			</button>
 
 			<!-- Expense -->
 			<button (click)="quickExpense()" class="group flex flex-col items-center gap-2 lg:gap-1">
-				<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg"
-					[ngClass]="isExpenseActive() ? 'active-icon-box' : 'inactive-icon-box'" (click)="quickExpense()">
+				<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
+					[ngClass]="isExpenseActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'"
+					(click)="quickExpense()">
 					<mat-icon class="text-lg lg:text-base relative bottom-1"
-						[ngClass]="isExpenseActive() ? 'active-icon' : 'inactive-icon'">trending_down</mat-icon>
+						[ngClass]="isExpenseActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">trending_down</mat-icon>
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
-					[ngClass]="isExpenseActive() ? 'active-label' : 'inactive-label'">Expense</span>
+					[ngClass]="isExpenseActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">Expense</span>
 			</button>
 
 			<!-- Add Transaction -->
 			<button (click)="addTransaction()" class="group flex flex-col items-center gap-2 lg:gap-1">
 				<div
-					class="add-button-box w-12 h-12 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center shadow-md hover:scale-105 hover:shadow-lg transition-all duration-200">
+					class="add-button-box w-12 h-12 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center shadow-md hover:scale-105 hover:shadow-lg transition-all duration-200 dark:shadow-none dark:bg-slate-700">
 					<mat-icon class="text-white text-lg lg:text-base relative bottom-1">add_circle</mat-icon>
 				</div>
-				<span class="text-xs lg:text-[10px] font-medium add-label">Add</span>
+				<span class="text-xs lg:text-[10px] font-medium add-label dark:text-slate-300">Add</span>
 			</button>
 
 			<!-- Reports -->
@@ -50,25 +52,25 @@
       </button> -->
 
 			<button (click)="navigateTo('/dashboard/category')" class="group flex flex-col items-center gap-2 lg:gap-1">
-				<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg"
-					[ngClass]="isCategoryActive() ? 'active-icon-box' : 'inactive-icon-box'"
+				<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
+					[ngClass]="isCategoryActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'"
 					(click)="navigateTo('/dashboard/category')">
 					<mat-icon class="text-lg lg:text-base relative bottom-1"
-						[ngClass]="isCategoryActive() ? 'active-icon' : 'inactive-icon'">layers</mat-icon>
+						[ngClass]="isCategoryActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">layers</mat-icon>
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
-					[ngClass]="isCategoryActive() ? 'active-label' : 'inactive-label'">Category</span>
+					[ngClass]="isCategoryActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">Category</span>
 			</button>
 
 			<button (click)="navigateTo('/dashboard/accounts')" class="group flex flex-col items-center gap-2 lg:gap-1">
-				<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg"
-					[ngClass]="isAccountsActive() ? 'active-icon-box' : 'inactive-icon-box'"
+				<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
+					[ngClass]="isAccountsActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'"
 					(click)="navigateTo('/dashboard/accounts')">
 					<mat-icon class="text-lg lg:text-base relative bottom-1"
-						[ngClass]="isAccountsActive() ? 'active-icon' : 'inactive-icon'">account_balance</mat-icon>
+						[ngClass]="isAccountsActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">account_balance</mat-icon>
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
-					[ngClass]="isAccountsActive() ? 'active-label' : 'inactive-label'">Accounts</span>
+					[ngClass]="isAccountsActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">Accounts</span>
 			</button>
 
 			<!-- More -->

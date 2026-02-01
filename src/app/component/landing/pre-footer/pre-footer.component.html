@@ -1,28 +1,30 @@
-<footer class="footer bg-gradient-to-br from-gray-50 to-white border-t border-gray-200">
+<footer
+  class="footer bg-gradient-to-br from-gray-50 to-white dark:from-slate-900 dark:to-slate-950 border-t border-gray-200 dark:border-slate-800">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
     <div class="footer-content flex flex-col-reverse md:flex-row items-center justify-between gap-6 md:gap-8">
 
       <!-- Copyright -->
       <div class="footer-copyright text-center md:text-left">
-        <p class="text-sm text-gray-600 font-medium">
-          &copy; {{ currentYear }} <span class="text-primary font-semibold">Money Manager</span>. All rights reserved.
+        <p class="text-sm text-gray-600 dark:text-gray-400 font-medium">
+          &copy; {{ currentYear }} <span class="text-primary dark:text-primary-400 font-semibold">Money Manager</span>.
+          All rights reserved.
         </p>
       </div>
 
       <!-- Links -->
       <div class="footer-links flex flex-wrap justify-center md:justify-end items-center gap-x-6 gap-y-3">
         <a routerLink="/privacy-policy"
-          class="footer-link text-sm font-medium text-gray-600 hover:text-primary transition-colors duration-200">
+          class="footer-link text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary-400 transition-colors duration-200">
           Privacy Policy
         </a>
-        <span class="hidden sm:inline text-gray-300">|</span>
+        <span class="hidden sm:inline text-gray-300 dark:text-slate-700">|</span>
         <a routerLink="/terms-conditions"
-          class="footer-link text-sm font-medium text-gray-600 hover:text-primary transition-colors duration-200">
+          class="footer-link text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary-400 transition-colors duration-200">
           Terms of Service
         </a>
-        <span class="hidden sm:inline text-gray-300">|</span>
+        <span class="hidden sm:inline text-gray-300 dark:text-slate-700">|</span>
         <a routerLink="/feedback"
-          class="footer-link text-sm font-medium text-gray-600 hover:text-primary transition-colors duration-200">
+          class="footer-link text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary-400 transition-colors duration-200">
           Contact
         </a>
       </div>

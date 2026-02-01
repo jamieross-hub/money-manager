@@ -99,15 +99,7 @@ table {
   }
   
   // Dark theme
-  :host-context(.dark-theme) & {
-    background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
-    border-bottom: 2px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
-    color: mat.get-theme-color(dark.$dark-theme, primary, 90);
-    
-    &:hover {
-      background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
-    }
-  }
+
   
   @media (min-width: 768px) {
     padding: 16px 24px;
@@ -132,9 +124,7 @@ table {
       color: #6b7280;
     }
     
-    :host-context(.dark-theme) & {
-      color: #94a3b8;
-    }
+
     
     @media (min-width: 768px) {
       font-size: 16px;
@@ -197,9 +187,7 @@ table {
     border-bottom: 1px solid mat.get-theme-color(light.$light-theme, neutral, 95);
   }
   
-  :host-context(.dark-theme) & {
-    border-bottom: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
-  }
+
   
   @media (min-width: 768px) {
     padding: 16px 24px;
@@ -225,29 +213,11 @@ table {
     // Hover elevation
     &:hover {
       background-color: #ffffff !important;
-      transform: translateY(-2px) scale(1.001);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      z-index: 10;
-      position: relative;
     }
   }
   
   // Dark theme
-  :host-context(.dark-theme) & {
-    // Alternate striping for readability
-    &:nth-child(even) {
-      background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
-    }
 
-    // Hover elevation
-    &:hover {
-      background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20) !important;
-      transform: translateY(-2px) scale(1.001);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-      z-index: 10;
-      position: relative;
-    }
-  }
 }
 
 // Date Column Styles
@@ -478,15 +448,7 @@ table {
     }
     
     // Dark theme
-    :host-context(.dark-theme) & {
-      background: #1e293b;
-      border: 1px solid #334155;
-      
-      &:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-        transform: translateY(-1px);
-      }
-    }
+
     
     .card-header {
       display: flex;
@@ -525,9 +487,7 @@ table {
               color: #1f2937;
             }
             
-            :host-context(.dark-theme) & {
-              color: #e2e8f0;
-            }
+
           }
           
           .category-name {
@@ -537,9 +497,7 @@ table {
               color: #6b7280;
             }
             
-            :host-context(.dark-theme) & {
-              color: #94a3b8;
-            }
+
           }
         }
       }
@@ -568,9 +526,7 @@ table {
             color: #9ca3af;
           }
           
-          :host-context(.dark-theme) & {
-            color: #64748b;
-          }
+
         }
       }
     }
@@ -731,10 +687,7 @@ table {
   }
   
   // Dark theme
-  :host-context(.dark-theme) & {
-    background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
-    border-top: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
-  }
+
   
   
  
@@ -779,9 +732,7 @@ table {
         color: #6b7280;
       }
       
-      :host-context(.dark-theme) & {
-        color: #94a3b8;
-      }
+
       
       @media (max-width: 1024px) {
         font-size: 12px;

@@ -175,16 +175,16 @@ body {
     color: mat.get-theme-color(dark.$dark-theme, primary, 100);
 
     // Dynamic Primary Palette for Tailwind
-    --primary-50: #{mat.get-theme-color(dark.$dark-theme, primary, 99)};
-    --primary-100: #{mat.get-theme-color(dark.$dark-theme, primary, 95)};
-    --primary-200: #{mat.get-theme-color(dark.$dark-theme, primary, 90)};
-    --primary-300: #{mat.get-theme-color(dark.$dark-theme, primary, 80)};
-    --primary-400: #{mat.get-theme-color(dark.$dark-theme, primary, 70)};
-    --primary-500: #{mat.get-theme-color(dark.$dark-theme, primary, 50)}; // Use 50 for dark mode better visibility
-    --primary-600: #{mat.get-theme-color(dark.$dark-theme, primary, 40)};
-    --primary-700: #{mat.get-theme-color(dark.$dark-theme, primary, 35)};
+    --primary-50: #{mat.get-theme-color(dark.$dark-theme, primary, 90)};
+    --primary-100: #{mat.get-theme-color(dark.$dark-theme, primary, 80)};
+    --primary-200: #{mat.get-theme-color(dark.$dark-theme, primary, 70)};
+    --primary-300: #{mat.get-theme-color(dark.$dark-theme, primary, 60)};
+    --primary-400: #{mat.get-theme-color(dark.$dark-theme, primary, 50)};
+    --primary-500: #{mat.get-theme-color(dark.$dark-theme, primary, 0)}; // Use 50 for dark mode better visibility
+    --primary-600: #{mat.get-theme-color(dark.$dark-theme, primary, 10)};
+    --primary-700: #{mat.get-theme-color(dark.$dark-theme, primary, 20)};
     --primary-800: #{mat.get-theme-color(dark.$dark-theme, primary, 30)};
-    --primary-900: #{mat.get-theme-color(dark.$dark-theme, primary, 20)};
+    --primary-900: #{mat.get-theme-color(dark.$dark-theme, primary, 40)};
   }
 
   /* Prevent pull-to-refresh */

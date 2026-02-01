@@ -1,20 +1,22 @@
-<section class="py-16 bg-white relative z-20">
+<section class="py-16 bg-white dark:bg-slate-950 relative z-20">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         <div class="max-w-2xl mx-auto text-center mb-10">
-            <h2 class="text-3xl font-bold text-gray-900 mb-4">Get in Touch</h2>
-            <p class="text-gray-600">
+            <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Get in Touch</h2>
+            <p class="text-gray-600 dark:text-gray-400">
                 Have questions? suggestions? or just want to say hi? We'd love to hear from you.
             </p>
         </div>
 
-        <div class="max-w-xl mx-auto bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+        <div
+            class="max-w-xl mx-auto bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-800">
             <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="space-y-6">
 
                 <!-- Name -->
                 <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <label for="name"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
                     <input type="text" id="name" formControlName="name"
-                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-200"
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-200 placeholder-gray-400 dark:placeholder-gray-500"
                         placeholder="Your name"
                         [class.border-red-500]="contactForm.get('name')?.invalid && contactForm.get('name')?.touched">
                     <div *ngIf="contactForm.get('name')?.invalid && contactForm.get('name')?.touched"
@@ -25,9 +27,10 @@
 
                 <!-- Email -->
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <label for="email"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
                     <input type="email" id="email" formControlName="email"
-                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-200"
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-200 placeholder-gray-400 dark:placeholder-gray-500"
                         placeholder="you@example.com"
                         [class.border-red-500]="contactForm.get('email')?.invalid && contactForm.get('email')?.touched">
                     <div *ngIf="contactForm.get('email')?.invalid && contactForm.get('email')?.touched"
@@ -38,9 +41,10 @@
 
                 <!-- Message -->
                 <div>
-                    <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                    <label for="message"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Message</label>
                     <textarea id="message" formControlName="message" rows="4"
-                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-200 resize-none"
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-200 resize-none placeholder-gray-400 dark:placeholder-gray-500"
                         placeholder="How can we help you?"
                         [class.border-red-500]="contactForm.get('message')?.invalid && contactForm.get('message')?.touched"></textarea>
                     <div *ngIf="contactForm.get('message')?.invalid && contactForm.get('message')?.touched"

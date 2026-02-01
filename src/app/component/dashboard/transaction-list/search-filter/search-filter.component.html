@@ -1,16 +1,17 @@
-<div class="filter-container rounded-xl border shadow-sm p-4 pb-0 ">
+<div
+  class="filter-container rounded-xl border shadow-sm p-4 pb-0 dark:bg-slate-900 dark:border-slate-800 dark:shadow-none">
   <!-- Header Section -->
   <div class="flex items-center justify-between mb-2">
 
     <div class="flex items-center space-x-4">
       <div class="flex items-center space-x-2">
         <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-        <span class="text-sm font-medium filter-text">
+        <span class="text-sm font-medium filter-text dark:text-slate-200">
           {{ selectedYear }} Transactions
         </span>
       </div>
       <div class="flex items-center space-x-1">
-        <span class="text-sm font-semibold filter-count">{{ filteredCount }}</span>
+        <span class="text-sm font-semibold filter-count dark:text-slate-100">{{ filteredCount }}</span>
       </div>
     </div>
 
@@ -45,9 +46,9 @@
       </div>
       @for (filter of getActiveFilters(); track filter.type) {
       <mat-chip [removable]="true" (removed)="filter.onRemove()"
-        class="bg-blue-50 text-blue-700 border-blue-200 text-xs h-6">
+        class="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/20 text-xs h-6">
         {{ filter.label }}
-        <mat-icon matChipRemove class="text-blue-500 text-xs">cancel</mat-icon>
+        <mat-icon matChipRemove class="text-blue-500 dark:text-blue-400 text-xs">cancel</mat-icon>
       </mat-chip>
       }
     </div>

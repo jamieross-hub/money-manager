@@ -1,16 +1,18 @@
-<div class="account-summary-card rounded-2xl shadow-sm p-5 w-full">
+<div
+  class="account-summary-card rounded-2xl shadow-sm p-5 w-full dark:bg-slate-900 dark:border-slate-800 dark:shadow-none">
 
   <!-- Header -->
   <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
     <div class="flex items-center gap-3">
-      <div class="summary-icon-wrap h-10 w-10 rounded-full flex items-center justify-center shrink-0">
-        <mat-icon aria-hidden="true">account_balance</mat-icon>
+      <div
+        class="summary-icon-wrap h-10 w-10 rounded-full flex items-center justify-center shrink-0 dark:bg-blue-900/20 dark:text-blue-400">
+        <mat-icon aria-hidden="true" class="dark:text-blue-400">account_balance</mat-icon>
       </div>
       <div>
-        <p class="balance-title text-xl font-medium !m-0">
+        <p class="balance-title text-xl font-medium !m-0 dark:text-slate-100">
           Total Balance
         </p>
-        <div class="balance-subtitle text-xs">Balances across {{ (getPositiveAccounts().length ) +
+        <div class="balance-subtitle text-xs dark:text-slate-400">Balances across {{ (getPositiveAccounts().length ) +
           (getNegativeAccounts().length ) }} accounts</div>
       </div>
     </div>
@@ -21,39 +23,43 @@
         [class.text-red-500]="((totalBalance$ | async) ?? 0) < 0" aria-label="Total balance">
         {{ (totalBalance$ | async) ?? 0 | currency }}
       </span>
-      <span class="balance-period text-xs">as of today</span>
+      <span class="balance-period text-xs dark:text-slate-500">as of today</span>
     </div>
   </div>
 
   <!-- Divider -->
-  <div class="card-divider my-3"></div>
+  <div class="card-divider my-3 dark:border-slate-800"></div>
 
   <!-- Breakdown -->
   <div class="text-sm">
     <div *ngIf="getPositiveAccounts().length" class="flex items-center gap-3">
-      <div class="asset-icon-wrap rounded-lg p-2 flex items-center justify-center">
-        <mat-icon aria-hidden="true">arrow_upward</mat-icon>
+      <div
+        class="asset-icon-wrap rounded-lg p-2 flex items-center justify-center dark:bg-green-900/20 dark:text-green-400">
+        <mat-icon aria-hidden="true" class="dark:text-green-400">arrow_upward</mat-icon>
       </div>
       <div class="w-full">
         <div class="flex items-center justify-between">
-          <div class="breakdown-label">Assets</div>
-          <div class="breakdown-subtitle text-xs">{{ getPositiveAccounts().length }} accounts</div>
+          <div class="breakdown-label dark:text-slate-300">Assets</div>
+          <div class="breakdown-subtitle text-xs dark:text-slate-400">{{ getPositiveAccounts().length }} accounts</div>
         </div>
-        <div class="mt-1 font-medium text-green-600" aria-label="Assets total">{{ getTotalPositiveBalance() | currency
+        <div class="mt-1 font-medium text-green-600 dark:text-green-400" aria-label="Assets total">{{
+          getTotalPositiveBalance() | currency
           }}</div>
       </div>
     </div>
 
     <div *ngIf="getNegativeAccounts()?.length" class="flex items-center gap-3">
-      <div class="liability-icon-wrap rounded-lg p-2 flex items-center justify-center">
-        <mat-icon aria-hidden="true">arrow_downward</mat-icon>
+      <div
+        class="liability-icon-wrap rounded-lg p-2 flex items-center justify-center dark:bg-red-900/20 dark:text-red-400">
+        <mat-icon aria-hidden="true" class="dark:text-red-400">arrow_downward</mat-icon>
       </div>
       <div class="w-full">
         <div class="flex items-center justify-between">
-          <div class="breakdown-label">Liabilities</div>
-          <div class="breakdown-subtitle text-xs">{{ getNegativeAccounts().length }} accounts</div>
+          <div class="breakdown-label dark:text-slate-300">Liabilities</div>
+          <div class="breakdown-subtitle text-xs dark:text-slate-400">{{ getNegativeAccounts().length }} accounts</div>
         </div>
-        <div class="mt-1 font-medium text-red-500 " aria-label="Liabilities total">{{ getTotalNegativeBalance() |
+        <div class="mt-1 font-medium text-red-500 dark:text-red-400" aria-label="Liabilities total">{{
+          getTotalNegativeBalance() |
           currency }}</div>
       </div>
     </div>
