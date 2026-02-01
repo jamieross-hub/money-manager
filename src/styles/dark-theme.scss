@@ -155,6 +155,6 @@ $dark-theme: mat.define-theme(
   color: mat.get-theme-color($dark-theme, primary, 100);
 
   .text-brand {
-    color: mat.get-theme-color($dark-theme, primary, 50);
+    color: var(--primary-500);
   }
 }

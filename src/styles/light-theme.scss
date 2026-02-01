@@ -179,7 +179,7 @@ $light-theme: mat.define-theme(
   color: mat.get-theme-color($light-theme, primary, 0);
 
   .text-brand {
-    color: mat.get-theme-color($light-theme, primary, 50);
+    color: var(--primary-500);
   }
 
   .mat-mdc-card {
