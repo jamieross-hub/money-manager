@@ -1,6 +1,5 @@
 <!-- Table Container -->
-<div
-  class="table-container-wrapper rounded-lg border overflow-hidden flex flex-col dark:bg-slate-900 dark:border-slate-800"
+<div class="table-container-wrapper rounded-lg  overflow-hidden flex flex-col dark:bg-slate-900 dark:border-slate-800"
   [ngClass]="{'max-h-[calc(75vh-210px)]': isHome && !breakpointService.device.isTablePortrait,'max-h-[65vh]':isHome && breakpointService.device.isTablePortrait,'max-h-[75vh]': !isHome}">
   <!-- View Toggle Header -->
   <div class="header-section flex justify-between items-center p-3 border-b dark:border-slate-800"
@@ -101,14 +100,11 @@
         </th>
         <td mat-cell *matCellDef="let element"
           class="px-3 md:px-4 py-4 border-b border-gray-100 dark:border-slate-800 hidden sm:table-cell">
-          <div class="flex items-center ">
-            <div
-              class="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center bg-gray-100 dark:bg-slate-800">
-              <mat-icon class="text-xs md:text-sm" [style.color]="getCategoryColor(element.categoryId)">{{
-                getCategoryIcon(element.categoryId) }}</mat-icon>
-            </div>
-            <span
-              class="inline-flex items-center px-1.5 md:px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200">
+          <div
+            class="inline-flex items-center gap-1.5 md:gap-2 px-1.5 md:px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-slate-800">
+            <mat-icon class="text-xs md:text-sm" [style.color]="getCategoryColor(element.categoryId)">{{
+              getCategoryIcon(element.categoryId) }}</mat-icon>
+            <span class="text-xs font-medium text-gray-800 dark:text-slate-200">
               {{getCategoryName(element.categoryId)}}
             </span>
           </div>

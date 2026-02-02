@@ -3,7 +3,6 @@
 .trend-card {
   padding: 1.5rem;
   border-radius: 20px;
-  background: var(--mat-sys-surface-container);
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
   margin-top: 1rem;
   border: none;
@@ -17,7 +16,6 @@
     .card-title {
       font-size: 0.875rem;
       font-weight: 700;
-      color: var(--mat-sys-on-surface-variant);
       margin-bottom: 0.75rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
@@ -49,13 +47,11 @@
         }
 
         .label {
-          color: var(--mat-sys-on-surface-variant);
           font-weight: 500;
         }
 
         .value {
           font-weight: 700;
-          color: var(--mat-sys-on-surface);
         }
       }
     }
@@ -63,7 +59,6 @@
     .action-section {
       .toggle-group {
         display: flex;
-        background: var(--mat-sys-surface-container-high);
         border-radius: 12px;
         padding: 4px;
         gap: 4px;
@@ -84,8 +79,7 @@
           }
 
           &.active {
-            background: var(--mat-sys-surface);
-            color: var(--mat-sys-primary);
+            color: var(--primary-800);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
           }
         }
@@ -123,7 +117,6 @@
 
   .chart-footer {
     font-size: 0.75rem;
-    color: var(--mat-sys-on-surface-variant);
     opacity: 0.6;
     font-weight: 500;
     margin-top: 1rem;

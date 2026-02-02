@@ -7,17 +7,17 @@
     <div class="header-main">
       <div class="header-title sm:text-sm text-xs">
         <mat-icon>calendar_today</mat-icon>
-        <span>{{ selectedYear }}</span>
+        <span class="text-neutral-500">{{ selectedYear }}</span>
       </div>
       <div class="header-actions">
         <button mat-icon-button color="warn" (click)="clearAll()" matTooltip="Clear selection" *ngIf="hasSelection()">
           <mat-icon>clear</mat-icon>
         </button>
-        <button mat-icon-button (click)="togglePieChart()" [color]="showPieChart ? 'primary' : 'basic'"
+        <button mat-icon-button (click)="togglePieChart()" class="{{showPieChart ? 'active' : ''}}"
           matTooltip="{{ showPieChart ? 'Hide gauge chart' : 'Show gauge chart' }}">
           <mat-icon>pie_chart</mat-icon>
         </button>
-        <button mat-icon-button (click)="toggleCalendar()" [color]="showCalendar && !showPieChart ? 'primary' : 'basic'"
+        <button mat-icon-button (click)="toggleCalendar()" class="{{showCalendar && !showPieChart ? 'active' : ''}}"
           matTooltip="{{ showCalendar && !showPieChart ? 'Hide calendar' : 'Show calendar' }}">
           <mat-icon>calendar_month</mat-icon>
         </button>

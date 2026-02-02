@@ -1,10 +1,6 @@
 // Filter Container
 .filter-container {
-  :host-context(.light-theme) & {
-    background: var(--surface-50);
-    border-color: var(--neutral-100);
-  }
-  
+  background-color: var(--surface-200);
 
 }
 
@@ -13,7 +9,7 @@
   :host-context(.light-theme) & {
     color: var(--neutral-700);
   }
-  
+      
 
 }
 

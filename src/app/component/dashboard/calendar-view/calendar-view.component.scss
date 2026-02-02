@@ -310,7 +310,7 @@
   }
   &.has-expense {
     .mat-calendar-body-cell-content {
-      background-color: var(--primary-100) !important;
+      background-color: var(--primary-800) !important;
     }
     color: white !important;
     font-weight: bold;
@@ -328,7 +328,7 @@
 // Selected date styling
 ::ng-deep .mat-calendar-body-cell.mat-calendar-body-active {
   .mat-calendar-body-cell-content {
-    @apply bg-primary; // Dark blue for selected date
+    @apply bg-primary-800; // Dark blue for selected date
     color: white !important;
   }
 }
@@ -403,3 +403,7 @@
   }
 }
 
+
+.active {
+  color: var(--primary-800);
+}
