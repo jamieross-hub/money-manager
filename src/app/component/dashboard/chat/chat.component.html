@@ -60,7 +60,7 @@
 
         <!-- Typing Loader -->
         <div *ngIf="chatFacadeService.isTyping" class="flex justify-start fade-in">
-          <div class="chat-bubble-bot px-4 py-2 rounded-2xl rounded-bl-md shadow-sm">
+          <div class="chat-bubble-bot px-4 py-2 rounded-2xl rounded-bl-md shadow-sm ">
             <span class="typing-dots">
               <span></span><span></span><span></span>
             </span>
@@ -152,7 +152,7 @@
 
         <!-- Send Button -->
         <button (click)="sendMessage(chatInput)"
-          class="bg-primary-500 hover:bg-primary-600 text-white p-2 rounded-full shadow-md transition flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 ">
+          class="bg-primary-800 hover:bg-primary-600 text-white p-2 rounded-full shadow-md transition flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 ">
           <mat-icon
             class="material-icons-outlined text-[18px] sm:text-[20px] leading-[18px] sm:leading-[20px] w-[18px] sm:w-[20px] h-[18px] sm:h-[20px] relative top-[3px]">arrow_upward</mat-icon>
         </button>
@@ -163,7 +163,7 @@
     <div class="flex gap-2 px-4 overflow-x-auto no-scrollbar justify-center mb-2"
       *ngIf="!breakpointService.device.isMobile">
       <mat-chip (click)="setQuickAction('Expense', ChatInput)"
-        class="quick-action-chip bg-red-50   py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-red-100 transition whitespace-nowrap">
+        class="quick-action-chip  py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-red-100 transition whitespace-nowrap">
         <mat-icon matChipAvatar>remove</mat-icon>
         Expense
       </mat-chip>
@@ -173,7 +173,7 @@
         Income
       </mat-chip>
       <mat-chip (click)="setQuickAction('Transfer', ChatInput)"
-        class="quick-action-chip  border border-blue-100  py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-blue-100 transition whitespace-nowrap">
+        class="quick-action-chip  border   py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-blue-100 transition whitespace-nowrap">
         <mat-icon matChipAvatar>swap_horiz</mat-icon>
         Transfer
       </mat-chip>

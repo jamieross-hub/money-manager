@@ -72,13 +72,13 @@
 
 // Theme Support
 .chat-bubble-bot {
-  background-color: var(--surface-100) !important;
-  color: var(--neutral-800) !important;
+  background-color: var(--surface-200) !important;
+  color: var(--primary-900) !important;
 }
 
 .input-bar-container {
   background-color: inherit;
-  border-top: 1px solid var(--neutral-200) !important;
+  // border-top: 1px solid var(--neutral-200) !important;
 }
 
 .search-input-wrap {

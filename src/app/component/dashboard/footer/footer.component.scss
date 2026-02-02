@@ -8,12 +8,12 @@
 
 footer {
   transition: all 0.3s ease;
-  background-color: var(--surface-50);
+  background-color: var(--surface-200) !important;
   border-top: 1px solid var(--neutral-200);
 }
 
 .active-icon-box {
-  background-color: var(--primary-500);
+  background-color: var(--primary-800);
   color: var(--surface-50);
   
   &:hover { 
