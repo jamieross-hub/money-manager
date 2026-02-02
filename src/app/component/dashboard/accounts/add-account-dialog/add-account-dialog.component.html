@@ -49,7 +49,7 @@
 		<!-- Balance Field -->
 		<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
 			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-				Initial Balance *
+				{{ isCreditCardAccount() ? 'Current Owed Amount (Liability) *' : 'Initial Balance *' }}
 			</label>
 			<input type="number" formControlName="balance" placeholder="0.00" step="0.01"
 				class="w-full py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />

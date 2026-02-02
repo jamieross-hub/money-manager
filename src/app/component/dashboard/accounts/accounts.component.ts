@@ -37,6 +37,11 @@ interface AccountViewModel {
   formattedName: string;
   formattedInstitution: string;
   formattedBalance: string;
+  // Payment Due Status
+  isPaymentDue: boolean;
+  daysUntilDue?: number;
+  paymentDueStatus?: 'overdue' | 'due-soon' | 'upcoming';
+  nextDueDate?: Date;
 }
 
 interface GroupViewModel {
@@ -225,7 +230,8 @@ export class AccountsComponent implements OnInit, OnDestroy {
               maskedId: account.accountId.slice(-4),
               formattedName: this.toTitleCase(account.name),
               formattedInstitution: this.toTitleCase(account.institution || account.type),
-              formattedBalance: new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(rawBalance)
+              formattedBalance: new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(rawBalance),
+              ...this.getPaymentDueStatus(account)
             };
           });
 
@@ -649,4 +655,49 @@ export class AccountsComponent implements OnInit, OnDestroy {
   public getTotalNegativeBalance(): number {
     return this.getNegativeAccounts().reduce((sum, a) => sum + a.balance, 0);
   }
+
+  /**
+   * Get payment due status for an account
+   */
+  private getPaymentDueStatus(account: Account): { isPaymentDue: boolean, daysUntilDue?: number, paymentDueStatus?: 'overdue' | 'due-soon' | 'upcoming', nextDueDate?: Date } {
+    if (account.type !== AccountType.CREDIT && account.type !== AccountType.LOAN) {
+      return { isPaymentDue: false };
+    }
+
+    let nextDueDate: Date | undefined;
+
+    if (account.type === AccountType.LOAN && account.loanDetails?.nextDueDate) {
+      const date = this.dateService.toDate(account.loanDetails.nextDueDate);
+      nextDueDate = date || undefined;
+    } else if (account.type === AccountType.CREDIT) {
+      nextDueDate = this.calculateNextDueDate(account);
+    }
+
+    if (!nextDueDate) {
+      return { isPaymentDue: false };
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(nextDueDate);
+    dueDate.setHours(0, 0, 0, 0);
+
+    const diffTime = dueDate.getTime() - today.getTime();
+    const daysUntilDue = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    let status: 'overdue' | 'due-soon' | 'upcoming' = 'upcoming';
+    if (daysUntilDue < 0) {
+      status = 'overdue';
+    } else if (daysUntilDue <= 7) {
+      status = 'due-soon';
+    }
+
+    return {
+      isPaymentDue: daysUntilDue <= 7,
+      daysUntilDue,
+      paymentDueStatus: status,
+      nextDueDate
+    };
+  }
 }
+

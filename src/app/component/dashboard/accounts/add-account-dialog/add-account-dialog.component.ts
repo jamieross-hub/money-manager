@@ -280,7 +280,13 @@ export class AddAccountDialogComponent {
         const accountData: any = {
           name: formData.name.trim(),
           type: formData.type,
-          balance: Number(formData.balance) || 0,
+          // For credit accounts, we treat the balance as liability (negative)
+          // If user enters 500 owed, we store -500.
+          // If user explicitly enters -100 (credit/overpayment), we store 100? No, standard is debt.
+          // Use standard convention: User enters debt as positive number. Store as negative.
+          balance: formData.type === 'credit'
+            ? -(Math.abs(Number(formData.balance) || 0))
+            : (Number(formData.balance) || 0),
           description: formData.description || '',
         };
 
@@ -309,6 +315,7 @@ export class AddAccountDialogComponent {
             creditLimit: Number(formData.creditLimit) || 0,
             minimumPayment: Number(formData.minimumPayment) || 0,
             showReminder: formData.creditCardShowReminder,
+            nextDueDate: this.calculateNextCreditCardDueDate(Number(formData.dueDate) || 15)
           };
         }
 
@@ -400,6 +407,25 @@ export class AddAccountDialogComponent {
   getDurationError(): string {
     const control = this.accountForm.get('durationMonths');
     return control ? this.validationService.getDurationError(control) : '';
+  }
+
+  /**
+   * Calculate next due date for credit card
+   */
+  private calculateNextCreditCardDueDate(dayOfMonth: number): Date {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    // Create date for this month
+    let nextDueDate = new Date(currentYear, currentMonth, dayOfMonth);
+
+    // If that date has passed, it's next month
+    if (nextDueDate < today) {
+      nextDueDate = new Date(currentYear, currentMonth + 1, dayOfMonth);
+    }
+
+    return nextDueDate;
   }
 
   /**

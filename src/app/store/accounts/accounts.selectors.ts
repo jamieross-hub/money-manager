@@ -84,8 +84,17 @@ export const selectTotalBalanceByType = (type: AccountType) => createSelector(
 export const selectTotalAssets = createSelector(
   selectAllAccounts,
   (accounts) => accounts
-    ?.filter(a => a.type !== AccountType.LOAN && a.type !== AccountType.CREDIT)
-    .reduce((sum, account) => sum + account.balance, 0) || 0
+    // Include all accounts except LOAN. 
+    // For CREDIT, only include if balance is positive (asset/overpayment).
+    // For others (BANK, CASH, INVESTMENT), assume positive/negative reflects net worth directly (including negative bank balance as "debt" but technically it reduces asset total here or should move to liability? 
+    // Standard approach: Sum of all positive asset-type accounts + positive credit accounts.
+    ?.reduce((sum, account) => {
+      if (account.type === AccountType.LOAN) return sum;
+      if (account.type === AccountType.CREDIT) {
+        return sum + (account.balance > 0 ? account.balance : 0);
+      }
+      return sum + account.balance;
+    }, 0) || 0
 );
 
 export const selectTotalLiabilities = createSelector(
@@ -96,6 +105,7 @@ export const selectTotalLiabilities = createSelector(
         return sum + (account.loanDetails?.remainingBalance || 0);
       }
       if (account.type === AccountType.CREDIT) {
+        // If balance is negative, it's a liability. Add absolute value to total liabilities.
         return sum + (account.balance < 0 ? Math.abs(account.balance) : 0);
       }
       return sum;

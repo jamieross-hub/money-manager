@@ -65,4 +65,8 @@ export class ThemeSwitchingService {
     this.previousClass = theme;
     this.currentTheme.next(theme);
   }
+
+  public setTheme(theme: ThemeType) {
+    this.applyTheme(theme);
+  }
 }

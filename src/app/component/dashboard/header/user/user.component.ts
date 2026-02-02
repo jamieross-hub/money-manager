@@ -6,7 +6,10 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
 import { User } from 'src/app/util/models/user.model';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { SplitwiseService } from 'src/app/modules/splitwise/services/splitwise.service';
+import { ThemeSwitchingService } from 'src/app/util/service/theme-switching.service';
+import { ThemeType } from 'src/app/util/models/theme.model';
 import { take } from 'rxjs';
+
 
 @Component({
   selector: 'app-user',
@@ -34,32 +37,39 @@ import { take } from 'rxjs';
 export class UserComponent {
   isOpen = false;
   public isMobile = false;
+  public isDarkTheme = false;
   user: {
-   displayName: string;
-   photoURL: string;
+    displayName: string;
+    photoURL: string;
   } = {
-    displayName: '',
-    photoURL: '',
-  };
+      displayName: '',
+      photoURL: '',
+    };
 
   constructor(
     private userService: UserService,
     private notificationService: NotificationService,
     private router: Router,
     private breakpointObserver: BreakpointObserver,
-    private splitwiseService: SplitwiseService
+    private splitwiseService: SplitwiseService,
+    private themeSwitchingService: ThemeSwitchingService
   ) {
     this.breakpointObserver.observe(Breakpoints.Handset).subscribe((result) => {
       this.isMobile = result.matches;
     });
   }
 
-  ngOnInit() {  
+  ngOnInit() {
     this.userService.userAuth$.pipe(take(1)).subscribe((user: any) => {
       this.user = {
         displayName: user?.displayName,
         photoURL: user?.photoURL,
       };
+    });
+
+    // Subscribe to theme changes
+    this.themeSwitchingService.currentTheme.subscribe(theme => {
+      this.isDarkTheme = theme === 'dark-theme';
     });
   }
 
@@ -69,6 +79,15 @@ export class UserComponent {
     }
     console.log('toggling');
     this.isOpen = !this.isOpen;
+  }
+
+  toggleTheme(event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    const newTheme: ThemeType = this.isDarkTheme ? 'light-theme' : 'dark-theme';
+    this.themeSwitchingService.setTheme(newTheme);
+    // Note: We don't close the menu here so user can see the change immediately
   }
 
   close() {

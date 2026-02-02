@@ -1,4 +1,4 @@
-<div class="accounts-page fade-in dark:bg-slate-950">
+<div class="accounts-page fade-in dark:bg-slate-950 lg:px-16 xl:px-32 2xl:px-48">
 	<!-- Header Section -->
 	<header class="page-header max-w-8xl mx-auto">
 		<div class="header-left">
@@ -155,6 +155,23 @@
 									<div class="meta-row" *ngIf="accountVM.isLoan || accountVM.isCreditCard">
 										<span class="account-number dark:bg-slate-800 dark:text-slate-400">****{{
 											accountVM.maskedId }}</span>
+
+										<!-- Payment Due Indicator -->
+										@if (accountVM.isPaymentDue) {
+										<div class="payment-due-badge"
+											[class.overdue]="accountVM.paymentDueStatus === 'overdue'"
+											[class.due-soon]="accountVM.paymentDueStatus === 'due-soon'">
+											<mat-icon class="badge-icon">
+												{{ accountVM.paymentDueStatus === 'overdue' ? 'warning' : 'schedule' }}
+											</mat-icon>
+											<span class="badge-text" *ngIf="accountVM.paymentDueStatus === 'overdue'">
+												Overdue {{ -accountVM.daysUntilDue! }}d
+											</span>
+											<span class="badge-text" *ngIf="accountVM.paymentDueStatus === 'due-soon'">
+												Due in {{ accountVM.daysUntilDue }}d
+											</span>
+										</div>
+										}
 									</div>
 								</div>
 							</mat-card-content>
