@@ -19,7 +19,8 @@
 				<p class="page-title dark:text-white">Categories</p>
 				<p class="page-description dark:text-slate-400">Manage your budget categories</p>
 			</div>
-			<button mat-flat-button color="primary" class="add-category-btn" (click)="openAddMobileDialog()">
+			<button mat-flat-button color="primary" class="add-category-btn"
+				(click)="openAddMobileDialog()">
 				<mat-icon>add</mat-icon>
 				Add Category
 			</button>
@@ -34,7 +35,7 @@
 						<mat-icon>account_balance_wallet</mat-icon>
 					</div>
 					<mat-card-subtitle class="card-label">Expenses</mat-card-subtitle>
-					<mat-card-title class="card-amount">
+					<mat-card-title class="card-amount text-primary">
 						{{ totalExpenseAmount | currency : { currency: (userCurrency$ | async ) || 'USD' } }}
 					</mat-card-title>
 				</mat-card-header>
@@ -50,7 +51,7 @@
 						<mat-icon>savings</mat-icon>
 					</div>
 					<mat-card-subtitle class="card-label">Income</mat-card-subtitle>
-					<mat-card-title class="card-amount">
+					<mat-card-title class="card-amount text-neutral-500">
 						{{ totalIncomeAmount | currency : { currency: (userCurrency$ | async ) || 'USD' } }}
 					</mat-card-title>
 				</mat-card-header>
@@ -330,7 +331,7 @@
 						}
 					</div>
 					}
-					<mat-divider></mat-divider>
+					<!-- <mat-divider></mat-divider> -->
 					}
 					}
 				</mat-list>

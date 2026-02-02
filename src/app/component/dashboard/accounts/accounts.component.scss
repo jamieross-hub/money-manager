@@ -60,7 +60,7 @@ mat-card.error-message {
       margin: 0;
       letter-spacing: -0.03em;
       line-height: 1.1;
-      color: var(--neutral-900);
+      color: var(--neutral-500);
     }
     
     .page-description {
@@ -72,11 +72,11 @@ mat-card.error-message {
   }
 
   .add-account-btn {
-    font-weight: 600;
+    color: var(--surface-100);
+    font-weight: inherit;
     font-size: 1rem;
-    color: white;
+    background-color: var(--primary-600);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background-color: var(--primary-500);
 
     &:hover {
       background-color: var(--primary-600);
@@ -238,7 +238,7 @@ mat-card.error-message {
     }
 
     :host-context(.dark-theme) & {
-      background: var(--surface-100);
+      background: var(--surface-200);
       border: 1px solid var(--neutral-800);
       
       &:hover {
@@ -260,16 +260,16 @@ mat-card.error-message {
         justify-content: center;
         
         &.bank { 
-          background: var(--primary-50); color: var(--primary-500);
+          color: var(--primary-500);
         }
         &.cash { 
-          background: var(--success-50); color: var(--success-500);
+          color: var(--success-500);
         }
         &.credit { 
-          background: var(--secondary-50); color: var(--secondary-500);
+          color: var(--secondary-500);
         }
         &.investment { 
-          background: var(--warning-50); color: var(--warning-500);
+          color: var(--warning-500);
         }
 
         mat-icon { font-size: 1.75rem; width: 1.75rem; height: 1.75rem; }
@@ -288,7 +288,7 @@ mat-card.error-message {
           font-size: 1.25rem; 
           font-weight: 700; 
           margin-top: 2px;
-          color: var(--neutral-900);
+          color: var(--primary-900);
 
       }
     }
@@ -325,7 +325,7 @@ mat-card.error-message {
           font-weight: 700;
           margin: 0;
           letter-spacing: -0.01em;
-          color: var(--neutral-800);
+          color: var(--neutral-500);
         }
         .count {
           font-size: 0.85rem;
@@ -346,7 +346,7 @@ mat-card.error-message {
           font-size: 1rem;
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          color: var(--neutral-900);
+          color: var(--neutral-500);
           
           &.negative { color: var(--error-600); }
         }
@@ -359,7 +359,7 @@ mat-card.error-message {
     }
 
     &.is-expanded .group-header {
-      border-bottom: 1px solid var(--neutral-100);
+      // border-bottom: 1px solid var(--neutral-500);
 
       margin-bottom: 1.5rem;
     }
@@ -372,7 +372,7 @@ mat-card.error-message {
         padding: 1rem 0;
         display: flex;
         justify-content: flex-end;
-        border-top: 1px solid var(--neutral-100);
+        // border-top: 1px solid var(--neutral-500);
 
         .add-inline-btn {
           color: var(--primary-600);
@@ -468,16 +468,16 @@ mat-card.error-message {
         transition: transform 0.3s ease;
         
         &.bank { 
-          background: var(--primary-50); color: var(--primary-500);
+          color: var(--primary-500);
         }
         &.cash { 
-          background: var(--success-50); color: var(--success-500);
+          color: var(--success-500);
         }
         &.credit { 
-          background: var(--secondary-50); color: var(--secondary-500);
+          color: var(--secondary-500);
         }
         &.loan { 
-          background: var(--error-50); color: var(--error-500);
+          color: var(--error-500);
         }
 
         mat-icon { font-size: 1.75rem; width: 1.75rem; height: 1.75rem; }
@@ -490,7 +490,7 @@ mat-card.error-message {
             font-weight: 700; 
             margin: 0;
             line-height: 1.3;
-            color: var(--neutral-900);
+            color: var(--neutral-500);
 
         }
         .institution { 
@@ -535,7 +535,7 @@ mat-card.error-message {
           font-weight: 800;
           letter-spacing: -0.02em;
           &.negative { color: var(--error-600); }
-          color: var(--neutral-900);
+          color: var(--neutral-500);
 
         }
       }

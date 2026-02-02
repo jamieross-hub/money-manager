@@ -53,7 +53,7 @@
       font-weight: 700 !important;
       margin: 0 !important;
       line-height: 1.2 !important;
-      color: var(--neutral-900) !important;
+      color: var(--neutral-500) !important;
     }
 
     .page-description {
@@ -64,10 +64,10 @@
   }
 
   .add-category-btn {
-    color: var(--surface-50);
-    font-weight: 600;
+    color: var(--surface-100);
+    font-weight: inherit;
     font-size: 1rem;
-    background-color: var(--primary-500);
+    background-color: var(--primary-600);
     
     mat-icon {
       margin-right: 0.5rem;
@@ -183,7 +183,7 @@
       transition: all 0.2s;
 
       background: var(--surface-100);
-      border: 1px solid var(--neutral-200);
+      // border: 1px solid var(--neutral-200);
       
       .search-icon {
           color: var(--neutral-400);
