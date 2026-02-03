@@ -184,7 +184,46 @@ export class AccountsService {
         return new Observable<number>(observer => {
             const updateBalanceAsync = async () => {
                 try {
-                    // ... existing Firestore implementation ...
+                    const accountRef = doc(this.firestore, `users/${userId}/accounts/${accountId}`);
+                    const accountSnap = await getDoc(accountRef);
+
+                    if (!accountSnap.exists()) {
+                        observer.error('Account not found');
+                        return;
+                    }
+
+                    const account = accountSnap.data() as Account;
+                    let balanceChange = 0;
+                    let loanRemainingBalanceChange = 0;
+
+                    const getEffect = (t: Transaction) => t.type === 'income' ? t.amount : -t.amount;
+                    const getLoanEffect = (t: Transaction) => t.type === 'expense' ? -t.amount : 0;
+
+                    if (transactionType === 'create' && newTransaction) {
+                        balanceChange = getEffect(newTransaction);
+                        if (account.type === 'loan') loanRemainingBalanceChange = getLoanEffect(newTransaction);
+                    } else if (transactionType === 'update' && oldTransaction && newTransaction) {
+                        balanceChange = getEffect(newTransaction) - getEffect(oldTransaction);
+                        if (account.type === 'loan') loanRemainingBalanceChange = getLoanEffect(newTransaction) - getLoanEffect(oldTransaction);
+                    } else if (transactionType === 'delete' && oldTransaction) {
+                        balanceChange = -getEffect(oldTransaction);
+                        if (account.type === 'loan') loanRemainingBalanceChange = -getLoanEffect(oldTransaction);
+                    }
+
+                    const newBalance = (account.balance || 0) + balanceChange;
+                    const updateData: any = {
+                        balance: newBalance,
+                        updatedAt: new Date() as any
+                    };
+
+                    if (account.type === 'loan' && account.loanDetails) {
+                        const newRemainingBalance = Math.max(0, (account.loanDetails.remainingBalance || 0) + loanRemainingBalanceChange);
+                        updateData['loanDetails.remainingBalance'] = newRemainingBalance;
+                    }
+
+                    await updateDoc(accountRef, updateData);
+                    observer.next(newBalance);
+                    observer.complete();
                 } catch (error) {
                     observer.error(error);
                 }
