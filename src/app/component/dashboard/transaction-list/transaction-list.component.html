@@ -5,11 +5,11 @@
 
 } @else if (!isHome && !breakpointService.device.isMobile && !breakpointService.device.isTablePortrait) {
 <div class="grid grid-cols-12 gap-5  lg:px-16 xl:px-32  2xl:px-48">
-	<div class="col-span-3">
+	<div class="col-span-3 hidden lg:block">
 		<calendar-view></calendar-view>
 		<app-monthly-expenditure-card></app-monthly-expenditure-card>
 	</div>
-	<div class="col-span-9">
+	<div class="col-span-12 lg:col-span-9">
 		<!-- <total-balance ></total-balance> -->
 		<!-- Search and Filter Section -->
 		<search-filter (addTransaction)="addTransactionDialog()" (importTransactions)="openImportDialog()"
@@ -26,7 +26,8 @@
 		</transaction-table>
 	</div>
 </div>
-} @else {
+}
+<!-- } @else {
 
 <mat-card
 	class="p-2 shadow-lg border-0 rounded-xl transaction-list-container dark:bg-slate-900 dark:border-slate-800 dark:shadow-none">
@@ -42,12 +43,10 @@
 			</ng-template>
 			@if(selectedTabIndex === 0) {
 			<div class="p-2 overflow-hidden">
-				<!-- Search and Filter Section -->
 				<search-filter (addTransaction)="addTransactionDialog()" (importTransactions)="openImportDialog()"
 					(openFilterDialog)="openFilterDialog()" (viewAnalytics)="viewAnalytics()"
 					(expandTable)="expandTable()"></search-filter>
 
-				<!-- Table Container -->
 				<transaction-table (editTransaction)="editTransaction($event)"
 					(deleteTransaction)="deleteTransaction($event)" (startRowEdit)="startRowEdit($event)"
 					(saveRowEdit)="saveRowEdit($event)" (cancelRowEdit)="cancelRowEdit($event)"
@@ -97,12 +96,10 @@
 			</ng-template>
 			@if(selectedTabIndex === 3) {
 			<div class="p-2 overflow-hidden">
-				<!-- Search and Filter Section -->
 				<search-filter (addTransaction)="addTransactionDialog()" (importTransactions)="openImportDialog()"
 					(openFilterDialog)="openFilterDialog()" (viewAnalytics)="viewAnalytics()"
 					(expandTable)="expandTable()"></search-filter>
 
-				<!-- Table Container -->
 				<transaction-table (editTransaction)="editTransaction($event)"
 					(deleteTransaction)="deleteTransaction($event)" (startRowEdit)="startRowEdit($event)"
 					(saveRowEdit)="saveRowEdit($event)" (cancelRowEdit)="cancelRowEdit($event)"
@@ -152,4 +149,4 @@
 		</mat-tab>
 	</mat-tab-group>
 </mat-card>
-}
+} -->

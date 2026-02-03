@@ -10,7 +10,7 @@
           <!-- Text/HTML Messages -->
           <ng-container *ngIf="msg.type === 'text' || msg.type === 'html'">
             <div class="px-4 py-2 my-2 rounded-2xl max-w-[80%] sm:max-w-[60%] text-sm sm:text-base shadow-sm"
-              [ngClass]="msg.sender === 'user' ? '!bg-primary-500 text-white rounded-br-md shadow-primary-500/20' : 'chat-bubble-bot rounded-bl-md'"
+              [ngClass]="msg.sender === 'user' ? '!bg-primary-800 text-white rounded-br-md shadow-primary-500/20' : 'chat-bubble-bot rounded-bl-md'"
               [innerHTML]="msg.text | safeHtml"
               style="-webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text;">
             </div>

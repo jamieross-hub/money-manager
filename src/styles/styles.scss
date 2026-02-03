@@ -302,14 +302,28 @@ body {
     --error-900: #{mat.get-theme-color(dark.$dark-theme, error, 10)};
 
     // Success (Fallback if not in map)
+    --success-50: #f0fdf4;
+    --success-100: #f0fdf4;
+    --success-200: #dcfce7;
+    --success-300: #bbf7d0;
     --success-400: #86efac;
     --success-500: #4ade80;
     --success-600: #22c55e;
+    --success-700: #16a34a;
+    --success-800: #15803d;
+    --success-900: #166534;
 
     // Warning (Fallback if not in map)
-    --warning-400: #fde047;
-    --warning-500: #facc15;
-    --warning-600: #eab308;
+      --warning-50: #fffbeb;
+    --warning-100: #fef3c7;
+    --warning-200: #fef08a;
+    --warning-300: #fde047;
+    --warning-400: #facc15;
+    --warning-500: #eab308;
+    --warning-600: #ca8a04;
+    --warning-700: #a16207;
+    --warning-800: #92400e;
+    --warning-900: #78350f;
 
     // Neutral Palette
     --neutral-50: #{mat.get-theme-color(dark.$dark-theme, neutral, 95)};

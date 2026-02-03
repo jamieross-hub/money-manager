@@ -305,14 +305,15 @@
 ::ng-deep .mat-calendar-body-cell.has-transactions {
   &.has-income {
     .mat-calendar-body-cell-content {
-      background-color: var(--success-100) !important;
+      @apply bg-success-200;
+      color: var(--success-900);
     }
   }
   &.has-expense {
     .mat-calendar-body-cell-content {
-      background-color: var(--primary-800) !important;
+      background-color: var(--error-300) !important;
+      color: white !important;
     }
-    color: white !important;
     font-weight: bold;
     border-radius: 50%;
   }
@@ -320,7 +321,7 @@
 
 // Hover effect for dates with transactions
 ::ng-deep .mat-calendar-body-cell.has-transactions:hover {
-  .mat-calendar-body-cell-content {
+  .mat-calendar-body-cell-content { 
     @apply bg-primary; // Darker blue on hover
   }
 }
@@ -328,7 +329,7 @@
 // Selected date styling
 ::ng-deep .mat-calendar-body-cell.mat-calendar-body-active {
   .mat-calendar-body-cell-content {
-    @apply bg-primary-800; // Dark blue for selected date
+    @apply bg-neutral-400; // Dark blue for selected date
     color: white !important;
   }
 }
