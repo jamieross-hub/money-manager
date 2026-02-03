@@ -291,8 +291,8 @@
     .categories-list-card {
         border-radius: 16px;
         overflow: hidden;
-        background: var(--surface-50);
-        border: 1px solid var(--neutral-100);
+        background: var(--surface-200);
+        // border: 1px solid var(--neutral-100);
         
         .category-item-wrapper, .subcategory-item-wrapper {
             height: auto;
@@ -421,7 +421,7 @@
 // =============================================================================
 
 .category-actions-expansion {
-  background: var(--surface-100);
+  background: var(--surface-500);
   border-top: 1px solid var(--neutral-200);
   animation: slideDown 0.2s ease;
 
