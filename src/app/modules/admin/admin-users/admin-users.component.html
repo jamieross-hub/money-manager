@@ -146,9 +146,9 @@
             <span class="label">Created:</span>
             <span class="value">{{ formatDate(user.createdAt) }}</span>
           </div>
-          <div class="date-info" *ngIf="user.lastSignInAt">
+          <div class="date-info">
             <span class="label">Last Sign In:</span>
-            <span class="value">{{ formatDateTime(user.lastSignInAt) }}</span>
+            <span class="value">{{ user.lastSignInAt ? formatDateTime(user.lastSignInAt) : 'Never' }}</span>
           </div>
         </div>
       </div>
@@ -165,22 +165,16 @@
     <p *ngIf="usersList.length === 0">
       No users have registered yet.
     </p>
-    <button *ngIf="filteredUsers.length === 0 && usersList.length > 0" 
-            mat-raised-button color="primary" 
-            (click)="clearFilters()">
+    <button *ngIf="filteredUsers.length === 0 && usersList.length > 0" mat-raised-button color="primary"
+      (click)="clearFilters()">
       Clear Filters
     </button>
   </div>
 
   <!-- Pagination -->
   <div *ngIf="getTotalPages() > 1" class="pagination-container">
-    <mat-paginator
-      [length]="totalItems"
-      [pageSize]="itemsPerPage"
-      [pageIndex]="currentPage - 1"
-      [pageSizeOptions]="[5, 10, 25, 50]"
-      (page)="onPageChange($event.pageIndex + 1)"
-      showFirstLastButtons>
+    <mat-paginator [length]="totalItems" [pageSize]="itemsPerPage" [pageIndex]="currentPage - 1"
+      [pageSizeOptions]="[5, 10, 25, 50]" (page)="onPageChange($event.pageIndex + 1)" showFirstLastButtons>
     </mat-paginator>
   </div>
-</div> 
+</div>
