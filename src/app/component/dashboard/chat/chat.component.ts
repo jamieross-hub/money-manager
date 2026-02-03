@@ -63,7 +63,7 @@ export class ChatComponent {
         }
         // Timeout after 10s to stop checking
       }, 500);
-      setTimeout(() => clearInterval(checkInterval), 10000);
+      setTimeout(() => clearInterval(checkInterval), 1000);
     }
   }
 
