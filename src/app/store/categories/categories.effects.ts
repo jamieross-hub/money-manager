@@ -26,9 +26,9 @@ export class CategoriesEffects {
   createCategory$ = createEffect(() =>
     this.actions$.pipe(
       ofType(CategoriesActions.createCategory),
-      mergeMap(({ userId, name, categoryType, icon, color }) =>
+      mergeMap(({ userId, name, categoryType, icon, color, group }) =>
         this.categoryService
-          .createCategory(userId, name, categoryType, icon, color)
+          .createCategory(userId, name, categoryType, icon, color, group)
           .pipe(
             map(() => {
               // Reload categories to get the updated list
@@ -46,7 +46,7 @@ export class CategoriesEffects {
     this.actions$.pipe(
       ofType(CategoriesActions.updateCategory),
       mergeMap(
-        ({ userId, categoryId, name, categoryType, icon, color, budgetData, parentCategoryId, isSubCategory }) =>
+        ({ userId, categoryId, name, categoryType, icon, color, budgetData, parentCategoryId, isSubCategory, group }) =>
           this.categoryService
             .updateCategory(
               userId,
@@ -57,7 +57,8 @@ export class CategoriesEffects {
               color,
               budgetData,
               parentCategoryId,
-              isSubCategory
+              isSubCategory,
+              group
             )
             .pipe(
               map(() => {
@@ -108,5 +109,5 @@ export class CategoriesEffects {
   constructor(
     private actions$: Actions,
     private categoryService: CategoryService
-  ) {}
+  ) { }
 }

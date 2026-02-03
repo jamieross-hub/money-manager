@@ -26,7 +26,7 @@
 		<app-account-summary-card></app-account-summary-card>
 
 		<!-- Category Summary Grid -->
-		<div class="category-summary-grid mt-5">
+		<div class="category-summary-grid mt-5" *ngIf="!breakpointService.device.isMobile">
 			<mat-card class="mini-card bank dark:bg-slate-900 dark:border-slate-800">
 				<mat-card-content>
 					<div class="card-icon-container">
@@ -92,7 +92,9 @@
 		</div>
 
 		<!-- Grouped Accounts List (Simplified for Performance) -->
-		<div *ngIf="groupedAccountsViewModel.length > 0" class="accounts-accordion-list">
+		<div *ngIf="groupedAccountsViewModel.length > 0" class="accounts-accordion-list" [ngClass]="{
+			'mt-10': breakpointService.device.isMobile
+		}">
 			@for (groupData of groupedAccountsViewModel; track groupData.id) {
 			<div class="account-group-container" [class.is-expanded]="!groupData.isCollapsed">
 				<div class="group-header" (click)="toggleGroupCollapse(groupData.id)">

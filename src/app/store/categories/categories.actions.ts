@@ -21,12 +21,13 @@ export const loadCategoriesFailure = createAction(
 // Create Category
 export const createCategory = createAction(
   '[Categories] Create Category',
-  props<{ 
-    userId: string; 
-    name: string; 
-    categoryType: TransactionType; 
-    icon: string; 
-    color: string 
+  props<{
+    userId: string;
+    name: string;
+    categoryType: TransactionType;
+    icon: string;
+    color: string;
+    group?: string;
   }>()
 );
 
@@ -43,16 +44,17 @@ export const createCategoryFailure = createAction(
 // Update Category
 export const updateCategory = createAction(
   '[Categories] Update Category',
-  props<{ 
-    userId: string; 
-    categoryId: string; 
-    name: string; 
-    categoryType: TransactionType; 
-    icon: string; 
+  props<{
+    userId: string;
+    categoryId: string;
+    name: string;
+    categoryType: TransactionType;
+    icon: string;
     color: string;
     budgetData?: Budget;
     parentCategoryId?: string | null;
     isSubCategory?: boolean;
+    group?: string;
   }>()
 );
 

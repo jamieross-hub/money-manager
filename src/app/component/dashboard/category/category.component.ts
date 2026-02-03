@@ -13,6 +13,7 @@ import { Category, Budget } from 'src/app/util/models';
 import { CategoryBudgetService } from 'src/app/util/service/category-budget.service';
 import { CategoryBudgetDialogComponent } from './category-budget-dialog/category-budget-dialog.component';
 import { ParentCategorySelectorDialogComponent } from './parent-category-selector-dialog/parent-category-selector-dialog.component';
+import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
 import { Store } from '@ngrx/store';
 import { AppState } from '../../../store/app.state';
 import * as CategoriesActions from '../../../store/categories/categories.actions';
@@ -66,7 +67,9 @@ export class CategoryComponent implements OnInit, OnDestroy {
   public searchControl = new FormControl('');
   public searchText: string = '';
   public filterType: 'all' | 'expense' | 'income' = 'all';
+  public selectedGroup: string | null = null;
   public selectedCategoryId: string | null = null;
+  public availableGroups: string[] = [];
 
   // Summary Data
   public totalExpenseAmount: number = 0;
@@ -159,6 +162,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
         // 3. Alphabetical order by name
         return a.name.localeCompare(b.name);
       });
+      this.availableGroups = [...new Set(this.categories.map(c => c.group).filter(g => !!g))] as string[];
       this.calculateSummaryData();
     });
 
@@ -557,19 +561,37 @@ export class CategoryComponent implements OnInit, OnDestroy {
   public removeBudget(category: Category): void {
     if (!category.budget) return;
 
-    const updatedBudget: any = { ...category.budget, hasBudget: false, budgetAmount: 0 };
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Remove Budget',
+        message: `Are you sure you want to remove the budget for "${category.name}"?`,
+        confirmText: 'Remove',
+        cancelText: 'Cancel',
+        confirmColor: 'warn'
+      }
+    });
 
-    this.store.dispatch(CategoriesActions.updateCategory({
-      userId: this.userId,
-      categoryId: category.id!,
-      name: category.name,
-      categoryType: category.type,
-      icon: category.icon,
-      color: category.color,
-      budgetData: updatedBudget,
-      parentCategoryId: category.parentCategoryId,
-      isSubCategory: category.isSubCategory
-    }));
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
+      if (result) {
+        const updatedBudget: any = { ...category.budget, hasBudget: false, budgetAmount: 0 };
+
+        this.store.dispatch(CategoriesActions.updateCategory({
+          userId: this.userId,
+          categoryId: category.id!,
+          name: category.name,
+          categoryType: category.type,
+          icon: category.icon,
+          color: category.color,
+          budgetData: updatedBudget,
+          parentCategoryId: category.parentCategoryId,
+          isSubCategory: category.isSubCategory
+        }));
+
+        this.notificationService.success('Budget removed successfully');
+      }
+    });
+
   }
 
   private setupSearch(): void {
@@ -582,9 +604,17 @@ export class CategoryComponent implements OnInit, OnDestroy {
     });
   }
 
-  public setFilterType(type: 'all' | 'expense' | 'income'): void {
-    this.filterType = type;
+  public setFilterType(type: string): void {
+    if (type === 'all' || type === 'expense' || type === 'income') {
+      this.filterType = type as 'all' | 'expense' | 'income';
+      this.selectedGroup = null;
+    } else {
+      this.selectedGroup = type;
+      this.filterType = 'all'; // Reset type filter when a group is selected
+    }
   }
+
+
 
   get filteredCategories(): Category[] {
     if (!this.categories) return [];
@@ -592,17 +622,9 @@ export class CategoryComponent implements OnInit, OnDestroy {
     return this.categories.filter(category => {
       const matchesSearch = !this.searchText || category.name.toLowerCase().includes(this.searchText.toLowerCase());
       const matchesType = this.filterType === 'all' || category.type.toLowerCase() === this.filterType;
+      const matchesGroup = !this.selectedGroup || category.group === this.selectedGroup;
 
-      // Also check subcategories if you want search to include them or just parent categories matching?
-      // For now let's modify the view to handle subcategories correctly or filter them out here if needed.
-      // Assuming we want to show hierarchical structure, we might need a more complex filter.
-      // But for the flat list view requested in the redesign, maybe we flatten it or stick to parents?
-      // let's stick to existing logic where we show parents and then subcategories inside, 
-      // OR if the user asked for a flat list, we might need to adjust.
-      // The design shows a flat list but with Indentation maybe? No, the design shows just a list.
-      // Let's implement simple filtering first.
-
-      return matchesSearch && matchesType;
+      return matchesSearch && matchesType && matchesGroup;
     });
   }
 

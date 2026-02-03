@@ -103,7 +103,6 @@ export class AccountsComponent implements OnInit, OnDestroy {
     private readonly auth: Auth,
     private readonly router: Router,
     private readonly dialog: MatDialog,
-    private readonly breakpointObserver: BreakpointObserver,
     private readonly notificationService: NotificationService,
     private readonly store: Store<AppState>,
     public readonly dateService: DateService,

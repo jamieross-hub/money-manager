@@ -94,6 +94,21 @@
 					</div>
 				</div>
 
+				<!-- Group Field -->
+				<div class="form-field !mt-4">
+					<label class="field-label">
+						<mat-icon class="field-icon">folder</mat-icon>
+						Group (Optional)
+					</label>
+					<input type="text" placeholder="Select or enter a group" [matAutocomplete]="auto"
+						formControlName="group" class="form-input" />
+					<mat-autocomplete #auto="matAutocomplete">
+						@for (group of filteredGroups$ | async; track group) {
+						<mat-option [value]="group">{{group}}</mat-option>
+						}
+					</mat-autocomplete>
+				</div>
+
 				<!-- Bottom Spacing for Mobile -->
 				<div class="bottom-spacing"></div>
 			</form>

@@ -71,6 +71,7 @@ export class CategoryService {
                         parentCategoryId: data?.parentCategoryId || null,
                         isSubCategory: data?.isSubCategory || false,
                         subCategories: data?.subCategories || [],
+                        group: data?.group
                     };
                     categories.push(category);
                 });
@@ -83,7 +84,7 @@ export class CategoryService {
         });
     }
 
-    createCategory(userId: string, name: string, type: TransactionType, icon: string, color: string): Observable<string> {
+    createCategory(userId: string, name: string, type: TransactionType, icon: string, color: string, group?: string): Observable<string> {
         const categoryId = this.generateCategoryId();
         if (this.isGuest()) {
             const category: Category = {
@@ -92,6 +93,7 @@ export class CategoryService {
                 type,
                 icon,
                 color,
+                group,
                 createdAt: Date.now() as any
             };
             this.localStorageUtility.saveEntity('categories', category, 'id');
@@ -105,6 +107,7 @@ export class CategoryService {
                 type,
                 icon,
                 color,
+                group: group || null,
                 createdAt: Date.now()
             }).then(() => {
                 observer.next(categoryId);
@@ -117,7 +120,7 @@ export class CategoryService {
     }
 
     /** Update a category */
-    updateCategory(userId: string, categoryId: string, name: string, type: TransactionType, icon: string, color: string, budgetData?: any, parentCategoryId?: string | null, isSubCategory?: boolean): Observable<void> {
+    updateCategory(userId: string, categoryId: string, name: string, type: TransactionType, icon: string, color: string, budgetData?: any, parentCategoryId?: string | null, isSubCategory?: boolean, group?: string): Observable<void> {
         if (this.isGuest()) {
             const categories = this.localStorageUtility.getEntities<Category>('categories');
             const index = categories.findIndex(c => c.id === categoryId);
@@ -129,6 +132,7 @@ export class CategoryService {
                     type,
                     icon,
                     color,
+                    group: group !== undefined ? group : currentCategory.group,
                     budget: budgetData !== undefined ? budgetData : currentCategory.budget,
                     parentCategoryId: parentCategoryId !== undefined ? (parentCategoryId === null ? undefined : parentCategoryId) : currentCategory.parentCategoryId,
                     isSubCategory: isSubCategory !== undefined ? isSubCategory : currentCategory.isSubCategory
@@ -182,6 +186,10 @@ export class CategoryService {
                         icon,
                         color
                     };
+
+                    if (group !== undefined) {
+                        updateData.group = group;
+                    }
 
                     // Add budget data if provided
                     if (budgetData !== undefined) {

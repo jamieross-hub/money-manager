@@ -12,6 +12,7 @@ export interface Category {
   parentCategoryId?: string;
   isSubCategory?: boolean;
   subCategories?: Array<string>;
+  group?: string;
 }
 
 export interface Budget {

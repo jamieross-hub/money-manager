@@ -247,7 +247,7 @@ body {
     --surface-200: #{mat.get-theme-color(light.$light-theme, neutral, 95)};
     --surface-300: #{mat.get-theme-color(light.$light-theme, neutral, 90)};
     --surface-400: #{mat.get-theme-color(light.$light-theme, neutral, 80)};
-    --surface-500: #{mat.get-theme-color(light.$light-theme, neutral, 70)};
+    --surface-500: #{mat.get-theme-color(light.$light-theme, neutral, 92)};
   }
 
   &.dark-theme {
@@ -344,6 +344,7 @@ body {
     --surface-300: #{mat.get-theme-color(dark.$dark-theme, neutral, 12)};
     --surface-400: #{mat.get-theme-color(dark.$dark-theme, neutral, 17)};
     --surface-500: #{mat.get-theme-color(dark.$dark-theme, neutral, 20)};
+    --surface-600: #{mat.get-theme-color(dark.$dark-theme, neutral, 25)};
   }
 
   /* Prevent pull-to-refresh */

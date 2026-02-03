@@ -19,8 +19,7 @@
 				<p class="page-title dark:text-white">Categories</p>
 				<p class="page-description dark:text-slate-400">Manage your budget categories</p>
 			</div>
-			<button mat-flat-button color="primary" class="add-category-btn"
-				(click)="openAddMobileDialog()">
+			<button mat-flat-button color="primary" class="add-category-btn" (click)="openAddMobileDialog()">
 				<mat-icon>add</mat-icon>
 				Add Category
 			</button>
@@ -69,11 +68,14 @@
 				<input matInput type="text" [formControl]="searchControl">
 			</mat-form-field>
 
-			<div class="filter-pills">
+			<div class="filter-pills w-full lg:w-[40%] flex flex-row-reverse">
 				<mat-chip-listbox (change)="setFilterType($event.value)" [value]="filterType">
 					<mat-chip-option value="all">All</mat-chip-option>
 					<mat-chip-option value="expense">Expense</mat-chip-option>
 					<mat-chip-option value="income">Income</mat-chip-option>
+					@for (group of availableGroups; track group) {
+					<mat-chip-option [value]="group">{{ group }}</mat-chip-option>
+					}
 				</mat-chip-listbox>
 			</div>
 		</section>
@@ -133,6 +135,8 @@
 										(click)="openBudgetDialog(category)" *ngIf="category.type === 'expense'"
 										[matTooltip]="category.budget?.hasBudget ? 'Edit Budget' : 'Set Budget'">
 										<mat-icon>account_balance_wallet</mat-icon>
+										<span class="btn-label">{{ category.budget?.hasBudget ? 'Edit Budget' : 'Set
+											Budget' }}</span>
 									</button>
 
 									<!-- Remove Budget -->
@@ -140,33 +144,37 @@
 										(click)="removeBudget(category)" *ngIf="category.budget?.hasBudget"
 										matTooltip="Remove Budget">
 										<mat-icon>money_off</mat-icon>
+										<span class="btn-label">Remove Budget</span>
 									</button>
 
 									<!-- Select Parent Category -->
-									<button mat-icon-button class="expansion-action-btn tree-btn"
+									<!-- <button mat-icon-button class="expansion-action-btn tree-btn"
 										*ngIf="!category.isSubCategory && !category.subCategories?.length"
 										(click)="openParentCategorySelector(category)"
 										matTooltip="Select Parent Category">
 										<mat-icon>account_tree</mat-icon>
-									</button>
+										<span class="btn-label">Select Parent</span>
+									</button> -->
 
 									<!-- Remove from Parent -->
 									<button mat-icon-button class="expansion-action-btn tree-off-btn"
 										*ngIf="category.isSubCategory || category.parentCategoryId"
 										(click)="removeFromParentCategory(category)" matTooltip="Remove from Parent">
 										<mat-icon>account_tree_off</mat-icon>
-									</button>
-
-									<!-- Edit -->
-									<button mat-icon-button class="expansion-action-btn edit-btn"
-										(click)="openMobileDialog(category)" matTooltip="Edit category">
-										<mat-icon>edit</mat-icon>
+										<span class="btn-label">Unlink Parent</span>
 									</button>
 
 									<!-- Delete -->
 									<button mat-icon-button class="expansion-action-btn delete-btn"
 										(click)="deleteCategory(category)" matTooltip="Delete category">
 										<mat-icon>delete</mat-icon>
+										<span class="btn-label">Delete</span>
+									</button>
+									<!-- Edit -->
+									<button mat-icon-button class="expansion-action-btn edit-btn"
+										(click)="openMobileDialog(category)" matTooltip="Edit category">
+										<mat-icon>edit</mat-icon>
+										<span class="btn-label">Edit</span>
 									</button>
 								</div>
 							</div>
@@ -266,6 +274,8 @@
 											*ngIf="subCategory.type === 'expense'"
 											[matTooltip]="subCategory.budget?.hasBudget ? 'Edit Budget' : 'Set Budget'">
 											<mat-icon>account_balance_wallet</mat-icon>
+											<span class="btn-label">{{ subCategory.budget?.hasBudget ? 'Edit Budget' :
+												'Set Budget' }}</span>
 										</button>
 
 										<!-- Remove Budget -->
@@ -273,18 +283,21 @@
 											(click)="removeBudget(subCategory)" *ngIf="subCategory.budget?.hasBudget"
 											matTooltip="Remove Budget">
 											<mat-icon>money_off</mat-icon>
+											<span class="btn-label">Remove Budget</span>
 										</button>
 
 										<!-- Edit -->
 										<button mat-icon-button class="expansion-action-btn edit-btn"
 											(click)="openMobileDialog(subCategory)" matTooltip="Edit subcategory">
 											<mat-icon>edit</mat-icon>
+											<span class="btn-label">Edit</span>
 										</button>
 
 										<!-- Delete -->
 										<button mat-icon-button class="expansion-action-btn delete-btn"
 											(click)="deleteCategory(subCategory)" matTooltip="Delete subcategory">
 											<mat-icon>delete</mat-icon>
+											<span class="btn-label">Delete</span>
 										</button>
 									</div>
 								</div>

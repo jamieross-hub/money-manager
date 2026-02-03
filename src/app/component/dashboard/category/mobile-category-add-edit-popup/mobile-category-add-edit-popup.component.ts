@@ -21,7 +21,8 @@ import { createCategory, updateCategory } from 'src/app/store/categories/categor
 import { SsrService } from 'src/app/util/service/ssr.service';
 import { Category } from 'src/app/util/models';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 
 @Component({
   selector: 'app-mobile-category-add-edit-popup',
@@ -34,6 +35,8 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
   public userId: string = '';
   public allCategories: Category[] = [];
   destroy$: Subject<void>;
+  public filteredGroups$!: Observable<string[]>;
+  public existingGroups: string[] = [];
 
 
 
@@ -57,17 +60,25 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
       type: ['expense', Validators.required],
       icon: ['category', Validators.required],
       color: ['#46777f', Validators.required],
+      group: [''], // Add group control
     });
 
     //destroy subscription on component destroy
     this.destroy$ = new Subject<void>();
     this.store.select(selectAllCategories).pipe(takeUntil(this.destroy$)).subscribe((categories) => {
       this.allCategories = categories;
+      this.existingGroups = [...new Set(categories.map(c => c.group).filter(g => !!g))] as string[];
     });
   }
 
   ngOnInit(): void {
     this.userId = this.userService.getCurrentUserId() || '';
+
+    // Setup group autocomplete
+    this.filteredGroups$ = this.categoryForm.get('group')!.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filterGroups(value || ''))
+    );
     if (this.ssrService.isClientSide()) {
       // Handle browser back button
       window.addEventListener('popstate', (event) => {
@@ -83,6 +94,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
         type: this.dialogData.category.type,
         icon: this.dialogData.category.icon || 'category',
         color: this.dialogData.category.color || '#46777f',
+        group: this.dialogData.category.group || '',
       });
 
 
@@ -108,6 +120,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
               categoryType: formValue.type,
               icon: formValue.icon,
               color: formValue.color,
+              group: formValue.group?.trim() || '',
             })
           );
           this.notificationService.success('Category updated successfully');
@@ -120,6 +133,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
               categoryType: formValue.type,
               icon: formValue.icon,
               color: formValue.color,
+              group: formValue.group?.trim() || undefined,
             })
           );
           this.notificationService.success('Category added successfully');
@@ -198,6 +212,11 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
         this.hapticFeedback.lightVibration();
       }
     });
+  }
+
+  private _filterGroups(value: string): string[] {
+    const filterValue = value.toLowerCase();
+    return this.existingGroups.filter(group => group.toLowerCase().includes(filterValue));
   }
 
   isCategoryPresent(): boolean {
