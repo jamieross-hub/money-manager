@@ -1,4 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { AppState } from 'src/app/store/app.state';
 import { Store } from '@ngrx/store';
@@ -18,10 +20,12 @@ import { RecurringTransactionService } from 'src/app/util/service/recurring-tran
   styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent {
+  @ViewChild('mainContent') mainContent!: ElementRef<HTMLElement>;
   isMobile = false;
 
 
   constructor(
+    private router: Router,
     private breakpointObserver: BreakpointObserver,
     private store: Store<AppState>,
     private userService: UserService,
@@ -61,5 +65,14 @@ export class DashboardComponent {
     setTimeout(() => {
       this.recurringTransactionService.checkDueRecurringTransactions().subscribe();
     }, 2000);
+
+    // Scroll to top on navigation change
+    this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe(() => {
+        if (this.mainContent) {
+          this.mainContent.nativeElement.scrollTop = 0;
+        }
+      });
   }
 }

@@ -418,7 +418,7 @@ mat-card.error-message {
     }
 
     :host-context(.dark-theme) & {
-      background: var(--surface-100);
+      background: var(--surface-200);
       border: 1px solid var(--neutral-800);
       
       &:hover {
@@ -783,15 +783,11 @@ mat-card.empty-state-card {
     }
 
     &.overdue {
-        background-color: #fef2f2;
-        color: #ef4444;
-        border: 1px solid #fee2e2;
+        background-color: var(--error-50);
+        color: var(--error-600);
+        border: 1px solid var(--error-200);
 
-        :host-context(.dark-theme) & {
-            background-color: rgba(239, 68, 68, 0.1);
-            color: #f87171;
-            border-color: rgba(239, 68, 68, 0.2);
-        }
+  
     }
 
     &.due-soon {
