@@ -5,13 +5,11 @@
 <app-offline-indicator></app-offline-indicator>
 
 <!-- PWA Install Prompt -->
-<app-pwa-install-prompt
-  (installClicked)="onInstallClicked()"
-  (dismissClicked)="onDismissClicked()">
+<app-pwa-install-prompt (installClicked)="onInstallClicked()" (dismissClicked)="onDismissClicked()">
 </app-pwa-install-prompt>
 
 <!-- Main App Content -->
 <div>
-  <app-loader></app-loader>
+  <!-- <app-loader></app-loader> -->
   <router-outlet></router-outlet>
 </div>
