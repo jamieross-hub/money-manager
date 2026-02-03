@@ -82,6 +82,7 @@ import { ChatCategoryDropdownComponent } from './util/components/chat-category-d
 import { ContactFormComponent } from './component/landing/contact-form/contact-form.component';
 import { ChatComponent } from './component/dashboard/chat/chat.component';
 import { DataDeletionComponent } from './component/data-deletion/data-deletion.component';
+import { SyncToCloudComponent } from './component/sync-to-cloud/sync-to-cloud.component';
 
 // Card Components
 import { TopCategoriesCardComponent } from './util/components/cards/top-categories-card/top-categories-card.component';
@@ -180,7 +181,9 @@ import { UpcomingTransactionsCardComponent } from './util/components/cards/upcom
     ChatCategoryDropdownComponent,
     ChatComponent,
     ContactFormComponent,
+    ContactFormComponent,
     DataDeletionComponent,
+    SyncToCloudComponent
   ],
   imports: [
     BrowserModule,

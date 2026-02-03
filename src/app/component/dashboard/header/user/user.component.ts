@@ -59,12 +59,22 @@ export class UserComponent {
     });
   }
 
+  isGuest = false;
+
   ngOnInit() {
-    this.userService.userAuth$.pipe(take(1)).subscribe((user: any) => {
-      this.user = {
-        displayName: user?.displayName,
-        photoURL: user?.photoURL,
-      };
+    this.userService.userAuth$.subscribe((user: any) => {
+      this.isGuest = this.userService.isGuestUser();
+      if (this.isGuest) {
+        this.user = {
+          displayName: 'Guest User',
+          photoURL: 'assets/images/profile.png'
+        };
+      } else {
+        this.user = {
+          displayName: user?.displayName,
+          photoURL: user?.photoURL,
+        };
+      }
     });
 
     // Subscribe to theme changes
@@ -234,6 +244,11 @@ export class UserComponent {
 
   shareApp() {
     this.splitwiseService.sharePWA();
+    this.close();
+  }
+
+  navigateToSignUp() {
+    this.router.navigate(['/dashboard/sync-to-cloud']);
     this.close();
   }
 }

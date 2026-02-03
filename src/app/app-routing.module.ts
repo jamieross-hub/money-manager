@@ -29,6 +29,7 @@ import { TermsConditionsComponent } from './component/terms-conditions/terms-con
 import { OfflinePageComponent } from './util/components/offline-page/offline-page.component';
 import { DataDeletionComponent } from './component/data-deletion/data-deletion.component';
 import { ContactFormComponent } from './component/landing/contact-form/contact-form.component';
+import { SyncToCloudComponent } from './component/sync-to-cloud/sync-to-cloud.component';
 
 export const routes: Routes = [
   { path: 'shell', component: AppShellComponent },
@@ -53,6 +54,7 @@ export const routes: Routes = [
 
     children: [
       { path: '', component: HomeComponent },
+      { path: 'sync-to-cloud', component: SyncToCloudComponent },
       { path: 'home', component: HomeComponent },
       {
         path: 'accounts',

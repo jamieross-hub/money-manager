@@ -103,7 +103,7 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         isPremium: true
       },
       {
-        label: 'Google Sheets',
+        label: 'Import by Google Sheets',
         route: '/dashboard/google-sheets',
         icon: 'table_chart',
         order: 5,

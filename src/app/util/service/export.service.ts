@@ -31,11 +31,18 @@ export interface ExportResult {
 /**
  * Export service providing data export functionality in multiple formats
  */
+import { Firestore, writeBatch, doc, collection } from '@angular/fire/firestore';
+
+/**
+ * Export service providing data export functionality in multiple formats
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class ExportService implements IExportService {
-  
+
+  constructor(private firestore: Firestore) { }
+
   /**
    * Export data to CSV format
    */
@@ -168,6 +175,25 @@ export class ExportService implements IExportService {
   }
 
   /**
+   * Export full backup (transactions, accounts, categories)
+   */
+  exportFullBackup(data: { transactions: any[], accounts: any[], categories: any[] }, filename?: string): void {
+    try {
+      const backupData = {
+        timestamp: new Date().toISOString(),
+        version: 1,
+        ...data
+      };
+
+      const name = filename || `money_manager_backup_${new Date().toISOString().split('T')[0]}`;
+      this.exportToJSON(backupData, name);
+    } catch (error) {
+      console.error('Full backup export failed:', error);
+      throw new Error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
+    }
+  }
+
+  /**
    * Export accounts data
    */
   exportAccounts(accounts: any[], options: ExportOptions): Observable<ExportResult> {
@@ -254,16 +280,16 @@ export class ExportService implements IExportService {
     let pdfContent = '%PDF-1.4\n';
     pdfContent += '1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n';
     pdfContent += '2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n';
-    
+
     // Add content
     let content = '';
     for (const row of data) {
       content += Object.values(row).join(' | ') + '\n';
     }
-    
+
     pdfContent += `3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/Contents 4 0 R\n>>\nendobj\n`;
     pdfContent += `4 0 obj\n<<\n/Length ${content.length}\n>>\nstream\n${content}\nendstream\nendobj\n`;
-    
+
     return pdfContent;
   }
 
@@ -276,7 +302,7 @@ export class ExportService implements IExportService {
     let excelContent = '<?xml version="1.0" encoding="UTF-8"?>\n';
     excelContent += '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">\n';
     excelContent += '<sheets>\n<sheet name="Data" sheetId="1" r:id="rId1"/>\n</sheets>\n</workbook>';
-    
+
     return excelContent;
   }
 
@@ -318,14 +344,14 @@ export class ExportService implements IExportService {
   private downloadFile(content: string | Blob, filename: string, mimeType: string): void {
     const blob = typeof content === 'string' ? new Blob([content], { type: mimeType }) : content;
     const url = URL.createObjectURL(blob);
-    
+
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     URL.revokeObjectURL(url);
   }
 
@@ -355,7 +381,7 @@ export class ExportService implements IExportService {
       if (account.type === 'loan' && account.loanDetails) {
         balance = -(account.loanDetails.remainingBalance || 0);
       }
-      
+
       return {
         Name: account.name,
         Type: account.type,
@@ -373,17 +399,17 @@ export class ExportService implements IExportService {
    */
   private formatDate(date: any, format?: string): string {
     if (!date) return '';
-    
+
     const dateObj = date instanceof Date ? date : new Date(date);
     if (isNaN(dateObj.getTime())) return '';
-    
+
     const locale = 'en-US';
     const options: Intl.DateTimeFormatOptions = {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
     };
-    
+
     return new Intl.DateTimeFormat(locale, options).format(dateObj);
   }
 
@@ -392,7 +418,7 @@ export class ExportService implements IExportService {
    */
   private formatCurrency(amount: number, format?: string): string {
     if (typeof amount !== 'number' || isNaN(amount)) return '0.00';
-    
+
     const currency = format || CurrencyCode.USD;
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -430,6 +456,57 @@ export class ExportService implements IExportService {
    */
   validateExportData(data: any[]): boolean {
     return Array.isArray(data) && data.length > 0;
+  }
+
+  /**
+   * Import full backup data
+   */
+  async importFullBackup(data: any, userId: string): Promise<void> {
+    if (!data || !userId) throw new Error('Invalid data or user ID');
+
+    const batch = writeBatch(this.firestore);
+
+    try {
+      // 1. Import Categories
+      if (data.categories && Array.isArray(data.categories)) {
+        for (const cat of data.categories) {
+          // We use set() with merge: true or just overwrite to ensure ID is preserved
+          // Assuming 'id' field is present in category object.
+          // If export includes 'id', we use it. If not, we can't link, but Guest Mode IDs are usually UUIDs generated by client or simple strings.
+          // We MUST assume export data has 'id'.
+          if (cat.id) {
+            const ref = doc(this.firestore, `users/${userId}/categories/${cat.id}`);
+            batch.set(ref, cat);
+          }
+        }
+      }
+
+      // 2. Import Accounts
+      if (data.accounts && Array.isArray(data.accounts)) {
+        for (const acc of data.accounts) {
+          if (acc.accountId) { // Accounts usually use 'accountId' in this app based on previous files
+            const ref = doc(this.firestore, `users/${userId}/accounts/${acc.accountId}`);
+            batch.set(ref, acc);
+          }
+        }
+      }
+
+      // 3. Import Transactions
+      if (data.transactions && Array.isArray(data.transactions)) {
+        for (const tx of data.transactions) {
+          if (tx.id) {
+            const ref = doc(this.firestore, `users/${userId}/transactions/${tx.id}`);
+            batch.set(ref, tx);
+          }
+        }
+      }
+
+      await batch.commit();
+
+    } catch (error) {
+      console.error('Import failed:', error);
+      throw error;
+    }
   }
 
   /**

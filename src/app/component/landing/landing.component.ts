@@ -167,6 +167,18 @@ export class LandingComponent implements OnInit {
     this.router.navigate(['/sign-in']);
   }
 
+  async startGuestMode(): Promise<void> {
+    try {
+      this.notificationService.info('Starting guest session...');
+      await this.userService.enableGuestMode();
+      this.router.navigate(['/dashboard']);
+      this.notificationService.success('Welcome! You are now in offline guest mode.');
+    } catch (error) {
+      console.error('Error starting guest mode:', error);
+      this.notificationService.error('Failed to start guest mode');
+    }
+  }
+
   scrollToFeatures(): void {
     const element = document.getElementById('features');
     if (element) {

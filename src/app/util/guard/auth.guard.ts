@@ -219,12 +219,10 @@ export class AuthGuard implements CanActivate, CanActivateChild {
   }
 
   private async handleUnauthenticatedUser(state: RouterStateSnapshot): Promise<void> {
-    this.router.navigate(['/sign-in'], {
-      queryParams: {
-        session: 'expired',
-        redirect: state.url
-      }
-    });
+    console.log('[AuthGuard] Auto-enabling guest mode for unauthenticated access');
+    await this.userService.enableGuestMode();
+    // Retry the navigation now that we are "logged in" as guest
+    this.router.navigateByUrl(state.url);
   }
 
   private async handleSessionExpired(firebaseUser: User, state: RouterStateSnapshot): Promise<void> {

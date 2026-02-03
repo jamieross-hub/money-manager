@@ -122,15 +122,29 @@
 		<div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
 
 		<!-- Sign Out -->
+		<!-- Sign Out -->
 		<div class="py-1">
+			<button *ngIf="isGuest" (click)="navigateToSignUp()"
+				class="flex items-center w-full px-4 py-2 text-sm text-green-600 capitalize transition-colors duration-200 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 focus:outline-none focus:bg-green-50 dark:focus:bg-green-900/20">
+				<svg class="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+						d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+						stroke="currentColor" />
+				</svg>
+				<span>Sync to Cloud</span>
+			</button>
+
 			<button (click)="signOut($event)"
 				class="flex items-center w-full px-4 py-2 text-sm text-red-600 capitalize transition-colors duration-200 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:bg-red-50 dark:focus:bg-red-900/20">
 				<svg class="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<path
+					<path *ngIf="!isGuest"
 						d="M19 21H10C8.89543 21 8 20.1046 8 19V15H10V19H19V5H10V9H8V5C8 3.89543 8.89543 3 10 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21ZM12 16V13H3V11H12V8L17 12L12 16Z"
 						fill="currentColor"></path>
+					<path *ngIf="isGuest" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+						d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+						stroke="currentColor" />
 				</svg>
-				<span>Sign Out</span>
+				<span>{{ isGuest ? 'Exit Guest Mode' : 'Sign Out' }}</span>
 			</button>
 		</div>
 	</div>

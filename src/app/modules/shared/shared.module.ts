@@ -32,6 +32,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSliderModule } from '@angular/material/slider';
+import { MatStepperModule } from '@angular/material/stepper';
 
 // Utility Components
 import { ConfirmDialogComponent } from '../../util/components/confirm-dialog/confirm-dialog.component';
@@ -101,6 +102,7 @@ import { LoanSummaryCardComponent } from '../../util/components/cards/loan-summa
     MatChipsModule,
     MatSnackBarModule,
     MatSliderModule,
+    MatStepperModule,
   ],
   exports: [
     CommonModule,
@@ -137,6 +139,7 @@ import { LoanSummaryCardComponent } from '../../util/components/cards/loan-summa
     MatChipsModule,
     MatSnackBarModule,
     MatSliderModule,
+    MatStepperModule,
 
     // Components
     ConfirmDialogComponent,
