@@ -485,8 +485,6 @@
 
   // &.budget-btn {
   //   color: var(--primary-600) !important;
-  //   // border-color: var(--primary-200) !important;
-  //   &:hover { background: var(--primary-alpha-10) !important; }
   // }
 
   // &.remove-budget-btn {
@@ -506,18 +504,12 @@
   // }
 
   &.edit-btn {
-    color: var(--neutral-500) !important;
-    &:hover { background: var(--neutral-100) !important; }
+    color: var(--primary-50) !important;
   }
 
-  // &.delete-btn {
-  //   color: var(--error-600) !important;
-  //   border-color: var(--error-200) !important;
-  //   &:hover { 
-  //     background: var(--error-alpha-10) !important;
-  //     border-color: var(--error-500) !important;
-  //   }
-  // }
+  &.delete-btn {
+    color: var(--error-800) !important;
+  }
 }
 
 .category-details-expanded {

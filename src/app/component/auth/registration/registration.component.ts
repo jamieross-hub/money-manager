@@ -4,13 +4,13 @@ import { Router } from "@angular/router";
 import { NotificationService } from "src/app/util/service/notification.service";
 import { ValidationService } from "src/app/util/service/validation.service";
 import { UserService } from "src/app/util/service/db/user.service";
-import { User, CURRENCIES, DEFAULT_CURRENCY, Category, defaultCategoriesForNewUser } from "src/app/util/models";
+import { User, CURRENCIES, DEFAULT_CURRENCY, Category } from "src/app/util/models";
 import { AppState } from "src/app/store/app.state";
 import { Store } from "@ngrx/store";
 import { createAccount } from "src/app/store/accounts/accounts.actions";
 import { createCategory } from "src/app/store/categories/categories.actions";
 import { AccountType } from "src/app/util/config/enums";
-import { APP_CONFIG } from "src/app/util/config/config";
+import { APP_CONFIG, defaultCategoriesForNewUser } from "src/app/util/config/config";
 
 interface BankAccount {
 	id?: string;
@@ -24,7 +24,7 @@ interface BankAccount {
 
 
 export const defaultBankAccounts: BankAccount[] = [
-	{ name: "Savings Account", type: "savings", balance: 0, currency: DEFAULT_CURRENCY ,institution:'Bank'},
+	{ name: "Savings Account", type: "savings", balance: 0, currency: DEFAULT_CURRENCY, institution: 'Bank' },
 	//add accountId, userId, createdAt 
 ];
 
@@ -41,10 +41,10 @@ export class RegistrationComponent implements OnInit {
 	currentUser: any;
 
 	// Predefined categories for new users
-	
+
 
 	// Predefined bank account types
-	
+
 
 	currencies = CURRENCIES;
 

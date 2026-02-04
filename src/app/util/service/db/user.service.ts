@@ -41,7 +41,6 @@ import { NotificationService } from '../notification.service';
 import {
   User,
   FirebaseAuthError,
-  defaultCategoriesForNewUser,
 } from '../../models';
 import { Timestamp } from '@angular/fire/firestore';
 import { AppState } from 'src/app/store/app.state';
@@ -49,7 +48,7 @@ import { Store } from '@ngrx/store';
 import { createAccount } from 'src/app/store/accounts/accounts.actions';
 import { createCategory } from 'src/app/store/categories/categories.actions';
 import { AccountType } from '../../config/enums';
-import { APP_CONFIG } from '../../config/config';
+import { APP_CONFIG, defaultCategoriesForNewUser } from '../../config/config';
 import * as CategoriesActions from 'src/app/store/categories/categories.actions';
 import * as AccountsActions from 'src/app/store/accounts/accounts.actions';
 

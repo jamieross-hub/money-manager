@@ -130,6 +130,12 @@
 									Stats & Controls
 								</div> -->
 								<div class="action-buttons-compact">
+									<!-- Edit -->
+									<button mat-icon-button class="expansion-action-btn edit-btn"
+										(click)="openMobileDialog(category)" matTooltip="Edit category">
+										<mat-icon>edit</mat-icon>
+										<span class="btn-label">Edit</span>
+									</button>
 									<!-- Set/Edit Budget -->
 									<button mat-icon-button class="expansion-action-btn budget-btn"
 										(click)="openBudgetDialog(category)" *ngIf="category.type === 'expense'"
@@ -157,12 +163,7 @@
 									</button> -->
 
 									<!-- Remove from Parent -->
-									<!-- Edit -->
-									<button mat-icon-button class="expansion-action-btn edit-btn"
-										(click)="openMobileDialog(category)" matTooltip="Edit category">
-										<mat-icon>edit</mat-icon>
-										<span class="btn-label">Edit</span>
-									</button>
+
 									<button mat-icon-button class="expansion-action-btn tree-off-btn"
 										*ngIf="category.isSubCategory || category.parentCategoryId"
 										(click)="removeFromParentCategory(category)" matTooltip="Remove from Parent">

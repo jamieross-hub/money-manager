@@ -1,4 +1,5 @@
-import { CurrencyCode, LanguageCode, ThemeType, DateRangePreset } from './enums';
+import { Category } from '../models';
+import { CurrencyCode, LanguageCode, ThemeType, DateRangePreset, TransactionType } from './enums';
 
 /**
  * Application configuration constants
@@ -9,7 +10,7 @@ export const APP_CONFIG = {
   APP_VERSION: '1.0.0',
   APP_DESCRIPTION: 'Personal finance management application',
   install_prompt_dismissed_days: 7,
-  
+
   // Firebase configuration
   FIREBASE: {
     COLLECTIONS: {
@@ -114,7 +115,7 @@ export const APP_CONFIG = {
       [LanguageCode.DE]: 'Deutsch',
       [LanguageCode.HI]: 'हिंदी',
       [LanguageCode.ZH]: '中文',
-     
+
     }
   },
 
@@ -325,7 +326,7 @@ export const SUCCESS_MESSAGES = {
     DELETED: 'Transaction deleted successfully',
     BULK_IMPORTED: 'Transactions imported successfully'
   }
-} as const; 
+} as const;
 
 
 
@@ -535,36 +536,143 @@ export const CATEGORY_ICONS: string[] = [
 
 // Available colors for category selection
 export const CATEGORY_COLORS: { label: string; value: string }[] = [
-  { label: 'Teal Gray', value: '#46777f' },
-  { label: 'Green', value: '#4CAF50' },
-  { label: 'Orange', value: '#FF9800' },
-  { label: 'Red', value: '#F44336' },
-  { label: 'Purple', value: '#9C27B0' },
-  { label: 'Cyan', value: '#00BCD4' },
-  { label: 'Deep Orange', value: '#FF5722' },
-  { label: 'Brown', value: '#795548' },
-  { label: 'Blue Gray', value: '#607D8B' },
-  { label: 'Pink', value: '#E91E63' },
-  { label: 'Indigo', value: '#3F51B5' },
-  { label: 'Teal', value: '#009688' },
-  { label: 'Amber', value: '#FFC107' },
-  { label: 'Light Green', value: '#8BC34A' },
-  { label: 'Yellow', value: '#FFEB3B' },
-  { label: 'Lime', value: '#CDDC39' },
-  { label: 'Hot Pink', value: '#FF4081' },
-  { label: 'Deep Purple', value: '#7C4DFF' },
-  { label: 'Soft Indigo', value: '#536DFE' },
-  { label: 'Bright Blue', value: '#448AFF' },
-  { label: 'Sky Blue', value: '#40C4FF' },
-  { label: 'Aqua', value: '#18FFFF' },
-  { label: 'Mint', value: '#64FFDA' },
-  { label: 'Light Mint', value: '#69F0AE' },
-  { label: 'Neon Green', value: '#B2FF59' },
-  { label: 'Lime Yellow', value: '#EEFF41' },
-  { label: 'Bright Yellow', value: '#FFFF00' },
-  { label: 'Golden Amber', value: '#FFD740' },
-  { label: 'Soft Orange', value: '#FFAB40' },
-  { label: 'Coral', value: '#FF6E40' },
-  { label: 'Bright Red', value: '#FF3D00' },
-  { label: 'Crimson', value: '#D50000' },
+  { label: 'Emerald', value: '#10B981' },
+  { label: 'Teal', value: '#14B8A6' },
+  { label: 'Cyan', value: '#06B6D4' },
+  { label: 'Sky', value: '#0EA5E9' },
+  { label: 'Blue', value: '#3B82F6' },
+  { label: 'Indigo', value: '#6366F1' },
+  { label: 'Violet', value: '#8B5CF6' },
+  { label: 'Purple', value: '#A855F7' },
+  { label: 'Fuchsia', value: '#D946EF' },
+  { label: 'Pink', value: '#EC4899' },
+  { label: 'Rose', value: '#F43F5E' },
+  { label: 'Red', value: '#EF4444' },
+  { label: 'Orange', value: '#F97316' },
+  { label: 'Amber', value: '#F59E0B' },
+  { label: 'Yellow', value: '#EAB308' },
+  { label: 'Lime', value: '#84CC16' },
+  { label: 'Green', value: '#22C55E' },
+  { label: 'Slate', value: '#64748B' },
+  { label: 'Gold', value: '#FFD700' },
+  { label: 'Platinum', value: '#E5E4E2' },
+];
+
+
+export const defaultCategoriesForNewUser: Category[] = [
+  // Income Categories
+  {
+    name: 'Salary',
+    type: TransactionType.INCOME,
+    color: '#52b788', // Emerald 500
+    icon: 'work',
+    createdAt: Date.now(),
+  },
+  {
+    name: 'Freelance',
+    type: TransactionType.INCOME,
+    color: '#14B8A6', // Teal 500
+    icon: 'computer',
+    createdAt: Date.now(),
+  },
+  {
+    name: 'Investments',
+    type: TransactionType.INCOME,
+    color: '#FFD700', // Gold
+    icon: 'trending_up',
+    createdAt: Date.now(),
+  },
+  {
+    name: 'Gifts & Rewards',
+    type: TransactionType.INCOME,
+    color: '#D946EF', // Fuchsia 500
+    icon: 'card_giftcard',
+    createdAt: Date.now(),
+  },
+  {
+    name: 'Other Income',
+    type: TransactionType.INCOME,
+    color: '#64748B', // Slate 500
+    icon: 'attach_money',
+    createdAt: Date.now(),
+  },
+
+  // Expense Categories
+  {
+    name: 'Food & Dining',
+    type: TransactionType.EXPENSE,
+    color: '#F59E0B', // Amber 500
+    icon: 'restaurant',
+    createdAt: Date.now(),
+  },
+  {
+    name: 'Transport & Fuel',
+    type: TransactionType.EXPENSE,
+    color: '#F97316', // Orange 500
+    icon: 'directions_car',
+    createdAt: Date.now(),
+  },
+  {
+    name: 'Shopping',
+    type: TransactionType.EXPENSE,
+    color: '#EC4899', // Pink 500
+    icon: 'shopping_cart',
+    createdAt: Date.now(),
+  },
+  {
+    name: 'Bills & Utilities',
+    type: TransactionType.EXPENSE,
+    color: '#52b788', // Red 500
+    icon: 'receipt_long',
+    createdAt: Date.now(),
+  },
+  {
+    name: 'Healthcare',
+    type: TransactionType.EXPENSE,
+    color: '#0EA5E9', // Sky 500
+    icon: 'local_hospital',
+    createdAt: Date.now(),
+  },
+  {
+    name: 'Entertainment',
+    type: TransactionType.EXPENSE,
+    color: '#8B5CF6', // Violet 500
+    icon: 'sports_esports',
+    createdAt: Date.now(),
+  },
+  {
+    name: 'Education',
+    type: TransactionType.EXPENSE,
+    color: '#ec4899', // Indigo 500
+    icon: 'school',
+    createdAt: Date.now(),
+  },
+  {
+    name: 'Travel',
+    type: TransactionType.EXPENSE,
+    color: '#3B82F6', // Blue 500
+    icon: 'flight',
+    createdAt: Date.now(),
+  },
+  {
+    name: 'Family & Kids',
+    type: TransactionType.EXPENSE,
+    color: '#b3eb5e', // Lime 500
+    icon: 'family_restroom',
+    createdAt: Date.now(),
+  },
+  {
+    name: 'Charity',
+    type: TransactionType.EXPENSE,
+    color: '#52b788', // Yellow 500
+    icon: 'volunteer_activism',
+    createdAt: Date.now(),
+  },
+  {
+    name: 'Other Expenses',
+    type: TransactionType.EXPENSE,
+    color: '#94A3B8', // Slate 400
+    icon: 'category',
+    createdAt: Date.now(),
+  },
 ];
