@@ -157,6 +157,12 @@
 									</button> -->
 
 									<!-- Remove from Parent -->
+									<!-- Edit -->
+									<button mat-icon-button class="expansion-action-btn edit-btn"
+										(click)="openMobileDialog(category)" matTooltip="Edit category">
+										<mat-icon>edit</mat-icon>
+										<span class="btn-label">Edit</span>
+									</button>
 									<button mat-icon-button class="expansion-action-btn tree-off-btn"
 										*ngIf="category.isSubCategory || category.parentCategoryId"
 										(click)="removeFromParentCategory(category)" matTooltip="Remove from Parent">
@@ -170,12 +176,7 @@
 										<mat-icon>delete</mat-icon>
 										<span class="btn-label">Delete</span>
 									</button>
-									<!-- Edit -->
-									<button mat-icon-button class="expansion-action-btn edit-btn"
-										(click)="openMobileDialog(category)" matTooltip="Edit category">
-										<mat-icon>edit</mat-icon>
-										<span class="btn-label">Edit</span>
-									</button>
+
 								</div>
 							</div>
 

@@ -405,7 +405,7 @@
 .category-actions-expansion {
   background: var(--surface-100);
   animation: slideDown 0.2s ease;
-  box-shadow: inset 0px 7px 19px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: inset -12px -3px 19px 2px rgba(0, 0, 0, 0.1);
 
   &.subcategory-actions {
     margin-left: 48px;
@@ -506,7 +506,7 @@
   // }
 
   &.edit-btn {
-    color: var(--primary-600) !important;
+    color: var(--neutral-500) !important;
     &:hover { background: var(--neutral-100) !important; }
   }
 
