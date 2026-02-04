@@ -3,6 +3,7 @@ import { Subscription } from 'rxjs';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { CommonSyncService, NetworkStatus } from '../../service/common-sync.service';
 import { NotificationService } from '../../service/notification.service';
+import { UserService } from '../../service/db/user.service';
 import { APP_CONFIG } from '../../config/config';
 
 @Component({
@@ -31,23 +32,41 @@ import { APP_CONFIG } from '../../config/config';
 export class OfflineIndicatorComponent implements OnInit, OnDestroy {
   isOnline = true;
   showOnlineBanner = false;
+  isGuest = false;
   private subscriptions: Subscription[] = [];
 
-  constructor(private commonSyncService: CommonSyncService, private notificationService: NotificationService) {}
+  constructor(
+    private commonSyncService: CommonSyncService,
+    private notificationService: NotificationService,
+    private userService: UserService
+  ) { }
 
   ngOnInit(): void {
+    // Check initial guest state from local storage to avoid flash
+    const isGuestStored = localStorage.getItem('guest-mode') === 'true';
+    if (isGuestStored) {
+      this.isGuest = true;
+    }
+
+    // Subscribe to user changes to check for guest mode
+    this.subscriptions.push(
+      this.userService.userAuth$.subscribe(user => {
+        this.isGuest = user?.uid === 'offline-guest';
+      })
+    );
+
     // Subscribe to network status changes
     this.subscriptions.push(
       this.commonSyncService.networkStatus$.subscribe(status => {
         const wasOnline = this.isOnline;
         this.isOnline = status.online;
 
-        if(!this.isOnline){
+        if (!this.isOnline && !this.isGuest) {
           console.log('You are offline. Please check your internet connection.');
         }
-        
+
         // Show online banner when connection is restored
-        if (!wasOnline && this.isOnline) {
+        if (!wasOnline && this.isOnline && !this.isGuest) {
           this.showOnlineBanner = true;
           console.log('Connection restored. Syncing data...');
           setTimeout(() => {
@@ -56,7 +75,6 @@ export class OfflineIndicatorComponent implements OnInit, OnDestroy {
         }
       })
     );
-
   }
 
   ngOnDestroy(): void {
@@ -71,5 +89,5 @@ export class OfflineIndicatorComponent implements OnInit, OnDestroy {
     this.showOnlineBanner = false;
   }
 
-  
+
 } 

@@ -180,10 +180,10 @@
 					{{ allTransactions.length === 0 ? 'Start by adding your first transaction' : 'No transactions match
 					your current filters. Try adjusting your search or filters.' }}
 				</p>
-				<button *ngIf="allTransactions.length === 0" mat-raised-button color="primary" class="add-first-btn"
+				<button *ngIf="allTransactions.length === 0" mat-flat-button color="primary" class="add-first-btn"
 					(click)="onAddTransaction()">
 					<mat-icon>add</mat-icon>
-					<span class="text-base">Add First Transaction</span>
+					<span>Add First Transaction</span>
 				</button>
 				<button *ngIf="allTransactions.length > 0 && hasActiveFilters()" mat-stroked-button
 					class="clear-filters-btn-large" (click)="clearAllFilters()">
