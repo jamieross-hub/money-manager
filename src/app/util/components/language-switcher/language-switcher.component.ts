@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { TranslationService, Language } from '../../service/translation.service';
+import { LanguageService } from '../../service/language.service';
 
 @Component({
   selector: 'app-language-switcher',
@@ -11,12 +12,22 @@ export class LanguageSwitcherComponent implements OnInit {
   availableLanguages: { code: Language; name: string; nativeName: string }[] = [];
   isDropdownOpen = false;
 
-  constructor(private translationService: TranslationService) { }
+  constructor(
+    private translationService: TranslationService,
+    private languageService: LanguageService
+  ) { }
 
   ngOnInit(): void {
     this.translationService.getCurrentLanguage().subscribe(lang => {
       this.currentLanguage = lang;
     });
+
+    // Populate available languages from LanguageService
+    this.availableLanguages = this.languageService.getAvailableLanguages().map((lang: any) => ({
+      code: lang.code,
+      name: lang.name,
+      nativeName: lang.code === 'hi' ? 'हिंदी' : lang.name
+    }));
   }
 
   switchLanguage(language: Language): void {
