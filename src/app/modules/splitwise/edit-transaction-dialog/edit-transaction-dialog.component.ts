@@ -2,6 +2,7 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { SplitTransaction, TransactionSplit } from '../../../util/models/splitwise.model';
+import { CurrencyService } from 'src/app/util/service/currency.service';
 
 export interface EditTransactionDialogData {
   transaction: SplitTransaction;
@@ -25,7 +26,8 @@ export class EditTransactionDialogComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<EditTransactionDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: EditTransactionDialogData
+    @Inject(MAT_DIALOG_DATA) public data: EditTransactionDialogData,
+    private currencyService: CurrencyService
   ) {
     this.transaction = data.transaction;
     this.groupMembers = data.groupMembers;
@@ -116,7 +118,7 @@ export class EditTransactionDialogComponent implements OnInit {
 
   addMemberSplit(member: any): void {
     // Check if member is already added
-    const existingMember = this.splitsArray.controls.find(control => 
+    const existingMember = this.splitsArray.controls.find(control =>
       control.get('userId')?.value === member.userId
     );
 
@@ -155,7 +157,7 @@ export class EditTransactionDialogComponent implements OnInit {
   isFormValid(): boolean {
     const totalPercentage = this.getTotalPercentage();
     const formValid = this.editForm.valid;
-    
+
     // Only require percentage to equal 100%, allow unequal amounts
     return formValid && Math.abs(totalPercentage - 100) < 0.01;
   }
@@ -184,10 +186,7 @@ export class EditTransactionDialogComponent implements OnInit {
   }
 
   formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: this.transaction.currency || 'USD'
-    }).format(amount);
+    return this.currencyService.formatAmount(amount);
   }
 
   setSplitMode(mode: 'percentage' | 'amount'): void {

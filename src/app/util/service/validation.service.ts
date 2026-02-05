@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { IValidationService } from './interfaces';
 import { APP_CONFIG, ERROR_MESSAGES } from '../config/config';
 import { Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { CurrencyService } from './currency.service';
 
 /**
  * Validation result interface
@@ -140,7 +141,9 @@ export const VALIDATION_CONSTANTS = {
   providedIn: 'root'
 })
 export class ValidationService implements IValidationService {
-  
+
+  constructor(private currencyService: CurrencyService) { }
+
   /**
    * Get validation constants
    */
@@ -321,10 +324,10 @@ export class ValidationService implements IValidationService {
       return 'Balance is required';
     }
     if (control?.hasError('min')) {
-      return `Balance must be at least ${VALIDATION_CONSTANTS.ACCOUNT.BALANCE.MIN.toLocaleString()}`;
+      return `Balance must be at least ${this.currencyService.formatAmount(VALIDATION_CONSTANTS.ACCOUNT.BALANCE.MIN)}`;
     }
     if (control?.hasError('max')) {
-      return `Balance must be less than ${VALIDATION_CONSTANTS.ACCOUNT.BALANCE.MAX.toLocaleString()}`;
+      return `Balance must be less than ${this.currencyService.formatAmount(VALIDATION_CONSTANTS.ACCOUNT.BALANCE.MAX)}`;
     }
     return '';
   }
@@ -334,7 +337,7 @@ export class ValidationService implements IValidationService {
       return 'Loan amount must be positive';
     }
     if (control?.hasError('max')) {
-      return `Loan amount must be less than ${VALIDATION_CONSTANTS.ACCOUNT.LOAN.AMOUNT.MAX.toLocaleString()}`;
+      return `Loan amount must be less than ${this.currencyService.formatAmount(VALIDATION_CONSTANTS.ACCOUNT.LOAN.AMOUNT.MAX)}`;
     }
     return '';
   }
@@ -478,7 +481,7 @@ export class ValidationService implements IValidationService {
    */
   validateEmail(email: string): boolean {
     if (!email) return false;
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email.trim());
   }
@@ -558,10 +561,10 @@ export class ValidationService implements IValidationService {
     if (typeof amount !== 'number' || isNaN(amount)) {
       return false;
     }
-    
-    const isValid = amount >= APP_CONFIG.VALIDATION.MIN_AMOUNT && 
-           amount <= APP_CONFIG.VALIDATION.MAX_AMOUNT;
-    
+
+    const isValid = amount >= APP_CONFIG.VALIDATION.MIN_AMOUNT &&
+      amount <= APP_CONFIG.VALIDATION.MAX_AMOUNT;
+
     console.log('Amount validation result:', isValid);
     return isValid;
   }
@@ -573,7 +576,7 @@ export class ValidationService implements IValidationService {
     if (!date || !(date instanceof Date)) {
       return false;
     }
-    
+
     return !isNaN(date.getTime());
   }
 
@@ -584,15 +587,15 @@ export class ValidationService implements IValidationService {
     if (value === null || value === undefined) {
       return false;
     }
-    
+
     if (typeof value === 'string') {
       return value.trim().length > 0;
     }
-    
+
     if (Array.isArray(value)) {
       return value.length > 0;
     }
-    
+
     return true;
   }
 
@@ -603,7 +606,7 @@ export class ValidationService implements IValidationService {
     if (!value || typeof value !== 'string') {
       return false;
     }
-    
+
     const length = value.trim().length;
     return length >= min && length <= max;
   }
@@ -656,7 +659,7 @@ export class ValidationService implements IValidationService {
 
     // Remove all non-digit characters for validation
     const digitsOnly = phone.replace(/\D/g, '');
-    
+
     if (digitsOnly.length < 10) {
       errors.push('Phone number must have at least 10 digits');
     }
@@ -692,7 +695,7 @@ export class ValidationService implements IValidationService {
 
     // Remove spaces and dashes
     const cleanNumber = accountNumber.replace(/[\s\-]/g, '');
-    
+
     if (cleanNumber.length < 8) {
       errors.push('Account number must be at least 8 digits');
     }
@@ -720,7 +723,7 @@ export class ValidationService implements IValidationService {
     if (!currencyCode || typeof currencyCode !== 'string') {
       return false;
     }
-    
+
     const validCodes = ['USD', 'EUR', 'GBP', 'INR', 'CAD', 'AUD', 'JPY', 'CNY'];
     return validCodes.includes(currencyCode.toUpperCase());
   }
@@ -765,7 +768,7 @@ export class ValidationService implements IValidationService {
     if (typeof percentage !== 'number' || isNaN(percentage)) {
       return false;
     }
-    
+
     return percentage >= 0 && percentage <= 100;
   }
 
@@ -776,7 +779,7 @@ export class ValidationService implements IValidationService {
     if (!url || typeof url !== 'string') {
       return false;
     }
-    
+
     try {
       new URL(url);
       return true;
@@ -792,33 +795,33 @@ export class ValidationService implements IValidationService {
     if (!cardNumber || typeof cardNumber !== 'string') {
       return false;
     }
-    
+
     // Remove spaces and dashes
     const cleanNumber = cardNumber.replace(/[\s\-]/g, '');
-    
+
     // Check if it's all digits and has reasonable length
     if (!/^\d{13,19}$/.test(cleanNumber)) {
       return false;
     }
-    
+
     // Luhn algorithm
     let sum = 0;
     let isEven = false;
-    
+
     for (let i = cleanNumber.length - 1; i >= 0; i--) {
       let digit = parseInt(cleanNumber.charAt(i));
-      
+
       if (isEven) {
         digit *= 2;
         if (digit > 9) {
           digit -= 9;
         }
       }
-      
+
       sum += digit;
       isEven = !isEven;
     }
-    
+
     return sum % 10 === 0;
   }
 
@@ -869,7 +872,7 @@ export class ValidationService implements IValidationService {
       warnings
     };
   }
-  
+
   validateCommonData(data: any): ValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
@@ -884,7 +887,7 @@ export class ValidationService implements IValidationService {
       warnings
     };
   }
-  
+
 
   /**
    * Sanitize input string
@@ -893,7 +896,7 @@ export class ValidationService implements IValidationService {
     if (!input || typeof input !== 'string') {
       return '';
     }
-    
+
     return input
       .trim()
       .replace(/[<>]/g, '') // Remove potential HTML tags

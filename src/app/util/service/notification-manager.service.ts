@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { FirebaseMessagingService, NotificationPayload } from './firebase-messaging.service';
 import { APP_CONFIG } from '../config/config';
 import { environment } from '@env/environment';
+import { CurrencyService } from './currency.service';
 
 export interface NotificationType {
   key: string;
@@ -24,12 +25,15 @@ export class NotificationManagerService {
     vibrationEnabled: boolean;
     requireInteraction: boolean;
   } = {
-    soundEnabled: true,
-    vibrationEnabled: true,
-    requireInteraction: false
-  };
+      soundEnabled: true,
+      vibrationEnabled: true,
+      requireInteraction: false
+    };
 
-  constructor(private messagingService: FirebaseMessagingService) {
+  constructor(
+    private messagingService: FirebaseMessagingService,
+    private currencyService: CurrencyService
+  ) {
     this.loadSettings();
   }
 
@@ -329,10 +333,7 @@ export class NotificationManagerService {
    * Format currency for display
    */
   private formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
+    return this.currencyService.formatAmount(amount);
   }
 
   /**

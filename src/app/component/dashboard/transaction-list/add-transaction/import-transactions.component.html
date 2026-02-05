@@ -10,7 +10,8 @@
 			<div class="flex flex-col sm:flex-row gap-4">
 				<div class="flex-1">
 					<label class="block text-sm font-medium text-gray-600 mb-1">Default Account</label>
-					<mat-select [(value)]="defaultAccountId" class="w-full" placeholder="Select account for imported transactions">
+					<mat-select [(value)]="defaultAccountId" class="w-full"
+						placeholder="Select account for imported transactions">
 						@for (account of accounts; track account.accountId) {
 						<mat-option [value]="account.accountId">
 							{{ account.name }} ({{ account.type }})
@@ -31,7 +32,8 @@
 		<!-- File Upload Section -->
 		<div *ngIf="!data?.transactions" class="mb-6">
 			<div class="file-upload-container" #fileUploadContainer [class.drag-over]="isDragOver">
-				<input type="file" accept=".xlsx,.xls" (change)="onFileSelected($event)" class="file-input" [disabled]="isLoading" />
+				<input type="file" accept=".xlsx,.xls" (change)="onFileSelected($event)" class="file-input"
+					[disabled]="isLoading" />
 				<div class="file-upload-overlay">
 					<mat-icon class="text-4xl mb-2">cloud_upload</mat-icon>
 					<p class="text-sm text-gray-600">
@@ -64,7 +66,8 @@
 				<div class="flex items-center gap-2">
 					<mat-icon class="text-blue-600 text-sm">info</mat-icon>
 					<span class="text-sm text-blue-800">
-						Data imported from Google Sheets. Review and select the transactions you want to import into your account.
+						Data imported from Google Sheets. Review and select the transactions you want to import into
+						your account.
 					</span>
 				</div>
 			</div>
@@ -89,11 +92,9 @@
 					<thead>
 						<tr>
 							<th class="checkbox-col">
-								<mat-checkbox
-									[checked]="selectedToImport.size === parsedTransactions.length"
+								<mat-checkbox [checked]="selectedToImport.size === parsedTransactions.length"
 									[indeterminate]="selectedToImport.size > 0 && selectedToImport.size < parsedTransactions.length"
-									(change)="toggleSelectAll()"
-								></mat-checkbox>
+									(change)="toggleSelectAll()"></mat-checkbox>
 							</th>
 							<th>Amount</th>
 							<th>Description</th>
@@ -106,31 +107,30 @@
 						@for (tx of parsedTransactions; track i; let i = $index) {
 						<tr class="transaction-row">
 							<td class="checkbox-col">
-								<mat-checkbox [checked]="selectedToImport.has(i)" (change)="toggleSelect(i)"></mat-checkbox>
+								<mat-checkbox [checked]="selectedToImport.has(i)"
+									(change)="toggleSelect(i)"></mat-checkbox>
 							</td>
 
 							<td class="amount-cell">
 								<span [class.income]="tx.type === 'income'" [class.expense]="tx.type === 'expense'">
-									{{ tx.type === 'income' ? '+' : '-' }}₹{{ tx.amount | number:'1.2-2' }}
+									{{ tx.type === 'income' ? '+' : '-' }}{{ tx.amount | currency }}
 								</span>
 							</td>
 
 							<td class="payee-cell">{{ tx.description }}</td>
 
 							<td class="type-cell">
-								<span class="type-badge" [class.income]="tx.type === 'income'" [class.expense]="tx.type === 'expense'">
+								<span class="type-badge" [class.income]="tx.type === 'income'"
+									[class.expense]="tx.type === 'expense'">
 									{{ tx.type }}
 								</span>
 							</td>
 
 							<td class="category-cell">
-								<mat-select 
-									[value]="tx.categoryId + '-' + tx.category" 
-									class="category-select"
+								<mat-select [value]="tx.categoryId + '-' + tx.category" class="category-select"
 									(selectionChange)="updateCategory(i, $event.value)">
 									<mat-option>
-										<ngx-mat-select-search 
-											[formControl]="categoryFilterCtrl"
+										<ngx-mat-select-search [formControl]="categoryFilterCtrl"
 											placeholderLabel="Search categories..."
 											noEntriesFoundLabel="No categories found">
 										</ngx-mat-select-search>
@@ -139,7 +139,7 @@
 									<mat-option [value]="category.id + '-' + category.name">
 										<div class="option-content">
 											<span class="option-text">{{ category.name }}</span>
-										
+
 										</div>
 									</mat-option>
 									}
@@ -157,7 +157,8 @@
 
 	<div mat-dialog-actions align="end" class="dialog-actions">
 		<button mat-button (click)="close()" class="mr-2">Cancel</button>
-		<button mat-raised-button color="primary" (click)="importSelected()" [disabled]="!parsedTransactions.length || selectedToImport.size === 0" class="import-button">
+		<button mat-raised-button color="primary" (click)="importSelected()"
+			[disabled]="!parsedTransactions.length || selectedToImport.size === 0" class="import-button">
 			<mat-icon>{{ data.transactions ? 'table_chart' : 'cloud_upload' }}</mat-icon>
 			{{ data.transactions ? 'Import from Sheets' : 'Import Selected' }} ({{ selectedToImport.size }})
 		</button>

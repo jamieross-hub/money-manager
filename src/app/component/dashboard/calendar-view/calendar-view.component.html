@@ -131,16 +131,16 @@
         <div class="summary-grid">
           <div class="summary-item">
             <div class="summary-label">Income</div>
-            <div class="summary-amount income">₹{{ getRangeTotalIncome() | number:'1.2-2' }}</div>
+            <div class="summary-amount income">{{ getRangeTotalIncome() | currency }}</div>
           </div>
           <div class="summary-item">
             <div class="summary-label">Expenses</div>
-            <div class="summary-amount expense">₹{{ getRangeTotalExpenses() | number:'1.2-2' }}</div>
+            <div class="summary-amount expense">{{ getRangeTotalExpenses() | currency }}</div>
           </div>
           <div class="summary-item">
             <div class="summary-label">Net</div>
             <div class="summary-amount" [ngClass]="getRangeNetAmount() >= 0 ? 'positive' : 'negative'">
-              ₹{{ getRangeNetAmount() | number:'1.2-2' }}
+              {{ getRangeNetAmount() | currency }}
             </div>
           </div>
         </div>
@@ -163,16 +163,16 @@
         <div class="summary-grid">
           <div class="summary-item">
             <div class="summary-label">Income</div>
-            <div class="summary-amount income">₹{{ getTotalIncome() | number:'1.2-2' }}</div>
+            <div class="summary-amount income">{{ getTotalIncome() | currency }}</div>
           </div>
           <div class="summary-item">
             <div class="summary-label">Expenses</div>
-            <div class="summary-amount expense">₹{{ getTotalExpenses() | number:'1.2-2' }}</div>
+            <div class="summary-amount expense">{{ getTotalExpenses() | currency }}</div>
           </div>
           <div class="summary-item">
             <div class="summary-label">Net</div>
             <div class="summary-amount" [ngClass]="getNetAmount() >= 0 ? 'positive' : 'negative'">
-              ₹{{ getNetAmount() | number:'1.2-2' }}
+              {{ getNetAmount() | currency }}
             </div>
           </div>
         </div>

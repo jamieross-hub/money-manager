@@ -25,6 +25,7 @@ import { Transaction } from 'src/app/util/models/transaction.model';
 import * as ProfileSelectors from '../../../store/profile/profile.selectors';
 import { BehaviorSubject, combineLatest, map, distinctUntilChanged } from 'rxjs';
 import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
+import { CurrencyService } from 'src/app/util/service/currency.service';
 
 interface AccountViewModel {
   account: Account;
@@ -109,7 +110,8 @@ export class AccountsComponent implements OnInit, OnDestroy {
     public readonly breakpointService: BreakpointService,
     private readonly userService: UserService,
     private readonly cdr: ChangeDetectorRef,
-    private readonly hapticFeedback: HapticFeedbackService
+    private readonly hapticFeedback: HapticFeedbackService,
+    private readonly currencyService: CurrencyService
   ) {
 
     if (this.breakpointService.device.isMobile) {
@@ -200,7 +202,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
     ]).pipe(
       takeUntil(this.destroy$),
       map(([accounts, collapsedMap, currencyCode]) => {
-        const currency = currencyCode || 'USD';
+      
 
         return ACCOUNT_GROUPS.map(group => {
           const groupAccounts = accounts.filter(account => group.accountTypes.includes(account.type));
@@ -229,7 +231,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
               maskedId: account.accountId.slice(-4),
               formattedName: this.toTitleCase(account.name),
               formattedInstitution: this.toTitleCase(account.institution || account.type),
-              formattedBalance: new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(rawBalance),
+              formattedBalance: this.currencyService.formatAmount(rawBalance),
               ...this.getPaymentDueStatus(account)
             };
           });
@@ -239,7 +241,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
             name: group.name,
             accounts: accountViewModels,
             totalBalance,
-            formattedTotalBalance: new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(totalBalance),
+            formattedTotalBalance: this.currencyService.formatAmount(totalBalance),
             isCollapsed: collapsedMap.get(group.id) || false,
             count: groupAccounts.length
           } as GroupViewModel;

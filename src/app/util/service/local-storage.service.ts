@@ -1,14 +1,19 @@
 import { Injectable } from '@angular/core';
+import { LocalStorageKey, LocalStorageTypeMap, LocalStorageKeyHelper } from '../models/local-storage.model';
 
 /**
  * Centralized LocalStorage service for production-ready localStorage operations
  * Provides type-safe get/set/remove with error handling, JSON serialization, and entity CRUD helpers
  * Consolidates functionality from LocalStorageService and LocalStorageUtilityService
+ * Uses LocalStorageKey enum for type safety and easier migration to other storage solutions
  */
 @Injectable({
     providedIn: 'root'
 })
 export class LocalStorageService {
+
+    // Expose helper for external use
+    public readonly keyHelper = LocalStorageKeyHelper;
 
     /**
      * Check if localStorage is available
@@ -138,6 +143,41 @@ export class LocalStorageService {
             console.error('Error getting localStorage keys:', error);
             return [];
         }
+    }
+
+    // ========== Type-Safe Methods Using LocalStorageKey Enum ==========
+
+    /**
+     * Type-safe get method using LocalStorageKey enum
+     */
+    getTyped<K extends LocalStorageKey>(
+        key: K
+    ): any {
+        return this.getItem(key as string);
+    }
+
+    /**
+     * Type-safe set method using LocalStorageKey enum
+     */
+    setTyped<K extends LocalStorageKey>(
+        key: K,
+        value: any
+    ): boolean {
+        return this.setItem(key as string, value);
+    }
+
+    /**
+     * Remove item using LocalStorageKey enum
+     */
+    removeTyped(key: LocalStorageKey): boolean {
+        return this.removeItem(key as string);
+    }
+
+    /**
+     * Check if item exists using LocalStorageKey enum
+     */
+    hasTyped(key: LocalStorageKey): boolean {
+        return this.hasItem(key as string);
     }
 
     // ========== Entity CRUD Helpers (from LocalStorageUtilityService) ==========

@@ -11,6 +11,7 @@ import * as CategoriesSelectors from '../../../../store/categories/categories.se
 import { Transaction } from '../../../../util/models/transaction.model';
 import { Category } from '../../../../util/models/category.model';
 import { TransactionType } from '../../../../util/config/enums';
+import { CurrencyService } from '../../../service/currency.service';
 
 export interface MonthlyTrend {
   month: string;
@@ -97,7 +98,10 @@ export class MonthlyTrendsCardComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private store: Store<AppState>) {
+  constructor(
+    private store: Store<AppState>,
+    private currencyService: CurrencyService
+  ) {
     // Initialize store selectors
     this.transactions$ = this.store.select(TransactionsSelectors.selectAllTransactions);
     this.categories$ = this.store.select(CategoriesSelectors.selectAllCategories);
@@ -109,7 +113,7 @@ export class MonthlyTrendsCardComponent implements OnInit, OnDestroy {
       this.transactionsLoading$,
       this.categoriesLoading$
     ]).pipe(
-      map(([transactionsLoading, categoriesLoading]) => 
+      map(([transactionsLoading, categoriesLoading]) =>
         transactionsLoading || categoriesLoading
       )
     );
@@ -144,13 +148,13 @@ export class MonthlyTrendsCardComponent implements OnInit, OnDestroy {
           }
 
           const monthData = months.get(monthKey)!;
-          
+
           if (t.type === TransactionType.INCOME) {
             monthData.income += t.amount;
           } else {
             monthData.expenses += t.amount;
           }
-          
+
           monthData.savings = monthData.income - monthData.expenses;
         });
 
@@ -180,7 +184,7 @@ export class MonthlyTrendsCardComponent implements OnInit, OnDestroy {
             const previous = trends[i + 1];
             const change = current.savings - previous.savings;
             const changePercentage = previous.savings !== 0 ? (change / Math.abs(previous.savings)) * 100 : 0;
-            
+
             current.change = change;
             current.changePercentage = changePercentage;
           }
@@ -251,17 +255,12 @@ export class MonthlyTrendsCardComponent implements OnInit, OnDestroy {
   }
 
   formatCurrency(value: number): string {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: this.effectiveConfig.currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
+    return this.currencyService.formatAmount(value);
   }
 
   getChangeColor(change: number): string {
-    return change >= 0 
-      ? 'text-green-600 dark:text-green-400' 
+    return change >= 0
+      ? 'text-green-600 dark:text-green-400'
       : 'text-red-600 dark:text-red-400';
   }
 

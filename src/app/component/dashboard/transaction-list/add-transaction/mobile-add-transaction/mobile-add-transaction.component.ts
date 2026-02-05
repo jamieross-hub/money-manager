@@ -1,21 +1,8 @@
-import {
-  Component,
-  Inject,
-  ViewChild,
-  ElementRef,
-  AfterViewInit,
-  OnInit,
-  OnDestroy,
-} from '@angular/core';
-
+import { Component, Inject, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import {
-  MAT_DIALOG_DATA,
-  MatDialogRef,
-  MatDialog,
-} from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
@@ -30,13 +17,7 @@ import { Store } from '@ngrx/store';
 import * as TransactionsActions from '../../../../../store/transactions/transactions.actions';
 import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
-import {
-  RecurringInterval,
-  SyncStatus,
-  TransactionStatus,
-  TransactionType,
-  PaymentMethod,
-} from 'src/app/util/config/enums';
+import { RecurringInterval, SyncStatus, TransactionStatus, TransactionType, PaymentMethod } from 'src/app/util/config/enums';
 import { Category } from 'src/app/util/models';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { SplitwiseGroup } from 'src/app/util/models/splitwise.model';
@@ -50,6 +31,7 @@ import { CategorySplitDialogComponent } from 'src/app/util/components/category-s
 import { FormControl } from '@angular/forms';
 import { ReplaySubject, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { CurrencyService } from 'src/app/util/service/currency.service';
 
 @Component({
   selector: 'app-mobile-add-transaction',
@@ -102,7 +84,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     private validationService: ValidationService,
     private breakpointObserver: BreakpointObserver,
     public breakpointService: BreakpointService,
-    private userService: UserService
+    private userService: UserService,
+    private currencyService: CurrencyService
   ) {
     this.recurringMinDate = moment().add(1, 'day').format('YYYY-MM-DD');
     this.recurringMaxDate = moment().add(1, 'year').format('YYYY-MM-DD');
@@ -244,6 +227,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
   private formatCurrency(value: number): string {
     if (value === null || value === undefined || isNaN(value)) return '';
+    // Format without currency symbol for input display
     return new Intl.NumberFormat('en-IN', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2

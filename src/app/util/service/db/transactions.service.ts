@@ -20,6 +20,7 @@ import { BaseService } from '../base.service';
 import { LocalStorageService } from '../local-storage.service';
 import { UserService } from './user.service';
 import { of } from 'rxjs';
+import { CurrencyService } from '../currency.service';
 
 @Injectable({
     providedIn: 'root'
@@ -30,6 +31,7 @@ export class TransactionsService extends BaseService {
     constructor(
         firestore: Firestore,
         auth: Auth,
+        currencyService: CurrencyService,
         private dateService: DateService,
         private store: Store<AppState>,
         private accountsService: AccountsService,
@@ -38,7 +40,7 @@ export class TransactionsService extends BaseService {
         private localStorageUtility: LocalStorageService,
         private userService: UserService
     ) {
-        super(firestore, auth);
+        super(firestore, auth, currencyService);
     }
 
     private isGuest(): boolean {

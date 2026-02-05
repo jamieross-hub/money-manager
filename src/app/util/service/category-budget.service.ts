@@ -4,6 +4,7 @@ import { ValidationService } from './validation.service';
 import { Budget, Category } from '../models/category.model';
 import { APP_CONFIG } from '../config/config';
 import { DateService } from './date.service';
+import { CurrencyService } from './currency.service';
 
 
 @Injectable({
@@ -12,9 +13,10 @@ import { DateService } from './date.service';
 export class CategoryBudgetService {
 
   constructor(
-    private fb: FormBuilder, 
+    private fb: FormBuilder,
     private dateService: DateService,
-    private validationService: ValidationService
+    private validationService: ValidationService,
+    private currencyService: CurrencyService
   ) { }
 
   /**
@@ -120,11 +122,8 @@ export class CategoryBudgetService {
    * Format budget amount
    */
   formatBudgetAmount(amount: number | undefined): string {
-    if (!amount) return '0';
-    return amount.toLocaleString(APP_CONFIG.LANGUAGE.DEFAULT, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+    if (!amount) return this.currencyService.formatAmount(0);
+    return this.currencyService.formatAmount(amount);
   }
 
   /**
@@ -142,7 +141,7 @@ export class CategoryBudgetService {
     if (!category.budget?.hasBudget || !budgetProgressPercentage) {
       return '#6b7280'; // gray
     }
-    
+
     if (budgetProgressPercentage >= 100) {
       return '#ef4444'; // red - over budget
     } else if (budgetProgressPercentage >= budgetAlertThreshold) {

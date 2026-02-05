@@ -50,11 +50,13 @@ export class CurrencyPipe implements PipeTransform {
    * Format currency value with the specified options
    */
   private formatCurrency(value: number, options?: CurrencyPipeOptions): string {
-    const userCurrency = this.userService.userAuth$.value?.preferences?.defaultCurrency;
+    const userPreferences = this.userService.userAuth$.value?.preferences;
+    const userCurrency = userPreferences?.defaultCurrency;
+    const userLanguage = userPreferences?.language;
 
     const {
       currency = userCurrency || APP_CONFIG.CURRENCY.DEFAULT,
-      locale = APP_CONFIG.LANGUAGE.DEFAULT,
+      locale = userLanguage || APP_CONFIG.LANGUAGE.DEFAULT,
       showSymbol = true,
       showCode = false,
       decimalPlaces,

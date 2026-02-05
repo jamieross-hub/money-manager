@@ -48,9 +48,11 @@ export const CHAT_CONSTANTS = {
         GREETING: '🙂 Hello! I am your financial assistant. How can I help you today?',
         INTERNAL_ERROR: 'Internal error, please try again!',
         DATA_CLEARED: 'All your data has been cleared successfully.',
-        INCOME_ADDED: (amount: number, account: string, category: string) => `Income of ₹${amount.toLocaleString()} credited to ${account} for ${category}.`,
-        EXPENSE_ADDED: (amount: number, account: string, category: string) => `Spent ₹${amount.toLocaleString()}  on ${category} from ${account}.`,
-        ASK_TYPE: (amount: number) => `Got ₹${amount.toLocaleString()}. Is this income or expense?`,
+        // Note: These functions now expect formatted currency strings instead of raw amounts
+        // The calling code should use CurrencyService.formatAmount() before passing to these functions
+        INCOME_ADDED: (formattedAmount: string, account: string, category: string) => `Income of ${formattedAmount} credited to ${account} for ${category}.`,
+        EXPENSE_ADDED: (formattedAmount: string, account: string, category: string) => `Spent ${formattedAmount}  on ${category} from ${account}.`,
+        ASK_TYPE: (formattedAmount: string) => `Got ${formattedAmount}. Is this income or expense?`,
         ASK_CATEGORY: (type: string) => `Select ${type} category`,
         ASK_CATEGORY_INCOME: 'Select income category',
         ASK_CATEGORY_EXPENSE: 'Select expense category',

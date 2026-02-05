@@ -4,6 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Auth } from '@angular/fire/auth';
 import { SplitwiseGroup } from 'src/app/util/models/splitwise.model';
 import { AddMemberDialogComponent } from '../add-member-dialog/add-member-dialog.component';
+import { CurrencyService } from 'src/app/util/service/currency.service';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 
 @Component({
@@ -23,8 +24,9 @@ export class GroupComponent {
     private router: Router,
     private auth: Auth,
     private dialog: MatDialog,
-    public breakpointService: BreakpointService
-  ) {}
+    public breakpointService: BreakpointService,
+    private currencyService: CurrencyService
+  ) { }
 
   onGroupClick(): void {
     // Navigate to group details page
@@ -33,7 +35,7 @@ export class GroupComponent {
 
   openAddMemberDialog(event: Event): void {
     event.stopPropagation();
-    
+
     const dialogRef = this.dialog.open(AddMemberDialogComponent, {
       data: { group: this.group },
       disableClose: true,
@@ -42,9 +44,9 @@ export class GroupComponent {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.addMember.emit({ 
-          groupId: this.group.id!, 
-          request: result 
+        this.addMember.emit({
+          groupId: this.group.id!,
+          request: result
         });
       }
     });
@@ -78,10 +80,7 @@ export class GroupComponent {
     return dateObj.toLocaleDateString();
   }
 
-  formatCurrency(amount: number, currency: string = 'USD'): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency
-    }).format(amount);
+  formatCurrency(amount: number, currency?: string): string {
+    return this.currencyService.formatAmount(amount);
   }
 } 

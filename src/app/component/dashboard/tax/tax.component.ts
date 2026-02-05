@@ -9,6 +9,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import * as TransactionsSelectors from '../../../store/transactions/transactions.selectors';
 import { UserService } from 'src/app/util/service/db/user.service';
+import { CurrencyService } from '../../../util/service/currency.service';
 
 @Component({
   selector: 'app-tax',
@@ -39,7 +40,8 @@ export class TaxComponent implements OnInit, OnDestroy {
     private taxService: TaxService,
     private notificationService: NotificationService,
     private store: Store<AppState>,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private currencyService: CurrencyService
   ) {
     this.taxForm = this.fb.group({
       manualIncome: [0, [Validators.required, Validators.min(0)]]
@@ -167,7 +169,7 @@ export class TaxComponent implements OnInit, OnDestroy {
    * Format currency for display
    */
   formatCurrency(amount: number): string {
-    return `₹${amount.toLocaleString('en-IN')}`;
+    return this.currencyService.formatAmount(amount);
   }
 
   /**

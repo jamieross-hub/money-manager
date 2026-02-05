@@ -17,6 +17,7 @@ import { Account, Category } from "src/app/util/models";
 import * as TransactionsActions from 'src/app/store/transactions/transactions.actions';
 import { EntityExtractorService } from '../../extractors/entity-extractor.service';
 import { INTENTS } from '../../models/intent-config';
+import { CurrencyService } from '../../../currency.service';
 
 /**
  * Handles ADD_INCOME and ADD_EXPENSE intents
@@ -31,7 +32,8 @@ export class TransactionIntentHandler implements IntentHandler {
         private userService: UserService,
         private notificationService: NotificationService,
         private hapticFeedback: HapticFeedbackService,
-        private extractor: EntityExtractorService
+        private extractor: EntityExtractorService,
+        private currencyService: CurrencyService
     ) { }
 
     /**
@@ -53,7 +55,7 @@ export class TransactionIntentHandler implements IntentHandler {
 
         if (!userId) {
             console.warn(`No authenticated user - cannot create ${type}`);
-            return `${type === TransactionType.INCOME ? 'Income' : 'Expense'} added locally: ₹${amount}`;
+            return `${type === TransactionType.INCOME ? 'Income' : 'Expense'} added locally: ${this.currencyService.formatAmount(amount)}`;
         }
 
         const transactionData = {
@@ -81,11 +83,11 @@ export class TransactionIntentHandler implements IntentHandler {
             await this.store.dispatch(TransactionsActions.createTransaction({ userId, transaction: transactionData }));
             this.notificationService.success('Transaction added successfully');
             this.hapticFeedback.successVibration();
-            return `${type === TransactionType.INCOME ? 'Income' : 'Expense'} added: ₹${amount}`;
+            return `${type === TransactionType.INCOME ? 'Income' : 'Expense'} added: ${this.currencyService.formatAmount(amount)}`;
         } catch (error) {
             console.error(`Failed to add ${type} transaction`, error);
             this.notificationService.error('Failed to add transaction');
-            return `Failed to add ${type === TransactionType.INCOME ? 'income' : 'expense'}: ₹${amount}`;
+            return `Failed to add ${type === TransactionType.INCOME ? 'income' : 'expense'}: ${this.currencyService.formatAmount(amount)}`;
         }
     }
 
@@ -136,7 +138,7 @@ export class TransactionIntentHandler implements IntentHandler {
 
         return from(isIncome ? this.addIncome(category, account, amount) : this.addExpense(category, account, amount)).pipe(
             map(() => ResponseBuilder.create()
-                .html(msgFunc(amount, account.name, category.name))
+                .html(msgFunc(this.currencyService.formatAmount(amount), account.name, category.name))
                 .build())
         );
     }

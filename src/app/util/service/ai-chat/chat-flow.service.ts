@@ -3,15 +3,19 @@ import { CHAT_CONSTANTS } from './models/chat-constants';
 import { TransactionType } from 'src/app/util/config/enums';
 import { Account } from "src/app/util/models";
 import { ConversationStateMachine, ChatState, ChatEvent } from './state/conversation-state-machine.service';
+import { CurrencyService } from '../currency.service';
 
 @Injectable({ providedIn: 'root' })
 export class ChatFlowService {
 
-    constructor(private fsm: ConversationStateMachine) { }
+    constructor(
+        private fsm: ConversationStateMachine,
+        private currencyService: CurrencyService
+    ) { }
 
     startAmountFlow(amount: number) {
         this.fsm.transition(ChatEvent.AMOUNT_PROVIDED, { amount });
-        return CHAT_CONSTANTS.MSGS.ASK_TYPE(amount);
+        return CHAT_CONSTANTS.MSGS.ASK_TYPE(this.currencyService.formatAmount(amount));
     }
 
     startCategoryFlow(type: TransactionType, amount: number) {
@@ -71,9 +75,9 @@ export class ChatFlowService {
         // This is usually a confirmation message after the facade adds the transaction
         let result = '';
         if (type === TransactionType.INCOME) {
-            result = CHAT_CONSTANTS.MSGS.INCOME_ADDED(amount, account?.name || '', category);
+            result = CHAT_CONSTANTS.MSGS.INCOME_ADDED(this.currencyService.formatAmount(amount), account?.name || '', category);
         } else {
-            result = CHAT_CONSTANTS.MSGS.EXPENSE_ADDED(amount, account?.name || '', category);
+            result = CHAT_CONSTANTS.MSGS.EXPENSE_ADDED(this.currencyService.formatAmount(amount), account?.name || '', category);
         }
 
         this.fsm.transition(ChatEvent.CATEGORY_PROVIDED, { category });

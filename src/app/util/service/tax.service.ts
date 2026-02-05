@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { DateService } from './date.service';
 import { Transaction } from '../models/transaction.model';
 import { APP_CONFIG } from '../config/config';
+import { CurrencyService } from './currency.service';
 
 export interface TaxSlab {
   minIncome: number;
@@ -61,7 +62,10 @@ export class TaxService {
   // Standard deductions for new regime
   private readonly NEW_REGIME_STANDARD_DEDUCTION = APP_CONFIG.VALIDATION.MAX_AMOUNT * 0.05; // 5% of max amount as standard deduction
 
-  constructor( private dateService: DateService) {}
+  constructor(
+    private dateService: DateService,
+    private currencyService: CurrencyService
+  ) { }
 
   /**
    * Calculate total income from transactions for a specific year
@@ -73,9 +77,9 @@ export class TaxService {
     return transactions
       .filter(t => {
         const transactionDate = this.dateService.toDate(t.date) || new Date();
-        return t.type === 'income' && 
-               transactionDate >= startDate && 
-               transactionDate <= endDate;
+        return t.type === 'income' &&
+          transactionDate >= startDate &&
+          transactionDate <= endDate;
       })
       .reduce((sum, t) => sum + t.amount, 0);
   }
@@ -100,7 +104,7 @@ export class TaxService {
   calculateOldRegimeTax(totalIncome: number, deductions: TaxDeduction[]): TaxCalculation {
     const totalDeductions = deductions.reduce((sum, d) => sum + d.currentAmount, 0);
     const taxableIncome = Math.max(0, totalIncome - totalDeductions);
-    
+
     const incomeTax = this.calculateTaxBySlabs(taxableIncome, this.oldRegimeSlabs);
     const cess = incomeTax * 0.04; // 4% cess
     const totalTaxLiability = incomeTax + cess;
@@ -122,7 +126,7 @@ export class TaxService {
    */
   calculateNewRegimeTax(totalIncome: number): TaxCalculation {
     const taxableIncome = Math.max(0, totalIncome - this.NEW_REGIME_STANDARD_DEDUCTION);
-    
+
     const incomeTax = this.calculateTaxBySlabs(taxableIncome, this.newRegimeSlabs);
     const cess = incomeTax * 0.04; // 4% cess
     const totalTaxLiability = incomeTax + cess;
@@ -195,7 +199,7 @@ export class TaxService {
   } {
     const oldRegime = this.calculateOldRegimeTax(totalIncome, deductions);
     const newRegime = this.calculateNewRegimeTax(totalIncome);
-    
+
     const savings = oldRegime.totalTaxLiability - newRegime.totalTaxLiability;
     const recommendation = savings > 0 ? 'new' : 'old';
 
@@ -217,30 +221,30 @@ Financial Year: 2024-25
 Tax Regime: ${calculations.regime === 'old' ? 'Old Regime (With Deductions)' : 'New Regime (Simplified)'}
 
 INCOME DETAILS:
-Total Income: ₹${calculations.totalIncome.toLocaleString('en-IN')}
+Total Income: ${this.currencyService.formatAmount(calculations.totalIncome)}
 
 ${calculations.regime === 'old' ? `
 DEDUCTIONS:
-${calculations.deductions.map(d => `${d.section}: ₹${d.currentAmount.toLocaleString('en-IN')}`).join('\n')}
-Total Deductions: ₹${calculations.totalDeductions.toLocaleString('en-IN')}
+${calculations.deductions.map(d => `${d.section}: ${this.currencyService.formatAmount(d.currentAmount)}`).join('\n')}
+Total Deductions: ${this.currencyService.formatAmount(calculations.totalDeductions)}
 ` : `
 STANDARD DEDUCTION:
-Standard Deduction: ₹${calculations.totalDeductions.toLocaleString('en-IN')}
+Standard Deduction: ${this.currencyService.formatAmount(calculations.totalDeductions)}
 `}
 
-TAXABLE INCOME: ₹${calculations.taxableIncome.toLocaleString('en-IN')}
+TAXABLE INCOME: ${this.currencyService.formatAmount(calculations.taxableIncome)}
 
 TAX CALCULATION:
-Income Tax: ₹${calculations.incomeTax.toLocaleString('en-IN')}
-Cess (4%): ₹${calculations.cess.toLocaleString('en-IN')}
-TOTAL TAX LIABILITY: ₹${calculations.totalTaxLiability.toLocaleString('en-IN')}
+Income Tax: ${this.currencyService.formatAmount(calculations.incomeTax)}
+Cess (4%): ${this.currencyService.formatAmount(calculations.cess)}
+TOTAL TAX LIABILITY: ${this.currencyService.formatAmount(calculations.totalTaxLiability)}
 
 ${gstCalculation ? `
 GST ANALYSIS:
-Base Amount: ₹${gstCalculation.baseAmount.toLocaleString('en-IN')}
-CGST (9%): ₹${gstCalculation.cgst.toLocaleString('en-IN')}
-SGST (9%): ₹${gstCalculation.sgst.toLocaleString('en-IN')}
-Total GST (18%): ₹${gstCalculation.totalGST.toLocaleString('en-IN')}
+Base Amount: ${this.currencyService.formatAmount(gstCalculation.baseAmount)}
+CGST (9%): ${this.currencyService.formatAmount(gstCalculation.cgst)}
+SGST (9%): ${this.currencyService.formatAmount(gstCalculation.sgst)}
+Total GST (18%): ${this.currencyService.formatAmount(gstCalculation.totalGST)}
 ` : ''}
 
 Generated on: ${new Date().toLocaleDateString('en-IN')}

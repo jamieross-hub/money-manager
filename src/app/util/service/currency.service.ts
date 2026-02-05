@@ -11,19 +11,24 @@ export class CurrencyService {
   private currentCurrencySubject = new BehaviorSubject<string>(DEFAULT_CURRENCY);
   public currentCurrency$ = this.currentCurrencySubject.asObservable();
 
+  private currentLanguageSubject = new BehaviorSubject<string>(APP_CONFIG.LANGUAGE.DEFAULT);
+  public currentLanguage$ = this.currentLanguageSubject.asObservable();
+
   constructor(private userService: UserService) {
     this.initializeCurrency();
   }
 
-  private async initializeCurrency(): Promise<void> {
-    try {
-      const user = await this.userService.getCurrentUser();
-      if (user?.preferences?.defaultCurrency) {
-        this.setCurrentCurrency(user.preferences.defaultCurrency);
+  private initializeCurrency(): void {
+    this.userService.userAuth$.subscribe(user => {
+      if (user?.preferences) {
+        if (user.preferences.defaultCurrency) {
+          this.setCurrentCurrency(user.preferences.defaultCurrency);
+        }
+        if (user.preferences.language) {
+          this.setCurrentLanguage(user.preferences.language);
+        }
       }
-    } catch (error) {
-      console.error('Error initializing currency:', error);
-    }
+    });
   }
 
   getCurrencies(): Currency[] {
@@ -35,8 +40,18 @@ export class CurrencyService {
   }
 
   setCurrentCurrency(currencyCode: string): void {
-    if (this.isValidCurrency(currencyCode)) {
+    if (this.isValidCurrency(currencyCode) && this.currentCurrencySubject.value !== currencyCode) {
       this.currentCurrencySubject.next(currencyCode);
+    }
+  }
+
+  getCurrentLanguage(): string {
+    return this.currentLanguageSubject.value;
+  }
+
+  setCurrentLanguage(languageCode: string): void {
+    if (this.currentLanguageSubject.value !== languageCode) {
+      this.currentLanguageSubject.next(languageCode);
     }
   }
 
@@ -57,9 +72,10 @@ export class CurrencyService {
     return DEFAULT_CURRENCY;
   }
 
-  formatAmount(amount: number, currencyCode?: string): string {
-    const code = currencyCode || this.getCurrentCurrency();
-    return new Intl.NumberFormat(APP_CONFIG.LANGUAGE.DEFAULT, {
+  formatAmount(amount: number): string {
+    const code = this.getCurrentCurrency();
+    const locale = this.getCurrentLanguage();
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: code,
     }).format(amount);

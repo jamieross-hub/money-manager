@@ -11,6 +11,7 @@ import * as CategoriesSelectors from '../../../../store/categories/categories.se
 import { Transaction } from '../../../../util/models/transaction.model';
 import { Category } from '../../../../util/models/category.model';
 import { TransactionType, TransactionStatus } from '../../../../util/config/enums';
+import { CurrencyService } from '../../../service/currency.service';
 
 export interface UpcomingTransaction {
   id: string;
@@ -101,7 +102,10 @@ export class UpcomingTransactionsCardComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private store: Store<AppState>) {
+  constructor(
+    private store: Store<AppState>,
+    private currencyService: CurrencyService
+  ) {
     // Initialize store selectors
     this.transactions$ = this.store.select(TransactionsSelectors.selectAllTransactions);
     this.categories$ = this.store.select(CategoriesSelectors.selectAllCategories);
@@ -113,14 +117,14 @@ export class UpcomingTransactionsCardComponent implements OnInit, OnDestroy {
       this.transactionsLoading$,
       this.categoriesLoading$
     ]).pipe(
-      map(([transactionsLoading, categoriesLoading]) => 
+      map(([transactionsLoading, categoriesLoading]) =>
         transactionsLoading || categoriesLoading
       )
     );
 
     // Calculate upcoming transactions
     this.upcomingTransactions$ = this.calculateUpcomingTransactions();
-    
+
     // Calculate monthly summary
     this.monthlySummary$ = this.calculateMonthlySummary();
   }
@@ -149,14 +153,14 @@ export class UpcomingTransactionsCardComponent implements OnInit, OnDestroy {
             const isUpcoming = txDate >= currentDate && txDate <= endDate;
             const isPending = t.status === TransactionStatus.PENDING;
             const isRecurring = t.isRecurring || false;
-            
+
             return isUpcoming && (isPending || isRecurring);
           })
           .map(t => {
             const category = categories.find(c => c.id === t.categoryId);
             const txDate = this.convertToDate(t.date);
             const daysUntil = Math.ceil((txDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
-            
+
             return {
               id: t.id || '',
               payee: t.payee,
@@ -255,12 +259,7 @@ export class UpcomingTransactionsCardComponent implements OnInit, OnDestroy {
   }
 
   formatCurrency(value: number): string {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: this.effectiveConfig.currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
+    return this.currencyService.formatAmount(value);
   }
 
   formatDate(date: Date): string {

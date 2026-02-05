@@ -4,6 +4,7 @@ import { Observable, from, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { ExportFormat, CurrencyCode } from '../config/enums';
 import { APP_CONFIG, ERROR_MESSAGES } from '../config/config';
+import { CurrencyService } from './currency.service';
 
 /**
  * Export options interface
@@ -41,7 +42,10 @@ import { Firestore, writeBatch, doc, collection } from '@angular/fire/firestore'
 })
 export class ExportService implements IExportService {
 
-  constructor(private firestore: Firestore) { }
+  constructor(
+    private firestore: Firestore,
+    private currencyService: CurrencyService
+  ) { }
 
   /**
    * Export data to CSV format
@@ -419,11 +423,7 @@ export class ExportService implements IExportService {
   private formatCurrency(amount: number, format?: string): string {
     if (typeof amount !== 'number' || isNaN(amount)) return '0.00';
 
-    const currency = format || CurrencyCode.USD;
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency
-    }).format(amount);
+    return this.currencyService.formatAmount(amount);
   }
 
   /**

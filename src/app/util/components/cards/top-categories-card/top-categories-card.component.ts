@@ -12,6 +12,7 @@ import { Transaction } from '../../../../util/models/transaction.model';
 import { Category } from '../../../../util/models/category.model';
 import { TransactionType } from '../../../../util/config/enums';
 import { SharedModule } from "src/app/modules/shared/shared.module";
+import { CurrencyService } from '../../../service/currency.service';
 
 export interface TopCategory {
   category: string;
@@ -87,7 +88,10 @@ export class TopCategoriesCardComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private store: Store<AppState>) {
+  constructor(
+    private store: Store<AppState>,
+    private currencyService: CurrencyService
+  ) {
     // Initialize store selectors
     this.transactions$ = this.store.select(TransactionsSelectors.selectAllTransactions);
     this.categories$ = this.store.select(CategoriesSelectors.selectAllCategories);
@@ -99,7 +103,7 @@ export class TopCategoriesCardComponent implements OnInit, OnDestroy {
       this.transactionsLoading$,
       this.categoriesLoading$
     ]).pipe(
-      map(([transactionsLoading, categoriesLoading]) => 
+      map(([transactionsLoading, categoriesLoading]) =>
         transactionsLoading || categoriesLoading
       )
     );
@@ -145,8 +149,8 @@ export class TopCategoriesCardComponent implements OnInit, OnDestroy {
         const filteredTransactions = transactions.filter(t => {
           const txDate = this.convertToDate(t.date);
           const matchesDate = txDate >= startDate && txDate <= currentDate;
-          const matchesType = this.effectiveConfig.transactionType === 'all' || 
-                             t.type === (this.effectiveConfig.transactionType === 'income' ? TransactionType.INCOME : TransactionType.EXPENSE);
+          const matchesType = this.effectiveConfig.transactionType === 'all' ||
+            t.type === (this.effectiveConfig.transactionType === 'income' ? TransactionType.INCOME : TransactionType.EXPENSE);
           return matchesDate && matchesType;
         });
 
@@ -230,12 +234,7 @@ export class TopCategoriesCardComponent implements OnInit, OnDestroy {
   }
 
   formatCurrency(value: number): string {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: this.effectiveConfig.currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
+    return this.currencyService.formatAmount(value);
   }
 
   onCategoryClick(category: TopCategory): void {

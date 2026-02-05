@@ -4,6 +4,7 @@ import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDo
 import { Auth } from '@angular/fire/auth';
 import { Observable, from, throwError, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
+import { CurrencyService } from './currency.service';
 
 export interface GoogleSheetsConfig {
   spreadsheetId: string;
@@ -30,9 +31,10 @@ export class GoogleSheetsService extends BaseService {
 
   constructor(
     protected override readonly firestore: Firestore,
-    protected override readonly auth: Auth
+    protected override readonly auth: Auth,
+    protected override readonly currencyService: CurrencyService
   ) {
-    super(firestore, auth);
+    super(firestore, auth, currencyService);
   }
 
   /**
@@ -69,7 +71,7 @@ export class GoogleSheetsService extends BaseService {
   getConnections(): Observable<GoogleSheetsConnection[]> {
     try {
       const collectionRef = this.getCollectionRef(this.COLLECTION_NAME);
-      
+
       return from(getDocs(collectionRef)).pipe(
         map(snapshot => {
           return snapshot.docs.map(doc => ({
@@ -105,7 +107,7 @@ export class GoogleSheetsService extends BaseService {
       };
 
       const docRef = this.getDocumentRef(this.COLLECTION_NAME, newConnection.id);
-      
+
       return from(setDoc(docRef, newConnection)).pipe(
         map(() => newConnection),
         catchError(error => this.handleError(error, 'createConnection'))
@@ -140,7 +142,7 @@ export class GoogleSheetsService extends BaseService {
   deleteConnection(id: string): Observable<void> {
     try {
       const docRef = this.getDocumentRef(this.COLLECTION_NAME, id);
-      
+
       return from(deleteDoc(docRef)).pipe(
         catchError(error => this.handleError(error, 'deleteConnection'))
       );
@@ -157,7 +159,7 @@ export class GoogleSheetsService extends BaseService {
       // For read-only access, we'll use a simple fetch to check if the sheet is accessible
       // This works for publicly shared sheets or sheets shared with "Anyone with the link can view"
       const url = `https://docs.google.com/spreadsheets/d/${config.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${config.sheetName}`;
-      
+
       return from(fetch(url, { method: 'HEAD' })).pipe(
         map(response => {
           return response.ok;
@@ -179,7 +181,7 @@ export class GoogleSheetsService extends BaseService {
     try {
       // Use Google Sheets CSV export for read-only access
       const url = `https://docs.google.com/spreadsheets/d/${config.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${config.sheetName}`;
-      
+
       return from(fetch(url)).pipe(
         switchMap(response => {
           if (!response.ok) {
@@ -225,10 +227,10 @@ export class GoogleSheetsService extends BaseService {
     const result = [];
     let current = '';
     let inQuotes = false;
-    
+
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
-      
+
       if (char === '"') {
         inQuotes = !inQuotes;
       } else if (char === ',' && !inQuotes) {
@@ -238,7 +240,7 @@ export class GoogleSheetsService extends BaseService {
         current += char;
       }
     }
-    
+
     result.push(current.trim());
     return result;
   }

@@ -12,6 +12,7 @@ import { AppState } from '../../../../store/app.state';
 import * as TransactionsSelectors from '../../../../store/transactions/transactions.selectors';
 import { Transaction } from '../../../../util/models/transaction.model';
 import { TransactionType } from '../../../../util/config/enums';
+import { CurrencyService } from '../../../service/currency.service';
 
 export interface FinancialMetricsConfig {
   title?: string;
@@ -80,7 +81,8 @@ export class FinancialMetricsCardComponent implements OnInit, OnDestroy {
   constructor(
     private store: Store<AppState>,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private zone: NgZone
+    private zone: NgZone,
+    private currencyService: CurrencyService
   ) {
     // Initialize store selectors
     this.transactions$ = this.store.select(TransactionsSelectors.selectAllTransactions);
@@ -107,7 +109,7 @@ export class FinancialMetricsCardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    
+
     this.browserOnly(() => {
       if (this.root) {
         this.root.dispose();
@@ -247,7 +249,7 @@ export class FinancialMetricsCardComponent implements OnInit, OnDestroy {
           const dataContext = dataItem.dataContext as any;
           const amount = dataContext.amount;
           const percentage = dataContext.percent;
-          
+
           if (amount !== undefined && percentage !== undefined) {
             return `${percentage.toFixed(0)}% ${amount}`;
           }
@@ -313,7 +315,7 @@ export class FinancialMetricsCardComponent implements OnInit, OnDestroy {
           fill: am5.color(0x000000),
           stroke: am5.color(0x000000),
           strokeWidth: 0.5,
-          
+
         }
       }
     ];
@@ -325,8 +327,8 @@ export class FinancialMetricsCardComponent implements OnInit, OnDestroy {
         value: expenses,
         amount: this.formatCurrency(expenses),
         percent: total > 0 ? (expenses / total) * 100 : 0,
-        sliceSettings: { 
-          fill: am5.color(this.getCustomColor('expenses', '#EF4444')) 
+        sliceSettings: {
+          fill: am5.color(this.getCustomColor('expenses', '#EF4444'))
         }
       }
     ];
@@ -338,8 +340,8 @@ export class FinancialMetricsCardComponent implements OnInit, OnDestroy {
         value: Math.abs(savings),
         amount: this.formatCurrency(Math.abs(savings)),
         percent: total > 0 ? (Math.abs(savings) / total) * 100 : 0,
-        sliceSettings: { 
-          fill: am5.color(this.getCustomColor('savings', savings >= 0 ? '#3B82F6' : '#F59E0B')) 
+        sliceSettings: {
+          fill: am5.color(this.getCustomColor('savings', savings >= 0 ? '#3B82F6' : '#F59E0B'))
         }
       });
     }
@@ -361,7 +363,7 @@ export class FinancialMetricsCardComponent implements OnInit, OnDestroy {
 
     // Animate the chart
     this.outerSeries.appear(1000, 100);
-    
+
     this.innerSeries.appear(1000, 100);
   }
 
@@ -417,12 +419,7 @@ export class FinancialMetricsCardComponent implements OnInit, OnDestroy {
   }
 
   formatCurrency(value: number): string {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: this.effectiveConfig.currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
+    return this.currencyService.formatAmount(value);
   }
 
   onRefreshClick(): void {

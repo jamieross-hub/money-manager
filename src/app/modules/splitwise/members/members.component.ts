@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { SplitwiseGroup } from 'src/app/util/models/splitwise.model';
+import { CurrencyService } from 'src/app/util/service/currency.service';
 
 @Component({
   selector: 'app-members',
@@ -12,11 +13,10 @@ export class MembersComponent {
   @Output() addMember = new EventEmitter<void>();
   Math = Math; // Make Math available in template
 
-  formatCurrency(amount: number, currency: string = 'USD'): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency
-    }).format(amount);
+  constructor(private currencyService: CurrencyService) { }
+
+  formatCurrency(amount: number, currency?: string): string {
+    return this.currencyService.formatAmount(amount);
   }
 
   getGroupMemberCount(): number {

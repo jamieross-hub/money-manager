@@ -23,6 +23,7 @@ import { RecentActivityConfig, RecentTransaction } from '../../../util/component
 import { MonthlyTrendsConfig, MonthlyTrend } from '../../../util/components/cards/monthly-trends-card/monthly-trends-card.component';
 import { CategoryBreakdownConfig, CategoryBreakdown } from '../../../util/components/cards/category-breakdown-card/category-breakdown-card.component';
 import { QuickActionsFabConfig, QuickAction } from '../../../util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
+import { CurrencyService } from '../../../util/service/currency.service';
 
 interface CategorySpending {
   category: string;
@@ -414,7 +415,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
     private store: Store<AppState>,
     public dateService: DateService,
     private ssrService: SsrService,
-    private userService: UserService
+    private userService: UserService,
+    private currencyService: CurrencyService
   ) {
     // Initialize selectors
     this.transactions$ = this.store.select(TransactionsSelectors.selectAllTransactions);
@@ -1022,17 +1024,9 @@ export class ReportsComponent implements OnInit, OnDestroy {
         return 'h-64 sm:h-80';
     }
   }
-
   // Currency formatting based on preferences
   formatCurrencyWithPreference(amount: number): string {
-    switch (this.userPreferences.currencyFormat) {
-      case 'USD':
-        return `$${amount.toLocaleString('en-US')}`;
-      case 'EUR':
-        return `€${amount.toLocaleString('de-DE')}`;
-      default:
-        return `₹${amount.toLocaleString('en-IN')}`;
-    }
+    return this.currencyService.formatAmount(amount);
   }
 
   exportReport(): void {
@@ -1114,7 +1108,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
   }
 
   formatCurrency(amount: number): string {
-    return `₹${amount.toLocaleString('en-IN')}`;
+    return this.currencyService.formatAmount(amount);
   }
 
   getTransactionIcon(transaction: Transaction): string {

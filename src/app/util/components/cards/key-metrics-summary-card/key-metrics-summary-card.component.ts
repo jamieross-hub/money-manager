@@ -13,6 +13,7 @@ import { Transaction } from '../../../../util/models/transaction.model';
 import { Category } from '../../../../util/models/category.model';
 import { Account } from '../../../../util/models/account.model';
 import { TransactionType, AccountType } from '../../../../util/config/enums';
+import { CurrencyService } from '../../../service/currency.service';
 
 export interface KeyMetric {
   id?: string;
@@ -134,7 +135,10 @@ export class KeyMetricsSummaryCardComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private store: Store<AppState>) {
+  constructor(
+    private store: Store<AppState>,
+    private currencyService: CurrencyService
+  ) {
     // Initialize store selectors
     this.transactions$ = this.store.select(TransactionsSelectors.selectAllTransactions);
     this.categories$ = this.store.select(CategoriesSelectors.selectAllCategories);
@@ -149,7 +153,7 @@ export class KeyMetricsSummaryCardComponent implements OnInit, OnDestroy {
       this.categoriesLoading$,
       this.accountsLoading$
     ]).pipe(
-      map(([transactionsLoading, categoriesLoading, accountsLoading]) => 
+      map(([transactionsLoading, categoriesLoading, accountsLoading]) =>
         transactionsLoading || categoriesLoading || accountsLoading
       )
     );
@@ -335,7 +339,7 @@ export class KeyMetricsSummaryCardComponent implements OnInit, OnDestroy {
           const transactionCount = currentMonthTransactions.length;
           const previousTransactionCount = previousMonthTransactions.length;
           const transactionChange = transactionCount - previousTransactionCount;
-          const transactionChangePercentage = previousTransactionCount > 0 ? 
+          const transactionChangePercentage = previousTransactionCount > 0 ?
             (transactionChange / previousTransactionCount) * 100 : 0;
 
           metrics.push({
@@ -409,30 +413,30 @@ export class KeyMetricsSummaryCardComponent implements OnInit, OnDestroy {
     if (this.effectiveConfig.cardsPerRow) {
       const cardsPerRow = this.effectiveConfig.cardsPerRow;
       let classes = `grid-cols-${cardsPerRow.xs || 1}`;
-      
+
       if (cardsPerRow.sm && cardsPerRow.sm !== cardsPerRow.xs) {
         classes += ` sm:grid-cols-${cardsPerRow.sm}`;
       }
-      
+
       if (cardsPerRow.md && cardsPerRow.md !== cardsPerRow.sm) {
         classes += ` md:grid-cols-${cardsPerRow.md}`;
       }
-      
+
       if (cardsPerRow.lg && cardsPerRow.lg !== cardsPerRow.md) {
         classes += ` lg:grid-cols-${cardsPerRow.lg}`;
       }
-      
+
       if (cardsPerRow.xl && cardsPerRow.xl !== cardsPerRow.lg) {
         classes += ` xl:grid-cols-${cardsPerRow.xl}`;
       }
-      
+
       if (cardsPerRow.xxl && cardsPerRow.xxl !== cardsPerRow.xl) {
         classes += ` 2xl:grid-cols-${cardsPerRow.xxl}`;
       }
-      
+
       return classes;
     }
-    
+
     // Fallback to responsiveBreakpoints for backward compatibility
     const breakpoints = this.effectiveConfig.responsiveBreakpoints;
     const mobile = breakpoints?.mobile ?? 1;
@@ -441,15 +445,15 @@ export class KeyMetricsSummaryCardComponent implements OnInit, OnDestroy {
 
     // Build responsive grid classes
     let classes = `grid-cols-${mobile}`;
-    
+
     if (tablet > mobile) {
       classes += ` sm:grid-cols-${tablet}`;
     }
-    
+
     if (desktop > tablet) {
       classes += ` lg:grid-cols-${desktop}`;
     }
-    
+
     if (desktop > 4) {
       classes += ` xl:grid-cols-${Math.min(desktop, 6)}`;
     }
@@ -475,12 +479,7 @@ export class KeyMetricsSummaryCardComponent implements OnInit, OnDestroy {
   }
 
   formatCurrency(value: number): string {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: this.effectiveConfig.currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
+    return this.currencyService.formatAmount(value);
   }
 
   getMetricClasses(metric: KeyMetric): { [key: string]: boolean } {
@@ -507,33 +506,33 @@ export class KeyMetricsSummaryCardComponent implements OnInit, OnDestroy {
 
     switch (color) {
       case 'green':
-        return type === 'text' ? 'text-green-600 dark:text-green-400' : 
-               type === 'value' ? 'text-green-700 dark:text-green-300' : 
-               'bg-green-50 dark:bg-green-900/20';
+        return type === 'text' ? 'text-green-600 dark:text-green-400' :
+          type === 'value' ? 'text-green-700 dark:text-green-300' :
+            'bg-green-50 dark:bg-green-900/20';
       case 'red':
-        return type === 'text' ? 'text-red-600 dark:text-red-400' : 
-               type === 'value' ? 'text-red-700 dark:text-red-300' : 
-               'bg-red-50 dark:bg-red-900/20';
+        return type === 'text' ? 'text-red-600 dark:text-red-400' :
+          type === 'value' ? 'text-red-700 dark:text-red-300' :
+            'bg-red-50 dark:bg-red-900/20';
       case 'blue':
-        return type === 'text' ? 'text-blue-600 dark:text-blue-400' : 
-               type === 'value' ? 'text-blue-700 dark:text-blue-300' : 
-               'bg-blue-50 dark:bg-blue-900/20';
+        return type === 'text' ? 'text-blue-600 dark:text-blue-400' :
+          type === 'value' ? 'text-blue-700 dark:text-blue-300' :
+            'bg-blue-50 dark:bg-blue-900/20';
       case 'purple':
-        return type === 'text' ? 'text-purple-600 dark:text-purple-400' : 
-               type === 'value' ? 'text-purple-700 dark:text-purple-300' : 
-               'bg-purple-50 dark:bg-purple-900/20';
+        return type === 'text' ? 'text-purple-600 dark:text-purple-400' :
+          type === 'value' ? 'text-purple-700 dark:text-purple-300' :
+            'bg-purple-50 dark:bg-purple-900/20';
       case 'orange':
-        return type === 'text' ? 'text-orange-600 dark:text-orange-400' : 
-               type === 'value' ? 'text-orange-700 dark:text-orange-300' : 
-               'bg-orange-50 dark:bg-orange-900/20';
+        return type === 'text' ? 'text-orange-600 dark:text-orange-400' :
+          type === 'value' ? 'text-orange-700 dark:text-orange-300' :
+            'bg-orange-50 dark:bg-orange-900/20';
       case 'yellow':
-        return type === 'text' ? 'text-yellow-600 dark:text-yellow-400' : 
-               type === 'value' ? 'text-yellow-700 dark:text-yellow-300' : 
-               'bg-yellow-50 dark:bg-yellow-900/20';
+        return type === 'text' ? 'text-yellow-600 dark:text-yellow-400' :
+          type === 'value' ? 'text-yellow-700 dark:text-yellow-300' :
+            'bg-yellow-50 dark:bg-yellow-900/20';
       case 'gray':
-        return type === 'text' ? 'text-gray-600 dark:text-gray-400' : 
-               type === 'value' ? 'text-gray-700 dark:text-gray-300' : 
-               'bg-gray-50 dark:bg-gray-900/20';
+        return type === 'text' ? 'text-gray-600 dark:text-gray-400' :
+          type === 'value' ? 'text-gray-700 dark:text-gray-300' :
+            'bg-gray-50 dark:bg-gray-900/20';
       default:
         return '';
     }
@@ -541,7 +540,7 @@ export class KeyMetricsSummaryCardComponent implements OnInit, OnDestroy {
 
   getTrendIcon(metric: KeyMetric): string {
     if (!metric.trend) return '';
-    
+
     switch (metric.trend) {
       case 'up':
         return 'trending_up';
@@ -554,7 +553,7 @@ export class KeyMetricsSummaryCardComponent implements OnInit, OnDestroy {
 
   getTrendColor(metric: KeyMetric): string {
     if (!metric.trend) return '';
-    
+
     switch (metric.trend) {
       case 'up':
         return 'text-green-600 dark:text-green-400';
@@ -575,25 +574,25 @@ export class KeyMetricsSummaryCardComponent implements OnInit, OnDestroy {
     if (metric.changeValue === undefined && metric.changePercentage === undefined) {
       return '';
     }
-    
+
     let display = '';
-    
+
     if (metric.changeValue !== undefined) {
       const sign = metric.changeValue >= 0 ? '+' : '';
       display += `${sign}${this.formatCurrency(metric.changeValue)}`;
     }
-    
+
     if (metric.changePercentage !== undefined) {
       const sign = metric.changePercentage >= 0 ? '+' : '';
       const percentage = `${sign}${metric.changePercentage.toFixed(1)}%`;
-      
+
       if (display) {
         display += ` (${percentage})`;
       } else {
         display = percentage;
       }
     }
-    
+
     return display;
   }
 
@@ -625,7 +624,7 @@ export class KeyMetricsSummaryCardComponent implements OnInit, OnDestroy {
   getCurrentCardsPerRow(): number {
     const cardsPerRow = this.effectiveConfig.cardsPerRow;
     if (!cardsPerRow) return this.effectiveConfig.columns || 4;
-    
+
     // This is a simplified version - in a real app you might want to use a service
     // to detect the actual screen size. For now, we'll return the default.
     return cardsPerRow.xl || cardsPerRow.lg || cardsPerRow.md || cardsPerRow.sm || cardsPerRow.xs || 1;
@@ -634,7 +633,7 @@ export class KeyMetricsSummaryCardComponent implements OnInit, OnDestroy {
   getCardsPerRowInfo(): string {
     const cardsPerRow = this.effectiveConfig.cardsPerRow;
     if (!cardsPerRow) return `${this.effectiveConfig.columns || 4} columns`;
-    
+
     const parts = [];
     if (cardsPerRow.xs) parts.push(`XS: ${cardsPerRow.xs}`);
     if (cardsPerRow.sm) parts.push(`SM: ${cardsPerRow.sm}`);
@@ -642,7 +641,7 @@ export class KeyMetricsSummaryCardComponent implements OnInit, OnDestroy {
     if (cardsPerRow.lg) parts.push(`LG: ${cardsPerRow.lg}`);
     if (cardsPerRow.xl) parts.push(`XL: ${cardsPerRow.xl}`);
     if (cardsPerRow.xxl) parts.push(`2XL: ${cardsPerRow.xxl}`);
-    
+
     return parts.join(', ');
   }
 } 

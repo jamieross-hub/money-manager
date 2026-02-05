@@ -13,6 +13,7 @@ import { Transaction } from '../../../../util/models/transaction.model';
 import { Category } from '../../../../util/models/category.model';
 import { Account } from '../../../../util/models/account.model';
 import { TransactionType } from '../../../../util/config/enums';
+import { CurrencyService } from '../../../service/currency.service';
 
 export interface CategoryTrend {
   category: string;
@@ -112,7 +113,10 @@ export class AnalyticsSummaryCardComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private store: Store<AppState>) {
+  constructor(
+    private store: Store<AppState>,
+    private currencyService: CurrencyService
+  ) {
     // Initialize store selectors
     this.transactions$ = this.store.select(TransactionsSelectors.selectAllTransactions);
     this.categories$ = this.store.select(CategoriesSelectors.selectAllCategories);
@@ -127,7 +131,7 @@ export class AnalyticsSummaryCardComponent implements OnInit, OnDestroy {
       this.categoriesLoading$,
       this.accountsLoading$
     ]).pipe(
-      map(([transactionsLoading, categoriesLoading, accountsLoading]) => 
+      map(([transactionsLoading, categoriesLoading, accountsLoading]) =>
         transactionsLoading || categoriesLoading || accountsLoading
       )
     );
@@ -196,7 +200,7 @@ export class AnalyticsSummaryCardComponent implements OnInit, OnDestroy {
           .map(item => {
             const change = item.current - item.previous;
             const percentage = item.previous > 0 ? ((change / item.previous) * 100) : 0;
-            
+
             return {
               category: item.category.name,
               change: Math.abs(change),
@@ -223,16 +227,16 @@ export class AnalyticsSummaryCardComponent implements OnInit, OnDestroy {
         for (let i = 5; i >= 0; i--) {
           const month = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
           const monthName = month.toLocaleDateString('en-US', { month: 'short' });
-          
+
           const monthTransactions = transactions.filter(t => {
             const txDate = this.convertToDate(t.date);
-            return txDate.getMonth() === month.getMonth() && 
-                   txDate.getFullYear() === month.getFullYear() &&
-                   t.type === TransactionType.EXPENSE;
+            return txDate.getMonth() === month.getMonth() &&
+              txDate.getFullYear() === month.getFullYear() &&
+              t.type === TransactionType.EXPENSE;
           });
 
           const totalAmount = monthTransactions.reduce((sum, t) => sum + t.amount, 0);
-          
+
           trends.push({
             period: monthName,
             amount: totalAmount
@@ -265,7 +269,7 @@ export class AnalyticsSummaryCardComponent implements OnInit, OnDestroy {
             if (account.type === 'loan' && account.loanDetails) {
               balance = -(account.loanDetails.remainingBalance || 0);
             }
-            
+
             return {
               account: account.name,
               balance: balance,
@@ -336,12 +340,7 @@ export class AnalyticsSummaryCardComponent implements OnInit, OnDestroy {
   }
 
   formatCurrency(value: number): string {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: this.effectiveConfig.currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
+    return this.currencyService.formatAmount(value);
   }
 
   getTrendColor(trend: CategoryTrend): string {
@@ -401,9 +400,9 @@ export class AnalyticsSummaryCardComponent implements OnInit, OnDestroy {
       this.spendingTrends$,
       this.accountBalances$
     ]).pipe(
-      map(([categoryTrends, spendingTrends, accountBalances]) => 
-        categoryTrends.length === 0 && 
-        spendingTrends.length === 0 && 
+      map(([categoryTrends, spendingTrends, accountBalances]) =>
+        categoryTrends.length === 0 &&
+        spendingTrends.length === 0 &&
         accountBalances.length === 0
       )
     );

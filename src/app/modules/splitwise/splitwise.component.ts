@@ -8,6 +8,7 @@ import { Auth } from '@angular/fire/auth';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { SplitwiseGroup, GroupInvitation } from 'src/app/util/models/splitwise.model';
 import { CreateGroupDialogComponent } from './create-group-dialog/create-group-dialog.component';
+import { CurrencyService } from 'src/app/util/service/currency.service';
 
 // NgRx
 import { AppState } from '../../store/app.state';
@@ -35,7 +36,8 @@ export class SplitwiseComponent implements OnInit, OnDestroy {
     private store: Store<AppState>,
     private dialog: MatDialog,
     private notificationService: NotificationService,
-    public breakpointService: BreakpointService
+    public breakpointService: BreakpointService,
+    private currencyService: CurrencyService
   ) {
     // Observe breakpoints for mobile detection
     this.breakpointObserver.observe([Breakpoints.Handset])
@@ -115,7 +117,7 @@ export class SplitwiseComponent implements OnInit, OnDestroy {
         confirmText: 'Delete',
         cancelText: 'Cancel',
       },
-    }).afterClosed().subscribe((result: any) => {   
+    }).afterClosed().subscribe((result: any) => {
       if (result) {
         this.store.dispatch(SplitwiseActions.deleteGroup({ groupId: group.id! }));
       }
@@ -130,10 +132,7 @@ export class SplitwiseComponent implements OnInit, OnDestroy {
     return dateObj.toLocaleDateString();
   }
 
-  formatCurrency(amount: number, currency: string = 'USD'): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency
-    }).format(amount);
+  formatCurrency(amount: number, currency?: string): string {
+    return this.currencyService.formatAmount(amount);
   }
 } 

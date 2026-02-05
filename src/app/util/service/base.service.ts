@@ -5,6 +5,7 @@ import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { APP_CONFIG, ERROR_MESSAGES } from '../config/config';
 import { SyncStatus } from '../config/enums';
+import { CurrencyService } from './currency.service';
 
 /**
  * Base service class providing common functionality for all services
@@ -16,8 +17,9 @@ export abstract class BaseService {
 
   constructor(
     protected readonly firestore: Firestore,
-    protected readonly auth: Auth
-  ) {}
+    protected readonly auth: Auth,
+    protected readonly currencyService: CurrencyService
+  ) { }
 
   /**
    * Get current user ID
@@ -67,9 +69,9 @@ export abstract class BaseService {
    */
   protected handleError(error: any, context: string): Observable<never> {
     console.error(`Error in ${context}:`, error);
-    
-    let errorMessage:string = ERROR_MESSAGES.NETWORK.SERVER_ERROR;
-    
+
+    let errorMessage: string = ERROR_MESSAGES.NETWORK.SERVER_ERROR;
+
     if (error.code) {
       switch (error.code) {
         case 'auth/user-not-found':
@@ -94,7 +96,7 @@ export abstract class BaseService {
           errorMessage = error.message || ERROR_MESSAGES.NETWORK.SERVER_ERROR;
       }
     }
-    
+
     return throwError(() => new Error(errorMessage));
   }
 
@@ -246,11 +248,8 @@ export abstract class BaseService {
   /**
    * Format currency amount
    */
-  protected formatCurrency(amount: number, currency: string = 'USD'): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency
-    }).format(amount);
+  protected formatCurrency(amount: number, currency?: string): string {
+    return this.currencyService.formatAmount(amount);
   }
 
   /**
@@ -281,7 +280,7 @@ export abstract class BaseService {
     baseDelay: number = 1000
   ): Promise<T> {
     let lastError: any;
-    
+
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         return await operation();
@@ -290,12 +289,12 @@ export abstract class BaseService {
         if (attempt === maxRetries) {
           throw error;
         }
-        
+
         const delay = baseDelay * Math.pow(2, attempt);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
-    
+
     throw lastError;
   }
 } 

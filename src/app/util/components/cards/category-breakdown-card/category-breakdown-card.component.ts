@@ -17,6 +17,7 @@ import * as CategoriesSelectors from '../../../../store/categories/categories.se
 import { Transaction } from '../../../../util/models/transaction.model';
 import { Category } from '../../../../util/models/category.model';
 import { TransactionType } from '../../../../util/config/enums';
+import { CurrencyService } from '../../../service/currency.service';
 
 export interface CategoryBreakdown {
   category: string;
@@ -103,15 +104,15 @@ export class CategoryBreakdownCardComponent implements OnInit, OnDestroy {
   // Computed data
   categoryBreakdown$: Observable<CategoryBreakdown[]>;
   isLoading$: Observable<boolean>;
-  
+
   // AmCharts
   private root: am5.Root | undefined;
   private chart: am5xy.XYChart | am5radar.RadarChart | undefined;
   currentChartType: 'bar' | 'radial' = 'radial';
-  
+
   // Generate unique chart container ID
   chartContainerId: string;
-  
+
   // Premium color palette
   private premiumColors: string[] = [
     '#6366F1', // Indigo
@@ -137,11 +138,12 @@ export class CategoryBreakdownCardComponent implements OnInit, OnDestroy {
   constructor(
     private store: Store<AppState>,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private zone: NgZone
+    private zone: NgZone,
+    private currencyService: CurrencyService
   ) {
     // Generate unique chart container ID with chart type
     this.chartContainerId = `category-breakdown-chart-${this.currentChartType}`;
-    
+
     // Initialize store selectors
     this.transactions$ = this.store.select(TransactionsSelectors.selectAllTransactions);
     this.categories$ = this.store.select(CategoriesSelectors.selectAllCategories);
@@ -153,7 +155,7 @@ export class CategoryBreakdownCardComponent implements OnInit, OnDestroy {
       this.transactionsLoading$,
       this.categoriesLoading$
     ]).pipe(
-      map(([transactionsLoading, categoriesLoading]) => 
+      map(([transactionsLoading, categoriesLoading]) =>
         transactionsLoading || categoriesLoading
       )
     );
@@ -165,7 +167,7 @@ export class CategoryBreakdownCardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Chart type is controlled by config only
     this.currentChartType = this.effectiveConfig.chartType || 'radial';
-    
+
     // Update chart container ID if chart type changes
     this.updateChartContainerId();
   }
@@ -185,7 +187,7 @@ export class CategoryBreakdownCardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    
+
     this.browserOnly(() => {
       if (this.root) {
         this.root.dispose();
@@ -244,7 +246,7 @@ export class CategoryBreakdownCardComponent implements OnInit, OnDestroy {
     const xAxis = this.chart.xAxes.push(
       am5xy.CategoryAxis.new(this.root, {
         categoryField: "category",
-        renderer: am5xy.AxisRendererX.new(this.root, { 
+        renderer: am5xy.AxisRendererX.new(this.root, {
           minGridDistance: 30,
           cellStartLocation: 0.1,
           cellEndLocation: 0.9
@@ -444,11 +446,11 @@ export class CategoryBreakdownCardComponent implements OnInit, OnDestroy {
     if (this.currentChartType === 'radial') {
       if (this.radarSeries && this.radarYAxis) {
         console.log('Setting radial chart data');
-        
+
         // Set data for both axis and series
         this.radarYAxis.data.setAll(data);
         this.radarSeries.data.setAll(data);
-        
+
         this.radarSeries.appear(1000, 100);
       } else {
         console.error('Radar series not available');
@@ -510,8 +512,8 @@ export class CategoryBreakdownCardComponent implements OnInit, OnDestroy {
         const filteredTransactions = transactions.filter(t => {
           const txDate = this.convertToDate(t.date);
           const matchesDate = txDate >= startDate && txDate <= currentDate;
-          const matchesType = this.effectiveConfig.transactionType === 'all' || 
-                             t.type === (this.effectiveConfig.transactionType === 'income' ? TransactionType.INCOME : TransactionType.EXPENSE);
+          const matchesType = this.effectiveConfig.transactionType === 'all' ||
+            t.type === (this.effectiveConfig.transactionType === 'income' ? TransactionType.INCOME : TransactionType.EXPENSE);
           return matchesDate && matchesType;
         });
 
@@ -604,12 +606,7 @@ export class CategoryBreakdownCardComponent implements OnInit, OnDestroy {
   }
 
   formatCurrency(value: number): string {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: this.effectiveConfig.currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
+    return this.currencyService.formatAmount(value);
   }
 
   getProgressBarColor(percentage: number): string {
