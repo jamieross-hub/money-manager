@@ -6,6 +6,18 @@ import { APP_CONFIG } from '../config/config';
 
 import { CurrencyDetectionUtil } from '../helpers/currency-detection.util';
 
+export interface CurrencyFormatOptions {
+  currency?: string;
+  locale?: string;
+  showSymbol?: boolean;
+  showCode?: boolean;
+  decimalPlaces?: number;
+  compact?: boolean;
+  signDisplay?: 'auto' | 'never' | 'always' | 'exceptZero';
+  notation?: 'standard' | 'scientific' | 'engineering' | 'compact';
+  round?: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -72,12 +84,77 @@ export class CurrencyService {
     return DEFAULT_CURRENCY;
   }
 
-  formatAmount(amount: number): string {
-    const code = this.getCurrentCurrency();
-    const locale = this.getCurrentLanguage();
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency: code,
-    }).format(amount);
+  /**
+   * Helper to get currency configuration from COUNTRY_MAPPING
+   */
+  getCurrencyConfig(currencyCode: string): { symbol: string, decimalPlaces: number } | undefined {
+    const mapping = APP_CONFIG.CURRENCY.COUNTRY_MAPPING;
+    for (const data of Object.values(mapping)) {
+      if (data.currency === currencyCode) {
+        return { symbol: (data as any).symbol, decimalPlaces: (data as any).decimalPlaces };
+      }
+    }
+    return undefined;
   }
-} 
+
+  formatAmount(amount: number | string | null | undefined, options?: CurrencyFormatOptions): string {
+    if (amount === null || amount === undefined || amount === '') {
+      return '';
+    }
+
+    const numericValue = typeof amount === 'string' ? parseFloat(amount) : amount;
+
+    if (isNaN(numericValue)) {
+      return 'Invalid amount';
+    }
+
+    const {
+      currency = this.getCurrentCurrency(),
+      locale = this.getCurrentLanguage(),
+      showSymbol = true,
+      showCode = false,
+      decimalPlaces,
+      compact = false,
+      signDisplay = 'auto',
+      notation = 'standard',
+      round = false
+    } = options || {};
+
+    const config = this.getCurrencyConfig(currency);
+    const configDecimalPlaces = config?.decimalPlaces ?? 2;
+
+    // Apply rounding if specified
+    const roundedValue = round ? Math.round(numericValue) : numericValue;
+
+    // Determine decimal places
+    const effectiveDecimalPlaces = round
+      ? 0
+      : (decimalPlaces !== undefined ? decimalPlaces : configDecimalPlaces);
+
+    const formatOptions: Intl.NumberFormatOptions = {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: effectiveDecimalPlaces,
+      maximumFractionDigits: effectiveDecimalPlaces,
+      signDisplay: signDisplay,
+      notation: compact ? 'compact' : notation
+    };
+
+    if (!showSymbol) {
+      formatOptions.currencyDisplay = 'code';
+    } else if (showCode) {
+      formatOptions.currencyDisplay = 'narrowSymbol';
+    } else {
+      formatOptions.currencyDisplay = 'symbol';
+    }
+
+    try {
+      return new Intl.NumberFormat(locale, formatOptions).format(roundedValue);
+    } catch (error) {
+      console.error('Error formatting currency:', error);
+      // Fallback formatting
+      const symbol = config?.symbol || currency;
+      return `${symbol}${roundedValue.toFixed(effectiveDecimalPlaces)}`;
+    }
+  }
+}
