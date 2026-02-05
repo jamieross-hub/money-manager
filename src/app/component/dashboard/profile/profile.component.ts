@@ -56,10 +56,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   countries = Object.entries(APP_CONFIG.REGIONAL.COUNTRY_MAPPING).map(([code, config]) => ({
     code,
-    name: (config as any).languageName || code,
+    languageName: (config as any).languageName || code,
+    countryName: (config as any).countryName || code,
     language: (config as any).language,
     currency: (config as any).currency
-  })).sort((a, b) => a.name.localeCompare(b.name));
+  })).sort((a, b) => a.countryName.localeCompare(b.countryName));
 
   fabConfig: QuickActionsFabConfig = {
     title: 'Profile',
@@ -138,11 +139,24 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Add current user's timezone to list if missing
+    this.ensureCurrentTimezoneInList();
+
     // Dispatch action to load profile
     if (this.currentUser) {
       this.store.dispatch(ProfileActions.loadProfile({ userId: this.currentUser.uid }));
     }
     this.subscribeToStoreData();
+  }
+
+  private ensureCurrentTimezoneInList(): void {
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (userTimezone && !this.timezones.find(tz => tz.value === userTimezone)) {
+      this.timezones = [...this.timezones, {
+        value: userTimezone,
+        label: `${userTimezone} (Detected)`
+      }];
+    }
   }
 
   ngOnDestroy(): void {
@@ -261,6 +275,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
           categoryListViewMode: this.userProfile.preferences?.categoryListViewMode || false,
         },
       });
+
+      // Ensure form's current timezone is in the list
+      const formTimezone = this.profileForm.get('preferences.timezone')?.value;
+      if (formTimezone && !this.timezones.find(tz => tz.value === formTimezone)) {
+        this.timezones = [...this.timezones, {
+          value: formTimezone,
+          label: `${formTimezone} (Preference)`
+        }];
+      }
     }
   }
 

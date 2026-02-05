@@ -154,11 +154,22 @@
 
 					<!-- Country/Region -->
 					<mat-form-field appearance="fill" class="form-field">
+						<mat-label>Language *</mat-label>
+						<mat-select formControlName="language" [disabled]="!isEditing">
+							@for (country of countries; track country.code) {
+							<mat-option [value]="country.language">
+								{{ country.languageName }}
+							</mat-option>
+							}
+						</mat-select>
+					</mat-form-field>
+
+					<mat-form-field appearance="fill" class="form-field">
 						<mat-label>Country/Region *</mat-label>
 						<mat-select formControlName="country" [disabled]="!isEditing">
 							@for (country of countries; track country.code) {
 							<mat-option [value]="country.code">
-								{{ country.name }}
+								{{ country.countryName }}
 							</mat-option>
 							}
 						</mat-select>

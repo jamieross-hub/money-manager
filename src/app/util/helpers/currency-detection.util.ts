@@ -23,18 +23,26 @@ export class CurrencyDetectionUtil {
     }
 
     /**
-     * Detect user's currency based on browser locale and timezone
+     * Detect user's currency based on detected country
      * @returns Detected currency code or fallback to INR
      */
     static detectCurrency(): CurrencyCode {
+        const countryCode = this.detectCountryCode();
+        return this.COUNTRY_CONFIG[countryCode]?.currency || CurrencyCode.INR;
+    }
+
+    /**
+     * Detect user's country code based on browser locale and timezone
+     * @returns Detected country code (e.g., 'US', 'IN')
+     */
+    static detectCountryCode(): string {
         try {
             // Method 1: Try to get country from Intl.DateTimeFormat (most reliable)
             const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
             if (timeZone) {
                 const country = this.getCountryFromTimezone(timeZone);
                 if (country && this.COUNTRY_CONFIG[country]) {
-                    console.log(`Detected currency from timezone: ${this.COUNTRY_CONFIG[country].currency}`);
-                    return this.COUNTRY_CONFIG[country].currency;
+                    return country;
                 }
             }
 
@@ -43,18 +51,31 @@ export class CurrencyDetectionUtil {
             if (locale) {
                 const countryCode = this.getCountryFromLocale(locale);
                 if (countryCode && this.COUNTRY_CONFIG[countryCode]) {
-                    console.log(`Detected currency from locale: ${this.COUNTRY_CONFIG[countryCode].currency}`);
-                    return this.COUNTRY_CONFIG[countryCode].currency;
+                    return countryCode;
                 }
             }
 
-            // Method 3: Fallback to INR (India)
-            console.log('Using fallback currency: INR');
-            return CurrencyCode.INR;
+            return 'IN'; // Fallback to India
         } catch (error) {
-            console.error('Error detecting currency:', error);
-            return CurrencyCode.INR;
+            console.error('Error detecting country:', error);
+            return 'IN';
         }
+    }
+
+    /**
+     * Detect full regional configuration for a user
+     */
+    static detectRegionalConfig(): { country: string, currency: CurrencyCode, language: LanguageCode, timezone: string } {
+        const countryCode = this.detectCountryCode();
+        const config = this.COUNTRY_CONFIG[countryCode];
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+
+        return {
+            country: countryCode,
+            currency: config?.currency || CurrencyCode.INR,
+            language: config?.language || LanguageCode.IN_EN,
+            timezone: timezone
+        };
     }
 
     /**

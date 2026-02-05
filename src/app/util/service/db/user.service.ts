@@ -192,12 +192,9 @@ export class UserService {
     console.log('Guest mode enabled');
   }
 
-  /**
-   * Create default guest user object
-   */
   private createDefaultGuestUser(): User {
-    // Detect currency based on user's location/locale
-    const defaultCurrency = CurrencyDetectionUtil.detectCurrency();
+    // Detect regional configuration based on user's location/locale
+    const regionalConfig = CurrencyDetectionUtil.detectRegionalConfig();
 
     return {
       uid: 'offline-guest',
@@ -209,9 +206,10 @@ export class UserService {
       updatedAt: new Date(),
       emailVerified: true,
       preferences: {
-        defaultCurrency: defaultCurrency,
-        timezone: '',
-        language: '',
+        defaultCurrency: regionalConfig.currency,
+        timezone: regionalConfig.timezone,
+        language: regionalConfig.language,
+        country: regionalConfig.country,
         notifications: false,
         emailUpdates: false,
         budgetAlerts: false
@@ -471,6 +469,7 @@ export class UserService {
       if (userCredential.user) {
         await updateProfile(userCredential.user, { displayName: name });
 
+        const regionalConfig = CurrencyDetectionUtil.detectRegionalConfig();
         const newUser: User = {
           uid: userCredential.user.uid,
           firstName: name,
@@ -478,7 +477,16 @@ export class UserService {
           email,
           role: 'free',
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
+          preferences: {
+            defaultCurrency: regionalConfig.currency,
+            timezone: regionalConfig.timezone,
+            language: regionalConfig.language,
+            country: regionalConfig.country,
+            notifications: true,
+            emailUpdates: true,
+            budgetAlerts: true
+          }
         };
 
         await this.createUserInFirestore(userCredential.user.uid, newUser);
@@ -753,6 +761,7 @@ export class UserService {
   private async createNewGoogleUser(firebaseUser: any): Promise<void> {
     console.log('🆕 Creating new Google user in Firestore');
 
+    const regionalConfig = CurrencyDetectionUtil.detectRegionalConfig();
     const newUser: User = {
       uid: firebaseUser.uid,
       firstName: firebaseUser.displayName?.split(' ')[0] || '',
@@ -760,7 +769,16 @@ export class UserService {
       email: firebaseUser.email || '',
       role: 'free',
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      preferences: {
+        defaultCurrency: regionalConfig.currency,
+        timezone: regionalConfig.timezone,
+        language: regionalConfig.language,
+        country: regionalConfig.country,
+        notifications: true,
+        emailUpdates: true,
+        budgetAlerts: true
+      }
     };
 
     await this.createUserInFirestore(firebaseUser.uid, newUser);
