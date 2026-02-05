@@ -103,6 +103,12 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         icon: 'smart_toy',
         order: 6,
         isPremium: true
+      },
+      {
+        label: 'NAVIGATION.LOAN_CALCULATOR',
+        route: '/dashboard/loan-calculator',
+        icon: 'calculate',
+        order: 7
       }
     ]
   },

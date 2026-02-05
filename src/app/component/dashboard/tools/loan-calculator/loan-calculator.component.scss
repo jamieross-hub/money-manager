@@ -1,0 +1,200 @@
+
+:host {
+    display: block;
+    height: 100%;
+}
+
+// Loan Calculator Professional Aesthetics
+.loan-calculator-container {
+    max-width: 1200px;
+    margin: 0 auto;
+
+    // Font System Integration
+    .title-text { 
+        font-family: 'Inter', system-ui, sans-serif;
+        font-weight: 600;
+        line-height: 1.5;
+        font-size: 22px;
+        @media (min-width: 768px) { font-size: 24px; }
+        color: var(--neutral-900);
+        .dark-theme & { color: var(--primary-100); }
+    }
+    
+    .label-text { 
+        font-family: 'Inter', system-ui, sans-serif;
+        font-weight: 500;
+        line-height: 1.6;
+        font-size: 10px;
+        @media (min-width: 768px) { font-size: 12px; }
+        color: var(--neutral-500);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    .data-text { 
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 500;
+        letter-spacing: 0.025em;
+        &.text-xl { @media (max-width: 640px) { font-size: 1.1rem; } }
+        &.text-2xl { @media (max-width: 640px) { font-size: 1.25rem; } }
+    }
+
+    // Modern Glassmorphism Card
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        border-radius: 20px; // Slightly smaller radius for mobile
+        transition: all 0.3s ease;
+
+        @media (min-width: 768px) {
+            border-radius: 24px;
+        }
+
+        &:hover {
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .dark-theme & {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+        }
+    }
+
+    // Responsive chart height
+    .chart-box {
+        position: relative;
+        min-height: 240px;
+        height: 280px;
+        
+        @media (min-width: 768px) {
+            height: 320px;
+            min-height: 280px;
+        }
+    }
+
+    // Refined summary labels
+    .summary-label {
+        position: absolute;
+        bottom: 2rem;
+        text-align: center;
+        width: 85px;
+        background: var(--surface-100);
+        padding: 6px;
+        border-radius: 10px;
+        border: 1px solid var(--neutral-100);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        z-index: 10;
+
+        @media (min-width: 768px) {
+            bottom: 4rem;
+            width: 120px;
+            padding: 8px;
+            border-radius: 12px;
+        }
+
+        &.left { left: 0.5rem; }
+        &.right { right: 0.5rem; }
+
+        @media (min-width: 1024px) {
+            &.left { left: 3.5rem; }
+            &.right { right: 3.5rem; }
+        }
+
+        .dark-theme & {
+            background: var(--surface-50);
+            border-color: var(--surface-300);
+        }
+    }
+
+    // Custom toggle styles
+    .small-toggle {
+        height: 32px;
+        align-items: center;
+        background: var(--surface-200);
+        border-radius: 10px;
+        border: 1px solid var(--neutral-200);
+        overflow: hidden;
+        padding: 2px;
+
+        ::ng-deep {
+            .mat-button-toggle-button {
+                line-height: normal !important;
+                padding: 0 10px !important;
+                transition: all 0.2s ease;
+                
+                @media (min-width: 640px) {
+                    padding: 0 14px !important;
+                }
+            }
+            .mat-button-toggle-label-content {
+                font-size: 10px;
+                font-weight: 600;
+                font-family: 'Inter', sans-serif;
+                @media (min-width: 640px) { font-size: 11px; }
+            }
+            .mat-button-toggle-checked {
+                background: var(--primary-500) !important;
+                color: white !important;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(var(--primary-500-rgb), 0.3);
+            }
+        }
+    }
+
+    // Slider overrides
+    ::ng-deep {
+        .mat-mdc-slider {
+            --mdc-slider-active-track-color: var(--primary-500);
+            --mdc-slider-handle-color: var(--primary-500);
+            --mdc-slider-active-track-height: 5px;
+            --mdc-slider-inactive-track-height: 5px;
+            
+            .mdc-slider__track--inactive {
+                background-color: var(--neutral-200) !important;
+                opacity: 1;
+            }
+        }
+    }
+
+    // Result Card Color Utilities
+    .bg-theme-primary { background-color: var(--primary-50); }
+    .bg-theme-secondary { background-color: var(--secondary-50); }
+    .bg-theme-tertiary { background-color: var(--tertiary-50); }
+    
+    .text-theme-primary { color: var(--primary-600); }
+    .text-theme-secondary { color: var(--secondary-600); }
+    .text-theme-tertiary { color: var(--tertiary-600); }
+}
+
+@keyframes fadeUp {
+    0% {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// Dark mode adjustments
+:host-context(.dark-theme) {
+    .loan-calculator-container {
+        .bg-theme-primary { background-color: rgba(99, 102, 241, 0.08); }
+        .bg-theme-secondary { background-color: rgba(139, 92, 246, 0.08); }
+        .bg-theme-tertiary { background-color: rgba(236, 72, 153, 0.08); }
+        
+        .text-theme-primary { color: var(--primary-300); }
+        .text-theme-secondary { color: var(--secondary-300); }
+        .text-theme-tertiary { color: var(--tertiary-300); }
+
+        .small-toggle {
+            background: var(--surface-100);
+            border-color: var(--surface-400);
+        }
+    }
+}

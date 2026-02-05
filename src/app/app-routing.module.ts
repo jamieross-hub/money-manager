@@ -30,6 +30,7 @@ import { OfflinePageComponent } from './util/components/offline-page/offline-pag
 import { DataDeletionComponent } from './component/data-deletion/data-deletion.component';
 import { ContactFormComponent } from './component/landing/contact-form/contact-form.component';
 import { SyncToCloudComponent } from './component/sync-to-cloud/sync-to-cloud.component';
+import { LoanCalculatorComponent } from './component/dashboard/tools/loan-calculator/loan-calculator.component';
 
 export const routes: Routes = [
   { path: 'shell', component: AppShellComponent },
@@ -179,6 +180,14 @@ export const routes: Routes = [
       {
         path: 'feedback',
         component: FeedbackComponent,
+        data: {
+          roles: ['free', 'premium', 'admin'],
+          requireEmailVerification: true
+        }
+      },
+      {
+        path: 'loan-calculator',
+        component: LoanCalculatorComponent,
         data: {
           roles: ['free', 'premium', 'admin'],
           requireEmailVerification: true

@@ -43,7 +43,27 @@
         "OPENAI": "การรวม OpenAI",
         "NOTIFICATIONS_NAV": "การแจ้งเตือน",
         "FEEDBACK": "คำติชม",
-        "ADMIN_PANEL": "แผงผู้ดูแลระบบ"
+        "ADMIN_PANEL": "แผงผู้ดูแลระบบ",
+        "LOAN_CALCULATOR": "Loan Calculator"
+    },
+    "LOAN_CALCULATOR": {
+        "TITLE": "Personal Loan EMI Calculator",
+        "SUBTITLE": "Calculate your monthly payments instantly",
+        "LOAN_DETAILS": "Loan Details",
+        "LOAN_AMOUNT": "Loan Amount",
+        "INTEREST_RATE": "Interest Rate (per year)",
+        "LOAN_TENURE": "Loan Tenure",
+        "MONTHS": "Months",
+        "YEARS": "Years",
+        "MONTHLY_EMI": "Monthly EMI",
+        "TOTAL_INTEREST": "Total Interest",
+        "TOTAL_AMOUNT": "Total Amount",
+        "PRINCIPAL_VS_INTEREST": "Principal vs Interest",
+        "PRINCIPAL": "Principal",
+        "INTEREST": "Interest",
+        "RESET_DEFAULTS": "Reset to Defaults",
+        "COPY_LINK": "Copy Shareable Link",
+        "LINK_COPIED": "Link copied to clipboard!"
     },
     "PROFILE": {
         "PERSONAL_INFO": "ข้อมูลส่วนตัว",
