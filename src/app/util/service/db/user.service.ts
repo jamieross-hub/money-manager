@@ -153,16 +153,23 @@ export class UserService {
    * Enable guest/offline mode
    */
   public async enableGuestMode(): Promise<void> {
-    const guestUser: User = {
-      uid: 'offline-guest',
-      email: 'guest@offline.local',
-      role: 'free',
-      firstName: 'Guest',
-      lastName: 'User',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      emailVerified: true
-    };
+    // Check if guest user data already exists in localStorage
+    const existingGuestData = localStorage.getItem('user-data-offline-guest');
+    let guestUser: User;
+
+    if (existingGuestData) {
+      // Load existing guest profile
+      try {
+        guestUser = JSON.parse(existingGuestData);
+        console.log('Loaded existing guest user data from localStorage');
+      } catch (error) {
+        console.error('Error parsing guest user data, creating new:', error);
+        guestUser = this.createDefaultGuestUser();
+      }
+    } else {
+      // Create new guest user
+      guestUser = this.createDefaultGuestUser();
+    }
 
     localStorage.setItem('guest-mode', 'true');
     this.userAuth$.next(guestUser);
@@ -175,6 +182,22 @@ export class UserService {
 
     // We treat the guest user as logged in for the app state
     console.log('Guest mode enabled');
+  }
+
+  /**
+   * Create default guest user object
+   */
+  private createDefaultGuestUser(): User {
+    return {
+      uid: 'offline-guest',
+      email: 'guest@offline.local',
+      role: 'free',
+      firstName: 'Guest',
+      lastName: 'User',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      emailVerified: true
+    };
   }
 
   /**

@@ -49,9 +49,7 @@
 					</div>
 					<div class="card-info">
 						<span class="label dark:text-slate-400">Cash</span>
-						<span class="value dark:text-white">{{ cashBalance$ | async | currency : { currency:
-							(userCurrency$ | async) ||
-							'USD' } }}</span>
+						<span class="value dark:text-white">{{ cashBalance$ | async | currency }}</span>
 					</div>
 				</mat-card-content>
 			</mat-card>
@@ -64,10 +62,7 @@
 					</div>
 					<div class="card-info">
 						<span class="label dark:text-slate-400">Credit</span>
-						<span class="value dark:text-white">{{ creditBalance$ | async | currency : { currency:
-							(userCurrency$ | async)
-							||
-							'USD' } }}</span>
+						<span class="value dark:text-white">{{ creditBalance$ | async | currency }}</span>
 					</div>
 				</mat-card-content>
 			</mat-card>
@@ -80,10 +75,7 @@
 					</div>
 					<div class="card-info">
 						<span class="label dark:text-slate-400">Investments</span>
-						<span class="value dark:text-white">{{ investmentBalance$ | async | currency : { currency:
-							(userCurrency$ |
-							async)
-							|| 'USD' } }}</span>
+						<span class="value dark:text-white">{{ investmentBalance$ | async | currency }}</span>
 					</div>
 				</mat-card-content>
 			</mat-card>
@@ -205,8 +197,7 @@
 											<span>Deposits</span>
 										</div>
 										<div class="detail-value">
-											{{ stats.totalDeposits | currency : { currency: (userCurrency$ | async) ||
-											'USD' } }}
+											{{ stats.totalDeposits | currency }}
 										</div>
 									</div>
 									<div class="detail-row">
@@ -215,8 +206,7 @@
 											<span>Withdrawals</span>
 										</div>
 										<div class="detail-value">
-											{{ stats.totalWithdrawals | currency : { currency: (userCurrency$ | async)
-											|| 'USD' } }}
+											{{ stats.totalWithdrawals | currency }}
 										</div>
 									</div>
 									<div class="detail-row">
@@ -229,8 +219,7 @@
 										</div>
 										<div class="detail-value" [class.positive]="stats.thisMonth >= 0"
 											[class.negative]="stats.thisMonth < 0">
-											{{ stats.thisMonth | currency : { currency: (userCurrency$ | async) || 'USD'
-											} }}
+											{{ stats.thisMonth | currency }}
 										</div>
 									</div>
 									<div class="detail-row">

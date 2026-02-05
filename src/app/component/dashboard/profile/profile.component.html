@@ -128,7 +128,7 @@
 				</div>
 
 				<div class="form-grid">
-					<!-- Default Currency -->
+					<!-- ₹ -->
 					<mat-form-field appearance="fill" class="form-field">
 						<mat-label>Default Currency *</mat-label>
 						<mat-select formControlName="defaultCurrency" [disabled]="!isEditing">
@@ -224,7 +224,7 @@
 					<mat-icon class="action-icon">lock</mat-icon>
 					<h3>Change Password</h3>
 					<p>Update your account password for better security</p>
-					<button mat-stroked-button (click)="changePassword()" class="action-btn">
+					<button mat-stroked-button (click)="changePassword()" class="action-btn" [disabled]="isGuestMode()">
 						Change Password
 					</button>
 				</div>

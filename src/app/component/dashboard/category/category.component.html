@@ -323,9 +323,7 @@
 												<span>Budget</span>
 											</div>
 											<div class="detail-value">
-												{{ subCategory.budget?.budgetAmount | currency : { currency:
-												(userCurrency$
-												| async) || 'USD' } }}
+												{{ subCategory.budget?.budgetAmount | currency }}
 												({{ calculateBudgetProgressPercentage(subCategory).toFixed(0) }}%)
 											</div>
 										</div>

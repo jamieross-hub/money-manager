@@ -537,4 +537,30 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   getAccountName(accountId: string): string {
     return this.accounts.find(account => account.accountId === accountId)?.name || accountId;
   }
+
+  /**
+   * Convert date to timestamp for display
+   * Handles both Firestore Timestamps and regular Date objects
+   */
+  getDateTimestamp(date: any): number {
+    if (!date) return Date.now();
+
+    // Handle Firestore Timestamp
+    if (date.seconds) {
+      return date.seconds * 1000;
+    }
+
+    // Handle Date object
+    if (date instanceof Date) {
+      return date.getTime();
+    }
+
+    // Handle number timestamp
+    if (typeof date === 'number') {
+      return date;
+    }
+
+    // Fallback
+    return new Date(date).getTime();
+  }
 } 

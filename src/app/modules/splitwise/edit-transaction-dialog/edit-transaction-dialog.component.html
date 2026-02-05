@@ -2,40 +2,22 @@
 <div class="mobile-header">
   <div class="header-content">
     <div class="header-left">
-      <button 
-        mat-icon-button 
-        type="button" 
-        (click)="onCancel()" 
-        matTooltip="Close" 
-        class="close-button mobile-only"
-      >
+      <button mat-icon-button type="button" (click)="onCancel()" matTooltip="Close" class="close-button mobile-only">
         <mat-icon>arrow_back</mat-icon>
       </button>
       <h6 class="header-title">
         Edit Transaction
       </h6>
     </div>
-    
+
     <!-- Desktop Close Button -->
-    <button 
-      mat-icon-button 
-      type="button" 
-      (click)="onCancel()" 
-      matTooltip="Close" 
-      class="close-button desktop-only"
-    >
+    <button mat-icon-button type="button" (click)="onCancel()" matTooltip="Close" class="close-button desktop-only">
       <mat-icon>close</mat-icon>
     </button>
-    
+
     <!-- Save Button -->
-    <button 
-      mat-raised-button 
-      color="primary" 
-      (click)="onSave()" 
-      [disabled]="!isFormValid() || isSubmitting" 
-      matTooltip="Save Changes" 
-      class="save-button"
-    >
+    <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!isFormValid() || isSubmitting"
+      matTooltip="Save Changes" class="save-button">
       <mat-spinner *ngIf="isSubmitting" diameter="16"></mat-spinner>
       <mat-icon *ngIf="!isSubmitting">check</mat-icon>
       {{ isSubmitting ? 'Saving...' : 'Save' }}
@@ -47,7 +29,7 @@
 <div class="mobile-content">
   <div class="form-container">
     <form [formGroup]="editForm" (ngSubmit)="onSave()" class="transaction-form">
-      
+
       <!-- Total Amount Field -->
       <div class="form-field">
         <label class="field-label">
@@ -55,22 +37,16 @@
           Total Amount *
         </label>
         <div class="amount-input-container">
-          <input 
-            type="number" 
-            formControlName="totalAmount" 
-            step="0.01" 
-            min="0.01"
-            placeholder="0.00"
-            class="form-input"
-          />
-          <span class="currency-suffix">{{ transaction.currency || 'USD' }}</span>
+          <input type="number" formControlName="totalAmount" step="0.01" min="0.01" placeholder="0.00"
+            class="form-input" />
+          <span class="currency-suffix">{{ transaction.currency }}</span>
         </div>
         <div class="field-footer">
           @if(editForm.get('totalAmount')?.hasError('required') && editForm.get('totalAmount')?.touched) {
-            <p class="error-message">Total amount is required</p>
+          <p class="error-message">Total amount is required</p>
           }
           @if(editForm.get('totalAmount')?.hasError('min') && editForm.get('totalAmount')?.touched) {
-            <p class="error-message">Amount must be greater than 0</p>
+          <p class="error-message">Amount must be greater than 0</p>
           }
         </div>
       </div>
@@ -82,21 +58,13 @@
           Split Mode
         </label>
         <div class="split-mode-selector">
-          <button 
-            type="button"
-            (click)="setSplitMode('percentage')"
-            class="mode-option"
-            [class.selected]="splitMode === 'percentage'"
-          >
+          <button type="button" (click)="setSplitMode('percentage')" class="mode-option"
+            [class.selected]="splitMode === 'percentage'">
             <mat-icon>percent</mat-icon>
             <span>Percentage</span>
           </button>
-          <button 
-            type="button"
-            (click)="setSplitMode('amount')"
-            class="mode-option"
-            [class.selected]="splitMode === 'amount'"
-          >
+          <button type="button" (click)="setSplitMode('amount')" class="mode-option"
+            [class.selected]="splitMode === 'amount'">
             <mat-icon>account_balance_wallet</mat-icon>
             <span>Amount</span>
           </button>
@@ -108,11 +76,13 @@
         <label class="field-label">
           <mat-icon class="field-icon">people</mat-icon>
           Splits
-          <span class="field-subtitle">({{ getTotalPercentage() | number:'1.1-1' }}% • {{ formatCurrency(getTotalSplitAmount()) }})</span>
+          <span class="field-subtitle">({{ getTotalPercentage() | number:'1.1-1' }}% • {{
+            formatCurrency(getTotalSplitAmount()) }})</span>
         </label>
-        
+
         <div class="split-balance-info">
-          <div class="balance-item" [class.over]="getTotalSplitAmount() > totalAmount" [class.under]="getTotalSplitAmount() < totalAmount">
+          <div class="balance-item" [class.over]="getTotalSplitAmount() > totalAmount"
+            [class.under]="getTotalSplitAmount() < totalAmount">
             <span class="balance-label">Split Total:</span>
             <span class="balance-amount">{{ formatCurrency(getTotalSplitAmount()) }}</span>
           </div>
@@ -122,24 +92,22 @@
           </div>
           <div class="balance-difference" *ngIf="Math.abs(getTotalSplitAmount() - totalAmount) > 0.01">
             <span class="difference-label">Difference:</span>
-            <span class="difference-amount" [class.positive]="getTotalSplitAmount() > totalAmount" [class.negative]="getTotalSplitAmount() < totalAmount">
+            <span class="difference-amount" [class.positive]="getTotalSplitAmount() > totalAmount"
+              [class.negative]="getTotalSplitAmount() < totalAmount">
               {{ formatCurrency(Math.abs(getTotalSplitAmount() - totalAmount)) }}
               <span class="difference-type">{{ getTotalSplitAmount() > totalAmount ? 'Over' : 'Under' }}</span>
             </span>
           </div>
         </div>
-        
+
         <div formArrayName="splits" class="splits-list">
           <div *ngFor="let split of splitsArray.controls; let i = index" [formGroupName]="i" class="split-item">
             <div class="split-header">
               <div class="member-info">
                 <div class="member-avatar">
-                  <img 
-                    *ngIf="getMemberPhotoURL(split.get('userId')?.value)" 
-                    [src]="getMemberPhotoURL(split.get('userId')?.value)" 
-                    [alt]="split.get('displayName')?.value"
-                    class="avatar-image"
-                  />
+                  <img *ngIf="getMemberPhotoURL(split.get('userId')?.value)"
+                    [src]="getMemberPhotoURL(split.get('userId')?.value)" [alt]="split.get('displayName')?.value"
+                    class="avatar-image" />
                   <div *ngIf="!getMemberPhotoURL(split.get('userId')?.value)" class="avatar-placeholder">
                     {{ getMemberInitials(split.get('displayName')?.value) }}
                   </div>
@@ -159,14 +127,8 @@
                 <div class="input-field">
                   <label class="input-label">Amount</label>
                   <div class="input-container">
-                    <input 
-                      type="number" 
-                      formControlName="amount" 
-                      step="0.01" 
-                      min="0"
-                      placeholder="0.00"
-                      class="split-input"
-                    />
+                    <input type="number" formControlName="amount" step="0.01" min="0" placeholder="0.00"
+                      class="split-input" />
                     <span class="input-suffix">{{ transaction.currency || 'USD' }}</span>
                   </div>
                 </div>
@@ -174,15 +136,8 @@
                 <div class="input-field">
                   <label class="input-label">Percentage</label>
                   <div class="input-container">
-                    <input 
-                      type="number" 
-                      formControlName="percentage" 
-                      step="0.1" 
-                      min="0" 
-                      max="100"
-                      placeholder="0.0"
-                      class="split-input"
-                    />
+                    <input type="number" formControlName="percentage" step="0.1" min="0" max="100" placeholder="0.0"
+                      class="split-input" />
                     <span class="input-suffix">%</span>
                   </div>
                 </div>
@@ -190,11 +145,7 @@
 
               <div class="paid-toggle">
                 <label class="toggle-label">
-                  <input 
-                    type="checkbox" 
-                    formControlName="isPaid"
-                    class="toggle-checkbox"
-                  />
+                  <input type="checkbox" formControlName="isPaid" class="toggle-checkbox" />
                   <span class="toggle-text">Paid</span>
                 </label>
               </div>
@@ -207,19 +158,11 @@
           <div class="available-members">
             <div class="section-label">Available Members</div>
             <div class="members-grid">
-              <button 
-                *ngFor="let member of getAvailableMembers()"
-                type="button"
-                (click)="addMemberSplit(member)"
-                class="member-option"
-              >
+              <button *ngFor="let member of getAvailableMembers()" type="button" (click)="addMemberSplit(member)"
+                class="member-option">
                 <div class="member-avatar">
-                  <img 
-                    *ngIf="member.photoURL" 
-                    [src]="member.photoURL" 
-                    [alt]="member.displayName"
-                    class="avatar-image"
-                  />
+                  <img *ngIf="member.photoURL" [src]="member.photoURL" [alt]="member.displayName"
+                    class="avatar-image" />
                   <div *ngIf="!member.photoURL" class="avatar-placeholder">
                     {{ getMemberInitials(member.displayName) }}
                   </div>
@@ -243,7 +186,8 @@
         </div>
         <div class="validation-item warning" *ngIf="Math.abs(getTotalSplitAmount() - totalAmount) > 0.01">
           <mat-icon>warning</mat-icon>
-          <span>Split amounts don't match transaction total ({{ formatCurrency(Math.abs(getTotalSplitAmount() - totalAmount)) }} {{ getTotalSplitAmount() > totalAmount ? 'over' : 'under' }})</span>
+          <span>Split amounts don't match transaction total ({{ formatCurrency(Math.abs(getTotalSplitAmount() -
+            totalAmount)) }} {{ getTotalSplitAmount() > totalAmount ? 'over' : 'under' }})</span>
         </div>
       </div>
 
@@ -251,4 +195,4 @@
       <div class="bottom-spacing"></div>
     </form>
   </div>
-</div> 
+</div>

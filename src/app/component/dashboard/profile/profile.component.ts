@@ -94,7 +94,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private breakpointObserver: BreakpointObserver,
     private userService: UserService
   ) {
-    this.currentUser = this.userService.getCurrentUserId();
+    this.currentUser = this.auth.currentUser;
     this.isMobile = this.breakpointObserver.isMatched('(max-width: 600px)');
     // Initialize selectors
     this.profile$ = this.store.select(ProfileSelectors.selectProfile);
@@ -122,6 +122,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Dispatch action to load profile
+    if (this.currentUser) {
+      this.store.dispatch(ProfileActions.loadProfile({ userId: this.currentUser.uid }));
+    }
     this.subscribeToStoreData();
   }
 
@@ -138,6 +142,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
         if (profile) {
           this.userProfile = this.mapUserToProfile(profile);
           this.populateForm();
+        } else if (this.userService.isGuestUser()) {
+          // For guest users, fall back to userAuth$ if store doesn't have profile
+          const guestProfile = this.userService.userAuth$.value;
+          if (guestProfile) {
+            this.userProfile = this.mapUserToProfile(guestProfile);
+            this.populateForm();
+          }
         }
       })
     );
@@ -152,7 +163,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
       this.profileError$.subscribe(error => {
         if (error) {
           console.error('Error loading profile:', error);
-          this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
+          // Don't show error for guest users - it's expected that they might not have Firestore data
+          if (!this.userService.isGuestUser()) {
+            this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
+          }
         }
       })
     );
@@ -262,7 +276,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         const updatedUser: User = {
           uid: this.userProfile.uid,
           email: formValue.email,
-          role: UserRole.FREE, // Keep existing role
+          role: this.userProfile.role || UserRole.FREE,
           createdAt: this.userProfile.createdAt,
           preferences: formValue.preferences,
           firstName: formValue.firstName,
@@ -274,14 +288,31 @@ export class ProfileComponent implements OnInit, OnDestroy {
           updatedAt: new Date(),
         };
 
-        this.store.dispatch(ProfileActions.updateProfile({
-          userId: this.userProfile.uid,
-          profile: updatedUser
-        }));
+        if (this.userService.isGuestUser()) {
+          // For guest users, save to localStorage and update userAuth$
+          localStorage.setItem(`user-data-${updatedUser.uid}`, JSON.stringify(updatedUser));
+          this.userService.userAuth$.next(updatedUser);
 
-        this.notificationService.success(SUCCESS_MESSAGES.GENERAL.UPDATED);
+          // Update local userProfile
+          this.userProfile = updatedUser;
+
+          this.notificationService.success('Profile updated successfully (saved locally)');
+        } else {
+          // For authenticated users, dispatch to store (which will update Firestore)
+          this.store.dispatch(ProfileActions.updateProfile({
+            userId: this.userProfile.uid,
+            profile: updatedUser
+          }));
+
+          this.notificationService.success(SUCCESS_MESSAGES.GENERAL.UPDATED);
+        }
+
         this.isEditing = false;
         this.profileForm.disable();
+
+        // Reset FAB state
+        this.fabConfig.mainButtonIcon = 'edit';
+        this.fabConfig.mainButtonTooltip = 'Edit Profile';
       }
     } catch (error) {
       console.error('Error saving profile:', error);
@@ -339,6 +370,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   async changePassword(): Promise<void> {
+    if (this.userService.isGuestUser()) {
+      this.notificationService.warning('Password change is not available for guest users.');
+      return;
+    }
     this.notificationService.info('Password change feature coming soon');
   }
 
@@ -382,7 +417,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
     if (!date) {
       return 'N/A';
     }
-    return moment(date?.seconds * 1000).format('MMM DD, YYYY');
+
+    // Handle Firestore Timestamp
+    if (date?.seconds) {
+      return moment(date.seconds * 1000).format('MMM DD, YYYY');
+    }
+
+    // Handle Date object or timestamp
+    return moment(date).format('MMM DD, YYYY');
   }
 
   // Error handling methods
@@ -414,6 +456,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
   getIncomeError(): string {
     const control = this.profileForm.get('monthlyIncome');
     return control ? this.validationService.getProfileIncomeError(control) : '';
+  }
+
+  /**
+   * Check if current user is in guest mode
+   */
+  isGuestMode(): boolean {
+    return this.userService.isGuestUser();
   }
 
 }

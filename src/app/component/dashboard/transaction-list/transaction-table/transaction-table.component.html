@@ -76,15 +76,15 @@
           <div class="text-xs md:text-sm text-gray-600 dark:text-slate-400">
 
             @if(breakpointService.device.isTablePortrait) {
-            {{ element.date.seconds * 1000 | date:'MMM dd' }}
+            {{ getDateTimestamp(element.date) | date:'MMM dd' }}
             } @else if(breakpointService.device.isDesktop) {
-            {{ element.date.seconds * 1000 | date:'dd MMM yyyy hh:mm a' }}
+            {{ getDateTimestamp(element.date) | date:'dd MMM yyyy hh:mm a' }}
             } @else {
-            {{ element.date.seconds * 1000 | date:'dd MMM yyyy' }}
+            {{ getDateTimestamp(element.date) | date:'dd MMM yyyy' }}
             }
           </div>
           <div class="text-xs text-gray-400 hidden md:block" *ngIf="!breakpointService.device.isDesktop">
-            {{ element.date.seconds * 1000 | date:'hh:mm a' }}
+            {{ getDateTimestamp(element.date) | date:'hh:mm a' }}
           </div>
         </td>
       </ng-container>
@@ -125,7 +125,7 @@
         <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100 dark:border-slate-800">
           <span *ngIf="!element.isEditing" class="font-bold text-xs md:text-sm"
             [class]="element.type === 'income' ? 'text-green-700' : 'text-red-800'">
-            {{ (element.type == 'income' ? '+':'-' ) + ' ₹' + element?.amount?.toLocaleString() }}
+            {{ (element.type == 'income' ? '+' : '-') + (element?.amount | currency) }}
           </span>
           <input *ngIf="element.isEditing" [(ngModel)]="element.amount" type="number"
             class="w-full px-2 md:px-3 py-1 md:py-2 border border-blue-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -267,7 +267,7 @@
             <!-- Amount -->
             <div class="text-right">
               <div class="font-bold text-sm" [class]="element.type === 'income' ? 'text-green-700' : 'text-red-800'">
-                {{ (element.type == 'income' ? '+':'-' ) + ' ₹' + element.amount.toLocaleString() }}
+                {{ (element.type == 'income' ? '+' : '-') + (element.amount | currency) }}
               </div>
             </div>
 
@@ -304,14 +304,14 @@
         <div class="total-item">
           <mat-icon class="income">trending_up</mat-icon>
           <span class="total-label dark:text-slate-400">Income:</span>
-          <span class="total-value income">₹{{ getTotalIncome().toLocaleString() }}</span>
+          <span class="total-value income">{{ getTotalIncome() | currency }}</span>
         </div>
 
         <!-- Expense Total -->
         <div class="total-item">
           <mat-icon class="expense">trending_down</mat-icon>
           <span class="total-label dark:text-slate-400">Expense:</span>
-          <span class="total-value expense">₹{{ getTotalExpense().toLocaleString() }}</span>
+          <span class="total-value expense">{{ getTotalExpense() | currency }}</span>
         </div>
 
         <!-- Net Amount -->
@@ -319,7 +319,7 @@
           <mat-icon>account_balance_wallet</mat-icon>
           <span class="total-label dark:text-slate-400">Net:</span>
           <span class="total-value" [class]="getNetAmount() >= 0 ? 'net-positive' : 'net-negative'">
-            {{ getNetAmount() >= 0 ? '+' : '' }}₹{{ getNetAmount().toLocaleString() }}
+            {{ (getNetAmount() >= 0 ? '+' : '') + (getNetAmount() | currency) }}
           </span>
         </div>
       </div>
@@ -344,7 +344,7 @@
           </div>
           <div class="right-section">
             <div class="amount" [class]="element.type === 'income' ? 'income' : 'expense'">
-              {{ (element.type == 'income' ? '+':'-' ) + ' ₹' + element.amount.toLocaleString() }}
+              {{ (element.type == 'income' ? '+' : '-') + (element.amount | currency) }}
             </div>
             <div class="date dark:text-slate-500">{{ getDateDisplay(element.date) }}</div>
           </div>
@@ -396,7 +396,7 @@
                 {{getCategoryName(element.categoryId)}}</h4>
               <div class="font-bold text-sm ml-2"
                 [class]="element.type === 'income' ? 'text-green-700' : 'text-red-800'">
-                {{ (element.type == 'income' ? '+':'-' ) + ' ₹' + element.amount.toLocaleString() }}
+                {{ (element.type == 'income' ? '+' : '-') + (element.amount | currency) }}
               </div>
             </div>
             <div class="flex items-center justify-between mt-1 text-gray-500 dark:text-slate-500">
@@ -440,14 +440,14 @@
         <div class="total-item">
           <mat-icon class="income">trending_up</mat-icon>
           <span class="total-label dark:text-slate-400">Income:</span>
-          <span class="total-value income">₹{{ getTotalIncome().toLocaleString() }}</span>
+          <span class="total-value income">{{ getTotalIncome() | currency }}</span>
         </div>
 
         <!-- Expense Total -->
         <div class="total-item">
           <mat-icon class="expense">trending_down</mat-icon>
           <span class="total-label dark:text-slate-400">Expense:</span>
-          <span class="total-value expense">₹{{ getTotalExpense().toLocaleString() }}</span>
+          <span class="total-value expense">{{ getTotalExpense() | currency }}</span>
         </div>
 
         <!-- Net Amount -->
@@ -455,7 +455,7 @@
           <mat-icon>account_balance_wallet</mat-icon>
           <span class="total-label dark:text-slate-400">Net:</span>
           <span class="total-value" [class]="getNetAmount() >= 0 ? 'net-positive' : 'net-negative'">
-            {{ getNetAmount() >= 0 ? '+' : '' }}₹{{ getNetAmount().toLocaleString() }}
+            {{ (getNetAmount() >= 0 ? '+' : '') + (getNetAmount() | currency) }}
           </span>
         </div>
       </div>
