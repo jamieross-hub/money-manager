@@ -16,7 +16,9 @@
     "cache-bust": "node deploy-cache-bust.js",
     "deploy": "npm run config && npm run cache-bust && npm run build",
     "postbuild": "cp README.md dist/money-manager/README.md",
-    "prepare": "husky"
+    "prepare": "husky",
+    "i18n:check": "node scripts/check-i18n.js",
+    "i18n:sync": "node scripts/sync-i18n.js"
   },
   "private": true,
   "dependencies": {
