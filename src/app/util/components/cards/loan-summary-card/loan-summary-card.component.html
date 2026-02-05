@@ -26,8 +26,7 @@
                 </div>
                 <div class="paid-info text-right">
                     <p class="text-xs opacity-90 m-0">Paid so far</p>
-                    <p class="text-2xl font-bold m-0">{{ totalPaid | currency:{ currency: userCurrency, decimalPlaces: 0
-                        } }}</p>
+                    <p class="text-2xl font-bold m-0">{{ totalPaid | currency }}</p>
                 </div>
             </div>
         </div>
@@ -43,8 +42,7 @@
                 <mat-icon>account_balance_wallet</mat-icon>
             </div>
             <div class="stat-content">
-                <p class="text-lg sm:text-xl font-bold m-0">{{ totalRemaining | currency:{ currency: userCurrency,
-                    decimalPlaces: 0 } }}</p>
+                <p class="text-lg sm:text-xl font-bold m-0">{{ totalRemaining | currency }}</p>
                 <p class="text-[10px] sm:text-xs stat-label m-0">Total Debt</p>
             </div>
         </div>
@@ -55,8 +53,7 @@
                 <mat-icon>trending_down</mat-icon>
             </div>
             <div class="stat-content">
-                <p class="text-lg sm:text-xl font-bold m-0">{{ monthlyPayment | currency:{ currency: userCurrency,
-                    decimalPlaces: 0 } }}</p>
+                <p class="text-lg sm:text-xl font-bold m-0">{{ monthlyPayment | currency }}</p>
                 <p class="text-[10px] sm:text-xs stat-label m-0">Monthly</p>
             </div>
         </div>
@@ -67,8 +64,7 @@
                 <mat-icon>piggy_bank</mat-icon>
             </div>
             <div class="stat-content">
-                <p class="text-lg sm:text-xl font-bold m-0">{{ totalPaid | currency:{ currency: userCurrency,
-                    decimalPlaces: 0 } }}</p>
+                <p class="text-lg sm:text-xl font-bold m-0">{{ totalPaid | currency }}</p>
                 <p class="text-[10px] sm:text-xs stat-label m-0">Total Paid</p>
             </div>
         </div>

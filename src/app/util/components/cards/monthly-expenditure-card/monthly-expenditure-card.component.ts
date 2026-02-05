@@ -11,6 +11,7 @@ import * as TransactionsSelectors from '../../../../store/transactions/transacti
 import { Transaction } from '../../../models/transaction.model';
 import { FilterService } from '../../../service/filter.service';
 import moment from 'moment';
+import { CurrencyPipe } from 'src/app/util/pipes';
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
@@ -18,7 +19,7 @@ import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 @Component({
     selector: 'app-monthly-expenditure-card',
     standalone: true,
-    imports: [CommonModule, MatCardModule, MatIconModule, MatButtonModule, MatTooltipModule],
+    imports: [CommonModule, MatCardModule, MatIconModule, MatButtonModule, MatTooltipModule, CurrencyPipe],
     templateUrl: './monthly-expenditure-card.component.html',
     styleUrl: './monthly-expenditure-card.component.scss'
 })

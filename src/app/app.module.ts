@@ -120,6 +120,7 @@ import { ParentCategorySelectorDialogComponent } from './component/dashboard/cat
 import { CategoryDetailsDialogComponent } from './component/dashboard/category/category-details-dialog/category-details-dialog.component';
 import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { UpcomingTransactionsCardComponent } from './util/components/cards/upcoming-transactions-card/upcoming-transactions-card.component';
+import { CurrencyPipe } from './util/pipes';
 
 
 @NgModule({
@@ -195,6 +196,7 @@ import { UpcomingTransactionsCardComponent } from './util/components/cards/upcom
     // Utility
     IconModule,
     TranslatePipe,
+    CurrencyPipe,
 
     // Charts
     NgxEchartsModule.forRoot({

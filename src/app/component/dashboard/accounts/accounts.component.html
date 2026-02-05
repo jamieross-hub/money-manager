@@ -36,9 +36,7 @@
 					</div>
 					<div class="card-info">
 						<span class="label dark:text-slate-400">Banks</span>
-						<span class="value dark:text-white">{{ bankBalance$ | async | currency : { currency:
-							(userCurrency$ | async) ||
-							'USD' } }}</span>
+						<span class="value dark:text-white">{{ bankBalance$ | async | currency }}</span>
 					</div>
 				</mat-card-content>
 			</mat-card>

@@ -6,12 +6,12 @@
                 <div class="metric-item">
                     <span class="dot income-dot"></span>
                     <span class="label">Income:</span>
-                    <span class="value">{{ totalIncome | number:'1.0-0' }}</span>
+                    <span class="value">{{ totalIncome | currency }}</span>
                 </div>
                 <div class="metric-item">
                     <span class="dot expense-dot"></span>
                     <span class="label">Expenses:</span>
-                    <span class="value text-red-600">{{ totalExpenses | number:'1.0-0' }}</span>
+                    <span class="value text-red-600">{{ totalExpenses | currency }}</span>
                 </div>
             </div>
         </div>

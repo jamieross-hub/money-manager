@@ -38,20 +38,22 @@
           border-radius: 50%;
 
           &.income-dot {
-            background-color: #10b981; // emerald-500
+            background-color: var(--primary-500); // emerald-500
           }
 
           &.expense-dot {
-            background-color: #ef4444; // red-500
+            background-color: var(--error-500); // red-500
           }
         }
 
         .label {
           font-weight: 500;
+          color: var(--neutral-500);
         }
 
         .value {
           font-weight: 700;
+          color: var(--neutral-500);
         }
       }
     }

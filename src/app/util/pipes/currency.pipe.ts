@@ -1,6 +1,7 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, PipeTransform, inject } from '@angular/core';
 import { APP_CONFIG } from '../config/config';
 import { CurrencyCode } from '../config/enums';
+import { UserService } from '../service/db/user.service';
 
 export interface CurrencyPipeOptions {
   currency?: string;
@@ -20,6 +21,7 @@ export interface CurrencyPipeOptions {
   pure: true
 })
 export class CurrencyPipe implements PipeTransform {
+  private userService = inject(UserService);
 
   /**
    * Transform a number value to a formatted currency string
@@ -48,8 +50,10 @@ export class CurrencyPipe implements PipeTransform {
    * Format currency value with the specified options
    */
   private formatCurrency(value: number, options?: CurrencyPipeOptions): string {
+    const userCurrency = this.userService.userAuth$.value?.preferences?.defaultCurrency;
+
     const {
-      currency = APP_CONFIG.CURRENCY.DEFAULT,
+      currency = userCurrency || APP_CONFIG.CURRENCY.DEFAULT,
       locale = APP_CONFIG.LANGUAGE.DEFAULT,
       showSymbol = true,
       showCode = false,
@@ -151,4 +155,4 @@ export class CurrencyPipe implements PipeTransform {
   static getSupportedCurrencies(): readonly CurrencyCode[] {
     return APP_CONFIG.CURRENCY.SUPPORTED;
   }
-} 
+}

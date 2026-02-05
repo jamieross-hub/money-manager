@@ -35,7 +35,7 @@
 					</div>
 					<mat-card-subtitle class="card-label">Expenses</mat-card-subtitle>
 					<mat-card-title class="card-amount text-primary">
-						{{ totalExpenseAmount | currency : { currency: (userCurrency$ | async ) || 'USD' } }}
+						{{ totalExpenseAmount | currency }}
 					</mat-card-title>
 				</mat-card-header>
 				<mat-card-content>
@@ -51,7 +51,7 @@
 					</div>
 					<mat-card-subtitle class="card-label">Income</mat-card-subtitle>
 					<mat-card-title class="card-amount text-neutral-500">
-						{{ totalIncomeAmount | currency : { currency: (userCurrency$ | async ) || 'USD' } }}
+						{{ totalIncomeAmount | currency }}
 					</mat-card-title>
 				</mat-card-header>
 				<mat-card-content>
@@ -104,8 +104,7 @@
 						<div matListItemMeta class="item-right">
 							<div class="amount-container" *ngIf="!breakpointService.device.isMobile">
 								<span class="category-amount">
-									{{ calculateTotalSpentPerMonth(category) | currency : { currency: (userCurrency$ |
-									async) || 'USD' } }}
+									{{ calculateTotalSpentPerMonth(category) | currency }}
 									<span class="period">/ month</span>
 								</span>
 
@@ -189,9 +188,7 @@
 											<span>Total Spent</span>
 										</div>
 										<div class="detail-value">
-											{{ stats.totalSpent | currency : { currency: (userCurrency$ | async) ||
-											'USD' }
-											}}
+											{{ stats.totalSpent | currency }}
 										</div>
 									</div>
 									<div class="detail-row">
@@ -200,9 +197,7 @@
 											<span>This Month</span>
 										</div>
 										<div class="detail-value">
-											{{ stats.thisMonth | currency : { currency: (userCurrency$ | async) || 'USD'
-											}
-											}}
+											{{ stats.thisMonth | currency }}
 										</div>
 									</div>
 									<div class="detail-row">
@@ -218,8 +213,7 @@
 											<span>Budget</span>
 										</div>
 										<div class="detail-value">
-											{{ category.budget?.budgetAmount | currency : { currency: (userCurrency$ |
-											async) || 'USD' } }}
+											{{ category.budget?.budgetAmount | currency }}
 											({{ calculateBudgetProgressPercentage(category).toFixed(0) }}%)
 										</div>
 									</div>
@@ -245,8 +239,7 @@
 							<div matListItemMeta class="item-right">
 								<div class="amount-container">
 									<span class="category-amount">
-										{{ calculateTotalSpentPerMonth(subCategory)| currency : { currency:
-										(userCurrency$ | async) || 'USD' } }}
+										{{ calculateTotalSpentPerMonth(subCategory)| currency }}
 										<span class="period">/ month</span>
 									</span>
 
@@ -312,8 +305,7 @@
 												<span>Total Spent</span>
 											</div>
 											<div class="detail-value">
-												{{ stats.totalSpent | currency : { currency: (userCurrency$ | async) ||
-												'USD' } }}
+												{{ stats.totalSpent | currency }}
 											</div>
 										</div>
 										<div class="detail-row">
@@ -322,9 +314,7 @@
 												<span>This Month</span>
 											</div>
 											<div class="detail-value">
-												{{ stats.thisMonth | currency : { currency: (userCurrency$ | async) ||
-												'USD'
-												} }}
+												{{ stats.thisMonth | currency }}
 											</div>
 										</div>
 										<div class="detail-row" *ngIf="subCategory.budget?.hasBudget">
