@@ -3,8 +3,7 @@ import { APP_CONFIG } from '../config/config';
 
 interface CountryConfig {
     currency: CurrencyCode;
-    language: LanguageCode;
-    languageName?: string;
+    languages: readonly { code: LanguageCode; name: string }[];
     timezones?: readonly string[];
     symbol: string;
     decimalPlaces: number;
@@ -73,7 +72,7 @@ export class CurrencyDetectionUtil {
         return {
             country: countryCode,
             currency: config?.currency || CurrencyCode.INR,
-            language: config?.language || LanguageCode.IN_EN,
+            language: config?.languages?.[0]?.code || LanguageCode.IN_EN,
             timezone: timezone
         };
     }

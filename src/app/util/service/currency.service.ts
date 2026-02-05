@@ -39,7 +39,7 @@ export class CurrencyService {
         const country = APP_CONFIG.REGIONAL.COUNTRY_MAPPING[user.preferences.country as keyof typeof APP_CONFIG.REGIONAL.COUNTRY_MAPPING];
         if (country) {
           this.setCurrentCurrency((country as any).currency);
-          this.setCurrentLanguage((country as any).language);
+          this.setCurrentLanguage((country as any).languages?.[0]?.code);
         }
       }
 

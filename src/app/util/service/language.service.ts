@@ -39,9 +39,8 @@ export class LanguageService {
     }
 
     getAvailableLanguages() {
-        return Object.entries(APP_CONFIG.REGIONAL.COUNTRY_MAPPING).map(([code, config]) => ({
-            code: (config as any).language,
-            name: (config as any).languageName
-        })).filter((v, i, a) => a.findIndex(t => t.code === v.code) === i);
+        return Object.values(APP_CONFIG.REGIONAL.COUNTRY_MAPPING)
+            .flatMap(config => (config as any).languages || [])
+            .filter((v, i, a) => a.findIndex(t => t.code === v.code) === i);
     }
 }

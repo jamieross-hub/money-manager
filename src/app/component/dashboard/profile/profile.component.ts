@@ -57,16 +57,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   countries = Object.entries(APP_CONFIG.REGIONAL.COUNTRY_MAPPING).map(([code, config]) => ({
     code,
-    languageName: (config as any).languageName || code,
+    languageName: (config as any).languages?.[0]?.name || code,
     countryName: (config as any).countryName || code,
-    language: (config as any).language,
+    language: (config as any).languages?.[0]?.code,
     currency: (config as any).currency
   })).sort((a, b) => a.countryName.localeCompare(b.countryName));
 
-  languages = Object.entries(APP_CONFIG.REGIONAL.COUNTRY_MAPPING).map(([code, config]) => ({
-    code: (config as any).language,
-    name: (config as any).languageName
-  }))
+  languages = Object.values(APP_CONFIG.REGIONAL.COUNTRY_MAPPING)
+    .flatMap(config => (config as any).languages || [])
     .filter((v, i, a) => a.findIndex(t => t.code === v.code) === i)
     .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -465,12 +463,16 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   getLanguageName(languageCode: string): string {
-    const entry = Object.values(APP_CONFIG.REGIONAL.COUNTRY_MAPPING).find(c => (c as any).language === languageCode);
-    return (entry as any)?.languageName || languageCode;
+    const language = Object.values(APP_CONFIG.REGIONAL.COUNTRY_MAPPING)
+      .flatMap(config => (config as any).languages || [])
+      .find(l => l.code === languageCode);
+    return language?.name || languageCode;
   }
 
   private deriveCountryFromLanguage(language: string): string {
-    const entry = Object.entries(APP_CONFIG.REGIONAL.COUNTRY_MAPPING).find(([code, c]) => (c as any).language === language);
+    const entry = Object.entries(APP_CONFIG.REGIONAL.COUNTRY_MAPPING).find(([code, c]) =>
+      (c as any).languages?.some((l: any) => l.code === language)
+    );
     return entry ? entry[0] : 'IN';
   }
 
