@@ -4,11 +4,13 @@ import { CURRENCIES, Currency, DEFAULT_CURRENCY, getCurrencyByCode, getCurrencyS
 import { UserService } from './db/user.service';
 import { APP_CONFIG } from '../config/config';
 
+import { CurrencyDetectionUtil } from '../helpers/currency-detection.util';
+
 @Injectable({
   providedIn: 'root'
 })
 export class CurrencyService {
-  private currentCurrencySubject = new BehaviorSubject<string>(DEFAULT_CURRENCY);
+  private currentCurrencySubject = new BehaviorSubject<string>(CurrencyDetectionUtil.detectCurrency());
   public currentCurrency$ = this.currentCurrencySubject.asObservable();
 
   private currentLanguageSubject = new BehaviorSubject<string>(APP_CONFIG.LANGUAGE.DEFAULT);
@@ -20,10 +22,8 @@ export class CurrencyService {
 
   private initializeCurrency(): void {
     this.userService.userAuth$.subscribe(user => {
-      if (user?.preferences) {
-        if (user.preferences.defaultCurrency) {
-          this.setCurrentCurrency(user.preferences.defaultCurrency);
-        }
+      if (user?.preferences?.defaultCurrency) {
+        this.setCurrentCurrency(user.preferences.defaultCurrency);
         if (user.preferences.language) {
           this.setCurrentLanguage(user.preferences.language);
         }

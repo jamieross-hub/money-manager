@@ -30,8 +30,12 @@ export class CurrencyPipe implements PipeTransform {
    * @returns Formatted currency string
    */
   transform(value: number | string | null | undefined, options?: CurrencyPipeOptions): string {
-    if (value === null || value === undefined || value === '') {
-      return this.formatCurrency(0, options);
+    if (value === null || value === undefined) {
+      return '';
+    }
+
+    if (value === '') {
+      return '';
     }
 
     const numericValue = typeof value === 'string' ? parseFloat(value) : value;
@@ -40,16 +44,6 @@ export class CurrencyPipe implements PipeTransform {
       return 'Invalid amount';
     }
 
-    // Apply rounding if specified
-    const roundedValue = options?.round ? Math.round(numericValue) : numericValue;
-
-    return this.formatCurrency(roundedValue, options);
-  }
-
-  /**
-   * Format currency value with the specified options
-   */
-  private formatCurrency(value: number, options?: CurrencyPipeOptions): string {
     const userPreferences = this.userService.userAuth$.value?.preferences;
     const userCurrency = userPreferences?.defaultCurrency;
     const userLanguage = userPreferences?.language;
@@ -66,27 +60,23 @@ export class CurrencyPipe implements PipeTransform {
       round = false
     } = options || {};
 
-    const currencyConfig = this.getCurrencyConfig(currency);
+    const currencyCode = currency as CurrencyCode;
+    const config = this.getCurrencyConfig(currencyCode);
+    const configDecimalPlaces = config?.decimalPlaces ?? 2;
 
-    // Determine if value has a decimal part
-    const hasDecimal = value % 1 !== 0;
+    // Apply rounding if specified
+    const roundedValue = round ? Math.round(numericValue) : numericValue;
 
-    // If rounding is enabled, force decimal places to 0
-    const effectiveDecimalPlaces = round ? 0 : decimalPlaces;
-
-    const minFractionDigits = effectiveDecimalPlaces !== undefined
-      ? (hasDecimal && !round ? effectiveDecimalPlaces : 0)
-      : (hasDecimal && !round ? currencyConfig.decimalPlaces : 0);
-
-    const maxFractionDigits = effectiveDecimalPlaces !== undefined
-      ? effectiveDecimalPlaces
-      : (round ? 0 : currencyConfig.decimalPlaces);
+    // Determine decimal places
+    const effectiveDecimalPlaces = round
+      ? 0
+      : (decimalPlaces !== undefined ? decimalPlaces : configDecimalPlaces);
 
     const formatOptions: Intl.NumberFormatOptions = {
       style: 'currency',
-      currency: currency,
-      minimumFractionDigits: minFractionDigits,
-      maximumFractionDigits: maxFractionDigits,
+      currency: currencyCode,
+      minimumFractionDigits: effectiveDecimalPlaces,
+      maximumFractionDigits: effectiveDecimalPlaces,
       signDisplay: signDisplay,
       notation: compact ? 'compact' : notation
     };
@@ -95,66 +85,61 @@ export class CurrencyPipe implements PipeTransform {
       formatOptions.currencyDisplay = 'code';
     } else if (showCode) {
       formatOptions.currencyDisplay = 'narrowSymbol';
+    } else {
+      formatOptions.currencyDisplay = 'symbol';
     }
 
     try {
-      const formatter = new Intl.NumberFormat(locale, formatOptions);
-      return formatter.format(value);
+      // Use the provided locale or default to browser locale
+      const formatLocale = locale || navigator.language;
+      return new Intl.NumberFormat(formatLocale, formatOptions).format(roundedValue);
     } catch (error) {
-      console.error('Currency formatting error:', error);
-      return this.fallbackFormat(value, currency, currencyConfig);
+      console.error('Error formatting currency:', error);
+      // Fallback formatting
+      const symbol = config?.symbol || currencyCode;
+      return `${symbol}${roundedValue.toFixed(effectiveDecimalPlaces)}`;
     }
   }
 
   /**
-   * Get currency configuration from APP_CONFIG
+   * Helper to get currency configuration from COUNTRY_MAPPING
    */
-  private getCurrencyConfig(currency: string) {
-    const currencyCode = currency as CurrencyCode;
-    return {
-      symbol: APP_CONFIG.CURRENCY.SYMBOLS[currencyCode] || currency,
-      decimalPlaces: APP_CONFIG.CURRENCY.DECIMAL_PLACES[currencyCode] || 2
-    };
+  private getCurrencyConfig(currencyCode: CurrencyCode): { symbol: string, decimalPlaces: number } | undefined {
+    // Search through COUNTRY_MAPPING values to find the currency
+    const mapping = APP_CONFIG.CURRENCY.COUNTRY_MAPPING;
+    for (const data of Object.values(mapping)) {
+      if (data.currency === currencyCode) {
+        return { symbol: data.symbol, decimalPlaces: data.decimalPlaces };
+      }
+    }
+    return undefined;
   }
 
-  /**
-   * Fallback formatting when Intl.NumberFormat fails
-   */
-  private fallbackFormat(value: number, currency: string, config: any): string {
-    const symbol = config.symbol;
-    const formattedValue = value % 1 === 0
-      ? value.toFixed(0)
-      : value.toFixed(config.decimalPlaces);
-    return `${symbol}${formattedValue}`;
+  getSymbol(currencyCode: CurrencyCode): string {
+    const config = this.getCurrencyConfig(currencyCode);
+    return config?.symbol || currencyCode;
   }
 
-  /**
-   * Get currency symbol for a given currency code
-   */
-  static getCurrencySymbol(currencyCode: string): string {
-    const code = currencyCode as CurrencyCode;
-    return APP_CONFIG.CURRENCY.SYMBOLS[code] || currencyCode;
-  }
-
-  /**
-   * Get decimal places for a given currency code
-   */
-  static getDecimalPlaces(currencyCode: string): number {
-    const code = currencyCode as CurrencyCode;
-    return APP_CONFIG.CURRENCY.DECIMAL_PLACES[code] || 2;
+  getDecimalPlaces(currencyCode: CurrencyCode): number {
+    const config = this.getCurrencyConfig(currencyCode);
+    return config?.decimalPlaces ?? 2;
   }
 
   /**
    * Check if a currency code is supported
    */
   static isSupportedCurrency(currencyCode: string): boolean {
-    return APP_CONFIG.CURRENCY.SUPPORTED.includes(currencyCode as CurrencyCode);
+    const mapping = APP_CONFIG.CURRENCY.COUNTRY_MAPPING;
+    return Object.values(mapping).some(data => data.currency === currencyCode);
   }
 
   /**
    * Get all supported currencies
    */
   static getSupportedCurrencies(): readonly CurrencyCode[] {
-    return APP_CONFIG.CURRENCY.SUPPORTED;
+    const mapping = APP_CONFIG.CURRENCY.COUNTRY_MAPPING;
+    const currencies = new Set<CurrencyCode>();
+    Object.values(mapping).forEach(data => currencies.add(data.currency));
+    return Array.from(currencies);
   }
 }

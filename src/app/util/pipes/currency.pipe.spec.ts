@@ -33,7 +33,15 @@ describe('CurrencyPipe', () => {
     it('should use default currency from config when no user is logged in', () => {
         const result = pipe.transform(100);
         // Assuming default is INR based on config file view
-        const symbol = APP_CONFIG.CURRENCY.SYMBOLS[APP_CONFIG.CURRENCY.DEFAULT];
+        // Search for symbol in COUNTRY_MAPPING
+        const mapping = APP_CONFIG.CURRENCY.COUNTRY_MAPPING;
+        let symbol = '';
+        for (const data of Object.values(mapping)) {
+            if (data.currency === APP_CONFIG.CURRENCY.DEFAULT) {
+                symbol = data.symbol;
+                break;
+            }
+        }
         expect(result).toContain(symbol);
     });
 
@@ -63,7 +71,14 @@ describe('CurrencyPipe', () => {
         userAuthSubject.next({}); // No preferences
 
         const result = pipe.transform(100);
-        const symbol = APP_CONFIG.CURRENCY.SYMBOLS[APP_CONFIG.CURRENCY.DEFAULT];
+        const mapping = APP_CONFIG.CURRENCY.COUNTRY_MAPPING;
+        let symbol = '';
+        for (const data of Object.values(mapping)) {
+            if (data.currency === APP_CONFIG.CURRENCY.DEFAULT) {
+                symbol = data.symbol;
+                break;
+            }
+        }
         expect(result).toContain(symbol);
     });
 });

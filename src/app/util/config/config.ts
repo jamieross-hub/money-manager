@@ -64,35 +64,311 @@ export const APP_CONFIG = {
   // Currency configuration
   CURRENCY: {
     DEFAULT: CurrencyCode.INR,
-    SUPPORTED: [
-      CurrencyCode.USD,
-      CurrencyCode.EUR,
-      CurrencyCode.GBP,
-      CurrencyCode.INR,
-      CurrencyCode.CAD,
-      CurrencyCode.AUD,
-      CurrencyCode.JPY,
-      CurrencyCode.CNY
-    ],
-    SYMBOLS: {
-      [CurrencyCode.USD]: '$',
-      [CurrencyCode.EUR]: '€',
-      [CurrencyCode.GBP]: '£',
-      [CurrencyCode.INR]: '₹',
-      [CurrencyCode.CAD]: 'C$',
-      [CurrencyCode.AUD]: 'A$',
-      [CurrencyCode.JPY]: '¥',
-      [CurrencyCode.CNY]: '¥'
-    },
-    DECIMAL_PLACES: {
-      [CurrencyCode.USD]: 2,
-      [CurrencyCode.EUR]: 2,
-      [CurrencyCode.GBP]: 2,
-      [CurrencyCode.INR]: 2,
-      [CurrencyCode.CAD]: 2,
-      [CurrencyCode.AUD]: 2,
-      [CurrencyCode.JPY]: 0,
-      [CurrencyCode.CNY]: 2
+
+    COUNTRY_MAPPING: {
+      // Americas - North
+      'US': {
+        currency: CurrencyCode.USD,
+        language: LanguageCode.EN,
+        timezones: [
+          'America/New_York', 'America/Chicago', 'America/Los_Angeles', 'America/Denver',
+          'America/Phoenix', 'America/Detroit', 'America/Anchorage', 'America/Honolulu'
+        ],
+        symbol: '$',
+        decimalPlaces: 2
+      },
+      'CA': {
+        currency: CurrencyCode.CAD,
+        language: LanguageCode.EN,
+        timezones: ['America/Toronto', 'America/Vancouver', 'America/Montreal', 'America/Edmonton'],
+        symbol: 'C$',
+        decimalPlaces: 2
+      },
+      'MX': {
+        currency: CurrencyCode.MXN,
+        language: LanguageCode.ES_MX,
+        timezones: ['America/Mexico_City'],
+        symbol: '$',
+        decimalPlaces: 2
+      },
+
+      // Americas - South
+      'BR': {
+        currency: CurrencyCode.BRL,
+        language: LanguageCode.PT_BR,
+        timezones: ['America/Sao_Paulo'],
+        symbol: 'R$',
+        decimalPlaces: 2
+      },
+      'AR': {
+        currency: CurrencyCode.ARS,
+        language: LanguageCode.ES_AR,
+        timezones: ['America/Argentina/Buenos_Aires'],
+        symbol: '$',
+        decimalPlaces: 2
+      },
+      'CL': {
+        currency: CurrencyCode.CLP,
+        language: LanguageCode.ES,
+        timezones: ['America/Santiago'],
+        symbol: '$',
+        decimalPlaces: 0
+      },
+      'CO': {
+        currency: CurrencyCode.COP,
+        language: LanguageCode.ES,
+        timezones: ['America/Bogota'],
+        symbol: '$',
+        decimalPlaces: 2
+      },
+      'PE': {
+        currency: CurrencyCode.PEN,
+        language: LanguageCode.ES,
+        timezones: ['America/Lima'],
+        symbol: 'S/',
+        decimalPlaces: 2
+      },
+
+      // Europe - Major
+      'GB': {
+        currency: CurrencyCode.GBP,
+        language: LanguageCode.EN,
+        timezones: ['Europe/London'],
+        symbol: '£',
+        decimalPlaces: 2
+      },
+      'CH': {
+        currency: CurrencyCode.CHF,
+        language: LanguageCode.DE,
+        timezones: ['Europe/Zurich'],
+        symbol: 'Fr',
+        decimalPlaces: 2
+      },
+      'SE': {
+        currency: CurrencyCode.SEK,
+        language: LanguageCode.SV,
+        timezones: ['Europe/Stockholm'],
+        symbol: 'kr',
+        decimalPlaces: 2
+      },
+      'NO': {
+        currency: CurrencyCode.NOK,
+        language: LanguageCode.NO,
+        timezones: ['Europe/Oslo'],
+        symbol: 'kr',
+        decimalPlaces: 2
+      },
+      'DK': {
+        currency: CurrencyCode.DKK,
+        language: LanguageCode.DA,
+        timezones: ['Europe/Copenhagen'],
+        symbol: 'kr',
+        decimalPlaces: 2
+      },
+      'PL': {
+        currency: CurrencyCode.PLN,
+        language: LanguageCode.PL,
+        timezones: ['Europe/Warsaw'],
+        symbol: 'zł',
+        decimalPlaces: 2
+      },
+      'RU': {
+        currency: CurrencyCode.RUB,
+        language: LanguageCode.RU,
+        timezones: ['Europe/Moscow'],
+        symbol: '₽',
+        decimalPlaces: 2
+      },
+      'TR': {
+        currency: CurrencyCode.TRY,
+        language: LanguageCode.TR,
+        timezones: ['Europe/Istanbul'],
+        symbol: '₺',
+        decimalPlaces: 2
+      },
+
+      // Eurozone countries
+      'DE': { currency: CurrencyCode.EUR, language: LanguageCode.DE, timezones: ['Europe/Berlin'], symbol: '€', decimalPlaces: 2 },
+      'FR': { currency: CurrencyCode.EUR, language: LanguageCode.FR, timezones: ['Europe/Paris'], symbol: '€', decimalPlaces: 2 },
+      'IT': { currency: CurrencyCode.EUR, language: LanguageCode.IT, timezones: ['Europe/Rome'], symbol: '€', decimalPlaces: 2 },
+      'ES': { currency: CurrencyCode.EUR, language: LanguageCode.ES, timezones: ['Europe/Madrid'], symbol: '€', decimalPlaces: 2 },
+      'PT': { currency: CurrencyCode.EUR, language: LanguageCode.PT, timezones: ['Europe/Lisbon'], symbol: '€', decimalPlaces: 2 },
+      'NL': { currency: CurrencyCode.EUR, language: LanguageCode.NL, timezones: ['Europe/Amsterdam'], symbol: '€', decimalPlaces: 2 },
+      'BE': { currency: CurrencyCode.EUR, language: LanguageCode.FR, timezones: ['Europe/Brussels'], symbol: '€', decimalPlaces: 2 },
+      'AT': { currency: CurrencyCode.EUR, language: LanguageCode.DE, timezones: ['Europe/Vienna'], symbol: '€', decimalPlaces: 2 },
+      'IE': { currency: CurrencyCode.EUR, language: LanguageCode.EN, timezones: ['Europe/Dublin'], symbol: '€', decimalPlaces: 2 },
+      'FI': { currency: CurrencyCode.EUR, language: LanguageCode.FI, timezones: ['Europe/Helsinki'], symbol: '€', decimalPlaces: 2 },
+      'GR': { currency: CurrencyCode.EUR, language: LanguageCode.EN, timezones: ['Europe/Athens'], symbol: '€', decimalPlaces: 2 },
+      'UA': { currency: CurrencyCode.EUR, language: LanguageCode.EN, timezones: ['Europe/Kiev'], symbol: '€', decimalPlaces: 2 },
+      'RO': { currency: CurrencyCode.EUR, language: LanguageCode.EN, timezones: ['Europe/Bucharest'], symbol: '€', decimalPlaces: 2 },
+
+      // Asia Pacific
+      'IN': {
+        currency: CurrencyCode.INR,
+        language: LanguageCode.IN_EN,
+        timezones: ['Asia/Kolkata', 'Asia/Calcutta'],
+        symbol: '₹',
+        decimalPlaces: 2
+      },
+      'CN': {
+        currency: CurrencyCode.CNY,
+        language: LanguageCode.ZH,
+        timezones: ['Asia/Shanghai', 'Asia/Chongqing', 'Asia/Urumqi'],
+        symbol: '¥',
+        decimalPlaces: 2
+      },
+      'JP': {
+        currency: CurrencyCode.JPY,
+        language: LanguageCode.JA,
+        timezones: ['Asia/Tokyo'],
+        symbol: '¥',
+        decimalPlaces: 0
+      },
+      'AU': {
+        currency: CurrencyCode.AUD,
+        language: LanguageCode.EN,
+        timezones: ['Australia/Sydney', 'Australia/Melbourne', 'Australia/Brisbane', 'Australia/Perth', 'Australia/Adelaide'],
+        symbol: 'A$',
+        decimalPlaces: 2
+      },
+      'NZ': {
+        currency: CurrencyCode.NZD,
+        language: LanguageCode.EN,
+        timezones: ['Pacific/Auckland'],
+        symbol: 'NZ$',
+        decimalPlaces: 2
+      },
+      'HK': {
+        currency: CurrencyCode.HKD,
+        language: LanguageCode.ZH,
+        timezones: ['Asia/Hong_Kong'],
+        symbol: 'HK$',
+        decimalPlaces: 2
+      },
+      'SG': {
+        currency: CurrencyCode.SGD,
+        language: LanguageCode.EN,
+        timezones: ['Asia/Singapore'],
+        symbol: 'S$',
+        decimalPlaces: 2
+      },
+      'TW': {
+        currency: CurrencyCode.TWD,
+        language: LanguageCode.ZH,
+        timezones: ['Asia/Taipei'],
+        symbol: 'NT$',
+        decimalPlaces: 2
+      },
+      'KR': {
+        currency: CurrencyCode.KRW,
+        language: LanguageCode.KO,
+        timezones: ['Asia/Seoul'],
+        symbol: '₩',
+        decimalPlaces: 0
+      },
+      'TH': {
+        currency: CurrencyCode.THB,
+        language: LanguageCode.TH,
+        timezones: ['Asia/Bangkok'],
+        symbol: '฿',
+        decimalPlaces: 2
+      },
+      'ID': {
+        currency: CurrencyCode.IDR,
+        language: LanguageCode.ID,
+        timezones: ['Asia/Jakarta'],
+        symbol: 'Rp',
+        decimalPlaces: 2
+      },
+      'MY': {
+        currency: CurrencyCode.MYR,
+        language: LanguageCode.MS,
+        timezones: ['Asia/Kuala_Lumpur'],
+        symbol: 'RM',
+        decimalPlaces: 2
+      },
+      'PH': {
+        currency: CurrencyCode.PHP,
+        language: LanguageCode.EN,
+        timezones: ['Asia/Manila'],
+        symbol: '₱',
+        decimalPlaces: 2
+      },
+      'VN': {
+        currency: CurrencyCode.VND,
+        language: LanguageCode.VI,
+        timezones: ['Asia/Ho_Chi_Minh'],
+        symbol: '₫',
+        decimalPlaces: 0
+      },
+      'IL': {
+        currency: CurrencyCode.ILS,
+        language: LanguageCode.HE,
+        timezones: ['Asia/Jerusalem'],
+        symbol: '₪',
+        decimalPlaces: 2
+      },
+      'IR': { currency: CurrencyCode.USD, language: LanguageCode.EN, timezones: ['Asia/Tehran'], symbol: '$', decimalPlaces: 2 }, // Fallback
+
+      // Middle East
+      'SA': {
+        currency: CurrencyCode.SAR,
+        language: LanguageCode.AR,
+        timezones: ['Asia/Riyadh'],
+        symbol: '﷼',
+        decimalPlaces: 2
+      },
+      'AE': {
+        currency: CurrencyCode.AED,
+        language: LanguageCode.AR,
+        timezones: ['Asia/Dubai'],
+        symbol: 'د.إ',
+        decimalPlaces: 2
+      },
+
+      // Africa
+      'ZA': {
+        currency: CurrencyCode.ZAR,
+        language: LanguageCode.EN,
+        timezones: ['Africa/Johannesburg'],
+        symbol: 'R',
+        decimalPlaces: 2
+      },
+      'NG': {
+        currency: CurrencyCode.NGN,
+        language: LanguageCode.EN,
+        timezones: ['Africa/Lagos'],
+        symbol: '₦',
+        decimalPlaces: 2
+      },
+      'EG': {
+        currency: CurrencyCode.EGP,
+        language: LanguageCode.AR,
+        timezones: ['Africa/Cairo'],
+        symbol: 'E£',
+        decimalPlaces: 2
+      },
+      'KE': {
+        currency: CurrencyCode.KES,
+        language: LanguageCode.EN,
+        timezones: ['Africa/Nairobi'],
+        symbol: 'KSh',
+        decimalPlaces: 2
+      },
+      'GH': {
+        currency: CurrencyCode.GHS,
+        language: LanguageCode.EN,
+        timezones: ['Africa/Accra'],
+        symbol: '₵',
+        decimalPlaces: 2
+      },
+      'MA': {
+        currency: CurrencyCode.MAD,
+        language: LanguageCode.AR,
+        timezones: ['Africa/Casablanca'],
+        symbol: 'dh',
+        decimalPlaces: 2
+      },
     }
   },
 
@@ -115,6 +391,27 @@ export const APP_CONFIG = {
       [LanguageCode.DE]: 'Deutsch',
       [LanguageCode.HI]: 'हिंदी',
       [LanguageCode.ZH]: '中文',
+      [LanguageCode.IT]: 'Italiano',
+      [LanguageCode.PT]: 'Português',
+      [LanguageCode.PT_BR]: 'Português (Brasil)',
+      [LanguageCode.ES_MX]: 'Español (México)',
+      [LanguageCode.ES_AR]: 'Español (Argentina)',
+      [LanguageCode.NL]: 'Nederlands',
+      [LanguageCode.RU]: 'Русский',
+      [LanguageCode.TR]: 'Türkçe',
+      [LanguageCode.JA]: '日本語',
+      [LanguageCode.KO]: '한국어',
+      [LanguageCode.TH]: 'ไทย',
+      [LanguageCode.ID]: 'Bahasa Indonesia',
+      [LanguageCode.MS]: 'Bahasa Melayu',
+      [LanguageCode.VI]: 'Tiếng Việt',
+      [LanguageCode.HE]: 'עברית',
+      [LanguageCode.AR]: 'العربية',
+      [LanguageCode.SV]: 'Svenska',
+      [LanguageCode.NO]: 'Norsk',
+      [LanguageCode.DA]: 'Dansk',
+      [LanguageCode.FI]: 'Suomi',
+      [LanguageCode.PL]: 'Polski',
 
     }
   },

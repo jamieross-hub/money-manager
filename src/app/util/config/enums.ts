@@ -20,7 +20,7 @@ export enum AccountType {
   CREDIT = 'credit',
   LOAN = 'loan',
   INVESTMENT = 'investment'
-  
+
 }
 
 /**
@@ -89,7 +89,31 @@ export enum LanguageCode {
   DE = 'de',
   HI = 'hi',
   ZH = 'zh',
-  IN_EN = 'en-IN'
+  IN_EN = 'en-IN',
+  // Europe
+  IT = 'it',
+  NL = 'nl',
+  PT = 'pt',
+  PL = 'pl',
+  RU = 'ru',
+  TR = 'tr',
+  SV = 'sv',
+  NO = 'no',
+  DA = 'da',
+  FI = 'fi',
+  // Americas
+  PT_BR = 'pt-BR', // Portuguese (Brazil)
+  ES_MX = 'es-MX', // Spanish (Mexico)
+  ES_AR = 'es-AR', // Spanish (Argentina)
+  // Asia
+  JA = 'ja',
+  KO = 'ko',
+  TH = 'th',
+  ID = 'id',
+  MS = 'ms',
+  VI = 'vi',
+  AR = 'ar',
+  HE = 'he'
 }
 
 /**
@@ -103,7 +127,43 @@ export enum CurrencyCode {
   CAD = 'CAD',
   AUD = 'AUD',
   JPY = 'JPY',
-  CNY = 'CNY'
+  CNY = 'CNY',
+  // Europe
+  CHF = 'CHF',
+  SEK = 'SEK',
+  NOK = 'NOK',
+  DKK = 'DKK',
+  PLN = 'PLN',
+  RUB = 'RUB',
+  TRY = 'TRY',
+  // Americas
+  BRL = 'BRL',
+  ARS = 'ARS',
+  CLP = 'CLP',
+  COP = 'COP',
+  PEN = 'PEN',
+  MXN = 'MXN',
+  // Asia/Pacific
+  TWD = 'TWD',
+  KRW = 'KRW',
+  THB = 'THB',
+  IDR = 'IDR',
+  MYR = 'MYR',
+  PHP = 'PHP',
+  VND = 'VND',
+  SAR = 'SAR',
+  AED = 'AED',
+  ILS = 'ILS',
+  NZD = 'NZD',
+  HKD = 'HKD',
+  SGD = 'SGD',
+  // Africa
+  ZAR = 'ZAR',
+  NGN = 'NGN',
+  EGP = 'EGP',
+  KES = 'KES',
+  GHS = 'GHS',
+  MAD = 'MAD'
 }
 
 /**
