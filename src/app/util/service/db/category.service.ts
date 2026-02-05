@@ -13,7 +13,7 @@ import { ParentCategorySelectorDialogComponent, ParentCategorySelectorData } fro
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
 import { NotificationService } from '../notification.service';
 import { HapticFeedbackService } from '../haptic-feedback.service';
-import { LocalStorageUtilityService } from '../local-storage-utility.service';
+import { LocalStorageService } from '../local-storage.service';
 import { UserService } from './user.service';
 import { of, map } from 'rxjs';
 
@@ -28,7 +28,7 @@ export class CategoryService {
         private dialog: MatDialog,
         private notificationService: NotificationService,
         private hapticFeedback: HapticFeedbackService,
-        private localStorageUtility: LocalStorageUtilityService,
+        private localStorageUtility: LocalStorageService,
         private userService: UserService
     ) {
         this.store.select(CategoriesSelectors.selectAllCategories).subscribe(categories => {

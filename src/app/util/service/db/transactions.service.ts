@@ -17,7 +17,7 @@ import { CreateSplitTransactionRequest } from '../../models/splitwise.model';
 import { SplitwiseService } from 'src/app/modules/splitwise/services/splitwise.service';
 import { CommonSyncService, SyncItem } from '../common-sync.service';
 import { BaseService } from '../base.service';
-import { LocalStorageUtilityService } from '../local-storage-utility.service';
+import { LocalStorageService } from '../local-storage.service';
 import { UserService } from './user.service';
 import { of } from 'rxjs';
 
@@ -35,7 +35,7 @@ export class TransactionsService extends BaseService {
         private accountsService: AccountsService,
         private splitwiseService: SplitwiseService,
         private commonSyncService: CommonSyncService,
-        private localStorageUtility: LocalStorageUtilityService,
+        private localStorageUtility: LocalStorageService,
         private userService: UserService
     ) {
         super(firestore, auth);

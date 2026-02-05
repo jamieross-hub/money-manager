@@ -4,7 +4,7 @@ import { Auth } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 import { Account, CreateAccountRequest, UpdateAccountRequest } from '../../models/account.model';
 import { Transaction } from '../../models/transaction.model';
-import { LocalStorageUtilityService } from '../local-storage-utility.service';
+import { LocalStorageService } from '../local-storage.service';
 import { UserService } from './user.service';
 import { of, map } from 'rxjs';
 
@@ -15,7 +15,7 @@ export class AccountsService {
     constructor(
         private firestore: Firestore,
         private auth: Auth,
-        private localStorageUtility: LocalStorageUtilityService,
+        private localStorageUtility: LocalStorageService,
         private userService: UserService
     ) { }
 

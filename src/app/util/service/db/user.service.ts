@@ -51,6 +51,8 @@ import { AccountType } from '../../config/enums';
 import { APP_CONFIG, defaultCategoriesForNewUser } from '../../config/config';
 import * as CategoriesActions from 'src/app/store/categories/categories.actions';
 import * as AccountsActions from 'src/app/store/accounts/accounts.actions';
+import { CurrencyDetectionUtil } from '../../helpers/currency-detection.util';
+import { LocalStorageService } from '../local-storage.service';
 
 /**
  * Security configuration for user operations
@@ -107,6 +109,7 @@ export class UserService {
     private readonly afAuth: Auth,
     private readonly firestore: Firestore,
     private readonly store: Store<AppState>,
+    private readonly localStorage: LocalStorageService
   ) {
     this.initializeAuthState();
     this.startSecurityMonitoring();
@@ -165,19 +168,24 @@ export class UserService {
       } catch (error) {
         console.error('Error parsing guest user data, creating new:', error);
         guestUser = this.createDefaultGuestUser();
+        // Save the newly created guest user to localStorage
+        localStorage.setItem('user-data-offline-guest', JSON.stringify(guestUser));
       }
     } else {
       // Create new guest user
       guestUser = this.createDefaultGuestUser();
+      // Save to localStorage immediately so preferences (including currency) persist
+      this.localStorage.setItem('user-data-offline-guest', guestUser);
+      console.log('Created new guest user with detected currency:', guestUser.preferences?.defaultCurrency);
     }
 
-    localStorage.setItem('guest-mode', 'true');
+    this.localStorage.setItem('guest-mode', 'true');
     this.userAuth$.next(guestUser);
 
     // Check if data is already initialized for guest
-    if (localStorage.getItem('guest-data-initialized') !== 'true') {
+    if (!this.localStorage.hasItem('guest-data-initialized')) {
       await this.setupDefaultData('offline-guest');
-      localStorage.setItem('guest-data-initialized', 'true');
+      this.localStorage.setItem('guest-data-initialized', 'true');
     }
 
     // We treat the guest user as logged in for the app state
@@ -188,6 +196,9 @@ export class UserService {
    * Create default guest user object
    */
   private createDefaultGuestUser(): User {
+    // Detect currency based on user's location/locale
+    const defaultCurrency = CurrencyDetectionUtil.detectCurrency();
+
     return {
       uid: 'offline-guest',
       email: 'guest@offline.local',
@@ -196,7 +207,15 @@ export class UserService {
       lastName: 'User',
       createdAt: new Date(),
       updatedAt: new Date(),
-      emailVerified: true
+      emailVerified: true,
+      preferences: {
+        defaultCurrency: defaultCurrency,
+        timezone: '',
+        language: '',
+        notifications: false,
+        emailUpdates: false,
+        budgetAlerts: false
+      }
     };
   }
 
