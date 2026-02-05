@@ -4,6 +4,7 @@ import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { Router } from '@angular/router';
 import { Subject, Observable, Subscription } from 'rxjs';
+import { TranslationService, Language } from 'src/app/util/service/translation.service';
 import {
   User,
 } from 'src/app/util/models';
@@ -95,7 +96,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private dateService: DateService,
     private store: Store<AppState>,
     private breakpointObserver: BreakpointObserver,
-    private userService: UserService
+    private userService: UserService,
+    private translationService: TranslationService
   ) {
     this.currentUser = this.auth.currentUser;
     this.isMobile = this.breakpointObserver.isMatched('(max-width: 600px)');
@@ -346,6 +348,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
           }));
 
           this.notificationService.success(SUCCESS_MESSAGES.GENERAL.UPDATED);
+        }
+
+        // Sync language with translation service
+        if (updatedUser.preferences?.language) {
+          this.translationService.setLanguage(updatedUser.preferences.language as Language);
         }
 
         this.isEditing = false;

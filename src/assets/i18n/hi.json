@@ -1,0 +1,33 @@
+{
+    "COMMON": {
+        "LOADING": "लोड हो रहा है...",
+        "ERROR": "त्रुटि",
+        "SUCCESS": "सफलता",
+        "CANCEL": "रद्द करें",
+        "SAVE": "सहेजें",
+        "DELETE": "हटाएं",
+        "EDIT": "संपादित करें",
+        "ADD": "जोड़ें",
+        "CLOSE": "बंद करें",
+        "LOGOUT": "लॉगआउट",
+        "LOGIN": "लॉगिन"
+    },
+    "NAVIGATION": {
+        "DASHBOARD": "डैशबोर्ड",
+        "ACCOUNTS": "खाते",
+        "TRANSACTIONS": "लेन-देन",
+        "CATEGORIES": "श्रेणियां",
+        "BUDGETS": "बजट",
+        "GOALS": "लक्ष्य",
+        "REPORTS": "रिपोर्ट्स",
+        "PROFILE": "प्रोफ़ाइल"
+    },
+    "PROFILE": {
+        "LANGUAGE": "भाषा",
+        "CURRENCY": "मुद्रा",
+        "TIMEZONE": "समय क्षेत्र",
+        "NOTIFICATIONS": "सूचनाएं",
+        "SAVE_PROFILE": "प्रोफ़ाइल सहेजें",
+        "EDIT_PROFILE": "प्रोफ़ाइल संपादित करें"
+    }
+}

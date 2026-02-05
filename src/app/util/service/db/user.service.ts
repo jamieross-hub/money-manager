@@ -38,6 +38,7 @@ import { catchError, retry, timeout, map } from 'rxjs/operators';
 
 import { defaultBankAccounts } from 'src/app/component/auth/registration/registration.component';
 import { NotificationService } from '../notification.service';
+import { TranslationService, Language } from '../translation.service';
 import {
   User,
   FirebaseAuthError,
@@ -109,7 +110,8 @@ export class UserService {
     private readonly afAuth: Auth,
     private readonly firestore: Firestore,
     private readonly store: Store<AppState>,
-    private readonly localStorage: LocalStorageService
+    private readonly localStorage: LocalStorageService,
+    private readonly translationService: TranslationService
   ) {
     this.initializeAuthState();
     this.startSecurityMonitoring();
@@ -138,6 +140,12 @@ export class UserService {
       this.userAuth$.next(user);
 
       if (user) {
+        // Sync language from profile
+        const userData = await this.getCurrentUser();
+        if (userData?.preferences?.language) {
+          this.translationService.setLanguage(userData.preferences.language as Language);
+        }
+
         this.ensureUserDataCached(user.uid);
         this.logAuditEvent('USER_LOGIN', user.uid, {
           email: user.email,
@@ -181,6 +189,11 @@ export class UserService {
 
     this.localStorage.setItem('guest-mode', 'true');
     this.userAuth$.next(guestUser);
+
+    // Sync language for guest
+    if (guestUser.preferences?.language) {
+      this.translationService.setLanguage(guestUser.preferences.language as Language);
+    }
 
     // Check if data is already initialized for guest
     if (!this.localStorage.hasItem('guest-data-initialized')) {

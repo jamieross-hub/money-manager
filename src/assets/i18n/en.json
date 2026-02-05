@@ -1,0 +1,33 @@
+{
+    "COMMON": {
+        "LOADING": "Loading...",
+        "ERROR": "Error",
+        "SUCCESS": "Success",
+        "CANCEL": "Cancel",
+        "SAVE": "Save",
+        "DELETE": "Delete",
+        "EDIT": "Edit",
+        "ADD": "Add",
+        "CLOSE": "Close",
+        "LOGOUT": "Logout",
+        "LOGIN": "Login"
+    },
+    "NAVIGATION": {
+        "DASHBOARD": "Dashboard",
+        "ACCOUNTS": "Accounts",
+        "TRANSACTIONS": "Transactions",
+        "CATEGORIES": "Categories",
+        "BUDGETS": "Budgets",
+        "GOALS": "Goals",
+        "REPORTS": "Reports",
+        "PROFILE": "Profile"
+    },
+    "PROFILE": {
+        "LANGUAGE": "Language",
+        "CURRENCY": "Currency",
+        "TIMEZONE": "Timezone",
+        "NOTIFICATIONS": "Notifications",
+        "SAVE_PROFILE": "Save Profile",
+        "EDIT_PROFILE": "Edit Profile"
+    }
+}

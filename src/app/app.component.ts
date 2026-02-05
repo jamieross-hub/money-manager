@@ -8,6 +8,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { APP_CONFIG } from './util/config/config';
 import { SsrService } from './util/service/ssr.service';
 import { FirebaseMessagingService } from './util/service/firebase-messaging.service';
+import { LanguageService } from './util/service/language.service';
 
 @Component({
   selector: 'app-root',
@@ -28,6 +29,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private ssrService: SsrService,
     private firebaseMessagingService: FirebaseMessagingService,
     public themeSwitchingService: ThemeSwitchingService,
+    private languageService: LanguageService,
   ) {
     this.navigationState = {
       canGoBack: false,

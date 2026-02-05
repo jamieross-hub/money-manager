@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { APP_CONFIG } from '../config/config';
+import { TranslateService } from '@ngx-translate/core';
 
 export type Language = 'en' | 'hi';
 
@@ -132,16 +133,23 @@ export class TranslationService {
     'confirmDiscardMessage': { en: 'Are you sure you want to discard your changes?', hi: 'क्या आप वाकई अपने परिवर्तन त्यागना चाहते हैं?' }
   };
 
-  constructor() {
+  constructor(private translateService: TranslateService) {
+    // Set default language
+    this.translateService.setDefaultLang('en');
+
     // Load saved language preference
     const savedLanguage = localStorage.getItem('app_language') as Language;
     if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'hi')) {
       this.currentLanguage.next(savedLanguage);
+      this.translateService.use(savedLanguage);
     } else {
       // Detect browser language
       const browserLang = navigator.language.split('-')[0];
       if (browserLang === 'hi') {
         this.currentLanguage.next('hi');
+        this.translateService.use('hi');
+      } else {
+        this.translateService.use('en');
       }
     }
   }
@@ -159,11 +167,19 @@ export class TranslationService {
   // Change language
   setLanguage(language: Language): void {
     this.currentLanguage.next(language);
+    this.translateService.use(language);
     localStorage.setItem('app_language', language);
   }
 
   // Get translation
   translate(key: string): string {
+    // First try ngx-translate (instant)
+    const ngxTranslation = this.translateService.instant(key);
+    if (ngxTranslation !== key) {
+      return ngxTranslation;
+    }
+
+    // Fallback to hardcoded translations
     const translation = this.translations[key];
     if (translation) {
       return translation[this.currentLanguage.value] || translation['en'] || key;
