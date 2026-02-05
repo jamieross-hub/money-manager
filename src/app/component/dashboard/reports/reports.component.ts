@@ -570,7 +570,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     // Calculate data for last 6 months
     for (let i = 5; i >= 0; i--) {
       const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthName = month.toLocaleDateString(APP_CONFIG.LANGUAGE.DEFAULT, { month: 'short' });
+      const monthName = month.toLocaleDateString(APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT, { month: 'short' });
 
       const monthTransactions = this.transactions.filter(t => {
         const transactionDate = this.dateService.toDate(t.date);

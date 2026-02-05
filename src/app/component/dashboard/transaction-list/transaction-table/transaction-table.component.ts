@@ -379,10 +379,10 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   getDateDisplay(date: Date | any): string {
     if (date && typeof date === 'object' && 'seconds' in date) {
       // Handle Timestamp
-      return new Date(date.seconds * 1000).toLocaleDateString(APP_CONFIG.LANGUAGE.DEFAULT, { month: 'short', day: 'numeric' });
+      return new Date(date.seconds * 1000).toLocaleDateString(APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT, { month: 'short', day: 'numeric' });
     } else if (date instanceof Date) {
       // Handle Date
-      return date.toLocaleDateString(APP_CONFIG.LANGUAGE.DEFAULT, { month: 'short', day: 'numeric' });
+      return date.toLocaleDateString(APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT, { month: 'short', day: 'numeric' });
     }
     return '';
   }

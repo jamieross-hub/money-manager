@@ -25,7 +25,7 @@ export class CurrencyService {
   private currentCurrencySubject = new BehaviorSubject<string>(CurrencyDetectionUtil.detectCurrency());
   public currentCurrency$ = this.currentCurrencySubject.asObservable();
 
-  private currentLanguageSubject = new BehaviorSubject<string>(APP_CONFIG.LANGUAGE.DEFAULT);
+  private currentLanguageSubject = new BehaviorSubject<string>(APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT);
   public currentLanguage$ = this.currentLanguageSubject.asObservable();
 
   constructor(private userService: UserService) {
@@ -34,11 +34,21 @@ export class CurrencyService {
 
   private initializeCurrency(): void {
     this.userService.userAuth$.subscribe(user => {
+      // Prioritize country-based settings if country is set in preferences
+      if (user?.preferences?.country) {
+        const country = APP_CONFIG.REGIONAL.COUNTRY_MAPPING[user.preferences.country as keyof typeof APP_CONFIG.REGIONAL.COUNTRY_MAPPING];
+        if (country) {
+          this.setCurrentCurrency((country as any).currency);
+          this.setCurrentLanguage((country as any).language);
+        }
+      }
+
+      // Individual preferences can override or act as fallback
       if (user?.preferences?.defaultCurrency) {
         this.setCurrentCurrency(user.preferences.defaultCurrency);
-        if (user.preferences.language) {
-          this.setCurrentLanguage(user.preferences.language);
-        }
+      }
+      if (user?.preferences?.language) {
+        this.setCurrentLanguage(user.preferences.language);
       }
     });
   }
@@ -88,9 +98,9 @@ export class CurrencyService {
    * Helper to get currency configuration from COUNTRY_MAPPING
    */
   getCurrencyConfig(currencyCode: string): { symbol: string, decimalPlaces: number } | undefined {
-    const mapping = APP_CONFIG.CURRENCY.COUNTRY_MAPPING;
+    const mapping = APP_CONFIG.REGIONAL.COUNTRY_MAPPING;
     for (const data of Object.values(mapping)) {
-      if (data.currency === currencyCode) {
+      if ((data as any).currency === currencyCode) {
         return { symbol: (data as any).symbol, decimalPlaces: (data as any).decimalPlaces };
       }
     }

@@ -50,14 +50,16 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   // Use configurations from config.ts
   currencies = Object.values(CurrencyCode);
-  defaultCurrency = APP_CONFIG.CURRENCY.DEFAULT;
+  defaultCurrency = APP_CONFIG.REGIONAL.CURRENCY_DEFAULT;
 
 
 
-  languages = Object.entries(APP_CONFIG.LANGUAGE.NAMES).map(([code, name]) => ({
+  countries = Object.entries(APP_CONFIG.REGIONAL.COUNTRY_MAPPING).map(([code, config]) => ({
     code,
-    name
-  }));
+    name: (config as any).languageName || code,
+    language: (config as any).language,
+    currency: (config as any).currency
+  })).sort((a, b) => a.name.localeCompare(b.name));
 
   fabConfig: QuickActionsFabConfig = {
     title: 'Profile',
@@ -112,12 +114,26 @@ export class ProfileComponent implements OnInit, OnDestroy {
       preferences: this.fb.group({
         defaultCurrency: [{ value: this.defaultCurrency, disabled: true }, Validators.required],
         timezone: [{ value: 'UTC', disabled: true }, Validators.required],
-        language: [{ value: APP_CONFIG.LANGUAGE.DEFAULT, disabled: true }, Validators.required],
+        language: [{ value: APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT, disabled: true }, Validators.required],
+        country: [{ value: 'IN', disabled: true }], // Default to IN or derive from language
         notifications: [{ value: true, disabled: true }],
         emailUpdates: [{ value: true, disabled: true }],
         budgetAlerts: [{ value: true, disabled: true }],
         categoryListViewMode: [{ value: false, disabled: true }],
       }),
+    });
+
+    // Listen to country changes to sync language and currency
+    this.profileForm.get('preferences.country')?.valueChanges.subscribe(countryCode => {
+      if (this.isEditing && countryCode) {
+        const country = APP_CONFIG.REGIONAL.COUNTRY_MAPPING[countryCode as keyof typeof APP_CONFIG.REGIONAL.COUNTRY_MAPPING];
+        if (country) {
+          this.profileForm.get('preferences')?.patchValue({
+            language: (country as any).language,
+            defaultCurrency: (country as any).currency
+          }, { emitEvent: false });
+        }
+      }
     });
   }
 
@@ -185,7 +201,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
       preferences: {
         defaultCurrency: user.preferences?.defaultCurrency || this.defaultCurrency,
         timezone: user.preferences?.timezone || 'UTC',
-        language: user.preferences?.language || APP_CONFIG.LANGUAGE.DEFAULT,
+        language: user.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT,
+        country: user.preferences?.country || this.deriveCountryFromLanguage(user.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT),
         notifications: user.preferences?.notifications || true,
         emailUpdates: user.preferences?.emailUpdates || true,
         budgetAlerts: user.preferences?.budgetAlerts || true,
@@ -236,7 +253,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
         preferences: {
           defaultCurrency: this.userProfile.preferences?.defaultCurrency || this.defaultCurrency,
           timezone: this.userProfile.preferences?.timezone || 'UTC',
-          language: this.userProfile.preferences?.language || APP_CONFIG.LANGUAGE.DEFAULT,
+          language: this.userProfile.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT,
+          country: this.userProfile.preferences?.country || this.deriveCountryFromLanguage(this.userProfile.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT),
           notifications: this.userProfile.preferences?.notifications || true,
           emailUpdates: this.userProfile.preferences?.emailUpdates || true,
           budgetAlerts: this.userProfile.preferences?.budgetAlerts || true,
@@ -410,7 +428,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   getLanguageName(languageCode: string): string {
-    return APP_CONFIG.LANGUAGE.NAMES[languageCode as LanguageCode] || languageCode;
+    const entry = Object.values(APP_CONFIG.REGIONAL.COUNTRY_MAPPING).find(c => (c as any).language === languageCode);
+    return (entry as any)?.languageName || languageCode;
+  }
+
+  private deriveCountryFromLanguage(language: string): string {
+    const entry = Object.entries(APP_CONFIG.REGIONAL.COUNTRY_MAPPING).find(([code, c]) => (c as any).language === language);
+    return entry ? entry[0] : 'IN';
   }
 
   getFormattedDate(date: any): string {

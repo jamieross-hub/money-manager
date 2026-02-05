@@ -38,6 +38,7 @@ export interface UserPreferences {
 	defaultCurrency: string;
 	timezone: string;
 	language: string;
+	country?: string;
 	notifications: boolean;
 	emailUpdates: boolean;
 	budgetAlerts: boolean;

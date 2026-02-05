@@ -4,6 +4,7 @@ import { APP_CONFIG } from '../config/config';
 interface CountryConfig {
     currency: CurrencyCode;
     language: LanguageCode;
+    languageName?: string;
     timezones?: readonly string[];
     symbol: string;
     decimalPlaces: number;
@@ -18,7 +19,7 @@ export class CurrencyDetectionUtil {
      * Retrieves from centralized config
      */
     private static get COUNTRY_CONFIG(): Record<string, CountryConfig> {
-        return APP_CONFIG.CURRENCY.COUNTRY_MAPPING;
+        return APP_CONFIG.REGIONAL.COUNTRY_MAPPING;
     }
 
     /**

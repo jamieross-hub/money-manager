@@ -61,15 +61,17 @@ export const APP_CONFIG = {
     MAX_ACCOUNT_BALANCE: 999999999.99
   },
 
-  // Currency configuration
-  CURRENCY: {
-    DEFAULT: CurrencyCode.INR,
+  // Regional configuration (Currency and Language)
+  REGIONAL: {
+    CURRENCY_DEFAULT: CurrencyCode.INR,
+    LANGUAGE_DEFAULT: LanguageCode.IN_EN,
 
     COUNTRY_MAPPING: {
       // Americas - North
       'US': {
         currency: CurrencyCode.USD,
         language: LanguageCode.EN,
+        languageName: 'English',
         timezones: [
           'America/New_York', 'America/Chicago', 'America/Los_Angeles', 'America/Denver',
           'America/Phoenix', 'America/Detroit', 'America/Anchorage', 'America/Honolulu'
@@ -80,6 +82,7 @@ export const APP_CONFIG = {
       'CA': {
         currency: CurrencyCode.CAD,
         language: LanguageCode.EN,
+        languageName: 'English',
         timezones: ['America/Toronto', 'America/Vancouver', 'America/Montreal', 'America/Edmonton'],
         symbol: 'C$',
         decimalPlaces: 2
@@ -87,6 +90,7 @@ export const APP_CONFIG = {
       'MX': {
         currency: CurrencyCode.MXN,
         language: LanguageCode.ES_MX,
+        languageName: 'Español (México)',
         timezones: ['America/Mexico_City'],
         symbol: '$',
         decimalPlaces: 2
@@ -96,6 +100,7 @@ export const APP_CONFIG = {
       'BR': {
         currency: CurrencyCode.BRL,
         language: LanguageCode.PT_BR,
+        languageName: 'Português (Brasil)',
         timezones: ['America/Sao_Paulo'],
         symbol: 'R$',
         decimalPlaces: 2
@@ -103,6 +108,7 @@ export const APP_CONFIG = {
       'AR': {
         currency: CurrencyCode.ARS,
         language: LanguageCode.ES_AR,
+        languageName: 'Español (Argentina)',
         timezones: ['America/Argentina/Buenos_Aires'],
         symbol: '$',
         decimalPlaces: 2
@@ -110,6 +116,7 @@ export const APP_CONFIG = {
       'CL': {
         currency: CurrencyCode.CLP,
         language: LanguageCode.ES,
+        languageName: 'Español',
         timezones: ['America/Santiago'],
         symbol: '$',
         decimalPlaces: 0
@@ -117,6 +124,7 @@ export const APP_CONFIG = {
       'CO': {
         currency: CurrencyCode.COP,
         language: LanguageCode.ES,
+        languageName: 'Español',
         timezones: ['America/Bogota'],
         symbol: '$',
         decimalPlaces: 2
@@ -124,6 +132,7 @@ export const APP_CONFIG = {
       'PE': {
         currency: CurrencyCode.PEN,
         language: LanguageCode.ES,
+        languageName: 'Español',
         timezones: ['America/Lima'],
         symbol: 'S/',
         decimalPlaces: 2
@@ -133,6 +142,7 @@ export const APP_CONFIG = {
       'GB': {
         currency: CurrencyCode.GBP,
         language: LanguageCode.EN,
+        languageName: 'English',
         timezones: ['Europe/London'],
         symbol: '£',
         decimalPlaces: 2
@@ -140,6 +150,7 @@ export const APP_CONFIG = {
       'CH': {
         currency: CurrencyCode.CHF,
         language: LanguageCode.DE,
+        languageName: 'Deutsch',
         timezones: ['Europe/Zurich'],
         symbol: 'Fr',
         decimalPlaces: 2
@@ -147,6 +158,7 @@ export const APP_CONFIG = {
       'SE': {
         currency: CurrencyCode.SEK,
         language: LanguageCode.SV,
+        languageName: 'Svenska',
         timezones: ['Europe/Stockholm'],
         symbol: 'kr',
         decimalPlaces: 2
@@ -154,6 +166,7 @@ export const APP_CONFIG = {
       'NO': {
         currency: CurrencyCode.NOK,
         language: LanguageCode.NO,
+        languageName: 'Norsk',
         timezones: ['Europe/Oslo'],
         symbol: 'kr',
         decimalPlaces: 2
@@ -161,6 +174,7 @@ export const APP_CONFIG = {
       'DK': {
         currency: CurrencyCode.DKK,
         language: LanguageCode.DA,
+        languageName: 'Dansk',
         timezones: ['Europe/Copenhagen'],
         symbol: 'kr',
         decimalPlaces: 2
@@ -168,6 +182,7 @@ export const APP_CONFIG = {
       'PL': {
         currency: CurrencyCode.PLN,
         language: LanguageCode.PL,
+        languageName: 'Polski',
         timezones: ['Europe/Warsaw'],
         symbol: 'zł',
         decimalPlaces: 2
@@ -175,6 +190,7 @@ export const APP_CONFIG = {
       'RU': {
         currency: CurrencyCode.RUB,
         language: LanguageCode.RU,
+        languageName: 'Русский',
         timezones: ['Europe/Moscow'],
         symbol: '₽',
         decimalPlaces: 2
@@ -182,30 +198,32 @@ export const APP_CONFIG = {
       'TR': {
         currency: CurrencyCode.TRY,
         language: LanguageCode.TR,
+        languageName: 'Türkçe',
         timezones: ['Europe/Istanbul'],
         symbol: '₺',
         decimalPlaces: 2
       },
 
       // Eurozone countries
-      'DE': { currency: CurrencyCode.EUR, language: LanguageCode.DE, timezones: ['Europe/Berlin'], symbol: '€', decimalPlaces: 2 },
-      'FR': { currency: CurrencyCode.EUR, language: LanguageCode.FR, timezones: ['Europe/Paris'], symbol: '€', decimalPlaces: 2 },
-      'IT': { currency: CurrencyCode.EUR, language: LanguageCode.IT, timezones: ['Europe/Rome'], symbol: '€', decimalPlaces: 2 },
-      'ES': { currency: CurrencyCode.EUR, language: LanguageCode.ES, timezones: ['Europe/Madrid'], symbol: '€', decimalPlaces: 2 },
-      'PT': { currency: CurrencyCode.EUR, language: LanguageCode.PT, timezones: ['Europe/Lisbon'], symbol: '€', decimalPlaces: 2 },
-      'NL': { currency: CurrencyCode.EUR, language: LanguageCode.NL, timezones: ['Europe/Amsterdam'], symbol: '€', decimalPlaces: 2 },
-      'BE': { currency: CurrencyCode.EUR, language: LanguageCode.FR, timezones: ['Europe/Brussels'], symbol: '€', decimalPlaces: 2 },
-      'AT': { currency: CurrencyCode.EUR, language: LanguageCode.DE, timezones: ['Europe/Vienna'], symbol: '€', decimalPlaces: 2 },
-      'IE': { currency: CurrencyCode.EUR, language: LanguageCode.EN, timezones: ['Europe/Dublin'], symbol: '€', decimalPlaces: 2 },
-      'FI': { currency: CurrencyCode.EUR, language: LanguageCode.FI, timezones: ['Europe/Helsinki'], symbol: '€', decimalPlaces: 2 },
-      'GR': { currency: CurrencyCode.EUR, language: LanguageCode.EN, timezones: ['Europe/Athens'], symbol: '€', decimalPlaces: 2 },
-      'UA': { currency: CurrencyCode.EUR, language: LanguageCode.EN, timezones: ['Europe/Kiev'], symbol: '€', decimalPlaces: 2 },
-      'RO': { currency: CurrencyCode.EUR, language: LanguageCode.EN, timezones: ['Europe/Bucharest'], symbol: '€', decimalPlaces: 2 },
+      'DE': { currency: CurrencyCode.EUR, language: LanguageCode.DE, languageName: 'Deutsch', timezones: ['Europe/Berlin'], symbol: '€', decimalPlaces: 2 },
+      'FR': { currency: CurrencyCode.EUR, language: LanguageCode.FR, languageName: 'Français', timezones: ['Europe/Paris'], symbol: '€', decimalPlaces: 2 },
+      'IT': { currency: CurrencyCode.EUR, language: LanguageCode.IT, languageName: 'Italiano', timezones: ['Europe/Rome'], symbol: '€', decimalPlaces: 2 },
+      'ES': { currency: CurrencyCode.EUR, language: LanguageCode.ES, languageName: 'Español', timezones: ['Europe/Madrid'], symbol: '€', decimalPlaces: 2 },
+      'PT': { currency: CurrencyCode.EUR, language: LanguageCode.PT, languageName: 'Português', timezones: ['Europe/Lisbon'], symbol: '€', decimalPlaces: 2 },
+      'NL': { currency: CurrencyCode.EUR, language: LanguageCode.NL, languageName: 'Nederlands', timezones: ['Europe/Amsterdam'], symbol: '€', decimalPlaces: 2 },
+      'BE': { currency: CurrencyCode.EUR, language: LanguageCode.FR, languageName: 'Français', timezones: ['Europe/Brussels'], symbol: '€', decimalPlaces: 2 },
+      'AT': { currency: CurrencyCode.EUR, language: LanguageCode.DE, languageName: 'Deutsch', timezones: ['Europe/Vienna'], symbol: '€', decimalPlaces: 2 },
+      'IE': { currency: CurrencyCode.EUR, language: LanguageCode.EN, languageName: 'English', timezones: ['Europe/Dublin'], symbol: '€', decimalPlaces: 2 },
+      'FI': { currency: CurrencyCode.EUR, language: LanguageCode.FI, languageName: 'Suomi', timezones: ['Europe/Helsinki'], symbol: '€', decimalPlaces: 2 },
+      'GR': { currency: CurrencyCode.EUR, language: LanguageCode.EN, languageName: 'English', timezones: ['Europe/Athens'], symbol: '€', decimalPlaces: 2 },
+      'UA': { currency: CurrencyCode.EUR, language: LanguageCode.EN, languageName: 'English', timezones: ['Europe/Kiev'], symbol: '€', decimalPlaces: 2 },
+      'RO': { currency: CurrencyCode.EUR, language: LanguageCode.EN, languageName: 'English', timezones: ['Europe/Bucharest'], symbol: '€', decimalPlaces: 2 },
 
       // Asia Pacific
       'IN': {
         currency: CurrencyCode.INR,
         language: LanguageCode.IN_EN,
+        languageName: 'English (India)',
         timezones: ['Asia/Kolkata', 'Asia/Calcutta'],
         symbol: '₹',
         decimalPlaces: 2
@@ -213,6 +231,7 @@ export const APP_CONFIG = {
       'CN': {
         currency: CurrencyCode.CNY,
         language: LanguageCode.ZH,
+        languageName: '中文',
         timezones: ['Asia/Shanghai', 'Asia/Chongqing', 'Asia/Urumqi'],
         symbol: '¥',
         decimalPlaces: 2
@@ -220,6 +239,7 @@ export const APP_CONFIG = {
       'JP': {
         currency: CurrencyCode.JPY,
         language: LanguageCode.JA,
+        languageName: '日本語',
         timezones: ['Asia/Tokyo'],
         symbol: '¥',
         decimalPlaces: 0
@@ -227,6 +247,7 @@ export const APP_CONFIG = {
       'AU': {
         currency: CurrencyCode.AUD,
         language: LanguageCode.EN,
+        languageName: 'English',
         timezones: ['Australia/Sydney', 'Australia/Melbourne', 'Australia/Brisbane', 'Australia/Perth', 'Australia/Adelaide'],
         symbol: 'A$',
         decimalPlaces: 2
@@ -234,6 +255,7 @@ export const APP_CONFIG = {
       'NZ': {
         currency: CurrencyCode.NZD,
         language: LanguageCode.EN,
+        languageName: 'English',
         timezones: ['Pacific/Auckland'],
         symbol: 'NZ$',
         decimalPlaces: 2
@@ -241,6 +263,7 @@ export const APP_CONFIG = {
       'HK': {
         currency: CurrencyCode.HKD,
         language: LanguageCode.ZH,
+        languageName: '中文',
         timezones: ['Asia/Hong_Kong'],
         symbol: 'HK$',
         decimalPlaces: 2
@@ -248,6 +271,7 @@ export const APP_CONFIG = {
       'SG': {
         currency: CurrencyCode.SGD,
         language: LanguageCode.EN,
+        languageName: 'English',
         timezones: ['Asia/Singapore'],
         symbol: 'S$',
         decimalPlaces: 2
@@ -255,6 +279,7 @@ export const APP_CONFIG = {
       'TW': {
         currency: CurrencyCode.TWD,
         language: LanguageCode.ZH,
+        languageName: '中文',
         timezones: ['Asia/Taipei'],
         symbol: 'NT$',
         decimalPlaces: 2
@@ -262,6 +287,7 @@ export const APP_CONFIG = {
       'KR': {
         currency: CurrencyCode.KRW,
         language: LanguageCode.KO,
+        languageName: '한국어',
         timezones: ['Asia/Seoul'],
         symbol: '₩',
         decimalPlaces: 0
@@ -269,6 +295,7 @@ export const APP_CONFIG = {
       'TH': {
         currency: CurrencyCode.THB,
         language: LanguageCode.TH,
+        languageName: 'ไทย',
         timezones: ['Asia/Bangkok'],
         symbol: '฿',
         decimalPlaces: 2
@@ -276,6 +303,7 @@ export const APP_CONFIG = {
       'ID': {
         currency: CurrencyCode.IDR,
         language: LanguageCode.ID,
+        languageName: 'Bahasa Indonesia',
         timezones: ['Asia/Jakarta'],
         symbol: 'Rp',
         decimalPlaces: 2
@@ -283,6 +311,7 @@ export const APP_CONFIG = {
       'MY': {
         currency: CurrencyCode.MYR,
         language: LanguageCode.MS,
+        languageName: 'Bahasa Melayu',
         timezones: ['Asia/Kuala_Lumpur'],
         symbol: 'RM',
         decimalPlaces: 2
@@ -290,6 +319,7 @@ export const APP_CONFIG = {
       'PH': {
         currency: CurrencyCode.PHP,
         language: LanguageCode.EN,
+        languageName: 'English',
         timezones: ['Asia/Manila'],
         symbol: '₱',
         decimalPlaces: 2
@@ -297,6 +327,7 @@ export const APP_CONFIG = {
       'VN': {
         currency: CurrencyCode.VND,
         language: LanguageCode.VI,
+        languageName: 'Tiếng Việt',
         timezones: ['Asia/Ho_Chi_Minh'],
         symbol: '₫',
         decimalPlaces: 0
@@ -304,16 +335,18 @@ export const APP_CONFIG = {
       'IL': {
         currency: CurrencyCode.ILS,
         language: LanguageCode.HE,
+        languageName: 'עברית',
         timezones: ['Asia/Jerusalem'],
         symbol: '₪',
         decimalPlaces: 2
       },
-      'IR': { currency: CurrencyCode.USD, language: LanguageCode.EN, timezones: ['Asia/Tehran'], symbol: '$', decimalPlaces: 2 }, // Fallback
+      'IR': { currency: CurrencyCode.USD, language: LanguageCode.EN, languageName: 'English', timezones: ['Asia/Tehran'], symbol: '$', decimalPlaces: 2 }, // Fallback
 
       // Middle East
       'SA': {
         currency: CurrencyCode.SAR,
         language: LanguageCode.AR,
+        languageName: 'العربية',
         timezones: ['Asia/Riyadh'],
         symbol: '﷼',
         decimalPlaces: 2
@@ -321,6 +354,7 @@ export const APP_CONFIG = {
       'AE': {
         currency: CurrencyCode.AED,
         language: LanguageCode.AR,
+        languageName: 'العربية',
         timezones: ['Asia/Dubai'],
         symbol: 'د.إ',
         decimalPlaces: 2
@@ -330,6 +364,7 @@ export const APP_CONFIG = {
       'ZA': {
         currency: CurrencyCode.ZAR,
         language: LanguageCode.EN,
+        languageName: 'English',
         timezones: ['Africa/Johannesburg'],
         symbol: 'R',
         decimalPlaces: 2
@@ -337,6 +372,7 @@ export const APP_CONFIG = {
       'NG': {
         currency: CurrencyCode.NGN,
         language: LanguageCode.EN,
+        languageName: 'English',
         timezones: ['Africa/Lagos'],
         symbol: '₦',
         decimalPlaces: 2
@@ -344,6 +380,7 @@ export const APP_CONFIG = {
       'EG': {
         currency: CurrencyCode.EGP,
         language: LanguageCode.AR,
+        languageName: 'العربية',
         timezones: ['Africa/Cairo'],
         symbol: 'E£',
         decimalPlaces: 2
@@ -351,6 +388,7 @@ export const APP_CONFIG = {
       'KE': {
         currency: CurrencyCode.KES,
         language: LanguageCode.EN,
+        languageName: 'English',
         timezones: ['Africa/Nairobi'],
         symbol: 'KSh',
         decimalPlaces: 2
@@ -358,6 +396,7 @@ export const APP_CONFIG = {
       'GH': {
         currency: CurrencyCode.GHS,
         language: LanguageCode.EN,
+        languageName: 'English',
         timezones: ['Africa/Accra'],
         symbol: '₵',
         decimalPlaces: 2
@@ -365,54 +404,22 @@ export const APP_CONFIG = {
       'MA': {
         currency: CurrencyCode.MAD,
         language: LanguageCode.AR,
+        languageName: 'العربية',
         timezones: ['Africa/Casablanca'],
         symbol: 'dh',
         decimalPlaces: 2
       },
-    }
-  },
+    },
 
-  // Language configuration
-  LANGUAGE: {
-    DEFAULT: LanguageCode.IN_EN,
-    SUPPORTED: [
-      LanguageCode.EN,
-      LanguageCode.ES,
-      LanguageCode.FR,
-      LanguageCode.DE,
-      LanguageCode.HI,
-      LanguageCode.ZH
-    ],
-    NAMES: {
-      [LanguageCode.EN]: 'English',
-      [LanguageCode.IN_EN]: 'English (India)',
-      [LanguageCode.ES]: 'Español',
-      [LanguageCode.FR]: 'Français',
-      [LanguageCode.DE]: 'Deutsch',
-      [LanguageCode.HI]: 'हिंदी',
-      [LanguageCode.ZH]: '中文',
-      [LanguageCode.IT]: 'Italiano',
-      [LanguageCode.PT]: 'Português',
-      [LanguageCode.PT_BR]: 'Português (Brasil)',
-      [LanguageCode.ES_MX]: 'Español (México)',
-      [LanguageCode.ES_AR]: 'Español (Argentina)',
-      [LanguageCode.NL]: 'Nederlands',
-      [LanguageCode.RU]: 'Русский',
-      [LanguageCode.TR]: 'Türkçe',
-      [LanguageCode.JA]: '日本語',
-      [LanguageCode.KO]: '한국어',
-      [LanguageCode.TH]: 'ไทย',
-      [LanguageCode.ID]: 'Bahasa Indonesia',
-      [LanguageCode.MS]: 'Bahasa Melayu',
-      [LanguageCode.VI]: 'Tiếng Việt',
-      [LanguageCode.HE]: 'עברית',
-      [LanguageCode.AR]: 'العربية',
-      [LanguageCode.SV]: 'Svenska',
-      [LanguageCode.NO]: 'Norsk',
-      [LanguageCode.DA]: 'Dansk',
-      [LanguageCode.FI]: 'Suomi',
-      [LanguageCode.PL]: 'Polski',
-
+    LANGUAGE: {
+      SUPPORTED: [
+        LanguageCode.EN,
+        LanguageCode.ES,
+        LanguageCode.FR,
+        LanguageCode.DE,
+        LanguageCode.HI,
+        LanguageCode.ZH
+      ]
     }
   },
 
