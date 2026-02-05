@@ -47,7 +47,7 @@ import { SplitwiseService } from './services/splitwise.service';
 
 // Utility Components
 import { LoaderComponent } from '../../util/components/loader/loader.component';
-import { TranslatePipe } from '../../util/pipes/translate.pipe';
+// import { TranslatePipe } from '../../util/pipes/translate.pipe';
 import { MembersComponent } from './members/members.component';
 import { SharedModule } from '../shared/shared.module';
 
@@ -68,7 +68,7 @@ import { SharedModule } from '../shared/shared.module';
     ReactiveFormsModule,
     RouterModule,
     SplitwiseRoutingModule,
-    
+
     // Material Modules
     MatCardModule,
     MatListModule,
@@ -88,14 +88,14 @@ import { SharedModule } from '../shared/shared.module';
     MatButtonToggleModule,
     MatCheckboxModule,
     SharedModule,
-    
+
     // NgRx
     StoreModule.forFeature('splitwise', splitwiseReducer),
     EffectsModule.forFeature([SplitwiseEffects]),
-    
+
     // Standalone Components
     LoaderComponent,
-    TranslatePipe,
+    // TranslatePipe,
   ],
   providers: [
     SplitwiseService

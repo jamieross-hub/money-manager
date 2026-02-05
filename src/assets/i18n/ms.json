@@ -1,0 +1,33 @@
+{
+    "COMMON": {
+        "LOADING": "Memuatkan...",
+        "ERROR": "Ralat",
+        "SUCCESS": "Berjaya",
+        "CANCEL": "Batal",
+        "SAVE": "Simpan",
+        "DELETE": "Padam",
+        "EDIT": "Edit",
+        "ADD": "Tambah",
+        "CLOSE": "Tutup",
+        "LOGOUT": "Log keluar",
+        "LOGIN": "Log masuk"
+    },
+    "NAVIGATION": {
+        "DASHBOARD": "Papan pemuka",
+        "ACCOUNTS": "Akaun",
+        "TRANSACTIONS": "Transaksi",
+        "CATEGORIES": "Kategori",
+        "BUDGETS": "Belanjawan",
+        "GOALS": "Matlamat",
+        "REPORTS": "Laporan",
+        "PROFILE": "Profil"
+    },
+    "PROFILE": {
+        "LANGUAGE": "Bahasa",
+        "CURRENCY": "Mata Wang",
+        "TIMEZONE": "Zon Masa",
+        "Pemberitahuan": "Pemberitahuan",
+        "SAVE_PROFILE": "Simpan Profil",
+        "EDIT_PROFILE": "Edit Profil"
+    }
+}

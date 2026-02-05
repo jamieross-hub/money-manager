@@ -25,44 +25,44 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
     isCollapsible: true,
     children: [
       {
-        label: 'dashboard',
+        label: 'NAVIGATION.DASHBOARD',
         route: '/dashboard/home',
         icon: 'dashboard',
         order: 1
       },
       {
-        label: 'accounts',
+        label: 'NAVIGATION.ACCOUNTS',
         route: '/dashboard/accounts',
         icon: 'account_balance',
         order: 2
       },
       {
-        label: 'transactions',
+        label: 'NAVIGATION.TRANSACTIONS',
         route: '/dashboard/transactions',
         icon: 'receipt_long',
         order: 3
       },
       {
-        label: 'recurring',
+        label: 'NAVIGATION.RECURRING',
         route: '/dashboard/transactions',
         queryParams: { tab: 'recurring' },
         icon: 'repeat',
         order: 4
       },
       {
-        label: 'categories',
+        label: 'NAVIGATION.CATEGORIES',
         route: '/dashboard/category',
         icon: 'category',
         order: 5
       },
       {
-        label: 'budgets',
+        label: 'NAVIGATION.BUDGETS',
         route: '/dashboard/budgets',
         icon: 'pie_chart',
         order: 6
       },
       {
-        label: 'reports',
+        label: 'NAVIGATION.REPORTS',
         route: '/dashboard/reports',
         icon: 'analytics',
         order: 7
@@ -89,7 +89,7 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
       //   order: 2
       // },
       {
-        label: 'tax',
+        label: 'NAVIGATION.TAX',
         route: '/dashboard/tax',
         icon: 'calculate',
         order: 3,
@@ -126,7 +126,7 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
     isCollapsible: true,
     children: [
       {
-        label: 'Profile',
+        label: 'NAVIGATION.PROFILE',
         route: '/dashboard/profile',
         icon: 'account_circle',
         order: 1

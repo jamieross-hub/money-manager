@@ -1,0 +1,33 @@
+{
+    "COMMON": {
+        "LOADING": "Laden...",
+        "ERROR": "Fout",
+        "SUCCESS": "Succes",
+        "CANCEL": "Annuleren",
+        "SAVE": "Opslaan",
+        "DELETE": "Verwijderen",
+        "EDIT": "Bewerken",
+        "ADD": "Toevoegen",
+        "CLOSE": "Sluiten",
+        "LOGOUT": "Uitloggen",
+        "LOGIN": "Inloggen"
+    },
+    "NAVIGATION": {
+        "DASHBOARD": "Dashboard",
+        "ACCOUNTS": "Accounts",
+        "TRANSACTIONS": "Transacties",
+        "CATEGORIES": "Categorieën",
+        "BUDGETS": "Budgetten",
+        "GOALS": "Doelen",
+        "REPORTS": "Rapporten",
+        "PROFILE": "Profiel"
+    },
+    "PROFILE": {
+        "LANGUAGE": "Taal",
+        "CURRENCY": "Valuta",
+        "TIMEZONE": "Tijdzone",
+        "NOTIFICATIONS": "Meldingen",
+        "SAVE_PROFILE": "Profiel opslaan",
+        "EDIT_PROFILE": "Profiel bewerken"
+    }
+}

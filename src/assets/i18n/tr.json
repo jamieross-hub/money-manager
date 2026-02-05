@@ -1,0 +1,33 @@
+{
+    "COMMON": {
+        "LOADING": "Yükleniyor...",
+        "ERROR": "Hata",
+        "SUCCESS": "Başarılı",
+        "CANCEL": "İptal",
+        "SAVE": "Kaydet",
+        "DELETE": "Sil",
+        "EDIT": "Düzenle",
+        "ADD": "Ekle",
+        "CLOSE": "Kapat",
+        "LOGOUT": "Çıkış Yap",
+        "LOGIN": "Giriş Yap"
+    },
+    "NAVIGATION": {
+        "DASHBOARD": "Panel",
+        "ACCOUNTS": "Hesaplar",
+        "TRANSACTIONS": "İşlemler",
+        "CATEGORIES": "Kategoriler",
+        "BUDGETS": "Bütçeler",
+        "GOALS": "Hedefler",
+        "REPORTS": "Raporlar",
+        "PROFILE": "Profil"
+    },
+    "PROFILE": {
+        "LANGUAGE": "Dil",
+        "CURRENCY": "Para Birimi",
+        "TIMEZONE": "Saat Dilimi",
+        "NOTIFICATIONS": "Bildirimler",
+        "SAVE_PROFILE": "Profili Kaydet",
+        "EDIT_PROFILE": "Profili Düzenle"
+    }
+}

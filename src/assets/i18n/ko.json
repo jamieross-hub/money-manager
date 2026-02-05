@@ -1,0 +1,33 @@
+{
+    "COMMON": {
+        "LOADING": "로딩 중...",
+        "ERROR": "오류",
+        "SUCCESS": "성공",
+        "CANCEL": "취소",
+        "SAVE": "저장",
+        "DELETE": "삭제",
+        "EDIT": "편집",
+        "ADD": "추가",
+        "CLOSE": "닫기",
+        "LOGOUT": "로그아웃",
+        "LOGIN": "로그인"
+    },
+    "NAVIGATION": {
+        "DASHBOARD": "대시보드",
+        "ACCOUNTS": "계정",
+        "TRANSACTIONS": "거래",
+        "CATEGORIES": "카테고리",
+        "BUDGETS": "예산",
+        "GOALS": "목표",
+        "REPORTS": "보고서",
+        "PROFILE": "프로필"
+    },
+    "PROFILE": {
+        "LANGUAGE": "언어",
+        "CURRENCY": "통화",
+        "TIMEZONE": "시간대",
+        "NOTIFICATIONS": "알림",
+        "SAVE_PROFILE": "프로필 저장",
+        "EDIT_PROFILE": "프로필 편집"
+    }
+}

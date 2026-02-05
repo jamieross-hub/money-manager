@@ -1,0 +1,33 @@
+{
+    "COMMON": {
+        "LOADING": "טוען...",
+        "ERROR": "שגיאה",
+        "SUCCESS": "הצלחה",
+        "CANCEL": "ביטול",
+        "SAVE": "שמירה",
+        "DELETE": "מחיקה",
+        "EDIT": "עריכה",
+        "ADD": "הוספה",
+        "CLOSE": "סגירה",
+        "LOGOUT": "התנתקות",
+        "LOGIN": "התחברות"
+    },
+    "NAVIGATION": {
+        "DASHBOARD": "לוח בקרה",
+        "ACCOUNTS": "חשבונות",
+        "TRANSACTIONS": "עסקאות",
+        "CATEGORIES": "קטגוריות",
+        "BUDGETS": "תקציבים",
+        "GOALS": "יעדים",
+        "REPORTS": "דוחות",
+        "PROFILE": "פרופיל"
+    },
+    "PROFILE": {
+        "LANGUAGE": "שפה",
+        "CURRENCY": "מטבע",
+        "TIMEZONE": "אזור זמן",
+        "NOTIFICATIONS": "התראות",
+        "SAVE_PROFILE": "שמירת פרופיל",
+        "EDIT_PROFILE": "עריכת פרופיל"
+    }
+}

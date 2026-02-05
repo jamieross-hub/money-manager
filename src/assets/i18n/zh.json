@@ -1,0 +1,33 @@
+{
+    "COMMON": {
+        "LOADING": "加载中...",
+        "ERROR": "错误",
+        "SUCCESS": "成功",
+        "CANCEL": "取消",
+        "SAVE": "保存",
+        "DELETE": "删除",
+        "EDIT": "编辑",
+        "ADD": "添加",
+        "CLOSE": "关闭",
+        "LOGOUT": "登出",
+        "LOGIN": "登录"
+    },
+    "NAVIGATION": {
+        "DASHBOARD": "仪表板",
+        "ACCOUNTS": "账户",
+        "TRANSACTIONS": "交易",
+        "CATEGORIES": "类别",
+        "BUDGETS": "预算",
+        "GOALS": "目标",
+        "REPORTS": "报告",
+        "PROFILE": "个人资料"
+    },
+    "PROFILE": {
+        "LANGUAGE": "语言",
+        "CURRENCY": "货币",
+        "TIMEZONE": "时区",
+        "NOTIFICATIONS": "通知",
+        "SAVE_PROFILE": "保存资料",
+        "EDIT_PROFILE": "编辑资料"
+    }
+}

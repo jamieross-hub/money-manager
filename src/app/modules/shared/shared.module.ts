@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 // Angular Material Modules
@@ -46,7 +47,7 @@ import { KeyMetricsSummaryCardComponent } from '../../util/components/cards/key-
 import { AnalyticsSummaryCardComponent } from '../../util/components/cards/analytics-summary-card/analytics-summary-card.component';
 import { CurrencyPipe } from 'src/app/util/pipes';
 import { SafeHtmlPipe } from 'src/app/util/pipes/safe-html.pipe';
-import { TranslatePipe } from 'src/app/util/pipes/translate.pipe';
+// import { TranslatePipe } from 'src/app/util/pipes/translate.pipe';
 import { FinancialMetricsCardComponent } from 'src/app/util/components/cards/financial-metrics-card/financial-metrics-card.component';
 import { LoanSummaryCardComponent } from '../../util/components/cards/loan-summary-card/loan-summary-card.component';
 
@@ -70,7 +71,8 @@ import { LoanSummaryCardComponent } from '../../util/components/cards/loan-summa
     LoanSummaryCardComponent,
     CurrencyPipe,
     SafeHtmlPipe,
-    TranslatePipe,
+    TranslateModule,
+    // TranslatePipe,
 
     // Material Modules
     MatCardModule,
@@ -157,7 +159,8 @@ import { LoanSummaryCardComponent } from '../../util/components/cards/loan-summa
     // Pipes
     CurrencyPipe,
     SafeHtmlPipe,
-    TranslatePipe
+    TranslateModule
+    // TranslatePipe
   ]
 })
 export class SharedModule { } 

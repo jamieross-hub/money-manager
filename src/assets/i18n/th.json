@@ -1,0 +1,33 @@
+{
+    "COMMON": {
+        "LOADING": "กำลังโหลด...",
+        "ERROR": "ข้อผิดพลาด",
+        "SUCCESS": "สำเร็จ",
+        "CANCEL": "ยกเลิก",
+        "SAVE": "บันทึก",
+        "DELETE": "ลบ",
+        "EDIT": "แก้ไข",
+        "ADD": "เพิ่ม",
+        "CLOSE": "ปิด",
+        "LOGOUT": "ออกจากระบบ",
+        "LOGIN": "เข้าสู่ระบบ"
+    },
+    "NAVIGATION": {
+        "DASHBOARD": "แดชบอร์ด",
+        "ACCOUNTS": "บัญชี",
+        "TRANSACTIONS": "ธุรกรรม",
+        "CATEGORIES": "หมวดหมู่",
+        "BUDGETS": "งบประมาณ",
+        "GOALS": "เป้าหมาย",
+        "REPORTS": "รายงาน",
+        "PROFILE": "โปรไฟล์"
+    },
+    "PROFILE": {
+        "LANGUAGE": "ภาษา",
+        "CURRENCY": "สกุลเงิน",
+        "TIMEZONE": "เขตเวลา",
+        "NOTIFICATIONS": "การแจ้งเตือน",
+        "SAVE_PROFILE": "บันทึกโปรไฟล์",
+        "EDIT_PROFILE": "แก้ไขโปรไฟล์"
+    }
+}

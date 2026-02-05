@@ -1,0 +1,33 @@
+{
+    "COMMON": {
+        "LOADING": "Indlæser...",
+        "ERROR": "Fejl",
+        "SUCCESS": "Succes",
+        "CANCEL": "Annuller",
+        "SAVE": "Gem",
+        "DELETE": "Slet",
+        "EDIT": "Rediger",
+        "ADD": "Tilføj",
+        "CLOSE": "Luk",
+        "LOGOUT": "Log ud",
+        "LOGIN": "Log ind"
+    },
+    "NAVIGATION": {
+        "DASHBOARD": "Dashboard",
+        "ACCOUNTS": "Konti",
+        "TRANSACTIONS": "Transaktioner",
+        "CATEGORIES": "Kategorier",
+        "BUDGETS": "Budgetter",
+        "GOALS": "Mål",
+        "REPORTS": "Rapporter",
+        "PROFILE": "Profil"
+    },
+    "PROFILE": {
+        "LANGUAGE": "Sprog",
+        "CURRENCY": "Valuta",
+        "TIMEZONE": "Tidszone",
+        "Meddelelser": "Notifikationer",
+        "SAVE_PROFILE": "Gem profil",
+        "EDIT_PROFILE": "Rediger profil"
+    }
+}

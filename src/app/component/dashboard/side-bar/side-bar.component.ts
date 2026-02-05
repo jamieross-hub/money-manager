@@ -56,7 +56,7 @@ export class SideBarComponent implements AfterViewInit {
       // Check if click is outside the sidebar
       if (!sidebarElement.contains(clickedElement)) {
         // Check if it's not a click on the menu button (which should open the sidebar)
-        const menuButton = clickedElement.closest('button[aria-label="Open sidebar"]');
+        const menuButton = clickedElement.closest('button[data-testid="sidebar-toggle"]');
         if (!menuButton) {
           this.drawer.close();
         }

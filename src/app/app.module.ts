@@ -64,7 +64,6 @@ import { TaxComponent } from './component/dashboard/tax/tax.component';
 import { NotesComponent } from './component/dashboard/notes/notes.component';
 import { LanguageSwitcherComponent } from './util/components/language-switcher/language-switcher.component';
 import { ThemeToggleComponent } from './util/components/theme-toggle/theme-toggle.component';
-import { TranslatePipe } from './util/pipes/translate.pipe';
 import { MobileTransactionListComponent } from './component/dashboard/transaction-list/mobile-transaction-list/mobile-transaction-list.component';
 import { SearchFilterComponent } from './component/dashboard/transaction-list/search-filter/search-filter.component';
 import { TransactionTableComponent } from './component/dashboard/transaction-list/transaction-table/transaction-table.component';
@@ -202,7 +201,7 @@ import { CurrencyPipe } from './util/pipes';
 
     // Utility
     IconModule,
-    TranslatePipe,
+    // TranslatePipe,
     CurrencyPipe,
 
     // Charts

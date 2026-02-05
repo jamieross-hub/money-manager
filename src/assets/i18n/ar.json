@@ -1,0 +1,33 @@
+{
+    "COMMON": {
+        "LOADING": "جاري التحميل...",
+        "ERROR": "خطأ",
+        "SUCCESS": "نجاح",
+        "CANCEL": "إلغاء",
+        "SAVE": "حفظ",
+        "DELETE": "حذف",
+        "EDIT": "تعديل",
+        "ADD": "إضافة",
+        "CLOSE": "إغلاق",
+        "LOGOUT": "تسجيل الخروج",
+        "LOGIN": "تسجيل الدخول"
+    },
+    "NAVIGATION": {
+        "DASHBOARD": "لوحة القيادة",
+        "ACCOUNTS": "الحسابات",
+        "TRANSACTIONS": "المعاملات",
+        "CATEGORIES": "الفئات",
+        "BUDGETS": "الميزانيات",
+        "GOALS": "الأهداف",
+        "REPORTS": "التقارير",
+        "PROFILE": "الملف الشخصي"
+    },
+    "PROFILE": {
+        "LANGUAGE": "اللغة",
+        "CURRENCY": "العملة",
+        "TIMEZONE": "المنطقة الزمنية",
+        "NOTIFICATIONS": "الإشعارات",
+        "SAVE_PROFILE": "حفظ الملف الشخصي",
+        "EDIT_PROFILE": "تعديل الملف الشخصي"
+    }
+}

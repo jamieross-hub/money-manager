@@ -1,0 +1,33 @@
+{
+    "COMMON": {
+        "LOADING": "Laddar...",
+        "ERROR": "Fel",
+        "SUCCESS": "Framgång",
+        "CANCEL": "Avbryt",
+        "SAVE": "Spara",
+        "DELETE": "Radera",
+        "EDIT": "Redigera",
+        "ADD": "Lägg till",
+        "CLOSE": "Stäng",
+        "LOGOUT": "Logga ut",
+        "LOGIN": "Logga in"
+    },
+    "NAVIGATION": {
+        "DASHBOARD": "Instrumentpanel",
+        "ACCOUNTS": "Konton",
+        "TRANSACTIONS": "Transaktioner",
+        "CATEGORIES": "Kategorier",
+        "BUDGETS": "Budgetar",
+        "GOALS": "Mål",
+        "REPORTS": "Rapporter",
+        "PROFILE": "Profil"
+    },
+    "PROFILE": {
+        "LANGUAGE": "Språk",
+        "CURRENCY": "Valuta",
+        "TIMEZONE": "Tidszon",
+        "NOTIFICATIONS": "Aviseringar",
+        "SAVE_PROFILE": "Spara profil",
+        "EDIT_PROFILE": "Redigera profil"
+    }
+}

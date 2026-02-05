@@ -1,0 +1,33 @@
+{
+    "COMMON": {
+        "LOADING": "Ladataan...",
+        "ERROR": "Virhe",
+        "SUCCESS": "Onnistui",
+        "CANCEL": "Peruuta",
+        "SAVE": "Tallenna",
+        "DELETE": "Poista",
+        "EDIT": "Muokkaa",
+        "ADD": "Lisää",
+        "CLOSE": "Sulje",
+        "LOGOUT": "Kirjaudu ulos",
+        "LOGIN": "Kirjaudu sisään"
+    },
+    "NAVIGATION": {
+        "DASHBOARD": "Hallintapaneeli",
+        "ACCOUNTS": "Tilit",
+        "TRANSACTIONS": "Tapahtumat",
+        "CATEGORIES": "Luokat",
+        "BUDGETS": "Budjetit",
+        "GOALS": "Tavoitteet",
+        "REPORTS": "Raportit",
+        "PROFILE": "Profiili"
+    },
+    "PROFILE": {
+        "LANGUAGE": "Kieli",
+        "CURRENCY": "Valuutta",
+        "TIMEZONE": "Aikavyöhyke",
+        "NOTIFICATIONS": "Ilmoitukset",
+        "SAVE_PROFILE": "Tallenna profiili",
+        "EDIT_PROFILE": "Muokkaa profiilia"
+    }
+}

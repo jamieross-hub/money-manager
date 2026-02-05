@@ -11,24 +11,24 @@ import { NotificationService } from '../service/notification.service';
  * Adds security headers and handles security-related errors
  */
 export function securityInterceptor(
-  request: HttpRequest<unknown>, 
+  request: HttpRequest<unknown>,
   next: HttpHandlerFn
 ): Observable<HttpEvent<unknown>> {
-  const router = inject(Router);
-  const userService = inject(UserService);
-  const notificationService = inject(NotificationService);
-  
   // Check if this is an OpenAI API request that should be ignored
   if (shouldIgnoreRequest(request)) {
     return next(request);
   }
-  
+
+  const router = inject(Router);
+  const userService = inject(UserService);
+  const notificationService = inject(NotificationService);
+
   // Add security headers to all requests
   const secureRequest = addSecurityHeaders(request);
-  
+
   // Add authentication token if available
   const authenticatedRequest = addAuthToken(secureRequest, userService);
-  
+
   return next(authenticatedRequest).pipe(
     retry(1), // Retry failed requests once
     catchError((error: HttpErrorResponse) => {
@@ -42,17 +42,22 @@ export function securityInterceptor(
  */
 function shouldIgnoreRequest(request: HttpRequest<unknown>): boolean {
   const url = request.url.toLowerCase();
-  
+
   // Ignore OpenAI API requests
   if (url.includes('api.openai.com')) {
     return true;
   }
-  
+
+  // Ignore local i18n asset requests to avoid circular dependencies during initialization
+  if (url.includes('assets/i18n/')) {
+    return true;
+  }
+
   // Add other external APIs here if needed
   // if (url.includes('other-external-api.com')) {
   //   return true;
   // }
-  
+
   return false;
 }
 
@@ -82,7 +87,7 @@ function addSecurityHeaders(request: HttpRequest<unknown>): HttpRequest<unknown>
  */
 function addAuthToken(request: HttpRequest<unknown>, userService: UserService): HttpRequest<unknown> {
   const currentUser = userService.userAuth$.value;
-  
+
   if (currentUser && currentUser.uid) {
     // For Firebase Auth, we would typically get the ID token
     // This is a placeholder for the actual implementation
@@ -92,7 +97,7 @@ function addAuthToken(request: HttpRequest<unknown>, userService: UserService): 
       }
     });
   }
-  
+
   return request;
 }
 
@@ -100,7 +105,7 @@ function addAuthToken(request: HttpRequest<unknown>, userService: UserService): 
  * Handle security-related HTTP errors
  */
 function handleSecurityError(
-  error: HttpErrorResponse, 
+  error: HttpErrorResponse,
   request: HttpRequest<unknown>,
   router: Router,
   userService: UserService,
@@ -140,16 +145,16 @@ function handleUnauthorizedError(
   notificationService: NotificationService
 ): void {
   console.warn('Unauthorized request detected');
-  
+
   // Log the security event
   logSecurityEvent('UNAUTHORIZED_REQUEST', {
     url: window?.location?.href || '',
     timestamp: new Date().toISOString()
   });
-  
+
   // Force logout user
   userService.forceLogout('Unauthorized request detected');
-  
+
   notificationService.error('Session expired. Please log in again.');
   router.navigate(['/landing'], {
     queryParams: { error: 'unauthorized', redirect: router.url }
@@ -161,12 +166,12 @@ function handleUnauthorizedError(
  */
 function handleForbiddenError(notificationService: NotificationService): void {
   console.warn('Forbidden request detected');
-  
+
   logSecurityEvent('FORBIDDEN_REQUEST', {
     url: window?.location?.href || '',
     timestamp: new Date().toISOString()
   });
-  
+
   notificationService.error('Access denied. You do not have permission to perform this action.');
 }
 
@@ -175,12 +180,12 @@ function handleForbiddenError(notificationService: NotificationService): void {
  */
 function handleRateLimitError(notificationService: NotificationService): void {
   console.warn('Rate limit exceeded');
-  
+
   logSecurityEvent('RATE_LIMIT_EXCEEDED', {
     url: window?.location?.href || '',
     timestamp: new Date().toISOString()
   });
-  
+
   notificationService.warning('Too many requests. Please wait a moment before trying again.');
 }
 
@@ -189,12 +194,12 @@ function handleRateLimitError(notificationService: NotificationService): void {
  */
 function handleServerError(notificationService: NotificationService): void {
   console.error('Server error detected');
-  
+
   logSecurityEvent('SERVER_ERROR', {
     url: window?.location?.href || '',
     timestamp: new Date().toISOString()
   });
-  
+
   notificationService.error('Server error. Please try again later.');
 }
 
@@ -203,14 +208,14 @@ function handleServerError(notificationService: NotificationService): void {
  */
 function handleGenericError(error: HttpErrorResponse, notificationService: NotificationService): void {
   console.error('Generic HTTP error:', error);
-  
+
   logSecurityEvent('HTTP_ERROR', {
     status: error.status,
     statusText: error.statusText,
     url: error.url || window?.location?.href || '',
     timestamp: new Date().toISOString()
   });
-  
+
   if (error.status >= 500) {
     notificationService.error('Server error. Please try again later.');
   } else if (error.status >= 400) {
@@ -231,7 +236,7 @@ function logSecurityEvent(eventType: string, data: any): void {
   };
 
   console.log('Security Event:', securityEvent);
-  
+
   // In production, send to security monitoring service
   // this.securityMonitoringService.logEvent(securityEvent);
 } 

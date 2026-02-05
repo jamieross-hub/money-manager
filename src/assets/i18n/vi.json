@@ -1,0 +1,33 @@
+{
+    "COMMON": {
+        "LOADING": "Đang tải...",
+        "ERROR": "Lỗi",
+        "SUCCESS": "Thành công",
+        "CANCEL": "Hủy",
+        "SAVE": "Lưu",
+        "DELETE": "Xóa",
+        "EDIT": "Chỉnh sửa",
+        "ADD": "Thêm",
+        "CLOSE": "Đóng",
+        "LOGOUT": "Đăng xuất",
+        "LOGIN": "Đăng nhập"
+    },
+    "NAVIGATION": {
+        "DASHBOARD": "Bảng điều khiển",
+        "ACCOUNTS": "Tài khoản",
+        "TRANSACTIONS": "Giao dịch",
+        "CATEGORIES": "Danh mục",
+        "BUDGETS": "Ngân sách",
+        "GOALS": "Mục tiêu",
+        "REPORTS": "Báo cáo",
+        "PROFILE": "Hồ sơ"
+    },
+    "PROFILE": {
+        "LANGUAGE": "Ngôn ngữ",
+        "CURRENCY": "Tiền tệ",
+        "TIMEZONE": "Múi giờ",
+        "NOTIFICATIONS": "Thông báo",
+        "SAVE_PROFILE": "Lưu hồ sơ",
+        "EDIT_PROFILE": "Chỉnh sửa hồ sơ"
+    }
+}

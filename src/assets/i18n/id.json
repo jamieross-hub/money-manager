@@ -1,0 +1,33 @@
+{
+    "COMMON": {
+        "LOADING": "Memuat...",
+        "ERROR": "Kesalahan",
+        "SUCCESS": "Berhasil",
+        "CANCEL": "Batal",
+        "SAVE": "Simpan",
+        "DELETE": "Hapus",
+        "EDIT": "Edit",
+        "ADD": "Tambah",
+        "CLOSE": "Tutup",
+        "LOGOUT": "Keluar",
+        "LOGIN": "Masuk"
+    },
+    "NAVIGATION": {
+        "DASHBOARD": "Dasbor",
+        "ACCOUNTS": "Akun",
+        "TRANSACTIONS": "Transaksi",
+        "CATEGORIES": "Kategori",
+        "BUDGETS": "Anggaran",
+        "GOALS": "Tujuan",
+        "REPORTS": "Laporan",
+        "PROFILE": "Profil"
+    },
+    "PROFILE": {
+        "LANGUAGE": "Bahasa",
+        "CURRENCY": "Mata Uang",
+        "TIMEZONE": "Zona Waktu",
+        "NOTIFICATIONS": "Notifikasi",
+        "SAVE_PROFILE": "Simpan Profil",
+        "EDIT_PROFILE": "Edit Profil"
+    }
+}

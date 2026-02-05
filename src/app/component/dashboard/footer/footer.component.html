@@ -13,7 +13,8 @@
 						[ngClass]="isHomeActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">home</mat-icon>
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
-					[ngClass]="isHomeActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">Home</span>
+					[ngClass]="isHomeActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
+					'NAVIGATION.HOME' | translate }}</span>
 			</button>
 
 			<!-- Expense -->
@@ -25,7 +26,8 @@
 						[ngClass]="isExpenseActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">trending_down</mat-icon>
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
-					[ngClass]="isExpenseActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">Expense</span>
+					[ngClass]="isExpenseActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
+					'NAVIGATION.EXPENSE' | translate }}</span>
 			</button>
 
 			<!-- Add Transaction -->
@@ -34,7 +36,8 @@
 					class="add-button-box w-12 h-12 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center shadow-md hover:scale-105 hover:shadow-lg transition-all duration-200 dark:shadow-none dark:bg-slate-700">
 					<mat-icon class="text-white text-lg lg:text-base relative bottom-1">add_circle</mat-icon>
 				</div>
-				<span class="text-xs lg:text-[10px] font-medium add-label dark:text-slate-300">Add</span>
+				<span class="text-xs lg:text-[10px] font-medium add-label dark:text-slate-300">{{ 'COMMON.ADD' |
+					translate }}</span>
 			</button>
 
 			<!-- Reports -->
@@ -59,7 +62,8 @@
 						[ngClass]="isCategoryActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">layers</mat-icon>
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
-					[ngClass]="isCategoryActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">Category</span>
+					[ngClass]="isCategoryActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
+					'NAVIGATION.CATEGORIES' | translate }}</span>
 			</button>
 
 			<button (click)="navigateTo('/dashboard/accounts')" class="group flex flex-col items-center gap-2 lg:gap-1">
@@ -70,7 +74,8 @@
 						[ngClass]="isAccountsActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">account_balance</mat-icon>
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
-					[ngClass]="isAccountsActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">Accounts</span>
+					[ngClass]="isAccountsActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
+					'NAVIGATION.ACCOUNTS' | translate }}</span>
 			</button>
 
 			<!-- More -->

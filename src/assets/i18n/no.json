@@ -1,0 +1,33 @@
+{
+    "COMMON": {
+        "LOADING": "Laster...",
+        "ERROR": "Feil",
+        "SUCCESS": "Suksess",
+        "CANCEL": "Avbryt",
+        "SAVE": "Lagre",
+        "DELETE": "Slett",
+        "EDIT": "Rediger",
+        "ADD": "Legg til",
+        "CLOSE": "Lukk",
+        "LOGOUT": "Logg ut",
+        "LOGIN": "Logg inn"
+    },
+    "NAVIGATION": {
+        "DASHBOARD": "Dashbord",
+        "ACCOUNTS": "Kontoer",
+        "TRANSACTIONS": "Transaksjoner",
+        "CATEGORIES": "Kategorier",
+        "BUDGETS": "Budsjetter",
+        "GOALS": "Mål",
+        "REPORTS": "Rapporter",
+        "PROFILE": "Profil"
+    },
+    "PROFILE": {
+        "LANGUAGE": "Språk",
+        "CURRENCY": "Valuta",
+        "TIMEZONE": "Tidssone",
+        "NOTIFICATIONS": "Varslinger",
+        "SAVE_PROFILE": "Lagre profil",
+        "EDIT_PROFILE": "Rediger profil"
+    }
+}

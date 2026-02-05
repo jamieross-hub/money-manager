@@ -6,7 +6,7 @@
 	<!-- Loading State -->
 	<div *ngIf="isLoading" class="loading-overlay">
 		<mat-spinner diameter="40"></mat-spinner>
-		<p class="mt-4 text-gray-600">Loading profile...</p>
+		<p class="mt-4 text-gray-600">{{ 'COMMON.LOADING' | translate }}</p>
 	</div>
 
 	<!-- Profile Header -->
@@ -19,14 +19,15 @@
 				<div class="user-info">
 					<h1 class="user-name">{{ getFullName() }}</h1>
 					<p class="user-email">{{ userProfile?.email }}</p>
-					<p class="user-role">Member since {{ getFormattedDate(userProfile?.createdAt) }}</p>
+					<p class="user-role">{{ 'PROFILE.MEMBER_SINCE' | translate }} {{
+						getFormattedDate(userProfile?.createdAt) }}</p>
 				</div>
 			</div>
 			<div class="header-actions">
 				<button mat-raised-button color="primary" (click)="isEditing ? cancelEdit() : toggleEdit()"
 					[disabled]="isLoading" class="edit-btn">
 					<mat-icon>{{ isEditing ? 'close' : 'edit' }}</mat-icon>
-					{{ isEditing ? 'Cancel Edit' : 'Edit Profile' }}
+					{{ (isEditing ? 'COMMON.CANCEL_EDIT' : 'PROFILE.EDIT_PROFILE') | translate }}
 				</button>
 			</div>
 		</div>
@@ -39,16 +40,16 @@
 			<div class="form-section">
 				<div class="section-header">
 					<mat-icon class="section-icon">person</mat-icon>
-					<h2>Personal Information</h2>
+					<h2>{{ 'PROFILE.PERSONAL_INFO' | translate }}</h2>
 				</div>
 
 				<div class="form-grid">
 					<!-- First Name -->
 					<mat-form-field appearance="fill" class="form-field">
-						<mat-label>First Name *</mat-label>
+						<mat-label>{{ 'PROFILE.FIRST_NAME' | translate }} *</mat-label>
 						<input matInput formControlName="firstName" [disabled]="!isEditing" autocomplete="given-name" />
 						<mat-error *ngIf="profileForm.get('firstName')?.hasError('required')">
-							First name is required
+							{{ 'PROFILE.FIRST_NAME_REQUIRED' | translate }}
 						</mat-error>
 						<mat-error *ngIf="profileForm.get('firstName')?.hasError('minlength')">
 							First name must be at least 2 characters
@@ -57,10 +58,10 @@
 
 					<!-- Last Name -->
 					<mat-form-field appearance="fill" class="form-field">
-						<mat-label>Last Name *</mat-label>
+						<mat-label>{{ 'PROFILE.LAST_NAME' | translate }} *</mat-label>
 						<input matInput formControlName="lastName" [disabled]="!isEditing" autocomplete="family-name" />
 						<mat-error *ngIf="profileForm.get('lastName')?.hasError('required')">
-							Last name is required
+							{{ 'PROFILE.LAST_NAME_REQUIRED' | translate }}
 						</mat-error>
 						<mat-error *ngIf="profileForm.get('lastName')?.hasError('minlength')">
 							Last name must be at least 2 characters
@@ -69,30 +70,30 @@
 
 					<!-- Email -->
 					<mat-form-field appearance="fill" class="form-field">
-						<mat-label>Email *</mat-label>
+						<mat-label>{{ 'PROFILE.EMAIL' | translate }} *</mat-label>
 						<input matInput type="email" formControlName="email" [disabled]="!isEditing"
 							autocomplete="email" />
 						<mat-error *ngIf="profileForm.get('email')?.hasError('required')">
-							Email is required
+							{{ 'PROFILE.EMAIL_REQUIRED' | translate }}
 						</mat-error>
 						<mat-error *ngIf="profileForm.get('email')?.hasError('email')">
-							Please enter a valid email
+							{{ 'PROFILE.EMAIL_INVALID' | translate }}
 						</mat-error>
 					</mat-form-field>
 
 					<!-- Phone -->
 					<mat-form-field appearance="fill" class="form-field">
-						<mat-label>Phone Number</mat-label>
+						<mat-label>{{ 'PROFILE.PHONE' | translate }}</mat-label>
 						<input matInput formControlName="phone" [disabled]="!isEditing" placeholder="+1 (555) 123-4567"
 							autocomplete="tel" />
 						<mat-error *ngIf="profileForm.get('phone')?.hasError('pattern')">
-							Please enter a valid phone number
+							{{ 'PROFILE.PHONE_INVALID' | translate }}
 						</mat-error>
 					</mat-form-field>
 
 					<!-- Date of Birth -->
 					<mat-form-field appearance="fill" class="form-field">
-						<mat-label>Date of Birth</mat-label>
+						<mat-label>{{ 'PROFILE.DOB' | translate }}</mat-label>
 						<input matInput [matDatepicker]="dobPicker" formControlName="dateOfBirth"
 							[disabled]="!isEditing" autocomplete="bday" />
 						<mat-datepicker-toggle matSuffix [for]="dobPicker"
@@ -102,19 +103,19 @@
 
 					<!-- Occupation -->
 					<mat-form-field appearance="fill" class="form-field">
-						<mat-label>Occupation</mat-label>
+						<mat-label>{{ 'PROFILE.OCCUPATION' | translate }}</mat-label>
 						<input matInput formControlName="occupation" [disabled]="!isEditing"
 							placeholder="e.g., Software Engineer" autocomplete="organization-title" />
 					</mat-form-field>
 
 					<!-- Monthly Income -->
 					<mat-form-field appearance="fill" class="form-field">
-						<mat-label>Monthly Income</mat-label>
+						<mat-label>{{ 'PROFILE.MONTHLY_INCOME' | translate }}</mat-label>
 						<input matInput type="number" formControlName="monthlyIncome" [disabled]="!isEditing"
 							step="0.01" autocomplete="off" />
 						<span matTextPrefix>{{ userProfile.preferences?.defaultCurrency }}&nbsp;</span>
 						<mat-error *ngIf="profileForm.get('monthlyIncome')?.hasError('min')">
-							Income cannot be negative
+							{{ 'PROFILE.INCOME_NEGATIVE' | translate }}
 						</mat-error>
 					</mat-form-field>
 				</div>
@@ -124,13 +125,13 @@
 			<div class="form-section" formGroupName="preferences">
 				<div class="section-header">
 					<mat-icon class="section-icon">settings</mat-icon>
-					<h2>Preferences</h2>
+					<h2>{{ 'PROFILE.PREFERENCES' | translate }}</h2>
 				</div>
 
 				<div class="form-grid">
 					<!-- ₹ -->
 					<mat-form-field appearance="fill" class="form-field">
-						<mat-label>Default Currency *</mat-label>
+						<mat-label>{{ 'PROFILE.DEFAULT_CURRENCY' | translate }} *</mat-label>
 						<mat-select formControlName="defaultCurrency" [disabled]="!isEditing">
 							@for (currency of currencies; track currency) {
 							<mat-option [value]="currency">
@@ -142,7 +143,7 @@
 
 					<!-- Timezone -->
 					<mat-form-field appearance="fill" class="form-field">
-						<mat-label>Timezone *</mat-label>
+						<mat-label>{{ 'PROFILE.TIMEZONE' | translate }} *</mat-label>
 						<mat-select formControlName="timezone" [disabled]="!isEditing">
 							@for (tz of timezones; track tz.value) {
 							<mat-option [value]="tz.value">
@@ -154,7 +155,7 @@
 
 					<!-- Country/Region -->
 					<mat-form-field appearance="fill" class="form-field">
-						<mat-label>Language *</mat-label>
+						<mat-label>{{ 'PROFILE.LANGUAGE' | translate }} *</mat-label>
 						<mat-select formControlName="language" [disabled]="!isEditing">
 							@for (country of countries; track country.code) {
 							<mat-option [value]="country.language">
@@ -165,7 +166,7 @@
 					</mat-form-field>
 
 					<mat-form-field appearance="fill" class="form-field">
-						<mat-label>Country/Region *</mat-label>
+						<mat-label>{{ 'PROFILE.COUNTRY' | translate }} *</mat-label>
 						<mat-select formControlName="country" [disabled]="!isEditing">
 							@for (country of countries; track country.code) {
 							<mat-option [value]="country.code">
@@ -180,31 +181,31 @@
 				<div class="preferences-grid">
 					<div class="preference-item">
 						<mat-slide-toggle formControlName="notifications" [disabled]="!isEditing" color="primary">
-							<span class="toggle-label">Push Notifications</span>
+							<span class="toggle-label">{{ 'PROFILE.NOTIFICATIONS' | translate }}</span>
 						</mat-slide-toggle>
-						<p class="preference-description">Receive notifications about important updates</p>
+						<p class="preference-description">{{ 'PROFILE.NOTIFICATIONS_DESC' | translate }}</p>
 					</div>
 
 					<div class="preference-item">
 						<mat-slide-toggle formControlName="emailUpdates" [disabled]="!isEditing" color="primary">
-							<span class="toggle-label">Email Updates</span>
+							<span class="toggle-label">{{ 'PROFILE.EMAIL_UPDATES' | translate }}</span>
 						</mat-slide-toggle>
-						<p class="preference-description">Receive weekly financial summaries via email</p>
+						<p class="preference-description">{{ 'PROFILE.EMAIL_UPDATES_DESC' | translate }}</p>
 					</div>
 
 					<div class="preference-item">
 						<mat-slide-toggle formControlName="budgetAlerts" [disabled]="!isEditing" color="primary">
-							<span class="toggle-label">Budget Alerts</span>
+							<span class="toggle-label">{{ 'PROFILE.BUDGET_ALERTS' | translate }}</span>
 						</mat-slide-toggle>
-						<p class="preference-description">Get notified when you exceed budget limits</p>
+						<p class="preference-description">{{ 'PROFILE.BUDGET_ALERTS_DESC' | translate }}</p>
 					</div>
 
 					<div class="preference-item">
 						<mat-slide-toggle formControlName="categoryListViewMode" [disabled]="!isEditing"
 							color="primary">
-							<span class="toggle-label">Category List View</span>
+							<span class="toggle-label">{{ 'PROFILE.VIEW_MODE' | translate }}</span>
 						</mat-slide-toggle>
-						<p class="preference-description">Display categories in list view instead of grid view</p>
+						<p class="preference-description">{{ 'PROFILE.VIEW_MODE_DESC' | translate }}</p>
 					</div>
 				</div>
 			</div>
@@ -213,12 +214,12 @@
 			<div class="form-actions" *ngIf="isEditing">
 				<button type="button" mat-stroked-button (click)="cancelEdit()" [disabled]="isLoading"
 					class="cancel-btn">
-					Cancel
+					{{ 'COMMON.CANCEL' | translate }}
 				</button>
 				<button type="submit" mat-raised-button color="primary" [disabled]="isLoading" class="save-btn">
 					<mat-icon *ngIf="isLoading">hourglass_empty</mat-icon>
 					<mat-icon *ngIf="!isLoading">save</mat-icon>
-					{{ isLoading ? 'Saving...' : 'Save Changes' }}
+					{{ (isLoading ? 'COMMON.SAVING' : 'COMMON.SAVE_CHANGES') | translate }}
 				</button>
 			</div>
 		</form>
@@ -227,34 +228,34 @@
 		<div class="account-actions-section">
 			<div class="section-header">
 				<mat-icon class="section-icon">security</mat-icon>
-				<h2>Account Actions</h2>
+				<h2>{{ 'PROFILE.ACCOUNT_ACTIONS' | translate }}</h2>
 			</div>
 
 			<div class="actions-grid">
 				<div class="action-card">
 					<mat-icon class="action-icon">lock</mat-icon>
-					<h3>Change Password</h3>
-					<p>Update your account password for better security</p>
+					<h3>{{ 'PROFILE.CHANGE_PASSWORD' | translate }}</h3>
+					<p>{{ 'PROFILE.CHANGE_PASSWORD_DESC' | translate }}</p>
 					<button mat-stroked-button (click)="changePassword()" class="action-btn" [disabled]="isGuestMode()">
-						Change Password
+						{{ 'PROFILE.CHANGE_PASSWORD' | translate }}
 					</button>
 				</div>
 
 				<div class="action-card">
 					<mat-icon class="action-icon">download</mat-icon>
-					<h3>Export Data</h3>
-					<p>Download all your financial data as a backup</p>
+					<h3>{{ 'PROFILE.EXPORT_DATA' | translate }}</h3>
+					<p>{{ 'PROFILE.EXPORT_DATA_DESC' | translate }}</p>
 					<button mat-stroked-button (click)="exportData()" class="action-btn">
-						Export Data
+						{{ 'PROFILE.EXPORT_DATA' | translate }}
 					</button>
 				</div>
 
 				<div class="action-card danger">
 					<mat-icon class="action-icon">delete_forever</mat-icon>
-					<h3>Delete Account</h3>
-					<p>Permanently delete your account and all associated data</p>
+					<h3>{{ 'PROFILE.DELETE_ACCOUNT' | translate }}</h3>
+					<p>{{ 'PROFILE.DELETE_ACCOUNT_DESC' | translate }}</p>
 					<button mat-stroked-button color="warn" (click)="deleteAccount()" class="action-btn">
-						Delete Account
+						{{ 'PROFILE.DELETE_ACCOUNT' | translate }}
 					</button>
 				</div>
 			</div>

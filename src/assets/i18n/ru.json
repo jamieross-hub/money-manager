@@ -1,0 +1,33 @@
+{
+    "COMMON": {
+        "LOADING": "Загрузка...",
+        "ERROR": "Ошибка",
+        "SUCCESS": "Успех",
+        "CANCEL": "Отмена",
+        "SAVE": "Сохранить",
+        "DELETE": "Удалить",
+        "EDIT": "Редактировать",
+        "ADD": "Добавить",
+        "CLOSE": "Закрыть",
+        "LOGOUT": "Выйти",
+        "LOGIN": "Войти"
+    },
+    "NAVIGATION": {
+        "DASHBOARD": "Дашборд",
+        "ACCOUNTS": "Счета",
+        "TRANSACTIONS": "Транзакции",
+        "CATEGORIES": "Категории",
+        "BUDGETS": "Бюджеты",
+        "GOALS": "Цели",
+        "REPORTS": "Отчеты",
+        "PROFILE": "Профиль"
+    },
+    "PROFILE": {
+        "LANGUAGE": "Язык",
+        "CURRENCY": "Валюта",
+        "TIMEZONE": "Часовой пояс",
+        "NOTIFICATIONS": "Уведомления",
+        "SAVE_PROFILE": "Сохранить профиль",
+        "EDIT_PROFILE": "Редактировать профиль"
+    }
+}

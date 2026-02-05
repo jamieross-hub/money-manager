@@ -9,18 +9,19 @@
 						routerLink="/dashboard">
 						<mat-icon class=" text-[2rem] !h-[33px] !w-[33px]">account_balance_wallet</mat-icon>
 					</div>
-					<span class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'moneyManager' | translate
+					<span class="text-lg font-semibold text-gray-900 dark:text-white">{{ 'COMMON.MONEY_MANAGER' |
+						translate
 						}}</span>
 				</div>
 				<div class="flex items-center gap-3">
 					<button mat-icon-button (click)="drawer.toggle()" routerLink="/dashboard"
 						class="text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
-						aria-label="Close sidebar">
+						[attr.aria-label]="'NAVIGATION.CLOSE_SIDEBAR' | translate">
 						<mat-icon>home</mat-icon>
 					</button>
 					<button mat-icon-button (click)="drawer.toggle()"
 						class="text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
-						aria-label="Close sidebar">
+						[attr.aria-label]="'NAVIGATION.CLOSE_SIDEBAR' | translate">
 						<mat-icon>close</mat-icon>
 					</button>
 				</div>
@@ -117,11 +118,11 @@
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-2">
 						<mat-icon class="text-gray-400 text-sm">settings</mat-icon>
-						<span class="text-xs text-gray-500">{{ 'settings' | translate }}</span>
+						<span class="text-xs text-gray-500">{{ 'COMMON.SETTINGS' | translate }}</span>
 					</div>
 					<button mat-icon-button
 						class="text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-						(click)="logout()" matTooltip="Logout">
+						(click)="logout()" [matTooltip]="'COMMON.LOGOUT' | translate">
 						<mat-icon class="text-sm">logout</mat-icon>
 					</button>
 				</div>
@@ -132,7 +133,8 @@
 	<mat-drawer-content class="!overflow-hidden">
 		<div>
 			<button class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
-				(click)="drawer.toggle()" aria-label="Open sidebar">
+				(click)="drawer.toggle()" [attr.aria-label]="'NAVIGATION.OPEN_SIDEBAR' | translate"
+				data-testid="sidebar-toggle">
 				<mat-icon class="text-gray-600">menu</mat-icon>
 			</button>
 		</div>

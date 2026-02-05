@@ -1,0 +1,33 @@
+{
+    "COMMON": {
+        "LOADING": "Caricamento...",
+        "ERROR": "Errore",
+        "SUCCESS": "Successo",
+        "CANCEL": "Annulla",
+        "SAVE": "Salva",
+        "DELETE": "Elimina",
+        "EDIT": "Modifica",
+        "ADD": "Aggiungi",
+        "CLOSE": "Chiudi",
+        "LOGOUT": "Logout",
+        "LOGIN": "Login"
+    },
+    "NAVIGATION": {
+        "DASHBOARD": "Dashboard",
+        "ACCOUNTS": "Conti",
+        "TRANSACTIONS": "Transazioni",
+        "CATEGORIES": "Categorie",
+        "BUDGETS": "Budget",
+        "GOALS": "Obiettivi",
+        "REPORTS": "Rapporti",
+        "PROFILE": "Profilo"
+    },
+    "PROFILE": {
+        "LANGUAGE": "Lingua",
+        "CURRENCY": "Valuta",
+        "TIMEZONE": "Fuso orario",
+        "NOTIFICATIONS": "Notifiche",
+        "SAVE_PROFILE": "Salva profilo",
+        "EDIT_PROFILE": "Modifica profilo"
+    }
+}
