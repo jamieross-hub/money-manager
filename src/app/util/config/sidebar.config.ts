@@ -18,7 +18,7 @@ export interface SidebarNavParent {
 
 export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
   {
-    label: 'Navigation',
+    label: 'NAVIGATION.NAV_SECTION',
     icon: 'navigation',
     order: 1,
     isExpanded: true,
@@ -70,24 +70,12 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
     ]
   },
   {
-    label: 'Tools',
+    label: 'NAVIGATION.TOOLS',
     icon: 'build',
     order: 2,
     isExpanded: true,
     isCollapsible: true,
     children: [
-      // {
-      //   label: 'calendar',
-      //   route: '/dashboard/calendar-view',
-      //   icon: 'calendar_today',
-      //   order: 1
-      // },
-      // {
-      //   label: 'notes',
-      //   route: '/dashboard/notes',
-      //   icon: 'note',
-      //   order: 2
-      // },
       {
         label: 'NAVIGATION.TAX',
         route: '/dashboard/tax',
@@ -96,21 +84,21 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         isPremium: true
       },
       {
-        label: 'Splitwise',
+        label: 'NAVIGATION.SPLITWISE',
         route: '/dashboard/splitwise',
         icon: 'group',
         order: 4,
         isPremium: true
       },
       {
-        label: 'Import by Google Sheets',
+        label: 'NAVIGATION.GOOGLE_SHEETS',
         route: '/dashboard/google-sheets',
         icon: 'table_chart',
         order: 5,
         isPremium: true
       },
       {
-        label: 'OpenAI Integration',
+        label: 'NAVIGATION.OPENAI',
         route: '/dashboard/openai-interaction',
         icon: 'smart_toy',
         order: 6,
@@ -119,7 +107,7 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
     ]
   },
   {
-    label: 'Account',
+    label: 'NAVIGATION.ACCOUNT',
     icon: 'person',
     order: 3,
     isExpanded: true,
@@ -131,20 +119,14 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         icon: 'account_circle',
         order: 1
       },
-      // {
-      //   label: 'subscription',
-      //   route: '/dashboard/subscription',
-      //   icon: 'card_membership',
-      //   order: 2
-      // },
       {
-        label: 'Notifications',
+        label: 'NAVIGATION.NOTIFICATIONS_NAV',
         route: '/dashboard/notifications',
         icon: 'notifications',
         order: 3
       },
       {
-        label: 'Feedback',
+        label: 'NAVIGATION.FEEDBACK',
         route: '/dashboard/feedback',
         icon: 'feedback',
         order: 4
@@ -152,14 +134,14 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
     ]
   },
   {
-    label: 'Admin',
+    label: 'NAVIGATION.ADMIN',
     icon: 'admin_panel_settings',
     order: 4,
     isExpanded: false,
     isCollapsible: true,
     children: [
       {
-        label: 'admin_panel',
+        label: 'NAVIGATION.ADMIN_PANEL',
         route: '/admin',
         icon: 'admin_panel_settings',
         order: 1

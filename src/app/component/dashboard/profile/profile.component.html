@@ -52,7 +52,7 @@
 							{{ 'PROFILE.FIRST_NAME_REQUIRED' | translate }}
 						</mat-error>
 						<mat-error *ngIf="profileForm.get('firstName')?.hasError('minlength')">
-							First name must be at least 2 characters
+							{{ 'PROFILE.FIRST_NAME_MINLENGTH' | translate }}
 						</mat-error>
 					</mat-form-field>
 
@@ -64,7 +64,7 @@
 							{{ 'PROFILE.LAST_NAME_REQUIRED' | translate }}
 						</mat-error>
 						<mat-error *ngIf="profileForm.get('lastName')?.hasError('minlength')">
-							Last name must be at least 2 characters
+							{{ 'PROFILE.LAST_NAME_MINLENGTH' | translate }}
 						</mat-error>
 					</mat-form-field>
 
@@ -157,9 +157,9 @@
 					<mat-form-field appearance="fill" class="form-field">
 						<mat-label>{{ 'PROFILE.LANGUAGE' | translate }} *</mat-label>
 						<mat-select formControlName="language" [disabled]="!isEditing">
-							@for (country of countries; track country.code) {
-							<mat-option [value]="country.language">
-								{{ country.languageName }}
+							@for (lang of languages; track lang.code) {
+							<mat-option [value]="lang.code">
+								{{ lang.name }}
 							</mat-option>
 							}
 						</mat-select>

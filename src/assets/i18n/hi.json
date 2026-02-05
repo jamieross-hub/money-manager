@@ -20,6 +20,7 @@
         "SAVING": "सहेजा जा रहा है..."
     },
     "NAVIGATION": {
+        "NAV_SECTION": "नेविगेशन",
         "DASHBOARD": "डैशबोर्ड",
         "ACCOUNTS": "खाते",
         "TRANSACTIONS": "लेन-देन",
@@ -33,7 +34,16 @@
         "OPEN_SIDEBAR": "साइडबार खोलें",
         "TAX": "टैक्स",
         "RECURRING": "आवर्ती",
-        "EXPENSE": "खर्च"
+        "EXPENSE": "खर्च",
+        "TOOLS": "उपकरण",
+        "ACCOUNT": "खाता",
+        "ADMIN": "एडमिन",
+        "SPLITWISE": "स्प्लिटवाइज",
+        "GOOGLE_SHEETS": "गूगल शीट्स से इम्पोर्ट",
+        "OPENAI": "ओपनएआई इंटीग्रेशन",
+        "NOTIFICATIONS_NAV": "सूचनाएं",
+        "FEEDBACK": "प्रतिक्रिया",
+        "ADMIN_PANEL": "एडमिन पैनल"
     },
     "PROFILE": {
         "PERSONAL_INFO": "व्यक्तिगत जानकारी",
@@ -72,7 +82,9 @@
         "EMAIL_INVALID": "कृपया एक मान्य ईमेल दर्ज करें",
         "PHONE_INVALID": "कृपया एक मान्य फ़ोन नंबर दर्ज करें",
         "INCOME_NEGATIVE": "आय नकारात्मक नहीं हो सकती",
-        "LOADING_PROFILE": "प्रोफ़ाइल लोड हो रही है..."
+        "LOADING_PROFILE": "प्रोफ़ाइल लोड हो रही है...",
+        "FIRST_NAME_MINLENGTH": "पहला नाम कम से कम 2 अक्षर का होना चाहिए",
+        "LAST_NAME_MINLENGTH": "अंतिम नाम कम से कम 2 अक्षर का होना चाहिए"
     },
     "USER_MENU": {
         "VIEW_PROFILE": "प्रोफ़ाइल देखें",

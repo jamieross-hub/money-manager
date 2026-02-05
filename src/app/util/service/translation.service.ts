@@ -199,11 +199,4 @@ export class TranslationService {
     return translation;
   }
 
-  // Get available languages
-  getAvailableLanguages(): { code: Language; name: string; nativeName: string }[] {
-    return [
-      { code: 'en', name: 'English', nativeName: 'English' },
-      { code: 'hi', name: 'Hindi', nativeName: 'हिंदी' }
-    ];
-  }
 } 

@@ -63,6 +63,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
     currency: (config as any).currency
   })).sort((a, b) => a.countryName.localeCompare(b.countryName));
 
+  languages = Object.entries(APP_CONFIG.REGIONAL.COUNTRY_MAPPING).map(([code, config]) => ({
+    code: (config as any).language,
+    name: (config as any).languageName
+  }))
+    .filter((v, i, a) => a.findIndex(t => t.code === v.code) === i)
+    .sort((a, b) => a.name.localeCompare(b.name));
+
   fabConfig: QuickActionsFabConfig = {
     title: 'Profile',
     mainButtonIcon: 'edit',
@@ -117,7 +124,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       preferences: this.fb.group({
         defaultCurrency: [{ value: this.defaultCurrency, disabled: true }, Validators.required],
         timezone: [{ value: 'UTC', disabled: true }, Validators.required],
-        language: [{ value: APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT, disabled: true }, Validators.required],
+        language: [{ value: '', disabled: true }, Validators.required],
         country: [{ value: 'IN', disabled: true }], // Default to IN or derive from language
         notifications: [{ value: true, disabled: true }],
         emailUpdates: [{ value: true, disabled: true }],
@@ -127,17 +134,17 @@ export class ProfileComponent implements OnInit, OnDestroy {
     });
 
     // Listen to country changes to sync language and currency
-    this.profileForm.get('preferences.country')?.valueChanges.subscribe(countryCode => {
-      if (this.isEditing && countryCode) {
-        const country = APP_CONFIG.REGIONAL.COUNTRY_MAPPING[countryCode as keyof typeof APP_CONFIG.REGIONAL.COUNTRY_MAPPING];
-        if (country) {
-          this.profileForm.get('preferences')?.patchValue({
-            language: (country as any).language,
-            defaultCurrency: (country as any).currency
-          }, { emitEvent: false });
-        }
-      }
-    });
+    // this.profileForm.get('preferences.country')?.valueChanges.subscribe(countryCode => {
+    //   if (this.isEditing && countryCode) {
+    //     const country = APP_CONFIG.REGIONAL.COUNTRY_MAPPING[countryCode as keyof typeof APP_CONFIG.REGIONAL.COUNTRY_MAPPING];
+    //     if (country) {
+    //       this.profileForm.get('preferences')?.patchValue({
+    //         language: (country as any).language,
+    //         defaultCurrency: (country as any).currency
+    //       }, { emitEvent: false });
+    //     }
+    //   }
+    // });
   }
 
   ngOnInit(): void {

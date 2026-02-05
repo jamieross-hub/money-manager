@@ -37,7 +37,7 @@ export type UserRole = "free" | "premium" | "admin";
 export interface UserPreferences {
 	defaultCurrency: string;
 	timezone: string;
-	language: string;
+	language?: string;
 	country?: string;
 	notifications: boolean;
 	emailUpdates: boolean;

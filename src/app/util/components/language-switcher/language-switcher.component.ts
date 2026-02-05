@@ -11,10 +11,9 @@ export class LanguageSwitcherComponent implements OnInit {
   availableLanguages: { code: Language; name: string; nativeName: string }[] = [];
   isDropdownOpen = false;
 
-  constructor(private translationService: TranslationService) {}
+  constructor(private translationService: TranslationService) { }
 
   ngOnInit(): void {
-    this.availableLanguages = this.translationService.getAvailableLanguages();
     this.translationService.getCurrentLanguage().subscribe(lang => {
       this.currentLanguage = lang;
     });

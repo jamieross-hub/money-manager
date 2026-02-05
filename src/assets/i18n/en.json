@@ -20,6 +20,7 @@
         "SAVING": "Saving..."
     },
     "NAVIGATION": {
+        "NAV_SECTION": "Navigation",
         "DASHBOARD": "Dashboard",
         "ACCOUNTS": "Accounts",
         "TRANSACTIONS": "Transactions",
@@ -33,7 +34,16 @@
         "OPEN_SIDEBAR": "Open sidebar",
         "TAX": "Tax",
         "RECURRING": "Recurring",
-        "EXPENSE": "Expense"
+        "EXPENSE": "Expense",
+        "TOOLS": "Tools",
+        "ACCOUNT": "Account",
+        "ADMIN": "Admin",
+        "SPLITWISE": "Splitwise",
+        "GOOGLE_SHEETS": "Import by Google Sheets",
+        "OPENAI": "OpenAI Integration",
+        "NOTIFICATIONS_NAV": "Notifications",
+        "FEEDBACK": "Feedback",
+        "ADMIN_PANEL": "Admin Panel"
     },
     "PROFILE": {
         "PERSONAL_INFO": "Personal Information",
@@ -72,7 +82,9 @@
         "EMAIL_INVALID": "Please enter a valid email",
         "PHONE_INVALID": "Please enter a valid phone number",
         "INCOME_NEGATIVE": "Income cannot be negative",
-        "LOADING_PROFILE": "Loading profile..."
+        "LOADING_PROFILE": "Loading profile...",
+        "FIRST_NAME_MINLENGTH": "First name must be at least 2 characters",
+        "LAST_NAME_MINLENGTH": "Last name must be at least 2 characters"
     },
     "USER_MENU": {
         "VIEW_PROFILE": "View Profile",
