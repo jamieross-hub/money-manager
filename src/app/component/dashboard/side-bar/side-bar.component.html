@@ -55,7 +55,7 @@
 				@for (section of navigationSections; track section.label) {
 				<div class="mb-6">
 					<!-- Section Header -->
-					<div *ngIf="section.label == 'Admin' && isAdmin"
+					<div *ngIf="section.label == 'NAVIGATION.ADMIN' && isAdmin"
 						class="flex items-center justify-between mb-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg p-2.5 transition-all duration-200 group"
 						(click)="toggleSection(section)" [class.cursor-pointer]="section.isCollapsible"
 						[class.cursor-default]="!section.isCollapsible" [class.hover:bg-blue-50]="section.isCollapsible"

@@ -232,7 +232,7 @@
 					<div class="transaction-amount">
 						<div class="amount-value text-base"
 							[ngClass]="tx.type === 'income' ? 'income-text' : 'expense-text'">
-							{{ tx.type === 'income' ? '+' : '-' }}₹{{ tx.amount | currency }}
+							{{ tx.type === 'income' ? '+' : '-' }}{{ tx.amount | currency }}
 						</div>
 						<div class="amount-type text-base">
 							{{ getCategoryName(tx.categoryId) }}

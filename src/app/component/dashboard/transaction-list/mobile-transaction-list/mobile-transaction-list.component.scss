@@ -9,23 +9,23 @@
 	background: var(--surface-100);
 	position: relative;
 
-	:host-context(.dark-theme) & {
-		background: mat.get-theme-color(dark.$dark-theme, neutral, 10);
-	}
+	// :host-context(.dark-theme) & {
+	// 	background: mat.get-theme-color(dark.$dark-theme, neutral, 10);
+	// }
 }
 
 // Mobile Filter Header
 .mobile-filter-header {
-	background: var(--surface-50);
-	border-bottom: 1px solid var(--neutral-200);
+	background: var(--surface-200);
+	// border-bottom: 1px solid var(--neutral-200);
 	padding: 12px;
 	box-shadow: var(--shadow-sm);
 	z-index: 10;
 
-	:host-context(.dark-theme) & {
-		background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
-		border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
-	}
+	// :host-context(.dark-theme) & {
+	// 	background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+	// 	border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+	// }
 }
 
 // Active Filters Indicator
@@ -51,19 +51,19 @@
 		width: 16px;
 		height: 16px;
 
-		:host-context(.dark-theme) & {
-			color: #60a5fa;
-		}
+		// :host-context(.dark-theme) & {
+		// 	color: #60a5fa;
+		// }
 	}
 
 	.filter-text {
 		font-size: 12px;
 		font-weight: 500;
-		color: #2563eb;
+		color: var(--primary-600);
 
-		:host-context(.dark-theme) & {
-			color: #60a5fa;
-		}
+		// :host-context(.dark-theme) & {
+		// 	color: #60a5fa;
+		// }
 	}
 }
 
@@ -364,14 +364,14 @@
 
 // Transaction Summary
 .transaction-summary {
-	background: white;
-	border-bottom: 1px solid #e2e8f0;
+	background: var(--surface-200);
+	// border-bottom: 1px solid #e2e8f0;
 	padding: 8px 12px;
 
-	:host-context(.dark-theme) & {
-		background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
-		border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
-	}
+	// :host-context(.dark-theme) & {
+	// 	background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
+	// 	border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+	// }
 }
 
 .summary-stats {
