@@ -40,48 +40,96 @@ export class TranslationService {
    * 2. Logged-in user preferences (if user data exists)
    * 3. Saved app_language in localStorage
    * 4. Browser locale detection
+   * 
+   * Android-safe: Each step has individual error handling to prevent cache issues
    */
   private getInitialLanguage(): string | null {
+    console.log('🌐 Initializing language...');
+
+    // Step 1: Try guest mode language
     try {
-      // Check for guest mode
       const isGuest = this.localStorageService.getItem<string>('guest-mode', false) === 'true';
+      console.log('Guest mode:', isGuest);
 
       if (isGuest) {
-        // Try to get language from guest user preferences
-        const guestData = this.localStorageService.getItem<any>('user-data-offline-guest');
-        if (guestData?.preferences?.language) {
-          return this.normalizeLanguageCode(guestData.preferences.language);
+        try {
+          const guestData = this.localStorageService.getItem<any>('user-data-offline-guest');
+          console.log('Guest data retrieved:', !!guestData);
+
+          if (guestData?.preferences?.language) {
+            const lang = this.normalizeLanguageCode(guestData.preferences.language);
+            console.log('✅ Using guest user language:', lang);
+            return lang;
+          }
+        } catch (guestError) {
+          console.warn('Failed to load guest user language:', guestError);
         }
       }
+    } catch (error) {
+      console.warn('Error checking guest mode:', error);
+    }
 
-      // Try to get language from any cached user data
+    // Step 2: Try logged-in user language
+    try {
       const keys = this.localStorageService.getAllKeys();
       const userDataKey = keys.find(key => key.startsWith('user-data-') && key !== 'user-data-offline-guest');
+      console.log('User data key found:', userDataKey);
 
       if (userDataKey) {
-        const userData = this.localStorageService.getItem<any>(userDataKey);
-        if (userData?.preferences?.language) {
-          return this.normalizeLanguageCode(userData.preferences.language);
+        try {
+          const userData = this.localStorageService.getItem<any>(userDataKey);
+
+          if (userData?.preferences?.language) {
+            const lang = this.normalizeLanguageCode(userData.preferences.language);
+            console.log('✅ Using logged-in user language:', lang);
+            return lang;
+          }
+        } catch (userError) {
+          console.warn('Failed to load user language from', userDataKey, userError);
+        }
+      }
+    } catch (error) {
+      console.warn('Error checking user data:', error);
+    }
+
+    // Step 3: Try app_language (with direct localStorage fallback for Android)
+    try {
+      let savedLanguage = this.localStorageService.getItem<string>('app_language', false);
+
+      // Android fallback: Try direct localStorage access if service fails
+      if (!savedLanguage && typeof localStorage !== 'undefined') {
+        try {
+          savedLanguage = localStorage.getItem('app_language');
+          console.log('Retrieved app_language via direct localStorage access:', savedLanguage);
+        } catch (directError) {
+          console.warn('Direct localStorage access failed:', directError);
         }
       }
 
-      // Fall back to saved app_language
-      const savedLanguage = this.localStorageService.getItem<string>('app_language', false);
       if (savedLanguage) {
-        return this.normalizeLanguageCode(savedLanguage);
+        const lang = this.normalizeLanguageCode(savedLanguage);
+        console.log('✅ Using saved app_language:', lang);
+        return lang;
       }
+    } catch (error) {
+      console.warn('Error loading app_language:', error);
+    }
 
-      // Fall back to browser locale detection
+    // Step 4: Fall back to browser locale detection
+    try {
       const browserLocale = navigator.language || (navigator as any).userLanguage;
       if (browserLocale) {
-        return this.normalizeLanguageCode(browserLocale);
+        const lang = this.normalizeLanguageCode(browserLocale);
+        console.log('✅ Using browser locale:', lang);
+        return lang;
       }
-
-      return null;
     } catch (error) {
-      console.error('Error getting initial language:', error);
-      return null;
+      console.warn('Error detecting browser locale:', error);
     }
+
+    // Final fallback: return null (will use default 'en')
+    console.log('⚠️ No language preference found, will use default');
+    return null;
   }
 
 
@@ -109,7 +157,19 @@ export class TranslationService {
     const normalizedLang = this.normalizeLanguageCode(language);
     this.currentLanguage.next(normalizedLang);
     this.translateService.use(normalizedLang);
-    this.localStorageService.setItem('app_language', normalizedLang);
+
+    // Try LocalStorageService first
+    const success = this.localStorageService.setItem('app_language', normalizedLang);
+
+    // Android fallback: Try direct localStorage if service fails
+    if (!success && typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem('app_language', normalizedLang);
+        console.log('Language saved via direct localStorage access');
+      } catch (error) {
+        console.error('Failed to save language preference:', error);
+      }
+    }
   }
 
 
