@@ -138,13 +138,20 @@ export class TranslationService {
     this.translateService.setDefaultLang('en');
 
     // Load saved language preference
-    const savedLanguage = localStorage.getItem('app_language') as Language;
+    let savedLanguage = localStorage.getItem('app_language');
+
+    // Normalize if needed (e.g. en-IN -> en)
+    if (savedLanguage) {
+      savedLanguage = this.normalizeLanguageCode(savedLanguage);
+    }
+
     if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'hi')) {
-      this.currentLanguage.next(savedLanguage);
-      this.translateService.use(savedLanguage);
+      const lang = savedLanguage as Language;
+      this.currentLanguage.next(lang);
+      this.translateService.use(lang);
     } else {
       // Detect browser language
-      const browserLang = navigator.language.split('-')[0];
+      const browserLang = this.normalizeLanguageCode(navigator.language);
       if (browserLang === 'hi') {
         this.currentLanguage.next('hi');
         this.translateService.use('hi');
@@ -152,6 +159,14 @@ export class TranslationService {
         this.translateService.use('en');
       }
     }
+  }
+
+  /**
+   * Normalize language code to short format (e.g., 'en-IN' -> 'en')
+   */
+  private normalizeLanguageCode(code: string): string {
+    if (!code) return 'en';
+    return code.split('-')[0].toLowerCase();
   }
 
   // Get current language as observable
@@ -165,10 +180,15 @@ export class TranslationService {
   }
 
   // Change language
-  setLanguage(language: Language): void {
-    this.currentLanguage.next(language);
-    this.translateService.use(language);
-    localStorage.setItem('app_language', language);
+  setLanguage(language: string): void {
+    const normalizedLang = this.normalizeLanguageCode(language) as Language;
+
+    // Only update if it's a supported language
+    if (normalizedLang === 'en' || normalizedLang === 'hi') {
+      this.currentLanguage.next(normalizedLang);
+      this.translateService.use(normalizedLang);
+      localStorage.setItem('app_language', normalizedLang);
+    }
   }
 
   // Get translation

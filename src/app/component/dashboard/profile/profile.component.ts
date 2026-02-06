@@ -337,8 +337,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
         };
 
         if (this.userService.isGuestUser()) {
-          // For guest users, save to localStorage and update userAuth$
-          localStorage.setItem(`user-data-${updatedUser.uid}`, JSON.stringify(updatedUser));
+          // For guest users, save to storage and update userAuth$
+          this.userService.storageService.setItem(`user-data-${updatedUser.uid}`, updatedUser);
           this.userService.userAuth$.next(updatedUser);
 
           // Update local userProfile

@@ -110,7 +110,7 @@ export class UserService {
     private readonly afAuth: Auth,
     private readonly firestore: Firestore,
     private readonly store: Store<AppState>,
-    private readonly localStorage: LocalStorageService,
+    public readonly storageService: LocalStorageService,
     private readonly translationService: TranslationService
   ) {
     this.initializeAuthState();
@@ -123,7 +123,7 @@ export class UserService {
   private initializeAuthState(): void {
     onAuthStateChanged(getAuth(), async (user: any) => {
       // Check for guest mode
-      const isGuest = localStorage.getItem('guest-mode') === 'true';
+      const isGuest = this.storageService.getItem('guest-mode') === 'true';
 
       if (!user && isGuest) {
         console.log('Restoring guest session');
@@ -164,30 +164,32 @@ export class UserService {
    * Enable guest/offline mode
    */
   public async enableGuestMode(): Promise<void> {
-    // Check if guest user data already exists in localStorage
-    const existingGuestData = localStorage.getItem('user-data-offline-guest');
+    // Check if guest user data already exists in storageService
+    const existingGuestData = this.storageService.getItem<User>('user-data-offline-guest');
     let guestUser: User;
 
     if (existingGuestData) {
       // Load existing guest profile
       try {
-        guestUser = JSON.parse(existingGuestData);
-        console.log('Loaded existing guest user data from localStorage');
+        guestUser = typeof existingGuestData === 'string'
+          ? JSON.parse(existingGuestData)
+          : existingGuestData;
+        console.log('Loaded existing guest user data');
       } catch (error) {
         console.error('Error parsing guest user data, creating new:', error);
         guestUser = this.createDefaultGuestUser();
-        // Save the newly created guest user to localStorage
-        localStorage.setItem('user-data-offline-guest', JSON.stringify(guestUser));
+        // Save the newly created guest user
+        this.storageService.setItem('user-data-offline-guest', guestUser);
       }
     } else {
       // Create new guest user
       guestUser = this.createDefaultGuestUser();
-      // Save to localStorage immediately so preferences (including currency) persist
-      this.localStorage.setItem('user-data-offline-guest', guestUser);
+      // Save to storage immediately so preferences (including currency) persist
+      this.storageService.setItem('user-data-offline-guest', guestUser);
       console.log('Created new guest user with detected currency:', guestUser.preferences?.defaultCurrency);
     }
 
-    this.localStorage.setItem('guest-mode', 'true');
+    this.storageService.setItem('guest-mode', 'true');
     this.userAuth$.next(guestUser);
 
     // Sync language for guest
@@ -196,9 +198,9 @@ export class UserService {
     }
 
     // Check if data is already initialized for guest
-    if (!this.localStorage.hasItem('guest-data-initialized')) {
+    if (!this.storageService.hasItem('guest-data-initialized')) {
       await this.setupDefaultData('offline-guest');
-      this.localStorage.setItem('guest-data-initialized', 'true');
+      this.storageService.setItem('guest-data-initialized', 'true');
     }
 
     // We treat the guest user as logged in for the app state
@@ -235,8 +237,8 @@ export class UserService {
    */
   public async logout(): Promise<void> {
     if (this.isGuestUser()) {
-      localStorage.removeItem('guest-mode');
-      localStorage.removeItem('guest-data-initialized');
+      this.storageService.removeItem('guest-mode');
+      this.storageService.removeItem('guest-data-initialized');
       this.userAuth$.next(null);
     } else {
       await this.auth.signOut();
@@ -276,10 +278,12 @@ export class UserService {
    */
   private detectSuspiciousActivity(user: any): void {
     const userAgent = navigator.userAgent;
-    const lastLoginInfo = localStorage.getItem(`last-login-${user.uid}`);
+    const lastLoginInfo = this.storageService.getItem(`last-login-${user.uid}`);
 
     if (lastLoginInfo) {
-      const lastLogin = JSON.parse(lastLoginInfo);
+      const lastLogin = typeof lastLoginInfo === 'string'
+        ? JSON.parse(lastLoginInfo)
+        : lastLoginInfo;
       const timeDiff = Date.now() - lastLogin.timestamp;
 
       // Alert if login from different location/device within short time
@@ -295,11 +299,11 @@ export class UserService {
     }
 
     // Store current login info
-    localStorage.setItem(`last-login-${user.uid}`, JSON.stringify({
+    this.storageService.setItem(`last-login-${user.uid}`, {
       timestamp: Date.now(),
       userAgent,
       location: window.location.href
-    }));
+    });
   }
 
   /**
@@ -616,15 +620,15 @@ export class UserService {
         });
 
         // Clear cached data
-        localStorage.removeItem(`user-data-${currentUser.uid}`);
-        localStorage.removeItem(`last-login-${currentUser.uid}`);
+        this.storageService.removeItem(`user-data-${currentUser.uid}`);
+        this.storageService.removeItem(`last-login-${currentUser.uid}`);
 
         // Clear rate limits for this user
         this.rateLimitMap.delete(`signin:${currentUser.email}`);
       }
 
       // Clear guest mode flag
-      localStorage.removeItem('guest-mode');
+      this.storageService.removeItem('guest-mode');
 
       await signOut(this.auth);
       console.log('User signed out');
@@ -813,9 +817,9 @@ export class UserService {
     console.log('✅ User already exists in Firestore');
 
     const userData = userSnap.data();
-    localStorage.setItem(
+    this.storageService.setItem(
       `user-data-${firebaseUser.uid}`,
-      JSON.stringify(userData)
+      userData
     );
   }
 
@@ -872,7 +876,7 @@ export class UserService {
         }
       });
 
-      localStorage.setItem(`user-data-${uid}`, JSON.stringify(userData));
+      this.storageService.setItem(`user-data-${uid}`, userData);
 
       this.logAuditEvent('USER_CREATED_IN_FIRESTORE', uid, {
         email: userData.email,
@@ -974,7 +978,7 @@ export class UserService {
         updatedAt: serverTimestamp()
       }, { merge: true });
 
-      localStorage.setItem(`user-data-${user.uid}`, JSON.stringify(user));
+      this.storageService.setItem(`user-data-${user.uid}`, user);
 
       this.logAuditEvent('USER_UPDATED', user.uid, {
         timestamp: new Date().toISOString()
@@ -997,11 +1001,11 @@ export class UserService {
 
     try {
       // Try cache first
-      const cachedUserData = localStorage.getItem(
+      const cachedUserData = this.storageService.getItem<User>(
         `user-data-${currentUser.uid}`
       );
       if (cachedUserData) {
-        return JSON.parse(cachedUserData) as User;
+        return cachedUserData;
       }
 
       // Check if we're offline
@@ -1016,9 +1020,9 @@ export class UserService {
 
       if (userSnap.exists()) {
         const userData = userSnap.data() as User;
-        localStorage.setItem(
+        this.storageService.setItem(
           `user-data-${currentUser.uid}`,
-          JSON.stringify(userData)
+          userData
         );
         return userData;
       }
@@ -1033,9 +1037,9 @@ export class UserService {
       // If we're offline and there's an error, try to return cached data
       if (!navigator.onLine) {
         console.log('[UserService] Offline mode - error occurred, trying cached data');
-        const cachedUserData = localStorage.getItem(`user-data-${currentUser.uid}`);
+        const cachedUserData = this.storageService.getItem<User>(`user-data-${currentUser.uid}`);
         if (cachedUserData) {
-          return JSON.parse(cachedUserData) as User;
+          return cachedUserData;
         }
       }
 
@@ -1055,8 +1059,7 @@ export class UserService {
    */
   public getCachedUserData(uid: string): User | null {
     try {
-      const cachedData = localStorage.getItem(`user-data-${uid}`);
-      return cachedData ? JSON.parse(cachedData) : null;
+      return this.storageService.getItem<User>(`user-data-${uid}`);
     } catch (error) {
       console.error('Error getting cached user data:', error);
       return null;
@@ -1068,10 +1071,10 @@ export class UserService {
    */
   public clearCachedUserData(): void {
     try {
-      const keys = Object.keys(localStorage);
+      const keys = this.storageService.getAllKeys();
       keys.forEach((key) => {
         if (key.startsWith('user-data-')) {
-          localStorage.removeItem(key);
+          this.storageService.removeItem(key);
         }
       });
 
@@ -1093,7 +1096,7 @@ export class UserService {
 
       if (userSnap.exists()) {
         const userData = userSnap.data();
-        localStorage.setItem(`user-data-${uid}`, JSON.stringify(userData));
+        this.storageService.setItem(`user-data-${uid}`, userData);
         console.log('User data cached for offline access');
       }
     } catch (error) {
@@ -1151,7 +1154,7 @@ export class UserService {
       remainingAttempts: USER_SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS - (loginAttempt?.count || 0),
       lockoutTime: loginAttempt?.lockedUntil,
       isEmailVerified: currentUser.emailVerified,
-      lastLogin: localStorage.getItem(`last-login-${currentUser.uid}`)
+      lastLogin: this.storageService.getItem(`last-login-${currentUser.uid}`)
     };
   }
 
