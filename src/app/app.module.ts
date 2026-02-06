@@ -1,4 +1,4 @@
-import { NgModule, isDevMode } from '@angular/core';
+import { NgModule, isDevMode, APP_INITIALIZER } from '@angular/core';
 import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -10,8 +10,14 @@ import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
 // Function for ngx-translate loader
+// Function for ngx-translate loader
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
+}
+
+// LocalStorageService Factory
+export function initializeLocalStorage(localStorageService: LocalStorageService) {
+  return () => localStorageService.initialize();
 }
 
 // ngx-papaparse
@@ -113,6 +119,7 @@ import { PwaInstallPromptComponent } from './util/components/pwa-install-prompt/
 
 // Common Sync Service (replaces BackgroundSyncService)
 import { CommonSyncService } from './util/service/common-sync.service';
+import { LocalStorageService } from './util/service/local-storage.service';
 
 
 // NgRx Store
@@ -251,7 +258,15 @@ import { CurrencyPipe } from './util/pipes';
     provideHttpClient(withInterceptors([securityInterceptor])),
     Papa,
     provideClientHydration(),
+    provideClientHydration(),
     CommonSyncService,
+    LocalStorageService,
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeLocalStorage,
+      deps: [LocalStorageService],
+      multi: true
+    },
 
     // Firebase Initialization
     provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
