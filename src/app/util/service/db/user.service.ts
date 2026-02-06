@@ -137,11 +137,9 @@ export class UserService {
         user ? 'User logged in' : 'User logged out'
       );
 
-      this.userAuth$.next(user);
-
       if (user) {
-        // Sync language from profile
         const userData = await this.getCurrentUser();
+        this.userAuth$.next(userData);
         if (userData?.preferences?.language) {
           this.translationService.setLanguage(userData.preferences.language as Language);
         }
@@ -155,6 +153,7 @@ export class UserService {
         // Check for suspicious activity
         this.detectSuspiciousActivity(user);
       } else {
+        this.userAuth$.next(null);
         this.logAuditEvent('USER_LOGOUT', undefined, { timestamp: new Date().toISOString() });
       }
     });

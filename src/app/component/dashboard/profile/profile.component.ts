@@ -150,10 +150,18 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.ensureCurrentTimezoneInList();
 
     // Dispatch action to load profile
-    if (this.currentUser) {
+    if (this.currentUser && !this.userService.isGuestUser()) {
       this.store.dispatch(ProfileActions.loadProfile({ userId: this.currentUser.uid }));
     }
-    this.subscribeToStoreData();
+    if (!this.userService.isGuestUser()) {
+      this.subscribeToStoreData();
+    } else {
+      const guestProfile = this.userService.userAuth$.value;
+      if (guestProfile) {
+        this.userProfile = this.mapUserToProfile(guestProfile);
+        this.populateForm();
+      }
+    }
   }
 
   private ensureCurrentTimezoneInList(): void {
@@ -179,13 +187,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
         if (profile) {
           this.userProfile = this.mapUserToProfile(profile);
           this.populateForm();
-        } else if (this.userService.isGuestUser()) {
-          // For guest users, fall back to userAuth$ if store doesn't have profile
-          const guestProfile = this.userService.userAuth$.value;
-          if (guestProfile) {
-            this.userProfile = this.mapUserToProfile(guestProfile);
-            this.populateForm();
-          }
         }
       })
     );
@@ -200,10 +201,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       this.profileError$.subscribe(error => {
         if (error) {
           console.error('Error loading profile:', error);
-          // Don't show error for guest users - it's expected that they might not have Firestore data
-          if (!this.userService.isGuestUser()) {
-            this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
-          }
+          this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
         }
       })
     );

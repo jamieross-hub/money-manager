@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { CURRENCIES, Currency, DEFAULT_CURRENCY, getCurrencyByCode, getCurrencySymbol } from '../models/currency.model';
+import { Currency, DEFAULT_CURRENCY } from '../models/currency.model';
 import { UserService } from './db/user.service';
 import { APP_CONFIG } from '../config/config';
 
@@ -38,8 +38,8 @@ export class CurrencyService {
       if (user?.preferences?.country) {
         const country = APP_CONFIG.REGIONAL.COUNTRY_MAPPING[user.preferences.country as keyof typeof APP_CONFIG.REGIONAL.COUNTRY_MAPPING];
         if (country) {
-          this.setCurrentCurrency((country as any).currency);
-          this.setCurrentLanguage((country as any).languages?.[0]?.code);
+          this.setCurrentCurrency(user?.preferences.defaultCurrency || (country as any).currency);
+          this.setCurrentLanguage(user?.preferences.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT);
         }
       }
 
@@ -53,16 +53,12 @@ export class CurrencyService {
     });
   }
 
-  getCurrencies(): Currency[] {
-    return CURRENCIES;
-  }
-
   getCurrentCurrency(): string {
     return this.currentCurrencySubject.value;
   }
 
   setCurrentCurrency(currencyCode: string): void {
-    if (this.isValidCurrency(currencyCode) && this.currentCurrencySubject.value !== currencyCode) {
+    if (this.currentCurrencySubject.value !== currencyCode) {
       this.currentCurrencySubject.next(currencyCode);
     }
   }
@@ -77,18 +73,10 @@ export class CurrencyService {
     }
   }
 
-  getCurrencySymbol(currencyCode?: string): string {
-    const code = currencyCode || this.getCurrentCurrency();
-    return getCurrencySymbol(code);
-  }
-
-  getCurrencyByCode(currencyCode: string): Currency | undefined {
-    return getCurrencyByCode(currencyCode);
-  }
-
-  isValidCurrency(currencyCode: string): boolean {
-    return CURRENCIES.some(currency => currency.code === currencyCode);
-  }
+  // getCurrencySymbol(currencyCode?: string): string {
+  //   const code = currencyCode || this.getCurrentCurrency();
+  //   return getCurrencySymbol(code);
+  // }
 
   getDefaultCurrency(): string {
     return DEFAULT_CURRENCY;

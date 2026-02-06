@@ -77,7 +77,7 @@ export class LocalStorageService {
         // Deep copy to prevent reference issues if needed, or return as is
         // Since we are now operating with objects in memory, parseJson is less relevant 
         // but kept for API compatibility. The cache stores the actual object/value.
-        return value as T;
+        return structuredClone(value) as T;
     }
 
     /**
