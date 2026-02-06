@@ -286,14 +286,14 @@ export class LocalStorageService {
         entity: T,
         idField: keyof T = 'id' as keyof T
     ): void {
-        const entities = this.getEntities<T>(collection);
+        const entities = [...this.getEntities<T>(collection)];
         const id = entity[idField];
         const index = entities.findIndex(e => e[idField] === id);
 
         if (index !== -1) {
             entities[index] = { ...entity };
         } else {
-            entities.push(entity);
+            entities.push(entity); // 
         }
 
         this.saveEntities(collection, entities);

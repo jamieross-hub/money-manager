@@ -1,0 +1,14 @@
+.search-field {
+  ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+  
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    background-color: transparent;
+  }
+}
+
+:host {
+  display: block;
+  background-color: var(--mat-bottom-sheet-container-background-color, white);
+}

@@ -58,6 +58,8 @@
 							<mat-icon class="text-sm">add</mat-icon>Add
 						</button>
 					</div>
+
+					@if(!breakpointService.device.isMobile) {
 					<mat-form-field appearance="fill" class="w-full">
 						<mat-label>Select a category</mat-label>
 						<mat-select formControlName="categoryId" [disabled]="viewMode"
@@ -76,6 +78,41 @@
 						<mat-error>Category is required</mat-error>
 						}
 					</mat-form-field>
+					}
+
+					@if(breakpointService.device.isMobile) {
+					<!-- Custom Category Select Trigger for Bottom Sheet -->
+					<div (click)="openCategorySheet()"
+						class="relative w-full cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-3 px-4 flex items-center justify-between hover:border-blue-500 transition-colors"
+						[class.bg-gray-100]="viewMode" [class.opacity-70]="viewMode"
+						[class.pointer-events-none]="viewMode">
+
+						<div class="flex items-center gap-3">
+							<div *ngIf="transactionForm.get('categoryId')?.value"
+								class="w-6 h-6 rounded-full flex items-center justify-center"
+								[style.background-color]="(currentCategoryColor || '#cccccc') + '20'"
+								[style.color]="currentCategoryColor || '#cccccc'">
+								<mat-icon>{{ currentCategoryIcon || 'category' }}</mat-icon>
+							</div>
+							<span [class.text-gray-500]="!transactionForm.get('categoryId')?.value"
+								[class.dark:text-gray-400]="!transactionForm.get('categoryId')?.value"
+								[class.text-gray-900]="transactionForm.get('categoryId')?.value"
+								[class.dark:text-gray-100]="transactionForm.get('categoryId')?.value">
+								{{ transactionForm.get('categoryName')?.value || 'Select a category' }}
+							</span>
+						</div>
+
+						<mat-icon class="text-gray-500 text-base">expand_more</mat-icon>
+					</div>
+					}
+
+					<!-- Hidden Input for Validation Display -->
+					<input type="hidden" formControlName="categoryId">
+
+					@if(transactionForm.get('categoryId')?.hasError('required') &&
+					transactionForm.get('categoryId')?.touched) {
+					<mat-error class="text-xs mt-1 ml-1">Category is required</mat-error>
+					}
 				</div>
 
 				<!-- Date Field -->

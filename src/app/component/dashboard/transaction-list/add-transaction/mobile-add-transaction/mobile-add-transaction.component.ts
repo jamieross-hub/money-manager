@@ -32,6 +32,8 @@ import { FormControl } from '@angular/forms';
 import { ReplaySubject, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { CurrencyService } from 'src/app/util/service/currency.service';
+import { CategorySelectionSheetComponent } from './category-selection-sheet/category-selection-sheet.component';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
 
 @Component({
   selector: 'app-mobile-add-transaction',
@@ -47,6 +49,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   public userId: any;
   public isSubmitting = false;
   public isMobile: boolean = false;
+  public currentCategoryIcon: string = '';
+  public currentCategoryColor: string = '';
   public paymentMethods = [
     { value: PaymentMethod.CREDIT_CARD, label: 'Credit Card', icon: 'credit_card' },
     { value: PaymentMethod.DEBIT_CARD, label: 'Debit Card', icon: 'credit_card' },
@@ -85,7 +89,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     private breakpointObserver: BreakpointObserver,
     public breakpointService: BreakpointService,
     private userService: UserService,
-    private currencyService: CurrencyService
+    private currencyService: CurrencyService,
+    private bottomSheet: MatBottomSheet
   ) {
     this.recurringMinDate = moment().add(1, 'day').format('YYYY-MM-DD');
     this.recurringMaxDate = moment().add(1, 'year').format('YYYY-MM-DD');
@@ -450,6 +455,9 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       filter((category): category is Category => !!category)
     ).subscribe((category: Category) => {
 
+      this.currentCategoryIcon = category.icon;
+      this.currentCategoryColor = category.color;
+
       this.transactionForm.patchValue({
         categoryId: category.id,
         categoryName: category.name,
@@ -457,6 +465,28 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         payee: this.editMode ? this.dialogData.payee : category.name,
       });
 
+    });
+  }
+
+  openCategorySheet(): void {
+    if (this.viewMode) return;
+
+    // Determine default transaction type. If not set, maybe Expense or based on logic?
+    // Using current form value or defaulting to Expense
+    const currentType = this.transactionForm.get('categoryType')?.value || TransactionType.EXPENSE;
+
+    const sheetRef = this.bottomSheet.open(CategorySelectionSheetComponent, {
+      data: {
+        selectedCategoryId: this.transactionForm.get('categoryId')?.value,
+        transactionType: currentType // We might want to pass this to filter list
+      },
+      panelClass: 'bg-transparent' // For rounded corners if needed
+    });
+
+    sheetRef.afterDismissed().subscribe((category: Category | undefined) => {
+      if (category) {
+        this.onCategoryChange(category.id);
+      }
     });
   }
 
