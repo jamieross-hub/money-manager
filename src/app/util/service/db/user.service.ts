@@ -967,6 +967,11 @@ export class UserService {
    */
   async createOrUpdateUser(user: User): Promise<void> {
     try {
+      if (this.isGuestUser()) {
+        this.storageService.setItem(`user-data-${user.uid}`, user);
+        this.userAuth$.next(user);
+        return;
+      }
       const userRef = doc(this.firestore, `users/${user.uid}`);
       await setDoc(userRef, {
         ...user,
@@ -991,6 +996,9 @@ export class UserService {
    * Get current user data from cache or Firestore
    */
   async getCurrentUser(): Promise<User | null> {
+    if (this.isGuestUser()) {
+      return this.userAuth$.value;
+    }
     const currentUser = this.auth.currentUser;
     if (!currentUser) return null;
 

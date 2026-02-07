@@ -149,19 +149,24 @@ export class ProfileComponent implements OnInit, OnDestroy {
     // Add current user's timezone to list if missing
     this.ensureCurrentTimezoneInList();
 
+    // Subscribe to store data (works for both real and guest users now)
+    this.subscribeToStoreData();
+
     // Dispatch action to load profile
-    if (this.currentUser && !this.userService.isGuestUser()) {
-      this.store.dispatch(ProfileActions.loadProfile({ userId: this.currentUser.uid }));
+    const uid = this.userService.isGuestUser() ? 'offline-guest' : this.currentUser?.uid;
+    if (uid) {
+      this.store.dispatch(ProfileActions.loadProfile({ userId: uid }));
     }
-    if (!this.userService.isGuestUser()) {
-      this.subscribeToStoreData();
-    } else {
-      const guestProfile = this.userService.userAuth$.value;
-      if (guestProfile) {
-        this.userProfile = this.mapUserToProfile(guestProfile);
-        this.populateForm();
-      }
-    }
+
+    // Also listen to userAuth$ for direct updates (important for guests)
+    this.subscriptions.add(
+      this.userService.userAuth$.subscribe(user => {
+        if (user && this.userService.isGuestUser() && !this.userProfile) {
+          this.userProfile = this.mapUserToProfile(user);
+          this.populateForm();
+        }
+      })
+    );
   }
 
   private ensureCurrentTimezoneInList(): void {
