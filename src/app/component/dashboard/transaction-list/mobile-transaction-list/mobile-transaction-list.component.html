@@ -220,9 +220,9 @@
 						<!-- <div class="transaction-category text-base">
               {{ tx.category }}
             </div> -->
-						<div class="transaction-date text-base">
-							{{ dateService.toDate(tx.date) | date:'dd MMM - hh:mm' }}
-						</div>
+						<!-- <div class="transaction-date text-base">
+							{{ dateService.toDate(tx.date) | date:'dd MMM ' }}
+						</div> -->
 						<div *ngIf="tx.notes" class="transaction-notes text-base">
 							{{ tx.notes }}
 						</div>
@@ -234,8 +234,8 @@
 							[ngClass]="tx.type === 'income' ? 'income-text' : 'expense-text'">
 							{{ tx.type === 'income' ? '+' : '-' }}{{ tx.amount | currency }}
 						</div>
-						<div class="amount-type text-base">
-							{{ getCategoryName(tx.categoryId) }}
+						<div class="amount-type">
+							{{ dateService.toDate(tx.date) | date:'dd MMM hh:mm' }}
 						</div>
 					</div>
 				</div>

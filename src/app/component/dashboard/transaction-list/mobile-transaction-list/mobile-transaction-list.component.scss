@@ -640,22 +640,22 @@
 
 .amount-type {
 	font-size: 10px;
-	color: #9ca3af;
+	color: var(--secondary-600);
 	text-transform: capitalize;
 	font-weight: 500;
 	letter-spacing: 0.5px;
 	margin: 0;
 
 	// remove later 
-	background-color: #ffffff;
-    padding: 1px 5px;
+	background-color: var(--surface-100);
+    padding: 1px 8px;
     border-radius: 5px;
     position: relative;
     color: #766d6d;
     font-weight: 600;
     top: 5px;
     left: 4px;
-    border: 0.5px dotted;
+    border: 0.5px dotted var(--secondary-600);
 
 	:host-context(.dark-theme) & {
 		background-color: mat.get-theme-color(dark.$dark-theme, neutral, 6);

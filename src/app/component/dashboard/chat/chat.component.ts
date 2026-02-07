@@ -7,6 +7,8 @@ import { CHAT_CONSTANTS } from 'src/app/util/service/ai-chat/models/chat-constan
 import { AudioRecordingService } from 'src/app/util/service/ai-chat/audio-recording.service';
 import { OpenAiIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/openai-intent-handler.service';
 import { take } from 'rxjs/operators';
+import { UserService } from 'src/app/util/service/db/user.service';
+import { NotificationService } from 'src/app/util/service/notification.service';
 
 @Component({
   selector: 'app-chat',
@@ -31,7 +33,9 @@ export class ChatComponent {
     public breakpointService: BreakpointService,
     private audioRecordingService: AudioRecordingService,
     private openAiHandler: OpenAiIntentHandler,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private userService: UserService,
+    private notificationService: NotificationService
   ) { }
 
   sendMessage(input: HTMLInputElement) {
@@ -102,6 +106,13 @@ export class ChatComponent {
   // --- Voice Interaction Methods ---
 
   async onMicClick() {
+    // Check for API key first
+    const user = await this.userService.getCurrentUser();
+    if (!user?.preferences?.openaiApiKey) {
+      this.notificationService.error('OpenAI API key not found. Please connect your API key in Settings > OpenAI Integration.');
+      return;
+    }
+
     this.isRecording = true;
     this.voiceBlob = null;
     try {
@@ -109,6 +120,7 @@ export class ChatComponent {
     } catch (error) {
       this.isRecording = false;
       console.error('Failed to start recording', error);
+      this.notificationService.error('Failed to start recording. Please check your microphone permissions.');
     }
   }
 
@@ -142,7 +154,7 @@ export class ChatComponent {
       error: (err) => {
         console.error('Transcription failed', err);
         this.isProcessingAudio = false;
-        // Optionally show error to user
+        this.notificationService.error('Transcription failed. Please ensure your OpenAI API key is correct.');
       }
     });
   }
