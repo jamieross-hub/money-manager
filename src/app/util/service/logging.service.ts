@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from '@env/environment';
+import { LocalStorageService } from './local-storage.service';
 
 export interface LogEntry {
   timestamp: Date;
@@ -101,7 +102,7 @@ export class LoggingService {
         //   url: window.location.href,
         //   userAgent: navigator.userAgent
         // }).subscribe();
-        
+
         console.error('Critical log should be sent to remote service:', { message, data });
       } catch (error) {
         console.error('Failed to send log to remote service:', error);
@@ -115,23 +116,23 @@ export class LoggingService {
 
   private saveLogsToStorage(): void {
     try {
-      localStorage.setItem('app_logs', JSON.stringify(this.logs));
+      LocalStorageService.getInstance().setItem('app_logs', this.logs);
     } catch (error) {
-      console.warn('Failed to save logs to localStorage:', error);
+      console.warn('Failed to save logs to storage:', error);
     }
   }
 
   private loadLogsFromStorage(): void {
     try {
-      const storedLogs = localStorage.getItem('app_logs');
+      const storedLogs = LocalStorageService.getInstance().getItem<any[]>('app_logs');
       if (storedLogs) {
-        this.logs = JSON.parse(storedLogs).map((log: any) => ({
+        this.logs = storedLogs.map((log: any) => ({
           ...log,
           timestamp: new Date(log.timestamp)
         }));
       }
     } catch (error) {
-      console.warn('Failed to load logs from localStorage:', error);
+      console.warn('Failed to load logs from storage:', error);
     }
   }
 
@@ -144,7 +145,7 @@ export class LoggingService {
   }
 
   getLogsByTimeRange(startTime: Date, endTime: Date): LogEntry[] {
-    return this.logs.filter(log => 
+    return this.logs.filter(log =>
       log.timestamp >= startTime && log.timestamp <= endTime
     );
   }
@@ -155,7 +156,7 @@ export class LoggingService {
 
   clearLogs(): void {
     this.logs = [];
-    localStorage.removeItem('app_logs');
+    LocalStorageService.getInstance().removeItem('app_logs');
   }
 
   exportLogs(): string {
@@ -184,10 +185,10 @@ export class LoggingService {
   // Performance monitoring
   timeOperation<T>(operationName: string, operation: () => T | Promise<T>): T | Promise<T> {
     const startTime = performance.now();
-    
+
     try {
       const result = operation();
-      
+
       if (result instanceof Promise) {
         return result.finally(() => {
           const endTime = performance.now();
@@ -203,9 +204,9 @@ export class LoggingService {
     } catch (error) {
       const endTime = performance.now();
       const duration = endTime - startTime;
-      this.error(`Operation failed: ${operationName}`, { 
-        duration: `${duration.toFixed(2)}ms`, 
-        error: error instanceof Error ? error.message : String(error) 
+      this.error(`Operation failed: ${operationName}`, {
+        duration: `${duration.toFixed(2)}ms`,
+        error: error instanceof Error ? error.message : String(error)
       });
       throw error;
     }

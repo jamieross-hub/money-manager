@@ -17,6 +17,8 @@ export class LocalStorageService {
     // ExPOSE helper for external use
     public readonly keyHelper = LocalStorageKeyHelper;
 
+    private static instance: LocalStorageService | null = null;
+
     private readonly DB_NAME = 'MoneyManagerDB';
     private readonly STORE_NAME = 'keyValueStore';
     private readonly DB_VERSION = 1;
@@ -26,7 +28,20 @@ export class LocalStorageService {
     private cache = new Map<string, any>();
     private isInitialized = false;
 
-    constructor() { }
+    constructor() {
+        LocalStorageService.instance = this;
+    }
+
+    /**
+     * Get the singleton instance (for non-DI contexts)
+     */
+    public static getInstance(): LocalStorageService {
+        if (!LocalStorageService.instance) {
+            // This should ideally not happen since it's provided in root and used in APP_INITIALIZER
+            LocalStorageService.instance = new LocalStorageService();
+        }
+        return LocalStorageService.instance;
+    }
 
     /**
      * Initialize the service: Open DB and load all data into cache

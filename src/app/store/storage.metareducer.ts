@@ -1,19 +1,27 @@
 import { ActionReducer, MetaReducer } from '@ngrx/store';
 import { Timestamp } from '@angular/fire/firestore';
+import { LocalStorageService } from '../util/service/local-storage.service';
 
 export function storageMetaReducer(reducer: ActionReducer<any>): ActionReducer<any> {
+    const storageService = LocalStorageService.getInstance();
+
     return function (state, action) {
-        // 1. On init, if state is undefined, try to search in localStorage
+        // 1. On init, if state is undefined, try to search in storage service
         if (action.type === '@ngrx/store/init' || action.type === '@ngrx/effects/init') {
-            const storedState = localStorage.getItem('app_state');
+            const storedState = storageService.getItem('app_state');
             if (storedState) {
                 try {
-                    const parsedState = JSON.parse(storedState, dateTimeReviver);
+                    // storageService handles parsing if it was stored as an object
+                    // but we keep the reviver for complex types like Dates/Timestamps
+                    const parsedState = typeof storedState === 'string'
+                        ? JSON.parse(storedState, dateTimeReviver)
+                        : storedState;
+
                     // Merge initial state with stored state to handle new properties/features
                     return reducer(parsedState, action);
                 } catch (e) {
                     console.error('Failed to parse stored state', e);
-                    localStorage.removeItem('app_state');
+                    storageService.removeItem('app_state');
                 }
             }
         }
@@ -21,14 +29,13 @@ export function storageMetaReducer(reducer: ActionReducer<any>): ActionReducer<a
         // 2. Compute the next state
         const nextState = reducer(state, action);
 
-        // 3. Save the next state to localStorage
+        // 3. Save the next state to storage service
         // We only save if the state is actual data (not undefined)
         if (nextState) {
             try {
-                const stateToSave = JSON.stringify(nextState);
-                localStorage.setItem('app_state', stateToSave);
+                storageService.setItem('app_state', nextState);
             } catch (e) {
-                console.error('Failed to save state to localStorage', e);
+                console.error('Failed to save state to storage service', e);
             }
         }
 

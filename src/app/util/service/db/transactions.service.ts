@@ -823,10 +823,9 @@ export class TransactionsService extends BaseService {
      */
     private getCachedTransactions(userId: string): Transaction[] {
         try {
-            const cachedData = localStorage.getItem(`transactions-cache-${userId}`);
+            const cachedData = this.localStorageUtility.getItem<Transaction[]>(`transactions-cache-${userId}`);
             if (cachedData) {
-                const transactions = JSON.parse(cachedData) as Transaction[];
-                return transactions.filter(t => t && t.id);
+                return cachedData.filter(t => t && t.id);
             }
         } catch (error) {
             console.error('Error loading cached transactions:', error);
@@ -839,7 +838,7 @@ export class TransactionsService extends BaseService {
      */
     private cacheTransactions(userId: string, transactions: Transaction[]): void {
         try {
-            localStorage.setItem(`transactions-cache-${userId}`, JSON.stringify(transactions));
+            this.localStorageUtility.setItem(`transactions-cache-${userId}`, transactions);
         } catch (error) {
             console.error('Error caching transactions:', error);
         }

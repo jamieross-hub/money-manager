@@ -1,6 +1,7 @@
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 
 import { AppModule } from './app/app.module';
+import { LocalStorageService } from './app/util/service/local-storage.service';
 
 // PWA Navigation and Service Worker initialization
 function initializePwaFeatures() {
@@ -8,10 +9,10 @@ function initializePwaFeatures() {
   if (typeof window === 'undefined') {
     return; // Skip on server-side
   }
-  
+
   // Handle PWA installation
   let deferredPrompt: any;
-  
+
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
@@ -46,9 +47,9 @@ function initializePwaFeatures() {
       url: window.location.href,
       scrollPosition: window.scrollY
     };
-    
+
     try {
-      localStorage.setItem('app-state', JSON.stringify(appState));
+      LocalStorageService.getInstance().setItem('app-state', appState);
     } catch (error) {
       console.warn('Failed to save app state:', error);
     }
@@ -61,10 +62,10 @@ function initializeCacheManagement() {
   if (typeof window === 'undefined') {
     return; // Skip on server-side
   }
-  
+
   // Check if this is a mobile device
   const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  
+
   if (isMobile) {
     // Use weekly versioning to reduce unnecessary cache clears
     const now = new Date();
@@ -72,14 +73,14 @@ function initializeCacheManagement() {
     const month = now.getMonth() + 1;
     const year = now.getFullYear();
     const currentVersion = `${year}-${month.toString().padStart(2, '0')}-W${weekNumber}`;
-    
-    const storedVersion = localStorage.getItem('app-version');
-    
+
+    const storedVersion = LocalStorageService.getInstance().getItem<string>('app-version', false);
+
     if (storedVersion && storedVersion !== currentVersion) {
       console.log('App version changed on mobile, performing smart cache update');
       performSmartCacheUpdate(storedVersion, currentVersion);
     } else {
-      localStorage.setItem('app-version', currentVersion);
+      LocalStorageService.getInstance().setItem('app-version', currentVersion);
     }
   }
 }
@@ -89,22 +90,22 @@ async function performSmartCacheUpdate(oldVersion: string, newVersion: string): 
   if (typeof window === 'undefined') {
     return; // Skip on server-side
   }
-  
+
   try {
     console.log(`Performing smart cache update from ${oldVersion} to ${newVersion}`);
-    
+
     // Preserve authentication state
     const authData = preserveAuthData();
-    
+
     // Clear only application caches, not authentication data
     await clearApplicationCaches();
-    
+
     // Restore authentication state
     restoreAuthData(authData);
-    
+
     // Update version
-    localStorage.setItem('app-version', newVersion);
-    
+    LocalStorageService.getInstance().setItem('app-version', newVersion);
+
     console.log('Smart cache update completed successfully');
   } catch (error) {
     console.error('Smart cache update failed:', error);
@@ -117,27 +118,28 @@ function preserveAuthData(): any {
   if (typeof window === 'undefined') {
     return {}; // Return empty object on server-side
   }
-  
+
   const authData: any = {};
-  
+  const storageService = LocalStorageService.getInstance();
+
   // Preserve Firebase Auth state
-  if (localStorage.getItem('firebase:authUser:')) {
-    const authKeys = Object.keys(localStorage).filter(key => 
-      key.startsWith('firebase:authUser:') || 
+  if (typeof localStorage !== 'undefined') {
+    const authKeys = Object.keys(localStorage).filter(key =>
+      key.startsWith('firebase:authUser:') ||
       key.startsWith('firebase:persistence:')
     );
     authKeys.forEach(key => {
-      authData[key] = localStorage.getItem(key);
+      authData[key] = storageService.getItem(key, false);
     });
   }
-  
+
   // Preserve user preferences
   const userPrefs = ['theme', 'language', 'user-settings'];
   userPrefs.forEach(pref => {
-    const value = localStorage.getItem(pref);
+    const value = storageService.getItem(pref, false);
     if (value) authData[pref] = value;
   });
-  
+
   return authData;
 }
 
@@ -146,10 +148,10 @@ function restoreAuthData(authData: any): void {
   if (typeof window === 'undefined') {
     return; // Skip on server-side
   }
-  
+
   // Restore preserved data
   Object.keys(authData).forEach(key => {
-    localStorage.setItem(key, authData[key]);
+    LocalStorageService.getInstance().setItem(key, authData[key]);
   });
 }
 
@@ -158,33 +160,34 @@ async function clearApplicationCaches(): Promise<void> {
   if (typeof window === 'undefined') {
     return; // Skip on server-side
   }
-  
+
   try {
     // Clear service worker caches (excluding auth-related caches)
     if ('caches' in window) {
       const cacheNames = await caches.keys();
-      const appCaches = cacheNames.filter(name => 
-        !name.includes('firebase') && 
-        !name.includes('auth') && 
+      const appCaches = cacheNames.filter(name =>
+        !name.includes('firebase') &&
+        !name.includes('auth') &&
         !name.includes('user')
       );
-      
+
       await Promise.all(
         appCaches.map(cacheName => caches.delete(cacheName))
       );
     }
 
     // Clear application-specific localStorage items
-    const keysToRemove = Object.keys(localStorage).filter(key => 
+    const storageService = LocalStorageService.getInstance();
+    const keysToRemove = Object.keys(localStorage).filter(key =>
       !key.startsWith('firebase:') &&
       !key.startsWith('user') &&
       !key.startsWith('theme') &&
       !key.startsWith('language') &&
       key !== 'app-version'
     );
-    
-    keysToRemove.forEach(key => localStorage.removeItem(key));
-    
+
+    keysToRemove.forEach(key => storageService.removeItem(key));
+
     console.log('Application caches cleared successfully');
   } catch (error) {
     console.error('Failed to clear application caches:', error);

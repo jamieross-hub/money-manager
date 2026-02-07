@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { APP_CONFIG } from '../config/config';
 import { LanguageCode } from '../config/enums';
 import { UserService } from './db/user.service';
+import { LocalStorageService } from './local-storage.service';
 
 @Injectable({
     providedIn: 'root'
@@ -12,7 +13,11 @@ export class LanguageService {
     private currentLanguageSubject = new BehaviorSubject<string>(APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT);
     public currentLanguage$ = this.currentLanguageSubject.asObservable();
 
-    constructor(private translate: TranslateService, private userService: UserService) {
+    constructor(
+        private translate: TranslateService,
+        private userService: UserService,
+        private localStorageService: LocalStorageService
+    ) {
         // Set default language
         this.translate.setDefaultLang('en');
 
@@ -32,7 +37,7 @@ export class LanguageService {
             // Prioritize country-based settings if country is set in preferences
             if (user?.preferences?.language) {
                 this.setLanguage(user?.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT);
-            }else{
+            } else {
                 this.setLanguage(APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT);
             }
         }
@@ -47,7 +52,7 @@ export class LanguageService {
     setLanguage(lang: string) {
         this.translate.use(lang);
         this.currentLanguageSubject.next(lang);
-        localStorage.setItem('app_language', lang);
+        this.localStorageService.setItem('app_language', lang);
 
         // Update HTML lang attribute
         document.documentElement.lang = lang;

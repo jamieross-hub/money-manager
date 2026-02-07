@@ -11,6 +11,7 @@ import { AppState } from '../../store/app.state';
 import * as TransactionsActions from '../../store/transactions/transactions.actions';
 import { Transaction } from '../models/transaction.model';
 import { APP_CONFIG } from '../config/config';
+import { LocalStorageService } from './local-storage.service';
 
 export interface NetworkStatus {
   online: boolean;
@@ -99,6 +100,7 @@ export class CommonSyncService {
     private validationService: ValidationService,
     private swUpdate: SwUpdate,
     private store: Store<AppState>,
+    private localStorageService: LocalStorageService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     if (!isPlatformServer(this.platformId)) {
@@ -127,7 +129,7 @@ export class CommonSyncService {
     if (isPlatformServer(this.platformId)) {
       return;
     }
-    
+
     // Monitor online/offline events
     const online$ = fromEvent(window, 'online').pipe(map(() => true));
     const offline$ = fromEvent(window, 'offline').pipe(map(() => false));
@@ -162,17 +164,17 @@ export class CommonSyncService {
    */
   private initializeServiceWorkerUpdates(): void {
     if (this.swUpdate.isEnabled) {
-      const updateInterval = this.isMobileDevice() 
-        ? APP_CONFIG.PWA.MOBILE_UPDATE_INTERVAL 
+      const updateInterval = this.isMobileDevice()
+        ? APP_CONFIG.PWA.MOBILE_UPDATE_INTERVAL
         : APP_CONFIG.PWA.DESKTOP_UPDATE_INTERVAL;
-      
+
       setInterval(() => {
         this.swUpdate.checkForUpdate();
       }, updateInterval);
 
       this.swUpdate.versionUpdates.subscribe(event => {
         console.log('Service worker update event:', event);
-        
+
         if (event.type === 'VERSION_READY') {
           console.log('New version available, activating silently:', event);
           this.activateUpdateSilently();
@@ -195,7 +197,7 @@ export class CommonSyncService {
       }
 
       const registrations = await navigator.serviceWorker.getRegistrations();
-      this.serviceWorkerRegistration = registrations.find(reg => 
+      this.serviceWorkerRegistration = registrations.find(reg =>
         reg.scope.includes('/') || reg.scope.includes('/money-manager/')
       ) || null;
 
@@ -286,11 +288,11 @@ export class CommonSyncService {
   async registerSyncItem(item: Omit<SyncItem, 'timestamp' | 'retryCount'>): Promise<{ success: boolean; errors?: string[] }> {
     try {
       const validationResult = this.validateSyncItem(item);
-      
+
       if (!validationResult.isValid) {
         console.error('Invalid sync item data:', item.id, validationResult.errors);
-        this.updateSyncStatus({ 
-          invalidItems: this.syncStatus.invalidItems + 1 
+        this.updateSyncStatus({
+          invalidItems: this.syncStatus.invalidItems + 1
         });
         return { success: false, errors: validationResult.errors };
       }
@@ -305,8 +307,8 @@ export class CommonSyncService {
       this.syncQueue.push(syncItem);
       await this.saveSyncQueue();
 
-      this.updateSyncStatus({ 
-        pendingItems: this.syncStatus.pendingItems + 1 
+      this.updateSyncStatus({
+        pendingItems: this.syncStatus.pendingItems + 1
       });
 
       if (navigator.onLine) {
@@ -356,33 +358,33 @@ export class CommonSyncService {
         }
 
         processedItems.push(item.id);
-        
+
         // Update sync status for successful transactions
         if (item.type === 'transaction') {
           await this.updateTransactionSyncStatus(item.data.id || item.id, 'synced');
         }
-              } catch (error) {
-          console.error(`Failed to process sync item ${item.id}:`, error);
-          
-          item.retryCount++;
-          if (item.retryCount >= (item.maxRetries || 3)) {
-            failedItems.push(item.id);
-            // Update sync status to failed for transactions
-            if (item.type === 'transaction') {
-              await this.updateTransactionSyncStatus(item.data.id || item.id, 'failed');
-            }
+      } catch (error) {
+        console.error(`Failed to process sync item ${item.id}:`, error);
+
+        item.retryCount++;
+        if (item.retryCount >= (item.maxRetries || 3)) {
+          failedItems.push(item.id);
+          // Update sync status to failed for transactions
+          if (item.type === 'transaction') {
+            await this.updateTransactionSyncStatus(item.data.id || item.id, 'failed');
           }
         }
+      }
     }
 
     if (processedItems.length > 0) {
       try {
         await batch.commit();
-        
+
         this.syncQueue = this.syncQueue.filter(item => !processedItems.includes(item.id));
         await this.saveSyncQueue();
 
-        this.updateSyncStatus({ 
+        this.updateSyncStatus({
           lastSyncTime: Date.now(),
           pendingItems: this.syncQueue.length,
           failedItems: failedItems.length,
@@ -527,21 +529,21 @@ export class CommonSyncService {
           errors.push(...transactionValidation.errors);
         }
         break;
-      
+
       case 'budget':
         const budgetValidation = this.validationService.validateCommonData(item.data);
         if (!budgetValidation.isValid) {
           errors.push(...budgetValidation.errors);
         }
         break;
-      
+
       case 'account':
         const accountValidation = this.validationService.validateCommonData(item.data);
         if (!accountValidation.isValid) {
           errors.push(...accountValidation.errors);
         }
         break;
-      
+
       case 'goal':
         const goalValidation = this.validationService.validateCommonData(item.data);
         if (!goalValidation.isValid) {
@@ -574,9 +576,9 @@ export class CommonSyncService {
         console.warn('Background Sync is not supported in this browser.');
       }
 
-      this.updateSyncStatus({ 
+      this.updateSyncStatus({
         lastSyncTime: Date.now(),
-        isSyncing: false 
+        isSyncing: false
       });
 
     } catch (error) {
@@ -599,7 +601,7 @@ export class CommonSyncService {
   async getSyncStats(): Promise<SyncStats> {
     const totalProcessed = this.syncQueue.length + this.syncStatus.failedItems + this.syncStatus.invalidItems;
     const successRate = totalProcessed > 0 ? (this.syncQueue.length / totalProcessed) * 100 : 0;
-    
+
     return {
       totalPending: this.syncQueue.length,
       totalFailed: this.syncStatus.failedItems,
@@ -614,7 +616,7 @@ export class CommonSyncService {
    */
   async clearCompletedItems(): Promise<void> {
     try {
-      this.updateSyncStatus({ 
+      this.updateSyncStatus({
         pendingItems: this.syncQueue.length,
         failedItems: 0,
         invalidItems: 0
@@ -647,7 +649,7 @@ export class CommonSyncService {
       await this.storeInCacheStorage(key, cacheItem);
       await this.storeInLocalStorage(key, cacheItem);
       await this.cleanupCache();
-      
+
     } catch (error) {
       console.error('Failed to cache data:', error);
     }
@@ -663,7 +665,7 @@ export class CommonSyncService {
 
     try {
       let cacheItem = await this.getFromCacheStorage<T>(key);
-      
+
       if (!cacheItem) {
         cacheItem = await this.getFromLocalStorage<T>(key);
       }
@@ -748,7 +750,7 @@ export class CommonSyncService {
 
       const allItems = [...cacheStorageItems, ...localStorageItems];
       const uniqueItems = this.deduplicateItems(allItems);
-      
+
       const expiredItems = uniqueItems.filter(item => this.isExpired(item));
       const totalSize = uniqueItems.reduce((sum, item) => sum + item.size, 0);
 
@@ -798,22 +800,22 @@ export class CommonSyncService {
     try {
       const auth = getAuth();
       const currentUser = auth.currentUser;
-      
+
       if (!currentUser) {
         return false;
       }
 
       // Check if user data is cached
-      const cachedUserData = localStorage.getItem(`user-data-${currentUser.uid}`);
+      const cachedUserData = this.localStorageService.getItem(`user-data-${currentUser.uid}`, false);
       if (!cachedUserData) {
         return false;
       }
 
       // Check if app has some cached data
-      const hasCachedData = localStorage.getItem('app-cache-version') || 
-                           localStorage.getItem('transactions-cache') ||
-                           localStorage.getItem('categories-cache');
-      
+      const hasCachedData = this.localStorageService.getItem('app-cache-version', false) ||
+        this.localStorageService.getItem('transactions-cache', false) ||
+        this.localStorageService.getItem('categories-cache', false);
+
       return !!hasCachedData;
     } catch (error) {
       console.error('Error checking offline capability:', error);
@@ -945,7 +947,7 @@ export class CommonSyncService {
   private async cleanupCache(): Promise<void> {
     try {
       const stats = await this.getCacheStats();
-      
+
       const keys = await this.getCacheKeys();
       for (const key of keys) {
         const data = await this.getCachedData(key);
@@ -962,7 +964,7 @@ export class CommonSyncService {
             const priorityOrder = { high: 3, normal: 2, low: 1 };
             const aPriority = priorityOrder[a.priority];
             const bPriority = priorityOrder[b.priority];
-            
+
             if (aPriority !== bPriority) {
               return bPriority - aPriority;
             }
@@ -1025,7 +1027,7 @@ export class CommonSyncService {
    */
   private async storeInLocalStorage(key: string, cacheItem: CacheItem): Promise<void> {
     try {
-      localStorage.setItem(key, JSON.stringify(cacheItem));
+      this.localStorageService.setItem(key, cacheItem);
     } catch (error) {
       console.warn('Failed to store in Local Storage:', error);
     }
@@ -1055,10 +1057,7 @@ export class CommonSyncService {
    */
   private async getFromLocalStorage<T>(key: string): Promise<CacheItem<T> | null> {
     try {
-      const data = localStorage.getItem(key);
-      if (data) {
-        return JSON.parse(data) as CacheItem<T>;
-      }
+      return this.localStorageService.getItem<CacheItem<T>>(key);
     } catch (error) {
       console.warn('Failed to get from Local Storage:', error);
     }
@@ -1084,7 +1083,7 @@ export class CommonSyncService {
    */
   private async removeFromLocalStorage(key: string): Promise<void> {
     try {
-      localStorage.removeItem(key);
+      this.localStorageService.removeItem(key);
     } catch (error) {
       console.warn('Failed to remove from Local Storage:', error);
     }
@@ -1111,7 +1110,7 @@ export class CommonSyncService {
    */
   private async clearLocalStorage(): Promise<void> {
     try {
-      localStorage.clear();
+      this.localStorageService.clear();
     } catch (error) {
       console.warn('Failed to clear Local Storage:', error);
     }
@@ -1126,7 +1125,7 @@ export class CommonSyncService {
         const cache = await caches.open('money-manager-data');
         const keys = await cache.keys();
         const items: CacheItem[] = [];
-        
+
         for (const request of keys) {
           const response = await cache.match(request);
           if (response) {
@@ -1134,7 +1133,7 @@ export class CommonSyncService {
             items.push(data);
           }
         }
-        
+
         return items;
       } catch (error) {
         console.warn('Failed to get all from Cache Storage:', error);
@@ -1148,19 +1147,12 @@ export class CommonSyncService {
    */
   private async getAllFromLocalStorage(): Promise<CacheItem[]> {
     try {
+      const keys = this.localStorageService.getAllKeys();
       const items: CacheItem[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key) {
-          const data = localStorage.getItem(key);
-          if (data) {
-            try {
-              const item = JSON.parse(data);
-              items.push(item);
-            } catch (error) {
-              // Skip invalid JSON
-            }
-          }
+      for (const key of keys) {
+        const item = this.localStorageService.getItem<CacheItem>(key);
+        if (item) {
+          items.push(item);
         }
       }
       return items;
@@ -1191,14 +1183,7 @@ export class CommonSyncService {
    */
   private async getLocalStorageKeys(): Promise<string[]> {
     try {
-      const keys: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key) {
-          keys.push(key);
-        }
-      }
-      return keys;
+      return this.localStorageService.getAllKeys();
     } catch (error) {
       console.warn('Failed to get Local Storage keys:', error);
       return [];
@@ -1210,14 +1195,14 @@ export class CommonSyncService {
    */
   private deduplicateItems(items: CacheItem[]): CacheItem[] {
     const uniqueItems = new Map<string, CacheItem>();
-    
+
     for (const item of items) {
       const existing = uniqueItems.get(item.key);
       if (!existing || item.timestamp > existing.timestamp) {
         uniqueItems.set(item.key, item);
       }
     }
-    
+
     return Array.from(uniqueItems.values());
   }
 
@@ -1238,7 +1223,7 @@ export class CommonSyncService {
           const { transactionId, success } = event.data;
           if (transactionId) {
             this.updateTransactionSyncStatus(
-              transactionId, 
+              transactionId,
               success ? 'synced' : 'failed'
             );
           }

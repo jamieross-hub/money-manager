@@ -170,9 +170,7 @@ export class UserService {
     if (existingGuestData) {
       // Load existing guest profile
       try {
-        guestUser = typeof existingGuestData === 'string'
-          ? JSON.parse(existingGuestData)
-          : existingGuestData;
+        guestUser = existingGuestData;
         console.log('Loaded existing guest user data');
       } catch (error) {
         console.error('Error parsing guest user data, creating new:', error);
@@ -277,12 +275,10 @@ export class UserService {
    */
   private detectSuspiciousActivity(user: any): void {
     const userAgent = navigator.userAgent;
-    const lastLoginInfo = this.storageService.getItem(`last-login-${user.uid}`);
+    const lastLoginInfo = this.storageService.getItem<any>(`last-login-${user.uid}`);
 
     if (lastLoginInfo) {
-      const lastLogin = typeof lastLoginInfo === 'string'
-        ? JSON.parse(lastLoginInfo)
-        : lastLoginInfo;
+      const lastLogin = lastLoginInfo;
       const timeDiff = Date.now() - lastLogin.timestamp;
 
       // Alert if login from different location/device within short time

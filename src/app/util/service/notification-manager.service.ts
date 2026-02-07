@@ -3,6 +3,7 @@ import { FirebaseMessagingService, NotificationPayload } from './firebase-messag
 import { APP_CONFIG } from '../config/config';
 import { environment } from '@env/environment';
 import { CurrencyService } from './currency.service';
+import { LocalStorageService } from './local-storage.service';
 
 export interface NotificationType {
   key: string;
@@ -32,22 +33,23 @@ export class NotificationManagerService {
 
   constructor(
     private messagingService: FirebaseMessagingService,
-    private currencyService: CurrencyService
+    private currencyService: CurrencyService,
+    private localStorageService: LocalStorageService
   ) {
     this.loadSettings();
   }
 
   private loadSettings(): void {
     // Load notification type settings
-    const savedTypes = localStorage.getItem('notification-types');
+    const savedTypes = this.localStorageService.getItem<any>('notification-types');
     if (savedTypes) {
-      this.notificationSettings = JSON.parse(savedTypes);
+      this.notificationSettings = savedTypes;
     }
 
     // Load advanced settings
-    const savedSettings = localStorage.getItem('notification-settings');
+    const savedSettings = this.localStorageService.getItem<any>('notification-settings');
     if (savedSettings) {
-      this.advancedSettings = { ...this.advancedSettings, ...JSON.parse(savedSettings) };
+      this.advancedSettings = { ...this.advancedSettings, ...savedSettings };
     }
   }
 
@@ -377,7 +379,7 @@ export class NotificationManagerService {
    */
   updateNotificationSettings(type: string, enabled: boolean): void {
     this.notificationSettings[type] = enabled;
-    localStorage.setItem('notification-types', JSON.stringify(this.notificationSettings));
+    this.localStorageService.setItem('notification-types', this.notificationSettings);
   }
 
   /**
@@ -385,7 +387,7 @@ export class NotificationManagerService {
    */
   updateAdvancedSettings(setting: string, value: boolean): void {
     this.advancedSettings[setting as keyof typeof this.advancedSettings] = value;
-    localStorage.setItem('notification-settings', JSON.stringify(this.advancedSettings));
+    this.localStorageService.setItem('notification-settings', this.advancedSettings);
   }
 
   /**

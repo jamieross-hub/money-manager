@@ -92,19 +92,9 @@ export class TranslationService {
       console.warn('Error checking user data:', error);
     }
 
-    // Step 3: Try app_language (with direct localStorage fallback for Android)
+    // Step 3: Try app_language
     try {
       let savedLanguage = this.localStorageService.getItem<string>('app_language', false);
-
-      // Android fallback: Try direct localStorage access if service fails
-      if (!savedLanguage && typeof localStorage !== 'undefined') {
-        try {
-          savedLanguage = localStorage.getItem('app_language');
-          console.log('Retrieved app_language via direct localStorage access:', savedLanguage);
-        } catch (directError) {
-          console.warn('Direct localStorage access failed:', directError);
-        }
-      }
 
       if (savedLanguage) {
         const lang = this.normalizeLanguageCode(savedLanguage);
@@ -159,17 +149,7 @@ export class TranslationService {
     this.translateService.use(normalizedLang);
 
     // Try LocalStorageService first
-    const success = this.localStorageService.setItem('app_language', normalizedLang);
-
-    // Android fallback: Try direct localStorage if service fails
-    if (!success && typeof localStorage !== 'undefined') {
-      try {
-        localStorage.setItem('app_language', normalizedLang);
-        console.log('Language saved via direct localStorage access');
-      } catch (error) {
-        console.error('Failed to save language preference:', error);
-      }
-    }
+    this.localStorageService.setItem('app_language', normalizedLang);
   }
 
 

@@ -24,6 +24,7 @@ import { MonthlyTrendsConfig, MonthlyTrend } from '../../../util/components/card
 import { CategoryBreakdownConfig, CategoryBreakdown } from '../../../util/components/cards/category-breakdown-card/category-breakdown-card.component';
 import { QuickActionsFabConfig, QuickAction } from '../../../util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { CurrencyService } from '../../../util/service/currency.service';
+import { LocalStorageService } from '../../../util/service/local-storage.service';
 
 interface CategorySpending {
   category: string;
@@ -416,7 +417,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
     public dateService: DateService,
     private ssrService: SsrService,
     private userService: UserService,
-    private currencyService: CurrencyService
+    private currencyService: CurrencyService,
+    private localStorageService: LocalStorageService
   ) {
     // Initialize selectors
     this.transactions$ = this.store.select(TransactionsSelectors.selectAllTransactions);
@@ -944,14 +946,14 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
   savePreferences(): void {
     // Save to localStorage
-    localStorage.setItem('reports-preferences', JSON.stringify(this.userPreferences));
+    this.localStorageService.setItem('reports-preferences', this.userPreferences);
     this.notificationService.success('Preferences saved successfully');
   }
 
   loadPreferences(): void {
-    const saved = localStorage.getItem('reports-preferences');
+    const saved = this.localStorageService.getItem<UserPreferences>('reports-preferences');
     if (saved) {
-      this.userPreferences = { ...this.userPreferences, ...JSON.parse(saved) };
+      this.userPreferences = { ...this.userPreferences, ...saved };
       this.selectedChartType = this.userPreferences.defaultChartType;
       this.selectedAnalyticsView = this.userPreferences.defaultAnalyticsView;
       this.selectedPeriod = this.userPreferences.defaultPeriod;

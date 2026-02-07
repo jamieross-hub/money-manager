@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map, distinctUntilChanged } from 'rxjs/operators';
 import moment from 'moment';
+import { LocalStorageService } from './local-storage.service';
 
 export interface DateRange {
   startDate: Date;
@@ -104,7 +105,7 @@ export class FilterService {
     distinctUntilChanged()
   );
 
-  constructor() {
+  constructor(private localStorageService: LocalStorageService) {
     // Initialize presets from localStorage
     this.initializePresets();
     // Subscribe to all filter changes to update combined state
@@ -575,18 +576,18 @@ export class FilterService {
 
   private savePresetsToStorage(presets: FilterPreset[]): void {
     try {
-      localStorage.setItem('money-manager-filter-presets', JSON.stringify(presets));
+      this.localStorageService.setItem('money-manager-filter-presets', presets);
     } catch (error) {
-      console.warn('Failed to save filter presets to localStorage:', error);
+      console.warn('Failed to save filter presets to storage:', error);
     }
   }
 
   private loadPresetsFromStorage(): FilterPreset[] {
     try {
-      const stored = localStorage.getItem('money-manager-filter-presets');
-      return stored ? JSON.parse(stored) : this.getDefaultPresets();
+      const stored = this.localStorageService.getItem<FilterPreset[]>('money-manager-filter-presets');
+      return stored ? stored : this.getDefaultPresets();
     } catch (error) {
-      console.warn('Failed to load filter presets from localStorage:', error);
+      console.warn('Failed to load filter presets from storage:', error);
       return this.getDefaultPresets();
     }
   }

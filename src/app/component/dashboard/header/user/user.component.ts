@@ -9,6 +9,7 @@ import { SplitwiseService } from 'src/app/modules/splitwise/services/splitwise.s
 import { ThemeSwitchingService } from 'src/app/util/service/theme-switching.service';
 import { ThemeType } from 'src/app/util/models/theme.model';
 import { take } from 'rxjs';
+import { LocalStorageService } from 'src/app/util/service/local-storage.service';
 
 
 @Component({
@@ -52,7 +53,8 @@ export class UserComponent {
     private router: Router,
     private breakpointObserver: BreakpointObserver,
     private splitwiseService: SplitwiseService,
-    private themeSwitchingService: ThemeSwitchingService
+    private themeSwitchingService: ThemeSwitchingService,
+    private localStorageService: LocalStorageService
   ) {
     this.breakpointObserver.observe(Breakpoints.Handset).subscribe((result) => {
       this.isMobile = result.matches;
@@ -174,7 +176,7 @@ export class UserComponent {
                 </div>
                 <div class="flex justify-between">
                   <span class="text-sm text-gray-600">Last Updated:</span>
-                  <span class="text-sm font-medium">${new Date(localStorage.getItem('app-version') || new Date().toISOString().split('T')[0]).toLocaleDateString()}</span>
+                  <span class="text-sm font-medium">${new Date(this.localStorageService.getItem('app-version') || new Date().toISOString().split('T')[0]).toLocaleDateString()}</span>
                 </div>
               </div>
             </div>
@@ -207,7 +209,7 @@ export class UserComponent {
     };
 
     (window as any).forceAppUpdate = () => {
-      localStorage.setItem('app-version', new Date().toISOString().split('T')[0]);
+      this.localStorageService.setItem('app-version', new Date().toISOString().split('T')[0]);
       this.notificationService.info('App update initiated');
       window.location.reload();
     };

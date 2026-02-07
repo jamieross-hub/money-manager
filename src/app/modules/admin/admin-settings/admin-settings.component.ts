@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { NotificationService } from 'src/app/util/service/notification.service';
+import { LocalStorageService } from 'src/app/util/service/local-storage.service';
 
 export interface AdminSettings {
   appName: string;
@@ -60,7 +61,8 @@ export class AdminSettingsComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private localStorageService: LocalStorageService
   ) {
     this.settingsForm = this.createForm();
   }
@@ -81,19 +83,19 @@ export class AdminSettingsComponent implements OnInit, OnDestroy {
       appVersion: ['1.0.0', [Validators.required]],
       maintenanceMode: [false],
       userRegistrationEnabled: [true],
-      
+
       // Security Settings
       sessionTimeout: [30, [Validators.required, Validators.min(5), Validators.max(120)]],
       maxLoginAttempts: [5, [Validators.required, Validators.min(3), Validators.max(10)]],
       requireEmailVerification: [true],
       enableTwoFactor: [false],
-      
+
       // Notification Settings
       emailNotificationsEnabled: [true],
       pushNotificationsEnabled: [true],
       feedbackNotificationsEnabled: [true],
       adminNotificationsEnabled: [true],
-      
+
       // Performance Settings
       maxFileUploadSize: [5, [Validators.required, Validators.min(1), Validators.max(50)]],
       backupFrequency: ['daily', [Validators.required]],
@@ -108,9 +110,8 @@ export class AdminSettingsComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     try {
       // Load settings from localStorage or API
-      const savedSettings = localStorage.getItem('admin-settings');
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
+      const settings = this.localStorageService.getItem<any>('admin-settings');
+      if (settings) {
         this.settingsForm.patchValue(settings);
       }
     } catch (error) {
@@ -130,10 +131,10 @@ export class AdminSettingsComponent implements OnInit, OnDestroy {
     this.isSaving = true;
     try {
       const settings = this.settingsForm.value;
-      
+
       // Save to localStorage (in real app, save to API)
-      localStorage.setItem('admin-settings', JSON.stringify(settings));
-      
+      this.localStorageService.setItem('admin-settings', settings);
+
       this.notificationService.success('Settings saved successfully');
     } catch (error) {
       console.error('Error saving settings:', error);
