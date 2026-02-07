@@ -224,7 +224,7 @@ export const APP_CONFIG = {
         countryName: 'India',
         currency: CurrencyCode.INR,
         languages: [
-          { code: LanguageCode.IN_EN, name: 'English (India)' },
+          { code: LanguageCode.EN, name: 'English (India)' },
           { code: LanguageCode.HI, name: 'Hindi' }
         ],
         timezones: ['Asia/Kolkata', 'Asia/Calcutta'],
