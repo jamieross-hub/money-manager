@@ -72,7 +72,7 @@ export class CurrencyDetectionUtil {
         return {
             country: countryCode,
             currency: config?.currency || CurrencyCode.INR,
-            language: config?.languages?.[0]?.code || LanguageCode.IN_EN,
+            language: config?.languages?.[0]?.code || LanguageCode.EN,
             timezone: timezone
         };
     }

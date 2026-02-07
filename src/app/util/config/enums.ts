@@ -89,7 +89,6 @@ export enum LanguageCode {
   DE = 'de',
   HI = 'hi',
   ZH = 'zh',
-  IN_EN = 'en-IN',
   // Europe
   IT = 'it',
   NL = 'nl',

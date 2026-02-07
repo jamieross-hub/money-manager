@@ -64,7 +64,7 @@ export const APP_CONFIG = {
   // Regional configuration (Currency and Language)
   REGIONAL: {
     CURRENCY_DEFAULT: CurrencyCode.INR,
-    LANGUAGE_DEFAULT: LanguageCode.IN_EN,
+    LANGUAGE_DEFAULT: LanguageCode.EN,
 
     COUNTRY_MAPPING: {
       // Americas - North

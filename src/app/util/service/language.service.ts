@@ -31,7 +31,9 @@ export class LanguageService {
         this.userService.userAuth$.subscribe(user => {
             // Prioritize country-based settings if country is set in preferences
             if (user?.preferences?.language) {
-                this.setLanguage(user?.preferences?.language);
+                this.setLanguage(user?.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT);
+            }else{
+                this.setLanguage(APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT);
             }
         }
 
