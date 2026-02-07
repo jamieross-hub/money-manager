@@ -1,5 +1,5 @@
-<!-- <app-quick-actions-fab [config]="quickActionsFabConfig"
-	(mainButtonClick)="openAddMobileDialog()"></app-quick-actions-fab> -->
+<app-quick-actions-fab [config]="quickActionsFabConfig" (mainButtonClick)="openAddMobileDialog()"
+	*ngIf="breakpointService.device.isMobile"></app-quick-actions-fab>
 
 <div class="categories-container lg:px-16 xl:px-32 2xl:px-48">
 	<!-- Error Message Display -->
@@ -19,7 +19,8 @@
 				<p class="page-title dark:text-white">Categories</p>
 				<p class="page-description dark:text-slate-400">Manage your budget categories</p>
 			</div>
-			<button mat-flat-button color="primary" class="add-category-btn" (click)="openAddMobileDialog()">
+			<button *ngIf="!breakpointService.device.isMobile" mat-flat-button color="primary" class="add-category-btn"
+				(click)="openAddMobileDialog()">
 				<mat-icon>add</mat-icon>
 				Add Category
 			</button>

@@ -2,46 +2,35 @@
   <div class="flex flex-col space-y-2 md:space-y-3" [ngClass]="animationClass">
     <!-- Single Button Mode (when no actions) -->
     @if (effectiveConfig.actions.length === 0) {
-    <button 
-      mat-fab 
-      [color]="effectiveConfig.mainButtonColor"
-      [ngClass]="getMainButtonClass()"
-      [matTooltip]="effectiveConfig.mainButtonTooltip"
-      (click)="onMainButtonClick()"
+    <button mat-fab [color]="effectiveConfig.mainButtonColor" [ngClass]="getMainButtonClass()"
+      [matTooltip]="effectiveConfig.mainButtonTooltip" (click)="onMainButtonClick()"
       class="shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out">
       <mat-icon>{{ effectiveConfig.mainButtonIcon }}</mat-icon>
     </button>
     }
-    
+
     <!-- Expandable Menu Mode (when actions exist) -->
     @if (effectiveConfig.actions.length > 0) {
     <!-- Main FAB Button -->
-    <button 
-      mat-fab 
-      [color]="effectiveConfig.mainButtonColor"
-      [matTooltip]="isExpanded? 'Close': effectiveConfig.mainButtonTooltip"
-      (click)="toggleExpanded()"
+    <button mat-fab [color]="effectiveConfig.mainButtonColor"
+      [matTooltip]="isExpanded? 'Close': effectiveConfig.mainButtonTooltip" (click)="toggleExpanded()"
       class="shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out">
       <mat-icon>{{ mainButtonIcon }}</mat-icon>
     </button>
-    
+
     <!-- Quick Actions Menu -->
     <div *ngIf="isExpanded" class="flex flex-col space-y-2 md:space-y-3">
       @for (action of effectiveConfig.actions; track action.id) {
       <div class="flex items-center space-x-2 md:space-x-3">
         @if (effectiveConfig.showLabels) {
-        <div class="hidden sm:block bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-lg text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap backdrop-blur-sm border border-gray-200 dark:border-gray-700">
+        <div
+          class="hidden sm:block bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-lg text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap backdrop-blur-sm border border-gray-200 dark:border-gray-700">
           {{ action.label }}
         </div>
         }
-        
-        <button 
-          mat-mini-fab 
-          [color]="action.color"
-          [ngClass]="getActionButtonClass(action)"
-          [matTooltip]="action.tooltip"
-          [disabled]="action.disabled"
-          (click)="onActionClick(action)"
+
+        <button mat-mini-fab [color]="action.color" [ngClass]="getActionButtonClass(action)"
+          [matTooltip]="action.tooltip" [disabled]="action.disabled" (click)="onActionClick(action)"
           class="shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out">
           <mat-icon [class.animate-spin]="action.loading" class="text-sm md:text-base">{{ action.icon }}</mat-icon>
         </button>
@@ -50,4 +39,4 @@
     </div>
     }
   </div>
-</div> 
+</div>

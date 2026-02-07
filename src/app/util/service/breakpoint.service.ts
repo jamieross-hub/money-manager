@@ -2,7 +2,6 @@ import { Injectable } from "@angular/core";
 import { BreakpointObserver } from '@angular/cdk/layout';
 
 interface DeviceType {
-    isMobileSmall: boolean;
     isMobile: boolean;
     isTablePortrait: boolean;
     isTableLandscape: boolean;
@@ -16,7 +15,6 @@ interface DeviceType {
 export class BreakpointService {
 
     public device: DeviceType = {
-        isMobileSmall: false,
         isMobile: false,
         isTablePortrait: false,
         isTableLandscape: false,
@@ -36,8 +34,7 @@ export class BreakpointService {
             .subscribe(result => {
                 const bp = result.breakpoints;
 
-                this.device.isMobileSmall = bp['(max-width: 360px)'];
-                this.device.isMobile = bp['(max-width: 480px)'] && !bp['(max-width: 360px)'];
+                this.device.isMobile = bp['(max-width: 480px)'];
                 this.device.isTablePortrait = bp['(min-width: 481px) and (max-width: 768px)'];
                 this.device.isTableLandscape = bp['(min-width: 769px) and (max-width: 1024px)'];
                 this.device.isLaptop = bp['(min-width: 1025px) and (max-width: 1440px)'];

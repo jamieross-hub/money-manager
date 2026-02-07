@@ -2,12 +2,19 @@
 .quick-actions-fab {
   // Ensure proper stacking context
   isolation: isolate;
+  // height: 0.2rem;
   
   // Prevent text selection
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+
+  .mat-mdc-fab{
+    background-color: var(--surface-500) !important;
+    color: var(--primary-400) !important;
+  }
+  
   
   // Animation classes for dynamic behavior
   .fab-animated {
@@ -52,13 +59,13 @@
   // Responsive button sizes using Tailwind
   @media (max-width: 640px) {
     .mat-fab {
-      width: 56px !important;
-      height: 56px !important;
+      width: 36px !important;
+      height: 36px !important;
     }
     
     .mat-mini-fab {
-      width: 40px !important;
-      height: 40px !important;
+      width: 36px !important;
+      height: 36px !important;
     }
   }
   

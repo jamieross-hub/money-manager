@@ -1,3 +1,5 @@
+<app-quick-actions-fab [config]="quickActionsFabConfig" (mainButtonClick)="addAccount()"
+	*ngIf="breakpointService.device.isMobile"></app-quick-actions-fab>
 <div class="accounts-page fade-in dark:bg-slate-950 lg:px-16 xl:px-32 2xl:px-48">
 	<!-- Header Section -->
 	<header class="page-header max-w-8xl mx-auto">
