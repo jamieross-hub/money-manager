@@ -45,9 +45,14 @@ export class CurrencyDetectionUtil {
                 }
             }
 
-            // Method 2: Try to get from browser language/locale
-            const locale = navigator.language || (navigator as any).userLanguage;
-            if (locale) {
+            // Method 2: Try to get from browser language/locale(s)
+            const locales = [
+                navigator.language,
+                ...(navigator.languages || []),
+                (navigator as any).userLanguage
+            ].filter(Boolean);
+
+            for (const locale of locales) {
                 const countryCode = this.getCountryFromLocale(locale);
                 if (countryCode && this.COUNTRY_CONFIG[countryCode]) {
                     return countryCode;
@@ -69,10 +74,14 @@ export class CurrencyDetectionUtil {
         const config = this.COUNTRY_CONFIG[countryCode];
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
+        // Detect preferred language from config if multiple are available
+        const browserLang = (navigator.language || (navigator as any).userLanguage || '').split(/[_-]/)[0].toLowerCase();
+        const matchedLanguage = config?.languages?.find(lang => lang.code === browserLang);
+
         return {
             country: countryCode,
             currency: config?.currency || CurrencyCode.INR,
-            language: config?.languages?.[0]?.code || LanguageCode.EN,
+            language: (matchedLanguage?.code as LanguageCode) || config?.languages?.[0]?.code || LanguageCode.EN,
             timezone: timezone
         };
     }
@@ -94,7 +103,8 @@ export class CurrencyDetectionUtil {
      * Extract country code from locale string (e.g., "en-US" -> "US")
      */
     private static getCountryFromLocale(locale: string): string | null {
-        const parts = locale.split('-');
+        // Handle both "en-US" and "en_US" formats
+        const parts = locale.split(/[_-]/);
         if (parts.length >= 2) {
             return parts[1].toUpperCase();
         }

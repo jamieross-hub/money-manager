@@ -125,7 +125,7 @@ export class TranslationService {
 
 
   /**
-   * Normalize language code to short format (e.g., 'en-IN' -> 'en')
+   * Normalize language code to short format (e.g., 'en' -> 'en')
    */
   private normalizeLanguageCode(code: string): string {
     if (!code) return 'en';
