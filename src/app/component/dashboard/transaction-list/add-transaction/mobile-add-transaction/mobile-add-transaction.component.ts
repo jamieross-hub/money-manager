@@ -15,6 +15,7 @@ import { DateService } from 'src/app/util/service/date.service';
 import { AppState } from 'src/app/store/app.state';
 import { Store } from '@ngrx/store';
 import * as TransactionsActions from '../../../../../store/transactions/transactions.actions';
+import { loadAccounts } from 'src/app/store/accounts/accounts.actions';
 import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
 import { RecurringInterval, SyncStatus, TransactionStatus, TransactionType, PaymentMethod } from 'src/app/util/config/enums';
@@ -427,6 +428,10 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       data: null, // null for new account
       disableClose: true,
       panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
+    }).afterClosed().subscribe((account: any) => {
+      if (account) {
+        this.store.dispatch(loadAccounts({ userId: this.userId }));
+      }
     });
   }
 
