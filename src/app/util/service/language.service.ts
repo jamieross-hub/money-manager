@@ -4,7 +4,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { APP_CONFIG } from '../config/config';
 import { LanguageCode } from '../config/enums';
 import { UserService } from './db/user.service';
-import { LocalStorageService } from './local-storage.service';
+import { TranslationService } from './translation.service';
 
 @Injectable({
     providedIn: 'root'
@@ -14,48 +14,35 @@ export class LanguageService {
     public currentLanguage$ = this.currentLanguageSubject.asObservable();
 
     constructor(
-        private translate: TranslateService,
+        private translationService: TranslationService,
         private userService: UserService,
-        private localStorageService: LocalStorageService
     ) {
-        // Set default language
-        this.translate.setDefaultLang('en');
-
-        // Initialize language from localStorage or profile
-        // const savedLang = localStorage.getItem('app_language');
-        // if (savedLang) {
-        //     this.setLanguage(savedLang);
-        // } else {
-        //     const browserLang = this.translate.getBrowserLang();
-        //     this.setLanguage(browserLang?.match(/en|hi|fr|de|es|zh/) ? browserLang : 'en');
-        // }
-        this.initializeCurrency();
+        // Initialization is handled by TranslationService via getInitialLanguage()
+        this.syncWithUserPreferences();
     }
 
-    private initializeCurrency(): void {
+    private syncWithUserPreferences(): void {
         this.userService.userAuth$.subscribe(user => {
-            // Prioritize country-based settings if country is set in preferences
             if (user?.preferences?.language) {
-                this.setLanguage(user?.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT);
-            } else {
-                this.setLanguage(APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT);
+                this.translationService.setLanguage(user.preferences.language);
             }
-        }
+        });
 
-
-        )
+        // Sync local currentLanguageSubject with TranslationService
+        this.translationService.getCurrentLanguage().subscribe((lang: string) => {
+            if (this.currentLanguageSubject.value !== lang) {
+                this.currentLanguageSubject.next(lang);
+                // Update HTML lang attribute
+                document.documentElement.lang = lang;
+            }
+        });
     }
 
 
 
 
     setLanguage(lang: string) {
-        this.translate.use(lang);
-        this.currentLanguageSubject.next(lang);
-        this.localStorageService.setItem('app_language', lang);
-
-        // Update HTML lang attribute
-        document.documentElement.lang = lang;
+        this.translationService.setLanguage(lang);
     }
 
     getCurrentLanguage(): string {
