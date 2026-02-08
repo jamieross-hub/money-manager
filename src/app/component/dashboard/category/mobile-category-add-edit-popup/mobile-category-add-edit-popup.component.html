@@ -68,7 +68,9 @@
 									(click)="openIconSelectorDialog()" class="icon-preview-button"
 									[class.active]="categoryForm.get('icon')?.value">
 									<div class="icon-preview">
-										<mat-icon class="selected-icon">{{ categoryForm.get('icon')?.value || 'category'
+										<mat-icon class="selected-icon"
+											[style.color]="categoryForm.get('color')?.value || '#005cbb'">{{
+											categoryForm.get('icon')?.value || 'category'
 											}}</mat-icon>
 										<span class="icon-name">{{ categoryForm.get('icon')?.value || 'category'
 											}}</span>

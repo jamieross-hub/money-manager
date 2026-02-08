@@ -243,7 +243,7 @@ import { CurrencyPipe } from './util/pipes';
     // Enhanced Service Worker with offline support
     ServiceWorkerModule.register('ngsw-worker.js', {
       enabled: !isDevMode(),
-      registrationStrategy: 'registerImmediately',
+      registrationStrategy: 'registerWhenStable:3000',
       scope: './'
     }),
     TranslateModule.forRoot({

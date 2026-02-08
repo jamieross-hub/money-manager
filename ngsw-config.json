@@ -27,17 +27,6 @@
       }
     },
     {
-      "name": "fonts",
-      "installMode": "lazy",
-      "updateMode": "prefetch",
-      "resources": {
-        "urls": [
-          "https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap",
-          "https://fonts.googleapis.com/icon?family=Material+Icons"
-        ]
-      }
-    },
-    {
       "name": "icons",
       "installMode": "prefetch",
       "updateMode": "prefetch",
@@ -56,11 +45,22 @@
           "/assets/i18n/**/*.json"
         ]
       }
+    },
+    {
+      "name": "fonts",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "urls": [
+          "https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap",
+          "https://fonts.googleapis.com/icon?family=Material+Icons"
+        ]
+      }
     }
   ],
   "dataGroups": [
     {
-      "name": "firebase-api",
+      "name": "firebase-api-cache-first",
       "urls": [
         "https://www.googleapis.com/**",
         "https://firestore.googleapis.com/**",
@@ -69,39 +69,39 @@
       ],
       "cacheConfig": {
         "strategy": "performance",
-        "maxSize": 1000,
+        "maxSize": 300,
         "maxAge": "7d",
         "timeout": "1s"
       }
     },
     {
-      "name": "auth-api",
+      "name": "auth-api-network-first",
       "urls": [
         "https://securetoken.googleapis.com/**",
         "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword",
         "https://identitytoolkit.googleapis.com/v1/accounts:signUp"
       ],
       "cacheConfig": {
-        "strategy": "performance",
+        "strategy": "freshness",
         "maxSize": 10,
-        "maxAge": "1h",
-        "timeout": "1s"
+        "maxAge": "10m",
+        "timeout": "5s"
       }
     },
     {
-      "name": "api-cache",
+      "name": "api-cache-first",
       "urls": [
         "/api/**"
       ],
       "cacheConfig": {
         "strategy": "performance",
-        "maxSize": 50,
-        "maxAge": "1h",
+        "maxSize": 100,
+        "maxAge": "24h",
         "timeout": "1s"
       }
     },
     {
-      "name": "static-assets",
+      "name": "static-cdn-cache-first",
       "urls": [
         "https://cdn.jsdelivr.net/**",
         "https://unpkg.com/**"
@@ -120,7 +120,7 @@
       ],
       "cacheConfig": {
         "strategy": "performance",
-        "maxSize": 1000,
+        "maxSize": 100,
         "maxAge": "365d",
         "timeout": "1s"
       }

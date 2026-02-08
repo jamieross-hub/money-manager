@@ -48,7 +48,7 @@
         class="icon-option-custom flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200"
         [class.selected-icon]="selectedIcon === icon" [attr.aria-label]="'Select ' + icon + ' icon'"
         [attr.aria-selected]="selectedIcon === icon">
-        <mat-icon class="text-3xl mb-1.5">{{ icon }}</mat-icon>
+        <mat-icon class="text-3xl mb-1.5 text-primary">{{ icon }}</mat-icon>
         <span class="text-[9px] font-bold uppercase tracking-widest text-gray-400 text-center truncate w-full px-1">{{
           icon.replace('_', ' ') }}</span>
       </button>
