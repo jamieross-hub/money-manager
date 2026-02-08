@@ -262,7 +262,6 @@ import { CurrencyPipe } from './util/pipes';
     provideHttpClient(withInterceptors([securityInterceptor])),
     Papa,
     provideClientHydration(),
-    provideClientHydration(),
     CommonSyncService,
     LocalIndexDBStorageService,
     {
