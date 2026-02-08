@@ -228,6 +228,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         paymentMethod: '',
       });
       this.getRecentTransaction();
+      this.autoSelectSingleAccount();
     }
   }
 
@@ -262,6 +263,14 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     if (amount !== null && amount !== undefined && amount !== '') {
       this.formattedAmount = this.formatCurrency(parseFloat(amount));
     }
+  }
+
+  private autoSelectSingleAccount(): void {
+    this.accountList$.pipe(take(1)).subscribe(accounts => {
+      if (accounts && accounts.length === 1) {
+        this.transactionForm.get('accountId')?.setValue(accounts[0].accountId);
+      }
+    });
   }
 
   private getRecentTransaction(): void {
