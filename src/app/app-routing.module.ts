@@ -8,16 +8,10 @@ import { AdminGuard } from './util/guard/admin.guard';
 import { AccountsComponent } from './component/dashboard/accounts/accounts.component';
 import { CategoryComponent } from './component/dashboard/category/category.component';
 import { HomeComponent } from './component/dashboard/home/home.component';
-import { ReportsComponent } from './component/dashboard/reports/reports.component';
-import { TransactionListComponent } from './component/dashboard/transaction-list/transaction-list.component';
-import { LandingComponent } from './component/landing/landing.component';
-import { TaxComponent } from './component/dashboard/tax/tax.component';
 import { SubscriptionComponent } from './component/dashboard/subscription/subscription.component';
 import { GoalsComponent } from './component/dashboard/goals/goals.component';
-import { GoogleSheetsComponent } from './component/dashboard/google-sheets/google-sheets.component';
-import { OpenaiInteractionComponent } from './component/dashboard/openai-interaction/openai-interaction.component';
-
-import { BudgetsComponent } from './component/dashboard/budgets/budgets.component';
+import { TransactionListComponent } from './component/dashboard/transaction-list/transaction-list.component';
+import { LandingComponent } from './component/landing/landing.component';
 import { NotesComponent } from './component/dashboard/notes/notes.component';
 import { ImportTransactionsComponent } from './component/dashboard/transaction-list/add-transaction';
 import { ProfileComponent } from './component/dashboard/profile/profile.component';
@@ -30,8 +24,6 @@ import { OfflinePageComponent } from './util/components/offline-page/offline-pag
 import { DataDeletionComponent } from './component/data-deletion/data-deletion.component';
 import { ContactFormComponent } from './component/landing/contact-form/contact-form.component';
 import { SyncToCloudComponent } from './component/sync-to-cloud/sync-to-cloud.component';
-import { LoanCalculatorComponent } from './component/dashboard/tools/loan-calculator/loan-calculator.component';
-import { BackupRestoreComponent } from './component/dashboard/settings/backup-restore/backup-restore.component';
 
 export const routes: Routes = [
   { path: 'shell', component: AppShellComponent },
@@ -75,26 +67,10 @@ export const routes: Routes = [
         }
       },
       {
-        path: 'reports',
-        component: ReportsComponent,
-        data: {
-          roles: ['premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
         path: 'transactions',
         component: TransactionListComponent,
         data: {
           roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'tax',
-        component: TaxComponent,
-        data: {
-          roles: ['premium', 'admin'],
           requireEmailVerification: true
         }
       },
@@ -117,30 +93,6 @@ export const routes: Routes = [
       {
         path: 'splitwise',
         loadChildren: () => import('./modules/splitwise/splitwise.module').then(m => m.SplitwiseModule),
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'google-sheets',
-        component: GoogleSheetsComponent,
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'openai-interaction',
-        component: OpenaiInteractionComponent,
-        data: {
-          roles: ['premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'budgets',
-        component: BudgetsComponent,
         data: {
           roles: ['free', 'premium', 'admin'],
           requireEmailVerification: true
@@ -187,20 +139,8 @@ export const routes: Routes = [
         }
       },
       {
-        path: 'loan-calculator',
-        component: LoanCalculatorComponent,
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'backup-restore',
-        component: BackupRestoreComponent,
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
-        }
+        path: '',
+        loadChildren: () => import('./modules/features/features.module').then(m => m.FeaturesModule)
       }
     ]
   },

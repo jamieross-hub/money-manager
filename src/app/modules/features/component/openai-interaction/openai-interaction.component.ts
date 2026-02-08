@@ -2,11 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { UserService } from 'src/app/util/service/db/user.service';
-import { OpenaiService } from 'src/app/util/service/ai-chat/openai.service';
+import { OpenaiService } from '../../../../util/service/ai-chat/openai.service';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import { updatePreferences } from 'src/app/store/profile/profile.actions';
-import { User } from 'src/app/util/models';
+import { User } from '../../../../util/models';
 
 @Component({
   selector: 'app-openai-interaction',

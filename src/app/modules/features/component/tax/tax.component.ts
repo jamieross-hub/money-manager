@@ -2,14 +2,14 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription, take } from 'rxjs';
-import { Transaction } from '../../../util/models/transaction.model';
-import { TaxService, TaxCalculation } from '../../../util/service/tax.service';
-import { NotificationService } from '../../../util/service/notification.service';
+import { Transaction } from '../../../../util/models/transaction.model';
+import { TaxService, TaxCalculation } from '../../../../util/service/tax.service';
+import { NotificationService } from '../../../../util/service/notification.service';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
-import * as TransactionsSelectors from '../../../store/transactions/transactions.selectors';
+import * as TransactionsSelectors from '../../../../store/transactions/transactions.selectors';
 import { UserService } from 'src/app/util/service/db/user.service';
-import { CurrencyService } from '../../../util/service/currency.service';
+import { CurrencyService } from '../../../../util/service/currency.service';
 
 @Component({
   selector: 'app-tax',

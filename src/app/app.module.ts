@@ -57,7 +57,7 @@ import { SignInComponent } from './component/auth/sign-in/sign-in.component';
 import { DashboardComponent } from './component/dashboard/dashboard.component';
 import { UserComponent } from './component/dashboard/header/user/user.component';
 import { AccountsComponent } from './component/dashboard/accounts/accounts.component';
-import { BudgetsComponent } from './component/dashboard/budgets/budgets.component';
+
 import { GoalsComponent } from './component/dashboard/goals/goals.component';
 import { SubscriptionComponent } from './component/dashboard/subscription/subscription.component';
 import { CategoryComponent } from './component/dashboard/category/category.component';
@@ -65,8 +65,6 @@ import { CategoryCardComponent } from './component/dashboard/category/category-c
 import { LoaderComponent } from './util/components/loader/loader.component';
 import { HomeComponent } from './component/dashboard/home/home.component';
 import { ImportTransactionsComponent } from './component/dashboard/transaction-list/add-transaction/import-transactions.component';
-import { ReportsComponent } from './component/dashboard/reports/reports.component';
-import { TaxComponent } from './component/dashboard/tax/tax.component';
 import { NotesComponent } from './component/dashboard/notes/notes.component';
 import { LanguageSwitcherComponent } from './util/components/language-switcher/language-switcher.component';
 import { ThemeToggleComponent } from './util/components/theme-toggle/theme-toggle.component';
@@ -88,15 +86,12 @@ import { CustomDateRangeDialogComponent } from './util/components/custom-date-ra
 import { ProfileComponent } from './component/dashboard/profile/profile.component';
 import { FeedbackComponent } from './component/feedback/feedback.component';
 import { PrivacyPolicyComponent } from './component/privacy-policy/privacy-policy.component';
-import { GoogleSheetsComponent } from './component/dashboard/google-sheets/google-sheets.component';
-import { OpenaiInteractionComponent } from './component/dashboard/openai-interaction/openai-interaction.component';
 import { ChatCategoryDropdownComponent } from './util/components/chat-category-dropdown/chat-category-dropdown.component';
 import { ContactFormComponent } from './component/landing/contact-form/contact-form.component';
 import { ChatComponent } from './component/dashboard/chat/chat.component';
 import { DataDeletionComponent } from './component/data-deletion/data-deletion.component';
 import { SyncToCloudComponent } from './component/sync-to-cloud/sync-to-cloud.component';
 import { CategorySelectionSheetComponent } from './component/dashboard/transaction-list/add-transaction/mobile-add-transaction/category-selection-sheet/category-selection-sheet.component';
-import { BackupRestoreComponent } from './component/dashboard/settings/backup-restore/backup-restore.component';
 
 // Card Components
 import { TopCategoriesCardComponent } from './util/components/cards/top-categories-card/top-categories-card.component';
@@ -158,15 +153,13 @@ import { CurrencyPipe } from './util/pipes';
     DashboardComponent,
     UserComponent,
     AccountsComponent,
-    BudgetsComponent,
+
     GoalsComponent,
     SubscriptionComponent,
     CategoryComponent,
     CategoryCardComponent,
     HomeComponent,
     ImportTransactionsComponent,
-    ReportsComponent,
-    TaxComponent,
     NotesComponent,
     LanguageSwitcherComponent,
     ThemeToggleComponent,
@@ -192,16 +185,12 @@ import { CurrencyPipe } from './util/pipes';
     FeedbackComponent,
     PrivacyPolicyComponent,
     TermsConditionsComponent,
-    GoogleSheetsComponent,
-    OpenaiInteractionComponent,
     ChatCategoryDropdownComponent,
     ChatComponent,
     ContactFormComponent,
-    ContactFormComponent,
     DataDeletionComponent,
     SyncToCloudComponent,
-    CategorySelectionSheetComponent,
-    BackupRestoreComponent
+    CategorySelectionSheetComponent
   ],
   imports: [
     BrowserModule,
@@ -226,15 +215,6 @@ import { CurrencyPipe } from './util/pipes';
     // Splitwise Module
     SplitwiseModule,
 
-    // Card Components
-    TopCategoriesCardComponent,
-    KeyMetricsSummaryCardComponent,
-    AnalyticsSummaryCardComponent,
-    RecentActivityCardComponent,
-    MonthlyTrendsCardComponent,
-    CategoryBreakdownCardComponent,
-    UpcomingTransactionsCardComponent,
-    MonthlyExpenditureCardComponent,
 
     // Floating Action Button Components
     QuickActionsFabComponent,
