@@ -2,7 +2,6 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
 
 // Angular Material Modules
 import { MatCardModule } from '@angular/material/card';
@@ -52,24 +51,6 @@ import { SafeHtmlPipe } from 'src/app/util/pipes/safe-html.pipe';
 // import { TranslatePipe } from 'src/app/util/pipes/translate.pipe';
 import { FinancialMetricsCardComponent } from 'src/app/util/components/cards/financial-metrics-card/financial-metrics-card.component';
 import { LoanSummaryCardComponent } from '../../util/components/cards/loan-summary-card/loan-summary-card.component';
-import { HeaderComponent } from '../../component/dashboard/header/header.component';
-import { SideBarComponent } from '../../component/dashboard/side-bar/side-bar.component';
-import { UserComponent } from '../../component/dashboard/header/user/user.component';
-import { FooterComponent } from '../../component/dashboard/footer/footer.component';
-import { LanguageSwitcherComponent } from '../../util/components/language-switcher/language-switcher.component';
-import { ThemeToggleComponent } from '../../util/components/theme-toggle/theme-toggle.component';
-import { PreLoginHeaderComponent } from '../../component/landing/pre-login-header/pre-login-header.component';
-import { PreFooterComponent } from '../../component/landing/pre-footer/pre-footer.component';
-
-// Standalone Cards
-import { MonthlyExpenditureCardComponent } from '../../util/components/cards/monthly-expenditure-card/monthly-expenditure-card.component';
-import { RecentActivityCardComponent } from '../../util/components/cards/recent-activity-card/recent-activity-card.component';
-import { MonthlyTrendsCardComponent } from '../../util/components/cards/monthly-trends-card/monthly-trends-card.component';
-import { TopCategoriesCardComponent } from '../../util/components/cards/top-categories-card/top-categories-card.component';
-import { CategoryBreakdownCardComponent } from '../../util/components/cards/category-breakdown-card/category-breakdown-card.component';
-import { UpcomingTransactionsCardComponent } from '../../util/components/cards/upcoming-transactions-card/upcoming-transactions-card.component';
-import { QuickActionsFabComponent } from '../../util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
-import { TotalBalanceComponent } from '../../util/components/cards/total-balance/total-balance.component';
 
 @NgModule({
   declarations: [
@@ -79,16 +60,7 @@ import { TotalBalanceComponent } from '../../util/components/cards/total-balance
     CommonBodyContentComponent,
     CategorySplitDialogComponent,
     BudgetCardComponent,
-    AccountSummaryCardComponent,
-    HeaderComponent,
-    SideBarComponent,
-    UserComponent,
-    FooterComponent,
-    LanguageSwitcherComponent,
-    ThemeToggleComponent,
-    PreLoginHeaderComponent,
-    PreFooterComponent,
-    TotalBalanceComponent
+    AccountSummaryCardComponent
   ],
   imports: [
     CommonModule,
@@ -135,22 +107,11 @@ import { TotalBalanceComponent } from '../../util/components/cards/total-balance
     MatSliderModule,
     MatStepperModule,
     MatBottomSheetModule,
-
-    // Standalone Components
-    MonthlyExpenditureCardComponent,
-    RecentActivityCardComponent,
-    MonthlyTrendsCardComponent,
-    TopCategoriesCardComponent,
-    CategoryBreakdownCardComponent,
-    UpcomingTransactionsCardComponent,
-    QuickActionsFabComponent,
-    RouterModule
   ],
   exports: [
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    RouterModule,
 
     // Material Modules
     MatCardModule,
@@ -197,22 +158,6 @@ import { TotalBalanceComponent } from '../../util/components/cards/total-balance
     AnalyticsSummaryCardComponent,
     FinancialMetricsCardComponent,
     LoanSummaryCardComponent,
-    MonthlyExpenditureCardComponent,
-    RecentActivityCardComponent,
-    MonthlyTrendsCardComponent,
-    TopCategoriesCardComponent,
-    CategoryBreakdownCardComponent,
-    UpcomingTransactionsCardComponent,
-    QuickActionsFabComponent,
-    HeaderComponent,
-    SideBarComponent,
-    UserComponent,
-    FooterComponent,
-    LanguageSwitcherComponent,
-    ThemeToggleComponent,
-    PreLoginHeaderComponent,
-    PreFooterComponent,
-    TotalBalanceComponent,
 
     // Pipes
     CurrencyPipe,
