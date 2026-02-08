@@ -10,7 +10,7 @@ import { AppShellComponent } from './app-shell/app-shell.component';
 
 
 @NgModule({
-  declarations: [AppShellComponent],
+  declarations: [],
   imports: [
     AppModule,
     ServerModule,

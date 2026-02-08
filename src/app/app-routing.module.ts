@@ -35,174 +35,23 @@ import { BackupRestoreComponent } from './component/dashboard/settings/backup-re
 
 export const routes: Routes = [
   { path: 'shell', component: AppShellComponent },
-  { path: 'feedback', component: ContactFormComponent },
-  { path: 'landing', component: LandingComponent },
-  { path: 'privacy-policy', component: PrivacyPolicyComponent },
-  { path: 'terms-conditions', component: TermsConditionsComponent },
-  { path: 'offline', component: OfflinePageComponent },
-  { path: 'data-deletion', component: DataDeletionComponent },
-  { path: 'sign-in', component: SignInComponent },
-  { path: 'sign-up', component: SignInComponent },
-  { path: 'register', component: RegistrationComponent },
 
   {
+    path: '',
+    loadChildren: () => import('./modules/landing/landing.module').then(m => m.LandingModule)
+  },
+  {
+    path: '',
+    loadChildren: () => import('./modules/auth/auth.module').then(m => m.AuthModule)
+  },
+  {
     path: 'dashboard',
-    component: DashboardComponent,
     canActivate: [AuthGuard],
+    loadChildren: () => import('./modules/dashboard/dashboard.module').then(m => m.DashboardModule),
     data: {
       requireEmailVerification: true,
       requireActiveSession: true
-    },
-
-    children: [
-      { path: '', component: HomeComponent },
-      { path: 'sync-to-cloud', component: SyncToCloudComponent },
-      { path: 'home', component: HomeComponent },
-      {
-        path: 'accounts',
-        component: AccountsComponent,
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'category',
-        component: CategoryComponent,
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'reports',
-        component: ReportsComponent,
-        data: {
-          roles: ['premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'transactions',
-        component: TransactionListComponent,
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'tax',
-        component: TaxComponent,
-        data: {
-          roles: ['premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'subscription',
-        component: SubscriptionComponent,
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'goals',
-        component: GoalsComponent,
-        data: {
-          roles: ['premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'splitwise',
-        loadChildren: () => import('./modules/splitwise/splitwise.module').then(m => m.SplitwiseModule),
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'google-sheets',
-        component: GoogleSheetsComponent,
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'openai-interaction',
-        component: OpenaiInteractionComponent,
-        data: {
-          roles: ['premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'budgets',
-        component: BudgetsComponent,
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'notes',
-        component: NotesComponent,
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'import',
-        component: ImportTransactionsComponent,
-        data: {
-          roles: ['premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'profile',
-        component: ProfileComponent,
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'notifications',
-        component: NotificationSettingsComponent,
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'feedback',
-        component: FeedbackComponent,
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'loan-calculator',
-        component: LoanCalculatorComponent,
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
-        }
-      },
-      {
-        path: 'backup-restore',
-        component: BackupRestoreComponent,
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
-        }
-      }
-    ]
+    }
   },
 
   // Admin routes - Lazy loaded
