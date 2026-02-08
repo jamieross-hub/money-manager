@@ -1,12 +1,13 @@
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import {
   MAT_DIALOG_DATA,
   MatDialog,
   MatDialogRef,
 } from '@angular/material/dialog';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { Router } from '@angular/router';
 import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
@@ -21,8 +22,10 @@ import { createCategory, updateCategory } from 'src/app/store/categories/categor
 import { SsrService } from 'src/app/util/service/ssr.service';
 import { Category } from 'src/app/util/models';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
-import { Subject, takeUntil, Observable } from 'rxjs';
+import { Subject, takeUntil, Observable, of } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
+import { BreakpointService } from 'src/app/util/service/breakpoint.service';
+import { CATEGORY_ICONS, CATEGORY_COLORS } from 'src/app/util/config/config';
 
 @Component({
   selector: 'app-mobile-category-add-edit-popup',
@@ -37,6 +40,12 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
   destroy$: Subject<void>;
   public filteredGroups$!: Observable<string[]>;
   public existingGroups: string[] = [];
+  public availableIcons = CATEGORY_ICONS;
+  public iconFilterCtrl = new FormControl('');
+  public filteredIcons$!: Observable<string[]>;
+  public availableColors = CATEGORY_COLORS;
+  public colorFilterCtrl = new FormControl('');
+  public filteredColors$!: Observable<{ label: string; value: string }[]>;
 
 
 
@@ -50,7 +59,8 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
     private router: Router,
     private hapticFeedback: HapticFeedbackService,
     private dialog: MatDialog,
-
+    private bottomSheet: MatBottomSheet,
+    public breakpointService: BreakpointService,
     private validationService: ValidationService,
     private ssrService: SsrService,
     private userService: UserService
@@ -59,7 +69,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
       name: ['', this.validationService.getCategoryNameValidators()],
       type: ['expense', Validators.required],
       icon: ['category', Validators.required],
-      color: ['#46777f', Validators.required],
+      color: ['#10B981', Validators.required],
       group: [''], // Add group control
     });
 
@@ -79,6 +89,19 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
       startWith(''),
       map(value => this._filterGroups(value || ''))
     );
+
+    // Setup icon autocomplete
+    this.filteredIcons$ = this.iconFilterCtrl.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filterIcons(value || ''))
+    );
+
+    // Setup color autocomplete
+    this.filteredColors$ = this.colorFilterCtrl.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filterColors(value || ''))
+    );
+
     if (this.ssrService.isClientSide()) {
       // Handle browser back button
       window.addEventListener('popstate', (event) => {
@@ -93,7 +116,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
         name: this.dialogData.category.name,
         type: this.dialogData.category.type,
         icon: this.dialogData.category.icon || 'category',
-        color: this.dialogData.category.color || '#46777f',
+        color: (this.dialogData.category.color || '#10B981').toUpperCase(),
         group: this.dialogData.category.group || '',
       });
 
@@ -172,19 +195,13 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
   }
 
   openIconSelectorDialog(): void {
-    this.dialog
+    this.bottomSheet
       .open(IconSelectorDialogComponent, {
-        width: '90vw',
-        maxWidth: '500px',
-        height: '80vh',
-        maxHeight: '600px',
         data: {
           currentIcon: this.categoryForm.get('icon')?.value,
         },
-        disableClose: false,
-        autoFocus: false,
       })
-      .afterClosed()
+      .afterDismissed()
       .subscribe((selectedIcon: string) => {
         if (selectedIcon) {
           this.categoryForm.patchValue({ icon: selectedIcon });
@@ -194,29 +211,40 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
   }
 
   openColorSelectorDialog(): void {
-    const dialogRef = this.dialog.open(ColorSelectorDialogComponent, {
-      width: '90vw',
-      maxWidth: '500px',
-      height: '80vh',
-      maxHeight: '600px',
-      data: {
-        currentColor: this.categoryForm.get('color')?.value,
-      },
-      disableClose: false,
-      autoFocus: false,
-    });
-
-    dialogRef.afterClosed().subscribe((selectedColor: string) => {
-      if (selectedColor) {
-        this.categoryForm.patchValue({ color: selectedColor });
-        this.hapticFeedback.lightVibration();
-      }
-    });
+    this.bottomSheet
+      .open(ColorSelectorDialogComponent, {
+        data: {
+          currentColor: this.categoryForm.get('color')?.value,
+        },
+      })
+      .afterDismissed()
+      .subscribe((selectedColor: string) => {
+        if (selectedColor) {
+          this.categoryForm.patchValue({ color: selectedColor.toUpperCase() });
+          this.hapticFeedback.lightVibration();
+        }
+      });
   }
 
   private _filterGroups(value: string): string[] {
     const filterValue = value.toLowerCase();
     return this.existingGroups.filter(group => group.toLowerCase().includes(filterValue));
+  }
+
+  private _filterIcons(value: string): string[] {
+    const filterValue = value.toLowerCase();
+    return this.availableIcons.filter(icon => icon.toLowerCase().includes(filterValue));
+  }
+
+  private _filterColors(value: string): { label: string; value: string }[] {
+    const filterValue = value.toLowerCase();
+    return this.availableColors.filter(color => color.label.toLowerCase().includes(filterValue));
+  }
+
+  getColorLabel(value: string): string {
+    if (!value) return '';
+    const color = this.availableColors.find(c => c.value.toUpperCase() === value.toUpperCase());
+    return color ? color.label : value;
   }
 
   isCategoryPresent(): boolean {

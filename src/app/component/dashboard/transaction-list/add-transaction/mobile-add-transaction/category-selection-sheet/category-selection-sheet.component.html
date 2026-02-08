@@ -12,7 +12,7 @@
         </div> -->
 
         <!-- Search Bar -->
-        <mat-form-field appearance="outline" class="w-full search-field">
+        <mat-form-field appearance="fill" class="w-full search-field">
             <mat-icon matPrefix class="text-gray-400 mr-2">search</mat-icon>
             <input matInput [formControl]="searchControl" placeholder="Search categories...">
             <button *ngIf="searchControl.value" matSuffix mat-icon-button aria-label="Clear"

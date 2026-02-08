@@ -1,339 +1,113 @@
-// Minimalistic Icon Selector Dialog
-.icon-selector-dialog {
+.bottom-sheet-container {
+  background: var(--background-200);
+  border-radius: 24px 24px 0 0;
+
+}
+
+.icons-grid-custom {
   display: flex;
-  flex-direction: column;
-  height: 100%;
-  max-height: 90vh;
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 32px;
+  justify-content: flex-start;
+}
 
-  @media (max-width: 640px) {
-    height: 100vh;
-    max-height: 100vh;
-    border-radius: 0;
+.icon-option-custom {
+  flex: 0 0 calc(33% - 9px); // 4 items per row, accounting for gap
+  max-width: calc(33% - 9px);
+  cursor: pointer;
+  background: white;
+  min-height: 80px; 
+  border: 1.5px solid #f3f4f6;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  @media (min-width: 400px) {
+    flex: 0 0 calc(20% - 10px); // 5 items per row
+    max-width: calc(20% - 10px);
+  }
+
+  @media (min-width: 640px) {
+    flex: 0 0 calc(16.66% - 10px); // 6 items per row
+    max-width: calc(16.66% - 10px);
+  }
+
+  &.selected-icon {
+    background-color: var(--primary-50) !important;
+    border-color: var(--primary-500) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2);
+    z-index: 1;
+    
+    mat-icon {
+      color: var(--primary-600) !important;
+      transform: scale(1.1);
+    }
+
+    span {
+      color: var(--primary-700) !important;
+      font-weight: 600;
+    }
+
+    :host-context(.dark-theme) & {
+      background-color: rgba(67, 121, 142, 0.15) !important;
+      border-color: #43798e !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      
+      mat-icon, span {
+        color: #79a5b6 !important;
+      }
+    }
+  }
+
+  &:hover:not(.selected-icon) {
+    background-color: #f9fafb;
+    border-color: #e5e7eb;
+    :host-context(.dark-theme) & {
+      background-color: #1f2937;
+      border-color: #374151;
+    }
+  }
+
+  &:active {
+    transform: scale(0.92);
+  }
+
+  :host-context(.dark-theme) & {
+    background: #1f2937;
+    border: 1.5px solid #374151;
+    box-shadow: none;
+
+    mat-icon {
+      color: #9ca3af;
+    }
+  }
+
+  mat-icon {
+    transition: all 0.2s ease;
+    font-size: 2rem;
+    width: 32px;
+    height: 32px;
   }
 }
 
-// Clean Header
-.dialog-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #f1f5f9;
-  background: white;
-
-  @media (max-width: 640px) {
-    padding: 1rem;
-  }
-
-  .dialog-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0;
-  }
-
-  .close-button {
-    color: #64748b;
-    min-width: 40px;
-    min-height: 40px;
-    border-radius: 8px;
-
-    &:hover {
-      color: #334155;
-      background: #f8fafc;
-    }
-  }
-}
-
-// Minimalistic Search
-.search-container {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #f1f5f9;
-  background: white;
-
-  @media (max-width: 640px) {
-    padding: 0.75rem 1rem;
-  }
-
-  .search-input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-
-    .search-icon {
-      position: absolute;
-      left: 0.75rem;
-      color: #94a3b8;
-      font-size: 1.125rem;
-      width: 1.125rem;
-      height: 1.125rem;
-      pointer-events: none;
-    }
-
-    .search-input {
-      width: 100%;
-      padding: 0.75rem 0.75rem 0.75rem 2.25rem;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 0.875rem;
-      background: #f8fafc;
-      transition: all 0.2s ease;
-      min-height: 40px;
-
-      @media (max-width: 640px) {
-        min-height: 44px;
-        font-size: 16px;
-      }
-
-      &:focus {
-        outline: none;
-        border-color: #3b82f6;
-        background: white;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-      }
-
-      &::placeholder {
-        color: #94a3b8;
-      }
-    }
-
-    .clear-search-button {
-      position: absolute;
-      right: 0.5rem;
-      color: #94a3b8;
-      min-width: 28px;
-      min-height: 28px;
-      border-radius: 6px;
-
-      &:hover {
-        color: #64748b;
-        background: #f1f5f9;
-      }
-    }
-  }
-}
-
-// Clean Icons Container
-.icons-container {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1rem 1.5rem;
-  background: #fafafa;
-
-  @media (max-width: 640px) {
-    padding: 0.75rem 1rem;
-  }
-
-  // Subtle scrollbar
+// Custom scrollbar
+.overflow-y-auto {
+  scroll-behavior: smooth;
+  
   &::-webkit-scrollbar {
-    width: 4px;
+    width: 5px;
   }
-
   &::-webkit-scrollbar-track {
     background: transparent;
   }
-
   &::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 2px;
-
-    &:hover {
-      background: #94a3b8;
+    background: #d1d5db;
+    border-radius: 10px;
+  }
+  
+  :host-context(.dark-theme) & {
+    &::-webkit-scrollbar-thumb {
+      background: #4b5563;
     }
   }
-
-  .no-results {
-    text-align: center;
-    padding: 3rem 1rem;
-
-    .no-results-icon {
-      font-size: 2.5rem;
-      width: 2.5rem;
-      height: 2.5rem;
-      color: #94a3b8;
-      margin-bottom: 0.75rem;
-    }
-
-    .no-results-text {
-      color: #64748b;
-      font-size: 0.875rem;
-      margin: 0 0 1rem 0;
-    }
-
-    .clear-search-btn {
-      min-height: 36px;
-      padding: 0.5rem 1rem;
-      font-size: 0.875rem;
-    }
-  }
-
-  .icons-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-    gap: 0.5rem;
-
-    // Desktop: Show icon names with larger grid
-    @media (min-width: 768px) {
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-      gap: 0.75rem;
-    }
-
-    @media (max-width: 640px) {
-      grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
-      gap: 0.5rem;
-    }
-
-    @media (max-width: 480px) {
-      grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
-      gap: 0.5rem;
-    }
-
-    .icon-option {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 0.75rem;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      background: white;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      min-height: 72px;
-      text-decoration: none;
-
-      // Desktop: Show icon names with larger height
-      @media (min-width: 768px) {
-        min-height: 90px;
-        padding: 0.75rem 0.5rem;
-        justify-content: space-between;
-      }
-
-      @media (max-width: 640px) {
-        min-height: 64px;
-        padding: 0.5rem;
-      }
-
-      @media (max-width: 480px) {
-        min-height: 56px;
-        padding: 0.5rem;
-      }
-
-      &:hover {
-        border-color: #3b82f6;
-        background: #f0f9ff;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
-      }
-
-      &.selected {
-        border-color: #3b82f6;
-        background: #dbeafe;
-        color: #1d4ed8;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
-      }
-
-      .icon {
-        font-size: 1.75rem;
-        width: 1.75rem;
-        height: 1.75rem;
-        color: inherit;
-
-        @media (min-width: 768px) {
-          font-size: 2rem;
-          width: 2rem;
-          height: 2rem;
-          margin-bottom: 0.25rem;
-        }
-
-        @media (max-width: 640px) {
-          font-size: 1.5rem;
-          width: 1.5rem;
-          height: 1.5rem;
-        }
-
-        @media (max-width: 480px) {
-          font-size: 1.25rem;
-          width: 1.25rem;
-          height: 1.25rem;
-        }
-      }
-
-      .icon-name {
-        // Hide on mobile, show on desktop
-        display: none;
-        font-size: 0.75rem;
-        font-weight: 500;
-        color: #64748b;
-        text-align: center;
-        word-break: break-word;
-        line-height: 1.2;
-        text-transform: capitalize;
-        margin-top: 0.25rem;
-
-        // Show on desktop
-        @media (min-width: 768px) {
-          display: block;
-        }
-
-        // Selected state
-        .icon-option.selected & {
-          color: #1d4ed8;
-          font-weight: 600;
-        }
-      }
-    }
-  }
-}
-
-// Minimal Actions
-.dialog-actions {
-  display: flex;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #f1f5f9;
-  background: white;
-
-  @media (max-width: 640px) {
-    padding: 0.75rem 1rem;
-  }
-
-  .cancel-button {
-    width: 100%;
-    min-height: 40px;
-    padding: 0.75rem 1.5rem;
-    font-weight: 500;
-    color: #64748b;
-    border-color: #e2e8f0;
-
-    @media (max-width: 640px) {
-      min-height: 44px;
-    }
-
-    &:hover {
-      color: #334155;
-      border-color: #cbd5e1;
-      background: #f8fafc;
-    }
-  }
-}
-
-// Smooth entrance animation
-@keyframes fadeInUp {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.icon-selector-dialog {
-  animation: fadeInUp 0.2s ease-out;
 }

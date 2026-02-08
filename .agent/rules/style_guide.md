@@ -41,5 +41,7 @@ Follow a **Mobile-First** approach.
 - **Primary Library**: Use **Angular Material** for all interactive components (Buttons, Inputs, Dialogs, Sidebars, Icons).
     - Example: `<button mat-button color="primary">` instead of `<button class="bg-primary...">`.
     - Example: `<mat-icon>` for icons.
+- **Form Fields**:
+    - **Rule**: Always use `appearance="fill"` for `<mat-form-field>`. This ensures visual consistency across the application.
 - **Styling Material**: Use Tailwind utility classes to handle **layout, spacing, and sizing** of Material components.
     - Example: `<button mat-raised-button class="w-full mt-4">Login</button>`

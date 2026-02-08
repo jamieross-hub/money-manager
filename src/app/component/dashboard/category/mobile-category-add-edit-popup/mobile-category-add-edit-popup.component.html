@@ -36,12 +36,12 @@
 							Category Type *
 						</label>
 						<div class="type-selector">
-							<button type="button" (click)="selectType('expense')" class="type-option"
+							<button type="button" (click)="selectType('expense')" class="type-option expense"
 								[class.selected]="categoryForm.get('type')?.value === 'expense'">
 								<mat-icon>trending_down</mat-icon>
 								<span>Expense</span>
 							</button>
-							<button type="button" (click)="selectType('income')" class="type-option"
+							<button type="button" (click)="selectType('income')" class="type-option income"
 								[class.selected]="categoryForm.get('type')?.value === 'income'">
 								<mat-icon>trending_up</mat-icon>
 								<span>Income</span>
@@ -62,15 +62,45 @@
 							Category Icon *
 						</label>
 						<div class="icon-selector">
-							<button type="button" (click)="openIconSelectorDialog()" class="icon-preview-button"
-								[class.active]="categoryForm.get('icon')?.value">
-								<div class="icon-preview">
-									<mat-icon class="selected-icon">{{ categoryForm.get('icon')?.value || 'category'
-										}}</mat-icon>
-									<span class="icon-name">{{ categoryForm.get('icon')?.value || 'category' }}</span>
-								</div>
-								<mat-icon class="dropdown-icon">expand_more</mat-icon>
-							</button>
+							<div class="flex items-center gap-2">
+								<!-- Mobile: Custom Button for Bottom Sheet -->
+								<button *ngIf="breakpointService.device.isMobile" type="button"
+									(click)="openIconSelectorDialog()" class="icon-preview-button"
+									[class.active]="categoryForm.get('icon')?.value">
+									<div class="icon-preview">
+										<mat-icon class="selected-icon">{{ categoryForm.get('icon')?.value || 'category'
+											}}</mat-icon>
+										<span class="icon-name">{{ categoryForm.get('icon')?.value || 'category'
+											}}</span>
+									</div>
+									<mat-icon class="dropdown-icon">expand_more</mat-icon>
+								</button>
+
+								<!-- Desktop/Tablet: MatDropdown with Search -->
+								<mat-form-field *ngIf="!breakpointService.device.isMobile" appearance="fill"
+									class="w-full">
+									<mat-select formControlName="icon">
+										<mat-select-trigger>
+											<div class="flex items-center gap-2">
+												<mat-icon>{{ categoryForm.get('icon')?.value || 'category' }}</mat-icon>
+												<span class="capitalize">{{ (categoryForm.get('icon')?.value ||
+													'category').replace('_', ' ') }}</span>
+											</div>
+										</mat-select-trigger>
+										<mat-option>
+											<ngx-mat-select-search [formControl]="iconFilterCtrl"
+												placeholderLabel="Search icons..." noEntriesFoundLabel="No icons found">
+											</ngx-mat-select-search>
+										</mat-option>
+										<mat-option *ngFor="let icon of filteredIcons$ | async" [value]="icon">
+											<div class="flex items-center gap-2">
+												<mat-icon>{{ icon }}</mat-icon>
+												<span class="capitalize text-sm">{{ icon.replace('_', ' ') }}</span>
+											</div>
+										</mat-option>
+									</mat-select>
+								</mat-form-field>
+							</div>
 						</div>
 					</div>
 
@@ -81,7 +111,9 @@
 							Category Color *
 						</label>
 						<div class="color-selector">
-							<button type="button" (click)="openColorSelectorDialog()" class="color-preview-button"
+							<!-- Mobile: Custom Button for Dialog -->
+							<button *ngIf="breakpointService.device.isMobile" type="button"
+								(click)="openColorSelectorDialog()" class="color-preview-button"
 								[class.active]="categoryForm.get('color')?.value">
 								<div class="color-preview">
 									<div class="color-swatch"
@@ -90,6 +122,31 @@
 								</div>
 								<mat-icon class="dropdown-icon">expand_more</mat-icon>
 							</button>
+
+							<!-- Desktop: MatDropdown with Search -->
+							<mat-form-field *ngIf="!breakpointService.device.isMobile" appearance="fill" class="w-full">
+								<mat-select formControlName="color">
+									<mat-select-trigger>
+										<div class="flex items-center gap-2">
+											<div class="w-4 h-4 rounded-full border border-gray-200 dark:border-gray-700"
+												[style.background-color]="categoryForm.get('color')?.value"></div>
+											<span>{{ getColorLabel(categoryForm.get('color')?.value) }}</span>
+										</div>
+									</mat-select-trigger>
+									<mat-option>
+										<ngx-mat-select-search [formControl]="colorFilterCtrl"
+											placeholderLabel="Search colors..." noEntriesFoundLabel="No colors found">
+										</ngx-mat-select-search>
+									</mat-option>
+									<mat-option *ngFor="let color of filteredColors$ | async" [value]="color.value">
+										<div class="flex items-center gap-2">
+											<div class="w-4 h-4 rounded-full border border-gray-200 dark:border-gray-700"
+												[style.background-color]="color.value"></div>
+											<span>{{ color.label }}</span>
+										</div>
+									</mat-option>
+								</mat-select>
+							</mat-form-field>
 						</div>
 					</div>
 				</div>

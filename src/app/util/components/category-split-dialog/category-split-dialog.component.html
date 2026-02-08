@@ -23,21 +23,15 @@
         <div *ngFor="let split of splitsArray.controls; let i = index" [formGroupName]="i" class="split-item">
           <div class="split-header">
             <h3>Split {{ i + 1 }}</h3>
-            <button 
-              type="button" 
-              mat-icon-button 
-              (click)="removeSplit(i)"
-              [disabled]="splitsArray.length === 1"
-              class="remove-button"
-              matTooltip="Remove split"
-            >
+            <button type="button" mat-icon-button (click)="removeSplit(i)" [disabled]="splitsArray.length === 1"
+              class="remove-button" matTooltip="Remove split">
               <mat-icon>delete</mat-icon>
             </button>
           </div>
 
           <div class="split-content">
             <!-- Category Selection -->
-            <mat-form-field appearance="outline" class="w-full">
+            <mat-form-field appearance="fill" class="w-full">
               <mat-label>Category</mat-label>
               <mat-select formControlName="categoryId" (selectionChange)="onCategoryChange($event.value, i)">
                 <mat-option *ngFor="let category of categories$ | async" [value]="category.id">
@@ -56,7 +50,7 @@
 
             <!-- Amount and Percentage -->
             <div class="amount-percentage-row">
-              <mat-form-field appearance="outline" class="amount-field">
+              <mat-form-field appearance="fill" class="amount-field">
                 <mat-label>Amount</mat-label>
                 <input matInput type="number" formControlName="amount" step="0.01" min="0">
                 <mat-error *ngIf="split.get('amount')?.hasError('required')">
@@ -67,7 +61,7 @@
                 </mat-error>
               </mat-form-field>
 
-              <mat-form-field appearance="outline" class="percentage-field">
+              <mat-form-field appearance="fill" class="percentage-field">
                 <mat-label>Percentage</mat-label>
                 <input matInput type="number" formControlName="percentage" step="0.01" min="0" max="100">
                 <span matSuffix>%</span>
@@ -81,7 +75,7 @@
             </div>
 
             <!-- Notes -->
-            <mat-form-field appearance="outline" class="w-full">
+            <mat-form-field appearance="fill" class="w-full">
               <mat-label>Notes (Optional)</mat-label>
               <textarea matInput formControlName="notes" rows="2" placeholder="Add notes for this split..."></textarea>
             </mat-form-field>
@@ -91,12 +85,7 @@
 
       <!-- Add Split Button -->
       <div class="add-split-section">
-        <button 
-          type="button" 
-          mat-stroked-button 
-          (click)="addSplit()"
-          class="add-split-button"
-        >
+        <button type="button" mat-stroked-button (click)="addSplit()" class="add-split-button">
           <mat-icon>add</mat-icon>
           Add Another Split
         </button>
@@ -104,12 +93,7 @@
 
       <!-- Distribute Remaining Button -->
       <div *ngIf="remainingAmount > 0" class="distribute-section">
-        <button 
-          type="button" 
-          mat-stroked-button 
-          (click)="distributeRemaining()"
-          class="distribute-button"
-        >
+        <button type="button" mat-stroked-button (click)="distributeRemaining()" class="distribute-button">
           <mat-icon>account_balance_wallet</mat-icon>
           Distribute Remaining (₹{{ remainingAmount.toFixed(2) }})
         </button>
@@ -119,14 +103,10 @@
 
   <mat-dialog-actions align="end">
     <button mat-button (click)="onCancel()">Cancel</button>
-    <button 
-      mat-raised-button 
-      color="primary" 
-      (click)="onSubmit()"
-      [disabled]="categorySplitForm.invalid || remainingAmount >= 0.01 || isSubmitting"
-    >
+    <button mat-raised-button color="primary" (click)="onSubmit()"
+      [disabled]="categorySplitForm.invalid || remainingAmount >= 0.01 || isSubmitting">
       <mat-icon *ngIf="isSubmitting" class="spinning">refresh</mat-icon>
       {{ isSubmitting ? 'Saving...' : 'Save Splits' }}
     </button>
   </mat-dialog-actions>
-</div> 
+</div>

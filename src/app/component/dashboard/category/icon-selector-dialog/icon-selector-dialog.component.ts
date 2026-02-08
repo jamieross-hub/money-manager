@@ -1,5 +1,5 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bottom-sheet';
 import { CATEGORY_ICONS } from 'src/app/util/config/config';
 
 export interface IconSelectorDialogData {
@@ -19,8 +19,8 @@ export class IconSelectorDialogComponent implements OnInit {
   public filteredIcons: string[] = [];
 
   constructor(
-    public dialogRef: MatDialogRef<IconSelectorDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: IconSelectorDialogData
+    public bottomSheetRef: MatBottomSheetRef<IconSelectorDialogComponent>,
+    @Inject(MAT_BOTTOM_SHEET_DATA) public data: IconSelectorDialogData
   ) {
     this.selectedIcon = data.currentIcon || 'category';
     this.filteredIcons = [...this.availableIcons];
@@ -35,7 +35,7 @@ export class IconSelectorDialogComponent implements OnInit {
 
   public selectIcon(icon: string): void {
     this.selectedIcon = icon;
-    this.dialogRef.close(icon);
+    this.bottomSheetRef.dismiss(icon);
   }
 
   public onSearchChange(): void {
@@ -54,10 +54,10 @@ export class IconSelectorDialogComponent implements OnInit {
   }
 
   public onCancel(): void {
-    this.dialogRef.close();
+    this.bottomSheetRef.dismiss();
   }
 
   public trackByIcon(index: number, icon: string): string {
     return icon;
   }
-} 
+}
