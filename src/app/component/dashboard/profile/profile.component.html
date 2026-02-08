@@ -152,7 +152,7 @@
 							}
 						</mat-select>
 					</mat-form-field>
-
+					<span>{{ userProfile.preferences?.language }}</span>
 					<mat-form-field appearance="fill" class="form-field">
 						<mat-label>{{ 'PROFILE.LANGUAGE' | translate }} *</mat-label>
 						<mat-select formControlName="language" [disabled]="!isEditing">
