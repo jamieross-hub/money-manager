@@ -94,13 +94,6 @@ import { SyncToCloudComponent } from './component/sync-to-cloud/sync-to-cloud.co
 import { CategorySelectionSheetComponent } from './component/dashboard/transaction-list/add-transaction/mobile-add-transaction/category-selection-sheet/category-selection-sheet.component';
 
 // Card Components
-import { TopCategoriesCardComponent } from './util/components/cards/top-categories-card/top-categories-card.component';
-import { KeyMetricsSummaryCardComponent } from './util/components/cards/key-metrics-summary-card/key-metrics-summary-card.component';
-import { AnalyticsSummaryCardComponent } from './util/components/cards/analytics-summary-card/analytics-summary-card.component';
-import { RecentActivityCardComponent } from './util/components/cards/recent-activity-card/recent-activity-card.component';
-import { MonthlyTrendsCardComponent } from './util/components/cards/monthly-trends-card/monthly-trends-card.component';
-import { CategoryBreakdownCardComponent } from './util/components/cards/category-breakdown-card/category-breakdown-card.component';
-import { MonthlyExpenditureCardComponent } from './util/components/cards/monthly-expenditure-card/monthly-expenditure-card.component';
 import { QuickActionsFabComponent } from './util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 
 // Notification Components
