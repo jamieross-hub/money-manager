@@ -96,6 +96,7 @@ import { ChatComponent } from './component/dashboard/chat/chat.component';
 import { DataDeletionComponent } from './component/data-deletion/data-deletion.component';
 import { SyncToCloudComponent } from './component/sync-to-cloud/sync-to-cloud.component';
 import { CategorySelectionSheetComponent } from './component/dashboard/transaction-list/add-transaction/mobile-add-transaction/category-selection-sheet/category-selection-sheet.component';
+import { BackupRestoreComponent } from './component/dashboard/settings/backup-restore/backup-restore.component';
 
 // Card Components
 import { TopCategoriesCardComponent } from './util/components/cards/top-categories-card/top-categories-card.component';
@@ -199,7 +200,8 @@ import { CurrencyPipe } from './util/pipes';
     ContactFormComponent,
     DataDeletionComponent,
     SyncToCloudComponent,
-    CategorySelectionSheetComponent
+    CategorySelectionSheetComponent,
+    BackupRestoreComponent
   ],
   imports: [
     BrowserModule,

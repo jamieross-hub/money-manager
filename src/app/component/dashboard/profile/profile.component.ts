@@ -31,6 +31,7 @@ import {
 } from 'src/app/util/config/enums';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
+import { BackupRestoreService } from 'src/app/util/service/db/backup-restore.service';
 
 @Component({
   selector: 'app-profile',
@@ -102,7 +103,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private store: Store<AppState>,
     private breakpointObserver: BreakpointObserver,
     private userService: UserService,
-    private translationService: TranslationService
+    private translationService: TranslationService,
+    private backupRestoreService: BackupRestoreService
   ) {
     this.currentUser = this.auth.currentUser;
     this.isMobile = this.breakpointObserver.isMatched('(max-width: 600px)');
@@ -441,8 +443,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
         return;
       }
 
-      // TODO: Implement data export functionality
-      this.notificationService.info('Data export feature coming soon');
+      // Use the newly implemented local backup service
+      await this.backupRestoreService.exportData();
+
+      this.notificationService.success(SUCCESS_MESSAGES.BACKUP.EXPORT_SUCCESS);
     } catch (error) {
       console.error('Error exporting data:', error);
       this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);

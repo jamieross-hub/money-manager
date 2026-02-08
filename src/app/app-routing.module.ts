@@ -31,6 +31,7 @@ import { DataDeletionComponent } from './component/data-deletion/data-deletion.c
 import { ContactFormComponent } from './component/landing/contact-form/contact-form.component';
 import { SyncToCloudComponent } from './component/sync-to-cloud/sync-to-cloud.component';
 import { LoanCalculatorComponent } from './component/dashboard/tools/loan-calculator/loan-calculator.component';
+import { BackupRestoreComponent } from './component/dashboard/settings/backup-restore/backup-restore.component';
 
 export const routes: Routes = [
   { path: 'shell', component: AppShellComponent },
@@ -188,6 +189,14 @@ export const routes: Routes = [
       {
         path: 'loan-calculator',
         component: LoanCalculatorComponent,
+        data: {
+          roles: ['free', 'premium', 'admin'],
+          requireEmailVerification: true
+        }
+      },
+      {
+        path: 'backup-restore',
+        component: BackupRestoreComponent,
         data: {
           roles: ['free', 'premium', 'admin'],
           requireEmailVerification: true

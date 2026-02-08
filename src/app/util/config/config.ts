@@ -639,6 +639,11 @@ export const SUCCESS_MESSAGES = {
     UPDATED: 'Transaction updated successfully',
     DELETED: 'Transaction deleted successfully',
     BULK_IMPORTED: 'Transactions imported successfully'
+  },
+
+  BACKUP: {
+    EXPORT_SUCCESS: 'Backup exported successfully',
+    IMPORT_SUCCESS: 'Backup imported successfully'
   }
 } as const;
 

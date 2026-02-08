@@ -44,7 +44,8 @@
         "NOTIFICATIONS_NAV": "Notifications",
         "FEEDBACK": "Feedback",
         "ADMIN_PANEL": "Admin Panel",
-        "LOAN_CALCULATOR": "Loan Calculator"
+        "LOAN_CALCULATOR": "Loan Calculator",
+        "BACKUP_RESTORE": "Backup & Restore"
     },
     "LOAN_CALCULATOR": {
         "TITLE": "Personal Loan EMI Calculator",
@@ -181,5 +182,36 @@
         "UNSAVED_CHANGES": "You have unsaved changes",
         "CONFIRM_DISCARD": "Discard Changes",
         "CONFIRM_DISCARD_MESSAGE": "Are you sure you want to discard your changes?"
+    },
+    "BACKUP": {
+        "TITLE": "Backup & Restore",
+        "DESCRIPTION": "Securely manage your app data locally. Backup your data to a file and restore it whenever needed.",
+        "EXPORT_TITLE": "Export Data",
+        "EXPORT_SUBTITLE": "Download your data as a JSON file",
+        "EXPORT_INFO": "When you export your data, a single JSON file will be downloaded to your device containing all your transactions, categories, accounts, and settings.",
+        "EXPORT_ITEM_ALL_DATA": "Includes all app data",
+        "EXPORT_ITEM_LOCAL_ONLY": "100% private and local",
+        "EXPORT_ITEM_JSON": "Human-readable JSON format",
+        "EXPORT_BUTTON": "Export Backup",
+        "EXPORT_SUCCESS": "Backup exported successfully",
+        "EXPORT_FAILED": "Failed to export backup",
+        "IMPORT_TITLE": "Restore Data",
+        "IMPORT_SUBTITLE": "Upload a previously exported backup file",
+        "CHOOSE_FILE": "Click or drag backup file here (.json)",
+        "IMPORT_MERGE": "Merge Data",
+        "IMPORT_REPLACE": "Replace Existing",
+        "IMPORT_WARNING": "Replacing will permanently delete all current data before restoring.",
+        "IMPORT_SUCCESS": "Data restored successfully. App will now reload.",
+        "IMPORT_FAILED": "Failed to restore data",
+        "INVALID_FILE_TYPE": "Please select a valid JSON backup file",
+        "INVALID_FORMAT": "Backup file format is invalid",
+        "INCOMPATIBLE_VERSION": "Backup file version is incompatible",
+        "PARSE_ERROR": "Error parsing backup file",
+        "PROCESSING": "Processing data...",
+        "SECURITY_NOTE": "Your data never leaves your device. All backup and restore operations are performed locally.",
+        "CONFIRM_REPLACE_TITLE": "Replace All Data?",
+        "CONFIRM_REPLACE_MSG": "This will PERMANENTLY DELETE all your current transactions, accounts, and settings and replace them with the data from the backup. Are you sure?",
+        "CONFIRM_MERGE_TITLE": "Merge Data?",
+        "CONFIRM_MERGE_MSG": "This will add data from the backup to your current data. Duplicate items will be updated. Are you sure?"
     }
 }

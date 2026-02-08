@@ -66,6 +66,12 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         route: '/dashboard/reports',
         icon: 'analytics',
         order: 7
+      },
+      {
+        label: 'NAVIGATION.BACKUP_RESTORE',
+        route: '/dashboard/backup-restore',
+        icon: 'settings_backup_restore',
+        order: 5
       }
     ]
   },

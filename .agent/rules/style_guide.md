@@ -11,17 +11,28 @@ The application uses **CSS Variables** that automatically adapt to Light and Dar
 **Do NOT use `dark:` modifiers for colors.** Instead, use the semantic Tailwind classes that map to these variables.
 
 ### Color Palette Usage
+The following CSS variables are available and automatically adapt to the theme:
+
+- **Primary**: `--primary-50` to `--primary-900` (e.g., `var(--primary-500)`)
+- **Secondary**: `--secondary-50` to `--secondary-900`
+- **Tertiary**: `--tertiary-50` to `--tertiary-900`
+- **Error**: `--error-50` to `--error-900`
+- **Success**: `--success-50` to `--success-900`
+- **Warning**: `--warning-50` to `--warning-900`
+- **Neutral**: `--neutral-50` to `--neutral-900`
+- **Surface**: `--surface-50` to `--surface-500`
+
+**Tailwind Mapping**:
 - **Primary** (`bg-primary-500`, `text-primary-500`): Main actions, active states, branding.
 - **Surface** (`bg-surface-50` to `900`): Backgrounds.
     - `bg-surface-50/100`: Main page background.
     - `bg-surface-200/300`: Cards, sidebars.
-- **text color**
-     -`text-neutral-500`: secondary logic text
-     -`text-neutral-900`: Main logic text like heading etc
+- **Text**:
+    - `text-neutral-500`: Secondary text/descriptions.
+    - `text-neutral-900`: Main headings/titles.
 - **Error/Success/Warning**: Status messages (`text-error-500`, `bg-success-100`, etc.).
-- **Neutral**: Borders, subtle dividers.
 
-**Rule**: Always use the defined tailwind colors (e.g., `text-primary-500`) instead of hex codes or standard colors (`text-blue-500`).
+**Rule**: Always use the defined CSS variables or Tailwind classes instead of hex codes or standard colors.
 
 ## 2. Responsiveness (Tailwind CSS)
 Follow a **Mobile-First** approach.
