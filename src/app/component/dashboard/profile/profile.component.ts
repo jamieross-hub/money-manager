@@ -225,7 +225,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       preferences: {
         defaultCurrency: user.preferences?.defaultCurrency || this.defaultCurrency,
         timezone: user.preferences?.timezone || 'UTC',
-        language: user.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT,
+        language: this.translationService.normalizeLanguageCode(user.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT),
         country: user.preferences?.country || this.deriveCountryFromLanguage(user.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT),
         notifications: user.preferences?.notifications || true,
         emailUpdates: user.preferences?.emailUpdates || true,

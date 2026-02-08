@@ -127,7 +127,7 @@ export class TranslationService {
   /**
    * Normalize language code to short format (e.g., 'en' -> 'en')
    */
-  private normalizeLanguageCode(code: string): string {
+  public normalizeLanguageCode(code: string): string {
     if (!code) return 'en';
     return code.split('-')[0].toLowerCase();
   }
