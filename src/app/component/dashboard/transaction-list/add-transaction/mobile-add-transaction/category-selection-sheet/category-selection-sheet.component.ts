@@ -58,8 +58,8 @@ export class CategorySelectionSheetComponent implements OnInit {
                     }
                 });
 
-                // First filter by type
-                let filtered = categories.filter(c => c.type === this.transactionType);
+                // Show all categories regardless of type
+                let filtered = [...categories];
 
                 if (search) {
                     filtered = filtered.filter(c => c.name.toLowerCase().includes(search));

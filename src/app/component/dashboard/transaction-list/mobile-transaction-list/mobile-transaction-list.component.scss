@@ -491,7 +491,7 @@
 
 // Date Grouping
 .date-group {
-	margin-bottom: 20px;
+	margin-bottom: 10px;
 
 	&:last-child {
 		margin-bottom: 0;
@@ -499,10 +499,9 @@
 }
 
 .date-header {
-	font-size: 13px;
-	font-weight: 700;
+	@apply text-xs ;
 	color: var(--neutral-600);
-	padding: 4px 12px;
+	padding: 0 12px;
 	margin-bottom: 8px;
 	background: var(--surface-100);
 	border-radius: 6px;
@@ -510,10 +509,6 @@
 	letter-spacing: 0.5px;
 	display: inline-block;
 
-	:host-context(.dark-theme) & {
-		color: mat.get-theme-color(dark.$dark-theme, neutral, 70);
-		background: rgba(mat.get-theme-color(dark.$dark-theme, neutral, 20), 0.5);
-	}
 }
 
 // Transaction Cards
@@ -674,15 +669,11 @@
 	margin: 0;
 
 	// remove later 
-	background-color: var(--surface-100);
     padding: 1px 8px;
-    border-radius: 5px;
     position: relative;
     color: #766d6d;
     font-weight: 600;
-    top: 5px;
-    left: 4px;
-    border: 0.5px dotted var(--secondary-600);
+    left: 8px;
 
 	:host-context(.dark-theme) & {
 		background-color: mat.get-theme-color(dark.$dark-theme, neutral, 6);
