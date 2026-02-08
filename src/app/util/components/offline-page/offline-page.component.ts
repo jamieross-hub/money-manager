@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonSyncService } from '../../service/common-sync.service';
 import { SsrService } from '../../service/ssr.service';
+import { NotificationService } from '../../service/notification.service';
 
 @Component({
   selector: 'app-offline-page',
@@ -14,15 +15,10 @@ import { SsrService } from '../../service/ssr.service';
           </div>
         </div>
 
-        <!-- Title -->
-        <h1 class="text-2xl font-bold text-gray-900 mb-4">
-          You're Offline
-        </h1>
-
-        <!-- Description -->
+        <!-- Heading -->
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">Offline Mode</h1>
         <p class="text-gray-600 mb-8">
-          It looks like you don't have an internet connection right now. 
-          Don't worry - your data is saved locally and will sync when you're back online.
+          The app is currently running in offline mode. You can continue to track your finances, and your data will sync once you're back online.
         </p>
 
         <!-- Connection Status -->
@@ -75,7 +71,11 @@ import { SsrService } from '../../service/ssr.service';
   `]
 })
 export class OfflinePageComponent {
-  constructor(private commonSyncService: CommonSyncService, private ssrService: SsrService) { }
+  constructor(
+    private commonSyncService: CommonSyncService,
+    private ssrService: SsrService,
+    private notificationService: NotificationService
+  ) { }
 
   retryConnection(): void {
     // Check if we're back online
@@ -86,7 +86,7 @@ export class OfflinePageComponent {
       }
     } else {
       // Show a message that we're still offline
-      alert('Still offline. Please check your internet connection.');
+      this.notificationService.warning('Still in offline mode. Please check your internet connection.');
     }
   }
 

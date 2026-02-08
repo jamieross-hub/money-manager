@@ -62,13 +62,13 @@ export class OfflineIndicatorComponent implements OnInit, OnDestroy {
         this.isOnline = status.online;
 
         if (!this.isOnline && !this.isGuest) {
-          console.log('You are offline. Please check your internet connection.');
+          console.log('App is running in offline mode.');
         }
 
         // Show online banner when connection is restored
         if (!wasOnline && this.isOnline && !this.isGuest) {
           this.showOnlineBanner = true;
-          console.log('Connection restored. Syncing data...');
+          console.log('Online mode restored. Syncing data...');
           setTimeout(() => {
             this.showOnlineBanner = false;
           }, APP_CONFIG.NOTIFICATIONS.AUTO_HIDE_DELAY); // Use config duration
