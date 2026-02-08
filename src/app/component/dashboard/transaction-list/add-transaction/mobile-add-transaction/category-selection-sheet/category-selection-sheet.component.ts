@@ -1,12 +1,14 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bottom-sheet';
-import { Category } from 'src/app/util/models';
+import { Category, Transaction } from 'src/app/util/models';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
+import { selectAllTransactions } from 'src/app/store/transactions/transactions.selectors';
 import { Observable, combineLatest, map, startWith } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { TransactionType } from 'src/app/util/config/enums';
+import { DateService } from 'src/app/util/service/date.service';
 
 @Component({
     selector: 'app-category-selection-sheet',
@@ -15,6 +17,7 @@ import { TransactionType } from 'src/app/util/config/enums';
 })
 export class CategorySelectionSheetComponent implements OnInit {
     categories$: Observable<Category[]>;
+    transactions$: Observable<Transaction[]>;
     filteredCategories$!: Observable<Category[]>;
     searchControl = new FormControl('');
     transactionType: TransactionType = TransactionType.EXPENSE; // Default
@@ -22,9 +25,11 @@ export class CategorySelectionSheetComponent implements OnInit {
     constructor(
         private _bottomSheetRef: MatBottomSheetRef<CategorySelectionSheetComponent>,
         @Inject(MAT_BOTTOM_SHEET_DATA) public data: { selectedCategoryId: string, transactionType: TransactionType },
-        private store: Store<AppState>
+        private store: Store<AppState>,
+        private dateService: DateService
     ) {
         this.categories$ = this.store.select(selectAllCategories);
+        this.transactions$ = this.store.select(selectAllTransactions);
         this.transactionType = data?.transactionType || TransactionType.EXPENSE;
     }
 
@@ -34,16 +39,42 @@ export class CategorySelectionSheetComponent implements OnInit {
             map(term => (term || '').toLowerCase())
         );
 
-        this.filteredCategories$ = combineLatest([this.categories$, search$]).pipe(
-            map(([categories, search]) => {
-                // First filter by type if needed, or maybe show all but grouped?
-                // Let's filter by type to be cleaner for the user context
+        this.filteredCategories$ = combineLatest([this.categories$, this.transactions$, search$]).pipe(
+            map(([categories, transactions, search]) => {
+                // Get last 20 transactions sorted by date desc
+                const last20 = [...transactions]
+                    .sort((a, b) => {
+                        const dateA = this.dateService.toDate(a.date) || new Date(0);
+                        const dateB = this.dateService.toDate(b.date) || new Date(0);
+                        return dateB.getTime() - dateA.getTime();
+                    })
+                    .slice(0, 20);
+
+                // Count frequency of category usage in last 20 tx
+                const frequencyMap = new Map<string, number>();
+                last20.forEach(tx => {
+                    if (tx.categoryId) {
+                        frequencyMap.set(tx.categoryId, (frequencyMap.get(tx.categoryId) || 0) + 1);
+                    }
+                });
+
+                // First filter by type
                 let filtered = categories.filter(c => c.type === this.transactionType);
 
                 if (search) {
                     filtered = filtered.filter(c => c.name.toLowerCase().includes(search));
                 }
-                return filtered;
+
+                // Sort by frequency (most used first) then by name
+                return filtered.sort((a, b) => {
+                    const freqA = a.id ? (frequencyMap.get(a.id) || 0) : 0;
+                    const freqB = b.id ? (frequencyMap.get(b.id) || 0) : 0;
+
+                    if (freqB !== freqA) {
+                        return freqB - freqA;
+                    }
+                    return a.name.localeCompare(b.name);
+                });
             })
         );
     }

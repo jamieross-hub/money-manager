@@ -153,6 +153,20 @@ export class MobileTransactionListComponent
     );
   }
 
+  get groupedTransactions() {
+    const groups: { date: string; transactions: Transaction[] }[] = [];
+    this.filteredTransactions.forEach(tx => {
+      const date = moment(this.dateService.toDate(tx.date)).format('YYYY-MM-DD');
+      const group = groups.find(g => g.date === date);
+      if (group) {
+        group.transactions.push(tx);
+      } else {
+        groups.push({ date, transactions: [tx] });
+      }
+    });
+    return groups;
+  }
+
   filterTransactions() {
     // Use FilterService to filter transactions
     let filteredData: Transaction[];

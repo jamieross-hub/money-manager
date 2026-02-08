@@ -193,203 +193,212 @@
 			</div>
 
 			<!-- Transaction Cards -->
-			@for (tx of filteredTransactions; track tx.id) {
-			<div class="transaction-card" [class.selected]="selectedTx?.id === tx.id" (click)="onLongPress(tx)">
-				<!-- Main Transaction Content -->
-				<div class="transaction-main">
-					<!-- Icon Section -->
-					<div class="transaction-icon">
-						<div class="icon-container">
-							<mat-icon [style.color]="getCategoryColor(tx.categoryId)">
-								{{ getCategoryIcon(tx.categoryId) }}
-							</mat-icon>
-							@if(tx.isSplitTransaction) {
-							<mat-icon class="split-transaction">bookmark</mat-icon>
-							}
-							@if(tx.isCategorySplit) {
-							<mat-icon class="category-split-transaction">category</mat-icon>
-							}
-						</div>
-					</div>
-
-					<!-- Transaction Details -->
-					<div class="transaction-details">
-						<div class="transaction-title text-base">
-							{{ tx.payee | titlecase }}
-						</div>
-						<!-- <div class="transaction-category text-base">
-              {{ tx.category }}
-            </div> -->
-						<!-- <div class="transaction-date text-base">
-							{{ dateService.toDate(tx.date) | date:'dd MMM ' }}
-						</div> -->
-						<div *ngIf="tx.notes" class="transaction-notes text-base">
-							{{ tx.notes }}
-						</div>
-					</div>
-
-					<!-- Amount Section -->
-					<div class="transaction-amount">
-						<div class="amount-value text-base"
-							[ngClass]="tx.type === 'income' ? 'income-text' : 'expense-text'">
-							{{ tx.type === 'income' ? '+' : '-' }}{{ tx.amount | currency }}
-						</div>
-						<div class="amount-type">
-							{{ dateService.toDate(tx.date) | date:'dd MMM hh:mm' }}
-						</div>
-					</div>
+			@for (group of groupedTransactions; track group.date) {
+			<div class="date-group">
+				<div class="date-header">
+					{{ group.date | date:'dd MMM, yyyy' }}
 				</div>
-
-				<!-- Action Buttons (shown when selected) -->
-				<div *ngIf="selectedTx?.id === tx.id" class="transaction-actions">
-					<div class="actions-container">
-						<button mat-icon-button class="action-button edit-btn" (click)="onEditTransaction(tx)"
-							matTooltip="Edit transaction">
-							<mat-icon>edit</mat-icon>
-						</button>
-						<button mat-icon-button class="action-button delete-btn" (click)="onDeleteTransaction(tx)"
-							matTooltip="Delete transaction">
-							<mat-icon>delete</mat-icon>
-						</button>
-					</div>
-				</div>
-
-				<!-- Expanded Details (shown when selected) -->
-				<div *ngIf="selectedTx?.id === tx.id" class="transaction-details-expanded">
-					<div class="details-container">
-						<!-- Account Information -->
-						<div class="detail-row">
-							<div class="detail-label">
-								<mat-icon class="detail-icon">account_balance</mat-icon>
-								<span>Account</span>
-							</div>
-							<div class="detail-value">
-								<span class="account-name">{{ getAccountName(tx.accountId) }}</span>
-								<span class="account-type" *ngIf="getAccountType(tx.accountId)">({{
-									getAccountType(tx.accountId) }})</span>
-							</div>
-						</div>
-
-						<!-- Transaction ID -->
-						<div class="detail-row" *ngIf="tx.id">
-							<div class="detail-label">
-								<mat-icon class="detail-icon">fingerprint</mat-icon>
-								<span>Transaction ID</span>
-							</div>
-							<div class="detail-value">
-								<span class="transaction-id">{{ tx.id }}</span>
-							</div>
-						</div>
-
-						<!-- Recurring Status -->
-						<div class="detail-row" *ngIf="tx.isRecurring">
-							<div class="detail-label">
-								<mat-icon class="detail-icon">repeat</mat-icon>
-								<span>Recurring</span>
-							</div>
-							<div class="detail-value">
-								<span class="recurring-info">{{ getRecurringInfo(tx) }}</span>
-							</div>
-						</div>
-
-						<!-- Sync Status -->
-						<div class="detail-row">
-							<div class="detail-label">
-								<mat-icon class="detail-icon" [style.color]="getSyncStatusColor(tx)">{{
-									getSyncStatusIcon(tx) }}</mat-icon>
-								<span>Status</span>
-							</div>
-							<div class="detail-value">
-								<span class="sync-status" [style.color]="getSyncStatusColor(tx)">{{
-									getSyncStatusInfo(tx) }}</span>
-							</div>
-						</div>
-
-						<!-- Created Date -->
-						<div class="detail-row">
-							<div class="detail-label">
-								<mat-icon class="detail-icon">schedule</mat-icon>
-								<span>Created Date</span>
-							</div>
-							<div class="detail-value">
-								<span class="created-date">{{ dateService.toDate(tx.date) | date:'fullDate' }}</span>
-							</div>
-						</div>
-
-						<!-- Created Time -->
-						<div class="detail-row">
-							<div class="detail-label">
-								<mat-icon class="detail-icon">schedule</mat-icon>
-								<span>Created Time</span>
-							</div>
-							<div class="detail-value">
-								<span class="created-time">{{ dateService.toDate(tx.date) | date:'shortTime' }}</span>
-							</div>
-						</div>
-
-						<!-- Notes (if available) -->
-						<div class="detail-row" *ngIf="tx.notes && tx.notes.trim()">
-							<div class="detail-label">
-								<mat-icon class="detail-icon">note</mat-icon>
-								<span>Notes</span>
-							</div>
-							<div class="detail-value">
-								<span class="transaction-notes">{{ tx.notes }}</span>
-							</div>
-						</div>
-
-						<!-- Payment Method -->
-						<div class="detail-row" *ngIf="tx.paymentMethod">
-							<div class="detail-label">
-								<mat-icon class="detail-icon">payment</mat-icon>
-								<span>Payment Method</span>
-							</div>
-							<div class="detail-value">
-								<span class="payment-method">{{ tx.paymentMethod }}</span>
-							</div>
-						</div>
-
-						<!-- Tax Amount -->
-						<div class="detail-row" *ngIf="tx.taxAmount">
-							<div class="detail-label">
-								<mat-icon class="detail-icon">payment</mat-icon>
-								<span>Tax Amount</span>
-							</div>
-							<div class="detail-value"></div>
-							<span class="tax-amount">{{ tx.taxAmount | currency }}</span>
-						</div>
-					</div>
-
-					<!-- Tax Percentage -->
-					<div class="detail-row" *ngIf="tx.taxPercentage">
-						<div class="detail-label">
-							<mat-icon class="detail-icon">payment</mat-icon>
-							<span>Tax Percentage</span>
-						</div>
-						<div class="detail-value">
-							<span class="tax-percentage">{{ tx.taxPercentage }}%</span>
-						</div>
-					</div>
-
-					<!-- Category Splits -->
-					<div class="detail-row" *ngIf="tx.isCategorySplit && tx.categorySplits?.length">
-						<div class="detail-label">
-							<mat-icon class="detail-icon">category</mat-icon>
-							<span>Category Splits</span>
-						</div>
-						<div class="detail-value">
-							<div class="category-splits-list">
-								@for (split of tx.categorySplits; track split.categoryId) {
-								<div class="category-split-item">
-									<span class="split-category">{{ split.categoryName }}</span>
-									<span class="split-amount">₹{{ split.amount.toFixed(2) }} ({{
-										split.percentage.toFixed(1) }}%)</span>
-								</div>
+				@for (tx of group.transactions; track tx.id) {
+				<div class="transaction-card" [class.selected]="selectedTx?.id === tx.id" (click)="onLongPress(tx)">
+					<!-- Main Transaction Content -->
+					<div class="transaction-main">
+						<!-- Icon Section -->
+						<div class="transaction-icon">
+							<div class="icon-container">
+								<mat-icon [style.color]="getCategoryColor(tx.categoryId)">
+									{{ getCategoryIcon(tx.categoryId) }}
+								</mat-icon>
+								@if(tx.isSplitTransaction) {
+								<mat-icon class="split-transaction">bookmark</mat-icon>
+								}
+								@if(tx.isCategorySplit) {
+								<mat-icon class="category-split-transaction">category</mat-icon>
 								}
 							</div>
 						</div>
+
+						<!-- Transaction Details -->
+						<div class="transaction-details">
+							<div class="transaction-title text-base">
+								{{ tx.payee | titlecase }}
+							</div>
+							<!-- <div class="transaction-category text-base">
+                  {{ tx.category }}
+                </div> -->
+							<!-- <div class="transaction-date text-base">
+								{{ dateService.toDate(tx.date) | date:'dd MMM ' }}
+							</div> -->
+							<div *ngIf="tx.notes" class="transaction-notes text-base">
+								{{ tx.notes }}
+							</div>
+						</div>
+
+						<!-- Amount Section -->
+						<div class="transaction-amount">
+							<div class="amount-value text-base"
+								[ngClass]="tx.type === 'income' ? 'income-text' : 'expense-text'">
+								{{ tx.type === 'income' ? '+' : '-' }}{{ tx.amount | currency }}
+							</div>
+							<div class="amount-type">
+								{{ dateService.toDate(tx.date) | date:'hh:mm a' }}
+							</div>
+						</div>
+					</div>
+
+					<!-- Action Buttons (shown when selected) -->
+					<div *ngIf="selectedTx?.id === tx.id" class="transaction-actions">
+						<div class="actions-container">
+							<button mat-icon-button class="action-button edit-btn" (click)="onEditTransaction(tx)"
+								matTooltip="Edit transaction">
+								<mat-icon>edit</mat-icon>
+							</button>
+							<button mat-icon-button class="action-button delete-btn" (click)="onDeleteTransaction(tx)"
+								matTooltip="Delete transaction">
+								<mat-icon>delete</mat-icon>
+							</button>
+						</div>
+					</div>
+
+					<!-- Expanded Details (shown when selected) -->
+					<div *ngIf="selectedTx?.id === tx.id" class="transaction-details-expanded">
+						<div class="details-container">
+							<!-- Account Information -->
+							<div class="detail-row">
+								<div class="detail-label">
+									<mat-icon class="detail-icon">account_balance</mat-icon>
+									<span>Account</span>
+								</div>
+								<div class="detail-value">
+									<span class="account-name">{{ getAccountName(tx.accountId) }}</span>
+									<span class="account-type" *ngIf="getAccountType(tx.accountId)">({{
+										getAccountType(tx.accountId) }})</span>
+								</div>
+							</div>
+
+							<!-- Transaction ID -->
+							<div class="detail-row" *ngIf="tx.id">
+								<div class="detail-label">
+									<mat-icon class="detail-icon">fingerprint</mat-icon>
+									<span>Transaction ID</span>
+								</div>
+								<div class="detail-value">
+									<span class="transaction-id">{{ tx.id }}</span>
+								</div>
+							</div>
+
+							<!-- Recurring Status -->
+							<div class="detail-row" *ngIf="tx.isRecurring">
+								<div class="detail-label">
+									<mat-icon class="detail-icon">repeat</mat-icon>
+									<span>Recurring</span>
+								</div>
+								<div class="detail-value">
+									<span class="recurring-info">{{ getRecurringInfo(tx) }}</span>
+								</div>
+							</div>
+
+							<!-- Sync Status -->
+							<div class="detail-row">
+								<div class="detail-label">
+									<mat-icon class="detail-icon" [style.color]="getSyncStatusColor(tx)">{{
+										getSyncStatusIcon(tx) }}</mat-icon>
+									<span>Status</span>
+								</div>
+								<div class="detail-value">
+									<span class="sync-status" [style.color]="getSyncStatusColor(tx)">{{
+										getSyncStatusInfo(tx) }}</span>
+								</div>
+							</div>
+
+							<!-- Created Date -->
+							<div class="detail-row">
+								<div class="detail-label">
+									<mat-icon class="detail-icon">schedule</mat-icon>
+									<span>Created Date</span>
+								</div>
+								<div class="detail-value">
+									<span class="created-date">{{ dateService.toDate(tx.date) | date:'fullDate'
+										}}</span>
+								</div>
+							</div>
+
+							<!-- Created Time -->
+							<div class="detail-row">
+								<div class="detail-label">
+									<mat-icon class="detail-icon">schedule</mat-icon>
+									<span>Created Time</span>
+								</div>
+								<div class="detail-value">
+									<span class="created-time">{{ dateService.toDate(tx.date) | date:'shortTime'
+										}}</span>
+								</div>
+							</div>
+
+							<!-- Notes (if available) -->
+							<div class="detail-row" *ngIf="tx.notes && tx.notes.trim()">
+								<div class="detail-label">
+									<mat-icon class="detail-icon">note</mat-icon>
+									<span>Notes</span>
+								</div>
+								<div class="detail-value">
+									<span class="transaction-notes">{{ tx.notes }}</span>
+								</div>
+							</div>
+
+							<!-- Payment Method -->
+							<div class="detail-row" *ngIf="tx.paymentMethod">
+								<div class="detail-label">
+									<mat-icon class="detail-icon">payment</mat-icon>
+									<span>Payment Method</span>
+								</div>
+								<div class="detail-value">
+									<span class="payment-method">{{ tx.paymentMethod }}</span>
+								</div>
+							</div>
+
+							<!-- Tax Amount -->
+							<div class="detail-row" *ngIf="tx.taxAmount">
+								<div class="detail-label">
+									<mat-icon class="detail-icon">payment</mat-icon>
+									<span>Tax Amount</span>
+								</div>
+								<div class="detail-value"></div>
+								<span class="tax-amount">{{ tx.taxAmount | currency }}</span>
+							</div>
+						</div>
+
+						<!-- Tax Percentage -->
+						<div class="detail-row" *ngIf="tx.taxPercentage">
+							<div class="detail-label">
+								<mat-icon class="detail-icon">payment</mat-icon>
+								<span>Tax Percentage</span>
+							</div>
+							<div class="detail-value">
+								<span class="tax-percentage">{{ tx.taxPercentage }}%</span>
+							</div>
+						</div>
+
+						<!-- Category Splits -->
+						<div class="detail-row" *ngIf="tx.isCategorySplit && tx.categorySplits?.length">
+							<div class="detail-label">
+								<mat-icon class="detail-icon">category</mat-icon>
+								<span>Category Splits</span>
+							</div>
+							<div class="detail-value">
+								<div class="category-splits-list">
+									@for (split of tx.categorySplits; track split.categoryId) {
+									<div class="category-split-item">
+										<span class="split-category">{{ split.categoryName }}</span>
+										<span class="split-amount">₹{{ split.amount.toFixed(2) }} ({{
+											split.percentage.toFixed(1) }}%)</span>
+									</div>
+									}
+								</div>
+							</div>
+						</div>
 					</div>
 				</div>
+				}
 			</div>
 			}
 		</div>

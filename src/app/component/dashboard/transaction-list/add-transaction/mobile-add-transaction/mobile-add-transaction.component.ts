@@ -190,6 +190,18 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   }
 
   private initializeFormData(): void {
+    // Subscribe to amount changes to keep formattedAmount in sync
+    this.transactionForm.get('amount')?.valueChanges.subscribe(value => {
+      if (value !== null && value !== undefined && value !== '') {
+        const numericValue = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
+        if (!isNaN(numericValue) && this.formattedAmount !== this.formatCurrency(numericValue)) {
+          this.formattedAmount = this.formatCurrency(numericValue);
+        }
+      } else {
+        this.formattedAmount = '';
+      }
+    });
+
     // Check if we're in view mode
     if (this.dialogData?.mode === 'view' && this.dialogData?.transaction) {
       this.viewMode = true;
@@ -217,18 +229,6 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       });
       this.getRecentTransaction();
     }
-
-    // Subscribe to amount changes to keep formattedAmount in sync
-    this.transactionForm.get('amount')?.valueChanges.subscribe(value => {
-      if (value !== null && value !== undefined && value !== '') {
-        const numericValue = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
-        if (!isNaN(numericValue) && this.formattedAmount !== this.formatCurrency(numericValue)) {
-          this.formattedAmount = this.formatCurrency(numericValue);
-        }
-      } else {
-        this.formattedAmount = '';
-      }
-    });
   }
 
   private formatCurrency(value: number): string {
