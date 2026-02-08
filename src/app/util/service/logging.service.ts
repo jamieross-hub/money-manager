@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from '@env/environment';
-import { LocalStorageService } from './local-storage.service';
+import { LocalStorageService } from './indexdb-storage.service';
 
 export interface LogEntry {
   timestamp: Date;

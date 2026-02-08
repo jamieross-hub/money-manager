@@ -11,7 +11,7 @@ import { AppState } from '../../store/app.state';
 import * as TransactionsActions from '../../store/transactions/transactions.actions';
 import { Transaction } from '../models/transaction.model';
 import { APP_CONFIG } from '../config/config';
-import { LocalStorageService } from './local-storage.service';
+import { LocalIndexDBStorageService } from './indexdb-storage.service';
 
 export interface NetworkStatus {
   online: boolean;
@@ -100,7 +100,7 @@ export class CommonSyncService {
     private validationService: ValidationService,
     private swUpdate: SwUpdate,
     private store: Store<AppState>,
-    private localStorageService: LocalStorageService,
+    private localStorageService: LocalIndexDBStorageService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     if (!isPlatformServer(this.platformId)) {
@@ -806,15 +806,15 @@ export class CommonSyncService {
       }
 
       // Check if user data is cached
-      const cachedUserData = this.localStorageService.getItem(`user-data-${currentUser.uid}`, false);
+      const cachedUserData = this.localStorageService.getItem(`user-data-${currentUser.uid}`);
       if (!cachedUserData) {
         return false;
       }
 
       // Check if app has some cached data
-      const hasCachedData = this.localStorageService.getItem('app-cache-version', false) ||
-        this.localStorageService.getItem('transactions-cache', false) ||
-        this.localStorageService.getItem('categories-cache', false);
+      const hasCachedData = this.localStorageService.getItem('app-cache-version') ||
+        this.localStorageService.getItem('transactions-cache') ||
+        this.localStorageService.getItem('categories-cache');
 
       return !!hasCachedData;
     } catch (error) {

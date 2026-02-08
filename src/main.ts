@@ -1,7 +1,7 @@
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 
 import { AppModule } from './app/app.module';
-import { LocalStorageService } from './app/util/service/local-storage.service';
+import { LocalIndexDBStorageService } from './app/util/service/indexdb-storage.service';
 
 // PWA Navigation and Service Worker initialization
 function initializePwaFeatures() {
@@ -49,7 +49,7 @@ function initializePwaFeatures() {
     };
 
     try {
-      LocalStorageService.getInstance().setItem('app-state', appState);
+      LocalIndexDBStorageService.getInstance().setItem('app-state', appState);
     } catch (error) {
       console.warn('Failed to save app state:', error);
     }
@@ -74,13 +74,13 @@ function initializeCacheManagement() {
     const year = now.getFullYear();
     const currentVersion = `${year}-${month.toString().padStart(2, '0')}-W${weekNumber}`;
 
-    const storedVersion = LocalStorageService.getInstance().getItem<string>('app-version', false);
+    const storedVersion = LocalIndexDBStorageService.getInstance().getItem<string>('app-version');
 
     if (storedVersion && storedVersion !== currentVersion) {
       console.log('App version changed on mobile, performing smart cache update');
       performSmartCacheUpdate(storedVersion, currentVersion);
     } else {
-      LocalStorageService.getInstance().setItem('app-version', currentVersion);
+      LocalIndexDBStorageService.getInstance().setItem('app-version', currentVersion);
     }
   }
 }
@@ -104,7 +104,7 @@ async function performSmartCacheUpdate(oldVersion: string, newVersion: string): 
     restoreAuthData(authData);
 
     // Update version
-    LocalStorageService.getInstance().setItem('app-version', newVersion);
+    LocalIndexDBStorageService.getInstance().setItem('app-version', newVersion);
 
     console.log('Smart cache update completed successfully');
   } catch (error) {
@@ -120,7 +120,7 @@ function preserveAuthData(): any {
   }
 
   const authData: any = {};
-  const storageService = LocalStorageService.getInstance();
+  const storageService = LocalIndexDBStorageService.getInstance();
 
   // Preserve Firebase Auth state
   if (typeof localStorage !== 'undefined') {
@@ -129,14 +129,14 @@ function preserveAuthData(): any {
       key.startsWith('firebase:persistence:')
     );
     authKeys.forEach(key => {
-      authData[key] = storageService.getItem(key, false);
+      authData[key] = storageService.getItem(key);
     });
   }
 
   // Preserve user preferences
   const userPrefs = ['theme', 'language', 'user-settings'];
   userPrefs.forEach(pref => {
-    const value = storageService.getItem(pref, false);
+    const value = storageService.getItem(pref);
     if (value) authData[pref] = value;
   });
 
@@ -151,7 +151,7 @@ function restoreAuthData(authData: any): void {
 
   // Restore preserved data
   Object.keys(authData).forEach(key => {
-    LocalStorageService.getInstance().setItem(key, authData[key]);
+    LocalIndexDBStorageService.getInstance().setItem(key, authData[key]);
   });
 }
 
@@ -177,7 +177,7 @@ async function clearApplicationCaches(): Promise<void> {
     }
 
     // Clear application-specific localStorage items
-    const storageService = LocalStorageService.getInstance();
+    const storageService = LocalIndexDBStorageService.getInstance();
     const keysToRemove = Object.keys(localStorage).filter(key =>
       !key.startsWith('firebase:') &&
       !key.startsWith('user') &&

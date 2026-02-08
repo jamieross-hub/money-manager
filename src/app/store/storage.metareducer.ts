@@ -1,9 +1,9 @@
 import { ActionReducer, MetaReducer } from '@ngrx/store';
 import { Timestamp } from '@angular/fire/firestore';
-import { LocalStorageService } from '../util/service/local-storage.service';
+import { LocalIndexDBStorageService } from '../util/service/indexdb-storage.service';
 
 export function storageMetaReducer(reducer: ActionReducer<any>): ActionReducer<any> {
-    const storageService = LocalStorageService.getInstance();
+    const storageService = LocalIndexDBStorageService.getInstance();
 
     return function (state, action) {
         // 1. On init, if state is undefined, try to search in storage service

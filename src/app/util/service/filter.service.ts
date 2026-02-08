@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map, distinctUntilChanged } from 'rxjs/operators';
 import moment from 'moment';
-import { LocalStorageService } from './local-storage.service';
+import { LocalIndexDBStorageService } from './indexdb-storage.service';
 
 export interface DateRange {
   startDate: Date;
@@ -105,7 +105,7 @@ export class FilterService {
     distinctUntilChanged()
   );
 
-  constructor(private localStorageService: LocalStorageService) {
+  constructor(private localStorageService: LocalIndexDBStorageService) {
     // Initialize presets from localStorage
     this.initializePresets();
     // Subscribe to all filter changes to update combined state

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { LocalStorageService } from './local-storage.service';
+import { LocalIndexDBStorageService } from './indexdb-storage.service';
 import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, Timestamp, addDoc, onSnapshot, writeBatch, serverTimestamp } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
@@ -177,7 +177,7 @@ export abstract class BaseService {
         timestamp: Date.now(),
         expiry: Date.now() + APP_CONFIG.OFFLINE.CACHE_EXPIRY
       };
-      LocalStorageService.getInstance().setItem(key, cacheData);
+      LocalIndexDBStorageService.getInstance().setItem(key, cacheData);
     } catch (error) {
       console.error('Failed to cache data:', error);
     }
@@ -188,11 +188,11 @@ export abstract class BaseService {
    */
   protected getCachedData<T>(key: string): T | null {
     try {
-      const cacheData = LocalStorageService.getInstance().getItem<any>(key);
+      const cacheData = LocalIndexDBStorageService.getInstance().getItem<any>(key);
       if (!cacheData) return null;
 
       if (Date.now() > cacheData.expiry) {
-        LocalStorageService.getInstance().removeItem(key);
+        LocalIndexDBStorageService.getInstance().removeItem(key);
         return null;
       }
 
@@ -208,7 +208,7 @@ export abstract class BaseService {
    */
   protected clearCachedData(key: string): void {
     try {
-      LocalStorageService.getInstance().removeItem(key);
+      LocalIndexDBStorageService.getInstance().removeItem(key);
     } catch (error) {
       console.error('Failed to clear cached data:', error);
     }

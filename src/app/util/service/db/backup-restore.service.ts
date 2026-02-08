@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { LocalStorageService } from '../local-storage.service';
+import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { LocalStorageKey } from '../../models/local-storage.model';
 import { UserService } from './user.service';
 import { ExportService } from '../export.service';
@@ -21,7 +21,7 @@ export class BackupRestoreService {
     private readonly SCHEMA_VERSION = 1;
 
     constructor(
-        private localStorageService: LocalStorageService,
+        private localStorageService: LocalIndexDBStorageService,
         private userService: UserService,
         private exportService: ExportService
     ) { }

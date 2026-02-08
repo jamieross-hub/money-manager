@@ -3,7 +3,7 @@ import { FirebaseMessagingService, NotificationPayload } from './firebase-messag
 import { APP_CONFIG } from '../config/config';
 import { environment } from '@env/environment';
 import { CurrencyService } from './currency.service';
-import { LocalStorageService } from './local-storage.service';
+import { LocalStorageService } from './indexdb-storage.service';
 
 export interface NotificationType {
   key: string;

@@ -9,7 +9,7 @@ import { SplitwiseService } from 'src/app/modules/splitwise/services/splitwise.s
 import { ThemeSwitchingService } from 'src/app/util/service/theme-switching.service';
 import { ThemeType } from 'src/app/util/models/theme.model';
 import { take } from 'rxjs';
-import { LocalStorageService } from 'src/app/util/service/local-storage.service';
+import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 
 
 @Component({
@@ -54,7 +54,7 @@ export class UserComponent {
     private breakpointObserver: BreakpointObserver,
     private splitwiseService: SplitwiseService,
     private themeSwitchingService: ThemeSwitchingService,
-    private localStorageService: LocalStorageService
+    private localStorageService: LocalIndexDBStorageService
   ) {
     this.breakpointObserver.observe(Breakpoints.Handset).subscribe((result) => {
       this.isMobile = result.matches;

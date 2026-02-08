@@ -16,7 +16,7 @@ export function HttpLoaderFactory(http: HttpClient) {
 }
 
 // LocalStorageService Factory
-export function initializeLocalStorage(localStorageService: LocalStorageService) {
+export function initializeLocalStorage(localStorageService: LocalIndexDBStorageService) {
   return () => localStorageService.initialize();
 }
 
@@ -121,7 +121,7 @@ import { PwaInstallPromptComponent } from './util/components/pwa-install-prompt/
 
 // Common Sync Service (replaces BackgroundSyncService)
 import { CommonSyncService } from './util/service/common-sync.service';
-import { LocalStorageService } from './util/service/local-storage.service';
+import { LocalIndexDBStorageService } from './util/service/indexdb-storage.service';
 
 
 // NgRx Store
@@ -264,11 +264,11 @@ import { CurrencyPipe } from './util/pipes';
     provideClientHydration(),
     provideClientHydration(),
     CommonSyncService,
-    LocalStorageService,
+    LocalIndexDBStorageService,
     {
       provide: APP_INITIALIZER,
       useFactory: initializeLocalStorage,
-      deps: [LocalStorageService],
+      deps: [LocalIndexDBStorageService],
       multi: true
     },
 

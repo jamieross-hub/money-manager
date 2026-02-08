@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { NotificationService } from 'src/app/util/service/notification.service';
-import { LocalStorageService } from 'src/app/util/service/local-storage.service';
+import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 
 export interface AdminSettings {
   appName: string;
@@ -62,7 +62,7 @@ export class AdminSettingsComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private notificationService: NotificationService,
-    private localStorageService: LocalStorageService
+    private localStorageService: LocalIndexDBStorageService
   ) {
     this.settingsForm = this.createForm();
   }

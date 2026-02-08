@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { LocalStorageService } from './local-storage.service';
+import { LocalIndexDBStorageService } from './indexdb-storage.service';
 
 describe('LocalStorageService (Hybrid)', () => {
-    let service: LocalStorageService;
+    let service: LocalIndexDBStorageService;
 
     const mockIndexedDB = {
         open: jasmine.createSpy('open').and.returnValue({
@@ -34,9 +34,9 @@ describe('LocalStorageService (Hybrid)', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [LocalStorageService]
+            providers: [LocalIndexDBStorageService]
         });
-        service = TestBed.inject(LocalStorageService);
+        service = TestBed.inject(LocalIndexDBStorageService);
 
         // Mock the internal openDatabase to avoid real IDB in unit tests if needed, 
         // or we can test with real IDB if the environment supports it. 

@@ -9,7 +9,7 @@ import { APP_CONFIG } from './util/config/config';
 import { SsrService } from './util/service/ssr.service';
 import { FirebaseMessagingService } from './util/service/firebase-messaging.service';
 import { LanguageService } from './util/service/language.service';
-import { LocalStorageService } from './util/service/local-storage.service';
+import { LocalIndexDBStorageService } from './util/service/indexdb-storage.service';
 
 @Component({
   selector: 'app-root',
@@ -31,7 +31,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private firebaseMessagingService: FirebaseMessagingService,
     public themeSwitchingService: ThemeSwitchingService,
     private languageService: LanguageService,
-    private localStorageService: LocalStorageService,
+    private localStorageService: LocalIndexDBStorageService,
   ) {
     this.navigationState = {
       canGoBack: false,
@@ -133,7 +133,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private refreshDataIfNeeded(): void {
-    const lastRefresh = this.localStorageService.getItem<string>('last-data-refresh', false);
+    const lastRefresh = this.localStorageService.getItem<string>('last-data-refresh');
     const now = Date.now();
     const refreshInterval = APP_CONFIG.OFFLINE.SYNC_INTERVAL; // Use config sync interval
 

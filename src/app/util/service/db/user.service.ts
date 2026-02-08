@@ -53,7 +53,7 @@ import { APP_CONFIG, defaultCategoriesForNewUser } from '../../config/config';
 import * as CategoriesActions from 'src/app/store/categories/categories.actions';
 import * as AccountsActions from 'src/app/store/accounts/accounts.actions';
 import { CurrencyDetectionUtil } from '../../helpers/currency-detection.util';
-import { LocalStorageService } from '../local-storage.service';
+import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 
 /**
  * Security configuration for user operations
@@ -110,7 +110,7 @@ export class UserService {
     private readonly afAuth: Auth,
     private readonly firestore: Firestore,
     private readonly store: Store<AppState>,
-    public readonly storageService: LocalStorageService,
+    public readonly storageService: LocalIndexDBStorageService,
     private readonly translationService: TranslationService
   ) {
     this.initializeAuthState();

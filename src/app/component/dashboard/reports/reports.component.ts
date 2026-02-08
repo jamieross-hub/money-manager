@@ -24,7 +24,7 @@ import { MonthlyTrendsConfig, MonthlyTrend } from '../../../util/components/card
 import { CategoryBreakdownConfig, CategoryBreakdown } from '../../../util/components/cards/category-breakdown-card/category-breakdown-card.component';
 import { QuickActionsFabConfig, QuickAction } from '../../../util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { CurrencyService } from '../../../util/service/currency.service';
-import { LocalStorageService } from '../../../util/service/local-storage.service';
+import { LocalIndexDBStorageService } from '../../../util/service/indexdb-storage.service';
 
 interface CategorySpending {
   category: string;
@@ -418,7 +418,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     private ssrService: SsrService,
     private userService: UserService,
     private currencyService: CurrencyService,
-    private localStorageService: LocalStorageService
+    private localStorageService: LocalIndexDBStorageService
   ) {
     // Initialize selectors
     this.transactions$ = this.store.select(TransactionsSelectors.selectAllTransactions);

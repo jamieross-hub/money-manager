@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { APP_CONFIG } from '../config/config';
 import { TranslateService } from '@ngx-translate/core';
-import { LocalStorageService } from './local-storage.service';
+import { LocalIndexDBStorageService } from './indexdb-storage.service';
 
 export type Language = string;
 
@@ -22,7 +22,7 @@ export class TranslationService {
 
   constructor(
     private translateService: TranslateService,
-    private localStorageService: LocalStorageService
+    private localStorageService: LocalIndexDBStorageService
   ) {
     // Set default language
     this.translateService.setDefaultLang('en');
@@ -48,7 +48,7 @@ export class TranslationService {
 
     // Step 1: Try guest mode language
     try {
-      const isGuest = this.localStorageService.getItem<string>('guest-mode', false) === 'true';
+      const isGuest = this.localStorageService.getItem<string>('guest-mode') === 'true';
       console.log('Guest mode:', isGuest);
 
       if (isGuest) {
@@ -94,7 +94,7 @@ export class TranslationService {
 
     // Step 3: Try app_language
     try {
-      let savedLanguage = this.localStorageService.getItem<string>('app_language', false);
+      let savedLanguage = this.localStorageService.getItem<string>('app_language');
 
       if (savedLanguage) {
         const lang = this.normalizeLanguageCode(savedLanguage);

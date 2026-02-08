@@ -12,12 +12,12 @@ import { LocalStorageKey, LocalStorageKeyHelper } from '../models/local-storage.
 @Injectable({
     providedIn: 'root'
 })
-export class LocalStorageService {
+export class LocalIndexDBStorageService {
 
-    // ExPOSE helper for external use
+    // Expose helper for external use
     public readonly keyHelper = LocalStorageKeyHelper;
 
-    private static instance: LocalStorageService | null = null;
+    private static instance: LocalIndexDBStorageService | null = null;
 
     private readonly DB_NAME = 'MoneyManagerDB';
     private readonly STORE_NAME = 'keyValueStore';
@@ -29,19 +29,19 @@ export class LocalStorageService {
     private isInitialized = false;
 
     constructor() {
-        LocalStorageService.instance = this;
+        LocalIndexDBStorageService.instance = this;
     }
 
     /**
-     * Get the singleton instance (for non-DI contexts)
+     * Get the singleton instance (for non-DI contexts like APP_INITIALIZER)
      */
-    public static getInstance(): LocalStorageService {
-        if (!LocalStorageService.instance) {
-            // This should ideally not happen since it's provided in root and used in APP_INITIALIZER
-            LocalStorageService.instance = new LocalStorageService();
+    public static getInstance(): LocalIndexDBStorageService {
+        if (!LocalIndexDBStorageService.instance) {
+            LocalIndexDBStorageService.instance = new LocalIndexDBStorageService();
         }
-        return LocalStorageService.instance;
+        return LocalIndexDBStorageService.instance;
     }
+
 
     /**
      * Initialize the service: Open DB and load all data into cache
@@ -66,7 +66,7 @@ export class LocalStorageService {
     /**
      * Set an item (Sync API, Async Persistence)
      */
-    setItem<T>(key: string, value: T): boolean {
+    setItem<T>(key: string, value: T): void {
         // Update cache immediately
         this.cache.set(key, value);
 
@@ -74,51 +74,42 @@ export class LocalStorageService {
         this.persistItem(key, value).catch(err => {
             console.error(`Error persisting key "${key}":`, err);
         });
-
-        return true;
     }
 
     /**
      * Get an item (Sync API, Read from Cache)
      */
-    getItem<T>(key: string, parseJson: boolean = true): T | null {
-        // Return directly from memory cache
+    getItem<T>(key: string): T | null {
         const value = this.cache.get(key);
 
         if (value === undefined || value === null) {
             return null;
         }
 
-        // Deep copy to prevent reference issues if needed, or return as is
-        // Since we are now operating with objects in memory, parseJson is less relevant 
-        // but kept for API compatibility. The cache stores the actual object/value.
+        // Deep copy to prevent reference mutation issues
         return structuredClone(value) as T;
     }
 
     /**
      * Remove an item (Sync API, Async Persistence)
      */
-    removeItem(key: string): boolean {
+    removeItem(key: string): void {
         this.cache.delete(key);
 
         this.deleteItem(key).catch(err => {
             console.error(`Error deleting key "${key}":`, err);
         });
-
-        return true;
     }
 
     /**
      * Clear all data
      */
-    clear(): boolean {
+    clear(): void {
         this.cache.clear();
 
         this.clearDb().catch(err => {
             console.error('Error clearing database:', err);
         });
-
-        return true;
     }
 
     /**
@@ -171,13 +162,13 @@ export class LocalStorageService {
 
             const transaction = this.db.transaction([this.STORE_NAME], 'readonly');
             const store = transaction.objectStore(this.STORE_NAME);
-
-            // Should properly migrate old localStorage data if DB is empty
             const countRequest = store.count();
 
             countRequest.onsuccess = () => {
+                // Migrate from localStorage if DB is empty
                 if (countRequest.result === 0) {
                     this.migrateFromLocalStorage();
+                    return resolve();
                 }
 
                 const request = store.openCursor();
@@ -203,27 +194,17 @@ export class LocalStorageService {
         if (typeof localStorage === 'undefined') return;
 
         console.log('Migrating data from localStorage to IndexedDB...');
-        const keys = Object.keys(localStorage);
 
-        // We use a separate flow effectively to not block initial load indefinitely 
-        // or we can do it synchronously in memory and async persist
-
-        keys.forEach(key => {
+        Object.keys(localStorage).forEach(key => {
             const rawValue = localStorage.getItem(key);
             if (rawValue !== null) {
                 try {
-                    // Try parsing JSON, otherwise store string
-                    const value = JSON.parse(rawValue);
-                    this.setItem(key, value);
+                    this.cache.set(key, JSON.parse(rawValue));
                 } catch {
-                    this.setItem(key, rawValue);
+                    this.cache.set(key, rawValue);
                 }
             }
         });
-
-        // Optional: clear localStorage after safe migration? 
-        // For safety, maybe keep it until confirmed? 
-        // For now, we leave it.
     }
 
     private persistItem(key: string, value: any): Promise<void> {
@@ -276,12 +257,12 @@ export class LocalStorageService {
         return this.getItem(key as string);
     }
 
-    setTyped<K extends LocalStorageKey>(key: K, value: any): boolean {
-        return this.setItem(key as string, value);
+    setTyped<K extends LocalStorageKey>(key: K, value: any): void {
+        this.setItem(key as string, value);
     }
 
-    removeTyped(key: LocalStorageKey): boolean {
-        return this.removeItem(key as string);
+    removeTyped(key: LocalStorageKey): void {
+        this.removeItem(key as string);
     }
 
     hasTyped(key: LocalStorageKey): boolean {
