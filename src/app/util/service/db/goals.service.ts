@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, Timestamp } from '@angular/fire/firestore';
+import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, Timestamp, onSnapshot } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 import { DateService } from '../date.service';
+import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 
 export interface Goal {
     goalId: string;
@@ -18,7 +19,12 @@ export interface Goal {
 })
 export class GoalsService {
 
-    constructor(private firestore: Firestore, private auth: Auth, private dateService: DateService) { }
+    constructor(
+        private firestore: Firestore,
+        private auth: Auth,
+        private dateService: DateService,
+        private localStorageUtility: LocalIndexDBStorageService
+    ) { }
 
     // 🔹 Create a new goal
     async createGoal(userId: string, goal: Goal): Promise<void> {
@@ -33,14 +39,51 @@ export class GoalsService {
     // 🔹 Get all goals for a user
     getGoals(userId: string): Observable<Goal[]> {
         const goalsRef = collection(this.firestore, `users/${userId}/goals`);
+
         return new Observable<Goal[]>(observer => {
-            getDocs(goalsRef).then(querySnapshot => {
-                const goals: Goal[] = [];
-                querySnapshot.forEach(doc => {
-                    goals.push(doc.data() as Goal);
-                });
-                observer.next(goals);
-            });
+            // 1. Emit cached data immediately if available
+            try {
+                const cachedGoals = this.localStorageUtility.getItem<Goal[]>(`goals-cache-${userId}`);
+                if (cachedGoals && cachedGoals.length > 0) {
+                    console.log(`[GoalsService] Emitting ${cachedGoals.length} cached goals`);
+                    observer.next(cachedGoals);
+                }
+            } catch (error) {
+                console.warn('[GoalsService] Failed to load cached goals:', error);
+            }
+
+            // 2. Subscribe to realtime updates
+            const unsubscribe = onSnapshot(goalsRef,
+                (querySnapshot) => {
+                    const goals: Goal[] = [];
+                    querySnapshot.forEach(docSnap => {
+                        goals.push(docSnap.data() as Goal);
+                    });
+
+                    console.log(`[GoalsService] Received ${goals.length} goals from Firestore`);
+
+                    // Update cache for next time
+                    try {
+                        this.localStorageUtility.setItem(`goals-cache-${userId}`, goals);
+                    } catch (error) {
+                        console.warn('[GoalsService] Failed to cache goals:', error);
+                    }
+
+                    observer.next(goals);
+                },
+                (error) => {
+                    console.error(`[GoalsService] Error in onSnapshot for ${userId}:`, error);
+                    if (!observer.closed) {
+                        if (error.code === 'unavailable' || !navigator.onLine) {
+                            console.warn('[GoalsService] Firestore unavailable, relying on cache');
+                        } else {
+                            observer.error(error);
+                        }
+                    }
+                }
+            );
+
+            return () => unsubscribe();
         });
     }
 
