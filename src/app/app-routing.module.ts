@@ -7,7 +7,6 @@ import { AuthGuard } from './util/guard/auth.guard';
 import { AdminGuard } from './util/guard/admin.guard';
 import { HomeComponent } from './component/dashboard/home/home.component';
 import { LandingComponent } from './component/landing/landing.component';
-import { ImportTransactionsComponent } from './component/dashboard/transaction-list/add-transaction';
 import { NotificationSettingsComponent } from './util/components/notification-settings/notification-settings.component';
 import { FeedbackComponent } from './component/feedback/feedback.component';
 import { AppShellComponent } from './app-shell/app-shell.component';
@@ -101,7 +100,8 @@ export const routes: Routes = [
       },
       {
         path: 'import',
-        component: ImportTransactionsComponent,
+        loadComponent: () => import('./component/dashboard/transaction-list/add-transaction/import-transactions.component')
+          .then(m => m.ImportTransactionsComponent),
         data: {
           roles: ['premium', 'admin'],
           requireEmailVerification: true

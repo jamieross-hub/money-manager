@@ -19,9 +19,6 @@ export function initializeLocalStorage(localStorageService: LocalIndexDBStorageS
   return () => localStorageService.initialize();
 }
 
-// ngx-papaparse
-import { Papa } from 'ngx-papaparse';
-
 
 // Firebase Imports
 import { environment } from '@env/environment';
@@ -102,7 +99,6 @@ import { LoaderComponent } from './util/components/loader/loader.component';
   providers: [
     provideAnimationsAsync(),
     provideHttpClient(withInterceptors([securityInterceptor])),
-    Papa,
     provideClientHydration(),
     CommonSyncService,
     LocalIndexDBStorageService,
