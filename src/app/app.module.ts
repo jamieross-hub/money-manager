@@ -10,7 +10,6 @@ import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
 // Function for ngx-translate loader
-// Function for ngx-translate loader
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
 }
@@ -23,8 +22,6 @@ export function initializeLocalStorage(localStorageService: LocalIndexDBStorageS
 // ngx-papaparse
 import { Papa } from 'ngx-papaparse';
 
-// ngx-echarts
-import { NgxEchartsModule } from 'ngx-echarts';
 
 // Firebase Imports
 import { environment } from '@env/environment';
@@ -77,10 +74,7 @@ import { PwaInstallPromptComponent } from './util/components/pwa-install-prompt/
     // TranslatePipe,
     CurrencyPipe,
 
-    // Charts
-    NgxEchartsModule.forRoot({
-      echarts: () => import('echarts')
-    }),
+
 
     // NgRx Store
     AppStoreModule,
