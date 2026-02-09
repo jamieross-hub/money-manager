@@ -690,6 +690,16 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     });
   }
 
+  getPaymentMethodIcon(value: string): string {
+    const method = this.paymentMethods.find(m => m.value === value);
+    return method ? method.icon : 'payment';
+  }
+
+  getPaymentMethodLabel(value: string): string {
+    const method = this.paymentMethods.find(m => m.value === value);
+    return method ? method.label : 'None';
+  }
+
   ngOnDestroy() {
     this._onDestroy.next();
     this._onDestroy.complete();

@@ -64,13 +64,24 @@
 						<mat-label>Select a category</mat-label>
 						<mat-select formControlName="categoryId" [disabled]="viewMode"
 							(selectionChange)="onCategoryChange($event.value)">
+							<mat-select-trigger>
+								<div class="flex items-center gap-2" *ngIf="transactionForm.get('categoryId')?.value">
+									<mat-icon [style.color]="currentCategoryColor || '#cccccc'">{{ currentCategoryIcon
+										||
+										'category' }}</mat-icon>
+									<span>{{ transactionForm.get('categoryName')?.value }}</span>
+								</div>
+							</mat-select-trigger>
 							<mat-option>
 								<ngx-mat-select-search [formControl]="categoryFilterCtrl"
 									placeholderLabel="Search categories..." noEntriesFoundLabel="No categories found">
 								</ngx-mat-select-search>
 							</mat-option>
 							<mat-option *ngFor="let category of filteredCategories | async" [value]="category.id">
-								{{ category.name }}
+								<div class="flex items-center gap-2">
+									<mat-icon [style.color]="category.color || '#cccccc'">{{ category.icon }}</mat-icon>
+									<span>{{ category.name }}</span>
+								</div>
 							</mat-option>
 						</mat-select>
 						@if(transactionForm.get('categoryId')?.hasError('required') &&
@@ -178,6 +189,14 @@
 				<mat-form-field appearance="fill" class="w-full">
 					<mat-label>Select payment method</mat-label>
 					<mat-select formControlName="paymentMethod" [disabled]="viewMode">
+						<mat-select-trigger>
+							<div class="flex items-center gap-2" *ngIf="transactionForm.get('paymentMethod')?.value">
+								<mat-icon class="text-sm">{{
+									getPaymentMethodIcon(transactionForm.get('paymentMethod')?.value)
+									}}</mat-icon>
+								<span>{{ getPaymentMethodLabel(transactionForm.get('paymentMethod')?.value) }}</span>
+							</div>
+						</mat-select-trigger>
 						<mat-option value="">None</mat-option>
 						@for (method of paymentMethods; track method.value) {
 						<mat-option [value]="method.value">
