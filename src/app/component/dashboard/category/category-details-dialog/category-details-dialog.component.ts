@@ -1,9 +1,43 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { Category } from 'src/app/util/models/category.model';
 import { Transaction } from 'src/app/util/models/transaction.model';
 import { DateService } from 'src/app/util/service/date.service';
 import { TransactionType } from 'src/app/util/config/enums';
+import { CommonModule } from '@angular/common';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatBottomSheetModule } from '@angular/material/bottom-sheet';
+import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatListModule } from '@angular/material/list';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatSlideToggle, MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSliderModule } from '@angular/material/slider';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSortModule } from '@angular/material/sort';
+import { MatStepperModule } from '@angular/material/stepper';
+import { MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { CategoryCardComponent } from '../category-card/category-card.component';
+import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
+import { TranslateModule } from '@ngx-translate/core';
 
 export interface CategoryDetailsDialogData {
   category: Category;
@@ -16,7 +50,47 @@ export interface CategoryDetailsDialogData {
 @Component({
   selector: 'app-category-details-dialog',
   templateUrl: './category-details-dialog.component.html',
-  styleUrls: ['./category-details-dialog.component.scss']
+  styleUrls: ['./category-details-dialog.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+
+    MatSlideToggle,
+    MatCardModule,
+    MatListModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressBarModule,
+    MatProgressSpinnerModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatSidenavModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatMenuModule,
+    MatToolbarModule,
+    MatButtonToggleModule,
+    MatInputModule,
+    MatDialogModule,
+    MatTableModule,
+    MatSortModule,
+    MatPaginatorModule,
+    MatTabsModule,
+    MatCheckboxModule,
+    MatTooltipModule,
+    MatSlideToggleModule,
+    MatAutocompleteModule,
+    MatExpansionModule,
+    MatDividerModule,
+    MatChipsModule,
+    MatSnackBarModule,
+    MatSliderModule,
+    MatStepperModule,
+    MatBottomSheetModule,
+    CategoryCardComponent,
+    CurrencyPipe,
+    TranslateModule,
+  ]
 })
 export class CategoryDetailsDialogComponent implements OnInit {
   selectedTabIndex = 0;
@@ -26,9 +100,9 @@ export class CategoryDetailsDialogComponent implements OnInit {
     private dialogRef: MatDialogRef<CategoryDetailsDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: CategoryDetailsDialogData,
     public dateService: DateService
-  ) {}
+  ) { }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   onClose(): void {
     this.dialogRef.close();
@@ -42,17 +116,17 @@ export class CategoryDetailsDialogComponent implements OnInit {
       return 0;
     }
 
-    const categoryTransactions = this.data.allTransactions.filter(t => 
-      t.categoryId === category.id && 
+    const categoryTransactions = this.data.allTransactions.filter(t =>
+      t.categoryId === category.id &&
       t.type === TransactionType.EXPENSE
     );
 
     // Filter transactions within the budget period
     const budgetStartDate = category.budget.budgetStartDate;
     const budgetEndDate = category.budget.budgetEndDate;
-    
+
     let filteredTransactions = categoryTransactions;
-    
+
     if (budgetStartDate) {
       const startDate = this.dateService.toDate(budgetStartDate);
       if (!startDate) {
@@ -63,7 +137,7 @@ export class CategoryDetailsDialogComponent implements OnInit {
         return txDate && txDate >= startDate;
       });
     }
-    
+
     if (budgetEndDate) {
       const endDate = this.dateService.toDate(budgetEndDate);
       if (!endDate) {
@@ -85,7 +159,7 @@ export class CategoryDetailsDialogComponent implements OnInit {
     if (!category.budget?.hasBudget || !category.budget?.budgetAmount) {
       return 0;
     }
-    
+
     const spent = this.calculateBudgetSpent(category);
     return Math.max(0, (category.budget.budgetAmount || 0) - spent);
   }
@@ -97,12 +171,12 @@ export class CategoryDetailsDialogComponent implements OnInit {
     if (!category.budget?.hasBudget || !category.budget?.budgetAmount) {
       return 0;
     }
-    
+
     const spent = this.calculateBudgetSpent(category);
     const budgetAmount = category.budget.budgetAmount || 0;
-    
+
     if (budgetAmount === 0) return 0;
-    
+
     return (spent / budgetAmount) * 100;
   }
 
@@ -112,7 +186,7 @@ export class CategoryDetailsDialogComponent implements OnInit {
   public getBudgetProgressColor(category: Category): string {
     const percentage = this.calculateBudgetProgressPercentage(category);
     const threshold = category.budget?.budgetAlertThreshold || 80;
-    
+
     if (percentage >= 100) return '#f44336'; // Red
     if (percentage >= threshold) return '#ff9800'; // Orange
     return '#4caf50'; // Green
@@ -123,14 +197,14 @@ export class CategoryDetailsDialogComponent implements OnInit {
    */
   public formatBudgetPeriod(period: string | undefined): string {
     if (!period) return '';
-    
+
     const periodMap: { [key: string]: string } = {
       'daily': 'Day',
       'weekly': 'Week',
       'monthly': 'Month',
       'yearly': 'Year'
     };
-    
+
     return periodMap[period] || period;
   }
 
@@ -140,7 +214,7 @@ export class CategoryDetailsDialogComponent implements OnInit {
   public getBudgetStatusClass(category: Category): string {
     const percentage = this.calculateBudgetProgressPercentage(category);
     const threshold = category.budget?.budgetAlertThreshold || 80;
-    
+
     if (percentage >= 100) return 'budget-exceeded';
     if (percentage >= threshold) return 'budget-warning';
     return 'budget-ok';
@@ -159,8 +233,8 @@ export class CategoryDetailsDialogComponent implements OnInit {
    * Calculate total spent per month for a category
    */
   public calculateTotalSpentPerMonth(category: Category): number {
-    const categoryTransactions = this.data.allTransactions.filter(t => 
-      t.categoryId === category.id && 
+    const categoryTransactions = this.data.allTransactions.filter(t =>
+      t.categoryId === category.id &&
       t.type === TransactionType.EXPENSE
     );
 
@@ -179,8 +253,8 @@ export class CategoryDetailsDialogComponent implements OnInit {
    * Calculate total income per month for a category
    */
   public calculateTotalIncomePerMonth(category: Category): number {
-    const categoryTransactions = this.data.allTransactions.filter(t => 
-      t.categoryId === category.id && 
+    const categoryTransactions = this.data.allTransactions.filter(t =>
+      t.categoryId === category.id &&
       t.type === TransactionType.INCOME
     );
 
@@ -199,7 +273,7 @@ export class CategoryDetailsDialogComponent implements OnInit {
    * Get subcategory stats
    */
   public getSubCategoryStats(subCategory: Category): any {
-    const subCategoryTransactions = this.data.allTransactions.filter(t => 
+    const subCategoryTransactions = this.data.allTransactions.filter(t =>
       t.categoryId === subCategory.id
     );
 
@@ -207,9 +281,9 @@ export class CategoryDetailsDialogComponent implements OnInit {
     const totalSpent = subCategoryTransactions
       .filter(t => t.type === TransactionType.EXPENSE)
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-    
+
     const averageTransaction = totalTransactions > 0 ? totalSpent / totalTransactions : 0;
-    const largestTransaction = subCategoryTransactions.length > 0 
+    const largestTransaction = subCategoryTransactions.length > 0
       ? Math.max(...subCategoryTransactions.map(t => Math.abs(t.amount)))
       : 0;
 

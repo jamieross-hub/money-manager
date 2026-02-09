@@ -3,11 +3,62 @@ import { Subject, takeUntil } from 'rxjs';
 import { Account } from 'src/app/util/models/account.model';
 import { AccountType } from 'src/app/util/config/enums';
 import { ACCOUNT_GROUPS, AccountGroup, getAccountGroup } from 'src/app/util/config/account.config';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatRippleModule } from '@angular/material/core';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatListModule } from '@angular/material/list';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSliderModule } from '@angular/material/slider';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSortModule } from '@angular/material/sort';
+import { MatStepperModule } from '@angular/material/stepper';
+import { MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
 	selector: "mobile-accounts-list",
 	templateUrl: "./mobile-accounts-list.component.html",
 	styleUrls: ["./mobile-accounts-list.component.scss"],
+	standalone: true,
+	imports: [
+		CommonModule,
+		FormsModule,
+		ReactiveFormsModule,
+		MatFormFieldModule,
+		MatInputModule,
+		MatButtonModule,
+		MatIconModule,
+		MatCheckboxModule,
+		MatRippleModule,
+		MatTooltipModule,
+		MatDividerModule,
+		MatListModule,
+		MatTabsModule,
+		MatCardModule,
+		MatCheckboxModule,
+		MatSlideToggleModule,
+		MatAutocompleteModule,
+		MatExpansionModule,
+		MatChipsModule,
+		MatSnackBarModule,
+		MatSliderModule,
+		MatStepperModule,
+		MatTableModule,
+		MatPaginatorModule,
+		MatSortModule,
+	],
 })
 export class MobileAccountsListComponent implements OnInit, OnDestroy {
 	@Input() accounts: Account[] = [];
@@ -18,9 +69,9 @@ export class MobileAccountsListComponent implements OnInit, OnDestroy {
 	public selectedAccount: Account | null = null;
 	private destroy$ = new Subject<void>();
 
-	constructor() {}
+	constructor() { }
 
-	ngOnInit(): void {}
+	ngOnInit(): void { }
 
 	ngOnDestroy(): void {
 		this.destroy$.next();
@@ -82,7 +133,7 @@ export class MobileAccountsListComponent implements OnInit, OnDestroy {
 		if (account.type !== 'loan' || !account.loanDetails) {
 			return 0;
 		}
-		
+
 		const { interestRate, remainingBalance } = account.loanDetails;
 		// Monthly interest = (Annual Rate / 12) * Remaining Balance
 		return (interestRate / 12 / 100) * remainingBalance;
@@ -114,14 +165,14 @@ export class MobileAccountsListComponent implements OnInit, OnDestroy {
 	public getAccountsByGroup(accounts: Account[], groupId: string): Account[] {
 		const group = ACCOUNT_GROUPS.find(g => g.id === groupId);
 		if (!group) return [];
-		
+
 		return accounts.filter(account => group.accountTypes.includes(account.type));
 	}
 
 	public getGroupedAccounts(accounts: Account[]): { group: AccountGroup; accounts: Account[] }[] {
 		return ACCOUNT_GROUPS.map(group => {
 			const groupAccounts = this.getAccountsByGroup(accounts, group.id);
-			
+
 			return {
 				group,
 				accounts: groupAccounts

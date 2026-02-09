@@ -1,5 +1,5 @@
 import { Component, OnInit } from "@angular/core";
-import { FormBuilder, FormGroup, Validators, FormArray } from "@angular/forms";
+import { FormBuilder, FormGroup, Validators, FormArray, FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
 import { NotificationService } from "src/app/util/service/notification.service";
 import { ValidationService } from "src/app/util/service/validation.service";
@@ -11,6 +11,30 @@ import { createAccount } from "src/app/store/accounts/accounts.actions";
 import { createCategory } from "src/app/store/categories/categories.actions";
 import { AccountType } from "src/app/util/config/enums";
 import { APP_CONFIG, defaultCategoriesForNewUser } from "src/app/util/config/config";
+import { CommonModule } from "@angular/common";
+import { MatAutocompleteModule } from "@angular/material/autocomplete";
+import { MatButtonModule } from "@angular/material/button";
+import { MatCardModule } from "@angular/material/card";
+import { MatCheckboxModule } from "@angular/material/checkbox";
+import { MatChipsModule } from "@angular/material/chips";
+import { MatRippleModule } from "@angular/material/core";
+import { MatDividerModule } from "@angular/material/divider";
+import { MatExpansionModule } from "@angular/material/expansion";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatIconModule } from "@angular/material/icon";
+import { MatInputModule } from "@angular/material/input";
+import { MatListModule } from "@angular/material/list";
+import { MatPaginatorModule } from "@angular/material/paginator";
+import { MatSlideToggleModule } from "@angular/material/slide-toggle";
+import { MatSliderModule } from "@angular/material/slider";
+import { MatSnackBarModule } from "@angular/material/snack-bar";
+import { MatSortModule } from "@angular/material/sort";
+import { MatStepperModule } from "@angular/material/stepper";
+import { MatTableModule } from "@angular/material/table";
+import { MatTabsModule } from "@angular/material/tabs";
+import { MatTooltipModule } from "@angular/material/tooltip";
+import { TranslateModule } from "@ngx-translate/core";
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 
 interface BankAccount {
 	id?: string;
@@ -32,6 +56,36 @@ export const defaultBankAccounts: BankAccount[] = [
 	selector: "app-registration",
 	templateUrl: "./registration.component.html",
 	styleUrls: ["./registration.component.scss"],
+	standalone: true,
+	imports: [
+		CommonModule,
+		FormsModule,
+		ReactiveFormsModule,
+		MatFormFieldModule,
+		MatInputModule,
+		MatButtonModule,
+		MatIconModule,
+		MatCheckboxModule,
+		MatRippleModule,
+		MatTooltipModule,
+		MatDividerModule,
+		MatListModule,
+		MatTabsModule,
+		MatCardModule,
+		MatCheckboxModule,
+		MatSlideToggleModule,
+		MatAutocompleteModule,
+		MatExpansionModule,
+		MatChipsModule,
+		MatSnackBarModule,
+		MatSliderModule,
+		MatStepperModule,
+		MatTableModule,
+		MatPaginatorModule,
+		MatSortModule,
+		TranslateModule,
+		MatProgressSpinnerModule,
+	],
 })
 export class RegistrationComponent implements OnInit {
 	registrationForm: FormGroup;

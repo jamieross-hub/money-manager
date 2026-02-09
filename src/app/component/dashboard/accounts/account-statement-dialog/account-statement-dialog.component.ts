@@ -9,6 +9,32 @@ import { TransactionType } from '../../../../util/config/enums';
 import { selectTransactionsByAccount } from '../../../../store/transactions/transactions.selectors';
 import { DateService } from '../../../../util/service/date.service';
 import { CurrencyService } from '../../../../util/service/currency.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatRippleModule } from '@angular/material/core';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatListModule } from '@angular/material/list';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSliderModule } from '@angular/material/slider';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSortModule } from '@angular/material/sort';
+import { MatStepperModule } from '@angular/material/stepper';
+import { MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslateModule } from '@ngx-translate/core';
+import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 
 export interface AccountStatementDialogData {
   account: Account;
@@ -17,7 +43,38 @@ export interface AccountStatementDialogData {
 @Component({
   selector: 'app-account-statement-dialog',
   templateUrl: './account-statement-dialog.component.html',
-  styleUrls: ['./account-statement-dialog.component.scss']
+  styleUrls: ['./account-statement-dialog.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatCheckboxModule,
+    MatRippleModule,
+    MatTooltipModule,
+    MatDividerModule,
+    MatListModule,
+    MatTabsModule,
+    MatCardModule,
+    MatCheckboxModule,
+    MatSlideToggleModule,
+    MatAutocompleteModule,
+    MatExpansionModule,
+    MatChipsModule,
+    MatSnackBarModule,
+    MatSliderModule,
+    MatStepperModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatProgressSpinnerModule,
+    TranslateModule,
+    CurrencyPipe,
+  ],
 })
 export class AccountStatementDialogComponent implements OnInit, OnDestroy {
   account: Account;
@@ -29,14 +86,14 @@ export class AccountStatementDialogComponent implements OnInit, OnDestroy {
   isBalanceAccurate: boolean = true;
   isLoading: boolean = true;
   errorMessage: string = '';
-  
+
   // Summary statistics
   totalDeposits: number = 0;
   totalWithdrawals: number = 0;
   totalTransactions: number = 0;
   averageTransaction: number = 0;
   largestTransaction: number = 0;
-  
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -82,7 +139,7 @@ export class AccountStatementDialogComponent implements OnInit, OnDestroy {
     // Calculate balance by considering transaction types
     this.calculatedBalance = this.transactions.reduce((balance, transaction) => {
       const amount = transaction.amount || 0;
-      
+
       switch (transaction.type) {
         case TransactionType.INCOME:
           return balance + amount; // Income increases balance
@@ -107,7 +164,7 @@ export class AccountStatementDialogComponent implements OnInit, OnDestroy {
 
   private calculateSummaryStatistics(): void {
     this.totalTransactions = this.transactions.length;
-    
+
     if (this.totalTransactions === 0) {
       this.totalDeposits = 0;
       this.totalWithdrawals = 0;
@@ -168,7 +225,7 @@ export class AccountStatementDialogComponent implements OnInit, OnDestroy {
     if (this.isBalanceAccurate) {
       return 'Balance is accurate';
     }
-    return this.balanceDifference > 0 
+    return this.balanceDifference > 0
       ? `Calculated balance is ${this.currencyService.formatAmount(this.balanceDifference)} higher than recorded`
       : `Calculated balance is ${this.currencyService.formatAmount(Math.abs(this.balanceDifference))} lower than recorded`;
   }

@@ -1,21 +1,89 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
-import { MatSlideToggleChange } from '@angular/material/slide-toggle';
+import { MatSlideToggle, MatSlideToggleModule, MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { FirebaseMessagingService, NotificationPayload } from '../../service/firebase-messaging.service';
 import { APP_CONFIG } from '../../config/config';
 import { NotificationService } from '../../service/notification.service';
 import { environment } from '@env/environment';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatBottomSheetModule } from '@angular/material/bottom-sheet';
+import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatListModule } from '@angular/material/list';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatSliderModule } from '@angular/material/slider';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSortModule } from '@angular/material/sort';
+import { MatStepperModule } from '@angular/material/stepper';
+import { MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-notification-settings',
   templateUrl: './notification-settings.component.html',
-  styleUrls: ['./notification-settings.component.scss']
+  styleUrls: ['./notification-settings.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+
+    MatSlideToggle,
+    MatCardModule,
+    MatListModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressBarModule,
+    MatProgressSpinnerModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatSidenavModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatMenuModule,
+    MatToolbarModule,
+    MatButtonToggleModule,
+    MatInputModule,
+    MatDialogModule,
+    MatTableModule,
+    MatSortModule,
+    MatPaginatorModule,
+    MatTabsModule,
+    MatCheckboxModule,
+    MatTooltipModule,
+    MatSlideToggleModule,
+    MatAutocompleteModule,
+    MatExpansionModule,
+    MatDividerModule,
+    MatChipsModule,
+    MatSnackBarModule,
+    MatSliderModule,
+    MatStepperModule,
+    MatBottomSheetModule,
+  ]
 })
 export class NotificationSettingsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
+
   APP_CONFIG = APP_CONFIG;
-  
+
   permissionStatus: NotificationPermission = 'default';
   fcmToken: string | null = null;
   isLoading = false;
@@ -87,7 +155,7 @@ export class NotificationSettingsComponent implements OnInit, OnDestroy {
   constructor(
     private messagingService: FirebaseMessagingService,
     private notificationService: NotificationService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadSettings();
@@ -172,11 +240,11 @@ export class NotificationSettingsComponent implements OnInit, OnDestroy {
     try {
       // First initialize messaging with permission request
       await this.messagingService.initializeMessagingWithPermission();
-      
+
       // Then get the permission status
       const permission = await this.messagingService.requestPermission();
       console.log('Permission result:', permission);
-      
+
       if (permission === 'granted') {
         this.notificationsEnabled = true;
         this.saveNotificationsEnabled();
@@ -235,7 +303,7 @@ export class NotificationSettingsComponent implements OnInit, OnDestroy {
   toggleMasterNotifications(event: MatSlideToggleChange): void {
     this.notificationsEnabled = event.checked;
     this.saveNotificationsEnabled();
-    
+
     if (this.notificationsEnabled && this.permissionStatus === 'default') {
       this.requestPermission();
     }
@@ -298,12 +366,12 @@ To enable notifications:
     try {
       const registrations = await navigator.serviceWorker.getRegistrations();
       console.log('All service worker registrations:', registrations);
-      
-      const firebaseSW = registrations.find(reg => 
+
+      const firebaseSW = registrations.find(reg =>
         reg.scope.includes(environment.serviceWorkerScope) ||
         reg.active?.scriptURL.includes(environment.serviceWorkerScope + 'firebase-messaging-sw.js')
       );
-      
+
       if (firebaseSW) {
         console.log('Firebase SW found:', firebaseSW);
         console.log('Firebase SW state:', firebaseSW.active?.state);
@@ -311,7 +379,7 @@ To enable notifications:
       } else {
         console.log('No Firebase service worker found');
       }
-      
+
       this.collectDebugInfo();
       console.log('Debug info:', this.debugInfo);
     } catch (error) {
@@ -323,21 +391,21 @@ To enable notifications:
     try {
       // Force re-registration of Firebase messaging service worker
       const registrations = await navigator.serviceWorker.getRegistrations();
-      const firebaseSW = registrations.find(reg => 
+      const firebaseSW = registrations.find(reg =>
         reg.scope.includes(environment.serviceWorkerScope)
       );
-      
+
       if (firebaseSW) {
         await firebaseSW.unregister();
         console.log('Unregistered existing Firebase SW');
       }
-      
+
       // Wait a bit then try to get token again
       setTimeout(async () => {
         await this.messagingService.refreshToken();
         this.collectDebugInfo();
       }, 1000);
-      
+
     } catch (error) {
       console.error('Force registration error:', error);
     }

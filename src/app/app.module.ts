@@ -41,67 +41,11 @@ import { IconModule } from './util/icon.module';
 
 // Directives
 // Directives
-import { ClickOutsideDirective } from './util/directives/click-outside.directive';
 
 // Components
-import { TotalBalanceComponent } from './util/components/cards/total-balance/total-balance.component';
-import { CalendarViewComponent } from './component/dashboard/calendar-view/calendar-view.component';
-import { TransactionListComponent } from './component/dashboard/transaction-list/transaction-list.component';
-import { HeaderComponent } from './component/dashboard/header/header.component';
-import { SideBarComponent } from './component/dashboard/side-bar/side-bar.component';
-import { MobileAddTransactionComponent } from './component/dashboard/transaction-list/add-transaction/mobile-add-transaction/mobile-add-transaction.component';
-import { IconSelectorDialogComponent } from './component/dashboard/category/icon-selector-dialog/icon-selector-dialog.component';
-import { ColorSelectorDialogComponent } from './component/dashboard/category/color-selector-dialog/color-selector-dialog.component';
-import { SignInComponent } from './component/auth/sign-in/sign-in.component';
-import { DashboardComponent } from './component/dashboard/dashboard.component';
-import { UserComponent } from './component/dashboard/header/user/user.component';
-import { AccountsComponent } from './component/dashboard/accounts/accounts.component';
 
-import { GoalsComponent } from './component/dashboard/goals/goals.component';
-import { SubscriptionComponent } from './component/dashboard/subscription/subscription.component';
-import { CategoryComponent } from './component/dashboard/category/category.component';
-import { CategoryCardComponent } from './component/dashboard/category/category-card/category-card.component';
-import { LoaderComponent } from './util/components/loader/loader.component';
-import { HomeComponent } from './component/dashboard/home/home.component';
-import { ImportTransactionsComponent } from './component/dashboard/transaction-list/add-transaction/import-transactions.component';
-import { NotesComponent } from './component/dashboard/notes/notes.component';
-import { LanguageSwitcherComponent } from './util/components/language-switcher/language-switcher.component';
-import { ThemeToggleComponent } from './util/components/theme-toggle/theme-toggle.component';
-import { MobileTransactionListComponent } from './component/dashboard/transaction-list/mobile-transaction-list/mobile-transaction-list.component';
-import { SearchFilterComponent } from './component/dashboard/transaction-list/search-filter/search-filter.component';
-import { TransactionTableComponent } from './component/dashboard/transaction-list/transaction-table/transaction-table.component';
-import { RegistrationComponent } from './component/auth/registration/registration.component';
-import { OfflineIndicatorComponent } from './util/components/offline-indicator/offline-indicator.component';
-import { OfflinePageComponent } from './util/components/offline-page/offline-page.component';
-import { FooterComponent } from './component/dashboard/footer/footer.component';
-import { TermsConditionsComponent } from './component/terms-conditions/terms-conditions.component';
-import { AccountStatementDialogComponent } from './component/dashboard/accounts/account-statement-dialog/account-statement-dialog.component';
-import { MobileAccountsListComponent } from './component/dashboard/accounts/mobile-accounts-list/mobile-accounts-list.component';
-import { LandingComponent } from './component/landing/landing.component';
-import { PreLoginHeaderComponent } from './component/landing/pre-login-header/pre-login-header.component';
-import { PreFooterComponent } from './component/landing/pre-footer/pre-footer.component';
-import { CustomDateRangeDialogComponent } from './util/components/custom-date-range-dialog';
-import { ProfileComponent } from './component/dashboard/profile/profile.component';
-import { FeedbackComponent } from './component/feedback/feedback.component';
-import { PrivacyPolicyComponent } from './component/privacy-policy/privacy-policy.component';
-import { ChatCategoryDropdownComponent } from './util/components/chat-category-dropdown/chat-category-dropdown.component';
-import { ContactFormComponent } from './component/landing/contact-form/contact-form.component';
-import { ChatComponent } from './component/dashboard/chat/chat.component';
-import { DataDeletionComponent } from './component/data-deletion/data-deletion.component';
-import { SyncToCloudComponent } from './component/sync-to-cloud/sync-to-cloud.component';
-import { CategorySelectionSheetComponent } from './component/dashboard/transaction-list/add-transaction/mobile-add-transaction/category-selection-sheet/category-selection-sheet.component';
 
 // Card Components
-import { QuickActionsFabComponent } from './util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
-
-// Notification Components
-import { NotificationSettingsComponent } from './util/components/notification-settings/notification-settings.component';
-
-
-// PWA Components
-import { PwaBackButtonComponent } from './util/components/pwa-back-button/pwa-back-button.component';
-import { PwaNavigationBarComponent } from './util/components/pwa-navigation-bar/pwa-navigation-bar.component';
-import { PwaInstallPromptComponent } from './util/components/pwa-install-prompt/pwa-install-prompt.component';
 
 // Common Sync Service (replaces BackgroundSyncService)
 import { CommonSyncService } from './util/service/common-sync.service';
@@ -114,76 +58,19 @@ import { AppStoreModule } from './store';
 // Security
 import { securityInterceptor } from './util/interceptors/security.interceptor';
 import { RouterModule } from '@angular/router';
-import { SharedModule } from './modules/shared/shared.module';
-import { ParentCategorySelectorDialogComponent } from './component/dashboard/category/parent-category-selector-dialog/parent-category-selector-dialog.component';
-import { CategoryDetailsDialogComponent } from './component/dashboard/category/category-details-dialog/category-details-dialog.component';
-import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { CurrencyPipe } from './util/pipes';
+import { OfflineIndicatorComponent } from './util/components/offline-indicator/offline-indicator.component';
+import { PwaInstallPromptComponent } from './util/components/pwa-install-prompt/pwa-install-prompt.component';
 
 
 @NgModule({
   declarations: [
     AppComponent,
-    CategoryDetailsDialogComponent,
-    IconSelectorDialogComponent,
-    ColorSelectorDialogComponent,
-    SignInComponent,
-    RegistrationComponent,
-    AccountStatementDialogComponent,
-    MobileAccountsListComponent,
-    NotificationSettingsComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     BrowserAnimationsModule,
-    LoaderComponent,
-    SharedModule,
-    DashboardComponent,
-    HomeComponent,
-    HeaderComponent,
-    FooterComponent,
-    SideBarComponent,
-    TotalBalanceComponent,
-    CalendarViewComponent,
-    TransactionListComponent,
-    MobileAddTransactionComponent,
-    ImportTransactionsComponent,
-    LanguageSwitcherComponent,
-    ThemeToggleComponent,
-    MobileTransactionListComponent,
-    TransactionTableComponent,
-    SearchFilterComponent,
-    OfflineIndicatorComponent,
-    CustomDateRangeDialogComponent,
-    ChatCategoryDropdownComponent,
-    ChatComponent,
-    CategorySelectionSheetComponent,
-    ParentCategorySelectorDialogComponent,
-    UserComponent,
-    ClickOutsideDirective,
-
-    // Standalone Components
-    AccountsComponent,
-    GoalsComponent,
-    SubscriptionComponent,
-    CategoryComponent,
-    CategoryCardComponent,
-    NotesComponent,
-    OfflinePageComponent,
-    PwaBackButtonComponent,
-    PwaNavigationBarComponent,
-    PwaInstallPromptComponent,
-    LandingComponent,
-    PreLoginHeaderComponent,
-    PreFooterComponent,
-    ProfileComponent,
-    FeedbackComponent,
-    PrivacyPolicyComponent,
-    TermsConditionsComponent,
-    ContactFormComponent,
-    DataDeletionComponent,
-    SyncToCloudComponent,
 
     // Utility
     IconModule,
@@ -197,13 +84,9 @@ import { CurrencyPipe } from './util/pipes';
 
     // NgRx Store
     AppStoreModule,
+    OfflineIndicatorComponent,
+    PwaInstallPromptComponent,
 
-
-    // Floating Action Button Components
-    QuickActionsFabComponent,
-
-    // ngx-mat-select-search
-    NgxMatSelectSearchModule,
 
     // Enhanced Service Worker with offline support
     ServiceWorkerModule.register('ngsw-worker.js', {
