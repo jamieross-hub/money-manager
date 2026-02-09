@@ -12,6 +12,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { MatNativeDateModule } from '@angular/material/core';
 import { TotalBalanceComponent } from 'src/app/util/components/cards/total-balance/total-balance.component';
 
 import { Subscription } from 'rxjs';
@@ -43,6 +44,7 @@ import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
     MatDatepickerModule,
     MatFormFieldModule,
     MatSelectModule,
+    MatNativeDateModule,
     TotalBalanceComponent
   ]
 })
