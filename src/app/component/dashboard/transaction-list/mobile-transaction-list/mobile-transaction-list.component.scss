@@ -392,18 +392,16 @@
 .stat-value {
 	font-size: 14px;
 	font-weight: 600;
-	color: #1f2937;
+	color: var(--success-500);
 
-	:host-context(.dark-theme) & {
-		color: mat.get-theme-color(dark.$dark-theme, neutral, 95);
-	}
+
 
 	&.income {
-		color: #10b981;
+		color: var(--success-500);
 	}
 
 	&.expense {
-		color: #ef4444;
+		color: var(--error-500);
 	}
 }
 

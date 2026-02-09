@@ -93,6 +93,7 @@ export class MobileTransactionListComponent
     if (this.route.url.includes('transactions')) {
       this.showFilters = true;
     }
+    this.onDateRangeChange('this-month');
   }
 
   ngOnDestroy() {
