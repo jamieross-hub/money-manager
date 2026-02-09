@@ -353,6 +353,13 @@ export class TransactionsService extends BaseService {
         );
 
         return new Observable<Transaction[]>(observer => {
+            // Emit cached transactions immediately for fast initial load
+            const initialCachedTransactions = this.getCachedTransactions(userId);
+            if (initialCachedTransactions.length > 0) {
+                this.transactionsSubject.next(initialCachedTransactions);
+                observer.next(initialCachedTransactions);
+            }
+
             const unsubscribe = onSnapshot(
                 transactionsRef,
                 (querySnapshot) => {
@@ -398,6 +405,7 @@ export class TransactionsService extends BaseService {
 
             return () => unsubscribe();
         });
+
     }
 
     /**
