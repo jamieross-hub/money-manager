@@ -5,6 +5,9 @@ import {
   Output,
   EventEmitter,
 } from '@angular/core';
+import * as am5 from '@amcharts/amcharts5';
+import * as am5xy from '@amcharts/amcharts5/xy';
+import am5themes_Animated from '@amcharts/amcharts5/themes/Animated';
 import { MatDialog } from '@angular/material/dialog';
 import { Transaction } from '../../../../util/models/transaction.model';
 import { Subject, Subscription, Observable } from 'rxjs';
@@ -98,6 +101,7 @@ export class MobileTransactionListComponent
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
+    this.disposeChart();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -538,5 +542,94 @@ export class MobileTransactionListComponent
   getCategoryName(categoryId: string): string {
     const category = this.categories.find(cat => cat.id === categoryId);
     return category?.name || categoryId;
+  }
+
+  // Chart state
+  showChart: boolean = false;
+  private chartRoot: am5.Root | null = null;
+
+  toggleChartView() {
+    this.showChart = !this.showChart;
+    if (this.showChart) {
+      // render chart after a short delay to ensure container exists
+      setTimeout(() => this.renderChart(), 50);
+    } else {
+      this.disposeChart();
+    }
+  }
+
+  private renderChart() {
+    this.disposeChart();
+
+    const root = am5.Root.new('transactionChart');
+    root.setThemes([am5themes_Animated.new(root)]);
+
+    const chart = root.container.children.push(
+      am5xy.XYChart.new(root, {
+        panX: true,
+        panY: true,
+        wheelX: 'panX',
+        wheelY: 'zoomX',
+      })
+    );
+
+    const xRenderer = am5xy.AxisRendererX.new(root, {});
+    xRenderer.labels.template.setAll({ rotation: -45, centerY: am5.p50 });
+
+    const xAxis = chart.xAxes.push(
+      am5xy.DateAxis.new(root, {
+        maxDeviation: 0.5,
+        baseInterval: { timeUnit: 'day', count: 1 },
+        renderer: xRenderer,
+      })
+    );
+
+    const yAxis = chart.yAxes.push(
+      am5xy.ValueAxis.new(root, {
+        renderer: am5xy.AxisRendererY.new(root, {}),
+      })
+    );
+
+    const series = chart.series.push(
+      am5xy.LineSeries.new(root, {
+        name: 'Net',
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: 'value',
+        valueXField: 'date',
+        tooltip: am5.Tooltip.new(root, {}),
+      })
+    );
+
+    // Aggregate filteredTransactions by day (net: income - expense)
+    const map = new Map<number, number>();
+    this.filteredTransactions.forEach(tx => {
+      const d = this.dateService.toDate(tx.date);
+      if (!d) return;
+      const day = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+      const sign = tx.type === 'income' ? 1 : -1;
+      map.set(day, (map.get(day) || 0) + sign * tx.amount);
+    });
+
+    const data = Array.from(map.entries())
+      .map(([time, value]) => ({ date: time, value }))
+      .sort((a, b) => a.date - b.date);
+
+    series.data.setAll(data);
+
+    chart.set('cursor', am5xy.XYCursor.new(root, {}));
+
+    this.chartRoot = root;
+  }
+
+  private disposeChart() {
+    try {
+      if (this.chartRoot) {
+        this.chartRoot.dispose();
+        this.chartRoot = null;
+      }
+    } catch (e) {
+      // ignore disposal errors
+    }
   }
 }

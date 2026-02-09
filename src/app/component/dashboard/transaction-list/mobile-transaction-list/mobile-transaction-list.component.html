@@ -148,8 +148,19 @@
 				<mat-icon>upload_file</mat-icon>
 				<span class="filter-btn-text">Import</span>
 			</button> -->
+
+				<!-- Chart Button -->
+				<button mat-icon-button class="filter-menu-btn" (click)="toggleChartView()" matTooltip="Show chart" aria-label="Show chart">
+					<mat-icon>show_chart</mat-icon>
+					<span class="filter-btn-text">Chart</span>
+				</button>
 		</div>
 	</div>
+
+		<!-- Chart area (amCharts) -->
+		<div *ngIf="showChart" class="chart-wrapper">
+			<div id="transactionChart" class="transaction-chart"></div>
+		</div>
 
 	<!-- Transaction Summary -->
 	<div class="transaction-summary" *ngIf="showFilters && filteredTransactions.length > 0">
