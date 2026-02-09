@@ -1,8 +1,22 @@
 import { Component, Inject, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef, MatDialog } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule, MatNativeDateModule } from '@angular/material/core';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatBottomSheetModule, MatBottomSheet } from '@angular/material/bottom-sheet';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { TranslateModule } from '@ngx-translate/core';
+import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import { Auth } from '@angular/fire/auth';
-import { UserService } from 'src/app/util/service/db/user.service';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
@@ -34,12 +48,40 @@ import { ReplaySubject, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { CurrencyService } from 'src/app/util/service/currency.service';
 import { CategorySelectionSheetComponent } from './category-selection-sheet/category-selection-sheet.component';
-import { MatBottomSheet } from '@angular/material/bottom-sheet';
+import { UserService } from 'src/app/util/service/db/user.service';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { CommonHeaderComponent } from 'src/app/util/components/dialog/common-header/common-header.component';
+import { CommonBodyContentComponent } from 'src/app/util/components/dialog/common-body-content/common-body-content.component';
 
 @Component({
   selector: 'app-mobile-add-transaction',
   templateUrl: './mobile-add-transaction.component.html',
-  styleUrl: './mobile-add-transaction.component.scss'
+  styleUrl: './mobile-add-transaction.component.scss',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatIconModule,
+    MatButtonModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatTooltipModule,
+    MatSlideToggleModule,
+    MatChipsModule,
+    MatBottomSheetModule,
+    TranslateModule,
+    CurrencyPipe,
+    CategorySelectionSheetComponent,
+    MatExpansionModule,
+    CommonHeaderComponent,
+    CommonBodyContentComponent
+  ]
 })
 export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('amountInput', { static: false }) amountInput!: ElementRef;

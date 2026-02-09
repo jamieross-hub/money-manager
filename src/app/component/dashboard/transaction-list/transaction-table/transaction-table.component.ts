@@ -1,6 +1,16 @@
 import { Component, Output, EventEmitter, ViewChild, OnInit, OnDestroy, AfterViewInit, HostListener, Input } from '@angular/core';
+import { MatTableModule } from '@angular/material/table';
+import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatMenuModule } from '@angular/material/menu';
+import { FormsModule } from '@angular/forms';
+import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import { MatTableDataSource } from '@angular/material/table';
-import { MatSort, Sort } from '@angular/material/sort';
+import { MatSort, Sort, MatSortModule } from '@angular/material/sort';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { Transaction } from '../../../../util/models/transaction.model';
 import { Auth } from '@angular/fire/auth';
@@ -27,6 +37,20 @@ import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
   selector: 'transaction-table',
   templateUrl: './transaction-table.component.html',
   styleUrls: ['./transaction-table.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatTableModule,
+    MatSortModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatCheckboxModule,
+    MatMenuModule,
+    TranslateModule,
+    CurrencyPipe,
+    FormsModule
+  ],
   animations: [
     trigger('listAnimation', [
       transition('* <=> *', [

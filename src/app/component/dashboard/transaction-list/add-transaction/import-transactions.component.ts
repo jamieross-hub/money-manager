@@ -5,7 +5,19 @@ import {
   ViewChild,
   OnDestroy,
 } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
+import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslateModule } from '@ngx-translate/core';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import * as XLSX from 'xlsx';
 import { Auth } from '@angular/fire/auth';
@@ -26,6 +38,22 @@ import { takeUntil } from 'rxjs/operators';
   selector: 'import-transactions',
   templateUrl: './import-transactions.component.html',
   styleUrls: ['./import-transactions.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatChipsModule,
+    MatProgressBarModule,
+    MatCheckboxModule,
+    MatProgressSpinnerModule,
+    TranslateModule
+  ]
 })
 export class ImportTransactionsComponent implements OnDestroy {
   @ViewChild('fileUploadContainer') fileUploadContainer!: ElementRef;

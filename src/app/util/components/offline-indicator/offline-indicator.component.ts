@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { CommonSyncService, NetworkStatus } from '../../service/common-sync.service';
@@ -10,6 +11,8 @@ import { APP_CONFIG } from '../../config/config';
   selector: 'app-offline-indicator',
   templateUrl: './offline-indicator.component.html',
   styleUrls: ['./offline-indicator.component.scss'],
+  standalone: true,
+  imports: [CommonModule],
   animations: [
     trigger('slideDown', [
       state('void', style({

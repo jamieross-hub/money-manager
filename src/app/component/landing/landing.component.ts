@@ -3,10 +3,32 @@ import { Router } from '@angular/router';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { UserService } from 'src/app/util/service/db/user.service';
 
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { PreLoginHeaderComponent } from './pre-login-header/pre-login-header.component';
+import { PreFooterComponent } from './pre-footer/pre-footer.component';
+import { ContactFormComponent } from './contact-form/contact-form.component';
+import { PwaInstallPromptComponent } from 'src/app/util/components/pwa-install-prompt/pwa-install-prompt.component';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { HeaderComponent } from '../dashboard/header/header.component';
+
 @Component({
   selector: 'app-landing',
   templateUrl: './landing.component.html',
-  styleUrls: ['./landing.component.scss']
+  styleUrls: ['./landing.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    PreLoginHeaderComponent,
+    PreFooterComponent,
+    ContactFormComponent,
+    PwaInstallPromptComponent,
+    MatButtonModule,
+    MatIconModule,
+    HeaderComponent
+  ]
 })
 export class LandingComponent implements OnInit {
   features = [

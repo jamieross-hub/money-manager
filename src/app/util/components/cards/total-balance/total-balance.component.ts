@@ -1,4 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { CurrencyPipe } from 'src/app/util/pipes';
 import { Auth } from '@angular/fire/auth';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { CurrencyService } from 'src/app/util/service/currency.service';
@@ -13,7 +15,9 @@ import { UserService } from 'src/app/util/service/db/user.service';
 @Component({
   selector: 'total-balance',
   templateUrl: './total-balance.component.html',
-  styleUrl: './total-balance.component.scss'
+  styleUrl: './total-balance.component.scss',
+  standalone: true,
+  imports: [CommonModule, CurrencyPipe]
 })
 export class TotalBalanceComponent implements OnInit, OnDestroy {
 

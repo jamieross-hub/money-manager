@@ -1,4 +1,8 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { HeaderComponent } from './header/header.component';
+import { FooterComponent } from './footer/footer.component';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
@@ -18,6 +22,8 @@ import { RecurringTransactionService } from 'src/app/util/service/recurring-tran
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
+  standalone: true,
+  imports: [CommonModule, RouterModule, HeaderComponent, FooterComponent]
 })
 export class DashboardComponent {
   @ViewChild('mainContent') mainContent!: ElementRef<HTMLElement>;

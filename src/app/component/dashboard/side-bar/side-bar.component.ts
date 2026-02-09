@@ -2,14 +2,30 @@ import { Component, HostListener, ElementRef, AfterViewInit } from '@angular/cor
 import { Auth } from '@angular/fire/auth';
 import { Router } from '@angular/router';
 import { ViewChild } from '@angular/core';
-import { MatDrawer } from '@angular/material/sidenav';
+import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { SidebarNavParent, getAllNavigationItems } from '../../../util/config/sidebar.config';
 import { UserService } from 'src/app/util/service/db/user.service';
 
 @Component({
   selector: 'side-bar',
   templateUrl: './side-bar.component.html',
-  styleUrl: './side-bar.component.scss'
+  styleUrl: './side-bar.component.scss',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatSidenavModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule,
+    RouterModule,
+    TranslateModule
+  ]
 })
 export class SideBarComponent implements AfterViewInit {
   @ViewChild('drawer') drawer!: MatDrawer;

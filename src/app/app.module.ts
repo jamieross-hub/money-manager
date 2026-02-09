@@ -40,6 +40,7 @@ import { ServiceWorkerModule } from '@angular/service-worker';
 import { IconModule } from './util/icon.module';
 
 // Directives
+// Directives
 import { ClickOutsideDirective } from './util/directives/click-outside.directive';
 
 // Components
@@ -49,10 +50,8 @@ import { TransactionListComponent } from './component/dashboard/transaction-list
 import { HeaderComponent } from './component/dashboard/header/header.component';
 import { SideBarComponent } from './component/dashboard/side-bar/side-bar.component';
 import { MobileAddTransactionComponent } from './component/dashboard/transaction-list/add-transaction/mobile-add-transaction/mobile-add-transaction.component';
-import { MobileCategoryAddEditPopupComponent } from './component/dashboard/category/mobile-category-add-edit-popup/mobile-category-add-edit-popup.component';
 import { IconSelectorDialogComponent } from './component/dashboard/category/icon-selector-dialog/icon-selector-dialog.component';
 import { ColorSelectorDialogComponent } from './component/dashboard/category/color-selector-dialog/color-selector-dialog.component';
-import { CategoryBudgetDialogComponent } from './component/dashboard/category/category-budget-dialog/category-budget-dialog.component';
 import { SignInComponent } from './component/auth/sign-in/sign-in.component';
 import { DashboardComponent } from './component/dashboard/dashboard.component';
 import { UserComponent } from './component/dashboard/header/user/user.component';
@@ -76,7 +75,6 @@ import { OfflineIndicatorComponent } from './util/components/offline-indicator/o
 import { OfflinePageComponent } from './util/components/offline-page/offline-page.component';
 import { FooterComponent } from './component/dashboard/footer/footer.component';
 import { TermsConditionsComponent } from './component/terms-conditions/terms-conditions.component';
-import { AddAccountDialogComponent } from './component/dashboard/accounts/add-account-dialog/add-account-dialog.component';
 import { AccountStatementDialogComponent } from './component/dashboard/accounts/account-statement-dialog/account-statement-dialog.component';
 import { MobileAccountsListComponent } from './component/dashboard/accounts/mobile-accounts-list/mobile-accounts-list.component';
 import { LandingComponent } from './component/landing/landing.component';
@@ -99,8 +97,6 @@ import { QuickActionsFabComponent } from './util/components/floating-action-butt
 // Notification Components
 import { NotificationSettingsComponent } from './util/components/notification-settings/notification-settings.component';
 
-// Splitwise Module
-import { SplitwiseModule } from './modules/splitwise/splitwise.module';
 
 // PWA Components
 import { PwaBackButtonComponent } from './util/components/pwa-back-button/pwa-back-button.component';
@@ -122,68 +118,20 @@ import { SharedModule } from './modules/shared/shared.module';
 import { ParentCategorySelectorDialogComponent } from './component/dashboard/category/parent-category-selector-dialog/parent-category-selector-dialog.component';
 import { CategoryDetailsDialogComponent } from './component/dashboard/category/category-details-dialog/category-details-dialog.component';
 import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
-import { UpcomingTransactionsCardComponent } from './util/components/cards/upcoming-transactions-card/upcoming-transactions-card.component';
 import { CurrencyPipe } from './util/pipes';
 
 
 @NgModule({
   declarations: [
     AppComponent,
-    TotalBalanceComponent,
-    CalendarViewComponent,
-    TransactionListComponent,
-    HeaderComponent,
-    SideBarComponent,
-    MobileAddTransactionComponent,
-    MobileCategoryAddEditPopupComponent,
-    ParentCategorySelectorDialogComponent,
     CategoryDetailsDialogComponent,
     IconSelectorDialogComponent,
     ColorSelectorDialogComponent,
-    CategoryBudgetDialogComponent,
     SignInComponent,
     RegistrationComponent,
-    DashboardComponent,
-    UserComponent,
-    AccountsComponent,
-
-    GoalsComponent,
-    SubscriptionComponent,
-    CategoryComponent,
-    CategoryCardComponent,
-    HomeComponent,
-    ImportTransactionsComponent,
-    NotesComponent,
-    LanguageSwitcherComponent,
-    ThemeToggleComponent,
-    MobileTransactionListComponent,
-    TransactionTableComponent,
-    SearchFilterComponent,
-    OfflineIndicatorComponent,
-    OfflinePageComponent,
-    FooterComponent,
-    ClickOutsideDirective,
-    PwaBackButtonComponent,
-    PwaNavigationBarComponent,
-    PwaInstallPromptComponent,
-    AddAccountDialogComponent,
     AccountStatementDialogComponent,
     MobileAccountsListComponent,
-    LandingComponent,
-    PreLoginHeaderComponent,
-    PreFooterComponent,
-    CustomDateRangeDialogComponent,
-    ProfileComponent,
-    NotificationSettingsComponent,
-    FeedbackComponent,
-    PrivacyPolicyComponent,
-    TermsConditionsComponent,
-    ChatCategoryDropdownComponent,
-    ChatComponent,
-    ContactFormComponent,
-    DataDeletionComponent,
-    SyncToCloudComponent,
-    CategorySelectionSheetComponent
+    NotificationSettingsComponent
   ],
   imports: [
     BrowserModule,
@@ -191,6 +139,51 @@ import { CurrencyPipe } from './util/pipes';
     BrowserAnimationsModule,
     LoaderComponent,
     SharedModule,
+    DashboardComponent,
+    HomeComponent,
+    HeaderComponent,
+    FooterComponent,
+    SideBarComponent,
+    TotalBalanceComponent,
+    CalendarViewComponent,
+    TransactionListComponent,
+    MobileAddTransactionComponent,
+    ImportTransactionsComponent,
+    LanguageSwitcherComponent,
+    ThemeToggleComponent,
+    MobileTransactionListComponent,
+    TransactionTableComponent,
+    SearchFilterComponent,
+    OfflineIndicatorComponent,
+    CustomDateRangeDialogComponent,
+    ChatCategoryDropdownComponent,
+    ChatComponent,
+    CategorySelectionSheetComponent,
+    ParentCategorySelectorDialogComponent,
+    UserComponent,
+    ClickOutsideDirective,
+
+    // Standalone Components
+    AccountsComponent,
+    GoalsComponent,
+    SubscriptionComponent,
+    CategoryComponent,
+    CategoryCardComponent,
+    NotesComponent,
+    OfflinePageComponent,
+    PwaBackButtonComponent,
+    PwaNavigationBarComponent,
+    PwaInstallPromptComponent,
+    LandingComponent,
+    PreLoginHeaderComponent,
+    PreFooterComponent,
+    ProfileComponent,
+    FeedbackComponent,
+    PrivacyPolicyComponent,
+    TermsConditionsComponent,
+    ContactFormComponent,
+    DataDeletionComponent,
+    SyncToCloudComponent,
 
     // Utility
     IconModule,
@@ -204,9 +197,6 @@ import { CurrencyPipe } from './util/pipes';
 
     // NgRx Store
     AppStoreModule,
-
-    // Splitwise Module
-    SplitwiseModule,
 
 
     // Floating Action Button Components

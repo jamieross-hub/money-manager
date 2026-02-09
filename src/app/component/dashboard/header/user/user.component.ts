@@ -1,5 +1,10 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { RouterModule } from '@angular/router';
 import { Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { trigger, state, style, transition, animate } from '@angular/animations';
@@ -16,6 +21,8 @@ import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage
   selector: 'app-user',
   templateUrl: './user.component.html',
   styleUrl: './user.component.scss',
+  standalone: true,
+  imports: [CommonModule, MatIconModule, MatTooltipModule, RouterModule, TranslateModule],
   animations: [
     trigger('slideDown', [
       state('void', style({

@@ -6,10 +6,17 @@ import { Subscription, SubscriptionService } from 'src/app/util/service/subscrip
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { DateService } from 'src/app/util/service/date.service';
 
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
+import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
+
 @Component({
   selector: 'app-subscription',
   templateUrl: './subscription.component.html',
-  styleUrls: ['./subscription.component.scss']
+  styleUrls: ['./subscription.component.scss'],
+  standalone: true,
+  imports: [CommonModule, FormsModule, CurrencyPipe]
 })
 export class SubscriptionComponent implements OnInit {
   userId: string = '';

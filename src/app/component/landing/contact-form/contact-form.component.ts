@@ -3,10 +3,24 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ContactService } from 'src/app/util/service/db/contact.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
 
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+
 @Component({
     selector: 'app-contact-form',
     templateUrl: './contact-form.component.html',
-    styleUrls: ['./contact-form.component.scss']
+    styleUrls: ['./contact-form.component.scss'],
+    standalone: true,
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule
+    ]
 })
 export class ContactFormComponent {
     contactForm: FormGroup;

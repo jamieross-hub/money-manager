@@ -1,5 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 import { Inject } from '@angular/core';
 import moment from 'moment';
 
@@ -11,7 +18,18 @@ export interface CustomDateRangeData {
 @Component({
   selector: 'app-custom-date-range-dialog',
   templateUrl: './custom-date-range-dialog.component.html',
-  styleUrls: ['./custom-date-range-dialog.component.scss']
+  styleUrls: ['./custom-date-range-dialog.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatDatepickerModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatDialogModule,
+    MatIconModule
+  ]
 })
 export class CustomDateRangeDialogComponent implements OnInit {
   startDate: Date | null = null;
@@ -21,7 +39,7 @@ export class CustomDateRangeDialogComponent implements OnInit {
   constructor(
     public dialogRef: MatDialogRef<CustomDateRangeDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: CustomDateRangeData
-  ) {}
+  ) { }
 
   ngOnInit() {
     // Initialize with existing date range if provided

@@ -3,8 +3,13 @@ import { PwaNavigationService, NavigationState } from '../../service/pwa-navigat
 import { CommonSyncService } from '../../service/common-sync.service';
 import { Subject, takeUntil } from 'rxjs';
 
+import { CommonModule } from '@angular/common';
+import { PwaBackButtonComponent } from '../pwa-back-button/pwa-back-button.component';
+
 @Component({
   selector: 'app-pwa-navigation-bar',
+  standalone: true,
+  imports: [CommonModule, PwaBackButtonComponent],
   template: `
     <nav class="pwa-navigation-bar" [class.standalone]="navigationState.isStandalone">
       <div class="nav-left">

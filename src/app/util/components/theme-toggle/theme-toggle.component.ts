@@ -1,11 +1,16 @@
 import { Component, OnInit } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ThemeSwitchingService } from '../../service/theme-switching.service';
 import { ThemeType } from '../../models/theme.model';
 
 @Component({
   selector: 'app-theme-toggle',
   templateUrl: './theme-toggle.component.html',
-  styleUrl: './theme-toggle.component.scss'
+  styleUrl: './theme-toggle.component.scss',
+  standalone: true,
+  imports: [MatIconModule, MatSlideToggleModule, MatTooltipModule]
 })
 export class ThemeToggleComponent implements OnInit {
   isDarkTheme: boolean = false;

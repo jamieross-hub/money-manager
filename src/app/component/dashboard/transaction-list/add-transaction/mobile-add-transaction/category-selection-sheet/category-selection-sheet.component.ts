@@ -1,19 +1,36 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bottom-sheet';
+import { CommonModule } from '@angular/common';
+import { MatListModule } from '@angular/material/list';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef, MatBottomSheetModule } from '@angular/material/bottom-sheet';
 import { Category, Transaction } from 'src/app/util/models';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
 import { selectAllTransactions } from 'src/app/store/transactions/transactions.selectors';
 import { Observable, combineLatest, map, startWith } from 'rxjs';
-import { FormControl } from '@angular/forms';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { TransactionType } from 'src/app/util/config/enums';
 import { DateService } from 'src/app/util/service/date.service';
 
 @Component({
     selector: 'app-category-selection-sheet',
     templateUrl: './category-selection-sheet.component.html',
-    styleUrls: ['./category-selection-sheet.component.scss']
+    styleUrls: ['./category-selection-sheet.component.scss'],
+    standalone: true,
+    imports: [
+        CommonModule,
+        MatListModule,
+        MatIconModule,
+        MatButtonModule,
+        MatBottomSheetModule,
+        MatFormFieldModule,
+        MatInputModule,
+        ReactiveFormsModule
+    ]
 })
 export class CategorySelectionSheetComponent implements OnInit {
     categories$: Observable<Category[]>;

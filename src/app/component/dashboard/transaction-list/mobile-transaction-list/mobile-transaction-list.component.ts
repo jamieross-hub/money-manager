@@ -5,6 +5,19 @@ import {
   Output,
   EventEmitter,
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatDividerModule } from '@angular/material/divider';
+import { TranslateModule } from '@ngx-translate/core';
+import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import * as am5 from '@amcharts/amcharts5';
 import * as am5xy from '@amcharts/amcharts5/xy';
 import am5themes_Animated from '@amcharts/amcharts5/themes/Animated';
@@ -40,6 +53,22 @@ interface SortOption {
   selector: 'mobile-transaction-list',
   templateUrl: './mobile-transaction-list.component.html',
   styleUrls: ['./mobile-transaction-list.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatDialogModule,
+    MatMenuModule,
+    MatChipsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    TranslateModule,
+    CurrencyPipe,
+    FormsModule,
+    MatDividerModule
+  ]
 })
 export class MobileTransactionListComponent
   implements OnInit, OnDestroy {

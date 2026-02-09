@@ -13,10 +13,16 @@ import { Observable, Subject, Subscription } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { DateService } from 'src/app/util/service/date.service';
 
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
+
 @Component({
   selector: 'app-goals',
   templateUrl: './goals.component.html',
-  styleUrls: ['./goals.component.scss']
+  styleUrls: ['./goals.component.scss'],
+  standalone: true,
+  imports: [CommonModule, FormsModule, CurrencyPipe]
 })
 export class GoalsComponent implements OnInit, OnDestroy {
   // Observables from store

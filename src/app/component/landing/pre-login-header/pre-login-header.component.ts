@@ -2,10 +2,18 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { TranslateModule } from '@ngx-translate/core';
+
 @Component({
   selector: 'app-pre-login-header',
   templateUrl: './pre-login-header.component.html',
   styleUrls: ['./pre-login-header.component.scss'],
+  standalone: true,
+  imports: [CommonModule, RouterModule, MatButtonModule, MatIconModule, TranslateModule]
 })
 export class PreLoginHeaderComponent {
   isMobileMenuOpen = false;

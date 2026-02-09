@@ -1,8 +1,18 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { FormGroup } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Category } from 'src/app/util/models/category.model';
 import { CategoryBudgetService } from 'src/app/util/service/category-budget.service';
+import { CommonModule } from '@angular/common';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { CommonHeaderComponent } from 'src/app/util/components/dialog/common-header/common-header.component';
+import { CommonBodyContentComponent } from 'src/app/util/components/dialog/common-body-content/common-body-content.component';
 
 export interface CategoryBudgetDialogData {
   category: Category;
@@ -12,7 +22,23 @@ export interface CategoryBudgetDialogData {
 @Component({
   selector: 'app-category-budget-dialog',
   templateUrl: './category-budget-dialog.component.html',
-  styleUrls: ['./category-budget-dialog.component.scss']
+  styleUrls: ['./category-budget-dialog.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatIconModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    CommonHeaderComponent,
+    CommonBodyContentComponent
+  ]
 })
 export class CategoryBudgetDialogComponent implements OnInit {
   budgetForm: FormGroup;

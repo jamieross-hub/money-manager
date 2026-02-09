@@ -2,8 +2,12 @@ import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angu
 import { PwaNavigationService, NavigationState } from '../../service/pwa-navigation.service';
 import { Subject, takeUntil } from 'rxjs';
 
+import { CommonModule } from '@angular/common';
+
 @Component({
   selector: 'app-pwa-back-button',
+  standalone: true,
+  imports: [CommonModule],
   template: `
     <button 
       *ngIf="showBackButton"
@@ -119,10 +123,10 @@ export class PwaBackButtonComponent implements OnInit, OnDestroy {
       this.showBackButton = true;
     } else {
       // Show back button if we can go back or if we're in standalone mode and not on home
-      this.showBackButton = this.navigationState.canGoBack || 
-                           (this.navigationState.isStandalone && 
-                            this.navigationState.currentRoute !== '/dashboard' &&
-                            this.navigationState.currentRoute !== '/');
+      this.showBackButton = this.navigationState.canGoBack ||
+        (this.navigationState.isStandalone &&
+          this.navigationState.currentRoute !== '/dashboard' &&
+          this.navigationState.currentRoute !== '/');
     }
   }
 

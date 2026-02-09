@@ -5,6 +5,14 @@ import { UserService } from '../../../util/service/db/user.service';
 import { FilterService } from '../../../util/service/filter.service';
 import { NotificationService } from '../../../util/service/notification.service';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { TotalBalanceComponent } from 'src/app/util/components/cards/total-balance/total-balance.component';
 
 import { Subscription } from 'rxjs';
 import moment from 'moment';
@@ -24,7 +32,19 @@ import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 @Component({
   selector: 'calendar-view',
   templateUrl: './calendar-view.component.html',
-  styleUrl: './calendar-view.component.scss'
+  styleUrl: './calendar-view.component.scss',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatDatepickerModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    TotalBalanceComponent
+  ]
 })
 export class CalendarViewComponent implements OnInit, OnDestroy {
 

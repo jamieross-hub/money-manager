@@ -1,4 +1,15 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
+import { MatChipsModule } from '@angular/material/chips';
+import { TranslateModule } from '@ngx-translate/core';
 import { Transaction } from '../../../../util/models/transaction.model';
 import { NotificationService } from '../../../../util/service/notification.service';
 import { Store } from '@ngrx/store';
@@ -14,7 +25,21 @@ import { FilterService } from '../../../../util/service/filter.service';
 @Component({
   selector: 'search-filter',
   templateUrl: './search-filter.component.html',
-  styleUrls: ['./search-filter.component.scss']
+  styleUrls: ['./search-filter.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatChipsModule,
+    TranslateModule,
+    FormsModule
+  ]
 })
 export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
   // Remove the @Input() filteredCount property

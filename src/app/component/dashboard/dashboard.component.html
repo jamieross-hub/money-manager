@@ -1,6 +1,8 @@
 <div class="dashboard-wrapper safe-h-screen flex flex-col">
   <!-- Fixed Header -->
+  @defer (on timer(200ms)) {
   <app-header class="dashboard-header"></app-header>
+  }
 
   <!-- Scrollable Content Area -->
   <main #mainContent class="main-content flex-1 overflow-y-auto h-[inherit]">
@@ -10,5 +12,7 @@
   </main>
 
   <!-- Fixed Footer -->
+  @defer (on timer(400ms)) {
   <app-footer class="dashboard-footer"></app-footer>
+  }
 </div>

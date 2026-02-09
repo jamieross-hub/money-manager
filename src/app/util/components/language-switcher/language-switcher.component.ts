@@ -1,11 +1,14 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { TranslationService, Language } from '../../service/translation.service';
 import { LanguageService } from '../../service/language.service';
 
 @Component({
   selector: 'app-language-switcher',
   templateUrl: './language-switcher.component.html',
-  styleUrls: ['./language-switcher.component.scss']
+  styleUrls: ['./language-switcher.component.scss'],
+  standalone: true,
+  imports: [CommonModule]
 })
 export class LanguageSwitcherComponent implements OnInit {
   currentLanguage: Language = 'en';

@@ -12,10 +12,28 @@ interface Note {
   isImportant: boolean;
 }
 
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatTooltipModule } from '@angular/material/tooltip';
+
 @Component({
   selector: 'app-notes',
   templateUrl: './notes.component.html',
-  styleUrls: ['./notes.component.scss']
+  styleUrls: ['./notes.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatIconModule,
+    MatButtonModule,
+    MatCardModule,
+    MatCheckboxModule,
+    MatTooltipModule
+  ]
 })
 export class NotesComponent implements OnInit {
 
@@ -85,8 +103,8 @@ export class NotesComponent implements OnInit {
     this.filteredNotes = this.notes.filter(note => {
       const matchesCategory = this.selectedCategory === 'all' || note.category === this.selectedCategory;
       const matchesSearch = note.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                           note.content.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                           note.tags.some(tag => tag.toLowerCase().includes(this.searchTerm.toLowerCase()));
+        note.content.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        note.tags.some(tag => tag.toLowerCase().includes(this.searchTerm.toLowerCase()));
       return matchesCategory && matchesSearch;
     });
   }
@@ -120,7 +138,7 @@ export class NotesComponent implements OnInit {
         updatedAt: new Date(),
         isImportant: this.newNote.isImportant!
       };
-      
+
       this.notes.unshift(note);
       this.filterNotes();
       this.resetNewNote();

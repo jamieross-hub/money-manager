@@ -19,10 +19,31 @@ import { StepperOrientation } from '@angular/material/stepper';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
+import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatStepperModule } from '@angular/material/stepper';
+import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatInputModule } from '@angular/material/input';
+
 @Component({
     selector: 'app-sync-to-cloud',
     templateUrl: './sync-to-cloud.component.html',
-    styleUrls: ['./sync-to-cloud.component.scss']
+    styleUrls: ['./sync-to-cloud.component.scss'],
+    standalone: true,
+    imports: [
+        CommonModule,
+        MatIconModule,
+        MatButtonModule,
+        MatProgressSpinnerModule,
+        MatStepperModule,
+        MatCardModule,
+        MatDividerModule,
+        MatProgressBarModule
+    ]
 })
 export class SyncToCloudComponent implements OnInit {
     currentStep = 1;

@@ -1,4 +1,7 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { ChatComponent } from '../chat/chat.component';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 
@@ -9,7 +12,9 @@ import { ChatFacadeService } from 'src/app/util/service/ai-chat/chat-facade-serv
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
-  styleUrl: './home.component.scss'
+  styleUrl: './home.component.scss',
+  standalone: true,
+  imports: [CommonModule, RouterModule, ChatComponent]
 })
 export class HomeComponent {
   // topCategoriesConfig: TopCategoriesConfig = {

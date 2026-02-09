@@ -1,5 +1,8 @@
 import { Component, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 export interface ConfirmDialogData {
   title: string;
@@ -11,6 +14,8 @@ export interface ConfirmDialogData {
 
 @Component({
   selector: 'confirm-dialog',
+  standalone: true,
+  imports: [CommonModule, MatIconModule, MatButtonModule, MatDialogModule],
   template: `
     <div class="confirm-dialog">
       <div class="dialog-header">
@@ -99,7 +104,7 @@ export class ConfirmDialogComponent {
   constructor(
     public dialogRef: MatDialogRef<ConfirmDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ConfirmDialogData
-  ) {}
+  ) { }
 
   onCancel(): void {
     this.dialogRef.close(false);

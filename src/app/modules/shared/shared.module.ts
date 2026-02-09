@@ -60,13 +60,7 @@ import { UpcomingTransactionsCardComponent } from 'src/app/util/components/cards
 
 @NgModule({
   declarations: [
-    ConfirmDialogComponent,
     RecurringTransactionConfirmationDialogComponent,
-    CommonHeaderComponent,
-    CommonBodyContentComponent,
-    CategorySplitDialogComponent,
-    BudgetCardComponent,
-    AccountSummaryCardComponent,
   ],
   imports: [
     CommonModule,
@@ -82,9 +76,15 @@ import { UpcomingTransactionsCardComponent } from 'src/app/util/components/cards
     UpcomingTransactionsCardComponent,
     MonthlyExpenditureCardComponent,
     LoanSummaryCardComponent,
+    ConfirmDialogComponent,
+    CategorySplitDialogComponent,
+    BudgetCardComponent,
+    AccountSummaryCardComponent,
     CurrencyPipe,
     SafeHtmlPipe,
     TranslateModule,
+    CommonHeaderComponent,
+    CommonBodyContentComponent,
     // TranslatePipe,
 
     // Material Modules
@@ -159,10 +159,10 @@ import { UpcomingTransactionsCardComponent } from 'src/app/util/components/cards
     MatBottomSheetModule,
 
     // Components
-    ConfirmDialogComponent,
     RecurringTransactionConfirmationDialogComponent,
     CommonHeaderComponent,
     CommonBodyContentComponent,
+    ConfirmDialogComponent,
     CategorySplitDialogComponent,
     BudgetCardComponent,
     AccountSummaryCardComponent,

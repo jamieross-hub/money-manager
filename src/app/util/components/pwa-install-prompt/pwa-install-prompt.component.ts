@@ -4,8 +4,12 @@ import { Subject } from 'rxjs';
 import { APP_CONFIG } from '../../config/config';
 import { SsrService } from '../../service/ssr.service';
 
+import { CommonModule } from '@angular/common';
+
 @Component({
   selector: 'app-pwa-install-prompt',
+  standalone: true,
+  imports: [CommonModule],
   template: `
     <div *ngIf="showInstallPrompt" class="pwa-install-prompt">
       <div class="install-content">
@@ -267,7 +271,7 @@ export class PwaInstallPromptComponent implements OnInit, OnDestroy {
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         this.deferredPrompt = e;
-        
+
         const dismissed = localStorage.getItem('pwa-install-dismissed');
         const dismissedTime = localStorage.getItem('pwa-install-dismissed-time');
         let showPrompt = true;

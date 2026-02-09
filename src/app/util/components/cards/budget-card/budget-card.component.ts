@@ -3,6 +3,13 @@ import { Store } from '@ngrx/store';
 import { Observable, Subject, combineLatest } from 'rxjs';
 import { takeUntil, map, distinctUntilChanged } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import { AppState } from '../../../../store/app.state';
 import * as CategoriesSelectors from '../../../../store/categories/categories.selectors';
 import * as TransactionsSelectors from '../../../../store/transactions/transactions.selectors';
@@ -16,6 +23,16 @@ import { BreakpointService } from '../../../service/breakpoint.service';
   selector: 'app-budget-card',
   templateUrl: './budget-card.component.html',
   styleUrls: ['./budget-card.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatProgressBarModule,
+    MatIconModule,
+    MatCardModule,
+    MatButtonModule,
+    MatTooltipModule,
+    CurrencyPipe
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BudgetCardComponent implements OnInit, OnDestroy {

@@ -1,10 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { Location } from '@angular/common';
 
+import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
+
 @Component({
     selector: 'app-data-deletion',
     templateUrl: './data-deletion.component.html',
-    styleUrls: ['./data-deletion.component.scss']
+    styleUrls: ['./data-deletion.component.scss'],
+    standalone: true,
+    imports: [CommonModule, MatIconModule]
 })
 export class DataDeletionComponent implements OnInit {
     lastUpdated: string = 'October 20, 2023'; // Keeping it consistent with other policy pages if they have it

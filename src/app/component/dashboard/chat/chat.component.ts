@@ -9,11 +9,36 @@ import { OpenAiIntentHandler } from 'src/app/util/service/ai-chat/handlers/inten
 import { take } from 'rxjs/operators';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
+import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { AccountSummaryCardComponent } from 'src/app/util/components/cards/account-summary-card/account-summary-card.component';
+import { LoanSummaryCardComponent } from 'src/app/util/components/cards/loan-summary-card/loan-summary-card.component';
+import { MonthlyExpenditureCardComponent } from 'src/app/util/components/cards/monthly-expenditure-card/monthly-expenditure-card.component';
+import { RecentActivityCardComponent } from 'src/app/util/components/cards/recent-activity-card/recent-activity-card.component';
+import { ChatCategoryDropdownComponent } from 'src/app/util/components/chat-category-dropdown/chat-category-dropdown.component';
+import { BudgetCardComponent } from 'src/app/util/components/cards/budget-card/budget-card.component';
+import { SafeHtmlPipe } from 'src/app/util/pipes/safe-html.pipe';
 
 @Component({
   selector: 'app-chat',
   templateUrl: './chat.component.html',
-  styleUrls: ['./chat.component.scss']
+  styleUrls: ['./chat.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatIconModule,
+    MatChipsModule,
+    MatTooltipModule,
+    AccountSummaryCardComponent,
+    LoanSummaryCardComponent,
+    MonthlyExpenditureCardComponent,
+    RecentActivityCardComponent,
+    ChatCategoryDropdownComponent,
+    BudgetCardComponent,
+    SafeHtmlPipe
+  ]
 })
 export class ChatComponent {
 

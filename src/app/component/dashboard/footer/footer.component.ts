@@ -1,4 +1,9 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { RouterModule } from '@angular/router';
 import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { CommonSyncService } from '../../../util/service/common-sync.service';
 import { Subscription } from 'rxjs';
@@ -11,12 +16,14 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 @Component({
   selector: 'app-footer',
   templateUrl: './footer.component.html',
-  styleUrls: ['./footer.component.scss']
+  styleUrls: ['./footer.component.scss'],
+  standalone: true,
+  imports: [CommonModule, TranslateModule, MatIconModule, MatButtonModule, RouterModule]
 })
 export class FooterComponent implements OnInit, OnDestroy {
   private routeSubscription?: Subscription;
   public hideFooter: boolean = false;
-  private hideFooterForRoutes: string[] = [ ];
+  private hideFooterForRoutes: string[] = [];
 
   constructor(
     private commonSyncService: CommonSyncService,

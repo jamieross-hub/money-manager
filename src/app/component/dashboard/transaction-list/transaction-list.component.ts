@@ -1,4 +1,15 @@
-import { Component, ViewChild, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, AfterViewInit, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { TranslateModule } from '@ngx-translate/core';
+import { SearchFilterComponent } from './search-filter/search-filter.component';
+import { TransactionTableComponent } from './transaction-table/transaction-table.component';
+import { MobileTransactionListComponent } from './mobile-transaction-list/mobile-transaction-list.component';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
@@ -8,11 +19,12 @@ import { UserService } from 'src/app/util/service/db/user.service';
 import { Transaction } from 'src/app/util/models/transaction.model';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { MobileAddTransactionComponent } from './add-transaction/mobile-add-transaction/mobile-add-transaction.component';
-import { MatDialog } from '@angular/material/dialog';
+import { CalendarViewComponent } from '../calendar-view/calendar-view.component';
+import { MonthlyExpenditureCardComponent } from '../../../util/components/cards/monthly-expenditure-card/monthly-expenditure-card.component';
 import { LoaderService } from 'src/app/util/service/loader.service';
 import { ImportTransactionsComponent } from './add-transaction/import-transactions.component';
 import { FilterService } from 'src/app/util/service/filter.service';
-import { Subscription, Observable } from 'rxjs';
+import { Subscription, Observable, map } from 'rxjs';
 import moment from 'moment';
 import { Store } from '@ngrx/store';
 import { AppState } from '../../../store/app.state';
@@ -23,15 +35,30 @@ import { DateService } from 'src/app/util/service/date.service';
 import { RecurringInterval, SyncStatus, TransactionStatus, TransactionType } from 'src/app/util/config/enums';
 import { APP_CONFIG } from 'src/app/util/config/config';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
-import { ActivatedRoute, Router } from '@angular/router';
 import { TransactionsService } from 'src/app/util/service/db/transactions.service';
 
 @Component({
   selector: 'transaction-list',
   templateUrl: './transaction-list.component.html',
-  styleUrl: './transaction-list.component.scss'
+  styleUrl: './transaction-list.component.scss',
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatTabsModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatDialogModule,
+    TranslateModule,
+    SearchFilterComponent,
+    TransactionTableComponent,
+    MobileTransactionListComponent,
+    CalendarViewComponent,
+    MonthlyExpenditureCardComponent
+  ]
 })
-export class TransactionListComponent implements OnInit, OnDestroy {
+export class TransactionListComponent implements OnInit, OnDestroy, AfterViewInit {
   @Input() isHome: boolean = false;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild("tableSort", { static: false }) sort!: MatSort;
@@ -295,7 +322,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       }
 
       if (errorCount > 0) {
-        this.notificationService.warning(`${errorCount} transactions failed to import`);
+        this.notificationService.warning(`${errorCount} transactions failed to import `);
       }
 
     } catch (error) {

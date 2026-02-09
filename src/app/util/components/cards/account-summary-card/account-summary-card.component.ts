@@ -5,20 +5,26 @@ import { Account, LoanDetails } from 'src/app/util/models/account.model';
 import { AccountType } from 'src/app/util/config/enums';
 import { AppState } from 'src/app/store/app.state';
 import * as AccountsSelectors from 'src/app/store/accounts/accounts.selectors';
+import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 
 @Component({
   selector: 'app-account-summary-card',
   templateUrl: './account-summary-card.component.html',
-  styleUrls: ['./account-summary-card.component.scss']
+  styleUrls: ['./account-summary-card.component.scss'],
+  standalone: true,
+  imports: [CommonModule, MatIconModule, MatCardModule, CurrencyPipe]
 })
 export class AccountSummaryCardComponent implements OnInit, OnDestroy {
-  
 
-  
+
+
   // Observables from store
   public accounts$: Observable<Account[]>;
   public totalBalance$: Observable<number>;
-  
+
   public accounts: Account[] = [];
   private destroy$ = new Subject<void>();
 

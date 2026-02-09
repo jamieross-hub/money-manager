@@ -1,14 +1,19 @@
 import { Component } from '@angular/core';
 
+import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
+
 @Component({
   selector: 'app-terms-conditions',
   templateUrl: './terms-conditions.component.html',
-  styleUrls: ['./terms-conditions.component.scss']
+  styleUrls: ['./terms-conditions.component.scss'],
+  standalone: true,
+  imports: [CommonModule, MatIconModule]
 })
 export class TermsConditionsComponent {
-  
+
   lastUpdated = 'December 2024';
-  
+
   navigateBack() {
     window.history.back();
   }

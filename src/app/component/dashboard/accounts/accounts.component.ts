@@ -55,11 +55,37 @@ interface GroupViewModel {
   count: number;
 }
 
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslateModule } from '@ngx-translate/core';
+import { QuickActionsFabComponent } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
+import { AccountSummaryCardComponent } from 'src/app/util/components/cards/account-summary-card/account-summary-card.component';
+import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
+
 @Component({
   selector: 'user-accounts',
   templateUrl: './accounts.component.html',
   styleUrls: ['./accounts.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatButtonModule,
+    MatIconModule,
+    MatCardModule,
+    MatMenuModule,
+    MatTooltipModule,
+    TranslateModule,
+    QuickActionsFabComponent,
+    AccountSummaryCardComponent,
+    CurrencyPipe
+  ]
 })
 export class AccountsComponent implements OnInit, OnDestroy {
 
@@ -202,7 +228,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
     ]).pipe(
       takeUntil(this.destroy$),
       map(([accounts, collapsedMap, currencyCode]) => {
-      
+
 
         return ACCOUNT_GROUPS.map(group => {
           const groupAccounts = accounts.filter(account => group.accountTypes.includes(account.type));

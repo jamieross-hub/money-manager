@@ -20,10 +20,30 @@ export interface FeedbackForm {
   rating?: number;
 }
 
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+
 @Component({
   selector: 'app-feedback',
   templateUrl: './feedback.component.html',
-  styleUrls: ['./feedback.component.scss']
+  styleUrls: ['./feedback.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatProgressSpinnerModule
+  ]
 })
 export class FeedbackComponent implements OnInit, OnDestroy {
   feedbackForm: FormGroup;
@@ -62,7 +82,7 @@ export class FeedbackComponent implements OnInit, OnDestroy {
     private feedbackService: FeedbackService
   ) {
     this.feedbackForm = this.createForm();
-    
+
     // Observe breakpoints for mobile detection
     this.breakpointObserver.observe([Breakpoints.Handset])
       .pipe(takeUntil(this.destroy$))
@@ -134,7 +154,7 @@ export class FeedbackComponent implements OnInit, OnDestroy {
     if (this.isSubmitting) return;
 
     this.isSubmitting = true;
-    
+
     if (this.isMobile) {
       this.hapticFeedback.lightVibration();
     }
@@ -146,10 +166,10 @@ export class FeedbackComponent implements OnInit, OnDestroy {
       };
 
       await this.feedbackService.submitFeedback(feedbackData);
-      
+
       this.notificationService.success('Thank you for your feedback! We\'ll get back to you soon.');
       this.resetForm();
-      
+
     } catch (error) {
       console.error('Error submitting feedback:', error);
       this.notificationService.error('Failed to submit feedback. Please try again.');
@@ -164,7 +184,7 @@ export class FeedbackComponent implements OnInit, OnDestroy {
       priority: 'medium',
       rating: null
     });
-    
+
     // Re-fill user information if available
     if (this.currentUser) {
       this.feedbackForm.patchValue({

@@ -1,9 +1,20 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-common-header',
   templateUrl: './common-header.component.html',
-  styleUrls: ['./common-header.component.scss']
+  styleUrls: ['./common-header.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule
+  ]
 })
 export class CommonHeaderComponent {
   @Input() title: string = '';
