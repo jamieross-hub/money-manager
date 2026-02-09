@@ -3,7 +3,8 @@
   <div class="feedback-header">
     <div class="header-content">
       <h1 class="page-title">Send Feedback</h1>
-      <p class="page-subtitle">Help us improve {{appName}} by sharing your thoughts, suggestions, or reporting issues.</p>
+      <p class="page-subtitle">Help us improve {{appName}} by sharing your thoughts, suggestions, or reporting issues.
+      </p>
     </div>
     <div class="header-icon">
       <mat-icon>feedback</mat-icon>
@@ -13,14 +14,14 @@
   <!-- Feedback Form -->
   <div class="feedback-form-container">
     <form [formGroup]="feedbackForm" (ngSubmit)="submitFeedback()" class="feedback-form">
-      
+
       <!-- Personal Information Section -->
       <div class="form-section">
         <h3 class="section-title">
           <mat-icon>person</mat-icon>
           Personal Information
         </h3>
-        
+
         <div class="form-row">
           <mat-form-field appearance="fill" class="form-field">
             <mat-label>Name *</mat-label>
@@ -86,15 +87,10 @@
         <div class="rating-section">
           <label class="rating-label">How would you rate your experience? (Optional)</label>
           <div class="rating-stars">
-            <button 
-              type="button"
-              *ngFor="let star of ratingOptions; let i = index"
-              class="star-button"
+            <button type="button" *ngFor="let star of ratingOptions; let i = index" class="star-button"
               [class.active]="feedbackForm.get('rating')?.value && i < feedbackForm.get('rating')?.value"
-              (click)="setRating(star)"
-              (mouseenter)="setRating(star)"
-              (mouseleave)="setRating(feedbackForm.get('rating')?.value || 0)"
-            >
+              (click)="setRating(star)" (mouseenter)="setRating(star)"
+              (mouseleave)="setRating(feedbackForm.get('rating')?.value || 0)">
               <mat-icon>{{ i < (feedbackForm.get('rating')?.value || 0) ? 'star' : 'star_border' }}</mat-icon>
             </button>
           </div>
@@ -106,13 +102,9 @@
         <div class="form-row">
           <mat-form-field appearance="fill" class="form-field message-field">
             <mat-label>Message *</mat-label>
-            <textarea 
-              matInput 
-              formControlName="message" 
+            <textarea matInput formControlName="message"
               placeholder="Please provide detailed feedback, suggestions, or describe any issues you've encountered..."
-              rows="6"
-              maxlength="1000"
-            ></textarea>
+              rows="6" maxlength="1000"></textarea>
             <mat-error *ngIf="isFieldInvalid('message')">{{ getFieldError('message') }}</mat-error>
             <mat-hint>{{ feedbackForm.get('message')?.value?.length || 0 }}/1000</mat-hint>
           </mat-form-field>
@@ -121,30 +113,18 @@
 
       <!-- Submit Section -->
       <div class="submit-section">
-        <div class="submit-info">
+        <!-- <div class="submit-info">
           <mat-icon>info</mat-icon>
           <span>Your feedback will be sent to our team and we'll get back to you as soon as possible.</span>
-        </div>
-        
+        </div> -->
+
         <div class="submit-actions">
-          <button 
-            type="button" 
-            mat-stroked-button 
-            (click)="resetForm()"
-            [disabled]="isSubmitting"
-            class="reset-button"
-          >
+          <button type="button" mat-stroked-button (click)="resetForm()" [disabled]="isSubmitting" class="reset-button">
             <mat-icon>refresh</mat-icon>
             Reset
           </button>
-          
-          <button 
-            type="submit" 
-            mat-raised-button 
-            color="primary"
-            [disabled]="feedbackForm.invalid || isSubmitting"
-            class="submit-button"
-          >
+
+          <button type="submit" mat-flat-button color="primary">
             <mat-icon *ngIf="!isSubmitting">send</mat-icon>
             <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
             {{ isSubmitting ? 'Sending...' : 'Send Feedback' }}
@@ -155,7 +135,7 @@
   </div>
 
   <!-- Help Section -->
-  <div class="help-section">
+  <!-- <div class="help-section">
     <h3 class="help-title">
       <mat-icon>help</mat-icon>
       Need Help?
@@ -183,5 +163,5 @@
         </div>
       </div>
     </div>
-  </div>
-</div> 
+  </div> -->
+</div>
