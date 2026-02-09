@@ -45,7 +45,8 @@
         "FEEDBACK": "Feedback",
         "ADMIN_PANEL": "Admin Panel",
         "LOAN_CALCULATOR": "Loan Calculator",
-        "BACKUP_RESTORE": "Backup & Restore"
+        "BACKUP_RESTORE": "Backup & Restore",
+        "GITHUB_SUPPORT": "GitHub Repo"
     },
     "LOAN_CALCULATOR": {
         "TITLE": "Personal Loan EMI Calculator",

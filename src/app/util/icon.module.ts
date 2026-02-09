@@ -14,7 +14,7 @@ export class IconModule {
       this.domSanitizer.bypassSecurityTrustResourceUrl('assets/icon/system-uicons.svg')
     );
 
-     // <----- Register individual icon <mat-icon svgIcon="test"></mat-icon>----->
+    // <----- Register individual icon <mat-icon svgIcon="test"></mat-icon>----->
     this.matIconRegistry.addSvgIcon(
       'test',
       this.domSanitizer.bypassSecurityTrustResourceUrl('assets/icon/test.svg')
@@ -23,5 +23,10 @@ export class IconModule {
       'add-txn',
       this.domSanitizer.bypassSecurityTrustResourceUrl('assets/icon/add-txn.svg')
     );
+
+    this.matIconRegistry.addSvgIcon(
+      'github',
+      this.domSanitizer.bypassSecurityTrustResourceUrl('assets/icon/github.svg')
+    );
   }
- }
+}

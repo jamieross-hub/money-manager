@@ -5,6 +5,7 @@ export interface SidebarNavChild {
   order: number;
   isPremium?: boolean;
   queryParams?: any;
+  externalUrl?: string;
 }
 
 export interface SidebarNavParent {
@@ -142,6 +143,13 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         route: '/dashboard/feedback',
         icon: 'feedback',
         order: 4
+      },
+      {
+        label: 'NAVIGATION.GITHUB_SUPPORT',
+        route: '',
+        externalUrl: 'https://github.com/prashiln79/money-manager',
+        icon: 'svg:github',
+        order: 5
       }
     ]
   },

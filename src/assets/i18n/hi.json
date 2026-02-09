@@ -44,7 +44,8 @@
         "NOTIFICATIONS_NAV": "सूचनाएं",
         "FEEDBACK": "प्रतिक्रिया",
         "ADMIN_PANEL": "एडमिन पैनल",
-        "LOAN_CALCULATOR": "Loan Calculator"
+        "LOAN_CALCULATOR": "Loan Calculator",
+        "GITHUB_SUPPORT": "गिटहब सपोर्ट"
     },
     "LOAN_CALCULATOR": {
         "TITLE": "Personal Loan EMI Calculator",

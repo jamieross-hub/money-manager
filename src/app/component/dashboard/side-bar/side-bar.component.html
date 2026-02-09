@@ -81,7 +81,19 @@
 					<div class="space-y-1 overflow-hidden transition-all duration-300 ease-in-out"
 						[class.max-h-0]="!section.isExpanded" [class.max-h-96]="section.isExpanded"
 						[class.opacity-0]="!section.isExpanded" [class.opacity-100]="section.isExpanded">
-						@for (child of section.children; track child.route) {
+						@for (child of section.children; track child.label) {
+						@if (child.externalUrl) {
+						<a [href]="child.externalUrl" target="_blank"
+							class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 hover:shadow-sm transition-all duration-200 group relative">
+							<mat-icon svgIcon="github"
+								class="text-gray-400 dark:text-slate-500 group-hover:text-blue-600 transition-colors text-lg ml-1">{{
+								child.icon }}</mat-icon>
+							<span
+								class="font-medium text-sm text-gray-700 dark:text-slate-300 group-hover:text-blue-700 transition-colors">{{
+								child.label | translate }}</span>
+							<mat-icon class="ml-auto text-gray-400 text-xs">open_in_new</mat-icon>
+						</a>
+						} @else {
 						<a [routerLink]="child.route" [queryParams]="child.queryParams"
 							routerLinkActive="bg-blue-50 text-blue-700 border-r-2 border-blue-600 shadow-sm dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-500"
 							(click)="drawer.toggle()"
@@ -102,6 +114,7 @@
 								<mat-icon class="text-yellow-500 text-sm">star</mat-icon>
 							</div>
 						</a>
+						}
 						}
 					</div>
 
