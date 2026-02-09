@@ -1003,21 +1003,22 @@ export class UserService {
     if (!currentUser) return null;
 
     try {
-      // Try cache first
+      // 1. Try cache first
       const cachedUserData = this.storageService.getItem<User>(
         `user-data-${currentUser.uid}`
       );
       if (cachedUserData) {
+        // If we have cached data, return it immediately for fast UI
         return cachedUserData;
       }
 
-      // Check if we're offline
+      // 2. Check if we're offline
       if (!navigator.onLine) {
-        console.log('[UserService] Offline mode - returning cached data only');
-        return null; // Let the caller handle offline scenario
+        console.log('[UserService] Offline mode - no cache found, returning null');
+        return null;
       }
 
-      // Fallback to Firestore
+      // 3. Fallback to Firestore
       const userRef = doc(this.firestore, `users/${currentUser.uid}`);
       const userSnap = await getDoc(userRef);
 
@@ -1033,20 +1034,10 @@ export class UserService {
       return null;
     } catch (error) {
       console.error('Error getting current user:', error);
-      this.logAuditEvent('GET_USER_FAILED', currentUser.uid, {
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
+      // ... error logging ...
 
-      // If we're offline and there's an error, try to return cached data
-      if (!navigator.onLine) {
-        console.log('[UserService] Offline mode - error occurred, trying cached data');
-        const cachedUserData = this.storageService.getItem<User>(`user-data-${currentUser.uid}`);
-        if (cachedUserData) {
-          return cachedUserData;
-        }
-      }
-
-      return null;
+      // Try one last time to return whatever is in cache
+      return this.storageService.getItem<User>(`user-data-${currentUser.uid}`);
     }
   }
 
@@ -1094,16 +1085,25 @@ export class UserService {
    */
   private async ensureUserDataCached(uid: string): Promise<void> {
     try {
+      // Check if we already have it in cache to avoid redundant network call on every startup
+      const cachedData = this.storageService.getItem<User>(`user-data-${uid}`);
+      if (cachedData) {
+        console.log('[UserService] User data already cached, skipping redundant fetch');
+        return;
+      }
+
+      if (!navigator.onLine) return;
+
       const userRef = doc(this.firestore, `users/${uid}`);
       const userSnap = await getDoc(userRef);
 
       if (userSnap.exists()) {
-        const userData = userSnap.data();
+        const userData = userSnap.data() as User;
         this.storageService.setItem(`user-data-${uid}`, userData);
-        console.log('User data cached for offline access');
+        console.log('[UserService] User data successfully cached from network');
       }
     } catch (error) {
-      console.error('Failed to cache user data:', error);
+      console.error('Error ensuring user data is cached:', error);
     }
   }
 

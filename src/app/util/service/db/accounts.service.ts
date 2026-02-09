@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, writeBatch } from '@angular/fire/firestore';
+import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, writeBatch, onSnapshot } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 import { Account, CreateAccountRequest, UpdateAccountRequest } from '../../models/account.model';
@@ -58,18 +58,54 @@ export class AccountsService {
         }
 
         const accountsRef = collection(this.firestore, `users/${userId}/accounts`);
+
         return new Observable<Account[]>(observer => {
-            getDocs(accountsRef).then(querySnapshot => {
-                const accounts: Account[] = [];
-                querySnapshot.forEach(doc => {
-                    accounts.push(doc.data() as Account);
-                });
-                observer.next(accounts);
-                observer.complete();
-            }).catch(error => {
-                console.error(`Error fetching accounts for ${userId}:`, error);
-                observer.error(error);
-            });
+            // 1. Emit cached data immediately if available
+            try {
+                const cachedAccounts = this.localStorageUtility.getItem<Account[]>(`accounts-cache-${userId}`);
+                if (cachedAccounts && cachedAccounts.length > 0) {
+                    console.log(`[AccountsService] Emitting ${cachedAccounts.length} cached accounts`);
+                    observer.next(cachedAccounts);
+                }
+            } catch (error) {
+                console.warn('[AccountsService] Failed to load cached accounts:', error);
+            }
+
+            // 2. Subscribe to realtime updates
+            const unsubscribe = onSnapshot(accountsRef,
+                (querySnapshot) => {
+                    const accounts: Account[] = [];
+                    querySnapshot.forEach(docSnap => {
+                        accounts.push(docSnap.data() as Account);
+                    });
+
+                    console.log(`[AccountsService] Received ${accounts.length} accounts from Firestore`);
+
+                    // Update cache for next time
+                    try {
+                        this.localStorageUtility.setItem(`accounts-cache-${userId}`, accounts);
+                    } catch (error) {
+                        console.warn('[AccountsService] Failed to cache accounts:', error);
+                    }
+
+                    observer.next(accounts);
+                },
+                (error) => {
+                    console.error(`[AccountsService] Error in onSnapshot for ${userId}:`, error);
+                    // If we haven't emitted anything yet (e.g. no cache), we might want to error or emit empty
+                    // For now, let the initial cache emission (if any) stand, or error if no cache was found.
+                    if (!observer.closed) {
+                        // If we are offline and have cache, we don't necessarily want to error out the whole stream
+                        if (error.code === 'unavailable' || !navigator.onLine) {
+                            console.warn('[AccountsService] Firestore unavailable, relying on cache');
+                        } else {
+                            observer.error(error);
+                        }
+                    }
+                }
+            );
+
+            return () => unsubscribe();
         });
     }
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, addDoc, doc, updateDoc, deleteDoc, collectionData, getDocs, getDoc, deleteField, setDoc } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, doc, updateDoc, deleteDoc, collectionData, getDocs, getDoc, deleteField, setDoc, onSnapshot } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 import { Category } from 'src/app/util/models';
@@ -54,33 +54,66 @@ export class CategoryService {
             return of(this.localStorageUtility.getEntities<Category>('categories'));
         }
 
-        const categoriesRef = this.getUserCategoriesCollection(userId); // Ensure userId is passed
+        const categoriesRef = this.getUserCategoriesCollection(userId);
+
         return new Observable<Category[]>(observer => {
-            getDocs(categoriesRef).then(querySnapshot => {
-                const categories: Category[] = [];
-                querySnapshot.forEach(docSnap => {
-                    const data: any = docSnap.data();
-                    const category: Category = {
-                        id: docSnap.id,
-                        name: data?.name,
-                        type: data?.type,
-                        icon: data?.icon || 'category',
-                        color: data?.color || '#46777f',
-                        createdAt: data?.createdAt,
-                        budget: data?.budget || null,
-                        parentCategoryId: data?.parentCategoryId || null,
-                        isSubCategory: data?.isSubCategory || false,
-                        subCategories: data?.subCategories || [],
-                        group: data?.group
-                    };
-                    categories.push(category);
-                });
-                observer.next(categories);
-                observer.complete();
-            }).catch(error => {
-                console.error(`Error fetching categories for ${userId}:`, error);
-                observer.error(error);
-            });
+            // 1. Emit cached data immediately if available
+            try {
+                const cachedCategories = this.localStorageUtility.getItem<Category[]>(`categories-cache-${userId}`);
+                if (cachedCategories && cachedCategories.length > 0) {
+                    console.log(`[CategoryService] Emitting ${cachedCategories.length} cached categories`);
+                    observer.next(cachedCategories);
+                }
+            } catch (error) {
+                console.warn('[CategoryService] Failed to load cached categories:', error);
+            }
+
+            // 2. Subscribe to realtime updates
+            const unsubscribe = onSnapshot(categoriesRef,
+                (querySnapshot) => {
+                    const categories: Category[] = [];
+                    querySnapshot.forEach(docSnap => {
+                        const data: any = docSnap.data();
+                        const category: Category = {
+                            id: docSnap.id,
+                            name: data?.name,
+                            type: data?.type,
+                            icon: data?.icon || 'category',
+                            color: data?.color || '#46777f',
+                            createdAt: data?.createdAt,
+                            budget: data?.budget || null,
+                            parentCategoryId: data?.parentCategoryId || null,
+                            isSubCategory: data?.isSubCategory || false,
+                            subCategories: data?.subCategories || [],
+                            group: data?.group
+                        };
+                        categories.push(category);
+                    });
+
+                    console.log(`[CategoryService] Received ${categories.length} categories from Firestore`);
+
+                    // Update cache for next time
+                    try {
+                        this.localStorageUtility.setItem(`categories-cache-${userId}`, categories);
+                    } catch (error) {
+                        console.warn('[CategoryService] Failed to cache categories:', error);
+                    }
+
+                    observer.next(categories);
+                },
+                (error) => {
+                    console.error(`[CategoryService] Error in onSnapshot for ${userId}:`, error);
+                    if (!observer.closed) {
+                        if (error.code === 'unavailable' || !navigator.onLine) {
+                            console.warn('[CategoryService] Firestore unavailable, relying on cache');
+                        } else {
+                            observer.error(error);
+                        }
+                    }
+                }
+            );
+
+            return () => unsubscribe();
         });
     }
 
