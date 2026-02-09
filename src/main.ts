@@ -195,13 +195,18 @@ async function clearApplicationCaches(): Promise<void> {
   }
 }
 
-// Initialize PWA features
-initializePwaFeatures();
-
-// Initialize cache management
-initializeCacheManagement();
-
+// Bootstrap app immediately for fastest startup
 platformBrowserDynamic().bootstrapModule(AppModule, {
   ngZoneEventCoalescing: true
 })
+  .then(() => {
+    console.log('✅ App bootstrapped successfully');
+
+    // Defer non-critical PWA features until after initial render
+    setTimeout(() => {
+      console.log('⏱️ Initializing deferred features...');
+      initializePwaFeatures();
+      initializeCacheManagement();
+    }, 1000); // Wait 1s after bootstrap
+  })
   .catch(err => console.error(err));

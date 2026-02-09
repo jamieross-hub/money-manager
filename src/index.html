@@ -50,11 +50,27 @@
   <link rel="apple-touch-icon" sizes="167x167" href="assets/icon/app-icon/icon-152x152.png">
   <link rel="canonical" href="https://prashiln79.github.io/money-manager/#/landing" />
 
-  <!-- Fonts -->
+  <!-- Fonts - Optimized for performance -->
+  <!-- Preconnect to Google Fonts for faster DNS resolution -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Async load fonts with reduced weights (removed 300, 800) -->
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
-    rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap"
+    rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap"
+      rel="stylesheet">
+  </noscript>
+
+  <!-- Material Icons - async load -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" media="print"
+    onload="this.media='all'">
+  <noscript>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  </noscript>
 
   <!-- Manifest -->
   <link rel="manifest" href="manifest.json">

@@ -58,6 +58,7 @@ import { RouterModule } from '@angular/router';
 import { CurrencyPipe } from './util/pipes';
 import { OfflineIndicatorComponent } from './util/components/offline-indicator/offline-indicator.component';
 import { PwaInstallPromptComponent } from './util/components/pwa-install-prompt/pwa-install-prompt.component';
+import { LoaderComponent } from './util/components/loader/loader.component';
 
 
 @NgModule({
@@ -80,6 +81,7 @@ import { PwaInstallPromptComponent } from './util/components/pwa-install-prompt/
     AppStoreModule,
     OfflineIndicatorComponent,
     PwaInstallPromptComponent,
+    LoaderComponent,
 
 
     // Enhanced Service Worker with offline support
