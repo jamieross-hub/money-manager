@@ -5,16 +5,9 @@ import { RegistrationComponent } from './component/auth/registration/registratio
 import { DashboardComponent } from './component/dashboard/dashboard.component';
 import { AuthGuard } from './util/guard/auth.guard';
 import { AdminGuard } from './util/guard/admin.guard';
-import { AccountsComponent } from './component/dashboard/accounts/accounts.component';
-import { CategoryComponent } from './component/dashboard/category/category.component';
 import { HomeComponent } from './component/dashboard/home/home.component';
-import { SubscriptionComponent } from './component/dashboard/subscription/subscription.component';
-import { GoalsComponent } from './component/dashboard/goals/goals.component';
-import { TransactionListComponent } from './component/dashboard/transaction-list/transaction-list.component';
 import { LandingComponent } from './component/landing/landing.component';
-import { NotesComponent } from './component/dashboard/notes/notes.component';
 import { ImportTransactionsComponent } from './component/dashboard/transaction-list/add-transaction';
-import { ProfileComponent } from './component/dashboard/profile/profile.component';
 import { NotificationSettingsComponent } from './util/components/notification-settings/notification-settings.component';
 import { FeedbackComponent } from './component/feedback/feedback.component';
 import { AppShellComponent } from './app-shell/app-shell.component';
@@ -52,7 +45,7 @@ export const routes: Routes = [
       { path: 'home', component: HomeComponent },
       {
         path: 'accounts',
-        component: AccountsComponent,
+        loadComponent: () => import('./component/dashboard/accounts/accounts.component').then(m => m.AccountsComponent),
         data: {
           roles: ['free', 'premium', 'admin'],
           requireEmailVerification: true
@@ -60,7 +53,7 @@ export const routes: Routes = [
       },
       {
         path: 'category',
-        component: CategoryComponent,
+        loadComponent: () => import('./component/dashboard/category/category.component').then(m => m.CategoryComponent),
         data: {
           roles: ['free', 'premium', 'admin'],
           requireEmailVerification: true
@@ -68,7 +61,7 @@ export const routes: Routes = [
       },
       {
         path: 'transactions',
-        component: TransactionListComponent,
+        loadComponent: () => import('./component/dashboard/transaction-list/transaction-list.component').then(m => m.TransactionListComponent),
         data: {
           roles: ['free', 'premium', 'admin'],
           requireEmailVerification: true
@@ -76,7 +69,7 @@ export const routes: Routes = [
       },
       {
         path: 'subscription',
-        component: SubscriptionComponent,
+        loadComponent: () => import('./component/dashboard/subscription/subscription.component').then(m => m.SubscriptionComponent),
         data: {
           roles: ['free', 'premium', 'admin'],
           requireEmailVerification: true
@@ -84,7 +77,7 @@ export const routes: Routes = [
       },
       {
         path: 'goals',
-        component: GoalsComponent,
+        loadComponent: () => import('./component/dashboard/goals/goals.component').then(m => m.GoalsComponent),
         data: {
           roles: ['premium', 'admin'],
           requireEmailVerification: true
@@ -100,7 +93,7 @@ export const routes: Routes = [
       },
       {
         path: 'notes',
-        component: NotesComponent,
+        loadComponent: () => import('./component/dashboard/notes/notes.component').then(m => m.NotesComponent),
         data: {
           roles: ['free', 'premium', 'admin'],
           requireEmailVerification: true
@@ -116,7 +109,7 @@ export const routes: Routes = [
       },
       {
         path: 'profile',
-        component: ProfileComponent,
+        loadComponent: () => import('./component/dashboard/profile/profile.component').then(m => m.ProfileComponent),
         data: {
           roles: ['free', 'premium', 'admin'],
           requireEmailVerification: true

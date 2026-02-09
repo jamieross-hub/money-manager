@@ -142,11 +142,20 @@ import { LoaderComponent } from './util/components/loader/loader.component';
       return firestore;
     }),
 
-    // Firebase Cloud Messaging
+    // Firebase Cloud Messaging (Browser-only)
     provideMessaging(() => {
-      const messaging = getMessaging();
-      console.log("✅ Firebase Cloud Messaging initialized");
-      return messaging;
+      // Only initialize messaging in browser context
+      if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
+        try {
+          const messaging = getMessaging();
+          console.log("✅ Firebase Cloud Messaging initialized");
+          return messaging;
+        } catch (error) {
+          console.warn("⚠️ Firebase Messaging not supported:", error);
+          return null as any;
+        }
+      }
+      return null as any; // Return null on server
     }),
   ],
   bootstrap: [AppComponent]
