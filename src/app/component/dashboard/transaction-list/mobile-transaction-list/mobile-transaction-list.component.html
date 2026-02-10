@@ -1,6 +1,9 @@
 <div class="mobile-transaction-container">
 	<!-- Chart area (amCharts) -->
 	<div *ngIf="showChart" class="chart-wrapper">
+		<button mat-icon-button class="close-chart-btn" (click)="toggleChartView()">
+			<mat-icon>close</mat-icon>
+		</button>
 		<div id="transactionChart" class="transaction-chart"></div>
 	</div>
 
