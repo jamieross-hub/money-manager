@@ -114,7 +114,7 @@ export class ChatFacadeService {
 
         if (userId) {
             const categories = this.categoryService.getCachedCategories();
-            this.accountsService.getAccounts(userId).subscribe(accounts => {
+            this.accountsService.getAccounts(userId).pipe(take(1)).subscribe(accounts => {
                 this.processUserText(userText, categories, accounts);
             });
         } else {
