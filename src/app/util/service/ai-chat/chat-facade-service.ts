@@ -12,7 +12,7 @@ import { CHAT_CONSTANTS } from "./models/chat-constants";
 import { AppState } from "src/app/store/app.state";
 import { Store } from "@ngrx/store";
 import { selectAllAccounts } from "src/app/store/accounts/accounts.selectors";
-import { Subscription, Observable, isObservable, take, filter } from "rxjs";
+import { Subscription, Observable, isObservable, take, filter, Subject } from "rxjs";
 import { Message } from './models/message.types';
 import { IntentContext } from './models/intent-context.types';
 import { ResponseBuilder } from './response-builder';
@@ -85,6 +85,8 @@ export class ChatFacadeService {
         this.registry.register(INTENTS.AI_REPLY, this.openAiHandler);
     }
 
+    public scrollToTop = new Subject<void>();
+
     private initWelcomeMessage() {
         this.store.select(selectAllAccounts).pipe(filter((accounts) => accounts?.length > 0),
             take(1)).subscribe(accounts => {
@@ -105,6 +107,7 @@ export class ChatFacadeService {
                     // this.pushBot(ResponseBuilder.create().uiElement(INTENTS.RECENT_ACTIVITY_CARD).build());
                     this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.GREETING).build());
                 }
+
             });
     }
 
@@ -134,6 +137,8 @@ export class ChatFacadeService {
 
         // 2. New Intent / Command
         this.handleNewIntent(detectedIntent, userText, amount, accounts);
+
+        this.scrollToBottom();
     }
 
 
@@ -241,6 +246,8 @@ export class ChatFacadeService {
         } else {
             this.pushBot(message);
         }
+
+        this.scrollToBottom();
     }
 
     // Helper to standardise flow reply pushing
@@ -252,11 +259,19 @@ export class ChatFacadeService {
         } else {
             this.pushBot(ResponseBuilder.create().html(reply).build());
         }
+
+        this.scrollToBottom();
     }
 
     private pushBot(message: Message) {
         this.messages.push(message);
         this.isTyping = false;
+    }
+
+    private scrollToBottom() {
+        setTimeout(() => {
+            this.scrollToTop.next();
+        }, 100);
     }
 
     // Called by UI dropdown

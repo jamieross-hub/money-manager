@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, ElementRef, ViewChild, ChangeDetectorRef, AfterViewInit } from '@angular/core';
 import { TransactionType } from 'src/app/util/config/enums';
 import { Category } from 'src/app/util/models';
 import { ChatFacadeService } from 'src/app/util/service/ai-chat/chat-facade-service';
@@ -40,7 +40,7 @@ import { SafeHtmlPipe } from 'src/app/util/pipes/safe-html.pipe';
     SafeHtmlPipe
   ]
 })
-export class ChatComponent {
+export class ChatComponent implements AfterViewInit {
 
   visible: boolean = false;
   suggestion: string = '';
@@ -53,6 +53,9 @@ export class ChatComponent {
   voiceBlob: Blob | null = null;
   isPlayingAudio: boolean = false;
 
+
+  @ViewChild('scrollContainer') chatScrollContainer!: ElementRef<HTMLElement>;
+
   constructor(
     public chatFacadeService: ChatFacadeService,
     public breakpointService: BreakpointService,
@@ -62,6 +65,17 @@ export class ChatComponent {
     private userService: UserService,
     private notificationService: NotificationService
   ) { }
+
+  ngAfterViewInit() {
+    this.chatFacadeService.scrollToTop.subscribe(() => {
+      if (this.chatScrollContainer) {
+        // it is scroll to bottom
+        this.chatScrollContainer.nativeElement.scrollTop = this.chatScrollContainer.nativeElement.scrollHeight;
+      }
+    });
+
+    // Also scroll to top on initial load if needed, or rely on service trigger
+  }
 
   sendMessage(input: HTMLInputElement) {
     const text = input.value?.trim();
