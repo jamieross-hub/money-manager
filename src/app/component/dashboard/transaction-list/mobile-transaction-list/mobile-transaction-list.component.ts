@@ -241,6 +241,10 @@ export class MobileTransactionListComponent
     const sortedData = this.filterService.sortTransactions(filteredData, this.selectedSort);
 
     this.filteredTransactions = sortedData;
+
+    if (this.showChart) {
+      this.renderChart();
+    }
   }
 
   onSearchChange(term: string) {

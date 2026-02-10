@@ -1,4 +1,9 @@
 <div class="mobile-transaction-container">
+	<!-- Chart area (amCharts) -->
+	<div *ngIf="showChart" class="chart-wrapper">
+		<div id="transactionChart" class="transaction-chart"></div>
+	</div>
+
 	<!-- Mobile Filter Header -->
 	<div class="mobile-filter-header" *ngIf="showFilters">
 		<!-- Active Filters Indicator -->
@@ -149,18 +154,16 @@
 				<span class="filter-btn-text">Import</span>
 			</button> -->
 
-				<!-- Chart Button -->
-				<button mat-icon-button class="filter-menu-btn" (click)="toggleChartView()" matTooltip="Show chart" aria-label="Show chart">
-					<mat-icon>show_chart</mat-icon>
-					<span class="filter-btn-text">Chart</span>
-				</button>
+			<!-- Chart Button -->
+			<button mat-icon-button class="filter-menu-btn bg-primary" color="primary" (click)="toggleChartView()"
+				matTooltip="Show chart" aria-label="Show chart">
+				<mat-icon>insert_chart</mat-icon>
+				<span class="filter-btn-text">{{showChart ? 'Hide Chart' : 'Show Chart'}}</span>
+			</button>
 		</div>
 	</div>
 
-		<!-- Chart area (amCharts) -->
-		<div *ngIf="showChart" class="chart-wrapper">
-			<div id="transactionChart" class="transaction-chart"></div>
-		</div>
+
 
 	<!-- Transaction Summary -->
 	<div class="transaction-summary" *ngIf="showFilters && filteredTransactions.length > 0">
