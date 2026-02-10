@@ -101,6 +101,13 @@
 
 			<button
 				class="flex items-center w-full px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 dark:hover:text-white focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-800"
+				(click)="openFeedback()">
+				<mat-icon class="text-sm mr-1">feedback</mat-icon>
+				<span>Feedback</span>
+			</button>
+
+			<button
+				class="flex items-center w-full px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 dark:hover:text-white focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-800"
 				(click)="shareApp()">
 				<mat-icon class="text-sm mr-1">share</mat-icon>
 				<span>{{ 'USER_MENU.SHARE_APP' | translate }}</span>

@@ -260,4 +260,9 @@ export class UserComponent {
     this.router.navigate(['/dashboard/sync-to-cloud']);
     this.close();
   }
+
+  openFeedback() {
+    this.router.navigate(['/dashboard/feedback']);
+    this.close();
+  }
 }
