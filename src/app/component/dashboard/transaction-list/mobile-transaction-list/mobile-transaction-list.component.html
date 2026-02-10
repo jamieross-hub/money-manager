@@ -91,7 +91,7 @@
 
 			<mat-menu #categoryMenu="matMenu" class="filter-menu">
 				<button mat-menu-item [class.active-menu-item]="selectedCategory.includes('all')"
-					(click)="onCategoryChange('all')">
+					(click)="onCategoryChange('all'); $event.stopPropagation()">
 					<mat-icon>list</mat-icon>
 					<span>All Categories</span>
 					<mat-icon *ngIf="selectedCategory.includes('all')" class="check-icon">check</mat-icon>
@@ -99,7 +99,7 @@
 				<mat-divider></mat-divider>
 				@for (category of getCategoriesList(); track category.id) {
 				<button mat-menu-item [class.active-menu-item]="isCategorySelected(category.id)"
-					(click)="onCategoryChange(category.id)">
+					(click)="onCategoryChange(category.id); $event.stopPropagation()">
 					<mat-icon>{{ category.icon }}</mat-icon>
 					<span>{{ category.name }}</span>
 					@if (isCategorySelected(category.id)) {

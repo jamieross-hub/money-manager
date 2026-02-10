@@ -262,10 +262,24 @@ export class MobileTransactionListComponent
 
   onCategoryChange(category: string) {
     if (category === 'all') {
-      this.filterService.setSelectedCategory(['all']);
+      this.selectedCategory = ['all'];
     } else {
-      this.filterService.setSelectedCategory([category]);
+      if (this.selectedCategory.includes('all')) {
+        this.selectedCategory = [];
+      }
+
+      if (this.selectedCategory.includes(category)) {
+        this.selectedCategory = this.selectedCategory.filter(c => c !== category);
+      } else {
+        this.selectedCategory = [...this.selectedCategory, category];
+      }
+
+      if (this.selectedCategory.length === 0) {
+        this.selectedCategory = ['all'];
+      }
     }
+    this.filterService.setSelectedCategory(this.selectedCategory);
+    this.filterTransactions();
   }
 
   onDateRangeChange(range: string | null) {
@@ -365,8 +379,12 @@ export class MobileTransactionListComponent
       return 'All Categories';
     }
 
-    const category = this.categories.find(cat => cat.id === this.selectedCategory[0]);
-    return category ? category.name : 'Unknown Category';
+    if (this.selectedCategory.length === 1) {
+      const category = this.categories.find(cat => cat.id === this.selectedCategory[0]);
+      return category ? category.name : 'Unknown Category';
+    }
+
+    return `${this.selectedCategory.length} Categories`;
   }
 
   getCurrentDateLabel(): string {
