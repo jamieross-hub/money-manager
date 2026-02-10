@@ -221,7 +221,9 @@
 					<div class="transaction-main">
 						<!-- Icon Section -->
 						<div class="transaction-icon">
-							<div class="icon-container">
+							<div class="icon-container"
+								[style.background-color]="getCategoryColor(tx.categoryId) + '20'"
+								[style.color]="getCategoryColor(tx.categoryId)">
 								<mat-icon [style.color]="getCategoryColor(tx.categoryId)">
 									{{ getCategoryIcon(tx.categoryId) }}
 								</mat-icon>
