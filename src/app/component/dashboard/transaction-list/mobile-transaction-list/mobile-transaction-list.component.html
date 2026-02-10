@@ -231,6 +231,7 @@
 								@if(tx.isCategorySplit) {
 								<mat-icon class="category-split-transaction">category</mat-icon>
 								}
+
 							</div>
 						</div>
 
@@ -238,7 +239,15 @@
 						<div class="transaction-details">
 							<div class="transaction-title text-base">
 								{{ tx.payee | titlecase }}
+
 							</div>
+
+							@if(tx.isRecurring) {
+							<div class="recurring-badge">
+								<mat-icon class="recurring-icon-small">repeat</mat-icon>
+								<span>{{ tx.recurringInterval | titlecase }}</span>
+							</div>
+							}
 							<!-- <div class="transaction-category text-base">
                   {{ tx.category }}
                 </div> -->
