@@ -223,7 +223,7 @@
 		</div>
 
 		<!-- Split Transaction Section -->
-		<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+		<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm" *ngIf="!isGuestUser">
 			<div class="flex items-center justify-between mb-4">
 				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
 					Split with Group
@@ -243,7 +243,7 @@
 			</div>
 
 			<!-- Split Transaction Options -->
-			@if(transactionForm.get('isSplitTransaction')?.value) {
+			@if(transactionForm.get('isSplitTransaction')?.value ) {
 			<div class="space-y-4">
 				<!-- Group Selection -->
 				<div>

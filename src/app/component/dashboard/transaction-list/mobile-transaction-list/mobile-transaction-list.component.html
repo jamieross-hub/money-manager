@@ -8,7 +8,7 @@
 	</div>
 
 	<!-- Mobile Filter Header -->
-	<div class="mobile-filter-header" *ngIf="showFilters">
+	<div class="mobile-filter-header" *ngIf="showFilters && !showChart">
 		<!-- Active Filters Indicator -->
 		<div *ngIf="hasActiveFilters()" class="active-filters-indicator flex justify-between items-center">
 			<div class="filter-icon-container">

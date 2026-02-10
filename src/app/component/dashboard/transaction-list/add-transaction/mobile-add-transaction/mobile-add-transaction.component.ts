@@ -115,6 +115,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   public categoryFilterCtrl: FormControl = new FormControl();
   public filteredCategories: ReplaySubject<Category[]> = new ReplaySubject<Category[]>(1);
   protected _onDestroy = new Subject<void>();
+  public isGuestUser: boolean = false;
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public dialogData: any,
@@ -135,6 +136,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     private currencyService: CurrencyService,
     private bottomSheet: MatBottomSheet
   ) {
+    this.isGuestUser = this.userService.isGuestUser();
     this.recurringMinDate = moment().add(1, 'day').format('YYYY-MM-DD');
     this.recurringMaxDate = moment().add(1, 'year').format('YYYY-MM-DD');
     this.store.dispatch(loadGroups());// Load groups
