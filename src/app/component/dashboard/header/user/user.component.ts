@@ -15,6 +15,7 @@ import { ThemeSwitchingService } from 'src/app/util/service/theme-switching.serv
 import { ThemeType } from 'src/app/util/models/theme.model';
 import { take } from 'rxjs';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
+import { ClickOutsideDirective } from 'src/app/util/directives/click-outside.directive';
 
 
 @Component({
@@ -22,7 +23,7 @@ import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage
   templateUrl: './user.component.html',
   styleUrl: './user.component.scss',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatTooltipModule, RouterModule, TranslateModule],
+  imports: [CommonModule, MatIconModule, MatTooltipModule, RouterModule, TranslateModule, ClickOutsideDirective],
   animations: [
     trigger('slideDown', [
       state('void', style({

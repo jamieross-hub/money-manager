@@ -716,15 +716,14 @@
 	// remove later 
     padding: 1px 8px;
     position: relative;
-    color: #766d6d;
     font-weight: 600;
     left: 8px;
 
-	:host-context(.dark-theme) & {
-		background-color: mat.get-theme-color(dark.$dark-theme, neutral, 6);
-		color: mat.get-theme-color(dark.$dark-theme, neutral, 80);
-		border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
-	}
+	// :host-context(.dark-theme) & {
+	// 	background-color: mat.get-theme-color(dark.$dark-theme, neutral, 6);
+	// 	color: mat.get-theme-color(dark.$dark-theme, neutral, 80);
+	// 	border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
+	// }
 }
 
 // Action Buttons
