@@ -1,8 +1,44 @@
 @if (loading$ | async) {
-<div class="loader-overlay">
-  <div class="loader">
-    <div class="spinner"></div>
-    <p class="loader-message">{{ displayMessage }}</p>
+<div class="app-shell">
+  <!-- Mobile Header -->
+  <div class="app-shell-header">
+    <div class="app-shell-menu-icon"></div>
+    <div class="app-shell-avatar"></div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="app-shell-container">
+    <!-- Sidebar (Desktop only) -->
+    <div class="app-shell-sidebar">
+      <div class="app-shell-sidebar-item"></div>
+      <div class="app-shell-sidebar-item stagger-1"></div>
+      <div class="app-shell-sidebar-item stagger-2"></div>
+      <div class="app-shell-sidebar-item stagger-3"></div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="app-shell-content">
+      <!-- Balance Card (mimics Home Page) -->
+      <div class="app-shell-balance-card">
+        <div class="app-shell-icon-circle"></div>
+        <div class="app-shell-text-line app-shell-text-title"></div>
+        <div class="app-shell-text-line app-shell-text-subtitle"></div>
+        <div class="app-shell-text-line app-shell-text-balance"></div>
+        <div class="app-shell-text-line app-shell-text-subtitle"></div>
+      </div>
+
+      <!-- Search Bar Placeholder -->
+      <div class="app-shell-search-bar"></div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation (Mobile only) -->
+  <div class="app-shell-bottom-nav">
+    <div class="app-shell-nav-icon"></div>
+    <div class="app-shell-nav-icon"></div>
+    <div class="app-shell-nav-fab"></div>
+    <div class="app-shell-nav-icon"></div>
+    <div class="app-shell-nav-icon"></div>
   </div>
 </div>
 }

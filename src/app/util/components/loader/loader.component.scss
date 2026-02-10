@@ -1,60 +1,329 @@
-.loader-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(249, 250, 251, 0.95);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
+ .app-shell {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #fcfdf9;
+    /* Match screenshot background */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
 
-.loader {
-  background: transparent;
-  border-radius: 1rem;
-  padding: 2rem;
-  max-width: 300px;
-  width: 90%;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
+  /* Header Skeleton */
+  .app-shell-header {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* Space between for mobile header */
+    padding: 0 1.5rem;
+    flex-shrink: 0;
+    z-index: 10;
+  }
 
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #e5e7eb;
-  border-top: 4px solid #46777f;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
+  .app-shell-menu-icon {
+    width: 24px;
+    height: 24px;
+    background: #e5e7eb;
+    background: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 50%, #e5e7eb 100%);
+    background-size: 200% 100%;
+    border-radius: 4px;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
 
-.loader-message {
-  font-family: 'Poppins', sans-serif;
-  font-weight: 500;
-  font-size: 1.125rem;
-  color: #1f2937;
-  margin: 0;
-}
+  .app-shell-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    background: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 50%, #e5e7eb 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+  /* Main Container */
+  .app-shell-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    flex-direction: column;
+    /* Allow content stacking */
+  }
 
-/* Mobile responsive */
-@media (max-width: 768px) {
-  .loader {
+  /* Sidebar Skeleton - Hidden on mobile */
+  .app-shell-sidebar {
+    position: absolute;
+    /* Hide/Show logic handled via display */
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 280px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
     padding: 1.5rem;
-    margin: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+    z-index: 5;
   }
-  
-  .loader-message {
-    font-size: 1rem;
+
+  .app-shell-sidebar-item {
+    height: 44px;
+    background: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 50%, #e5e7eb 100%);
+    background-size: 200% 100%;
+    border-radius: 8px;
+    animation: shimmer 1.5s ease-in-out infinite;
   }
-}
+
+  .stagger-1 {
+    animation-delay: 0.1s;
+  }
+
+  .stagger-2 {
+    animation-delay: 0.2s;
+  }
+
+  .stagger-3 {
+    animation-delay: 0.3s;
+  }
+
+  /* Content Area - Matches Home Page layout */
+  .app-shell-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1.5rem;
+    position: relative;
+    overflow-y: hidden;
+  }
+
+  /* Balance Card Skeleton */
+  .app-shell-balance-card {
+    width: 100%;
+    max-width: 400px;
+    background: white;
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 2rem;
+    animation: fadeInUp 0.5s ease-out;
+  }
+
+  .app-shell-icon-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #eff6ff;
+    /* Light blue tint */
+    margin-bottom: 1rem;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .app-shell-text-line {
+    height: 12px;
+    background: #e5e7eb;
+    background: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 50%, #e5e7eb 100%);
+    background-size: 200% 100%;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    animation: shimmer 1.5s linear infinite;
+  }
+
+  .app-shell-text-title {
+    height: 24px;
+    width: 140px;
+    margin-bottom: 1.5rem;
+  }
+
+  .app-shell-text-balance {
+    height: 40px;
+    width: 180px;
+    background: #fee2e2;
+    /* Red hint base */
+    background: linear-gradient(90deg, #fee2e2 0%, #fecaca 50%, #fee2e2 100%);
+    background-size: 200% 100%;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+
+  .app-shell-text-subtitle {
+    width: 100px;
+  }
+
+  /* Search Bar Area */
+  .app-shell-search-bar {
+    position: absolute;
+    bottom: 100px;
+    /* Above nav bar */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    height: 56px;
+    background: #f3f4f6;
+    border-radius: 28px;
+    animation: fadeInUp 0.6s ease-out;
+  }
+
+  /* Bottom Navigation Skeleton */
+  .app-shell-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    background: white;
+    border-top: 1px solid #f3f4f6;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding-bottom: 10px;
+    /* Safe area */
+    z-index: 20;
+  }
+
+  .app-shell-nav-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: #f3f4f6;
+
+    animation: pulse 2s infinite;
+  }
+
+  .app-shell-nav-fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: #374151;
+    opacity: 0.1;
+    margin-bottom: 24px;
+    /* Lifted up */
+    animation: pulse 2s infinite;
+  }
+
+  /* Animations */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes pulse {
+
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: 0.7;
+      transform: scale(0.98);
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px) translateX(var(--tx, 0));
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) translateX(var(--tx, 0));
+    }
+  }
+
+  /* Desktop Adjustments */
+  @media (min-width: 769px) {
+
+    .app-shell-header,
+    .app-shell-bottom-nav,
+    .app-shell-search-bar {
+      display: none;
+      /* Hide mobile specific elements */
+    }
+
+    .app-shell-sidebar {
+      position: relative;
+      /* Show sidebar */
+      display: flex;
+    }
+
+    .app-shell-content {
+      justify-content: center;
+      align-items: center;
+    }
+
+    .app-shell-balance-card {
+      /* Center card on desktop differently if needed */
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      max-width: 380px;
+      /* Use sidebar layout for desktop, centered card */
+    }
+
+    /* Show original loader design on desktop perhaps? 
+           For now, the card skeleton looks fine on desktop too, just without mobile nav/header */
+  }
+
+  @media (max-width: 768px) {
+    .app-shell-sidebar {
+      display: none;
+    }
+
+    .app-shell-content {
+      align-items: center;
+    }
+
+    .app-shell-search-bar {
+      --tx: -50%;
+    }
+  }
+
+  /* Dark mode support */
+  @media (prefers-color-scheme: dark) {
+    .app-shell {
+      background-color: #111827;
+    }
+
+    .app-shell-balance-card {
+      background-color: #1f2937;
+    }
+
+    .app-shell-bottom-nav {
+      background-color: #1f2937;
+      border-color: #374151;
+    }
+
+    .app-shell-menu-icon,
+    .app-shell-avatar,
+    .app-shell-icon-circle,
+    .app-shell-search-bar,
+    .app-shell-nav-icon {
+      background-color: #374151;
+    }
+
+    .app-shell-text-title,
+    .app-shell-text-balance,
+    .app-shell-nav-fab {
+      background-color: #4b5563;
+    }
+
+    .app-shell-text-line {
+      background: #374151;
+    }
+  }

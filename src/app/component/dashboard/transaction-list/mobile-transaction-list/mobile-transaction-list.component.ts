@@ -42,6 +42,8 @@ import { selectAllCategories } from 'src/app/store/categories/categories.selecto
 import { RecurringInterval, SyncStatus } from 'src/app/util/config/enums';
 import { FilterService } from 'src/app/util/service/filter.service';
 import { CategoryService } from 'src/app/util/service/db/category.service';
+import { CurrencyService } from 'src/app/util/service/currency.service';
+import { ThemeSwitchingService } from 'src/app/util/service/theme-switching.service';
 
 interface SortOption {
   value: string;
@@ -114,7 +116,9 @@ export class MobileTransactionListComponent
     public readonly dateService: DateService,
     private readonly store: Store<AppState>,
     private readonly filterService: FilterService,
-    private readonly categoryService: CategoryService
+    private readonly categoryService: CategoryService,
+    private readonly currencyService: CurrencyService,
+    private readonly themeService: ThemeSwitchingService
   ) { }
 
   ngOnInit() {
@@ -126,6 +130,15 @@ export class MobileTransactionListComponent
       this.showFilters = true;
     }
     this.onDateRangeChange('this-month');
+
+    // Subscribe to theme changes
+    this.subscription.add(
+      this.themeService.currentTheme.subscribe(() => {
+        if (this.showChart) {
+          this.renderChart();
+        }
+      })
+    );
   }
 
   ngOnDestroy() {
@@ -593,63 +606,133 @@ export class MobileTransactionListComponent
     const root = am5.Root.new('transactionChart');
     root.setThemes([am5themes_Animated.new(root)]);
 
+    const isDark = this.themeService.currentTheme.value === 'dark-theme';
+    const textColor = isDark ? am5.color(0xe5e7eb) : am5.color(0x9ca3af);
+    const gridColor = isDark ? am5.color(0xffffff) : am5.color(0x000000);
+
     const chart = root.container.children.push(
       am5xy.XYChart.new(root, {
         panX: true,
-        panY: true,
+        panY: false,
         wheelX: 'panX',
         wheelY: 'zoomX',
+        layout: root.verticalLayout,
       })
     );
 
-    const xRenderer = am5xy.AxisRendererX.new(root, {});
-    xRenderer.labels.template.setAll({ rotation: -45, centerY: am5.p50 });
+    // Create axes
+    const xRenderer = am5xy.AxisRendererX.new(root, {
+      minGridDistance: 30,
+      cellStartLocation: 0.1,
+      cellEndLocation: 0.9,
+    });
+
+    xRenderer.grid.template.set('visible', false);
+
+    xRenderer.labels.template.setAll({
+      rotation: -45,
+      centerY: am5.p50,
+      centerX: am5.p100,
+      paddingRight: 15,
+      fontSize: 10,
+      fill: textColor,
+    });
 
     const xAxis = chart.xAxes.push(
-      am5xy.DateAxis.new(root, {
-        maxDeviation: 0.5,
-        baseInterval: { timeUnit: 'day', count: 1 },
+      am5xy.CategoryAxis.new(root, {
+        categoryField: 'category',
         renderer: xRenderer,
-      })
-    );
-
-    const yAxis = chart.yAxes.push(
-      am5xy.ValueAxis.new(root, {
-        renderer: am5xy.AxisRendererY.new(root, {}),
-      })
-    );
-
-    const series = chart.series.push(
-      am5xy.LineSeries.new(root, {
-        name: 'Net',
-        xAxis: xAxis,
-        yAxis: yAxis,
-        valueYField: 'value',
-        valueXField: 'date',
         tooltip: am5.Tooltip.new(root, {}),
       })
     );
 
-    // Aggregate filteredTransactions by day (net: income - expense)
-    const map = new Map<number, number>();
-    this.filteredTransactions.forEach(tx => {
-      const d = this.dateService.toDate(tx.date);
-      if (!d) return;
-      const day = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-      const sign = tx.type === 'income' ? 1 : -1;
-      map.set(day, (map.get(day) || 0) + sign * tx.amount);
+    const yRenderer = am5xy.AxisRendererY.new(root, {});
+    yRenderer.grid.template.setAll({
+      strokeDasharray: [3, 3],
+      strokeOpacity: 0.2,
+      stroke: gridColor
     });
 
-    const data = Array.from(map.entries())
-      .map(([time, value]) => ({ date: time, value }))
-      .sort((a, b) => a.date - b.date);
+    yRenderer.labels.template.setAll({
+      fontSize: 10,
+      fill: textColor,
+    });
 
+    yRenderer.labels.template.adapters.add("text", (text, target) => {
+      if (target.dataItem && typeof (target.dataItem as any).get("value") === "number") {
+        return this.currencyService.formatAmount((target.dataItem as any).get("value") as number, {
+          compact: true,
+          decimalPlaces: 0
+        });
+      }
+      return text;
+    });
+
+    const yAxis = chart.yAxes.push(
+      am5xy.ValueAxis.new(root, {
+        renderer: yRenderer,
+        min: 0,
+      })
+    );
+
+    // Add series
+    const series = chart.series.push(
+      am5xy.ColumnSeries.new(root, {
+        name: 'Amount',
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: 'value',
+        categoryXField: 'category',
+        tooltip: am5.Tooltip.new(root, {
+          labelText: '{fullCategory}: {formattedValue}'
+        }),
+      })
+    );
+
+    series.columns.template.setAll({
+      cornerRadiusTL: 5,
+      cornerRadiusTR: 5,
+      width: am5.percent(70),
+      strokeOpacity: 0
+    });
+
+    // Make each column a different color
+    series.columns.template.adapters.add("fill", (fill, target) => {
+      return chart.get("colors")?.getIndex(series.columns.indexOf(target));
+    });
+
+    series.columns.template.adapters.add("stroke", (stroke, target) => {
+      return chart.get("colors")?.getIndex(series.columns.indexOf(target));
+    });
+
+    // Process data
+    const categoryMap = new Map<string, number>();
+    this.filteredTransactions.forEach((tx) => {
+      const catId = tx.categoryId;
+      const current = categoryMap.get(catId) || 0;
+      categoryMap.set(catId, current + tx.amount);
+    });
+
+    const data = Array.from(categoryMap.entries())
+      .map(([catId, value]) => ({
+        category: this.getCategoryName(catId).substring(0, 3).toUpperCase(),
+        fullCategory: this.getCategoryName(catId),
+        value: value,
+        formattedValue: this.currencyService.formatAmount(value)
+      }))
+      .sort((a, b) => b.value - a.value);
+
+    xAxis.data.setAll(data);
     series.data.setAll(data);
 
-    chart.set('cursor', am5xy.XYCursor.new(root, {}));
+    chart.set('cursor', am5xy.XYCursor.new(root, {
+      behavior: "none",
+      xAxis: xAxis
+    }));
 
     this.chartRoot = root;
   }
+
 
   private disposeChart() {
     try {

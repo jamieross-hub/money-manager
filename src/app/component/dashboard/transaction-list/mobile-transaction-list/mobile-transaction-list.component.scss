@@ -427,8 +427,8 @@
 	width: 100%;
 	height: 260px;
 	border-radius: 12px;
-	background: white;
-	border: 1px solid #e5e7eb;
+	background: var(--surface-100);
+	border: 1px solid var(--surface-200);
 	overflow: hidden;
 }
 
