@@ -380,7 +380,26 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           isRecurring: formData.isRecurring || false,
           recurringInterval: formData.recurringInterval || RecurringInterval.MONTHLY,
           recurringEndDate: formData.recurringEndDate ? new Date(formData.recurringEndDate) : null,
-          nextOccurrence: formData.isRecurring ? new Date(formData.recurringStartDate || formData.date) : null,
+          nextOccurrence: formData.isRecurring ? (() => {
+            const startDate = moment(formData.recurringStartDate || formData.date);
+            const transactionDate = moment(formData.date);
+
+            // If start date is same or before transaction date, we need to calculate the NEXT occurrence
+            // because the current transaction IS the first occurrence
+            if (startDate.isSameOrBefore(transactionDate, 'day')) {
+              const interval = formData.recurringInterval;
+              switch (interval) {
+                case 'daily': return startDate.add(1, 'days').toDate();
+                case 'weekly': return startDate.add(1, 'weeks').toDate();
+                case 'monthly': return startDate.add(1, 'months').toDate();
+                case 'yearly': return startDate.add(1, 'years').toDate();
+                default: return startDate.toDate();
+              }
+            }
+
+            // If start date is in the future, that IS the next occurrence
+            return startDate.toDate();
+          })() : null,
           status: TransactionStatus.COMPLETED,
           isSplitTransaction: formData.isSplitTransaction || false,
           splitGroupId: formData.splitGroupId || '',
