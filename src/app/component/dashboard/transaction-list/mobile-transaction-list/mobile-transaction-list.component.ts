@@ -104,6 +104,7 @@ export class MobileTransactionListComponent
   private subscription = new Subscription();
   destroy$: Subject<void> = new Subject<void>();
   categories: Category[] = [];
+  private availableCategories: (Category & { id: string })[] = [];
 
   // Store observables
   transactions$: Observable<Transaction[]> = this.store.select(selectAllTransactions);
@@ -157,6 +158,7 @@ export class MobileTransactionListComponent
           const dateB = this.dateService.toDate(b.date);
           return (dateB?.getTime() ?? 0) - (dateA?.getTime() ?? 0);
         });
+        this.updateAvailableCategories();
         this.filterTransactions();
       })
     );
@@ -456,10 +458,34 @@ export class MobileTransactionListComponent
   }
 
   getCategoriesList(): (Category & { id: string })[] {
-    return this.categories.map(category => ({
-      ...category,
-      id: category.id || ''
-    }));
+    return this.availableCategories;
+  }
+
+  private updateAvailableCategories() {
+    if (!this.categories || !this.allTransactions) return;
+
+    const usedCategoryIds = new Set<string>();
+
+    this.allTransactions.forEach(tx => {
+      if (tx.categoryId) {
+        usedCategoryIds.add(tx.categoryId);
+      }
+
+      if (tx.isCategorySplit && tx.categorySplits) {
+        tx.categorySplits.forEach(split => {
+          if (split.categoryId) {
+            usedCategoryIds.add(split.categoryId);
+          }
+        });
+      }
+    });
+
+    this.availableCategories = this.categories
+      .filter(category => usedCategoryIds.has(category.id || ''))
+      .map(category => ({
+        ...category,
+        id: category.id || ''
+      }));
   }
 
   getFilteredCount(): number {
@@ -488,6 +514,7 @@ export class MobileTransactionListComponent
     this.subscription.add(
       this.store.select(selectAllCategories).subscribe((categories: Category[]) => {
         this.categories = categories;
+        this.updateAvailableCategories();
       })
     );
   }
