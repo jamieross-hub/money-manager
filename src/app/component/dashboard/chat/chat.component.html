@@ -2,7 +2,7 @@
   <div class="flex flex-col  ">
 
     <div #scrollContainer class="flex-1 overflow-y-auto px-4 space-y-4 pt-4 pb-28 md:pb-4 flex"
-      [ngStyle]="{'max-height': breakpointService.device.isMobile ? 'calc(75dvh - 100px)' : '70vh'}">
+      [ngStyle]="{'max-height': breakpointService.device.isMobile ? 'calc(80dvh - 100px)' : '70vh'}">
       <div class="max-w-screen-xl mx-auto w-full">
         <div *ngFor="let msg of chatFacadeService.messages" class="flex fade-in"
           [ngClass]="msg.sender === 'user' ? 'justify-end' : 'justify-start'">
