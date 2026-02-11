@@ -3,14 +3,22 @@
   "name": "Money Manager",
   "short_name": "MoneyManager",
   "description": "Track your expenses, manage budgets, and achieve financial goals with our comprehensive money management app",
-  "theme_color": "#dbe9fe",
-  "background_color": "#fafafa",
+  "theme_color": "#f7faf5",
+  "background_color": "transparent",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
   "orientation": "portrait-primary",
   "scope": "./",
   "start_url": "./",
-  "categories": ["finance", "productivity", "utilities"],
+  "categories": [
+    "finance",
+    "productivity",
+    "utilities"
+  ],
   "lang": "en",
   "dir": "ltr",
   "prefer_related_applications": false,
@@ -33,11 +41,21 @@
     {
       "action": "./",
       "accept": {
-        "text/csv": [".csv"],
-        "application/vnd.ms-excel": [".xls"],
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
-        "application/pdf": [".pdf"],
-        "text/plain": [".txt"]
+        "text/csv": [
+          ".csv"
+        ],
+        "application/vnd.ms-excel": [
+          ".xls"
+        ],
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+          ".xlsx"
+        ],
+        "application/pdf": [
+          ".pdf"
+        ],
+        "text/plain": [
+          ".txt"
+        ]
       }
     }
   ],
@@ -67,7 +85,11 @@
       "files": [
         {
           "name": "receipts",
-          "accept": ["image/*", "application/pdf", "text/csv"]
+          "accept": [
+            "image/*",
+            "application/pdf",
+            "text/csv"
+          ]
         }
       ]
     }
