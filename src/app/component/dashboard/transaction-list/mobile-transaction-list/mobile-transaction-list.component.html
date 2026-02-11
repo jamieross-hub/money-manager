@@ -176,10 +176,10 @@
 				<span class="stat-total">/ {{ getTotalCount() }}</span>
 			</div>
 			<div class="stat-item">
-				<span class="stat-value income">+{{ getTotalIncome() | currency }}</span>
+				<span class="stat-value income">+{{ getTotalIncome() | currency:{round:true} }}</span>
 			</div>
 			<div class="stat-item">
-				<span class="stat-value expense">-{{ getTotalExpenses() | currency }}</span>
+				<span class="stat-value expense">-{{ getTotalExpenses() | currency:{round:true} }}</span>
 			</div>
 		</div>
 	</div>
