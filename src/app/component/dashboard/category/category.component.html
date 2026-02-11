@@ -19,8 +19,7 @@
 				<p class="page-title dark:text-white">Categories</p>
 				<p class="page-description dark:text-slate-400">Manage your budget categories</p>
 			</div>
-			<button *ngIf="!breakpointService.device.isMobile" mat-flat-button color="primary" class="add-category-btn"
-				(click)="openAddMobileDialog()">
+			<button mat-flat-button color="primary" class="add-category-btn" (click)="openAddMobileDialog()">
 				<mat-icon>add</mat-icon>
 				Add Category
 			</button>
