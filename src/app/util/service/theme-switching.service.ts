@@ -3,6 +3,7 @@ import { Inject, Injectable, Renderer2, RendererFactory2 } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { ThemeType } from '../models/theme.model';
 import { SsrService } from './ssr.service';
+import { Meta } from '@angular/platform-browser';
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +18,8 @@ export class ThemeSwitchingService {
   constructor(
     rendererFactory: RendererFactory2,
     @Inject(DOCUMENT) private document: Document,
-    private ssrService: SsrService
+    private ssrService: SsrService,
+    private meta: Meta
   ) {
     this.renderer = rendererFactory.createRenderer(null, null);
     this.body = this.document.body;
@@ -39,13 +41,9 @@ export class ThemeSwitchingService {
   private listenForSystemChanges() {
     if (!this.ssrService.isClientSide()) return;
 
-    window
-      .matchMedia('(prefers-color-scheme: dark)')
+    window.matchMedia('(prefers-color-scheme: dark)')
       .addEventListener('change', (event) => {
-        const newTheme: ThemeType = event.matches
-          ? 'dark-theme'
-          : 'light-theme';
-
+        const newTheme: ThemeType = event.matches ? 'dark-theme' : 'light-theme';
         this.applyTheme(newTheme);
       });
   }
@@ -57,13 +55,15 @@ export class ThemeSwitchingService {
   }
 
   private applyTheme(theme: ThemeType) {
-    if (theme === this.previousClass) return;
-
     this.renderer.removeClass(this.body, this.previousClass);
     this.renderer.addClass(this.body, theme);
 
     this.previousClass = theme;
     this.currentTheme.next(theme);
+
+    // Update theme-color meta tag
+    const themeColor = theme === 'dark-theme' ? '#0a0b0a' : '#f7faf5';
+    this.meta.updateTag({ name: 'theme-color', content: themeColor });
   }
 
   public setTheme(theme: ThemeType) {
