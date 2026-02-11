@@ -95,7 +95,7 @@ export class TranslationService {
 
     // Step 3: Try app_language
     try {
-      let savedLanguage = this.localStorageService.getItem<string>('app_language');
+      let savedLanguage = this.localStorageService.getItem<string>(LocalStorageKey.APP_LANGUAGE);
 
       if (savedLanguage) {
         const lang = this.normalizeLanguageCode(savedLanguage);
@@ -150,7 +150,7 @@ export class TranslationService {
     this.translateService.use(normalizedLang);
 
     // Try LocalStorageService first
-    this.localStorageService.setItem('app_language', normalizedLang);
+    this.localStorageService.setItem(LocalStorageKey.APP_LANGUAGE, normalizedLang);
   }
 
 

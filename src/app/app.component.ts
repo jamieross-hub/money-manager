@@ -10,6 +10,7 @@ import { SsrService } from './util/service/ssr.service';
 import { FirebaseMessagingService } from './util/service/firebase-messaging.service';
 import { LanguageService } from './util/service/language.service';
 import { LocalIndexDBStorageService } from './util/service/indexdb-storage.service';
+import { LocalStorageKey } from './util/models/local-storage.model';
 
 @Component({
   selector: 'app-root',
@@ -109,7 +110,7 @@ export class AppComponent implements OnInit, OnDestroy {
     };
 
     try {
-      this.localStorageService.setItem('app-state', appState);
+      this.localStorageService.setItem(LocalStorageKey.NAVIGATION_STATE, appState);
     } catch (error) {
       console.warn('Failed to save app state:', error);
     }
@@ -133,13 +134,13 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private refreshDataIfNeeded(): void {
-    const lastRefresh = this.localStorageService.getItem<string>('last-data-refresh');
+    const lastRefresh = this.localStorageService.getItem<string>(LocalStorageKey.LAST_DATA_REFRESH);
     const now = Date.now();
     const refreshInterval = APP_CONFIG.OFFLINE.SYNC_INTERVAL; // Use config sync interval
 
     if (!lastRefresh || (now - parseInt(lastRefresh)) > refreshInterval) {
       // Trigger data refresh
-      this.localStorageService.setItem('last-data-refresh', now.toString());
+      this.localStorageService.setItem(LocalStorageKey.LAST_DATA_REFRESH, now.toString());
       // You can emit an event here to refresh data in components
     }
   }

@@ -1,42 +1,50 @@
 import { ActionReducer } from '@ngrx/store';
 import { storageMetaReducer } from './storage.metareducer';
 import { Timestamp } from '@angular/fire/firestore';
+import { LocalIndexDBStorageService } from '../util/service/indexdb-storage.service';
+import { LocalStorageKey } from '../util/models/local-storage.model';
 
 describe('storageMetaReducer', () => {
     let reducer: ActionReducer<any>;
     let metaReducer: ActionReducer<any>;
+    let storageServiceMock: jasmine.SpyObj<LocalIndexDBStorageService>;
 
     beforeEach(() => {
+        // Mock the storage service
+        storageServiceMock = jasmine.createSpyObj('LocalIndexDBStorageService', ['getItem', 'setItem', 'removeItem']);
+
+        // Mock getInstance to return our spy object
+        spyOn(LocalIndexDBStorageService, 'getInstance').and.returnValue(storageServiceMock);
+
         reducer = jasmine.createSpy('reducer').and.callFake((state, action) => state);
         metaReducer = storageMetaReducer(reducer);
-        spyOn(localStorage, 'getItem').and.callThrough();
-        spyOn(localStorage, 'setItem').and.callThrough();
-        localStorage.clear();
     });
 
-    it('should save state to localStorage', () => {
+    it('should save state to storage using LocalStorageKey.APP_STATE', () => {
         const state = { foo: 'bar' };
         metaReducer(state, { type: 'SOME_ACTION' });
-        expect(localStorage.setItem).toHaveBeenCalledWith('app_state', JSON.stringify(state));
+        expect(storageServiceMock.setItem).toHaveBeenCalledWith(LocalStorageKey.APP_STATE, state);
     });
 
-    it('should restore state from localStorage on init', () => {
+    it('should restore state from storage on init', () => {
         const storedState = { foo: 'baz' };
-        localStorage.setItem('app_state', JSON.stringify(storedState));
-
-        // Re-create spy to pick up the item we just set, if needed, 
-        // but localStorage works globally in jsdom/browser envs usually.
+        // Setup mock return value
+        storageServiceMock.getItem.and.returnValue(storedState);
 
         metaReducer(undefined, { type: '@ngrx/store/init' });
 
         // The reducer should be called with the restored state
         expect(reducer).toHaveBeenCalledWith(storedState, jasmine.anything());
+        expect(storageServiceMock.getItem).toHaveBeenCalledWith(LocalStorageKey.APP_STATE);
     });
 
     it('should revive Date strings to Date objects', () => {
         const date = new Date('2023-01-01T10:00:00.000Z');
-        const storedState = { myDate: date.toISOString() };
-        localStorage.setItem('app_state', JSON.stringify(storedState));
+        // When stored as JSON string (simulator internal behavior of getItem if it returned string)
+        // But the service returns `any`. The meta reducer handles string parsing if getItem returns string.
+        // Let's simulate getItem returning a JSON string to test the reviver logic in meta-reducer
+        const storedStateString = JSON.stringify({ myDate: date.toISOString() });
+        storageServiceMock.getItem.and.returnValue(storedStateString);
 
         metaReducer(undefined, { type: '@ngrx/store/init' });
 
@@ -49,8 +57,8 @@ describe('storageMetaReducer', () => {
 
     it('should revive Firestore Timestamp objects', () => {
         const timestamp = { seconds: 1672569600, nanoseconds: 0 };
-        const storedState = { myTimestamp: timestamp };
-        localStorage.setItem('app_state', JSON.stringify(storedState));
+        const storedStateString = JSON.stringify({ myTimestamp: timestamp });
+        storageServiceMock.getItem.and.returnValue(storedStateString);
 
         metaReducer(undefined, { type: '@ngrx/store/init' });
 
@@ -59,5 +67,15 @@ describe('storageMetaReducer', () => {
 
         expect(restoredState.myTimestamp).toBeInstanceOf(Timestamp);
         expect(restoredState.myTimestamp.seconds).toBe(1672569600);
+    });
+
+    it('should handle parsing errors gracefully', () => {
+        storageServiceMock.getItem.and.returnValue('invalid json');
+
+        metaReducer(undefined, { type: '@ngrx/store/init' });
+
+        expect(storageServiceMock.removeItem).toHaveBeenCalledWith(LocalStorageKey.APP_STATE);
+        // Should return undefined/initial state to reducer if parsing fails
+        expect(reducer).toHaveBeenCalledWith(undefined, jasmine.anything());
     });
 });

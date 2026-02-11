@@ -4,6 +4,7 @@ import { Auth } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 import { DateService } from '../date.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
+import { LocalStorageKeyHelper } from '../../models/local-storage.model';
 
 export interface Goal {
     goalId: string;
@@ -43,7 +44,7 @@ export class GoalsService {
         return new Observable<Goal[]>(observer => {
             // 1. Emit cached data immediately if available
             try {
-                const cachedGoals = this.localStorageUtility.getItem<Goal[]>(`goals-cache-${userId}`);
+                const cachedGoals = this.localStorageUtility.getItem<Goal[]>(LocalStorageKeyHelper.getGoalsCacheKey(userId));
                 if (cachedGoals && cachedGoals.length > 0) {
                     console.log(`[GoalsService] Emitting ${cachedGoals.length} cached goals`);
                     observer.next(cachedGoals);
@@ -64,7 +65,7 @@ export class GoalsService {
 
                     // Update cache for next time
                     try {
-                        this.localStorageUtility.setItem(`goals-cache-${userId}`, goals);
+                        this.localStorageUtility.setItem(LocalStorageKeyHelper.getGoalsCacheKey(userId), goals);
                     } catch (error) {
                         console.warn('[GoalsService] Failed to cache goals:', error);
                     }

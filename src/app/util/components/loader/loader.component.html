@@ -1,39 +1,60 @@
 @if (loading$ | async) {
 <div class="app-shell">
-  <!-- Mobile Header -->
+  <!-- Header (Visible on Desktop & Mobile) -->
   <div class="app-shell-header">
-    <div class="app-shell-menu-icon"></div>
+    <div class="app-shell-menu-icon sm:hidden"></div> <!-- Mobile Menu Icon -->
+    <div class="app-shell-logo hidden sm:block"></div> <!-- Desktop Logo Placeholder -->
     <div class="app-shell-avatar"></div>
   </div>
 
   <!-- Main Container -->
   <div class="app-shell-container">
-    <!-- Sidebar (Desktop only) -->
-    <div class="app-shell-sidebar">
-      <div class="app-shell-sidebar-item"></div>
-      <div class="app-shell-sidebar-item stagger-1"></div>
-      <div class="app-shell-sidebar-item stagger-2"></div>
-      <div class="app-shell-sidebar-item stagger-3"></div>
-    </div>
+    <!-- Sidebar (Hidden on Desktop as per overlay mode) -->
+    <!-- app-shell-sidebar removed or hidden via CSS -->
 
     <!-- Content Area -->
     <div class="app-shell-content">
-      <!-- Balance Card (mimics Home Page) -->
-      <div class="app-shell-balance-card">
-        <div class="app-shell-icon-circle"></div>
-        <div class="app-shell-text-line app-shell-text-title"></div>
-        <div class="app-shell-text-line app-shell-text-subtitle"></div>
-        <div class="app-shell-text-line app-shell-text-balance"></div>
-        <div class="app-shell-text-line app-shell-text-subtitle"></div>
+
+      <!-- Desktop Grid Layout -->
+      <div class="app-shell-grid">
+
+        <!-- Main Balance Card (Spans full on mobile, specific cols on desktop) -->
+        <div class="app-shell-card main-card">
+          <div class="app-shell-icon-circle"></div>
+          <div class="app-shell-text-line app-shell-text-title"></div>
+          <div class="app-shell-text-line app-shell-text-subtitle"></div>
+          <div class="app-shell-text-line app-shell-text-balance"></div>
+        </div>
+
+        <!-- Secondary Widget 1 (Recent Activity / Charts) -->
+        <div class="app-shell-card widget-card">
+          <div class="app-shell-text-line app-shell-text-title w-1/2"></div>
+          <div class="space-y-4 w-full mt-4">
+            <div class="app-shell-text-line w-full"></div>
+            <div class="app-shell-text-line w-3/4"></div>
+            <div class="app-shell-text-line w-5/6"></div>
+          </div>
+        </div>
+
+        <!-- Secondary Widget 2 (Top Categories) -->
+        <div class="app-shell-card widget-card">
+          <div class="app-shell-text-line app-shell-text-title w-1/2"></div>
+          <div class="flex gap-4 mt-4 justify-center">
+            <div class="app-shell-icon-circle small"></div>
+            <div class="app-shell-icon-circle small"></div>
+            <div class="app-shell-icon-circle small"></div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Search Bar Placeholder -->
-      <div class="app-shell-search-bar"></div>
+      <!-- Mobile Search Bar Placeholder -->
+      <div class="app-shell-search-bar sm:hidden"></div>
     </div>
   </div>
 
   <!-- Bottom Navigation (Mobile only) -->
-  <div class="app-shell-bottom-nav">
+  <div class="app-shell-bottom-nav sm:hidden">
     <div class="app-shell-nav-icon"></div>
     <div class="app-shell-nav-icon"></div>
     <div class="app-shell-nav-fab"></div>

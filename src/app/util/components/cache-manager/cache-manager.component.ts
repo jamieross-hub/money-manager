@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonSyncService } from '../../service/common-sync.service';
 import { SsrService } from '../../service/ssr.service';
+import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
+import { LocalStorageKey } from 'src/app/util/models/local-storage.model';
 
 @Component({
   selector: 'app-cache-manager',
@@ -112,7 +114,11 @@ export class CacheManagerComponent {
   isUpdating = false;
   isChecking = false;
 
-  constructor(private commonSyncService: CommonSyncService, private ssrService: SsrService) { }
+  constructor(
+    private commonSyncService: CommonSyncService,
+    private ssrService: SsrService,
+    private storageService: LocalIndexDBStorageService
+  ) { }
 
   async clearApplicationCache(): Promise<void> {
     this.isClearing = true;
@@ -182,7 +188,7 @@ export class CacheManagerComponent {
   }
 
   getLastUpdated(): string {
-    const lastUpdated = localStorage.getItem('app-version') || this.getAppVersion();
+    const lastUpdated = this.storageService.getItem<string>(LocalStorageKey.APP_VERSION) || this.getAppVersion();
     return new Date(lastUpdated).toLocaleDateString();
   }
 } 

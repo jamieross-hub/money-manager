@@ -4,6 +4,7 @@ import { Auth } from '@angular/fire/auth';
 import { Observable, of } from 'rxjs';
 import { DateService } from '../date.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
+import { LocalStorageKeyHelper } from '../../models/local-storage.model';
 
 export interface Budget {
   budgetId: string;
@@ -45,7 +46,7 @@ export class BudgetsService {
     return new Observable<Budget[]>(observer => {
       // 1. Emit cached data immediately if available
       try {
-        const cachedBudgets = this.localStorageUtility.getItem<Budget[]>(`budgets-cache-${userId}`);
+        const cachedBudgets = this.localStorageUtility.getItem<Budget[]>(LocalStorageKeyHelper.getBudgetsCacheKey(userId));
         if (cachedBudgets && cachedBudgets.length > 0) {
           console.log(`[BudgetsService] Emitting ${cachedBudgets.length} cached budgets`);
           observer.next(cachedBudgets);
@@ -66,7 +67,7 @@ export class BudgetsService {
 
           // Update cache for next time
           try {
-            this.localStorageUtility.setItem(`budgets-cache-${userId}`, budgets);
+            this.localStorageUtility.setItem(LocalStorageKeyHelper.getBudgetsCacheKey(userId), budgets);
           } catch (error) {
             console.warn('[BudgetsService] Failed to cache budgets:', error);
           }

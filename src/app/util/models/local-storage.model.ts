@@ -23,14 +23,44 @@ export enum LocalStorageKey {
     GUEST_GOALS = 'guest_goals',
 
     // App State
+    APP_STATE = 'app_state',
+    NAVIGATION_STATE = 'app-state', // Kept 'app-state' value to maintain backward compatibility if needed, or migration
+    LAST_DATA_REFRESH = 'last-data-refresh',
     THEME_PREFERENCE = 'theme-preference',
     LOCALE_PREFERENCE = 'locale-preference',
+    ADMIN_SETTINGS = 'admin-settings',
+    FILTER_PRESETS = 'money-manager-filter-presets',
+    APP_LOGS = 'app_logs',
+    APP_LANGUAGE = 'app_language',
+    REPORTS_PREFERENCES = 'reports-preferences',
 
     // Feature Flags
     FEATURE_FLAGS = 'feature-flags',
 
     // Cache
+    // Notifications
+    NOTIFICATIONS_ENABLED = 'notifications_enabled',
+    NOTIFICATION_PREFIX = 'notification_',
+    NOTIFICATION_ADVANCED_PREFIX = 'notification_advanced_',
+
+    // PWA
+    PWA_INSTALL_DISMISSED = 'pwa-install-dismissed',
+    PWA_INSTALL_DISMISSED_TIME = 'pwa-install-dismissed-time',
+    APP_BACKGROUND_STATE = 'app-background-state',
+
+    // Firebase
+    FCM_TOKEN = 'fcm-token',
+
+    // App Version/Cache
+    APP_VERSION = 'app-version',
+    APP_CACHE_VERSION = 'app-cache-version',
     CACHE_PREFIX = 'cache_',
+    SYNC_QUEUE = 'sync-queue',
+    TRANSACTIONS_CACHE = 'transactions-cache',
+    CATEGORIES_CACHE = 'categories-cache',
+    ACCOUNTS_CACHE = 'accounts-cache',
+    BUDGETS_CACHE = 'budgets-cache',
+    GOALS_CACHE = 'goals-cache',
 }
 
 /**
@@ -110,6 +140,41 @@ export class LocalStorageKeyHelper {
      */
     static getCacheKey(key: string): string {
         return `${LocalStorageKey.CACHE_PREFIX}${key}`;
+    }
+
+    /**
+     * Get transactions cache key
+     */
+    static getTransactionsCacheKey(uid: string): string {
+        return `${LocalStorageKey.TRANSACTIONS_CACHE}-${uid}`;
+    }
+
+    /**
+     * Get categories cache key
+     */
+    static getCategoriesCacheKey(uid: string): string {
+        return `${LocalStorageKey.CATEGORIES_CACHE}-${uid}`;
+    }
+
+    /**
+     * Get accounts cache key
+     */
+    static getAccountsCacheKey(uid: string): string {
+        return `${LocalStorageKey.ACCOUNTS_CACHE}-${uid}`;
+    }
+
+    /**
+     * Get budgets cache key
+     */
+    static getBudgetsCacheKey(uid: string): string {
+        return `${LocalStorageKey.BUDGETS_CACHE}-${uid}`;
+    }
+
+    /**
+     * Get goals cache key
+     */
+    static getGoalsCacheKey(uid: string): string {
+        return `${LocalStorageKey.GOALS_CACHE}-${uid}`;
     }
 
     /**

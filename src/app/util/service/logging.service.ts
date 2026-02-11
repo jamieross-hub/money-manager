@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '@env/environment';
-import { LocalStorageService } from './indexdb-storage.service';
+import { LocalIndexDBStorageService } from './indexdb-storage.service';
+import { LocalStorageKey } from '../models/local-storage.model';
 
 export interface LogEntry {
   timestamp: Date;
@@ -116,7 +117,7 @@ export class LoggingService {
 
   private saveLogsToStorage(): void {
     try {
-      LocalStorageService.getInstance().setItem('app_logs', this.logs);
+      LocalIndexDBStorageService.getInstance().setItem(LocalStorageKey.APP_LOGS, this.logs);
     } catch (error) {
       console.warn('Failed to save logs to storage:', error);
     }
@@ -124,7 +125,7 @@ export class LoggingService {
 
   private loadLogsFromStorage(): void {
     try {
-      const storedLogs = LocalStorageService.getInstance().getItem<any[]>('app_logs');
+      const storedLogs = LocalIndexDBStorageService.getInstance().getItem<any[]>(LocalStorageKey.APP_LOGS);
       if (storedLogs) {
         this.logs = storedLogs.map((log: any) => ({
           ...log,
@@ -156,7 +157,7 @@ export class LoggingService {
 
   clearLogs(): void {
     this.logs = [];
-    LocalStorageService.getInstance().removeItem('app_logs');
+    LocalIndexDBStorageService.getInstance().removeItem(LocalStorageKey.APP_LOGS);
   }
 
   exportLogs(): string {

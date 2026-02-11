@@ -19,6 +19,7 @@ import { CommonSyncService, SyncItem } from '../common-sync.service';
 import { BaseService } from '../base.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { UserService } from './user.service';
+import { LocalStorageKeyHelper } from '../../models/local-storage.model';
 import { of } from 'rxjs';
 import { CurrencyService } from '../currency.service';
 
@@ -831,7 +832,7 @@ export class TransactionsService extends BaseService {
      */
     private getCachedTransactions(userId: string): Transaction[] {
         try {
-            const cachedData = this.localStorageUtility.getItem<Transaction[]>(`transactions-cache-${userId}`);
+            const cachedData = this.localStorageUtility.getItem<Transaction[]>(LocalStorageKeyHelper.getTransactionsCacheKey(userId));
             if (cachedData) {
                 return cachedData.filter(t => t && t.id);
             }
@@ -846,7 +847,7 @@ export class TransactionsService extends BaseService {
      */
     private cacheTransactions(userId: string, transactions: Transaction[]): void {
         try {
-            this.localStorageUtility.setItem(`transactions-cache-${userId}`, transactions);
+            this.localStorageUtility.setItem(LocalStorageKeyHelper.getTransactionsCacheKey(userId), transactions);
         } catch (error) {
             console.error('Error caching transactions:', error);
         }

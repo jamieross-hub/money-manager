@@ -15,6 +15,7 @@ import { NotificationService } from '../notification.service';
 import { HapticFeedbackService } from '../haptic-feedback.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { UserService } from './user.service';
+import { LocalStorageKeyHelper } from '../../models/local-storage.model';
 import { of, map } from 'rxjs';
 
 @Injectable({
@@ -59,7 +60,7 @@ export class CategoryService {
         return new Observable<Category[]>(observer => {
             // 1. Emit cached data immediately if available
             try {
-                const cachedCategories = this.localStorageUtility.getItem<Category[]>(`categories-cache-${userId}`);
+                const cachedCategories = this.localStorageUtility.getItem<Category[]>(LocalStorageKeyHelper.getCategoriesCacheKey(userId));
                 if (cachedCategories && cachedCategories.length > 0) {
                     console.log(`[CategoryService] Emitting ${cachedCategories.length} cached categories`);
                     observer.next(cachedCategories);
@@ -94,7 +95,7 @@ export class CategoryService {
 
                     // Update cache for next time
                     try {
-                        this.localStorageUtility.setItem(`categories-cache-${userId}`, categories);
+                        this.localStorageUtility.setItem(LocalStorageKeyHelper.getCategoriesCacheKey(userId), categories);
                     } catch (error) {
                         console.warn('[CategoryService] Failed to cache categories:', error);
                     }

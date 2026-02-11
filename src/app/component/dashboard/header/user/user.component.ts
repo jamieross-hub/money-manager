@@ -18,6 +18,7 @@ import { ThemeType } from 'src/app/util/models/theme.model';
 import { take } from 'rxjs';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 import { ClickOutsideDirective } from 'src/app/util/directives/click-outside.directive';
+import { LocalStorageKey } from 'src/app/util/models/local-storage.model';
 
 
 @Component({
@@ -187,7 +188,7 @@ export class UserComponent {
                 </div>
                 <div class="flex justify-between">
                   <span class="text-sm text-gray-600">Last Updated:</span>
-                  <span class="text-sm font-medium">${new Date(this.localStorageService.getItem('app-version') || new Date().toISOString().split('T')[0]).toLocaleDateString()}</span>
+                  <span class="text-sm font-medium">${new Date(this.localStorageService.getItem(LocalStorageKey.APP_VERSION) || new Date().toISOString().split('T')[0]).toLocaleDateString()}</span>
                 </div>
               </div>
             </div>
@@ -220,7 +221,7 @@ export class UserComponent {
     };
 
     (window as any).forceAppUpdate = () => {
-      this.localStorageService.setItem('app-version', new Date().toISOString().split('T')[0]);
+      this.localStorageService.setItem(LocalStorageKey.APP_VERSION, new Date().toISOString().split('T')[0]);
       this.notificationService.info('App update initiated');
       window.location.reload();
     };

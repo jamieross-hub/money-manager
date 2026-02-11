@@ -1,5 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Subject, takeUntil } from 'rxjs';
+import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
+import { LocalStorageKey, LocalStorageKeyHelper } from 'src/app/util/models/local-storage.model';
+import { Subject, takeUntil, Subscription } from 'rxjs';
 import { MatSlideToggle, MatSlideToggleModule, MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { FirebaseMessagingService, NotificationPayload } from '../../service/firebase-messaging.service';
 import { APP_CONFIG } from '../../config/config';
@@ -36,6 +38,8 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-notification-settings',
@@ -153,8 +157,11 @@ export class NotificationSettingsComponent implements OnInit, OnDestroy {
   ];
 
   constructor(
+    private router: Router,
     private messagingService: FirebaseMessagingService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private snackBar: MatSnackBar,
+    private storageService: LocalIndexDBStorageService
   ) { }
 
   ngOnInit(): void {
@@ -171,34 +178,38 @@ export class NotificationSettingsComponent implements OnInit, OnDestroy {
   private loadSettings(): void {
     // Load notification types settings
     this.notificationTypes.forEach(type => {
-      const stored = localStorage.getItem(`notification_${type.key}`);
+      const storageKey = `${LocalStorageKey.NOTIFICATION_PREFIX}${type.key}`;
+      const stored = this.storageService.getItem<string>(storageKey);
       type.enabled = stored ? JSON.parse(stored) : true;
     });
 
     // Load advanced settings
     this.advancedSettings.forEach(setting => {
-      const stored = localStorage.getItem(`notification_advanced_${setting.key}`);
+      const storageKey = `${LocalStorageKey.NOTIFICATION_ADVANCED_PREFIX}${setting.key}`;
+      const stored = this.storageService.getItem<string>(storageKey);
       setting.value = stored ? JSON.parse(stored) : setting.value;
     });
 
     // Load master toggle state
-    const masterState = localStorage.getItem('notifications_enabled');
+    const masterState = this.storageService.getItem<string>(LocalStorageKey.NOTIFICATIONS_ENABLED);
     this.notificationsEnabled = masterState ? JSON.parse(masterState) : true;
   }
 
   private saveSettings(): void {
     // Save notification types settings
     this.notificationTypes.forEach(type => {
-      localStorage.setItem(`notification_${type.key}`, JSON.stringify(type.enabled));
+      const storageKey = `${LocalStorageKey.NOTIFICATION_PREFIX}${type.key}`;
+      this.storageService.setItem(storageKey, JSON.stringify(type.enabled));
     });
 
     // Save advanced settings
     this.advancedSettings.forEach(setting => {
-      localStorage.setItem(`notification_advanced_${setting.key}`, JSON.stringify(setting.value));
+      const storageKey = `${LocalStorageKey.NOTIFICATION_ADVANCED_PREFIX}${setting.key}`;
+      this.storageService.setItem(storageKey, JSON.stringify(setting.value));
     });
 
     // Save master toggle state
-    localStorage.setItem('notifications_enabled', JSON.stringify(this.notificationsEnabled));
+    this.storageService.setItem(LocalStorageKey.NOTIFICATIONS_ENABLED, JSON.stringify(this.notificationsEnabled));
   }
 
   private subscribeToMessagingEvents(): void {
@@ -331,7 +342,7 @@ export class NotificationSettingsComponent implements OnInit, OnDestroy {
   }
 
   private saveNotificationsEnabled(): void {
-    localStorage.setItem('notifications_enabled', JSON.stringify(this.notificationsEnabled));
+    this.storageService.setItem(LocalStorageKey.NOTIFICATIONS_ENABLED, JSON.stringify(this.notificationsEnabled));
   }
 
   getStatusIcon(): string {
@@ -351,13 +362,7 @@ export class NotificationSettingsComponent implements OnInit, OnDestroy {
   }
 
   openPermissionHelp(): void {
-    const helpText = `
-To enable notifications:
-1. Click the lock/info icon in your browser's address bar
-2. Find "Notifications" in the site settings
-3. Change it from "Block" to "Allow"
-4. Refresh the page
-    `;
+    const helpText = 'To enable notifications:\n1. Click the lock / info icon in your browser\'s address bar\n2. Find "Notifications" in the site settings\n3. Change it from "Block" to "Allow"\n4. Refresh the page';
     alert(helpText);
   }
 
@@ -410,4 +415,4 @@ To enable notifications:
       console.error('Force registration error:', error);
     }
   }
-} 
+}

@@ -1,6 +1,7 @@
 import { ActionReducer, MetaReducer } from '@ngrx/store';
 import { Timestamp } from '@angular/fire/firestore';
 import { LocalIndexDBStorageService } from '../util/service/indexdb-storage.service';
+import { LocalStorageKey } from '../util/models/local-storage.model';
 
 export function storageMetaReducer(reducer: ActionReducer<any>): ActionReducer<any> {
     const storageService = LocalIndexDBStorageService.getInstance();
@@ -8,7 +9,7 @@ export function storageMetaReducer(reducer: ActionReducer<any>): ActionReducer<a
     return function (state, action) {
         // 1. On init, if state is undefined, try to search in storage service
         if (action.type === '@ngrx/store/init' || action.type === '@ngrx/effects/init') {
-            const storedState = storageService.getItem('app_state');
+            const storedState = storageService.getItem(LocalStorageKey.APP_STATE);
             if (storedState) {
                 try {
                     // storageService handles parsing if it was stored as an object
@@ -21,7 +22,7 @@ export function storageMetaReducer(reducer: ActionReducer<any>): ActionReducer<a
                     return reducer(parsedState, action);
                 } catch (e) {
                     console.error('Failed to parse stored state', e);
-                    storageService.removeItem('app_state');
+                    storageService.removeItem(LocalStorageKey.APP_STATE);
                 }
             }
         }
@@ -33,7 +34,7 @@ export function storageMetaReducer(reducer: ActionReducer<any>): ActionReducer<a
         // We only save if the state is actual data (not undefined)
         if (nextState) {
             try {
-                storageService.setItem('app_state', nextState);
+                storageService.setItem(LocalStorageKey.APP_STATE, nextState);
             } catch (e) {
                 console.error('Failed to save state to storage service', e);
             }

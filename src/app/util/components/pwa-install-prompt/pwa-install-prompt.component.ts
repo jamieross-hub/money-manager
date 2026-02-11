@@ -1,5 +1,7 @@
 import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { PwaSwService } from '../../service/pwa-sw.service';
+import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
+import { LocalStorageKey } from 'src/app/util/models/local-storage.model';
 import { Subject } from 'rxjs';
 import { APP_CONFIG } from '../../config/config';
 import { SsrService } from '../../service/ssr.service';
@@ -253,7 +255,8 @@ export class PwaInstallPromptComponent implements OnInit, OnDestroy {
 
   constructor(
     private pwaSwService: PwaSwService,
-    private ssrService: SsrService
+    private ssrService: SsrService,
+    private storageService: LocalIndexDBStorageService
   ) { }
 
   ngOnInit(): void {
@@ -272,8 +275,8 @@ export class PwaInstallPromptComponent implements OnInit, OnDestroy {
         e.preventDefault();
         this.deferredPrompt = e;
 
-        const dismissed = localStorage.getItem('pwa-install-dismissed');
-        const dismissedTime = localStorage.getItem('pwa-install-dismissed-time');
+        const dismissed = this.storageService.getItem<string>(LocalStorageKey.PWA_INSTALL_DISMISSED);
+        const dismissedTime = this.storageService.getItem<string>(LocalStorageKey.PWA_INSTALL_DISMISSED_TIME);
         let showPrompt = true;
 
         if (dismissed && dismissedTime) {
@@ -326,7 +329,7 @@ export class PwaInstallPromptComponent implements OnInit, OnDestroy {
     this.dismissClicked.emit();
     this.showInstallPrompt = false;
 
-    localStorage.setItem('pwa-install-dismissed', 'true');
-    localStorage.setItem('pwa-install-dismissed-time', Date.now().toString());
+    this.storageService.setItem(LocalStorageKey.PWA_INSTALL_DISMISSED, 'true');
+    this.storageService.setItem(LocalStorageKey.PWA_INSTALL_DISMISSED_TIME, Date.now().toString());
   }
 }

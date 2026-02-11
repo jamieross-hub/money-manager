@@ -3,6 +3,8 @@ import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { filter, map } from 'rxjs/operators';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { APP_CONFIG } from '../config/config';
+import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
+import { LocalStorageKey } from 'src/app/util/models/local-storage.model';
 
 export interface PwaUpdateInfo {
   available: boolean;
@@ -24,7 +26,10 @@ export class PwaSwService {
 
   public updateInfo$: Observable<PwaUpdateInfo> = this.updateInfoSubject.asObservable();
 
-  constructor(private swUpdate: SwUpdate) {
+  constructor(
+    private swUpdate: SwUpdate,
+    private storageService: LocalIndexDBStorageService
+  ) {
     this.initializeServiceWorker();
   }
 
@@ -110,7 +115,7 @@ export class PwaSwService {
           newVersion: '',
           updateReady: false
         });
-        
+
         // Reload the page to use the new version without any user notification
         window.location.reload();
         return true;
@@ -201,7 +206,7 @@ export class PwaSwService {
   // Method to check if app is installed
   public isAppInstalled(): boolean {
     return window.matchMedia('(display-mode: standalone)').matches ||
-           (window.navigator as any).standalone === true;
+      (window.navigator as any).standalone === true;
   }
 
   // Method to handle app visibility changes
@@ -224,9 +229,9 @@ export class PwaSwService {
       url: window.location.href,
       scrollPosition: window.scrollY
     };
-    
+
     try {
-      localStorage.setItem('app-background-state', JSON.stringify(appState));
+      this.storageService.setItem(LocalStorageKey.APP_BACKGROUND_STATE, JSON.stringify(appState));
     } catch (error) {
       console.warn('Failed to save app state:', error);
     }

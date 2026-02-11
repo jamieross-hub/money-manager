@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { Account, CreateAccountRequest, UpdateAccountRequest } from '../../models/account.model';
 import { Transaction } from '../../models/transaction.model';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
+import { LocalStorageKeyHelper } from '../../models/local-storage.model';
 import { UserService } from './user.service';
 import { of, map } from 'rxjs';
 
@@ -62,7 +63,7 @@ export class AccountsService {
         return new Observable<Account[]>(observer => {
             // 1. Emit cached data immediately if available
             try {
-                const cachedAccounts = this.localStorageUtility.getItem<Account[]>(`accounts-cache-${userId}`);
+                const cachedAccounts = this.localStorageUtility.getItem<Account[]>(LocalStorageKeyHelper.getAccountsCacheKey(userId));
                 if (cachedAccounts && cachedAccounts.length > 0) {
                     console.log(`[AccountsService] Emitting ${cachedAccounts.length} cached accounts`);
                     observer.next(cachedAccounts);
@@ -83,7 +84,7 @@ export class AccountsService {
 
                     // Update cache for next time
                     try {
-                        this.localStorageUtility.setItem(`accounts-cache-${userId}`, accounts);
+                        this.localStorageUtility.setItem(LocalStorageKeyHelper.getAccountsCacheKey(userId), accounts);
                     } catch (error) {
                         console.warn('[AccountsService] Failed to cache accounts:', error);
                     }

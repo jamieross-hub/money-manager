@@ -4,6 +4,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
+import { LocalStorageKey } from 'src/app/util/models/local-storage.model';
 
 export interface AdminSettings {
   appName: string;
@@ -110,7 +111,7 @@ export class AdminSettingsComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     try {
       // Load settings from localStorage or API
-      const settings = this.localStorageService.getItem<any>('admin-settings');
+      const settings = this.localStorageService.getItem<any>(LocalStorageKey.ADMIN_SETTINGS);
       if (settings) {
         this.settingsForm.patchValue(settings);
       }
@@ -133,7 +134,7 @@ export class AdminSettingsComponent implements OnInit, OnDestroy {
       const settings = this.settingsForm.value;
 
       // Save to localStorage (in real app, save to API)
-      this.localStorageService.setItem('admin-settings', settings);
+      this.localStorageService.setItem(LocalStorageKey.ADMIN_SETTINGS, settings);
 
       this.notificationService.success('Settings saved successfully');
     } catch (error) {

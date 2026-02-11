@@ -12,6 +12,7 @@ import * as TransactionsActions from '../../store/transactions/transactions.acti
 import { Transaction } from '../models/transaction.model';
 import { APP_CONFIG } from '../config/config';
 import { LocalIndexDBStorageService } from './indexdb-storage.service';
+import { LocalStorageKey, LocalStorageKeyHelper } from '../models/local-storage.model';
 
 export interface NetworkStatus {
   online: boolean;
@@ -806,15 +807,15 @@ export class CommonSyncService {
       }
 
       // Check if user data is cached
-      const cachedUserData = this.localStorageService.getItem(`user-data-${currentUser.uid}`);
+      const cachedUserData = this.localStorageService.getItem(LocalStorageKeyHelper.getUserDataKey(currentUser.uid));
       if (!cachedUserData) {
         return false;
       }
 
       // Check if app has some cached data
-      const hasCachedData = this.localStorageService.getItem('app-cache-version') ||
-        this.localStorageService.getItem('transactions-cache') ||
-        this.localStorageService.getItem('categories-cache');
+      const hasCachedData = this.localStorageService.getItem(LocalStorageKey.APP_CACHE_VERSION) ||
+        this.localStorageService.getItem(LocalStorageKeyHelper.getTransactionsCacheKey(currentUser.uid)) ||
+        this.localStorageService.getItem(LocalStorageKeyHelper.getCategoriesCacheKey(currentUser.uid));
 
       return !!hasCachedData;
     } catch (error) {
@@ -877,7 +878,7 @@ export class CommonSyncService {
    */
   private async loadSyncQueue(): Promise<void> {
     try {
-      const queue = await this.getCachedData<SyncItem[]>('sync-queue');
+      const queue = await this.getCachedData<SyncItem[]>(LocalStorageKey.SYNC_QUEUE);
       if (queue && Array.isArray(queue)) {
         this.syncQueue = queue;
         this.updateSyncStatus({ pendingItems: this.syncQueue.length });
@@ -899,7 +900,7 @@ export class CommonSyncService {
    */
   private async saveSyncQueue(): Promise<void> {
     try {
-      await this.cacheData('sync-queue', this.syncQueue);
+      await this.cacheData(LocalStorageKey.SYNC_QUEUE, this.syncQueue);
     } catch (error) {
       console.error('Failed to save sync queue:', error);
     }

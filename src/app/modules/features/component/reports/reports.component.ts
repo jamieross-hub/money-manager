@@ -25,6 +25,7 @@ import { CategoryBreakdownConfig, CategoryBreakdown } from '../../../../util/com
 import { QuickActionsFabConfig, QuickAction } from '../../../../util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { CurrencyService } from '../../../../util/service/currency.service';
 import { LocalIndexDBStorageService } from '../../../../util/service/indexdb-storage.service';
+import { LocalStorageKey } from '../../../../util/models/local-storage.model';
 
 interface CategorySpending {
   category: string;
@@ -946,12 +947,12 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
   savePreferences(): void {
     // Save to localStorage
-    this.localStorageService.setItem('reports-preferences', this.userPreferences);
+    this.localStorageService.setItem(LocalStorageKey.REPORTS_PREFERENCES, this.userPreferences);
     this.notificationService.success('Preferences saved successfully');
   }
 
   loadPreferences(): void {
-    const saved = this.localStorageService.getItem<UserPreferences>('reports-preferences');
+    const saved = this.localStorageService.getItem<UserPreferences>(LocalStorageKey.REPORTS_PREFERENCES);
     if (saved) {
       this.userPreferences = { ...this.userPreferences, ...saved };
       this.selectedChartType = this.userPreferences.defaultChartType;

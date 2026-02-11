@@ -3,6 +3,7 @@ import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map, distinctUntilChanged } from 'rxjs/operators';
 import moment from 'moment';
 import { LocalIndexDBStorageService } from './indexdb-storage.service';
+import { LocalStorageKey } from '../models/local-storage.model';
 
 export interface DateRange {
   startDate: Date;
@@ -576,7 +577,7 @@ export class FilterService {
 
   private savePresetsToStorage(presets: FilterPreset[]): void {
     try {
-      this.localStorageService.setItem('money-manager-filter-presets', presets);
+      this.localStorageService.setItem(LocalStorageKey.FILTER_PRESETS, presets);
     } catch (error) {
       console.warn('Failed to save filter presets to storage:', error);
     }
@@ -584,7 +585,7 @@ export class FilterService {
 
   private loadPresetsFromStorage(): FilterPreset[] {
     try {
-      const stored = this.localStorageService.getItem<FilterPreset[]>('money-manager-filter-presets');
+      const stored = this.localStorageService.getItem<FilterPreset[]>(LocalStorageKey.FILTER_PRESETS);
       return stored ? stored : this.getDefaultPresets();
     } catch (error) {
       console.warn('Failed to load filter presets from storage:', error);
