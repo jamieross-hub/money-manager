@@ -54,6 +54,7 @@ import * as CategoriesActions from 'src/app/store/categories/categories.actions'
 import * as AccountsActions from 'src/app/store/accounts/accounts.actions';
 import { CurrencyDetectionUtil } from '../../helpers/currency-detection.util';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
+import { LocalStorageKey } from '../../models/local-storage.model';
 
 /**
  * Security configuration for user operations
@@ -123,7 +124,7 @@ export class UserService {
   private initializeAuthState(): void {
     onAuthStateChanged(getAuth(), async (user: any) => {
       // Check for guest mode
-      const isGuest = this.storageService.getItem('guest-mode') === 'true';
+      const isGuest = this.storageService.getItem(LocalStorageKey.GUEST_MODE) === 'true';
 
       if (!user && isGuest) {
         console.log('Restoring guest session');
@@ -186,7 +187,7 @@ export class UserService {
       console.log('Created new guest user with detected currency:', guestUser.preferences?.defaultCurrency);
     }
 
-    this.storageService.setItem('guest-mode', 'true');
+    this.storageService.setItem(LocalStorageKey.GUEST_MODE, 'true');
     this.userAuth$.next(guestUser);
 
     // Sync language for guest
@@ -234,7 +235,7 @@ export class UserService {
    */
   public async logout(): Promise<void> {
     if (this.isGuestUser()) {
-      this.storageService.removeItem('guest-mode');
+      this.storageService.removeItem(LocalStorageKey.GUEST_MODE);
       this.storageService.removeItem('guest-data-initialized');
       this.userAuth$.next(null);
     } else {
@@ -254,6 +255,13 @@ export class UserService {
    */
   public isGuestUser(): boolean {
     return this.userAuth$.value?.uid === 'offline-guest';
+  }
+
+  /**
+   * Check if guest mode is enabled in storage
+   */
+  public isGuestModeEnabled(): boolean {
+    return this.storageService.getItem(LocalStorageKey.GUEST_MODE) === 'true';
   }
 
   async checkIfAdmin(user: any): Promise<void> {
@@ -623,7 +631,7 @@ export class UserService {
       }
 
       // Clear guest mode flag
-      this.storageService.removeItem('guest-mode');
+      this.storageService.removeItem(LocalStorageKey.GUEST_MODE);
 
       await signOut(this.auth);
       console.log('User signed out');

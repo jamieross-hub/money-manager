@@ -46,7 +46,7 @@ export class OfflineIndicatorComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Check initial guest state from local storage to avoid flash
-    const isGuestStored = localStorage.getItem('guest-mode') === 'true';
+    const isGuestStored = this.userService.isGuestModeEnabled();
     if (isGuestStored) {
       this.isGuest = true;
     }

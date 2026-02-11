@@ -120,7 +120,7 @@ export class SignInComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Check if user is already in guest/offline mode
-    if (localStorage.getItem('guest-mode') === 'true') {
+    if (this.userService.isGuestModeEnabled()) {
       this.continueAsGuest();
       return;
     }

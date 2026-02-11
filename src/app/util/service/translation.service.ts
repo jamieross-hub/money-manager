@@ -3,6 +3,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { APP_CONFIG } from '../config/config';
 import { TranslateService } from '@ngx-translate/core';
 import { LocalIndexDBStorageService } from './indexdb-storage.service';
+import { LocalStorageKey } from '../models/local-storage.model';
 
 export type Language = string;
 
@@ -48,12 +49,12 @@ export class TranslationService {
 
     // Step 1: Try guest mode language
     try {
-      const isGuest = this.localStorageService.getItem<string>('guest-mode') === 'true';
+      const isGuest = this.localStorageService.getItem<string>(LocalStorageKey.GUEST_MODE) === 'true';
       console.log('Guest mode:', isGuest);
 
       if (isGuest) {
         try {
-          const guestData = this.localStorageService.getItem<any>('user-data-offline-guest');
+          const guestData = this.localStorageService.getItem<any>(LocalStorageKey.USER_DATA_GUEST);
           console.log('Guest data retrieved:', !!guestData);
 
           if (guestData?.preferences?.language) {
@@ -72,7 +73,7 @@ export class TranslationService {
     // Step 2: Try logged-in user language
     try {
       const keys = this.localStorageService.getAllKeys();
-      const userDataKey = keys.find(key => key.startsWith('user-data-') && key !== 'user-data-offline-guest');
+      const userDataKey = keys.find(key => key.startsWith(LocalStorageKey.USER_DATA_PREFIX) && key !== LocalStorageKey.USER_DATA_GUEST);
       console.log('User data key found:', userDataKey);
 
       if (userDataKey) {
