@@ -4,7 +4,7 @@ import { Category } from './category.model';
 import { Transaction } from './transaction.model';
 
 /**
- * Central registry of all localStorage keys used in the application
+ * Central registry of all storage keys used in the application
  * This provides type safety and makes it easier to migrate to other storage solutions
  */
 export enum LocalStorageKey {
@@ -64,7 +64,7 @@ export enum LocalStorageKey {
 }
 
 /**
- * Type mapping for localStorage values
+ * Type mapping for storage values
  * Maps each key to its corresponding data type
  */
 export interface LocalStorageTypeMap {
@@ -97,7 +97,7 @@ export type DynamicLocalStorageKey =
     | `${LocalStorageKey.CACHE_PREFIX}${string}`;
 
 /**
- * Combined type for all localStorage keys
+ * Combined type for all storage keys
  */
 export type AllLocalStorageKeys = LocalStorageKey | DynamicLocalStorageKey;
 
@@ -111,7 +111,7 @@ export interface LastLoginInfo {
 }
 
 /**
- * Helper functions for localStorage key management
+ * Helper functions for storage key management
  */
 export class LocalStorageKeyHelper {
     /**

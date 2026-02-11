@@ -101,7 +101,7 @@ export class CommonSyncService {
     private validationService: ValidationService,
     private swUpdate: SwUpdate,
     private store: Store<AppState>,
-    private localStorageService: LocalIndexDBStorageService,
+    private storageService: LocalIndexDBStorageService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     if (!isPlatformServer(this.platformId)) {
@@ -648,7 +648,7 @@ export class CommonSyncService {
       };
 
       await this.storeInCacheStorage(key, cacheItem);
-      await this.storeInLocalStorage(key, cacheItem);
+      await this.storeInIndexedDB(key, cacheItem);
       await this.cleanupCache();
 
     } catch (error) {
@@ -668,7 +668,7 @@ export class CommonSyncService {
       let cacheItem = await this.getFromCacheStorage<T>(key);
 
       if (!cacheItem) {
-        cacheItem = await this.getFromLocalStorage<T>(key);
+        cacheItem = await this.getFromIndexedDB<T>(key);
       }
 
       if (!cacheItem) {
@@ -698,7 +698,7 @@ export class CommonSyncService {
     try {
       await Promise.all([
         this.removeFromCacheStorage(key),
-        this.removeFromLocalStorage(key)
+        this.removeFromIndexedDB(key)
       ]);
     } catch (error) {
       console.error('Failed to remove cached data:', error);
@@ -716,7 +716,7 @@ export class CommonSyncService {
     try {
       await Promise.all([
         this.clearCacheStorage(),
-        this.clearLocalStorage()
+        this.clearIndexedDB()
       ]);
     } catch (error) {
       console.error('Failed to clear cache:', error);
@@ -731,7 +731,7 @@ export class CommonSyncService {
     totalSize: number;
     expiredItems: number;
     cacheStorageSize: number;
-    localStorageSize: number;
+    indexedDBSize: number;
   }> {
     if (isPlatformServer(this.platformId)) {
       return {
@@ -739,17 +739,17 @@ export class CommonSyncService {
         totalSize: 0,
         expiredItems: 0,
         cacheStorageSize: 0,
-        localStorageSize: 0
+        indexedDBSize: 0
       };
     }
 
     try {
-      const [cacheStorageItems, localStorageItems] = await Promise.all([
+      const [cacheStorageItems, indexedDBItems] = await Promise.all([
         this.getAllFromCacheStorage(),
-        this.getAllFromLocalStorage()
+        this.getAllFromIndexedDB()
       ]);
 
-      const allItems = [...cacheStorageItems, ...localStorageItems];
+      const allItems = [...cacheStorageItems, ...indexedDBItems];
       const uniqueItems = this.deduplicateItems(allItems);
 
       const expiredItems = uniqueItems.filter(item => this.isExpired(item));
@@ -760,7 +760,7 @@ export class CommonSyncService {
         totalSize,
         expiredItems: expiredItems.length,
         cacheStorageSize: cacheStorageItems.length,
-        localStorageSize: localStorageItems.length
+        indexedDBSize: indexedDBItems.length
       };
     } catch (error) {
       console.error('Failed to get cache stats:', error);
@@ -769,7 +769,7 @@ export class CommonSyncService {
         totalSize: 0,
         expiredItems: 0,
         cacheStorageSize: 0,
-        localStorageSize: 0
+        indexedDBSize: 0
       };
     }
   }
@@ -807,15 +807,15 @@ export class CommonSyncService {
       }
 
       // Check if user data is cached
-      const cachedUserData = this.localStorageService.getItem(LocalStorageKeyHelper.getUserDataKey(currentUser.uid));
+      const cachedUserData = this.storageService.getItem(LocalStorageKeyHelper.getUserDataKey(currentUser.uid));
       if (!cachedUserData) {
         return false;
       }
 
       // Check if app has some cached data
-      const hasCachedData = this.localStorageService.getItem(LocalStorageKey.APP_CACHE_VERSION) ||
-        this.localStorageService.getItem(LocalStorageKeyHelper.getTransactionsCacheKey(currentUser.uid)) ||
-        this.localStorageService.getItem(LocalStorageKeyHelper.getCategoriesCacheKey(currentUser.uid));
+      const hasCachedData = this.storageService.getItem(LocalStorageKey.APP_CACHE_VERSION) ||
+        this.storageService.getItem(LocalStorageKeyHelper.getTransactionsCacheKey(currentUser.uid)) ||
+        this.storageService.getItem(LocalStorageKeyHelper.getCategoriesCacheKey(currentUser.uid));
 
       return !!hasCachedData;
     } catch (error) {
@@ -996,12 +996,12 @@ export class CommonSyncService {
     }
 
     try {
-      const [cacheStorageKeys, localStorageKeys] = await Promise.all([
+      const [cacheStorageKeys, indexedDBKeys] = await Promise.all([
         this.getCacheStorageKeys(),
-        this.getLocalStorageKeys()
+        this.getIndexedDBKeys()
       ]);
 
-      return [...new Set([...cacheStorageKeys, ...localStorageKeys])];
+      return [...new Set([...cacheStorageKeys, ...indexedDBKeys])];
     } catch (error) {
       console.error('Failed to get cache keys:', error);
       return [];
@@ -1026,11 +1026,11 @@ export class CommonSyncService {
   /**
    * Store data in Local Storage
    */
-  private async storeInLocalStorage(key: string, cacheItem: CacheItem): Promise<void> {
+  private async storeInIndexedDB(key: string, cacheItem: CacheItem): Promise<void> {
     try {
-      this.localStorageService.setItem(key, cacheItem);
+      this.storageService.setItem(key, cacheItem);
     } catch (error) {
-      console.warn('Failed to store in Local Storage:', error);
+      console.warn('Failed to store in IndexedDB:', error);
     }
   }
 
@@ -1056,11 +1056,11 @@ export class CommonSyncService {
   /**
    * Get data from Local Storage
    */
-  private async getFromLocalStorage<T>(key: string): Promise<CacheItem<T> | null> {
+  private async getFromIndexedDB<T>(key: string): Promise<CacheItem<T> | null> {
     try {
-      return this.localStorageService.getItem<CacheItem<T>>(key);
+      return this.storageService.getItem<CacheItem<T>>(key);
     } catch (error) {
-      console.warn('Failed to get from Local Storage:', error);
+      console.warn('Failed to get from IndexedDB:', error);
     }
     return null;
   }
@@ -1082,11 +1082,11 @@ export class CommonSyncService {
   /**
    * Remove data from Local Storage
    */
-  private async removeFromLocalStorage(key: string): Promise<void> {
+  private async removeFromIndexedDB(key: string): Promise<void> {
     try {
-      this.localStorageService.removeItem(key);
+      this.storageService.removeItem(key);
     } catch (error) {
-      console.warn('Failed to remove from Local Storage:', error);
+      console.warn('Failed to remove from IndexedDB:', error);
     }
   }
 
@@ -1109,11 +1109,11 @@ export class CommonSyncService {
   /**
    * Clear Local Storage
    */
-  private async clearLocalStorage(): Promise<void> {
+  private async clearIndexedDB(): Promise<void> {
     try {
-      this.localStorageService.clear();
+      this.storageService.clear();
     } catch (error) {
-      console.warn('Failed to clear Local Storage:', error);
+      console.warn('Failed to clear IndexedDB:', error);
     }
   }
 
@@ -1146,12 +1146,12 @@ export class CommonSyncService {
   /**
    * Get all items from Local Storage
    */
-  private async getAllFromLocalStorage(): Promise<CacheItem[]> {
+  private async getAllFromIndexedDB(): Promise<CacheItem[]> {
     try {
-      const keys = this.localStorageService.getAllKeys();
+      const keys = this.storageService.getAllKeys();
       const items: CacheItem[] = [];
       for (const key of keys) {
-        const item = this.localStorageService.getItem<CacheItem>(key);
+        const item = this.storageService.getItem<CacheItem>(key);
         if (item) {
           items.push(item);
         }
@@ -1182,9 +1182,9 @@ export class CommonSyncService {
   /**
    * Get Local Storage keys
    */
-  private async getLocalStorageKeys(): Promise<string[]> {
+  private async getIndexedDBKeys(): Promise<string[]> {
     try {
-      return this.localStorageService.getAllKeys();
+      return this.storageService.getAllKeys();
     } catch (error) {
       console.warn('Failed to get Local Storage keys:', error);
       return [];
