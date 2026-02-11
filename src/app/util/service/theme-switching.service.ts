@@ -34,21 +34,40 @@ export class ThemeSwitchingService {
       return;
     }
 
-    const systemTheme = this.getSystemTheme();
-    this.applyTheme(systemTheme);
+    // Run after first paint to avoid Android PWA wrong value
+    requestAnimationFrame(() => {
+      const systemTheme = this.getSystemTheme();
+      this.applyTheme(systemTheme);
+    });
   }
 
   private listenForSystemChanges() {
     if (!this.ssrService.isClientSide()) return;
 
-    window.matchMedia('(prefers-color-scheme: dark)')
-      .addEventListener('change', (event) => {
-        const newTheme: ThemeType = event.matches ? 'dark-theme' : 'light-theme';
-        this.applyTheme(newTheme);
-      });
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const handler = () => {
+      const newTheme: ThemeType = mediaQuery.matches
+        ? 'dark-theme'
+        : 'light-theme';
+      this.applyTheme(newTheme);
+    };
+
+    // Modern browsers
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handler);
+    }
+    // Older Android / WebView
+    else if ((mediaQuery as any).addListener) {
+      (mediaQuery as any).addListener(handler);
+    }
+
+    // Also sync once more after load (important for PWA)
+    setTimeout(handler, 0);
   }
 
   private getSystemTheme(): ThemeType {
+    if (!window.matchMedia) return 'light-theme';
     return window.matchMedia('(prefers-color-scheme: dark)').matches
       ? 'dark-theme'
       : 'light-theme';
