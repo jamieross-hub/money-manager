@@ -5,6 +5,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { trigger, state, style, transition, animate } from '@angular/animations';
@@ -23,7 +25,7 @@ import { ClickOutsideDirective } from 'src/app/util/directives/click-outside.dir
   templateUrl: './user.component.html',
   styleUrl: './user.component.scss',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatTooltipModule, RouterModule, TranslateModule, ClickOutsideDirective],
+  imports: [CommonModule, MatIconModule, MatTooltipModule, RouterModule, TranslateModule, ClickOutsideDirective, MatDialogModule],
   animations: [
     trigger('slideDown', [
       state('void', style({
@@ -62,7 +64,8 @@ export class UserComponent {
     private breakpointObserver: BreakpointObserver,
     private splitwiseService: SplitwiseService,
     private themeSwitchingService: ThemeSwitchingService,
-    private localStorageService: LocalIndexDBStorageService
+    private localStorageService: LocalIndexDBStorageService,
+    private dialog: MatDialog
   ) {
     this.breakpointObserver.observe(Breakpoints.Handset).subscribe((result) => {
       this.isMobile = result.matches;
@@ -240,16 +243,46 @@ export class UserComponent {
   }
 
   async signOut(e: any) {
-    console.log('signing out');
-    try {
-      await this.userService.signOut();
-      this.notificationService.success('Signed out successfully');
-      this.router.navigate(['/sign-in']);
+    if (e) {
       e.stopPropagation();
-      this.close();
-    } catch (error) {
-      console.error('Error signing out:', error);
-      this.notificationService.error('Failed to sign out');
+    }
+    console.log('signing out');
+
+    if (this.isGuest) {
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        data: {
+          title: 'Sign Out?',
+          message: 'Are you sure you want to sign out? All your guest data will be permanently deleted.',
+          confirmText: 'Sign Out',
+          cancelText: 'Cancel',
+          type: 'warning'
+        }
+      });
+
+      dialogRef.afterClosed().subscribe(async (result) => {
+        if (result) {
+          try {
+            await this.localStorageService.clear();
+            await this.userService.signOut();
+            this.notificationService.success('Signed out and guest data cleared');
+            this.router.navigate(['/sign-in']);
+            this.close();
+          } catch (error) {
+            console.error('Error signing out guest:', error);
+            this.notificationService.error('Failed to sign out');
+          }
+        }
+      });
+    } else {
+      try {
+        await this.userService.signOut();
+        this.notificationService.success('Signed out successfully');
+        this.router.navigate(['/sign-in']);
+        this.close();
+      } catch (error) {
+        console.error('Error signing out:', error);
+        this.notificationService.error('Failed to sign out');
+      }
     }
   }
 
