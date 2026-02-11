@@ -232,6 +232,13 @@
 			box-shadow: 0 1px 2px rgba(14, 165, 233, 0.1);
 		}
 	}
+
+	&.active {
+		background: var(--primary-50) !important;
+		border-color: var(--primary-500) !important;
+		color: var(--primary-500) !important;
+
+	}
 }
 
 // Responsive design for larger screens
@@ -416,7 +423,7 @@
 // Transaction List Container
 .transaction-list-container {
 	flex: 1;
-	overflow: hidden;
+	// overflow: hidden;
 	position: relative;
 }
 
@@ -470,7 +477,7 @@
 .transaction-scroll {
 	height: 100%;
 	padding: 12px;
-	overflow-y: auto;
+	// overflow-y: auto;
 	max-height: 70vh;
 }
 

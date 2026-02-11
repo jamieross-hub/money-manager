@@ -10,7 +10,7 @@
 	<!-- Mobile Filter Header -->
 	<div class="mobile-filter-header" *ngIf="showFilters && !showChart">
 		<!-- Active Filters Indicator -->
-		<div *ngIf="hasActiveFilters()" class="active-filters-indicator flex justify-between items-center">
+		<!-- <div *ngIf="hasActiveFilters()" class="active-filters-indicator flex justify-between items-center">
 			<div class="filter-icon-container">
 				<mat-icon class="filter-icon">filter_alt</mat-icon>
 				<span class="filter-text">{{ getActiveFiltersCount() }} Filter{{ getActiveFiltersCount() > 1 ? 's' : ''
@@ -20,7 +20,7 @@
 				<mat-icon class="text-black relative top-1 !text-blue-700 text-sm"
 					(click)="quickClearFilters()">clear</mat-icon>
 			</div>
-		</div>
+		</div> -->
 		<!-- Search Bar -->
 		<div class="search-container">
 			<div class="search-input-wrapper">
@@ -37,7 +37,8 @@
 		<div class="filter-menu-container md:justify-center">
 			<!-- Sort Menu -->
 			<button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="sortMenu"
-				matTooltip="{{ getCurrentSortLabel() }}" aria-label="Sort transactions">
+				[ngClass]="{'active': selectedSort !== 'date-desc'}" matTooltip="{{ getCurrentSortLabel() }}"
+				aria-label="Sort transactions">
 				<mat-icon>sort</mat-icon>
 				<span class="filter-btn-text">{{ getCurrentSortLabel() }}</span>
 			</button>
@@ -56,8 +57,9 @@
 			</mat-menu>
 
 			<!-- Type Menu -->
-			<button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="typeMenu"
-				matTooltip="{{ getCurrentTypeLabel() }}" aria-label="Filter by transaction type">
+			<button mat-icon-button class="filter-menu-btn" [ngClass]="{'active': selectedType !== 'all'}"
+				[matMenuTriggerFor]="typeMenu" matTooltip="{{ getCurrentTypeLabel() }}"
+				aria-label="Filter by transaction type">
 				<mat-icon>account_balance_wallet</mat-icon>
 				<span class="filter-btn-text">{{ getCurrentTypeLabel() }}</span>
 			</button>
@@ -84,7 +86,8 @@
 
 			<!-- Category Menu -->
 			<button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="categoryMenu"
-				matTooltip="{{ getCurrentCategoryLabel() }}" aria-label="Filter by category">
+				matTooltip="{{ getCurrentCategoryLabel() }}" aria-label="Filter by category"
+				[ngClass]="{'active': !selectedCategory.includes('all')}">
 				<mat-icon>category</mat-icon>
 				<span class="filter-btn-text">{{ getCurrentCategoryLabel() }}</span>
 			</button>
@@ -111,7 +114,8 @@
 
 			<!-- Date Range Menu -->
 			<button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="dateMenu"
-				matTooltip="{{ getCurrentDateLabel() }}" aria-label="Filter by date range">
+				[ngClass]="{'active': selectedDateRange !== null}" matTooltip="{{ getCurrentDateLabel() }}"
+				aria-label="Filter by date range">
 				<mat-icon>calendar_today</mat-icon>
 				<span class="filter-btn-text">{{ getCurrentDateLabel() }}</span>
 			</button>
