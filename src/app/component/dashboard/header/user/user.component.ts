@@ -244,6 +244,7 @@ export class UserComponent {
     try {
       await this.userService.signOut();
       this.notificationService.success('Signed out successfully');
+      this.router.navigate(['/sign-in']);
       e.stopPropagation();
       this.close();
     } catch (error) {
