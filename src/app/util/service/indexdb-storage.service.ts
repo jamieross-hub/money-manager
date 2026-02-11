@@ -167,7 +167,7 @@ export class LocalIndexDBStorageService {
             countRequest.onsuccess = () => {
                 // Migrate from localStorage if DB is empty
                 if (countRequest.result === 0) {
-                    this.migrateFromLocalStorage();
+                    // Migration removed as per requirement to avoid duplicate data
                     return resolve();
                 }
 
@@ -190,22 +190,7 @@ export class LocalIndexDBStorageService {
         });
     }
 
-    private migrateFromLocalStorage(): void {
-        if (typeof localStorage === 'undefined') return;
 
-        console.log('Migrating data from localStorage to IndexedDB...');
-
-        Object.keys(localStorage).forEach(key => {
-            const rawValue = localStorage.getItem(key);
-            if (rawValue !== null) {
-                try {
-                    this.cache.set(key, JSON.parse(rawValue));
-                } catch {
-                    this.cache.set(key, rawValue);
-                }
-            }
-        });
-    }
 
     private persistItem(key: string, value: any): Promise<void> {
         return new Promise((resolve, reject) => {
