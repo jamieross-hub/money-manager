@@ -220,24 +220,11 @@ export class MobileTransactionListComponent
     // Use FilterService to filter transactions
     let filteredData: Transaction[];
 
-    // Check if we have specific date filters applied
-    const hasDateFilters = this.filterService.getSelectedDate() ||
-      this.filterService.getSelectedDateRange() ||
-      this.filterService.getSelectedYear();
-
-    if (!hasDateFilters) {
-      // Filter to show only current year transactions when no specific date filter is applied
-      filteredData = this.filterService.filterCurrentYearTransactions(
-        this.allTransactions,
-        this.filterService.getCurrentFilterState()
-      );
-    } else {
-      // Use all filters including date filters
-      filteredData = this.filterService.filterTransactions(
-        this.allTransactions,
-        this.filterService.getCurrentFilterState()
-      );
-    }
+    // Use all filters including date filters (or no date filters if none selected)
+    filteredData = this.filterService.filterTransactions(
+      this.allTransactions,
+      this.filterService.getCurrentFilterState()
+    );
 
     // Apply sorting using FilterService
     const sortedData = this.filterService.sortTransactions(filteredData, this.selectedSort);
