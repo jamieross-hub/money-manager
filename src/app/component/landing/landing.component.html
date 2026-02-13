@@ -18,19 +18,20 @@
 		<div class="relative z-10 text-center px-4 sm:px-6 hero-content max-w-5xl mx-auto">
 			<p
 				class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-primary-900 dark:text-primary-50 leading-tight !mb-6 tracking-tight">
-				Manage & Track Your <span class="text-primary-600 dark:text-primary-400">Finances</span>
+				{{ 'LANDING.HERO_TITLE' | translate }} <span class="text-primary-600 dark:text-primary-400">{{
+					'LANDING.HERO_TITLE_HIGHLIGHT' | translate }}</span>
 			</p>
 
 			<p
 				class="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-300 mt-4 mx-auto max-w-2xl font-light">
-				Easily track spending, set budgets, and grow your savings with our intuitive money management tools.
+				{{ 'LANDING.HERO_SUBTITLE' | translate }}
 			</p>
 
 			<div class="flex flex-col sm:flex-row gap-4 mt-10 sm:mt-16 justify-center items-center">
 				<button
 					class="bg-primary-800 hover:bg-primary-600 text-white px-8 py-4 rounded-full text-lg font-bold shadow-lg hover:shadow-primary/30 transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 min-w-[200px]"
 					(click)="startGuestMode()">
-					Start Using Now
+					{{ 'LANDING.START_USING' | translate }}
 					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
 						stroke="currentColor" stroke-width="2.5">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -39,7 +40,7 @@
 
 				<!-- <button (click)="loginDemoUser()"
 					class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 px-8 py-4 rounded-full text-lg font-semibold shadow-sm hover:shadow-md transform hover:-translate-y-1 transition-all duration-300 min-w-[200px]">
-					View Demo
+					{{ 'LANDING.VIEW_DEMO' | translate }}
 				</button> -->
 			</div>
 
@@ -51,7 +52,7 @@
 						<path stroke-linecap="round" stroke-linejoin="round"
 							d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 					</svg>
-					<span>Bank-grade security</span>
+					<span>{{ 'LANDING.SECURITY_BADGE' | translate }}</span>
 				</div>
 				<div class="flex items-center gap-2">
 					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" fill="none"
@@ -59,7 +60,7 @@
 						<path stroke-linecap="round" stroke-linejoin="round"
 							d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
 					</svg>
-					<span>Syncs securely</span>
+					<span>{{ 'LANDING.SYNC_BADGE' | translate }}</span>
 				</div>
 			</div>
 		</div>
@@ -72,10 +73,10 @@
 			<div class="text-center mb-16 max-w-3xl mx-auto">
 				<h2
 					class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6 tracking-tight">
-					What You Can Do
+					{{ 'LANDING.FEATURES_TITLE' | translate }}
 				</h2>
 				<p class="text-lg sm:text-xl text-gray-600 dark:text-gray-400">
-					Everything you need to take control of your financial life, all in one place.
+					{{ 'LANDING.FEATURES_SUBTITLE' | translate }}
 				</p>
 			</div>
 
@@ -92,8 +93,9 @@
 					</div>
 					<h3
 						class="relative text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-primary dark:group-hover:text-primary-400 transition-colors duration-300">
-						{{ feature.title }}</h3>
-					<p class="relative text-gray-600 dark:text-gray-400 leading-relaxed">{{ feature.description }}</p>
+						{{ feature.title | translate }}</h3>
+					<p class="relative text-gray-600 dark:text-gray-400 leading-relaxed">{{ feature.description |
+						translate }}</p>
 				</div>
 				}
 			</div>
@@ -106,10 +108,10 @@
 			<div class="text-center mb-16 max-w-3xl mx-auto">
 				<h2
 					class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6 tracking-tight">
-					Getting Started is Easy
+					{{ 'LANDING.HOW_WORKS_TITLE' | translate }}
 				</h2>
 				<p class="text-lg sm:text-xl text-gray-600 dark:text-gray-400">
-					Start your journey to financial freedom in just a few minutes.
+					{{ 'LANDING.HOW_WORKS_SUBTITLE' | translate }}
 				</p>
 			</div>
 
@@ -128,9 +130,10 @@
 				</div>
 
 				<h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">
-					{{ step.title }}
+					{{ step.title | translate }}
 				</h3>
-				<p class="text-gray-600 dark:text-gray-400 leading-relaxed max-w-xs mx-auto">{{ step.description }}</p>
+				<p class="text-gray-600 dark:text-gray-400 leading-relaxed max-w-xs mx-auto">{{ step.description |
+					translate }}</p>
 
 			</div>
 			}
@@ -146,20 +149,18 @@
 			<div class="order-2 lg:order-1 text-center lg:text-left">
 				<h2
 					class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6 tracking-tight leading-tight">
-					Access Everywhere, <span class="text-primary dark:text-primary-400">Anytime</span>
+					{{ 'LANDING.ACCESS_TITLE' | translate }} <span class="text-primary dark:text-primary-400">{{
+						'LANDING.ACCESS_TITLE_HIGHLIGHT' | translate }}</span>
 				</h2>
 				<p
 					class="text-lg sm:text-xl text-gray-600 dark:text-gray-400 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-					Manage your finances from your laptop, tablet, or mobile phone. Our responsive design ensures a
-					seamless
-					experience across all your devices, so you can track expenses on the go or analyze your budget at
-					home.
+					{{ 'LANDING.ACCESS_SUBTITLE' | translate }}
 				</p>
 
 				<div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
 					<a href="https://prashiln79.github.io/money-manager/#/sign-in" target="_blank"
 						class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-700 text-white px-8 py-4 rounded-full text-lg font-bold shadow-lg hover:shadow-primary/30 transform hover:-translate-y-1 transition-all duration-300 min-w-[200px]">
-						Login to Web App
+						{{ 'LANDING.LOGIN_WEB_APP' | translate }}
 						<mat-icon class="icon-sm">login</mat-icon>
 					</a>
 				</div>

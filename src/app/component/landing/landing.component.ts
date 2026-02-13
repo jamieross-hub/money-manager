@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { Router } from '@angular/router';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { UserService } from 'src/app/util/service/db/user.service';
@@ -27,81 +28,82 @@ import { HeaderComponent } from '../dashboard/header/header.component';
     PwaInstallPromptComponent,
     MatButtonModule,
     MatIconModule,
-    HeaderComponent
+    HeaderComponent,
+    TranslateModule
   ]
 })
 export class LandingComponent implements OnInit {
   features = [
     {
       icon: 'account_balance',
-      title: 'Connect Bank',
-      description: 'Securely connect your bank accounts for automatic transaction tracking and real-time balance updates.'
+      title: 'LANDING.FEATURES_LIST.CONNECT_BANK_TITLE',
+      description: 'LANDING.FEATURES_LIST.CONNECT_BANK_DESC'
     },
     {
       icon: 'pie_chart',
-      title: 'Smart Budgeting',
-      description: 'Create and manage budgets with intelligent spending alerts to keep you on track.'
+      title: 'LANDING.FEATURES_LIST.SMART_BUDGETING_TITLE',
+      description: 'LANDING.FEATURES_LIST.SMART_BUDGETING_DESC'
     },
     {
       icon: 'category',
-      title: 'Sub Category',
-      description: 'Create and manage sub categories to track your spending.'
+      title: 'LANDING.FEATURES_LIST.SUB_CATEGORY_TITLE',
+      description: 'LANDING.FEATURES_LIST.SUB_CATEGORY_DESC'
     },
     //sub category
     {
       icon: 'trending_up',
-      title: 'Real-Time Insights',
-      description: 'Get instant financial insights and trends with beautiful charts and analytics.'
+      title: 'LANDING.FEATURES_LIST.REAL_TIME_INSIGHTS_TITLE',
+      description: 'LANDING.FEATURES_LIST.REAL_TIME_INSIGHTS_DESC'
     },
     {
       icon: 'flag',
-      title: 'Goal Tracking',
-      description: 'Set savings goals and track your progress with visual milestones.'
+      title: 'LANDING.FEATURES_LIST.GOAL_TRACKING_TITLE',
+      description: 'LANDING.FEATURES_LIST.GOAL_TRACKING_DESC'
     },
     {
       icon: 'wifi_off',
-      title: 'Offline Access',
-      description: 'Access your data anytime, even without an internet connection.'
+      title: 'LANDING.FEATURES_LIST.OFFLINE_ACCESS_TITLE',
+      description: 'LANDING.FEATURES_LIST.OFFLINE_ACCESS_DESC'
     },
     {
       icon: 'currency_exchange',
-      title: 'Multiple Currency Support',
-      description: 'Manage your finances in multiple currencies with ease.'
+      title: 'LANDING.FEATURES_LIST.MULTIPLE_CURRENCY_TITLE',
+      description: 'LANDING.FEATURES_LIST.MULTIPLE_CURRENCY_DESC'
     },
     {
       icon: 'devices',
-      title: 'PWA - Multi-Platform Support',
-      description: 'Access your data on multiple devices web, android and ios'
+      title: 'LANDING.FEATURES_LIST.PWA_TITLE',
+      description: 'LANDING.FEATURES_LIST.PWA_DESC'
     },
     {
       icon: 'security',
-      title: 'Secure & Private',
-      description: 'Your financial data is protected with industry-standard security measures.'
+      title: 'LANDING.FEATURES_LIST.SECURE_PRIVATE_TITLE',
+      description: 'LANDING.FEATURES_LIST.SECURE_PRIVATE_DESC'
     },
     {
       icon: 'cloud',
-      title: 'Cloud Sync',
-      description: 'Sync your data across all your devices with ease.'
+      title: 'LANDING.FEATURES_LIST.CLOUD_SYNC_TITLE',
+      description: 'LANDING.FEATURES_LIST.CLOUD_SYNC_DESC'
     }
   ];
 
   howItWorks = [
     {
       step: 1,
-      title: 'Download & Sign Up',
-      description: 'Get the app from App Store or Play Store and create your account in seconds.',
+      title: 'LANDING.HOW_IT_WORKS_STEPS.STEP_1_TITLE',
+      description: 'LANDING.HOW_IT_WORKS_STEPS.STEP_1_DESC',
       icon: 'smartphone'
     },
     {
       step: 2,
-      title: 'Set Your Goals',
-      description: 'Define your financial goals and create personalized budgets.',
+      title: 'LANDING.HOW_IT_WORKS_STEPS.STEP_2_TITLE',
+      description: 'LANDING.HOW_IT_WORKS_STEPS.STEP_2_DESC',
       icon: 'flag'
     },
     {
       step: 3,
-      title: 'Track & Grow',
-      description: 'Monitor your progress and watch your savings grow with smart insights.',
+      title: 'LANDING.HOW_IT_WORKS_STEPS.STEP_3_TITLE',
+      description: 'LANDING.HOW_IT_WORKS_STEPS.STEP_3_DESC',
       icon: 'trending_up'
     }
   ];
@@ -135,18 +137,18 @@ export class LandingComponent implements OnInit {
 
   screenshots = [
     {
-      title: 'Dashboard Overview',
-      description: 'Get a complete view of your finances at a glance',
+      title: 'LANDING.SCREENSHOTS.DASHBOARD_TITLE',
+      description: 'LANDING.SCREENSHOTS.DASHBOARD_DESC',
       image: 'assets/images/screenshot/dashboard.png'
     },
     {
-      title: 'Smart Analytics',
-      description: 'Beautiful charts and insights to understand your spending',
+      title: 'LANDING.SCREENSHOTS.ANALYTICS_TITLE',
+      description: 'LANDING.SCREENSHOTS.ANALYTICS_DESC',
       image: 'assets/images/screenshot/analytics.png'
     },
     {
-      title: 'Goal Tracking',
-      description: 'Set and track your financial goals with visual progress',
+      title: 'LANDING.SCREENSHOTS.GOALS_TITLE',
+      description: 'LANDING.SCREENSHOTS.GOALS_DESC',
       image: 'assets/images/screenshot/goals.png'
     }
   ];

@@ -8,6 +8,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
     selector: 'app-contact-form',
@@ -19,7 +20,8 @@ import { MatButtonModule } from '@angular/material/button';
         ReactiveFormsModule,
         MatFormFieldModule,
         MatInputModule,
-        MatButtonModule
+        MatButtonModule,
+        TranslateModule
     ]
 })
 export class ContactFormComponent {

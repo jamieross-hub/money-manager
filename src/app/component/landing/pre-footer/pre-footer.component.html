@@ -6,8 +6,10 @@
       <!-- Copyright -->
       <div class="footer-copyright text-center md:text-left">
         <p class="text-sm text-gray-600 dark:text-gray-400 font-medium">
-          &copy; {{ currentYear }} <span class="text-primary dark:text-primary-400 font-semibold">Money Manager</span>.
-          All rights reserved.
+          &copy; {{ currentYear }} <span class="text-primary dark:text-primary-400 font-semibold">{{
+            'COMMON.MONEY_MANAGER' |
+            translate }}</span>.
+          {{ 'PRE_FOOTER.COPYRIGHT' | translate }}
         </p>
       </div>
 
@@ -15,17 +17,17 @@
       <div class="footer-links flex flex-wrap justify-center md:justify-end items-center gap-x-6 gap-y-3">
         <a routerLink="/privacy-policy"
           class="footer-link text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary-400 transition-colors duration-200">
-          Privacy Policy
+          {{ 'PRE_FOOTER.PRIVACY_POLICY' | translate }}
         </a>
         <span class="hidden sm:inline text-gray-300 dark:text-slate-700">|</span>
         <a routerLink="/terms-conditions"
           class="footer-link text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary-400 transition-colors duration-200">
-          Terms of Service
+          {{ 'PRE_FOOTER.TERMS_OF_SERVICE' | translate }}
         </a>
         <span class="hidden sm:inline text-gray-300 dark:text-slate-700">|</span>
         <a routerLink="/feedback"
           class="footer-link text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary-400 transition-colors duration-200">
-          Contact
+          {{ 'PRE_FOOTER.CONTACT' | translate }}
         </a>
       </div>
 

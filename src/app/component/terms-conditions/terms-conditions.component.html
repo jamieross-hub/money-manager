@@ -4,13 +4,12 @@
     <div class="container mx-auto px-4 py-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <button 
-            (click)="navigateBack()"
-            class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+          <button (click)="navigateBack()" class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
             <mat-icon>arrow_back</mat-icon>
           </button>
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-r from-primary to-primary-600">
+            <div
+              class="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-r from-primary to-primary-600">
               <img src="assets/icon/app-icon/icon-192x192.png" alt="Money Manager" class="w-6 h-6">
             </div>
             <h1 class="text-xl font-bold text-gray-900">Terms & Conditions</h1>
@@ -26,226 +25,227 @@
   <!-- Content -->
   <div class="container mx-auto px-4 py-8 overflow-y-auto h-screen">
     <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-sm p-8">
-      
+
       <!-- Introduction -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Introduction</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'TERMS.INTRODUCTION_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed mb-4">
-          Welcome to Money Manager. These Terms and Conditions ("Terms") govern your use of our money management application and services. By accessing or using our application, you agree to be bound by these Terms.
+          {{ 'TERMS.INTRODUCTION_TEXT_1' | translate }}
         </p>
         <p class="text-gray-700 leading-relaxed">
-          If you do not agree with any part of these Terms, you may not access or use our application.
+          {{ 'TERMS.INTRODUCTION_TEXT_2' | translate }}
         </p>
       </section>
 
       <!-- Acceptance of Terms -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Acceptance of Terms</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'TERMS.ACCEPTANCE_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed mb-4">
-          By creating an account, downloading, installing, or using the Money Manager application, you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions.
+          {{ 'TERMS.ACCEPTANCE_TEXT_1' | translate }}
         </p>
         <p class="text-gray-700 leading-relaxed">
-          These Terms constitute a legally binding agreement between you and Money Manager regarding your use of our services.
+          {{ 'TERMS.ACCEPTANCE_TEXT_2' | translate }}
         </p>
       </section>
 
       <!-- Description of Service -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Description of Service</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'TERMS.DESCRIPTION_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed mb-4">
-          Money Manager is a personal finance management application that allows users to:
+          {{ 'TERMS.DESCRIPTION_TEXT_1' | translate }}
         </p>
         <ul class="list-disc list-inside text-gray-700 mb-4 space-y-2">
-          <li>Track income and expenses</li>
-          <li>Manage multiple accounts and budgets</li>
-          <li>Set financial goals and monitor progress</li>
-          <li>Generate financial reports and insights</li>
-          <li>Categorize transactions</li>
-          <li>Import and export financial data</li>
+          <li>{{ 'TERMS.DESCRIPTION_LIST_1' | translate }}</li>
+          <li>{{ 'TERMS.DESCRIPTION_LIST_2' | translate }}</li>
+          <li>{{ 'TERMS.DESCRIPTION_LIST_3' | translate }}</li>
+          <li>{{ 'TERMS.DESCRIPTION_LIST_4' | translate }}</li>
+          <li>{{ 'TERMS.DESCRIPTION_LIST_5' | translate }}</li>
+          <li>{{ 'TERMS.DESCRIPTION_LIST_6' | translate }}</li>
         </ul>
         <p class="text-gray-700 leading-relaxed">
-          We reserve the right to modify, suspend, or discontinue any part of our service at any time with reasonable notice.
+          {{ 'TERMS.DESCRIPTION_TEXT_2' | translate }}
         </p>
       </section>
 
       <!-- User Accounts -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">User Accounts</h2>
-        <h3 class="text-lg font-semibold text-gray-800 mb-3">Account Creation</h3>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'TERMS.ACCOUNTS_TITLE' | translate }}</h2>
+        <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ 'TERMS.ACCOUNTS_SUBTITLE_1' | translate }}</h3>
         <p class="text-gray-700 leading-relaxed mb-4">
-          To use our services, you must create an account by providing accurate, current, and complete information. You are responsible for maintaining the confidentiality of your account credentials.
+          {{ 'TERMS.ACCOUNTS_TEXT_1' | translate }}
         </p>
-        
-        <h3 class="text-lg font-semibold text-gray-800 mb-3">Account Responsibilities</h3>
+
+        <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ 'TERMS.ACCOUNTS_SUBTITLE_2' | translate }}</h3>
         <ul class="list-disc list-inside text-gray-700 mb-4 space-y-2">
-          <li>You are responsible for all activities that occur under your account</li>
-          <li>You must notify us immediately of any unauthorized use of your account</li>
-          <li>You must be at least 18 years old to create an account</li>
-          <li>You may not share your account credentials with others</li>
-          <li>You are responsible for maintaining the security of your device</li>
+          <li>{{ 'TERMS.ACCOUNTS_LIST_1' | translate }}</li>
+          <li>{{ 'TERMS.ACCOUNTS_LIST_2' | translate }}</li>
+          <li>{{ 'TERMS.ACCOUNTS_LIST_3' | translate }}</li>
+          <li>{{ 'TERMS.ACCOUNTS_LIST_4' | translate }}</li>
+          <li>{{ 'TERMS.ACCOUNTS_LIST_5' | translate }}</li>
         </ul>
       </section>
 
       <!-- Acceptable Use -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Acceptable Use</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'TERMS.USE_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed mb-4">
-          You agree to use our application only for lawful purposes and in accordance with these Terms. You agree not to:
+          {{ 'TERMS.USE_TEXT_1' | translate }}
         </p>
         <ul class="list-disc list-inside text-gray-700 mb-4 space-y-2">
-          <li>Use the service for any illegal or unauthorized purpose</li>
-          <li>Attempt to gain unauthorized access to our systems or other users' accounts</li>
-          <li>Interfere with or disrupt the service or servers</li>
-          <li>Upload or transmit viruses, malware, or other harmful code</li>
-          <li>Violate any applicable laws or regulations</li>
-          <li>Use the service to store or transmit illegal content</li>
-          <li>Reverse engineer, decompile, or disassemble the application</li>
+          <li>{{ 'TERMS.USE_LIST_1' | translate }}</li>
+          <li>{{ 'TERMS.USE_LIST_2' | translate }}</li>
+          <li>{{ 'TERMS.USE_LIST_3' | translate }}</li>
+          <li>{{ 'TERMS.USE_LIST_4' | translate }}</li>
+          <li>{{ 'TERMS.USE_LIST_5' | translate }}</li>
+          <li>{{ 'TERMS.USE_LIST_6' | translate }}</li>
+          <li>{{ 'TERMS.USE_LIST_7' | translate }}</li>
         </ul>
       </section>
 
       <!-- Financial Information -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Financial Information</h2>
-        <h3 class="text-lg font-semibold text-gray-800 mb-3">Data Accuracy</h3>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'TERMS.FINANCIAL_TITLE' | translate }}</h2>
+        <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ 'TERMS.FINANCIAL_SUBTITLE_1' | translate }}</h3>
         <p class="text-gray-700 leading-relaxed mb-4">
-          You are responsible for the accuracy and completeness of all financial information you enter into the application. We are not responsible for any errors, omissions, or inaccuracies in your financial data.
+          {{ 'TERMS.FINANCIAL_TEXT_1' | translate }}
         </p>
-        
-        <h3 class="text-lg font-semibold text-gray-800 mb-3">No Financial Advice</h3>
+
+        <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ 'TERMS.FINANCIAL_SUBTITLE_2' | translate }}</h3>
         <p class="text-gray-700 leading-relaxed mb-4">
-          Money Manager is a financial tracking tool and does not provide financial advice, investment recommendations, or tax advice. You should consult with qualified professionals for financial, investment, or tax advice.
+          {{ 'TERMS.FINANCIAL_TEXT_2' | translate }}
         </p>
-        
-        <h3 class="text-lg font-semibold text-gray-800 mb-3">Third-Party Services</h3>
+
+        <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ 'TERMS.FINANCIAL_SUBTITLE_3' | translate }}</h3>
         <p class="text-gray-700 leading-relaxed">
-          Our application may integrate with third-party financial institutions or services. We are not responsible for the accuracy, availability, or security of these third-party services.
+          {{ 'TERMS.FINANCIAL_TEXT_3' | translate }}
         </p>
       </section>
 
       <!-- Privacy and Data Protection -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Privacy and Data Protection</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'TERMS.PRIVACY_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed mb-4">
-          Your privacy is important to us. Our collection and use of your personal information is governed by our Privacy Policy, which is incorporated into these Terms by reference.
+          {{ 'TERMS.PRIVACY_TEXT_1' | translate }}
         </p>
         <p class="text-gray-700 leading-relaxed">
-          By using our service, you consent to the collection and use of your information as described in our Privacy Policy.
+          {{ 'TERMS.PRIVACY_TEXT_2' | translate }}
         </p>
       </section>
 
       <!-- Subscription and Payment -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Subscription and Payment</h2>
-        <h3 class="text-lg font-semibold text-gray-800 mb-3">Free and Premium Plans</h3>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'TERMS.SUBSCRIPTION_TITLE' | translate }}</h2>
+        <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ 'TERMS.SUBSCRIPTION_SUBTITLE_1' | translate }}</h3>
         <p class="text-gray-700 leading-relaxed mb-4">
-          We offer both free and premium subscription plans. Premium features require a paid subscription. Subscription fees are billed in advance and are non-refundable except as required by law.
+          {{ 'TERMS.SUBSCRIPTION_TEXT_1' | translate }}
         </p>
-        
-        <h3 class="text-lg font-semibold text-gray-800 mb-3">Payment Terms</h3>
+
+        <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ 'TERMS.SUBSCRIPTION_SUBTITLE_2' | translate }}</h3>
         <ul class="list-disc list-inside text-gray-700 mb-4 space-y-2">
-          <li>All fees are exclusive of applicable taxes</li>
-          <li>Subscriptions automatically renew unless cancelled</li>
-          <li>You may cancel your subscription at any time</li>
-          <li>No refunds for partial months or unused periods</li>
-          <li>We may change subscription fees with 30 days' notice</li>
+          <li>{{ 'TERMS.SUBSCRIPTION_LIST_1' | translate }}</li>
+          <li>{{ 'TERMS.SUBSCRIPTION_LIST_2' | translate }}</li>
+          <li>{{ 'TERMS.SUBSCRIPTION_LIST_3' | translate }}</li>
+          <li>{{ 'TERMS.SUBSCRIPTION_LIST_4' | translate }}</li>
+          <li>{{ 'TERMS.SUBSCRIPTION_LIST_5' | translate }}</li>
         </ul>
       </section>
 
       <!-- Intellectual Property -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Intellectual Property</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'TERMS.IP_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed mb-4">
-          The Money Manager application, including its content, features, and functionality, is owned by us and is protected by copyright, trademark, and other intellectual property laws.
+          {{ 'TERMS.IP_TEXT_1' | translate }}
         </p>
         <p class="text-gray-700 leading-relaxed mb-4">
-          You may not copy, modify, distribute, sell, or lease any part of our application without our written permission.
+          {{ 'TERMS.IP_TEXT_2' | translate }}
         </p>
         <p class="text-gray-700 leading-relaxed">
-          You retain ownership of your financial data and content, but grant us a license to use it to provide our services.
+          {{ 'TERMS.IP_TEXT_3' | translate }}
         </p>
       </section>
 
       <!-- Limitation of Liability -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Limitation of Liability</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'TERMS.LIABILITY_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed mb-4">
-          To the maximum extent permitted by law, Money Manager shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to:
+          {{ 'TERMS.LIABILITY_TEXT_1' | translate }}
         </p>
         <ul class="list-disc list-inside text-gray-700 mb-4 space-y-2">
-          <li>Loss of profits, data, or use</li>
-          <li>Business interruption</li>
-          <li>Financial losses</li>
-          <li>Security breaches</li>
-          <li>Service interruptions</li>
+          <li>{{ 'TERMS.LIABILITY_LIST_1' | translate }}</li>
+          <li>{{ 'TERMS.LIABILITY_LIST_2' | translate }}</li>
+          <li>{{ 'TERMS.LIABILITY_LIST_3' | translate }}</li>
+          <li>{{ 'TERMS.LIABILITY_LIST_4' | translate }}</li>
+          <li>{{ 'TERMS.LIABILITY_LIST_5' | translate }}</li>
         </ul>
         <p class="text-gray-700 leading-relaxed">
-          Our total liability shall not exceed the amount you paid for our services in the 12 months preceding the claim.
+          {{ 'TERMS.LIABILITY_TEXT_2' | translate }}
         </p>
       </section>
 
       <!-- Disclaimers -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Disclaimers</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'TERMS.DISCLAIMERS_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed mb-4">
-          THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO:
+          {{ 'TERMS.DISCLAIMERS_TEXT_1' | translate }}
         </p>
         <ul class="list-disc list-inside text-gray-700 mb-4 space-y-2">
-          <li>Warranties of merchantability or fitness for a particular purpose</li>
-          <li>Warranties that the service will be uninterrupted or error-free</li>
-          <li>Warranties regarding the accuracy or reliability of financial data</li>
-          <li>Warranties that defects will be corrected</li>
+          <li>{{ 'TERMS.DISCLAIMERS_LIST_1' | translate }}</li>
+          <li>{{ 'TERMS.DISCLAIMERS_LIST_2' | translate }}</li>
+          <li>{{ 'TERMS.DISCLAIMERS_LIST_3' | translate }}</li>
+          <li>{{ 'TERMS.DISCLAIMERS_LIST_4' | translate }}</li>
         </ul>
       </section>
 
       <!-- Termination -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Termination</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'TERMS.TERMINATION_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed mb-4">
-          We may terminate or suspend your account and access to our services at any time, with or without cause, with or without notice.
+          {{ 'TERMS.TERMINATION_TEXT_1' | translate }}
         </p>
         <p class="text-gray-700 leading-relaxed mb-4">
-          Upon termination, your right to use the service will cease immediately. We may delete your account and data, though we will provide reasonable notice before permanent deletion.
+          {{ 'TERMS.TERMINATION_TEXT_2' | translate }}
         </p>
         <p class="text-gray-700 leading-relaxed">
-          You may terminate your account at any time by contacting us or using the account deletion feature in the application.
+          {{ 'TERMS.TERMINATION_TEXT_3' | translate }}
         </p>
       </section>
 
       <!-- Governing Law -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Governing Law</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'TERMS.GOVERNING_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed">
-          These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising from these Terms or your use of our service shall be resolved in the courts of Goa, India.
+          {{ 'TERMS.GOVERNING_TEXT_1' | translate }}
         </p>
       </section>
 
       <!-- Changes to Terms -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Changes to These Terms</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'TERMS.CHANGES_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed mb-4">
-          We reserve the right to modify these Terms at any time. We will notify you of any changes by:
+          {{ 'TERMS.CHANGES_TEXT_1' | translate }}
         </p>
         <ul class="list-disc list-inside text-gray-700 mb-4 space-y-2">
-          <li>Posting the updated Terms in the application</li>
-          <li>Sending you an email notification</li>
-          <li>Displaying a notice when you next access the service</li>
+          <li>{{ 'TERMS.CHANGES_LIST_1' | translate }}</li>
+          <li>{{ 'TERMS.CHANGES_LIST_2' | translate }}</li>
+          <li>{{ 'TERMS.CHANGES_LIST_3' | translate }}</li>
         </ul>
         <p class="text-gray-700 leading-relaxed">
-          Your continued use of the service after any changes constitutes acceptance of the updated Terms.
+          {{ 'TERMS.CHANGES_TEXT_2' | translate }}
         </p>
       </section>
 
       <!-- Contact Information -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Contact Us</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'TERMS.CONTACT_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed mb-4">
-          If you have any questions about these Terms and Conditions, please contact us:
+          {{ 'TERMS.CONTACT_TEXT_1' | translate }}
         </p>
         <div class="bg-gray-50 rounded-lg p-4">
           <div class="space-y-2 text-gray-700">
-            <p><strong>Email:</strong> Prashiln79&#64;gmail.com</p>
-            <p><strong>Address:</strong> Goa, India</p>
-            <p><strong>Response Time:</strong> We aim to respond to all inquiries within 48 hours.</p>
+            <p><strong>{{ 'TERMS.CONTACT_EMAIL' | translate }}</strong> Prashiln79&#64;gmail.com</p>
+            <p><strong>{{ 'TERMS.CONTACT_ADDRESS' | translate }}</strong> Goa, India</p>
+            <p><strong>{{ 'TERMS.CONTACT_RESPONSE' | translate }}</strong> {{ 'TERMS.CONTACT_RESPONSE_TEXT' | translate
+              }}</p>
           </div>
         </div>
       </section>
@@ -253,10 +253,10 @@
       <!-- Footer -->
       <div class="border-t pt-6 mt-8">
         <p class="text-sm text-gray-500 text-center">
-          These Terms and Conditions are effective as of {{ lastUpdated }} and will remain in effect except with respect to any changes in its provisions in the future.
+          {{ 'TERMS.FOOTER_TEXT' | translate }} {{ lastUpdated }}
         </p>
       </div>
 
     </div>
   </div>
-</div> 
+</div>

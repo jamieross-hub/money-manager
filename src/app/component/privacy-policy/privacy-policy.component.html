@@ -4,13 +4,12 @@
     <div class="container mx-auto px-4 py-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <button 
-            (click)="navigateBack()"
-            class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+          <button (click)="navigateBack()" class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
             <mat-icon>arrow_back</mat-icon>
           </button>
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-r from-primary to-primary-600">
+            <div
+              class="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-r from-primary to-primary-600">
               <img src="assets/icon/app-icon/icon-192x192.png" alt="Money Manager" class="w-6 h-6">
             </div>
             <h1 class="text-xl font-bold text-gray-900">Privacy Policy</h1>
@@ -26,152 +25,158 @@
   <!-- Content -->
   <div class="container mx-auto px-4 py-8 overflow-y-auto h-screen">
     <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-sm p-8">
-      
+
       <!-- Introduction -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Introduction</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'PRIVACY.INTRODUCTION_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed mb-4">
-          Money Manager ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our money management application.
+          {{ 'PRIVACY.INTRODUCTION_TEXT_1' | translate }}
         </p>
         <p class="text-gray-700 leading-relaxed">
-          By using our application, you agree to the collection and use of information in accordance with this policy.
+          {{ 'PRIVACY.INTRODUCTION_TEXT_2' | translate }}
         </p>
       </section>
 
       <!-- Information We Collect -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Information We Collect</h2>
-        
-        <h3 class="text-lg font-semibold text-gray-800 mb-3">Personal Information</h3>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'PRIVACY.COLLECT_TITLE' | translate }}</h2>
+
+        <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ 'PRIVACY.COLLECT_SUBTITLE_1' | translate }}</h3>
         <ul class="list-disc list-inside text-gray-700 mb-4 space-y-2">
-          <li>Name and email address when you create an account</li>
-          <li>Profile information you choose to provide</li>
-          <li>Financial data you input (transactions, budgets, goals)</li>
-          <li>Account preferences and settings</li>
+          <li>{{ 'PRIVACY.COLLECT_LIST_1' | translate }}</li>
+          <li>{{ 'PRIVACY.COLLECT_LIST_2' | translate }}</li>
+          <li>{{ 'PRIVACY.COLLECT_LIST_3' | translate }}</li>
+          <li>{{ 'PRIVACY.COLLECT_LIST_4' | translate }}</li>
         </ul>
 
-        <h3 class="text-lg font-semibold text-gray-800 mb-3">Usage Information</h3>
+        <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ 'PRIVACY.COLLECT_SUBTITLE_2' | translate }}</h3>
         <ul class="list-disc list-inside text-gray-700 mb-4 space-y-2">
-          <li>App usage patterns and features accessed</li>
-          <li>Device information and browser type</li>
-          <li>IP address and general location data</li>
-          <li>Error logs and performance data</li>
+          <li>{{ 'PRIVACY.COLLECT_LIST_5' | translate }}</li>
+          <li>{{ 'PRIVACY.COLLECT_LIST_6' | translate }}</li>
+          <li>{{ 'PRIVACY.COLLECT_LIST_7' | translate }}</li>
+          <li>{{ 'PRIVACY.COLLECT_LIST_8' | translate }}</li>
         </ul>
       </section>
 
       <!-- How We Use Your Information -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">How We Use Your Information</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'PRIVACY.USE_TITLE' | translate }}</h2>
         <ul class="list-disc list-inside text-gray-700 space-y-2">
-          <li>Provide and maintain our money management services</li>
-          <li>Process your transactions and financial data</li>
-          <li>Generate reports and insights about your finances</li>
-          <li>Improve our application and user experience</li>
-          <li>Send important updates and notifications</li>
-          <li>Provide customer support and respond to inquiries</li>
-          <li>Ensure security and prevent fraud</li>
+          <li>{{ 'PRIVACY.USE_LIST_1' | translate }}</li>
+          <li>{{ 'PRIVACY.USE_LIST_2' | translate }}</li>
+          <li>{{ 'PRIVACY.USE_LIST_3' | translate }}</li>
+          <li>{{ 'PRIVACY.USE_LIST_4' | translate }}</li>
+          <li>{{ 'PRIVACY.USE_LIST_5' | translate }}</li>
+          <li>{{ 'PRIVACY.USE_LIST_6' | translate }}</li>
+          <li>{{ 'PRIVACY.USE_LIST_7' | translate }}</li>
         </ul>
       </section>
 
       <!-- Data Storage and Security -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Data Storage and Security</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'PRIVACY.STORAGE_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed mb-4">
-          We implement industry-standard security measures to protect your personal and financial information:
+          {{ 'PRIVACY.STORAGE_TEXT_1' | translate }}
         </p>
         <ul class="list-disc list-inside text-gray-700 mb-4 space-y-2">
-          <li>End-to-end encryption for sensitive data</li>
-          <li>Secure cloud storage with regular backups</li>
-          <li>Multi-factor authentication for account access</li>
-          <li>Regular security audits and updates</li>
-          <li>Limited access to personal data by authorized personnel only</li>
+          <li>{{ 'PRIVACY.STORAGE_LIST_1' | translate }}</li>
+          <li>{{ 'PRIVACY.STORAGE_LIST_2' | translate }}</li>
+          <li>{{ 'PRIVACY.STORAGE_LIST_3' | translate }}</li>
+          <li>{{ 'PRIVACY.STORAGE_LIST_4' | translate }}</li>
+          <li>{{ 'PRIVACY.STORAGE_LIST_5' | translate }}</li>
         </ul>
         <p class="text-gray-700 leading-relaxed">
-          Your data is stored securely and we never share your financial information with third parties without your explicit consent.
+          {{ 'PRIVACY.STORAGE_TEXT_2' | translate }}
         </p>
       </section>
 
       <!-- Data Sharing -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Data Sharing</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'PRIVACY.SHARING_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed mb-4">
-          We do not sell, trade, or rent your personal information to third parties. We may share your information only in the following circumstances:
+          {{ 'PRIVACY.SHARING_TEXT_1' | translate }}
         </p>
         <ul class="list-disc list-inside text-gray-700 space-y-2">
-          <li>With your explicit consent</li>
-          <li>To comply with legal obligations</li>
-          <li>To protect our rights and prevent fraud</li>
-          <li>With trusted service providers who assist in app operations (under strict confidentiality agreements)</li>
+          <li>{{ 'PRIVACY.SHARING_LIST_1' | translate }}</li>
+          <li>{{ 'PRIVACY.SHARING_LIST_2' | translate }}</li>
+          <li>{{ 'PRIVACY.SHARING_LIST_3' | translate }}</li>
+          <li>{{ 'PRIVACY.SHARING_LIST_4' | translate }}</li>
         </ul>
       </section>
 
       <!-- Your Rights -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Your Rights</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'PRIVACY.RIGHTS_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed mb-4">
-          You have the following rights regarding your personal information:
+          {{ 'PRIVACY.RIGHTS_TEXT_1' | translate }}
         </p>
         <ul class="list-disc list-inside text-gray-700 space-y-2">
-          <li><strong>Access:</strong> Request a copy of your personal data</li>
-          <li><strong>Correction:</strong> Update or correct inaccurate information</li>
-          <li><strong>Deletion:</strong> Request deletion of your account and data</li>
-          <li><strong>Portability:</strong> Export your data in a standard format</li>
-          <li><strong>Opt-out:</strong> Unsubscribe from marketing communications</li>
+          <li><strong>{{ 'PRIVACY.RIGHTS_LIST_1' | translate }}</strong> {{ 'PRIVACY.RIGHTS_LIST_1_DESC' | translate }}
+          </li>
+          <li><strong>{{ 'PRIVACY.RIGHTS_LIST_2' | translate }}</strong> {{ 'PRIVACY.RIGHTS_LIST_2_DESC' | translate }}
+          </li>
+          <li><strong>{{ 'PRIVACY.RIGHTS_LIST_3' | translate }}</strong> {{ 'PRIVACY.RIGHTS_LIST_3_DESC' | translate }}
+          </li>
+          <li><strong>{{ 'PRIVACY.RIGHTS_LIST_4' | translate }}</strong> {{ 'PRIVACY.RIGHTS_LIST_4_DESC' | translate }}
+          </li>
+          <li><strong>{{ 'PRIVACY.RIGHTS_LIST_5' | translate }}</strong> {{ 'PRIVACY.RIGHTS_LIST_5_DESC' | translate }}
+          </li>
         </ul>
       </section>
 
       <!-- Cookies and Tracking -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Cookies and Tracking</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'PRIVACY.COOKIES_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed mb-4">
-          We use cookies and similar technologies to:
+          {{ 'PRIVACY.COOKIES_TEXT_1' | translate }}
         </p>
         <ul class="list-disc list-inside text-gray-700 mb-4 space-y-2">
-          <li>Remember your preferences and settings</li>
-          <li>Analyze app usage and performance</li>
-          <li>Provide personalized features</li>
-          <li>Ensure security and prevent fraud</li>
+          <li>{{ 'PRIVACY.COOKIES_LIST_1' | translate }}</li>
+          <li>{{ 'PRIVACY.COOKIES_LIST_2' | translate }}</li>
+          <li>{{ 'PRIVACY.COOKIES_LIST_3' | translate }}</li>
+          <li>{{ 'PRIVACY.COOKIES_LIST_4' | translate }}</li>
         </ul>
         <p class="text-gray-700 leading-relaxed">
-          You can control cookie settings through your browser preferences.
+          {{ 'PRIVACY.COOKIES_TEXT_2' | translate }}
         </p>
       </section>
 
       <!-- Children's Privacy -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Children's Privacy</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'PRIVACY.CHILDREN_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed">
-          Our application is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe your child has provided us with personal information, please contact us immediately.
+          {{ 'PRIVACY.CHILDREN_TEXT_1' | translate }}
         </p>
       </section>
 
       <!-- Changes to Privacy Policy -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Changes to This Privacy Policy</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'PRIVACY.CHANGES_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed mb-4">
-          We may update this Privacy Policy from time to time. We will notify you of any changes by:
+          {{ 'PRIVACY.CHANGES_TEXT_1' | translate }}
         </p>
         <ul class="list-disc list-inside text-gray-700 mb-4 space-y-2">
-          <li>Posting the new Privacy Policy on this page</li>
-          <li>Sending you an email notification</li>
-          <li>Displaying a notice in the application</li>
+          <li>{{ 'PRIVACY.CHANGES_LIST_1' | translate }}</li>
+          <li>{{ 'PRIVACY.CHANGES_LIST_2' | translate }}</li>
+          <li>{{ 'PRIVACY.CHANGES_LIST_3' | translate }}</li>
         </ul>
         <p class="text-gray-700 leading-relaxed">
-          Your continued use of the application after any changes constitutes acceptance of the updated Privacy Policy.
+          {{ 'PRIVACY.CHANGES_TEXT_2' | translate }}
         </p>
       </section>
 
       <!-- Contact Information -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Contact Us</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ 'PRIVACY.CONTACT_TITLE' | translate }}</h2>
         <p class="text-gray-700 leading-relaxed mb-4">
-          If you have any questions about this Privacy Policy or our data practices, please contact us:
+          {{ 'PRIVACY.CONTACT_TEXT_1' | translate }}
         </p>
         <div class="bg-gray-50 rounded-lg p-4">
           <div class="space-y-2 text-gray-700">
-            <p><strong>Email:</strong> Prashiln79&#64;gmail.com</p>
-            <p><strong>Address:</strong> Goa, India</p>
-            <p><strong>Response Time:</strong> We aim to respond to all privacy-related inquiries within 48 hours.</p>
+            <p><strong>{{ 'PRIVACY.CONTACT_EMAIL' | translate }}</strong> Prashiln79&#64;gmail.com</p>
+            <p><strong>{{ 'PRIVACY.CONTACT_ADDRESS' | translate }}</strong> Goa, India</p>
+            <p><strong>{{ 'PRIVACY.CONTACT_RESPONSE' | translate }}</strong> {{ 'PRIVACY.CONTACT_RESPONSE_TEXT' |
+              translate }}</p>
           </div>
         </div>
       </section>
@@ -179,10 +184,10 @@
       <!-- Footer -->
       <div class="border-t pt-6 mt-8">
         <p class="text-sm text-gray-500 text-center">
-          This Privacy Policy is effective as of {{ lastUpdated }} and will remain in effect except with respect to any changes in its provisions in the future.
+          {{ 'PRIVACY.FOOTER_TEXT' | translate }} {{ lastUpdated }}
         </p>
       </div>
 
     </div>
   </div>
-</div> 
+</div>

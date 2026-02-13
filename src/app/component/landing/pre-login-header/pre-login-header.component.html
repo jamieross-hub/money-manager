@@ -15,14 +15,15 @@
       <!-- Desktop Navigation -->
       <nav class="desktop-nav hidden md:flex items-center gap-6 lg:gap-8">
         <a href="#features"
-          class="nav-link text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-400 font-medium transition-colors duration-200 text-sm lg:text-base">Features</a>
+          class="nav-link text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-400 font-medium transition-colors duration-200 text-sm lg:text-base">{{
+          'PRE_LOGIN_HEADER.FEATURES' | translate }}</a>
         <a href="#how"
-          class="nav-link text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-400 font-medium transition-colors duration-200 text-sm lg:text-base">How
-          it Works</a>
+          class="nav-link text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-400 font-medium transition-colors duration-200 text-sm lg:text-base">{{
+          'PRE_LOGIN_HEADER.HOW_IT_WORKS' | translate }}</a>
         <button
           class="bg-primary hover:bg-primary-700 text-white px-6 py-2.5 rounded-full font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 text-sm lg:text-base"
           (click)="navigateToSignIn()">
-          Sign In
+          {{ 'PRE_LOGIN_HEADER.SIGN_IN' | translate }}
         </button>
       </nav>
 
@@ -53,17 +54,17 @@
       <a href="#features"
         class="block py-3 px-4 text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg font-medium transition-all duration-200"
         (click)="toggleMobileMenu()">
-        Features
+        {{ 'PRE_LOGIN_HEADER.FEATURES' | translate }}
       </a>
       <a href="#how"
         class="block py-3 px-4 text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg font-medium transition-all duration-200"
         (click)="toggleMobileMenu()">
-        How it Works
+        {{ 'PRE_LOGIN_HEADER.HOW_IT_WORKS' | translate }}
       </a>
       <button
         class="w-full bg-primary hover:bg-primary-700 text-white py-3 px-4 rounded-lg font-semibold shadow-md active:scale-95 transition-all duration-200"
         (click)="navigateToSignIn(); toggleMobileMenu()">
-        Sign In
+        {{ 'PRE_LOGIN_HEADER.SIGN_IN' | translate }}
       </button>
     </div>
   </div>
