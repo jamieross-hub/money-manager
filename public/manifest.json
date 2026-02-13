@@ -1,7 +1,7 @@
 {
   "id": "com.moneymanager.app",
-  "name": "Money Manager",
-  "short_name": "MoneyManager",
+  "name": "Family Expense Tracker",
+  "short_name": "Family Expense Tracker",
   "description": "Track your expenses, manage budgets, and achieve financial goals with our comprehensive money management app",
   "theme_color": "#f7faf5",
   "background_color": "transparent",

@@ -74,7 +74,7 @@ if (messaging) {
   messaging.onBackgroundMessage((payload) => {
     console.log('Background message received:', payload);
     
-    const notificationTitle = payload.notification?.title || 'Money Manager';
+    const notificationTitle = payload.notification?.title || 'Family Expense Tracker';
     const notificationOptions = getNotificationOptions(payload);
 
     return self.registration.showNotification(notificationTitle, notificationOptions)
@@ -160,7 +160,7 @@ self.addEventListener('push', (event) => {
       });
 
       event.waitUntil(
-        self.registration.showNotification('Money Manager', fallbackOptions)
+        self.registration.showNotification('Family Expense Tracker', fallbackOptions)
           .then(() => console.log('Fallback notification shown successfully'))
           .catch((error) => console.error('Failed to show fallback notification:', error))
       );
