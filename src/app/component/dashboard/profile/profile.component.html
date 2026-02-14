@@ -174,7 +174,21 @@
 							}
 						</mat-select>
 					</mat-form-field>
+
+					<mat-form-field appearance="fill" class="form-field">
+						<mat-label>{{ 'PROFILE.APP_VIEW' | translate }}</mat-label>
+						<mat-select formControlName="appView" [disabled]="!isEditing">
+							@for (option of appViewOptions; track option.value) {
+							<mat-option [value]="option.value">
+								{{ option.label | translate }}
+							</mat-option>
+							}
+						</mat-select>
+					</mat-form-field>
 				</div>
+
+
+
 
 				<!-- Notification Preferences -->
 				<div class="preferences-grid">

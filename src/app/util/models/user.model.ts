@@ -44,6 +44,7 @@ export interface UserPreferences {
 	budgetAlerts: boolean;
 	openaiApiKey?: string;
 	categoryListViewMode?: boolean;
+	appView?: 'WEEKLY' | 'MONTHLY' | 'YEARLY';
 }
 
 

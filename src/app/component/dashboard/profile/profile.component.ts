@@ -101,6 +101,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
     .filter((v, i, a) => a.findIndex(t => t.code === v.code) === i)
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  appViewOptions = [
+    { value: 'WEEKLY', label: 'PROFILE.APP_VIEW_WEEKLY' },
+    { value: 'MONTHLY', label: 'PROFILE.APP_VIEW_MONTHLY' },
+    { value: 'YEARLY', label: 'PROFILE.APP_VIEW_YEARLY' }
+  ];
+
   fabConfig: QuickActionsFabConfig = {
     title: 'Profile',
     mainButtonIcon: 'edit',
@@ -162,6 +168,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         emailUpdates: [{ value: true, disabled: true }],
         budgetAlerts: [{ value: true, disabled: true }],
         categoryListViewMode: [{ value: false, disabled: true }],
+        appView: [{ value: 'MONTHLY', disabled: true }],
       }),
     });
 
@@ -265,6 +272,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         emailUpdates: user.preferences?.emailUpdates || true,
         budgetAlerts: user.preferences?.budgetAlerts || true,
         categoryListViewMode: user.preferences?.categoryListViewMode || false,
+        appView: user.preferences?.appView || 'MONTHLY',
       },
       role: user.role,
       createdAt: user.createdAt,
@@ -317,6 +325,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
           emailUpdates: this.userProfile.preferences?.emailUpdates || true,
           budgetAlerts: this.userProfile.preferences?.budgetAlerts || true,
           categoryListViewMode: this.userProfile.preferences?.categoryListViewMode || false,
+          appView: this.userProfile.preferences?.appView || 'MONTHLY',
         },
       });
 
