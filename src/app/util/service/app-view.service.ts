@@ -54,8 +54,8 @@ export class AppViewService {
      * @param view The current App View
      * @returns label string (e.g., 'week', 'month', 'year')
      */
-    public getViewLabel(view: AppView): string {
-        switch (view) {
+    public getViewLabel(): string {
+        switch (this.appView) {
             case 'WEEKLY': return 'week';
             case 'YEARLY': return 'year';
             case 'MONTHLY':

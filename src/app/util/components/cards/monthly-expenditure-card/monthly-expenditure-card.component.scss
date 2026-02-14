@@ -1,19 +1,21 @@
-@use '@angular/material' as mat;
+@use "@angular/material" as mat;
 
 .trend-card {
-  padding: 1.5rem;
+  // padding: 1rem;
   border-radius: 20px;
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
   margin-top: 1rem;
   border: none;
 
   .trend-header {
+    padding-top: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 1.5rem;
 
     .card-title {
+      padding-left: 1rem;
       font-size: 0.875rem;
       font-weight: 700;
       margin-bottom: 0.75rem;
@@ -25,6 +27,7 @@
     .metrics-row {
       display: flex;
       gap: 1.5rem;
+      padding-left: 1rem;
 
       .metric-item {
         display: flex;
@@ -60,10 +63,14 @@
 
     .action-section {
       .toggle-group {
+        padding-right: 1rem;
         display: flex;
         border-radius: 12px;
         padding: 4px;
         gap: 4px;
+        position: absolute;
+        top: 1rem;
+        right: 0.5rem;
 
         button {
           width: 32px;

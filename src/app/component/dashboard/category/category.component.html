@@ -106,7 +106,7 @@
 								<span class="category-amount">
 									{{ calculateTotalSpent(category) | currency:{round: true} }}
 									<span class="period" *ngIf="!breakpointService.device.isMobile">/ {{
-										appViewService.getViewLabel(appView) }}</span>
+										appViewService.getViewLabel() }}</span>
 								</span>
 
 								<!-- Budget Progress -->
@@ -241,7 +241,7 @@
 								<div class="amount-container">
 									<span class="category-amount">
 										{{ calculateTotalSpent(subCategory)| currency }}
-										<span class="period">/ {{ appViewService.getViewLabel(appView) }}</span>
+										<span class="period">/ {{ appViewService.getViewLabel() }}</span>
 									</span>
 
 									<!-- Budget Progress for Subcategory -->

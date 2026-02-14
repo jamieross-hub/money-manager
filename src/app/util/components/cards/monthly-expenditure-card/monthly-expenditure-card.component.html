@@ -1,7 +1,7 @@
 <mat-card class="trend-card">
     <div class="trend-header">
         <div class="title-section">
-            <h3 class="card-title text-uppercase">Monthly Expenditure</h3>
+            <h3 class="card-title text-uppercase">{{ chartTitle }}</h3>
             <div class="metrics-row">
                 <div class="metric-item">
                     <span class="dot income-dot"></span>
@@ -29,8 +29,8 @@
         </div>
     </div>
 
-    <mat-card-content>
+    <mat-card-content class="!p-0">
         <div [id]="chartId" class="chart-container"></div>
-        <p class="chart-footer text-center mt-2">Expenditure per month</p>
+        <p class="chart-footer text-center mt-2">{{ chartFooter }}</p>
     </mat-card-content>
 </mat-card>

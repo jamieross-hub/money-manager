@@ -15,6 +15,7 @@ import { CurrencyPipe } from 'src/app/util/pipes';
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
+import { AppViewService } from '../../../../util/service/app-view.service';
 
 @Component({
     selector: 'app-monthly-expenditure-card',
@@ -36,16 +37,30 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
     selectedYear = moment().year();
     selectedMonth = moment().month();
 
+    currentView: 'WEEKLY' | 'MONTHLY' | 'YEARLY' = 'MONTHLY';
+    chartTitle = 'Monthly Expenditure';
+    chartFooter = 'Expenditure per month';
+
     private subscription = new Subscription();
 
     constructor(
         private store: Store<AppState>,
         private filterService: FilterService,
         @Inject(PLATFORM_ID) private platformId: Object,
-        private zone: NgZone
+        private zone: NgZone,
+        private appViewService: AppViewService
     ) { }
 
     ngOnInit(): void {
+        // Subscribe to App View
+        this.subscription.add(
+            this.appViewService.appView$.subscribe(view => {
+                this.currentView = view;
+                this.updateChartLabels();
+                this.updateData();
+            })
+        );
+
         // Synchronize with global filters
         this.subscription.add(
             combineLatest([
@@ -92,6 +107,24 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
         }
     }
 
+    private updateChartLabels() {
+        switch (this.currentView) {
+            case 'WEEKLY':
+                this.chartTitle = 'Weekly Expenditure';
+                this.chartFooter = 'Expenditure per day';
+                break;
+            case 'YEARLY':
+                this.chartTitle = 'Yearly Expenditure';
+                this.chartFooter = 'Expenditure per month';
+                break;
+            case 'MONTHLY':
+            default:
+                this.chartTitle = 'Monthly Expenditure';
+                this.chartFooter = 'Expenditure per day';
+                break;
+        }
+    }
+
     private initChart() {
         //this.chartId = 'daily-trend-chart-' + Math.random().toString(36).substr(2, 9);
         this.root = am5.Root.new(this.chartId);
@@ -121,7 +154,7 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
 
         this.xAxis = chart.xAxes.push(
             am5xy.CategoryAxis.new(this.root, {
-                categoryField: "month",
+                categoryField: "period",
                 renderer: xRenderer,
                 tooltip: am5.Tooltip.new(this.root, {})
             })
@@ -162,7 +195,7 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
                     xAxis: this.xAxis!,
                     yAxis: yAxis,
                     valueYField: "value",
-                    categoryXField: "month",
+                    categoryXField: "period",
                     stroke: am5.color(0x0d9488),
                     tooltip: am5.Tooltip.new(this.root!, {
                         labelText: "{valueY}"
@@ -193,7 +226,7 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
                     xAxis: this.xAxis!,
                     yAxis: yAxis,
                     valueYField: "value",
-                    categoryXField: "month",
+                    categoryXField: "period",
                     fill: am5.color(0x0d9488),
                     stroke: am5.color(0x0d9488),
                     tooltip: am5.Tooltip.new(this.root!, {
@@ -230,36 +263,116 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
     }
 
     private processTransactions(transactions: Transaction[]) {
-        const year = this.selectedYear;
-        const months = moment.monthsShort();
-        const totals: { [month: string]: number } = {};
-        months.forEach(m => totals[m] = 0);
+        if (this.currentView === 'WEEKLY') {
+            return this.processWeeklyTransactions(transactions);
+        } else if (this.currentView === 'YEARLY') {
+            return this.processYearlyTransactions(transactions);
+        } else {
+            return this.processMonthlyTransactions(transactions);
+        }
+    }
 
-        let incomeTotal = 0;
-        let expenseTotal = 0;
+    private processWeeklyTransactions(transactions: Transaction[]) {
+        const startOfWeek = moment().startOf('week');
+        const endOfWeek = moment().endOf('week');
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const totals: { [day: string]: number } = {};
+        days.forEach(d => totals[d] = 0);
+
+        this.resetTotals();
 
         transactions.forEach(t => {
             const txDate = moment(this.convertToDate(t.date));
-            if (txDate.year() === year) {
+            if (txDate.isBetween(startOfWeek, endOfWeek, 'day', '[]')) {
                 if (t.type === 'expense') {
-                    const monthName = txDate.format('MMM');
-                    totals[monthName] += t.amount;
-                    expenseTotal += t.amount;
+                    const dayName = txDate.format('ddd');
+                    if (totals[dayName] !== undefined) {
+                        totals[dayName] += t.amount;
+                        this.totalExpenses += t.amount;
+                    }
                 } else if (t.type === 'income') {
-                    incomeTotal += t.amount;
+                    this.totalIncome += t.amount;
                 }
             }
         });
 
-        const data = months.map(month => ({
-            month: month,
+        return days.map(day => ({
+            period: day,
+            value: totals[day]
+        }));
+    }
+
+    private processMonthlyTransactions(transactions: Transaction[]) {
+        const startOfMonth = moment().startOf('month');
+        const endOfMonth = moment().endOf('month');
+        const daysInMonth = startOfMonth.daysInMonth();
+        const days: string[] = [];
+        for (let i = 1; i <= daysInMonth; i++) {
+            days.push(i.toString());
+        }
+
+        const totals: { [day: string]: number } = {};
+        days.forEach(d => totals[d] = 0);
+
+        this.resetTotals();
+
+        transactions.forEach(t => {
+            const txDate = moment(this.convertToDate(t.date));
+            if (txDate.isBetween(startOfMonth, endOfMonth, 'day', '[]')) {
+                if (t.type === 'expense') {
+                    const dayObj = txDate.date().toString();
+                    if (totals[dayObj] !== undefined) {
+                        totals[dayObj] += t.amount;
+                        this.totalExpenses += t.amount;
+                    }
+                } else if (t.type === 'income') {
+                    this.totalIncome += t.amount;
+                }
+            }
+        });
+
+        return days.map(day => ({
+            period: day,
+            value: totals[day]
+        }));
+    }
+
+    private processYearlyTransactions(transactions: Transaction[]) {
+        const year = moment().year(); // In yearly view, usually we show current year or selected year
+        // We can respect selectedYear if needed, usually 'this-year' implies current year.
+        // But let's use the year from filters if available, or current year.
+        const targetYear = this.selectedYear || moment().year();
+
+        const months = moment.monthsShort();
+        const totals: { [month: string]: number } = {};
+        months.forEach(m => totals[m] = 0);
+
+        this.resetTotals();
+
+        transactions.forEach(t => {
+            const txDate = moment(this.convertToDate(t.date));
+            if (txDate.year() === targetYear) {
+                if (t.type === 'expense') {
+                    const monthName = txDate.format('MMM');
+                    if (totals[monthName] !== undefined) {
+                        totals[monthName] += t.amount;
+                        this.totalExpenses += t.amount;
+                    }
+                } else if (t.type === 'income') {
+                    this.totalIncome += t.amount;
+                }
+            }
+        });
+
+        return months.map(month => ({
+            period: month,
             value: totals[month]
         }));
+    }
 
-        this.totalIncome = incomeTotal;
-        this.totalExpenses = expenseTotal;
-
-        return data;
+    private resetTotals() {
+        this.totalIncome = 0;
+        this.totalExpenses = 0;
     }
 
     private convertToDate(date: any): Date {
