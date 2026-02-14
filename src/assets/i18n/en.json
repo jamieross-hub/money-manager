@@ -110,6 +110,7 @@
     },
     "USER_MENU": {
         "VIEW_PROFILE": "View Profile",
+        "PROFILE_SETTINGS": "Profile Settings",
         "DARK_MODE": "Dark Mode",
         "CACHE_MGMT": "Cache Management",
         "SHARE_APP": "Share App",
