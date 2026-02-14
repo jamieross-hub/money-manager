@@ -599,6 +599,20 @@ export class MobileTransactionListComponent
     this.selectedSort = 'date-desc';
   }
 
+  getDateHeader(dateStr: string): string {
+    const date = moment(dateStr);
+    const today = moment().startOf('day');
+    const yesterday = moment().subtract(1, 'day').startOf('day');
+
+    if (date.isSame(today, 'day')) {
+      return 'Today';
+    } else if (date.isSame(yesterday, 'day')) {
+      return 'Yesterday';
+    } else {
+      return date.format('dddd, DD MMM YYYY');
+    }
+  }
+
   quickClearFilters() {
     this.filterService.clearAllFilters();
   }

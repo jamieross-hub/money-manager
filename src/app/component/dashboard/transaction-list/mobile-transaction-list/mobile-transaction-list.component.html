@@ -217,7 +217,7 @@
 			@for (group of groupedTransactions; track group.date) {
 			<div class="date-group">
 				<div class="date-header">
-					{{ group.date | date:'dd MMM, yyyy' }}
+					{{ getDateHeader(group.date) }}
 				</div>
 				@for (tx of group.transactions; track tx.id) {
 				<div class="transaction-card" [class.selected]="selectedTx?.id === tx.id" (click)="onLongPress(tx)">
