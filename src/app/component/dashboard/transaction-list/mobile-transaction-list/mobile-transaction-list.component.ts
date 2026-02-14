@@ -742,10 +742,39 @@ export class MobileTransactionListComponent
       return text;
     });
 
+    // Process data to find max value
+    const categoryMap = new Map<string, number>();
+    this.filteredTransactions.forEach((tx) => {
+      const catId = tx.categoryId;
+      const current = categoryMap.get(catId) || 0;
+      categoryMap.set(catId, current + tx.amount);
+    });
+
+    const data = Array.from(categoryMap.entries())
+      .map(([catId, value]) => ({
+        category: this.getCategoryName(catId).substring(0, 3).toUpperCase(),
+        fullCategory: this.getCategoryName(catId),
+        value: value,
+        formattedValue: this.currencyService.formatAmount(value)
+      }))
+      .sort((a, b) => b.value - a.value);
+
+    // Calculate max value for Y axis
+    let maxValue = 0;
+    data.forEach(item => {
+      if (item.value > maxValue) {
+        maxValue = item.value;
+      }
+    });
+
     const yAxis = chart.yAxes.push(
       am5xy.ValueAxis.new(root, {
         renderer: yRenderer,
         min: 0,
+        max: maxValue,
+        strictMinMax: true,
+        extraMax: 0,
+        maxPrecision: 0
       })
     );
 
@@ -778,23 +807,6 @@ export class MobileTransactionListComponent
     series.columns.template.adapters.add("stroke", (stroke, target) => {
       return chart.get("colors")?.getIndex(series.columns.indexOf(target));
     });
-
-    // Process data
-    const categoryMap = new Map<string, number>();
-    this.filteredTransactions.forEach((tx) => {
-      const catId = tx.categoryId;
-      const current = categoryMap.get(catId) || 0;
-      categoryMap.set(catId, current + tx.amount);
-    });
-
-    const data = Array.from(categoryMap.entries())
-      .map(([catId, value]) => ({
-        category: this.getCategoryName(catId).substring(0, 3).toUpperCase(),
-        fullCategory: this.getCategoryName(catId),
-        value: value,
-        formattedValue: this.currencyService.formatAmount(value)
-      }))
-      .sort((a, b) => b.value - a.value);
 
     xAxis.data.setAll(data);
     series.data.setAll(data);

@@ -58,10 +58,10 @@ export const selectTotalBalance = createSelector(
     if (!accounts) return 0;
     const totalBalance = accounts.reduce((sum, account) => {
       if (account.type === AccountType.LOAN) {
-        const loanDetails = account.loanDetails as LoanDetails;
-        return sum - loanDetails.remainingBalance;
+        const loanDetails = account.loanDetails;
+        return sum - (loanDetails?.remainingBalance || 0);
       }
-      return sum + account.balance;
+      return sum + (account.balance || 0);
     }, 0);
     return totalBalance;
   }
