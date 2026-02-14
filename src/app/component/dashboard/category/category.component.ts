@@ -663,7 +663,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
       const matchesGroup = !this.selectedGroup || category.group === this.selectedGroup;
 
       return matchesSearch && matchesType && matchesGroup;
-    });
+    }).sort((a, b) => this.calculateTotalSpent(b) - this.calculateTotalSpent(a));
   }
 
   public calculateSummaryData(appView: AppView): void {
