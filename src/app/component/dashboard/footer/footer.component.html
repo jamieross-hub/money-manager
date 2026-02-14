@@ -23,7 +23,7 @@
 					[ngClass]="isExpenseActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'"
 					(click)="quickExpense()">
 					<mat-icon class="text-lg lg:text-base relative bottom-1"
-						[ngClass]="isExpenseActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">trending_down</mat-icon>
+						[ngClass]="isExpenseActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">trending_up</mat-icon>
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
 					[ngClass]="isExpenseActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
@@ -63,7 +63,9 @@
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
 					[ngClass]="isCategoryActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
-					'NAVIGATION.CATEGORIES' | translate }}</span>
+					breakpointService.device.isMobile ? ('NAVIGATION.SUMMARY' | translate) : ('NAVIGATION.CATEGORIES' |
+					translate)
+					}}</span>
 			</button>
 
 			<button (click)="navigateTo('/dashboard/accounts')" class="group flex flex-col items-center gap-2 lg:gap-1">
