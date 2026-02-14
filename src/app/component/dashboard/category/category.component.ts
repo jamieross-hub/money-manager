@@ -11,6 +11,7 @@ import { MobileCategoryAddEditPopupComponent } from './mobile-category-add-edit-
 
 import { Category, Budget } from 'src/app/util/models';
 import { CategoryBudgetService } from 'src/app/util/service/category-budget.service';
+import { AppViewService, AppView } from 'src/app/util/service/app-view.service';
 import { CategoryBudgetDialogComponent } from './category-budget-dialog/category-budget-dialog.component';
 import { ParentCategorySelectorDialogComponent } from './parent-category-selector-dialog/parent-category-selector-dialog.component';
 import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
@@ -130,6 +131,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
     public breakpointService: BreakpointService,
     private categoryService: CategoryService,
     private userService: UserService,
+    public appViewService: AppViewService
   ) {
 
     this.isLoading$ = this.store.select(CategoriesSelectors.selectCategoriesLoading);
@@ -199,12 +201,12 @@ export class CategoryComponent implements OnInit, OnDestroy {
         return a.name.localeCompare(b.name);
       });
       this.availableGroups = [...new Set(this.categories.map(c => c.group).filter(g => !!g))] as string[];
-      this.calculateSummaryData();
+      this.calculateSummaryData(this.appViewService.appView);
     });
 
     this.transactions$.pipe(takeUntil(this.destroy$)).subscribe(transactions => {
       this.transactions = transactions;
-      this.calculateSummaryData();
+      this.calculateSummaryData(this.appViewService.appView);
     });
 
     this.isLoading$.pipe(takeUntil(this.destroy$)).subscribe(loading => {
@@ -212,11 +214,12 @@ export class CategoryComponent implements OnInit, OnDestroy {
     });
 
     // Subscribe to profile changes to get user preferences
-    this.store.select(ProfileSelectors.selectUserPreferences).pipe(take(1)).subscribe(preferences => {
-      if (preferences && this.isListViewMode != preferences.categoryListViewMode) {
-        this.isListViewMode = preferences.categoryListViewMode ?? false;
-      }
+    this.appViewService.appView$.pipe(takeUntil(this.destroy$)).subscribe(appView => {
+      this.calculateSummaryData(appView);
     });
+
+
+
 
     // this.error$.pipe(takeUntil(this.destroy$)).subscribe(error => {
     //   if (error) {
@@ -496,11 +499,10 @@ export class CategoryComponent implements OnInit, OnDestroy {
     return 'safe';
   }
 
-  public calculateTotalSpentPerMonth(category: Category): number {
-    const now = new Date();
+  public calculateTotalSpent(category: Category): number {
     const categoryTransactions = this.transactions.filter(t => {
-      const date = this.dateService.toDate(t.date);
-      return t.categoryId === category.id && date && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+      if (t.categoryId !== category.id) return false;
+      return this.appViewService.isDateInView(t.date);
     });
     return categoryTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
   }
@@ -664,22 +666,20 @@ export class CategoryComponent implements OnInit, OnDestroy {
     });
   }
 
-  public calculateSummaryData(): void {
+  public calculateSummaryData(appView: AppView): void {
     if (!this.categories || !this.transactions) return;
 
-    // Filter transactions for the current month
-    const now = new Date();
-    const currentMonthTransactions = this.transactions.filter(t => {
-      const date = this.dateService.toDate(t.date);
-      return date && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+    // Filter transactions based on app view
+    const filteredTransactions = this.transactions.filter(t => {
+      return this.appViewService.isDateInView(t.date);
     });
 
     // Calculate totals
-    this.totalExpenseAmount = currentMonthTransactions
+    this.totalExpenseAmount = filteredTransactions
       .filter(t => t.type === TransactionType.EXPENSE)
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-    this.totalIncomeAmount = currentMonthTransactions
+    this.totalIncomeAmount = filteredTransactions
       .filter(t => t.type === TransactionType.INCOME)
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 

@@ -104,8 +104,9 @@
 						<div matListItemMeta class="item-right">
 							<div class="amount-container">
 								<span class="category-amount">
-									{{ calculateTotalSpentPerMonth(category) | currency:{round: true} }}
-									<span class="period" *ngIf="!breakpointService.device.isMobile">/ month</span>
+									{{ calculateTotalSpent(category) | currency:{round: true} }}
+									<span class="period" *ngIf="!breakpointService.device.isMobile">/ {{
+										appViewService.getViewLabel(appView) }}</span>
 								</span>
 
 								<!-- Budget Progress -->
@@ -239,8 +240,8 @@
 							<div matListItemMeta class="item-right">
 								<div class="amount-container">
 									<span class="category-amount">
-										{{ calculateTotalSpentPerMonth(subCategory)| currency }}
-										<span class="period">/ month</span>
+										{{ calculateTotalSpent(subCategory)| currency }}
+										<span class="period">/ {{ appViewService.getViewLabel(appView) }}</span>
 									</span>
 
 									<!-- Budget Progress for Subcategory -->
