@@ -44,6 +44,7 @@ import { FilterService } from 'src/app/util/service/filter.service';
 import { CategoryService } from 'src/app/util/service/db/category.service';
 import { CurrencyService } from 'src/app/util/service/currency.service';
 import { ThemeSwitchingService } from 'src/app/util/service/theme-switching.service';
+import { AppViewService } from 'src/app/util/service/app-view.service';
 
 interface SortOption {
   value: string;
@@ -109,6 +110,7 @@ export class MobileTransactionListComponent
   // Store observables
   transactions$: Observable<Transaction[]> = this.store.select(selectAllTransactions);
   allTransactions: Transaction[] = [];
+  public selectedRange: string = '';
 
   constructor(
     private readonly auth: Auth,
@@ -119,7 +121,8 @@ export class MobileTransactionListComponent
     private readonly filterService: FilterService,
     private readonly categoryService: CategoryService,
     private readonly currencyService: CurrencyService,
-    private readonly themeService: ThemeSwitchingService
+    private readonly themeService: ThemeSwitchingService,
+    private readonly appViewService: AppViewService
   ) { }
 
   ngOnInit() {
@@ -130,7 +133,19 @@ export class MobileTransactionListComponent
     if (this.route.url.includes('transactions')) {
       this.showFilters = true;
     }
-    this.onDateRangeChange('this-month');
+
+    // Set initial date range based on App View preference
+    this.subscription.add(
+      this.appViewService.appView$.subscribe(view => {
+        let range = 'this-month';
+        if (view === 'WEEKLY') {
+          range = 'this-week';
+        } else if (view === 'YEARLY') {
+          range = 'this-year';
+        }
+        this.onDateRangeChange(range);
+      })
+    );
 
     // Subscribe to theme changes
     this.subscription.add(
@@ -277,38 +292,38 @@ export class MobileTransactionListComponent
       return;
     }
 
-    const now = moment();
     let startDate: Date;
     let endDate: Date;
+    this.selectedRange = range;
 
     switch (range) {
       case 'today':
-        startDate = now.startOf('day').toDate();
-        endDate = now.endOf('day').toDate();
+        startDate = moment().startOf('day').toDate();
+        endDate = moment().endOf('day').toDate();
         break;
       case 'yesterday':
-        startDate = now.subtract(1, 'day').startOf('day').toDate();
-        endDate = now.endOf('day').toDate();
+        startDate = moment().subtract(1, 'day').startOf('day').toDate();
+        endDate = moment().subtract(1, 'day').endOf('day').toDate();
         break;
       case 'this-week':
-        startDate = now.startOf('week').toDate();
-        endDate = now.endOf('week').toDate();
+        startDate = moment().startOf('week').toDate();
+        endDate = moment().endOf('week').toDate();
         break;
       case 'last-week':
-        startDate = now.subtract(1, 'week').startOf('week').toDate();
-        endDate = now.subtract(1, 'week').endOf('week').toDate();
+        startDate = moment().subtract(1, 'week').startOf('week').toDate();
+        endDate = moment().subtract(1, 'week').endOf('week').toDate();
         break;
       case 'this-month':
-        startDate = now.startOf('month').toDate();
-        endDate = now.endOf('month').toDate();
+        startDate = moment().startOf('month').toDate();
+        endDate = moment().endOf('month').toDate();
         break;
       case 'last-month':
-        startDate = now.subtract(1, 'month').startOf('month').toDate();
-        endDate = now.subtract(1, 'month').endOf('month').toDate();
+        startDate = moment().subtract(1, 'month').startOf('month').toDate();
+        endDate = moment().subtract(1, 'month').endOf('month').toDate();
         break;
       case 'this-year':
-        startDate = now.startOf('year').toDate();
-        endDate = now.endOf('year').toDate();
+        startDate = moment().startOf('year').toDate();
+        endDate = moment().endOf('year').toDate();
         break;
       default:
         return;
@@ -323,6 +338,15 @@ export class MobileTransactionListComponent
     return this.filteredTransactions.some(tx => {
       const txDate = moment(this.dateService.toDate(tx.date));
       return txDate.month() === currentMonth && txDate.year() === currentYear;
+    });
+  }
+
+  isCurrentWeek(): boolean {
+    const currentWeek = moment().week();
+    const currentYear = moment().year();
+    return this.filteredTransactions.some(tx => {
+      const txDate = moment(this.dateService.toDate(tx.date));
+      return txDate.week() === currentWeek && txDate.year() === currentYear;
     });
   }
 

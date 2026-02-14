@@ -125,32 +125,32 @@
 					(click)="onDateRangeChange(null)">
 					<mat-icon>all_inclusive</mat-icon>
 					<span>All Time</span>
-					<mat-icon *ngIf="selectedDateRange === null" class="check-icon">check</mat-icon>
 				</button>
-				<button mat-menu-item [class.active-menu-item]="isCurrentMonth()"
+				<button mat-menu-item [class.active-menu-item]="selectedRange === 'this-week'"
+					(click)="onDateRangeChange('this-week')">
+					<mat-icon>calendar_view_week</mat-icon>
+					<span>This Week</span>
+				</button>
+				<button mat-menu-item [class.active-menu-item]="selectedRange === 'this-month'"
 					(click)="onDateRangeChange('this-month')">
 					<mat-icon>calendar_month</mat-icon>
 					<span>This Month</span>
-					<mat-icon *ngIf="isCurrentMonth()" class="check-icon">check</mat-icon>
 				</button>
-				<button mat-menu-item [class.active-menu-item]="isLastMonth()"
+				<button mat-menu-item [class.active-menu-item]="selectedRange === 'last-month'"
 					(click)="onDateRangeChange('last-month')">
 					<mat-icon>calendar_view_month</mat-icon>
 					<span>Last Month</span>
-					<mat-icon *ngIf="isLastMonth()" class="check-icon">check</mat-icon>
 				</button>
-				<button mat-menu-item [class.active-menu-item]="isCurrentYear()"
+				<button mat-menu-item [class.active-menu-item]="selectedRange === 'this-year'"
 					(click)="onDateRangeChange('this-year')">
 					<mat-icon>calendar_today</mat-icon>
 					<span>This Year</span>
-					<mat-icon *ngIf="isCurrentYear()" class="check-icon">check</mat-icon>
 				</button>
 				<mat-divider></mat-divider>
-				<button mat-menu-item [class.active-menu-item]="isCustomDateRange()"
+				<button mat-menu-item [class.active-menu-item]="selectedRange === 'custom'"
 					(click)="openCustomDateRangeDialog()">
 					<mat-icon>date_range</mat-icon>
 					<span>Custom Range</span>
-					<mat-icon *ngIf="isCustomDateRange()" class="check-icon">check</mat-icon>
 				</button>
 			</mat-menu>
 
