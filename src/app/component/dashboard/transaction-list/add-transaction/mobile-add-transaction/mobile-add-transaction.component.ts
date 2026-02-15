@@ -145,7 +145,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     this.accountList$ = this.store.select(selectAllAccounts);
 
     // Initialize filtered categories for ngx-mat-select-search
-    this.categoryList$.subscribe(categories => {
+    this.categoryList$.pipe(takeUntil(this._onDestroy)).subscribe(categories => {
       this.filteredCategories.next(categories.slice());
     });
 
@@ -235,7 +235,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
   private initializeFormData(): void {
     // Subscribe to amount changes to keep formattedAmount in sync
-    this.transactionForm.get('amount')?.valueChanges.subscribe(value => {
+    this.transactionForm.get('amount')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(value => {
       if (value !== null && value !== undefined && value !== '') {
         const numericValue = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
         if (!isNaN(numericValue) && this.formattedAmount !== this.formatCurrency(numericValue)) {

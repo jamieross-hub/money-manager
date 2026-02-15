@@ -177,7 +177,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
   }
 
   private subscribeToStoreData(): void {
-    this.store.select(CategoriesSelectors.selectAllCategories).subscribe(categories => {
+    this.store.select(CategoriesSelectors.selectAllCategories).pipe(takeUntil(this.destroy$)).subscribe(categories => {
       this.categories = categories.sort((a, b) => {
         // 1. Prioritize categories with budget
         const aHasBudget = a.budget?.hasBudget ?? false;

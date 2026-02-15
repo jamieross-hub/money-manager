@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -14,7 +14,7 @@ import { CategoryService } from 'src/app/util/service/db/category.service';
 import { AccountsService } from 'src/app/util/service/db/accounts.service';
 import { TransactionType, RecurringInterval, TransactionStatus, PaymentMethod } from 'src/app/util/config/enums';
 import { Transaction } from 'src/app/util/models/transaction.model';
-import { Observable, of } from 'rxjs';
+import { Observable, of, Subject, takeUntil } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 import moment from 'moment';
 import { CommonModule } from '@angular/common';
@@ -56,8 +56,10 @@ import { CommonBodyContentComponent } from 'src/app/util/components/dialog/commo
     CommonBodyContentComponent
   ]
 })
-export class AddAccountDialogComponent implements OnInit {
+export class AddAccountDialogComponent implements OnInit, OnDestroy {
   accountForm: FormGroup;
+  private _onDestroy = new Subject<void>();
+
   public userId: any;
   public isSubmitting = false;
   public accountTypes: { value: AccountType, label: string }[] = [
@@ -161,14 +163,14 @@ export class AddAccountDialogComponent implements OnInit {
       }, 100);
 
       // Update balance when loan amount changes
-      this.accountForm.get('loanAmount')?.valueChanges.subscribe(value => {
+      this.accountForm.get('loanAmount')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(value => {
         if (this.accountForm.get('type')?.value === 'loan') {
           this.accountForm.patchValue({ balance: -value }, { emitEvent: false });
         }
       });
 
       // Add/remove validation for loan and credit card fields based on account type
-      this.accountForm.get('type')?.valueChanges.subscribe(type => {
+      this.accountForm.get('type')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(type => {
         const lenderNameControl = this.accountForm.get('lenderName');
         const loanAmountControl = this.accountForm.get('loanAmount');
         const interestRateControl = this.accountForm.get('interestRate');
@@ -231,28 +233,28 @@ export class AddAccountDialogComponent implements OnInit {
       });
 
       // Update remaining balance based on time elapsed since loan start
-      this.accountForm.get('loanAmount')?.valueChanges.subscribe(() => {
+      this.accountForm.get('loanAmount')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(() => {
         this.updateRemainingBalance();
       });
 
-      this.accountForm.get('startDate')?.valueChanges.subscribe(() => {
+      this.accountForm.get('startDate')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(() => {
         this.updateRemainingBalance();
       });
 
-      this.accountForm.get('interestRate')?.valueChanges.subscribe(() => {
+      this.accountForm.get('interestRate')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(() => {
         this.updateRemainingBalance();
       });
 
-      this.accountForm.get('durationMonths')?.valueChanges.subscribe(() => {
+      this.accountForm.get('durationMonths')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(() => {
         this.updateRemainingBalance();
       });
 
-      this.accountForm.get('repaymentFrequency')?.valueChanges.subscribe(() => {
+      this.accountForm.get('repaymentFrequency')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(() => {
         this.updateRemainingBalance();
       });
 
       // Update custom payment when calculated payment changes
-      this.accountForm.get('useCalculatedPayment')?.valueChanges.subscribe(useCalculated => {
+      this.accountForm.get('useCalculatedPayment')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(useCalculated => {
         if (useCalculated) {
           const calculatedPayment = this.getCalculatedMonthlyPayment();
           this.accountForm.patchValue({
@@ -262,7 +264,7 @@ export class AddAccountDialogComponent implements OnInit {
       });
 
       // Update custom payment when loan details change
-      this.accountForm.get('loanAmount')?.valueChanges.subscribe(() => {
+      this.accountForm.get('loanAmount')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(() => {
         if (this.accountForm.get('useCalculatedPayment')?.value) {
           const calculatedPayment = this.getCalculatedMonthlyPayment();
           this.accountForm.patchValue({
@@ -271,7 +273,7 @@ export class AddAccountDialogComponent implements OnInit {
         }
       });
 
-      this.accountForm.get('interestRate')?.valueChanges.subscribe(() => {
+      this.accountForm.get('interestRate')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(() => {
         if (this.accountForm.get('useCalculatedPayment')?.value) {
           const calculatedPayment = this.getCalculatedMonthlyPayment();
           this.accountForm.patchValue({
@@ -280,7 +282,7 @@ export class AddAccountDialogComponent implements OnInit {
         }
       });
 
-      this.accountForm.get('durationMonths')?.valueChanges.subscribe(() => {
+      this.accountForm.get('durationMonths')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(() => {
         if (this.accountForm.get('useCalculatedPayment')?.value) {
           const calculatedPayment = this.getCalculatedMonthlyPayment();
           this.accountForm.patchValue({
@@ -702,4 +704,8 @@ export class AddAccountDialogComponent implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    this._onDestroy.next();
+    this._onDestroy.complete();
+  }
 }
