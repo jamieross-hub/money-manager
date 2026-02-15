@@ -1,7 +1,7 @@
 <app-quick-actions-fab [config]="quickActionsFabConfig" (mainButtonClick)="openAddMobileDialog()"
 	*ngIf="breakpointService.device.isMobile"></app-quick-actions-fab>
 
-<div class="categories-container lg:px-16 xl:px-32 2xl:px-48">
+<div class="categories-container lg:px-16 xl:px-32 2xl:px-48" *ngIf="vm$ | async as vm">
 	<!-- Error Message Display -->
 	<div *ngIf="errorMessage" class="error-message mb-4 p-3 rounded-lg flex items-center justify-between shadow-sm">
 		<p class="error-text text-sm font-medium">{{ errorMessage }}</p>
@@ -35,11 +35,11 @@
 					</div>
 					<mat-card-subtitle class="card-label">Expenses</mat-card-subtitle>
 					<mat-card-title class="card-amount text-error-600">
-						{{ totalExpenseAmount | currency }}
+						{{ vm.summary.totalExpense | currency }}
 					</mat-card-title>
 				</mat-card-header>
 				<mat-card-content>
-					<div class="card-count">{{ expenseCategoryCount }} categories</div>
+					<div class="card-count">{{ vm.summary.expenseCount }} categories</div>
 				</mat-card-content>
 			</mat-card>
 
@@ -51,11 +51,11 @@
 					</div>
 					<mat-card-subtitle class="card-label">Income</mat-card-subtitle>
 					<mat-card-title class="card-amount text-neutral-500">
-						{{ totalIncomeAmount | currency }}
+						{{ vm.summary.totalIncome | currency }}
 					</mat-card-title>
 				</mat-card-header>
 				<mat-card-content>
-					<div class="card-count">{{ incomeCategoryCount }} categories</div>
+					<div class="card-count">{{ vm.summary.incomeCount }} categories</div>
 				</mat-card-content>
 			</mat-card>
 		</section>
@@ -69,11 +69,11 @@
 			</mat-form-field>
 
 			<div class="filter-pills w-full lg:w-[40%] flex flex-row-reverse">
-				<mat-chip-listbox (change)="setFilterType($event.value)" [value]="filterType">
+				<mat-chip-listbox (change)="setFilterType($event.value)" [value]="filterType$ | async">
 					<mat-chip-option value="all">All</mat-chip-option>
 					<mat-chip-option value="expense">Expense</mat-chip-option>
 					<mat-chip-option value="income">Income</mat-chip-option>
-					@for (group of availableGroups; track group) {
+					@for (group of vm.availableGroups; track group) {
 					<mat-chip-option [value]="group">{{ group }}</mat-chip-option>
 					}
 				</mat-chip-listbox>
@@ -82,14 +82,14 @@
 
 		<!-- Categories List -->
 		<section class="categories-list-section">
-			<div *ngIf="filteredCategories.length === 0" class="empty-state">
+			<div *ngIf="vm.categories.length === 0" class="empty-state">
 				<mat-icon>search_off</mat-icon>
 				<p>No categories found.</p>
 			</div>
 
-			<mat-card class="categories-list-card" *ngIf="filteredCategories.length > 0">
+			<mat-card class="categories-list-card" *ngIf="vm.categories.length > 0">
 				<mat-list class="pt-0">
-					@for (category of filteredCategories; track category.id) {
+					@for (category of vm.categories; track category.id) {
 					<!-- Main Categories -->
 					@if(!category.isSubCategory && !category.parentCategoryId) {
 					<mat-list-item class="category-item-wrapper" [class.selected]="selectedCategoryId === category.id"
@@ -104,17 +104,16 @@
 						<div matListItemMeta class="item-right">
 							<div class="amount-container">
 								<span class="category-amount">
-									{{ calculateTotalSpent(category) | currency:{round: true} }}
+									{{ category.totalSpent | currency:{round: true} }}
 									<span class="period" *ngIf="!breakpointService.device.isMobile">/ {{
 										appViewService.getViewLabel() }}</span>
 								</span>
 
 								<!-- Budget Progress -->
 								<div class="budget-progress-wrapper" *ngIf="category.budget?.hasBudget">
-									<mat-progress-bar mode="determinate"
-										[value]="calculateBudgetProgressPercentage(category)"
-										[color]="getBudgetProgressColor(category)"
-										[ngClass]="getBudgetStatusClass(category)"></mat-progress-bar>
+									<mat-progress-bar mode="determinate" [value]="category.budgetProgress"
+										[color]="category.budgetColor"
+										[ngClass]="category.budgetStatusClass"></mat-progress-bar>
 								</div>
 							</div>
 
@@ -125,10 +124,6 @@
 					<ng-container *ngIf="selectedCategoryId === category.id">
 						<div class="category-actions-expansion">
 							<div class="expansion-header">
-								<!-- <div class="expansion-title">
-									<mat-icon>info</mat-icon>
-									Stats & Controls
-								</div> -->
 								<div class="action-buttons-compact">
 									<!-- Edit -->
 									<button mat-icon-button class="expansion-action-btn edit-btn"
@@ -153,15 +148,6 @@
 										<span class="btn-label">Remove Budget</span>
 									</button>
 
-									<!-- Select Parent Category -->
-									<!-- <button mat-icon-button class="expansion-action-btn tree-btn"
-										*ngIf="!category.isSubCategory && !category.subCategories?.length"
-										(click)="openParentCategorySelector(category)"
-										matTooltip="Select Parent Category">
-										<mat-icon>account_tree</mat-icon>
-										<span class="btn-label">Select Parent</span>
-									</button> -->
-
 									<!-- Remove from Parent -->
 
 									<button mat-icon-button class="expansion-action-btn tree-off-btn"
@@ -182,7 +168,7 @@
 							</div>
 
 							<div class="category-details-expanded">
-								<div class="details-container" *ngIf="getCategoryStats(category) as stats">
+								<div class="details-container" *ngIf="category.stats as stats">
 									<div class="detail-row">
 										<div class="detail-label">
 											<mat-icon class="detail-icon">analytics</mat-icon>
@@ -215,7 +201,7 @@
 										</div>
 										<div class="detail-value">
 											{{ category.budget?.budgetAmount | currency }}
-											({{ calculateBudgetProgressPercentage(category).toFixed(0) }}%)
+											({{ category.budgetProgress.toFixed(0) }}%)
 										</div>
 									</div>
 								</div>
@@ -240,16 +226,15 @@
 							<div matListItemMeta class="item-right">
 								<div class="amount-container">
 									<span class="category-amount">
-										{{ calculateTotalSpent(subCategory)| currency }}
+										{{ subCategory.totalSpent | currency }}
 										<span class="period">/ {{ appViewService.getViewLabel() }}</span>
 									</span>
 
 									<!-- Budget Progress for Subcategory -->
 									<div class="budget-progress-wrapper" *ngIf="subCategory.budget?.hasBudget">
-										<mat-progress-bar mode="determinate"
-											[value]="calculateBudgetProgressPercentage(subCategory)"
-											[color]="getBudgetProgressColor(subCategory)"
-											[ngClass]="getBudgetStatusClass(subCategory)"></mat-progress-bar>
+										<mat-progress-bar mode="determinate" [value]="subCategory.budgetProgress"
+											[color]="subCategory.budgetColor"
+											[ngClass]="subCategory.budgetStatusClass"></mat-progress-bar>
 									</div>
 								</div>
 
@@ -299,7 +284,7 @@
 								</div>
 
 								<div class="category-details-expanded subcategory-details-expanded">
-									<div class="details-container" *ngIf="getCategoryStats(subCategory) as stats">
+									<div class="details-container" *ngIf="subCategory.stats as stats">
 										<div class="detail-row">
 											<div class="detail-label">
 												<mat-icon class="detail-icon">analytics</mat-icon>
@@ -325,7 +310,7 @@
 											</div>
 											<div class="detail-value">
 												{{ subCategory.budget?.budgetAmount | currency }}
-												({{ calculateBudgetProgressPercentage(subCategory).toFixed(0) }}%)
+												({{ subCategory.budgetProgress.toFixed(0) }}%)
 											</div>
 										</div>
 									</div>
@@ -335,7 +320,6 @@
 						}
 					</div>
 					}
-					<!-- <mat-divider></mat-divider> -->
 					}
 					}
 				</mat-list>

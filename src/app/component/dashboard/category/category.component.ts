@@ -1,10 +1,10 @@
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, ChangeDetectionStrategy } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { MatDialog } from '@angular/material/dialog';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { Subject, Observable } from 'rxjs';
-import { take, takeUntil } from 'rxjs/operators';
+import { Subject, Observable, BehaviorSubject, combineLatest } from 'rxjs';
+import { take, takeUntil, map, startWith, distinctUntilChanged, debounceTime } from 'rxjs/operators';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { MobileCategoryAddEditPopupComponent } from './mobile-category-add-edit-popup/mobile-category-add-edit-popup.component';
@@ -31,7 +31,6 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { CategoryService } from 'src/app/util/service/db/category.service';
 import { Router } from '@angular/router';
 import { FormControl } from '@angular/forms';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 
 import { CommonModule } from '@angular/common';
@@ -55,6 +54,7 @@ import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
   selector: 'user-category',
   templateUrl: './category.component.html',
   styleUrls: ['./category.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
     CommonModule,
@@ -88,36 +88,39 @@ export class CategoryComponent implements OnInit, OnDestroy {
   @Input() isChildView: boolean = false;
 
   public isLoading$: Observable<boolean>;
-  // public error$: Observable<any>;
   public transactions$: Observable<Transaction[]>;
-  public Math = Math; // Make Math available in template
+  public Math = Math;
 
-  public categories!: Category[];
-  public transactions: Transaction[] = [];
-  public isLoading: boolean = false;
-  public errorMessage: string = '';
+  // Reactive State
+  public searchText$ = new BehaviorSubject<string>('');
+  public filterType$ = new BehaviorSubject<'all' | 'expense' | 'income'>('all');
+  public selectedGroup$ = new BehaviorSubject<string | null>(null);
 
+  // Derived Streams
+  public vm$: Observable<{
+    categories: (Category & {
+      totalSpent: number;
+      budgetProgress: number;
+      budgetColor: string;
+      budgetStatusClass: string;
+      stats: any;
+    })[];
+    summary: { totalExpense: number; totalIncome: number; expenseCount: number; incomeCount: number };
+    availableGroups: string[];
+  }>;
 
-  public isListViewMode: boolean = false; // Add this property for list view toggle
-
-  // Search and Filter
   public searchControl = new FormControl('');
-  public searchText: string = '';
-  public filterType: 'all' | 'expense' | 'income' = 'all';
-  public selectedGroup: string | null = null;
-  public selectedCategoryId: string | null = null;
-  public availableGroups: string[] = [];
-
-  // Summary Data
-  public totalExpenseAmount: number = 0;
-  public totalIncomeAmount: number = 0;
-  public expenseCategoryCount: number = 0;
-  public incomeCategoryCount: number = 0;
-
-
   public userId: string = '';
   private destroy$ = new Subject<void>();
   public userCurrency$: Observable<string | undefined>;
+
+  // UI State
+  public isListViewMode: boolean = false;
+  public selectedCategoryId: string | null = null;
+  public errorMessage: string = '';
+
+  // Local snapshot for dialogs and helpers
+  private _categoriesSnapshot: any[] = [];
 
   constructor(
     private auth: Auth,
@@ -135,14 +138,97 @@ export class CategoryComponent implements OnInit, OnDestroy {
   ) {
 
     this.isLoading$ = this.store.select(CategoriesSelectors.selectCategoriesLoading);
-    // this.error$ = this.store.select(CategoriesSelectors.selectCategoriesError);
     this.transactions$ = this.store.select(TransactionsSelectors.selectAllTransactions);
     this.userCurrency$ = this.store.select(ProfileSelectors.selectUserCurrency);
+
+    // Main ViewModel Stream
+    this.vm$ = combineLatest([
+      this.store.select(CategoriesSelectors.selectAllCategories),
+      this.transactions$,
+      this.appViewService.appView$,
+      this.searchText$,
+      this.filterType$,
+      this.selectedGroup$
+    ]).pipe(
+      map(([categories, transactions, appView, searchText, filterType, selectedGroup]) => {
+        // 1. Process Data & Compute Stats for each category
+        const processedCategories = categories.map(cat => {
+          const catTransactions = transactions.filter(t => t.categoryId === cat.id);
+
+          // Calculate total spent based on current view
+          const viewTransactions = catTransactions.filter(t => this.appViewService.isDateInView(t.date));
+          const totalSpent = viewTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+          // Calculate budget stuff
+          let budgetProgress = 0;
+          let budgetColor = 'primary';
+          let budgetStatusClass = '';
+
+          if (cat.budget?.hasBudget) {
+            const budgetSpent = this.calculateBudgetSpentInternal(cat, transactions);
+            const budgetAmount = cat.budget.budgetAmount || 0;
+            budgetProgress = budgetAmount > 0 ? Math.min(100, (budgetSpent / budgetAmount) * 100) : 0;
+
+            const threshold = cat.budget.budgetAlertThreshold || 80;
+            budgetColor = this.budgetService.getBudgetProgressColor(cat, budgetProgress, threshold);
+
+            if (budgetProgress >= 90) budgetStatusClass = 'danger';
+            else if (budgetProgress >= 75) budgetStatusClass = 'warning';
+            else budgetStatusClass = 'safe';
+          }
+
+          // Calculate detailed stats
+          const stats = this.calculateCategoryStatsInternal(cat, catTransactions);
+
+          return {
+            ...cat,
+            totalSpent,
+            budgetProgress,
+            budgetColor,
+            budgetStatusClass,
+            stats
+          };
+        });
+
+        // 2. Filter & Sort
+        const filtered = processedCategories.filter(category => {
+          const matchesSearch = !searchText || category.name.toLowerCase().includes(searchText.toLowerCase());
+          const matchesType = filterType === 'all' || category.type.toLowerCase() === filterType;
+          const matchesGroup = !selectedGroup || category.group === selectedGroup;
+          return matchesSearch && matchesType && matchesGroup;
+        }).sort((a, b) => {
+          // 1. Prioritize categories with budget
+          const aHasBudget = a.budget?.hasBudget ?? false;
+          const bHasBudget = b.budget?.hasBudget ?? false;
+          if (aHasBudget !== bHasBudget) return aHasBudget ? -1 : 1;
+
+          // 2. Sort by Spent Amount (High to Low)
+          return b.totalSpent - a.totalSpent;
+        });
+
+        const viewTransactions = transactions.filter(t => this.appViewService.isDateInView(t.date));
+        const totalExpense = viewTransactions.filter(t => t.type === TransactionType.EXPENSE).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        const totalIncome = viewTransactions.filter(t => t.type === TransactionType.INCOME).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+        const expenseCount = categories.filter(c => c.type === 'expense').length;
+        const incomeCount = categories.filter(c => c.type === 'income').length;
+
+        const availableGroups = [...new Set(categories.map(c => c.group).filter(g => !!g))] as string[];
+
+        // Update snapshot for synchronous/dialog usage (it is safe to mutate local private state in map)
+        this._categoriesSnapshot = processedCategories;
+
+        return {
+          categories: filtered,
+          summary: { totalExpense, totalIncome, expenseCount, incomeCount },
+          availableGroups
+        };
+      })
+    );
   }
 
   ngOnInit(): void {
     this.initializeComponent();
-    this.subscribeToStoreData();
     this.setupSearch();
   }
 
@@ -157,7 +243,6 @@ export class CategoryComponent implements OnInit, OnDestroy {
       this.errorMessage = 'User not authenticated';
       return;
     }
-
     this.userId = userId;
     this.loadUserCategories();
     this.loadUserTransactions();
@@ -176,257 +261,62 @@ export class CategoryComponent implements OnInit, OnDestroy {
     this.store.dispatch(ProfileActions.loadProfile({ userId: this.userId }));
   }
 
-  private subscribeToStoreData(): void {
-    this.store.select(CategoriesSelectors.selectAllCategories).pipe(takeUntil(this.destroy$)).subscribe(categories => {
-      this.categories = categories.sort((a, b) => {
-        // 1. Prioritize categories with budget
-        const aHasBudget = a.budget?.hasBudget ?? false;
-        const bHasBudget = b.budget?.hasBudget ?? false;
-        if (aHasBudget !== bHasBudget) return aHasBudget ? -1 : 1;
-
-        if (this.breakpointService.device.isDesktop) {
-          const aHasSub = (a.subCategories?.length ?? 0) > 0;
-          const bHasSub = (b.subCategories?.length ?? 0) > 0;
-          if (aHasSub !== bHasSub) return aHasSub ? 1 : -1;
-        } else {
-          // 2. Prioritize categories with subcategories
-          const aHasSub = (a.subCategories?.length ?? 0) > 0;
-          const bHasSub = (b.subCategories?.length ?? 0) > 0;
-          if (aHasSub !== bHasSub) return aHasSub ? -1 : 1;
-
-        }
-
-
-        // 3. Alphabetical order by name
-        return a.name.localeCompare(b.name);
-      });
-      this.availableGroups = [...new Set(this.categories.map(c => c.group).filter(g => !!g))] as string[];
-      this.calculateSummaryData(this.appViewService.appView);
-    });
-
-    this.transactions$.pipe(takeUntil(this.destroy$)).subscribe(transactions => {
-      this.transactions = transactions;
-      this.calculateSummaryData(this.appViewService.appView);
-    });
-
-    this.isLoading$.pipe(takeUntil(this.destroy$)).subscribe(loading => {
-      this.isLoading = loading;
-    });
-
-    // Subscribe to profile changes to get user preferences
-    this.appViewService.appView$.pipe(takeUntil(this.destroy$)).subscribe(appView => {
-      this.calculateSummaryData(appView);
-    });
-
-
-
-
-    // this.error$.pipe(takeUntil(this.destroy$)).subscribe(error => {
-    //   if (error) {
-    //     this.errorMessage = 'Failed to load categories';
-    //     console.error('Error loading categories:', error);
-    //     this.notificationService.error('Failed to load categories');
-    //   }
-    // });
-  }
-
-
-
-
-
-
-
-  public trackByCategoryId(index: number, category: Category): string | number {
-    return category.id || index;
-  }
-
-  public clearError(): void {
-    this.errorMessage = '';
-  }
-
-
-
-  public openMobileDialog(category?: Category): void {
-
-    const dialogRef = this.dialog.open(MobileCategoryAddEditPopupComponent, {
-      panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
-      data: {
-        category: category ? { ...category } : null,
-        isEdit: category ? true : false,
-        allCategories: this.categories
-      }
-    });
-
-    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
-      if (result) {
-        this.loadUserCategories();
-      }
+  private setupSearch(): void {
+    this.searchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(value => {
+      this.searchText$.next((value as string) || '');
     });
   }
 
-  public openAddMobileDialog(): void {
-    if (this.breakpointService.device.isMobile) {
-      this.hapticFeedback.lightVibration();
-    }
-    this.openMobileDialog();
-  }
-
-
-
-  public getSubCategoriesForCategory(categoryId: string | null | undefined): Category[] {
-    if (!categoryId || !this.categories) return [];
-    return this.categories.filter(cat =>
-      cat.isSubCategory && cat.parentCategoryId === categoryId
-    );
-  }
-
-  public toggleExpandCategory(category: Category, event: Event): void {
-    event.stopPropagation();
-
-    if (this.selectedCategoryId === category.id) {
-      this.selectedCategoryId = null;
+  public setFilterType(type: string): void {
+    if (type === 'all' || type === 'expense' || type === 'income') {
+      this.filterType$.next(type as 'all' | 'expense' | 'income');
+      this.selectedGroup$.next(null);
     } else {
-      this.selectedCategoryId = category.id || null;
-      if (this.selectedCategoryId && this.breakpointService.device.isMobile) {
-        this.hapticFeedback.lightVibration();
-      }
+      this.selectedGroup$.next(type);
+      this.filterType$.next('all'); // Reset type filter when a group is selected
     }
   }
 
-  public isCategoryExpanded(categoryId: string | undefined): boolean {
-    return this.selectedCategoryId === categoryId;
-  }
+  // --- Calculation Helpers ---
 
-
-
-
-
-
-
-  /**
-   * Calculate budget spent for a category based on transactions
-   */
-  public calculateBudgetSpent(category: Category): number {
-    if (!category.budget?.hasBudget || !category.budget?.budgetAmount) {
-      return 0;
-    }
-
-    const categoryTransactions = this.transactions.filter(t =>
+  private calculateBudgetSpentInternal(category: Category, transactions: Transaction[]): number {
+    if (!category.budget?.hasBudget) return 0;
+    const categoryTransactions = transactions.filter(t =>
       t.categoryId === category.id &&
       t.type === TransactionType.EXPENSE
     );
 
-    // Filter transactions within the budget period
     const budgetStartDate = category.budget.budgetStartDate;
     const budgetEndDate = category.budget.budgetEndDate;
-
     let filteredTransactions = categoryTransactions;
 
     if (budgetStartDate) {
       const startDate = this.dateService.toDate(budgetStartDate);
-      if (!startDate) {
-        return 0;
+      if (startDate) {
+        filteredTransactions = filteredTransactions.filter(t => {
+          const txDate = this.dateService.toDate(t.date);
+          return txDate && txDate >= startDate;
+        });
       }
-      filteredTransactions = filteredTransactions.filter(t => {
-        const txDate = this.dateService.toDate(t.date);
-        return txDate && txDate >= startDate;
-      });
     }
 
     if (budgetEndDate) {
       const endDate = this.dateService.toDate(budgetEndDate);
-      if (!endDate) {
-        return 0;
+      if (endDate) {
+        filteredTransactions = filteredTransactions.filter(t => {
+          const txDate = this.dateService.toDate(t.date);
+          return txDate && txDate <= endDate;
+        });
       }
-      filteredTransactions = filteredTransactions.filter(t => {
-        const txDate = this.dateService.toDate(t.date);
-        return txDate && txDate <= endDate;
-      });
     }
-
     return filteredTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
   }
 
-  /**
-   * Calculate budget progress percentage for a category
-   */
-  public calculateBudgetProgressPercentage(category: Category): number {
-    if (!category.budget?.hasBudget || !category.budget?.budgetAmount) {
-      return 0;
-    }
-
-    const spent = this.calculateBudgetSpent(category);
-    const budgetAmount = category.budget.budgetAmount || 0;
-
-    if (budgetAmount === 0) return 0;
-
-    return Math.min(100, (spent / budgetAmount) * 100);
-  }
-
-  public getBudgetProgressColor(category: Category, budgetProgressPercentage?: number, budgetAlertThreshold?: number): string {
-    const progress = budgetProgressPercentage ?? this.calculateBudgetProgressPercentage(category);
-    const threshold = budgetAlertThreshold ?? (category.budget?.budgetAlertThreshold || 80);
-    return this.budgetService.getBudgetProgressColor(category, progress, threshold);
-  }
-
-  public formatBudgetPeriod(period: string | undefined): string {
-    return this.budgetService.formatBudgetPeriod(period);
-  }
-
-
-
-
-
-
-
-  public toggleListViewMode(): void {
-    this.isListViewMode = !this.isListViewMode;
-
-    // Save the preference to user profile
-    this.store.select(ProfileSelectors.selectUserPreferences).pipe(takeUntil(this.destroy$)).subscribe(preferences => {
-      if (preferences) {
-        const updatedPreferences = {
-          ...preferences,
-          categoryListViewMode: this.isListViewMode
-        };
-        this.store.dispatch(ProfileActions.updatePreferences({
-          userId: this.userId,
-          preferences: updatedPreferences
-        }));
-      }
-    });
-  }
-
-  /**
-   * Get recent transactions for a category
-   */
-  public getRecentTransactions(category: Category): Transaction[] {
-    if (!category || !category.name) return [];
-
-    return this.transactions
-      .filter(transaction =>
-        transaction.categoryId === category.id &&
-        moment(this.dateService.toDate(transaction.date)).isSame(moment(), 'month')
-      )
-  }
-
-  /**
-   * Get category statistics
-   */
-  public getCategoryStats(category: Category): any {
-    if (!category || !category.name) {
-      return {
-        totalTransactions: 0,
-        totalSpent: 0,
-        averageTransaction: 0,
-        largestTransaction: 0,
-        thisMonth: 0,
-        lastMonth: 0
-      };
-    }
-
-    const categoryTransactions = this.transactions.filter(t => t.categoryId === category.id);
-
+  private calculateCategoryStatsInternal(category: Category, categoryTransactions: Transaction[]): any {
     if (categoryTransactions.length === 0) {
       return {
         totalTransactions: 0,
@@ -438,13 +328,11 @@ export class CategoryComponent implements OnInit, OnDestroy {
       };
     }
 
-    // Calculate basic stats
     const totalTransactions = categoryTransactions.length;
     const totalSpent = categoryTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
     const averageTransaction = totalSpent / totalTransactions;
     const largestTransaction = Math.max(...categoryTransactions.map(t => Math.abs(t.amount)));
 
-    // Calculate monthly stats
     const now = new Date();
     const thisMonth = now.getMonth();
     const thisYear = now.getFullYear();
@@ -474,46 +362,79 @@ export class CategoryComponent implements OnInit, OnDestroy {
     };
   }
 
-  /**
-   * Get budget status class for styling
-   */
-  public getBudgetStatusClass(category: Category, budgetProgressPercentage?: number): string {
-    if (!category.budget?.hasBudget) return '';
+  // --- UI Action Methods ---
 
-    const percentage = budgetProgressPercentage ?? this.calculateBudgetProgressPercentage(category);
-    if (percentage >= 90) return 'danger';
-    if (percentage >= 75) return 'warning';
-    return 'safe';
+  public trackByCategoryId(index: number, category: Category): string | number {
+    return category.id || index;
   }
 
-  /**
-   * Get remaining budget class for styling
-   */
-  public getRemainingBudgetClass(category: Category, budgetSpent?: number): string {
-    if (!category.budget?.hasBudget) return '';
-
-    const spent = budgetSpent ?? this.calculateBudgetSpent(category);
-    const remaining = (category.budget?.budgetAmount || 0) - spent;
-    if (remaining <= 0) return 'danger';
-    if (remaining < (category.budget?.budgetAmount || 0) * 0.1) return 'warning';
-    return 'safe';
+  public clearError(): void {
+    this.errorMessage = '';
   }
 
-  public calculateTotalSpent(category: Category): number {
-    const categoryTransactions = this.transactions.filter(t => {
-      if (t.categoryId !== category.id) return false;
-      return this.appViewService.isDateInView(t.date);
+  public openMobileDialog(category?: Category): void {
+    const dialogRef = this.dialog.open(MobileCategoryAddEditPopupComponent, {
+      panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
+      data: {
+        category: category ? { ...category } : null,
+        isEdit: category ? true : false,
+        allCategories: this._categoriesSnapshot // Use snapshot
+      }
     });
-    return categoryTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
+      if (result) {
+        this.loadUserCategories();
+      }
+    });
   }
 
-  public calculateTotalIncomePerMonth(category: Category): number {
-    const categoryTransactions = this.transactions.filter(t => t.categoryId === category.id);
-    const totalIncome = categoryTransactions.reduce((sum, t) => sum + t.amount, 0);
-    return totalIncome;
+  public openAddMobileDialog(): void {
+    if (this.breakpointService.device.isMobile) {
+      this.hapticFeedback.lightVibration();
+    }
+    this.openMobileDialog();
   }
 
+  public getSubCategoriesForCategory(categoryId: string | null | undefined): any[] {
+    // Return enhanced items from snapshot
+    if (!categoryId || !this._categoriesSnapshot) return [];
+    return this._categoriesSnapshot.filter(cat =>
+      cat.isSubCategory && cat.parentCategoryId === categoryId
+    );
+  }
 
+  public toggleExpandCategory(category: Category, event: Event): void {
+    event.stopPropagation();
+    if (this.selectedCategoryId === category.id) {
+      this.selectedCategoryId = null;
+    } else {
+      this.selectedCategoryId = category.id || null;
+      if (this.selectedCategoryId && this.breakpointService.device.isMobile) {
+        this.hapticFeedback.lightVibration();
+      }
+    }
+  }
+
+  public isCategoryExpanded(categoryId: string | undefined): boolean {
+    return this.selectedCategoryId === categoryId;
+  }
+
+  public toggleListViewMode(): void {
+    this.isListViewMode = !this.isListViewMode;
+    this.store.select(ProfileSelectors.selectUserPreferences).pipe(takeUntil(this.destroy$), take(1)).subscribe(preferences => {
+      if (preferences) {
+        const updatedPreferences = {
+          ...preferences,
+          categoryListViewMode: this.isListViewMode
+        };
+        this.store.dispatch(ProfileActions.updatePreferences({
+          userId: this.userId,
+          preferences: updatedPreferences
+        }));
+      }
+    });
+  }
 
   public deleteCategory(category: Category): void {
     this.categoryService.performDelete(category, this.userId);
@@ -524,13 +445,12 @@ export class CategoryComponent implements OnInit, OnDestroy {
       panelClass: 'responsive-dialog',
       data: {
         category: category,
-        isEdit: category.budget?.hasBudget || false // Pass isEdit correctly
+        isEdit: category.budget?.hasBudget || false
       }
     });
 
     dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
       if (result) {
-        // Dispatch update action to save the budget
         this.store.dispatch(CategoriesActions.updateCategory({
           userId: this.userId,
           categoryId: category.id!,
@@ -538,19 +458,11 @@ export class CategoryComponent implements OnInit, OnDestroy {
           categoryType: category.type,
           icon: category.icon,
           color: category.color,
-          budgetData: result, // This contains the new budget data
+          budgetData: result,
           parentCategoryId: category.parentCategoryId,
           isSubCategory: category.isSubCategory
         }));
-
-        // Update local category object to reflect changes immediately
-        const categoryIndex = this.categories.findIndex(c => c.id === category.id);
-        if (categoryIndex !== -1) {
-          this.categories[categoryIndex] = {
-            ...this.categories[categoryIndex],
-            budget: result
-          };
-        }
+        // Note: ViewModel automatically updates via store effect -> selector -> combineLatest
       }
     });
   }
@@ -560,7 +472,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
       panelClass: 'responsive-dialog',
       data: {
         category: category,
-        allCategories: this.categories
+        allCategories: this._categoriesSnapshot
       }
     });
 
@@ -573,16 +485,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
   public removeFromParentCategory(category: Category): void {
     if (!category.parentCategoryId && !category.isSubCategory) return;
-
-    // Logic to removing parent requires updating the category object
-    // Assuming we update the category to set parentCategoryId to null/undefined and isSubCategory to false
-    // But verify API/Model support. Usually backend handles it or we update object.
-    // Based on `categoryService`, updateCategory method likely exists.
-
     const updatedCategory = { ...category };
-    updatedCategory.parentCategoryId = undefined;
-    updatedCategory.isSubCategory = false;
-
     this.store.dispatch(CategoriesActions.updateCategory({
       userId: this.userId,
       categoryId: category.id!,
@@ -591,14 +494,13 @@ export class CategoryComponent implements OnInit, OnDestroy {
       icon: category.icon,
       color: category.color,
       budgetData: category.budget,
-      parentCategoryId: null, // Set to null to remove parent
+      parentCategoryId: null,
       isSubCategory: false
     }));
   }
 
   public removeBudget(category: Category): void {
     if (!category.budget) return;
-
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
@@ -613,7 +515,6 @@ export class CategoryComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
       if (result) {
         const updatedBudget: any = { ...category.budget, hasBudget: false, budgetAmount: 0 };
-
         this.store.dispatch(CategoriesActions.updateCategory({
           userId: this.userId,
           categoryId: category.id!,
@@ -625,82 +526,8 @@ export class CategoryComponent implements OnInit, OnDestroy {
           parentCategoryId: category.parentCategoryId,
           isSubCategory: category.isSubCategory
         }));
-
         this.notificationService.success('Budget removed successfully');
       }
     });
-
-  }
-
-  private setupSearch(): void {
-    this.searchControl.valueChanges.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      takeUntil(this.destroy$)
-    ).subscribe(value => {
-      this.searchText = value || '';
-    });
-  }
-
-  public setFilterType(type: string): void {
-    if (type === 'all' || type === 'expense' || type === 'income') {
-      this.filterType = type as 'all' | 'expense' | 'income';
-      this.selectedGroup = null;
-    } else {
-      this.selectedGroup = type;
-      this.filterType = 'all'; // Reset type filter when a group is selected
-    }
-  }
-
-
-
-  get filteredCategories(): Category[] {
-    if (!this.categories) return [];
-
-    return this.categories.filter(category => {
-      const matchesSearch = !this.searchText || category.name.toLowerCase().includes(this.searchText.toLowerCase());
-      const matchesType = this.filterType === 'all' || category.type.toLowerCase() === this.filterType;
-      const matchesGroup = !this.selectedGroup || category.group === this.selectedGroup;
-
-      return matchesSearch && matchesType && matchesGroup;
-    }).sort((a, b) => this.calculateTotalSpent(b) - this.calculateTotalSpent(a));
-  }
-
-  public calculateSummaryData(appView: AppView): void {
-    if (!this.categories || !this.transactions) return;
-
-    // Filter transactions based on app view
-    const filteredTransactions = this.transactions.filter(t => {
-      return this.appViewService.isDateInView(t.date);
-    });
-
-    // Calculate totals
-    this.totalExpenseAmount = filteredTransactions
-      .filter(t => t.type === TransactionType.EXPENSE)
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-    this.totalIncomeAmount = filteredTransactions
-      .filter(t => t.type === TransactionType.INCOME)
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-    // Calculate category counts
-    this.expenseCategoryCount = this.categories.filter(c => c.type === 'expense').length;
-    this.incomeCategoryCount = this.categories.filter(c => c.type === 'income').length;
-  }
-
-  // --- Methods for Tests ---
-
-  public isBudgetSummaryExpanded: boolean = false;
-
-  public toggleBudgetSummaryExpansion(): void {
-    this.isBudgetSummaryExpanded = !this.isBudgetSummaryExpanded;
-  }
-
-  public calculateBudgetRemaining(category: Category): number {
-    if (!category.budget?.hasBudget || !category.budget?.budgetAmount) {
-      return 0;
-    }
-    const spent = this.calculateBudgetSpent(category);
-    return Math.max(0, category.budget.budgetAmount - spent);
   }
 }

@@ -1,15 +1,15 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterModule } from '@angular/router';
-import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
-import { CommonSyncService } from '../../../util/service/common-sync.service';
-import { Subscription } from 'rxjs';
+import { Router, NavigationEnd } from '@angular/router';
+import { CommonSyncService, NetworkStatus } from '../../../util/service/common-sync.service';
+import { Subject } from 'rxjs'; // Removed Subscription import as using Subject/takeUntil
 import { MatDialog } from '@angular/material/dialog';
 import { HapticFeedbackService } from '../../../util/service/haptic-feedback.service';
-import { filter } from 'rxjs/operators';
+import { filter, takeUntil } from 'rxjs/operators';
 import { MobileAddTransactionComponent } from '../transaction-list/add-transaction/mobile-add-transaction/mobile-add-transaction.component';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 
@@ -18,12 +18,16 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.scss'],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, TranslateModule, MatIconModule, MatButtonModule, RouterModule]
 })
 export class FooterComponent implements OnInit, OnDestroy {
-  private routeSubscription?: Subscription;
   public hideFooter: boolean = false;
   private hideFooterForRoutes: string[] = [];
+
+  // Local state for network status to support OnPush
+  private networkStatus: NetworkStatus = { online: false };
+  private destroy$ = new Subject<void>();
 
   constructor(
     private commonSyncService: CommonSyncService,
@@ -31,23 +35,40 @@ export class FooterComponent implements OnInit, OnDestroy {
     private _dialog: MatDialog,
     private hapticFeedback: HapticFeedbackService,
     public breakpointService: BreakpointService,
+    private cdr: ChangeDetectorRef
   ) {
-
+    // Initialize with current status
+    this.networkStatus = this.commonSyncService.getCurrentNetworkStatus();
   }
 
   ngOnInit() {
-    this.routeSubscription = this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
+    // Subscribe to Router Events
+    this.router.events
+      .pipe(
+        filter(event => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
       .subscribe(() => {
         this.hideFooter = this.hideFooterForRoutes.includes(this.router.url);
+        this.cdr.markForCheck(); // Trigger CD on route change
+      });
+
+    // Subscribe to Network Status
+    this.commonSyncService.networkStatus$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(status => {
+        this.networkStatus = status;
+        this.cdr.markForCheck(); // Trigger CD on network status change
       });
   }
 
   ngOnDestroy() {
-    this.routeSubscription?.unsubscribe();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  // Route checking methods for highlighting
+  // Route checking methods
+  // Note: These will be re-evaluated when CD runs (which happens on route change via subscription)
   isHomeActive(): boolean {
     return this.router.url === '/dashboard' || this.router.url === '/dashboard/home';
   }
@@ -109,28 +130,22 @@ export class FooterComponent implements OnInit, OnDestroy {
 
   scanReceipt() {
     console.log('Scan receipt clicked');
-    // TODO: Implement receipt scanning functionality
     alert('Receipt scanning feature coming soon!');
   }
 
   openAddTransactionModal() {
-    console.log('Open add transaction modal clicked');
     this.router.navigate(['/dashboard/add-transaction']);
   }
 
   openSettings() {
-    console.log('Settings clicked');
     this.router.navigate(['/dashboard/settings']);
   }
 
   openReports() {
-    console.log('Reports clicked');
     this.router.navigate(['/dashboard/reports']);
   }
 
   openSearch() {
-    console.log('Search clicked');
-    // TODO: Implement search functionality
     alert('Search feature coming soon!');
   }
 
@@ -148,8 +163,9 @@ export class FooterComponent implements OnInit, OnDestroy {
     return new Date().toISOString().split('T')[0];
   }
 
+  // Network Status Helpers (using local state)
   getNetworkStatusClass(): string {
-    const status = this.commonSyncService.getCurrentNetworkStatus();
+    const status = this.networkStatus;
     if (!status.online) return 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300';
     if (status.effectiveType === '4g') return 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300';
     if (status.effectiveType === '3g') return 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300';
@@ -157,7 +173,7 @@ export class FooterComponent implements OnInit, OnDestroy {
   }
 
   getNetworkIndicatorClass(): string {
-    const status = this.commonSyncService.getCurrentNetworkStatus();
+    const status = this.networkStatus;
     if (!status.online) return 'bg-red-500';
     if (status.effectiveType === '4g') return 'bg-green-500';
     if (status.effectiveType === '3g') return 'bg-yellow-500';
@@ -165,12 +181,11 @@ export class FooterComponent implements OnInit, OnDestroy {
   }
 
   getNetworkStatusText(): string {
-    const status = this.commonSyncService.getCurrentNetworkStatus();
+    const status = this.networkStatus;
     if (!status.online) return 'Offline';
     if (status.effectiveType === '4g') return '4G';
     if (status.effectiveType === '3g') return '3G';
     if (status.effectiveType === '2g') return '2G';
     return 'Online';
   }
-
-} 
+}

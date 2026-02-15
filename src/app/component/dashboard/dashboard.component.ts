@@ -1,10 +1,11 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HeaderComponent } from './header/header.component';
 import { FooterComponent } from './footer/footer.component';
 import { Router, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs';
+import { filter, takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { AppState } from 'src/app/store/app.state';
 import { Store } from '@ngrx/store';
@@ -23,12 +24,13 @@ import { RecurringTransactionService } from 'src/app/util/service/recurring-tran
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterModule, HeaderComponent, FooterComponent]
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit, OnDestroy {
   @ViewChild('mainContent') mainContent!: ElementRef<HTMLElement>;
   isMobile = false;
-
+  private destroy$ = new Subject<void>();
 
   constructor(
     private router: Router,
@@ -36,49 +38,61 @@ export class DashboardComponent {
     private store: Store<AppState>,
     private userService: UserService,
     private invitationPopupService: InvitationPopupService,
-    private recurringTransactionService: RecurringTransactionService
-  ) {
-    this.breakpointObserver
-      .observe([Breakpoints.Handset])
-      .subscribe((result) => {
-        this.isMobile = result.matches;
-      });
-  }
+    private recurringTransactionService: RecurringTransactionService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit() {
-    // Load App Data **********
-    this.store.dispatch(
-      loadProfile({ userId: this.userService.userAuth$.value?.uid || '' })
-    );
-    this.store.dispatch(
-      loadAccounts({ userId: this.userService.userAuth$.value?.uid || '' })
-    );
-    this.store.dispatch(
-      loadCategories({ userId: this.userService.userAuth$.value?.uid || '' })
-    );
-    this.store.dispatch(
-      loadBudgets({ userId: this.userService.userAuth$.value?.uid || '' })
-    );
-    this.store.dispatch(loadGoals({ userId: this.userService.userAuth$.value?.uid || '' }));
-
-    this.store.dispatch(
-      loadTransactions({ userId: this.userService.userAuth$.value?.uid || '' })
-    );
+    this.setupSubscriptions();
+    this.loadAppData();
 
     this.invitationPopupService.showInvitationsAfterLogin();
 
-    // Check for due recurring transactions after a short delay to ensure data is loaded
+    // Check for due recurring transactions after a short delay
     setTimeout(() => {
-      this.recurringTransactionService.checkDueRecurringTransactions().subscribe();
+      this.recurringTransactionService.checkDueRecurringTransactions()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe();
     }, 2000);
+  }
 
-    // Scroll to top on navigation change
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private setupSubscriptions() {
+    // Breakpoint subscription
+    this.breakpointObserver
+      .observe([Breakpoints.Handset])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((result) => {
+        this.isMobile = result.matches;
+        this.cdr.markForCheck(); // Manually trigger change detection since we're updating a property
+      });
+
+    // Router subscription
     this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
       .subscribe(() => {
         if (this.mainContent) {
           this.mainContent.nativeElement.scrollTop = 0;
         }
       });
+  }
+
+  private loadAppData() {
+    const userId = this.userService.userAuth$.value?.uid;
+    if (userId) {
+      this.store.dispatch(loadProfile({ userId }));
+      this.store.dispatch(loadAccounts({ userId }));
+      this.store.dispatch(loadCategories({ userId }));
+      this.store.dispatch(loadBudgets({ userId }));
+      this.store.dispatch(loadGoals({ userId }));
+      this.store.dispatch(loadTransactions({ userId }));
+    }
   }
 }
