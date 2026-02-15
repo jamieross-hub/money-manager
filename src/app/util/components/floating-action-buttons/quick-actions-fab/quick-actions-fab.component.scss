@@ -3,19 +3,18 @@
   // Ensure proper stacking context
   isolation: isolate;
   // height: 0.2rem;
-  
+
   // Prevent text selection
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
 
-  .mat-mdc-fab{
-    background-color: var(--surface-500) !important;
+  .mat-mdc-fab {
+    background-color: var(--surface-100) !important;
     color: var(--primary-400) !important;
   }
-  
-  
+
   // Animation classes for dynamic behavior
   .fab-animated {
     .mat-fab {
@@ -23,58 +22,58 @@
         transform: scale(1.1);
       }
     }
-    
+
     .mat-mini-fab {
       animation: slideInUp 0.3s ease-out;
-      
+
       &:hover {
         transform: scale(1.1);
       }
     }
   }
-  
+
   // Action labels animation
   .action-label {
     animation: slideInRight 0.3s ease-out;
-    
+
     &:hover {
       transform: translateX(-4px);
     }
   }
-  
+
   // Loading animation
   .animate-spin {
     animation: spin 1s linear infinite;
   }
-  
+
   // Disabled state
   .opacity-50 {
     opacity: 0.5;
   }
-  
+
   .cursor-not-allowed {
     cursor: not-allowed;
   }
-  
+
   // Responsive button sizes using Tailwind
   @media (max-width: 640px) {
     .mat-fab {
       width: 36px !important;
       height: 36px !important;
     }
-    
+
     .mat-mini-fab {
       width: 36px !important;
       height: 36px !important;
     }
   }
-  
+
   @media (min-width: 641px) {
     .mat-fab {
       width: 64px !important;
       height: 64px !important;
     }
-    
+
     .mat-mini-fab {
       width: 48px !important;
       height: 48px !important;

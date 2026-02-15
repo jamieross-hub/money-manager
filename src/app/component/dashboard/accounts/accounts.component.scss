@@ -1,6 +1,6 @@
-@use '@angular/material' as mat;
-@use '../../../../styles/light-theme' as light;
-@use '../../../../styles/dark-theme' as dark;
+@use "@angular/material" as mat;
+@use "../../../../styles/light-theme" as light;
+@use "../../../../styles/dark-theme" as dark;
 
 // =============================================================================
 // ACCOUNTS PAGE - CLEAN LIGHT THEME (FINANCIAL DASHBOARD)
@@ -8,14 +8,16 @@
 
 .accounts-page {
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", "Roboto",
+    "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
   background-color: var(--surface-100);
   color: var(--neutral-900);
-
-
+  padding: 1rem;
+  padding-bottom: 6rem;
 }
 
 // Global Animation
@@ -24,8 +26,14 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 mat-card.error-message {
@@ -54,14 +62,14 @@ mat-card.error-message {
 
   .header-left {
     .page-title {
-      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-size: 1.75rem !important;
       font-weight: 800;
       margin: 0;
       letter-spacing: -0.03em;
       line-height: 1.1;
       color: var(--neutral-500);
     }
-    
+
     .page-description {
       font-size: clamp(0.9rem, 2vw, 1rem);
       margin: 0.5rem 0 0 0;
@@ -80,10 +88,15 @@ mat-card.error-message {
     &:hover {
       background-color: var(--primary-600);
       transform: translateY(-2px);
-      box-shadow: 0 10px 15px -3px rgba(var(--primary-500), 0.3), 0 4px 6px -2px rgba(var(--primary-500), 0.15);
+      box-shadow:
+        0 10px 15px -3px rgba(var(--primary-500), 0.3),
+        0 4px 6px -2px rgba(var(--primary-500), 0.15);
     }
-    
-    mat-icon { margin-right: 0.5rem; font-size: 1.25rem; }
+
+    mat-icon {
+      margin-right: 0.5rem;
+      font-size: 1.25rem;
+    }
   }
 
   @media (max-width: 768px) {
@@ -91,8 +104,8 @@ mat-card.error-message {
     align-items: flex-start;
     gap: 1.25rem;
     padding: 0 1rem;
-    
-    .add-account-btn { 
+
+    .add-account-btn {
       width: 100%;
       justify-content: center;
     }
@@ -109,8 +122,10 @@ mat-card.error-message {
     border-radius: 20px;
     padding: clamp(2rem, 5vw, 3rem);
     border: 1px solid var(--neutral-100);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-    
+    box-shadow:
+      0 20px 25px -5px rgba(0, 0, 0, 0.05),
+      0 8px 10px -6px rgba(0, 0, 0, 0.01);
+
     .net-worth-content {
       display: flex;
       justify-content: space-between;
@@ -151,25 +166,43 @@ mat-card.error-message {
             align-items: center;
             justify-content: center;
             transition: transform 0.2s ease;
-            
-            &.positive { background: var(--success-50); color: var(--success-600); }
-            &.negative { background: var(--error-50); color: var(--error-600); }
 
-            mat-icon { font-size: 1.5rem; }
+            &.positive {
+              background: var(--success-50);
+              color: var(--success-600);
+            }
+            &.negative {
+              background: var(--error-50);
+              color: var(--error-600);
+            }
+
+            mat-icon {
+              font-size: 1.5rem;
+            }
           }
-          
-          &:hover .indicator-icon { transform: scale(1.05); }
+
+          &:hover .indicator-icon {
+            transform: scale(1.05);
+          }
 
           .indicator-details {
             display: flex;
             flex-direction: column;
-            .label { font-size: 0.8rem; color: var(--neutral-500); font-weight: 500; }
+            .label {
+              font-size: 0.8rem;
+              color: var(--neutral-500);
+              font-weight: 500;
+            }
             .value {
               font-size: 1.25rem;
               font-weight: 700;
               margin-top: 2px;
-              &.positive { color: var(--success-600); }
-              &.negative { color: var(--error-600); }
+              &.positive {
+                color: var(--success-600);
+              }
+              &.negative {
+                color: var(--error-600);
+              }
             }
           }
         }
@@ -179,18 +212,18 @@ mat-card.error-message {
     @media (max-width: 768px) {
       padding: 1.5rem;
       border-radius: 16px;
-      
+
       .net-worth-content {
         flex-direction: column;
         align-items: flex-start;
         gap: 2rem;
-        
-        .right-info { 
+
+        .right-info {
           gap: 1.5rem;
           width: 100%;
           flex-direction: row;
           flex-wrap: wrap;
-          
+
           .sub-indicator {
             flex: 1;
             min-width: 140px;
@@ -228,10 +261,12 @@ mat-card.error-message {
     :host-context(.light-theme) & {
       background: var(--surface-50);
       border: 1px solid var(--neutral-100);
-      
+
       &:hover {
         transform: translateY(-4px);
-        box-shadow: 0 12px 16px -4px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04) !important;
+        box-shadow:
+          0 12px 16px -4px rgba(0, 0, 0, 0.08),
+          0 4px 6px -2px rgba(0, 0, 0, 0.04) !important;
         border-color: var(--neutral-200);
       }
     }
@@ -239,15 +274,15 @@ mat-card.error-message {
     :host-context(.dark-theme) & {
       background: var(--surface-200);
       border: 1px solid var(--neutral-800);
-      
+
       &:hover {
         transform: translateY(-4px);
-        box-shadow: 0 12px 16px -4px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
+        box-shadow:
+          0 12px 16px -4px rgba(0, 0, 0, 0.3),
+          0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
         border-color: var(--neutral-700);
       }
     }
-
-
 
     .card-icon-container {
       .icon-bg {
@@ -257,38 +292,41 @@ mat-card.error-message {
         display: flex;
         align-items: center;
         justify-content: center;
-        
-        &.bank { 
+
+        &.bank {
           color: var(--primary-500);
         }
-        &.cash { 
+        &.cash {
           color: var(--success-500);
         }
-        &.credit { 
+        &.credit {
           color: var(--secondary-500);
         }
-        &.investment { 
+        &.investment {
           color: var(--warning-500);
         }
 
-        mat-icon { font-size: 1.75rem; width: 1.75rem; height: 1.75rem; }
+        mat-icon {
+          font-size: 1.75rem;
+          width: 1.75rem;
+          height: 1.75rem;
+        }
       }
     }
 
     .card-info {
       display: flex;
       flex-direction: column;
-      .label { 
-          font-size: 0.875rem; 
-          color: var(--neutral-500); 
-          font-weight: 500; 
+      .label {
+        font-size: 0.875rem;
+        color: var(--neutral-500);
+        font-weight: 500;
       }
-      .value { 
-          font-size: 1.25rem; 
-          font-weight: 700; 
-          margin-top: 2px;
-          color: var(--primary-900);
-
+      .value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-top: 2px;
+        color: var(--primary-900);
       }
     }
   }
@@ -300,7 +338,7 @@ mat-card.error-message {
 
   .account-group-container {
     margin-bottom: 2rem;
-    
+
     .group-header {
       display: flex;
       justify-content: space-between;
@@ -309,7 +347,7 @@ mat-card.error-message {
       cursor: pointer;
       user-select: none;
       transition: opacity 0.2s;
-      
+
       &:hover {
         opacity: 0.8;
       }
@@ -331,8 +369,8 @@ mat-card.error-message {
           font-weight: 600;
           padding: 0.1rem 0.5rem;
           border-radius: 999px;
-          background: var(--neutral-100); 
-          color: var(--neutral-500); 
+          background: var(--neutral-100);
+          color: var(--neutral-500);
         }
       }
 
@@ -346,8 +384,10 @@ mat-card.error-message {
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           color: var(--neutral-500);
-          
-          &.negative { color: var(--error-600); }
+
+          &.negative {
+            color: var(--error-600);
+          }
         }
 
         .expansion-arrow {
@@ -365,7 +405,7 @@ mat-card.error-message {
 
     .panel-content {
       padding: 0;
-      
+
       .action-row {
         margin-top: 1.5rem;
         padding: 1rem 0;
@@ -377,10 +417,17 @@ mat-card.error-message {
           color: var(--primary-600);
           font-weight: 600;
           font-size: 0.875rem;
-          
-          &:hover { background: var(--primary-50) !important; }
-          
-          mat-icon { font-size: 1.1rem; width: 1.1rem; height: 1.1rem; margin-right: 0.25rem; }
+
+          &:hover {
+            background: var(--primary-50) !important;
+          }
+
+          mat-icon {
+            font-size: 1.1rem;
+            width: 1.1rem;
+            height: 1.1rem;
+            margin-right: 0.25rem;
+          }
         }
       }
     }
@@ -408,29 +455,47 @@ mat-card.error-message {
     :host-context(.light-theme) & {
       background: var(--primary-50);
       border: 1px solid var(--neutral-100);
-      
+
       &:hover {
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01) !important;
+        box-shadow:
+          0 20px 25px -5px rgba(0, 0, 0, 0.05),
+          0 8px 10px -6px rgba(0, 0, 0, 0.01) !important;
         border-color: var(--neutral-200);
         transform: translateY(-4px);
-        &::before { background: var(--primary-500); content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+        &::before {
+          background: var(--primary-500);
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 4px;
+          height: 100%;
+        }
       }
     }
 
     :host-context(.dark-theme) & {
       background: var(--surface-200);
       border: 1px solid var(--neutral-800);
-      
+
       &:hover {
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2) !important;
+        box-shadow:
+          0 20px 25px -5px rgba(0, 0, 0, 0.3),
+          0 8px 10px -6px rgba(0, 0, 0, 0.2) !important;
         border-color: var(--neutral-700);
         transform: translateY(-4px);
-        &::before { background: var(--primary-500); content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+        &::before {
+          background: var(--primary-500);
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 4px;
+          height: 100%;
+        }
       }
     }
 
-
-    
     &.selected {
       border-color: var(--primary-500);
       box-shadow: 0 0 0 3px rgba(var(--primary-500), 0.1);
@@ -438,7 +503,7 @@ mat-card.error-message {
 
       &::before {
         background: var(--primary-500);
-        content: '';
+        content: "";
         position: absolute;
         top: 0;
         left: 0;
@@ -447,7 +512,10 @@ mat-card.error-message {
       }
     }
 
-    &.negative-border:hover::before, &.negative-border.selected::before { background: var(--error-500); }
+    &.negative-border:hover::before,
+    &.negative-border.selected::before {
+      background: var(--error-500);
+    }
 
     .card-top {
       display: flex;
@@ -465,77 +533,90 @@ mat-card.error-message {
         background: var(--surface-200);
         color: var(--neutral-500);
         transition: transform 0.3s ease;
-        
-        &.bank { 
+
+        &.bank {
           color: var(--primary-500);
         }
-        &.cash { 
+        &.cash {
           color: var(--success-500);
         }
-        &.credit { 
+        &.credit {
           color: var(--secondary-500);
         }
-        &.loan { 
+        &.loan {
           color: var(--error-500);
         }
 
-        mat-icon { font-size: 1.75rem; width: 1.75rem; height: 1.75rem; }
+        mat-icon {
+          font-size: 1.75rem;
+          width: 1.75rem;
+          height: 1.75rem;
+        }
       }
 
       .account-titles {
         flex: 1;
-        .name { 
-            font-size: 1.125rem; 
-            font-weight: 700; 
-            margin: 0;
-            line-height: 1.3;
-            color: var(--neutral-500);
-
+        .name {
+          font-size: 1.125rem;
+          font-weight: 700;
+          margin: 0;
+          line-height: 1.3;
+          color: var(--neutral-500);
         }
-        .institution { 
-            font-size: 0.875rem; 
-            color: var(--neutral-500); 
-            margin: 0.25rem 0 0 0; 
-            font-weight: 500;
+        .institution {
+          font-size: 0.875rem;
+          color: var(--neutral-500);
+          margin: 0.25rem 0 0 0;
+          font-weight: 500;
         }
       }
-      
+
       .menu-action {
         margin-top: -0.25rem;
         margin-right: -0.5rem;
-        .more-btn { 
-            color: var(--neutral-400);
-            opacity: 0;
-            transition: all 0.2s;
-            &:hover { background: var(--surface-200); color: var(--neutral-600); }
+        .more-btn {
+          color: var(--neutral-400);
+          opacity: 0;
+          transition: all 0.2s;
+          &:hover {
+            background: var(--surface-200);
+            color: var(--neutral-600);
+          }
         }
       }
     }
-    
+
     // Show menu button on hover or mobile
-    &:hover .menu-action .more-btn { opacity: 1; }
-    @media (max-width: 768px) { .menu-action .more-btn { opacity: 1; } }
+    &:hover .menu-action .more-btn {
+      opacity: 1;
+    }
+    @media (max-width: 768px) {
+      .menu-action .more-btn {
+        opacity: 1;
+      }
+    }
 
     .card-details {
       .balance-row {
         display: flex;
         justify-content: space-between;
         align-items: flex-end;
-        .label { 
-            font-size: 0.75rem; 
-            font-weight: 700; 
-            color: var(--neutral-400); 
-            text-transform: uppercase; 
-            letter-spacing: 0.05em; 
-            margin-bottom: 0.35rem;
+        .label {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: var(--neutral-400);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 0.35rem;
         }
         .amount {
           font-size: 1rem; // Larger balance
           font-weight: 800;
           letter-spacing: -0.02em;
-          &.negative { color: var(--error-600); }
+          &.negative {
+            color: var(--error-600);
+          }
           color: var(--primary-600);
-
         }
       }
 
@@ -547,8 +628,10 @@ mat-card.error-message {
           font-size: 0.75rem;
           padding: 0.2rem 0.5rem;
           border-radius: 6px;
-          :host-context(.light-theme) & { background: var(--surface-200); color: var(--neutral-400); }
-
+          :host-context(.light-theme) & {
+            background: var(--surface-200);
+            color: var(--neutral-400);
+          }
         }
       }
     }
@@ -564,15 +647,15 @@ mat-card.empty-state-card {
   margin: 0 clamp(1rem, 3vw, 1.5rem);
   transition: border-color 0.3s;
   box-shadow: none !important;
-  
-  &:hover { 
+
+  &:hover {
     border-color: var(--neutral-400);
   }
 
   .mat-mdc-card-content {
-      padding: clamp(3rem, 6vw, 5rem) 2rem !important;
+    padding: clamp(3rem, 6vw, 5rem) 2rem !important;
   }
-  
+
   .empty-icon-box {
     width: 96px;
     height: 96px;
@@ -583,44 +666,49 @@ mat-card.empty-state-card {
     margin: 0 auto 2rem;
     background: var(--neutral-100);
 
-    mat-icon { font-size: 3rem; width: 3rem; height: 3rem; color: var(--neutral-300); }
+    mat-icon {
+      font-size: 3rem;
+      width: 3rem;
+      height: 3rem;
+      color: var(--neutral-300);
+    }
   }
 
-  .empty-title { 
-    font-size: 1.5rem; 
-    font-weight: 800; 
-    margin: 0 0 0.75rem 0; 
-    letter-spacing: -0.02em; 
+  .empty-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0 0 0.75rem 0;
+    letter-spacing: -0.02em;
     color: var(--neutral-900);
   }
-  .empty-text { 
-    max-width: 400px; 
-    margin: 0 auto 2.5rem; 
-    font-size: 1.1rem; 
-    line-height: 1.6; 
+  .empty-text {
+    max-width: 400px;
+    margin: 0 auto 2.5rem;
+    font-size: 1.1rem;
+    line-height: 1.6;
     color: var(--neutral-500);
   }
-  .empty-btn { 
-      border-radius: 12px; 
-      padding: 0 2.5rem; 
-      height: 48px;
-      font-size: 1rem;
-      font-weight: 600;
-      box-shadow: 0 4px 6px -1px var(--primary-alpha-20);
+  .empty-btn {
+    border-radius: 12px;
+    padding: 0 2.5rem;
+    height: 48px;
+    font-size: 1rem;
+    font-weight: 600;
+    box-shadow: 0 4px 6px -1px var(--primary-alpha-20);
   }
 }
 
 // Custom Material Overrides
 ::ng-deep .standard-menu {
   border-radius: 16px !important;
-  box-shadow: 0 20px 25px -5px var(--primary-alpha-10), 0 10px 10px -5px var(--primary-alpha-5) !important;
+  box-shadow:
+    0 20px 25px -5px var(--primary-alpha-10),
+    0 10px 10px -5px var(--primary-alpha-5) !important;
   min-width: 200px !important;
   padding: 0.5rem !important;
   background: var(--surface-50) !important;
   border: 1px solid var(--neutral-200) !important;
 
-
-  
   .mat-mdc-menu-item {
     font-size: 0.95rem !important;
     font-weight: 500 !important;
@@ -628,21 +716,31 @@ mat-card.empty-state-card {
     margin-bottom: 2px !important;
     min-height: 44px !important;
     color: var(--neutral-700) !important;
-    
-    mat-icon { color: var(--neutral-400) !important; }
-    
-    &:hover { 
-      background: var(--neutral-100) !important; 
-      color: var(--neutral-900) !important; 
-      mat-icon { color: var(--neutral-600) !important; } 
+
+    mat-icon {
+      color: var(--neutral-400) !important;
     }
-    
-    mat-icon { margin-right: 1rem !important; }
-    
-    &.delete-item { 
-        color: var(--error-600) !important; 
-        mat-icon { color: var(--error-600) !important; } 
-        &:hover { background: var(--error-50) !important; }
+
+    &:hover {
+      background: var(--neutral-100) !important;
+      color: var(--neutral-900) !important;
+      mat-icon {
+        color: var(--neutral-600) !important;
+      }
+    }
+
+    mat-icon {
+      margin-right: 1rem !important;
+    }
+
+    &.delete-item {
+      color: var(--error-600) !important;
+      mat-icon {
+        color: var(--error-600) !important;
+      }
+      &:hover {
+        background: var(--error-50) !important;
+      }
     }
   }
 }
@@ -675,19 +773,28 @@ mat-card.empty-state-card {
     &.edit-btn {
       border: 1px dashed var(--neutral-400);
       color: var(--neutral-400);
-      &:hover { background: var(--neutral-100); transform: scale(1.05); }
+      &:hover {
+        background: var(--neutral-100);
+        transform: scale(1.05);
+      }
     }
 
     &.statement-btn {
       border: 1px dashed var(--primary-500);
       color: var(--primary-500);
-      &:hover { background: var(--primary-50); transform: scale(1.05); }
+      &:hover {
+        background: var(--primary-50);
+        transform: scale(1.05);
+      }
     }
 
     &.delete-btn {
       border: 1px solid var(--error-500);
       color: var(--error-500);
-      &:hover { background: var(--error-50); transform: scale(1.05); }
+      &:hover {
+        background: var(--error-50);
+        transform: scale(1.05);
+      }
     }
   }
 }
@@ -700,8 +807,6 @@ mat-card.empty-state-card {
   margin-top: -1.25rem;
   margin-bottom: 1.5rem;
   border-radius: 0 0 16px 16px;
-
-
 
   .details-container {
     display: flex;
@@ -718,23 +823,25 @@ mat-card.empty-state-card {
     &:last-child {
       border-bottom: none;
     }
-
-
   }
 
   .detail-label {
     display: flex;
     align-items: center;
     gap: 8px;
-    
+
     .detail-icon {
       font-size: 18px;
       width: 18px;
       height: 18px;
       color: var(--neutral-400);
-      
-      &.positive { color: var(--success-600); }
-      &.negative { color: var(--error-600); }
+
+      &.positive {
+        color: var(--success-600);
+      }
+      &.negative {
+        color: var(--error-600);
+      }
     }
 
     span {
@@ -749,8 +856,12 @@ mat-card.empty-state-card {
     font-weight: 600;
     color: var(--neutral-900);
 
-    &.positive { color: var(--success-600); }
-    &.negative { color: var(--error-600); }
+    &.positive {
+      color: var(--success-600);
+    }
+    &.negative {
+      color: var(--error-600);
+    }
   }
 }
 
@@ -767,46 +878,44 @@ mat-card.empty-state-card {
 
 // Payment Due Badge
 .payment-due-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 500;
-    margin-left: auto;
-    
-    .badge-icon {
-        font-size: 14px;
-        width: 14px;
-        height: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  margin-left: auto;
+
+  .badge-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+
+  &.overdue {
+    background-color: var(--error-50);
+    color: var(--error-600);
+    border: 1px solid var(--error-200);
+  }
+
+  &.due-soon {
+    background-color: #fffbeb;
+    color: #f59e0b;
+    border: 1px solid #fef3c7;
+
+    :host-context(.dark-theme) & {
+      background-color: rgba(245, 158, 11, 0.1);
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.2);
     }
-
-    &.overdue {
-        background-color: var(--error-50);
-        color: var(--error-600);
-        border: 1px solid var(--error-200);
-
-  
-    }
-
-    &.due-soon {
-        background-color: #fffbeb;
-        color: #f59e0b;
-        border: 1px solid #fef3c7;
-
-        :host-context(.dark-theme) & {
-            background-color: rgba(245, 158, 11, 0.1);
-            color: #fbbf24;
-            border-color: rgba(245, 158, 11, 0.2);
-        }
-    }
+  }
 }
 
 // Media Query for Mobile to Adjust Badge
 @media (max-width: 600px) {
-    .payment-due-badge {
-        padding: 2px 6px;
-        font-size: 10px;
-    }
+  .payment-due-badge {
+    padding: 2px 6px;
+    font-size: 10px;
+  }
 }

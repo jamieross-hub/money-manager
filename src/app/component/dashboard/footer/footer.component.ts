@@ -61,11 +61,15 @@ export class FooterComponent implements OnInit, OnDestroy {
   }
 
   isCategoryActive(): boolean {
-    return this.router.url === '/dashboard/category';
+    return this.router.url === '/dashboard/category' || this.router.url === '/dashboard/summary';
   }
 
   isAccountsActive(): boolean {
     return this.router.url === '/dashboard/accounts';
+  }
+
+  isProfileActive(): boolean {
+    return this.router.url === '/dashboard/profile';
   }
 
   isMoreActive(): boolean {
@@ -82,6 +86,7 @@ export class FooterComponent implements OnInit, OnDestroy {
 
   // Toolbar Action Methods
   addTransaction() {
+    this.hapticFeedback.buttonClick();
     this._dialog.open(MobileAddTransactionComponent, {
       panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
     });
@@ -93,6 +98,7 @@ export class FooterComponent implements OnInit, OnDestroy {
   }
 
   quickExpense() {
+    this.hapticFeedback.buttonClick();
     this.router.navigate(['/dashboard/transactions']);
   }
 
@@ -134,6 +140,7 @@ export class FooterComponent implements OnInit, OnDestroy {
   }
 
   navigateTo(route: string) {
+    this.hapticFeedback.buttonClick();
     this.router.navigate([route]);
   }
 

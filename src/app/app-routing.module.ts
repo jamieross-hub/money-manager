@@ -51,6 +51,14 @@ export const routes: Routes = [
         }
       },
       {
+        path: 'summary',
+        loadComponent: () => import('./component/dashboard/summary/summary.component').then(m => m.SummaryComponent),
+        data: {
+          roles: ['free', 'premium', 'admin'],
+          requireEmailVerification: true
+        }
+      },
+      {
         path: 'category',
         loadComponent: () => import('./component/dashboard/category/category.component').then(m => m.CategoryComponent),
         data: {

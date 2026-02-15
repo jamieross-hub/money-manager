@@ -47,6 +47,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { TranslateModule } from '@ngx-translate/core';
 import { QuickActionsFabComponent } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
+import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 
 @Component({
   selector: 'app-profile',
@@ -86,6 +87,20 @@ export class ProfileComponent implements OnInit, OnDestroy {
   currencies = Object.values(CurrencyCode);
   defaultCurrency = APP_CONFIG.REGIONAL.CURRENCY_DEFAULT;
 
+  quickActionsFabConfig: QuickActionsFabConfig = {
+    title: 'Profile',
+    mainButtonIcon: 'edit',
+    mainButtonColor: 'primary',
+    mainButtonTooltip: 'Edit Profile',
+    showLabels: false,
+    animations: true,
+    autoHide: false,
+    autoHideDelay: 3000,
+    theme: 'auto',
+    actions: [],
+    onMainButtonClick: () => this.isEditing ? this.saveProfile() : this.toggleEdit(),
+  };
+
 
 
   countries = Object.entries(APP_CONFIG.REGIONAL.COUNTRY_MAPPING).map(([code, config]) => ({
@@ -107,20 +122,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     { value: 'YEARLY', label: 'PROFILE.APP_VIEW_YEARLY' }
   ];
 
-  fabConfig: QuickActionsFabConfig = {
-    title: 'Profile',
-    mainButtonIcon: 'edit',
-    mainButtonColor: 'primary',
-    mainButtonTooltip: 'Edit Profile',
-    showLabels: false,
-    animations: true,
-    autoHide: false,
-    autoHideDelay: 3000,
-    theme: 'auto',
-    actions: [],
-    onMainButtonClick: () => this.toggleEdit(),
 
-  };
 
   // Validation constants from config
   validation = APP_CONFIG.VALIDATION;
@@ -139,13 +141,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private dateService: DateService,
     private store: Store<AppState>,
-    private breakpointObserver: BreakpointObserver,
+    public breakpointService: BreakpointService,
     private userService: UserService,
     private translationService: TranslationService,
     private backupRestoreService: BackupRestoreService
   ) {
     this.currentUser = this.auth.currentUser;
-    this.isMobile = this.breakpointObserver.isMatched('(max-width: 600px)');
     // Initialize selectors
     this.profile$ = this.store.select(ProfileSelectors.selectProfile);
     this.profileLoading$ = this.store.select(ProfileSelectors.selectProfileLoading);
@@ -348,8 +349,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
       // Trying to edit
       this.isEditing = true;
       this.profileForm.enable();
-      this.fabConfig.mainButtonIcon = 'save';
-      this.fabConfig.mainButtonTooltip = 'Save Profile';
+      this.quickActionsFabConfig = {
+        ...this.quickActionsFabConfig,
+        mainButtonIcon: 'save',
+        mainButtonTooltip: 'Save Profile'
+      };
     }
   }
 
@@ -410,8 +414,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.profileForm.disable();
 
         // Reset FAB state
-        this.fabConfig.mainButtonIcon = 'edit';
-        this.fabConfig.mainButtonTooltip = 'Edit Profile';
+        this.quickActionsFabConfig = {
+          ...this.quickActionsFabConfig,
+          mainButtonIcon: 'edit',
+          mainButtonTooltip: 'Edit Profile'
+        };
       }
     } catch (error) {
       console.error('Error saving profile:', error);
@@ -427,8 +434,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.profileForm.disable();
 
     // Reset FAB state
-    this.fabConfig.mainButtonIcon = 'edit';
-    this.fabConfig.mainButtonTooltip = 'Edit Profile';
+    this.quickActionsFabConfig = {
+      ...this.quickActionsFabConfig,
+      mainButtonIcon: 'edit',
+      mainButtonTooltip: 'Edit Profile'
+    };
 
     this.notificationService.info('Changes cancelled');
   }

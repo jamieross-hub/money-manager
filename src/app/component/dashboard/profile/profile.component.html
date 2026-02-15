@@ -1,5 +1,6 @@
 <!-- <app-quick-actions-fab [config]="fabConfig"></app-quick-actions-fab> -->
-
+<app-quick-actions-fab [config]="quickActionsFabConfig" *ngIf="breakpointService.device.isMobile">
+</app-quick-actions-fab>
 
 <div class="profile-container">
 
