@@ -8,6 +8,7 @@ import { Router } from '@angular/router';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { ChatFacadeService } from 'src/app/util/service/ai-chat/chat-facade-service';
+import { MobileAddTransactionComponent } from '../transaction-list/add-transaction/mobile-add-transaction/mobile-add-transaction.component';
 
 @Component({
   selector: 'app-home',
@@ -160,7 +161,12 @@ export class HomeComponent {
   // };
 
   constructor(private router: Router, private _dialog: MatDialog, public breakpointService: BreakpointService, public chatFacadeService: ChatFacadeService, private userService: UserService) {
-
+    //check route param action=add-transaction
+    if (this.router.url.includes('action=add-transaction')) {
+      this._dialog.open(MobileAddTransactionComponent, {
+        panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
+      });
+    }
   }
 
 

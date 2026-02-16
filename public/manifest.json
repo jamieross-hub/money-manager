@@ -181,67 +181,7 @@
       "name": "Add Transaction",
       "short_name": "Add Txn",
       "description": "Quickly add a new transaction",
-      "url": "./?action=add-transaction",
-      "icons": [
-        {
-          "src": "icons/icon-96x96.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "View Dashboard",
-      "short_name": "Dashboard",
-      "description": "View your financial dashboard",
-      "url": "./?action=dashboard",
-      "icons": [
-        {
-          "src": "icons/icon-96x96.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "View Reports",
-      "short_name": "Reports",
-      "description": "Check your financial reports and analytics",
-      "url": "./?action=reports",
-      "icons": [
-        {
-          "src": "icons/icon-96x96.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "Manage Budgets",
-      "short_name": "Budgets",
-      "description": "View and manage your budgets",
-      "url": "./?action=budgets",
-      "icons": [
-        {
-          "src": "icons/icon-96x96.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "View Accounts",
-      "short_name": "Accounts",
-      "description": "Check your account balances",
-      "url": "./?action=accounts",
-      "icons": [
-        {
-          "src": "icons/icon-96x96.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "Financial Goals",
-      "short_name": "Goals",
-      "description": "Track your financial goals",
-      "url": "./?action=goals",
+      "url": "./dashboard?action=add-transaction",
       "icons": [
         {
           "src": "icons/icon-96x96.png",
