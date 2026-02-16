@@ -118,6 +118,7 @@ export class MobileTransactionListComponent
 
   // Optimization: Pre-calculated view model
   groupedTransactions: { date: string; dateHeader: string; transactions: any[] }[] = [];
+  upcomingTransactions: Transaction[] = [];
 
   constructor(
     private readonly auth: Auth,
@@ -292,12 +293,18 @@ export class MobileTransactionListComponent
   }
 
   filterTransactions() {
+    // Determine source data based on selected range
+    let sourceData = this.allTransactions;
+    if (this.selectedRange === 'upcoming') {
+      sourceData = this.upcomingTransactions;
+    }
+
     // Use FilterService to filter transactions
     let filteredData: Transaction[];
 
     // Use all filters including date filters (or no date filters if none selected)
     filteredData = this.filterService.filterTransactions(
-      this.allTransactions,
+      sourceData,
       this.filterService.getCurrentFilterState()
     );
 
@@ -357,6 +364,32 @@ export class MobileTransactionListComponent
     let endDate: Date;
     this.selectedRange = range;
 
+    if (range === 'upcoming') {
+      const recurring = this.allTransactions.filter(t => t.isRecurring);
+      const appView = this.appViewService.appView;
+      const today = moment().startOf('day').toDate();
+
+      if (appView === 'WEEKLY') {
+        // Next 7 days
+        startDate = today;
+        endDate = moment().add(1, 'week').endOf('day').toDate();
+      } else if (appView === 'YEARLY') {
+        // Next 1 year
+        startDate = today;
+        endDate = moment().add(1, 'year').endOf('day').toDate();
+      } else {
+        // Default to Monthly (Next 1 month)
+        startDate = today;
+        endDate = moment().add(1, 'month').endOf('day').toDate();
+      }
+
+      this.upcomingTransactions = this.generateUpcomingTransactions(recurring, startDate, endDate);
+
+      // Set date range filter to cover this period so they aren't filtered out
+      this.filterService.setSelectedDateRange(startDate, endDate);
+      return; // filterService update will trigger filterTransactions
+    }
+
     switch (range) {
       case 'today':
         startDate = moment().startOf('day').toDate();
@@ -391,6 +424,60 @@ export class MobileTransactionListComponent
     }
 
     this.filterService.setSelectedDateRange(startDate, endDate);
+  }
+
+  private generateUpcomingTransactions(recurringTransactions: Transaction[], startDate: Date, endDate: Date): Transaction[] {
+    const upcoming: Transaction[] = [];
+
+    recurringTransactions.forEach(rt => {
+      if (!rt.nextOccurrence || !rt.isRecurring) return;
+
+      let nextDate = this.dateService.toDate(rt.nextOccurrence);
+      if (!nextDate) return;
+
+      // Clone the transaction to avoid modifying the original
+      const baseTransaction = { ...rt };
+
+      // Generate occurrences within the range
+      while (nextDate <= endDate) {
+        if (nextDate >= startDate) {
+          // Create a new ephemeral transaction for this occurrence
+          const occurrence: Transaction = {
+            ...baseTransaction,
+            id: `upcoming-${baseTransaction.id}-${nextDate.getTime()}`, // Temporary ID
+            date: new Date(nextDate), // Set the specific date for this occurrence
+            status: SyncStatus.PENDING as any, // Mark as potential/pending
+            syncStatus: SyncStatus.PENDING,
+            isPending: true
+          };
+          upcoming.push(occurrence);
+        }
+
+        // Calculate next date based on interval
+        nextDate = this.calculateNextDate(nextDate, rt.recurringInterval!);
+      }
+    });
+
+    return upcoming;
+  }
+
+  private calculateNextDate(currentDate: Date, interval: RecurringInterval): Date {
+    const nextDate = new Date(currentDate);
+    switch (interval) {
+      case RecurringInterval.DAILY:
+        nextDate.setDate(nextDate.getDate() + 1);
+        break;
+      case RecurringInterval.WEEKLY:
+        nextDate.setDate(nextDate.getDate() + 7);
+        break;
+      case RecurringInterval.MONTHLY:
+        nextDate.setMonth(nextDate.getMonth() + 1);
+        break;
+      case RecurringInterval.YEARLY:
+        nextDate.setFullYear(nextDate.getFullYear() + 1);
+        break;
+    }
+    return nextDate;
   }
 
   isCurrentMonth(): boolean {
@@ -474,6 +561,8 @@ export class MobileTransactionListComponent
   }
 
   onLongPress(transaction: Transaction) {
+    // Disable long press for upcoming transactions for now
+    if (transaction.id?.startsWith('upcoming-')) return;
 
     if (this.selectedTx?.id == transaction.id) {
       this.selectedTx = null;

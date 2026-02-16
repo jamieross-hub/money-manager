@@ -141,6 +141,12 @@
 					<mat-icon>calendar_view_month</mat-icon>
 					<span>Last Month</span>
 				</button>
+				<!-- //upcoming button -->
+				<button mat-menu-item [class.active-menu-item]="selectedRange === 'upcoming'"
+					(click)="onDateRangeChange('upcoming')">
+					<mat-icon>calendar_today</mat-icon>
+					<span>Upcoming</span>
+				</button>
 				<button mat-menu-item [class.active-menu-item]="selectedRange === 'this-year'"
 					(click)="onDateRangeChange('this-year')">
 					<mat-icon>calendar_today</mat-icon>
