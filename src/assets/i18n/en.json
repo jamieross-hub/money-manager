@@ -157,7 +157,8 @@
         "PASSWORD_MISMATCH": "Passwords do not match",
         "EMAIL_REQUIRED": "Email is required",
         "PASSWORD_REQUIRED": "Password is required",
-        "NAME_REQUIRED": "Name is required"
+        "NAME_REQUIRED": "Name is required",
+        "SIGN_IN_WITH_GOOGLE": "Sign in with Google"
     },
     "TRANSACTIONS": {
         "ADD_TRANSACTION": "Add Transaction",

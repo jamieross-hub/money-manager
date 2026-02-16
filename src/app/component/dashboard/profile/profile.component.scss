@@ -2,7 +2,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px;
-  min-height: 100vh;
+  // min-height: 100vh;
   // background: var(--surface-200);
   color: var(--neutral-900);
 
@@ -78,6 +78,8 @@
 .avatar-section {
   display: flex;
   align-items: center;
+  justify-content: center;
+  align-items: flex-start;
   gap: 20px;
   flex: 1;
 

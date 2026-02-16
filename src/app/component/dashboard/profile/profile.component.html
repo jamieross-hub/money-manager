@@ -3,13 +3,6 @@
 </app-quick-actions-fab>
 
 <div class="profile-container">
-
-	<!-- Loading State -->
-	<div *ngIf="isLoading" class="loading-overlay">
-		<mat-spinner diameter="40"></mat-spinner>
-		<p class="mt-4 text-gray-600">{{ 'COMMON.LOADING' | translate }}</p>
-	</div>
-
 	<!-- Profile Header -->
 	<div class="profile-header">
 		<div class="header-content">
@@ -18,7 +11,7 @@
 					<mat-icon class="avatar-icon">person</mat-icon>
 				</div>
 				<div class="user-info">
-					<h1 class="user-name">{{ getFullName() }}</h1>
+					<p class="user-name">{{ getFullName() }}</p>
 					<p class="user-email">{{ userProfile?.email }}</p>
 					<p class="user-role">{{ 'PROFILE.MEMBER_SINCE' | translate }} {{
 						getFormattedDate(userProfile?.createdAt) }}</p>
@@ -29,6 +22,17 @@
 					[disabled]="isLoading" class="edit-btn">
 					<mat-icon>{{ isEditing ? 'close' : 'edit' }}</mat-icon>
 					{{ (isEditing ? 'COMMON.CANCEL_EDIT' : 'PROFILE.EDIT_PROFILE') | translate }}
+				</button>
+				<button mat-flat-button color="primary" (click)="signInWithGoogle()"
+					*ngIf="isGuestMode() && breakpointService.device.isMobile" [disabled]="isLoading"
+					class="google-signin-btn ml-2 mt-5 !text-white">
+					<span class="flex items-center gap-2">
+						<mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+						<mat-icon *ngIf="!isLoading">login</mat-icon>
+						{{ isLoading ? 'Loading...' : 'AUTH.SIGN_IN_WITH_GOOGLE' | translate }}
+					</span>
+
+
 				</button>
 			</div>
 		</div>
@@ -44,7 +48,7 @@
 				<mat-expansion-panel-header>
 					<mat-panel-title class="flex items-center gap-2">
 						<mat-icon class="section-icon">person</mat-icon>
-						<p class="text-lg font-semibold text-gray-700 !mb-0 dark:text-gray-200">{{
+						<p class="text-lg font-medium  text-gray-700 !mb-0 dark:text-gray-200">{{
 							'PROFILE.PERSONAL_INFO' | translate }}</p>
 					</mat-panel-title>
 				</mat-expansion-panel-header>
@@ -133,7 +137,7 @@
 				<mat-expansion-panel-header>
 					<mat-panel-title class="flex items-center gap-2">
 						<mat-icon class="section-icon">settings</mat-icon>
-						<p class="text-lg font-semibold text-gray-700 !mb-0 dark:text-gray-200">{{
+						<p class="text-lg font-medium text-gray-700 !mb-0 dark:text-gray-200">{{
 							'PROFILE.PREFERENCES' | translate }}</p>
 					</mat-panel-title>
 				</mat-expansion-panel-header>
@@ -252,7 +256,7 @@
 				<mat-expansion-panel-header>
 					<mat-panel-title class="flex items-center gap-2">
 						<mat-icon class="section-icon">security</mat-icon>
-						<p class="text-lg font-semibold text-gray-700 !mb-0 dark:text-gray-200">{{
+						<p class="text-lg font-medium text-gray-700 !mb-0 dark:text-gray-200">{{
 							'PROFILE.ACCOUNT_ACTIONS' | translate }}</p>
 					</mat-panel-title>
 				</mat-expansion-panel-header>
@@ -285,8 +289,11 @@
 							{{ 'PROFILE.DELETE_ACCOUNT' | translate }}
 						</button>
 					</div>
+
 				</div>
 			</mat-expansion-panel>
 		</mat-accordion>
+
+
 	</div>
 </div>

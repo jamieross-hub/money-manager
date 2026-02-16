@@ -430,6 +430,26 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
   }
 
+  async signInWithGoogle(): Promise<void> {
+    try {
+      this.isLoading = true;
+      await this.userService.signInWithGoogle();
+
+      // After successful sign-in, the auth state change listener in UserService 
+      // will update the userAuth$ subject, which we are subscribed to.
+      // However, we might want to manually refresh the profile or navigate if needed.
+      // For now, the existing subscription should handle the UI update.
+
+      this.notificationService.success('Successfully signed in with Google');
+      window.location.reload();
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
+      this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
   cancelEdit(): void {
     this.populateForm();
     this.isEditing = false;
