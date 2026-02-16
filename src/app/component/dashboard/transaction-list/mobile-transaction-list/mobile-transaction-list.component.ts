@@ -657,7 +657,7 @@ export class MobileTransactionListComponent
 
   getCategoryName(categoryId: string): string {
     const category = this.categories.find(cat => cat.id === categoryId);
-    return category?.name || categoryId;
+    return category?.name || categoryId || 'Unknown';
   }
 
   // Chart state
@@ -724,7 +724,7 @@ export class MobileTransactionListComponent
     yRenderer.grid.template.setAll({
       strokeDasharray: [3, 3],
       strokeOpacity: 0.2,
-      stroke: gridColor
+      stroke: gridColor,
     });
 
     yRenderer.labels.template.setAll({
@@ -732,36 +732,57 @@ export class MobileTransactionListComponent
       fill: textColor,
     });
 
-    yRenderer.labels.template.adapters.add("text", (text, target) => {
-      if (target.dataItem && typeof (target.dataItem as any).get("value") === "number") {
-        return this.currencyService.formatAmount((target.dataItem as any).get("value") as number, {
-          compact: true,
-          decimalPlaces: 0
-        });
+    yRenderer.labels.template.adapters.add('text', (text, target) => {
+      if (
+        target.dataItem &&
+        typeof (target.dataItem as any).get('value') === 'number'
+      ) {
+        return this.currencyService.formatAmount(
+          (target.dataItem as any).get('value') as number,
+          {
+            compact: true,
+            decimalPlaces: 0,
+          }
+        );
       }
       return text;
     });
 
-    // Process data to find max value
+    // Process data to find max value and calculate cumulative percentage
     const categoryMap = new Map<string, number>();
+    let totalAmount = 0;
+
     this.filteredTransactions.forEach((tx) => {
+      if (tx.type === 'income') return;
       const catId = tx.categoryId;
       const current = categoryMap.get(catId) || 0;
       categoryMap.set(catId, current + tx.amount);
+      totalAmount += tx.amount;
     });
 
-    const data = Array.from(categoryMap.entries())
-      .map(([catId, value]) => ({
+    const sortedEntries = Array.from(categoryMap.entries()).sort(
+      (a, b) => b[1] - a[1]
+    );
+
+    let cumulative = 0;
+    const data = sortedEntries.map(([catId, value]) => {
+      cumulative += value;
+      const percentage = totalAmount > 0 ? (cumulative / totalAmount) * 100 : 0;
+      const individualPercentage = totalAmount > 0 ? (value / totalAmount) * 100 : 0;
+
+      return {
         category: this.getCategoryName(catId).substring(0, 3).toUpperCase(),
         fullCategory: this.getCategoryName(catId),
         value: value,
-        formattedValue: this.currencyService.formatAmount(value)
-      }))
-      .sort((a, b) => b.value - a.value);
+        formattedValue: this.currencyService.formatAmount(value),
+        pareto: percentage,
+        paretoVal: individualPercentage,
+      };
+    });
 
     // Calculate max value for Y axis
     let maxValue = 0;
-    data.forEach(item => {
+    data.forEach((item) => {
       if (item.value > maxValue) {
         maxValue = item.value;
       }
@@ -774,11 +795,30 @@ export class MobileTransactionListComponent
         max: maxValue,
         strictMinMax: true,
         extraMax: 0,
-        maxPrecision: 0
+        maxPrecision: 0,
       })
     );
 
-    // Add series
+    // Create Secondary Y-axis (Percentage)
+    const paretoRenderer = am5xy.AxisRendererY.new(root, {
+      opposite: true,
+    });
+
+    paretoRenderer.labels.template.setAll({
+      fontSize: 10,
+      fill: textColor,
+    });
+
+    const paretoAxis = chart.yAxes.push(
+      am5xy.ValueAxis.new(root, {
+        renderer: paretoRenderer,
+        min: 0,
+        max: 100,
+        strictMinMax: true,
+      })
+    );
+
+    // Add Column Series (Amount)
     const series = chart.series.push(
       am5xy.ColumnSeries.new(root, {
         name: 'Amount',
@@ -787,7 +827,7 @@ export class MobileTransactionListComponent
         valueYField: 'value',
         categoryXField: 'category',
         tooltip: am5.Tooltip.new(root, {
-          labelText: '{fullCategory}: {formattedValue}'
+          labelText: '{fullCategory}: {formattedValue} ({paretoVal.formatNumber(\'#.0\')}%)',
         }),
       })
     );
@@ -796,25 +836,59 @@ export class MobileTransactionListComponent
       cornerRadiusTL: 5,
       cornerRadiusTR: 5,
       width: am5.percent(70),
-      strokeOpacity: 0
+      strokeOpacity: 0,
     });
 
     // Make each column a different color
-    series.columns.template.adapters.add("fill", (fill, target) => {
-      return chart.get("colors")?.getIndex(series.columns.indexOf(target));
+    series.columns.template.adapters.add('fill', (fill, target) => {
+      return chart.get('colors')?.getIndex(series.columns.indexOf(target));
     });
 
-    series.columns.template.adapters.add("stroke", (stroke, target) => {
-      return chart.get("colors")?.getIndex(series.columns.indexOf(target));
+    series.columns.template.adapters.add('stroke', (stroke, target) => {
+      return chart.get('colors')?.getIndex(series.columns.indexOf(target));
+    });
+
+    // Add Line Series (Pareto)
+    const paretoSeries = chart.series.push(
+      am5xy.LineSeries.new(root, {
+        name: 'Cumulative %',
+        xAxis: xAxis,
+        yAxis: paretoAxis,
+        valueYField: 'pareto',
+        categoryXField: 'category',
+        tooltip: am5.Tooltip.new(root, {
+          labelText: '{valueY.formatNumber(\'#.0\')}%',
+        }),
+      })
+    );
+
+    paretoSeries.strokes.template.setAll({
+      stroke: am5.color(0xff0000), // Red color for the line
+      strokeWidth: 2,
+    });
+
+    paretoSeries.bullets.push(() => {
+      return am5.Bullet.new(root, {
+        sprite: am5.Circle.new(root, {
+          radius: 4,
+          fill: am5.color(0xff0000),
+          stroke: root.interfaceColors.get('background'),
+          strokeWidth: 2,
+        }),
+      });
     });
 
     xAxis.data.setAll(data);
     series.data.setAll(data);
+    paretoSeries.data.setAll(data);
 
-    chart.set('cursor', am5xy.XYCursor.new(root, {
-      behavior: "none",
-      xAxis: xAxis
-    }));
+    chart.set(
+      'cursor',
+      am5xy.XYCursor.new(root, {
+        behavior: 'none',
+        xAxis: xAxis,
+      })
+    );
 
     this.chartRoot = root;
   }
