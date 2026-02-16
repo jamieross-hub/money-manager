@@ -105,7 +105,14 @@ export class CategoryComponent implements OnInit, OnDestroy {
       budgetStatusClass: string;
       stats: any;
     })[];
-    summary: { totalExpense: number; totalIncome: number; expenseCount: number; incomeCount: number };
+    summary: {
+      totalExpense: number;
+      totalIncome: number;
+      expenseCount: number;
+      incomeCount: number;
+      expenseChange: number;
+      incomeChange: number;
+    };
     availableGroups: string[];
   }>;
 
@@ -210,6 +217,40 @@ export class CategoryComponent implements OnInit, OnDestroy {
         const totalExpense = viewTransactions.filter(t => t.type === TransactionType.EXPENSE).reduce((sum, t) => sum + Math.abs(t.amount), 0);
         const totalIncome = viewTransactions.filter(t => t.type === TransactionType.INCOME).reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
+        // Previous Period Calculation
+        let prevExpense = 0;
+        let prevIncome = 0;
+        const now = moment();
+        let prevStart: moment.Moment;
+        let prevEnd: moment.Moment;
+
+        if (appView === 'WEEKLY') {
+          prevStart = moment().subtract(1, 'week').startOf('week');
+          prevEnd = moment().subtract(1, 'week').endOf('week');
+        } else if (appView === 'YEARLY') {
+          prevStart = moment().subtract(1, 'year').startOf('year');
+          prevEnd = moment().subtract(1, 'year').endOf('year');
+        } else {
+          prevStart = moment().subtract(1, 'month').startOf('month');
+          prevEnd = moment().subtract(1, 'month').endOf('month');
+        }
+
+        const prevTransactions = transactions.filter(t => {
+          const tDate = moment(this.dateService.toDate(t.date));
+          return tDate.isBetween(prevStart, prevEnd, undefined, '[]');
+        });
+
+        prevExpense = prevTransactions.filter(t => t.type === TransactionType.EXPENSE).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        prevIncome = prevTransactions.filter(t => t.type === TransactionType.INCOME).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+        const calculateChange = (current: number, previous: number) => {
+          if (previous === 0) return current > 0 ? 100 : 0;
+          return ((current - previous) / previous) * 100;
+        };
+
+        const expenseChange = calculateChange(totalExpense, prevExpense);
+        const incomeChange = calculateChange(totalIncome, prevIncome);
+
         const expenseCount = categories.filter(c => c.type === 'expense').length;
         const incomeCount = categories.filter(c => c.type === 'income').length;
 
@@ -220,7 +261,14 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
         return {
           categories: filtered,
-          summary: { totalExpense, totalIncome, expenseCount, incomeCount },
+          summary: {
+            totalExpense,
+            totalIncome,
+            expenseCount,
+            incomeCount,
+            expenseChange,
+            incomeChange
+          },
           availableGroups
         };
       })

@@ -140,6 +140,21 @@
         color: var(--neutral-500);
     }
 
+    .percentage-change {
+        display: flex;
+        align-items: center;
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+
+        mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+            margin-right: 4px;
+        }
+    }
+
     // Specific Styles
     &.expenses-card {
         .card-icon-wrapper {
@@ -510,9 +525,7 @@
     color: var(--primary-50) !important;
   }
 
-  &.delete-btn {
-    // color: var(--error-800) !important;
-  }
+
 }
 
 .category-details-expanded {
