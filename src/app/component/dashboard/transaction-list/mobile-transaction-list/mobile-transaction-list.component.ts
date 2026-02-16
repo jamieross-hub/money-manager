@@ -112,6 +112,13 @@ export class MobileTransactionListComponent
   allTransactions: Transaction[] = [];
   public selectedRange: string = '';
 
+  // Optimization: Maps for O(1) access
+  private categoryMap = new Map<string, Category>();
+  private accountMap = new Map<string, Account>();
+
+  // Optimization: Pre-calculated view model
+  groupedTransactions: { date: string; dateHeader: string; transactions: any[] }[] = [];
+
   constructor(
     private readonly auth: Auth,
     private readonly route: Router,
@@ -217,18 +224,71 @@ export class MobileTransactionListComponent
     );
   }
 
-  get groupedTransactions() {
-    const groups: { date: string; transactions: Transaction[] }[] = [];
+  updateGroupedTransactions() {
+    const groups: { date: string; dateHeader: string; transactions: any[] }[] = [];
+
+    // Cache for date headers to avoid repeated moment calls for same date
+    const dateHeaderCache = new Map<string, string>();
+    const today = moment().startOf('day');
+    const yesterday = moment().subtract(1, 'day').startOf('day');
+
     this.filteredTransactions.forEach(tx => {
-      const date = moment(this.dateService.toDate(tx.date)).format('YYYY-MM-DD');
-      const group = groups.find(g => g.date === date);
-      if (group) {
-        group.transactions.push(tx);
-      } else {
-        groups.push({ date, transactions: [tx] });
+      const txDate = this.dateService.toDate(tx.date);
+      const momentDate = moment(txDate);
+      const dateKey = momentDate.format('YYYY-MM-DD');
+
+      // Pre-calculate view properties
+      const categoryId = tx.categoryId || '';
+      const category = this.categoryMap.get(categoryId);
+      const accountId = tx.accountId || '';
+      const account = this.accountMap.get(accountId);
+
+      const txView = {
+        ...tx,
+        // Pre-calculated display properties
+        _categoryColor: category?.color || '#46777f',
+        _categoryIcon: category?.icon || 'category',
+        _categoryName: category?.name || categoryId || 'Unknown',
+        _accountName: account?.name || 'Unknown Account',
+        _accountType: account?.type || 'Unknown',
+        _dateDisplay: momentDate.format('dd MMM '),
+        _timeDisplay: momentDate.format('hh:mm a'),
+        _fullDateDisplay: momentDate.format('fullDate'),
+        _syncStatusColor: this.getSyncStatusColor(tx),
+        _syncStatusIcon: this.getSyncStatusIcon(tx),
+        _syncStatusInfo: this.getSyncStatusInfo(tx),
+        _recurringInfo: this.getRecurringInfo(tx),
+        // Helper for styling
+        _isIncome: tx.type === 'income',
+        _categoryBgColor: (category?.color || '#46777f') + '20'
+      };
+
+      let group = groups.find(g => g.date === dateKey);
+      if (!group) {
+        // Get or calculate header
+        let header = dateHeaderCache.get(dateKey);
+        if (!header) {
+          if (momentDate.isSame(today, 'day')) {
+            header = 'Today';
+          } else if (momentDate.isSame(yesterday, 'day')) {
+            header = 'Yesterday';
+          } else {
+            header = momentDate.format('dddd, DD MMM YYYY');
+          }
+          dateHeaderCache.set(dateKey, header);
+        }
+
+        group = {
+          date: dateKey,
+          dateHeader: header,
+          transactions: []
+        };
+        groups.push(group);
       }
+      group.transactions.push(txView);
     });
-    return groups;
+
+    this.groupedTransactions = groups;
   }
 
   filterTransactions() {
@@ -245,6 +305,7 @@ export class MobileTransactionListComponent
     const sortedData = this.filterService.sortTransactions(filteredData, this.selectedSort);
 
     this.filteredTransactions = sortedData;
+    this.updateGroupedTransactions();
 
     if (this.showChart) {
       this.renderChart();
@@ -512,12 +573,12 @@ export class MobileTransactionListComponent
   }
 
   getCategoryIcon(categoryId: string): string {
-    const category = this.categories.find(cat => cat.id === categoryId);
+    const category = this.categoryMap.get(categoryId);
     return category?.icon || 'category';
   }
 
   getCategoryColor(categoryId: string): string {
-    const category = this.categories.find(cat => cat.id === categoryId);
+    const category = this.categoryMap.get(categoryId);
     return category?.color || '#46777f';
   }
 
@@ -525,7 +586,16 @@ export class MobileTransactionListComponent
     this.subscription.add(
       this.store.select(selectAllCategories).subscribe((categories: Category[]) => {
         this.categories = categories;
+        // Populate Map for O(1) access
+        this.categoryMap.clear();
+        categories.forEach(cat => {
+          if (cat.id) this.categoryMap.set(cat.id, cat);
+        });
         this.updateAvailableCategories();
+        // Update view if we have transactions
+        if (this.filteredTransactions.length > 0) {
+          this.updateGroupedTransactions();
+        }
       })
     );
   }
@@ -534,17 +604,26 @@ export class MobileTransactionListComponent
     this.subscription.add(
       this.store.select(selectAllAccounts).subscribe((accounts: Account[]) => {
         this.accounts = accounts;
+        // Populate Map for O(1) access
+        this.accountMap.clear();
+        accounts.forEach(acc => {
+          this.accountMap.set(acc.accountId, acc);
+        });
+        // Update view if we have transactions
+        if (this.filteredTransactions.length > 0) {
+          this.updateGroupedTransactions();
+        }
       })
     );
   }
 
   getAccountName(accountId: string): string {
-    const account = this.accounts.find(acc => acc.accountId === accountId);
+    const account = this.accountMap.get(accountId);
     return account?.name || 'Unknown Account';
   }
 
   getAccountType(accountId: string): string {
-    const account = this.accounts.find(acc => acc.accountId === accountId);
+    const account = this.accountMap.get(accountId);
     return account?.type || 'Unknown';
   }
 
@@ -599,19 +678,7 @@ export class MobileTransactionListComponent
     this.selectedSort = 'date-desc';
   }
 
-  getDateHeader(dateStr: string): string {
-    const date = moment(dateStr);
-    const today = moment().startOf('day');
-    const yesterday = moment().subtract(1, 'day').startOf('day');
 
-    if (date.isSame(today, 'day')) {
-      return 'Today';
-    } else if (date.isSame(yesterday, 'day')) {
-      return 'Yesterday';
-    } else {
-      return date.format('dddd, DD MMM YYYY');
-    }
-  }
 
   quickClearFilters() {
     this.filterService.clearAllFilters();
@@ -656,7 +723,7 @@ export class MobileTransactionListComponent
   }
 
   getCategoryName(categoryId: string): string {
-    const category = this.categories.find(cat => cat.id === categoryId);
+    const category = this.categoryMap.get(categoryId);
     return category?.name || categoryId || 'Unknown';
   }
 

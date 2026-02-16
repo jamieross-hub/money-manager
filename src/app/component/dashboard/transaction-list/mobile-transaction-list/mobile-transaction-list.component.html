@@ -217,7 +217,7 @@
 			@for (group of groupedTransactions; track group.date) {
 			<div class="date-group">
 				<div class="date-header">
-					{{ getDateHeader(group.date) }}
+					{{ group.dateHeader }}
 				</div>
 				@for (tx of group.transactions; track tx.id) {
 				<div class="transaction-card" [class.selected]="selectedTx?.id === tx.id" (click)="onLongPress(tx)">
@@ -225,11 +225,10 @@
 					<div class="transaction-main">
 						<!-- Icon Section -->
 						<div class="transaction-icon">
-							<div class="icon-container"
-								[style.background-color]="getCategoryColor(tx.categoryId) + '20'"
-								[style.color]="getCategoryColor(tx.categoryId)">
-								<mat-icon [style.color]="getCategoryColor(tx.categoryId)">
-									{{ getCategoryIcon(tx.categoryId) }}
+							<div class="icon-container" [style.background-color]="tx._categoryBgColor"
+								[style.color]="tx._categoryColor">
+								<mat-icon [style.color]="tx._categoryColor">
+									{{ tx._categoryIcon }}
 								</mat-icon>
 								@if(tx.isSplitTransaction) {
 								<mat-icon class="split-transaction">bookmark</mat-icon>
@@ -258,7 +257,7 @@
                   {{ tx.category }}
                 </div> -->
 							<!-- <div class="transaction-date text-base">
-								{{ dateService.toDate(tx.date) | date:'dd MMM ' }}
+								{{ tx._dateDisplay }}
 							</div> -->
 							<div *ngIf="tx.notes" class="transaction-notes text-base">
 								{{ tx.notes }}
@@ -268,11 +267,11 @@
 						<!-- Amount Section -->
 						<div class="transaction-amount">
 							<div class="amount-value text-base"
-								[ngClass]="tx.type === 'income' ? 'income-text' : 'expense-text'">
-								{{ tx.type === 'income' ? '+' : '-' }}{{ tx.amount | currency }}
+								[ngClass]="tx._isIncome ? 'income-text' : 'expense-text'">
+								{{ tx._isIncome ? '+' : '-' }}{{ tx.amount | currency }}
 							</div>
 							<div class="amount-type">
-								{{ dateService.toDate(tx.date) | date:'hh:mm a' }}
+								{{ tx._timeDisplay }}
 							</div>
 						</div>
 					</div>
@@ -301,9 +300,9 @@
 									<span>Account</span>
 								</div>
 								<div class="detail-value">
-									<span class="account-name">{{ getAccountName(tx.accountId) }}</span>
-									<span class="account-type" *ngIf="getAccountType(tx.accountId)">({{
-										getAccountType(tx.accountId) }})</span>
+									<span class="account-name">{{ tx._accountName }}</span>
+									<span class="account-type" *ngIf="tx._accountType">({{
+										tx._accountType }})</span>
 								</div>
 							</div>
 
@@ -325,20 +324,20 @@
 									<span>Recurring</span>
 								</div>
 								<div class="detail-value">
-									<span class="recurring-info">{{ getRecurringInfo(tx) }}</span>
+									<span class="recurring-info">{{ tx._recurringInfo }}</span>
 								</div>
 							</div>
 
 							<!-- Sync Status -->
 							<div class="detail-row">
 								<div class="detail-label">
-									<mat-icon class="detail-icon" [style.color]="getSyncStatusColor(tx)">{{
-										getSyncStatusIcon(tx) }}</mat-icon>
+									<mat-icon class="detail-icon" [style.color]="tx._syncStatusColor">{{
+										tx._syncStatusIcon }}</mat-icon>
 									<span>Status</span>
 								</div>
 								<div class="detail-value">
-									<span class="sync-status" [style.color]="getSyncStatusColor(tx)">{{
-										getSyncStatusInfo(tx) }}</span>
+									<span class="sync-status" [style.color]="tx._syncStatusColor">{{
+										tx._syncStatusInfo }}</span>
 								</div>
 							</div>
 
@@ -349,7 +348,7 @@
 									<span>Created Date</span>
 								</div>
 								<div class="detail-value">
-									<span class="created-date">{{ dateService.toDate(tx.date) | date:'fullDate'
+									<span class="created-date">{{ tx._fullDateDisplay
 										}}</span>
 								</div>
 							</div>
@@ -361,7 +360,7 @@
 									<span>Created Time</span>
 								</div>
 								<div class="detail-value">
-									<span class="created-time">{{ dateService.toDate(tx.date) | date:'shortTime'
+									<span class="created-time">{{ tx._timeDisplay
 										}}</span>
 								</div>
 							</div>
