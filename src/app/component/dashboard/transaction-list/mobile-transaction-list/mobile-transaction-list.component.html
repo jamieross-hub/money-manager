@@ -9,25 +9,13 @@
 
 	<!-- Mobile Filter Header -->
 	<div class="mobile-filter-header" *ngIf="showFilters && !showChart">
-		<!-- Active Filters Indicator -->
-		<!-- <div *ngIf="hasActiveFilters()" class="active-filters-indicator flex justify-between items-center">
-			<div class="filter-icon-container">
-				<mat-icon class="filter-icon">filter_alt</mat-icon>
-				<span class="filter-text">{{ getActiveFiltersCount() }} Filter{{ getActiveFiltersCount() > 1 ? 's' : ''
-					}} Active</span>
-			</div>
-			<div class="">
-				<mat-icon class="text-black relative top-1 !text-blue-700 text-sm"
-					(click)="quickClearFilters()">clear</mat-icon>
-			</div>
-		</div> -->
 		<!-- Search Bar -->
 		<div class="search-container">
 			<div class="search-input-wrapper">
 				<mat-icon class="search-icon">search</mat-icon>
-				<input type="text" [ngModel]="searchTerm" (ngModelChange)="onSearchChange($event)"
+				<input type="text" [ngModel]="searchTerm()" (ngModelChange)="onSearchChange($event)"
 					placeholder="Search transactions..." class="search-input" />
-				<button *ngIf="searchTerm" mat-icon-button class="clear-search-btn" (click)="onSearchChange('')">
+				<button *ngIf="searchTerm()" mat-icon-button class="clear-search-btn" (click)="onSearchChange('')">
 					<mat-icon>close</mat-icon>
 				</button>
 			</div>
@@ -37,19 +25,19 @@
 		<div class="filter-menu-container md:justify-center">
 			<!-- Sort Menu -->
 			<button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="sortMenu"
-				[ngClass]="{'active': selectedSort !== 'date-desc'}" matTooltip="{{ getCurrentSortLabel() }}"
+				[ngClass]="{'active': selectedSort() !== 'date-desc'}" matTooltip="{{ currentSortLabel() }}"
 				aria-label="Sort transactions">
 				<mat-icon>sort</mat-icon>
-				<span class="filter-btn-text">{{ getCurrentSortLabel() }}</span>
+				<span class="filter-btn-text">{{ currentSortLabel() }}</span>
 			</button>
 
 			<mat-menu #sortMenu="matMenu" class="filter-menu">
 				@for (option of sortOptions; track option.value) {
-				<button mat-menu-item [class.active-menu-item]="selectedSort === option.value"
+				<button mat-menu-item [class.active-menu-item]="selectedSort() === option.value"
 					(click)="onSortChange(option.value)">
 					<mat-icon>{{ option.icon }}</mat-icon>
 					<span>{{ option.label }}</span>
-					@if (selectedSort === option.value) {
+					@if (selectedSort() === option.value) {
 					<mat-icon class="check-icon">check</mat-icon>
 					}
 				</button>
@@ -57,47 +45,47 @@
 			</mat-menu>
 
 			<!-- Type Menu -->
-			<button mat-icon-button class="filter-menu-btn" [ngClass]="{'active': selectedType !== 'all'}"
-				[matMenuTriggerFor]="typeMenu" matTooltip="{{ getCurrentTypeLabel() }}"
+			<button mat-icon-button class="filter-menu-btn" [ngClass]="{'active': selectedType() !== 'all'}"
+				[matMenuTriggerFor]="typeMenu" matTooltip="{{ currentTypeLabel() }}"
 				aria-label="Filter by transaction type">
 				<mat-icon>account_balance_wallet</mat-icon>
-				<span class="filter-btn-text">{{ getCurrentTypeLabel() }}</span>
+				<span class="filter-btn-text">{{ currentTypeLabel() }}</span>
 			</button>
 
 			<mat-menu #typeMenu="matMenu" class="filter-menu">
-				<button mat-menu-item [class.active-menu-item]="selectedType === 'all'" (click)="onTypeChange('all')">
+				<button mat-menu-item [class.active-menu-item]="selectedType() === 'all'" (click)="onTypeChange('all')">
 					<mat-icon>list</mat-icon>
 					<span>All Types</span>
-					<mat-icon *ngIf="selectedType === 'all'" class="check-icon">check</mat-icon>
+					<mat-icon *ngIf="selectedType() === 'all'" class="check-icon">check</mat-icon>
 				</button>
-				<button mat-menu-item [class.active-menu-item]="selectedType === 'income'"
+				<button mat-menu-item [class.active-menu-item]="selectedType() === 'income'"
 					(click)="onTypeChange('income')">
 					<mat-icon class="income-icon">trending_up</mat-icon>
 					<span>Income</span>
-					<mat-icon *ngIf="selectedType === 'income'" class="check-icon">check</mat-icon>
+					<mat-icon *ngIf="selectedType() === 'income'" class="check-icon">check</mat-icon>
 				</button>
-				<button mat-menu-item [class.active-menu-item]="selectedType === 'expense'"
+				<button mat-menu-item [class.active-menu-item]="selectedType() === 'expense'"
 					(click)="onTypeChange('expense')">
 					<mat-icon class="expense-icon">trending_down</mat-icon>
 					<span>Expense</span>
-					<mat-icon *ngIf="selectedType === 'expense'" class="check-icon">check</mat-icon>
+					<mat-icon *ngIf="selectedType() === 'expense'" class="check-icon">check</mat-icon>
 				</button>
 			</mat-menu>
 
 			<!-- Category Menu -->
 			<button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="categoryMenu"
-				matTooltip="{{ getCurrentCategoryLabel() }}" aria-label="Filter by category"
-				[ngClass]="{'active': !selectedCategory.includes('all')}">
+				matTooltip="{{ currentCategoryLabel() }}" aria-label="Filter by category"
+				[ngClass]="{'active': !selectedCategory().includes('all')}">
 				<mat-icon>category</mat-icon>
-				<span class="filter-btn-text">{{ getCurrentCategoryLabel() }}</span>
+				<span class="filter-btn-text">{{ currentCategoryLabel() }}</span>
 			</button>
 
 			<mat-menu #categoryMenu="matMenu" class="filter-menu">
-				<button mat-menu-item [class.active-menu-item]="selectedCategory.includes('all')"
+				<button mat-menu-item [class.active-menu-item]="selectedCategory().includes('all')"
 					(click)="onCategoryChange('all'); $event.stopPropagation()">
 					<mat-icon>list</mat-icon>
 					<span>All Categories</span>
-					<mat-icon *ngIf="selectedCategory.includes('all')" class="check-icon">check</mat-icon>
+					<mat-icon *ngIf="selectedCategory().includes('all')" class="check-icon">check</mat-icon>
 				</button>
 				<mat-divider></mat-divider>
 				@for (category of getCategoriesList(); track category.id) {
@@ -114,58 +102,51 @@
 
 			<!-- Date Range Menu -->
 			<button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="dateMenu"
-				[ngClass]="{'active': selectedDateRange !== null}" matTooltip="{{ getCurrentDateLabel() }}"
+				[ngClass]="{'active': selectedDateRange() !== null}" matTooltip="{{ currentDateLabel() }}"
 				aria-label="Filter by date range">
 				<mat-icon>calendar_today</mat-icon>
-				<span class="filter-btn-text">{{ getCurrentDateLabel() }}</span>
+				<span class="filter-btn-text">{{ currentDateLabel() }}</span>
 			</button>
 
 			<mat-menu #dateMenu="matMenu" class="filter-menu">
-				<button mat-menu-item [class.active-menu-item]="selectedDateRange === null"
+				<button mat-menu-item [class.active-menu-item]="selectedDateRange() === null"
 					(click)="onDateRangeChange(null)">
 					<mat-icon>all_inclusive</mat-icon>
 					<span>All Time</span>
 				</button>
-				<button mat-menu-item [class.active-menu-item]="selectedRange === 'this-week'"
+				<button mat-menu-item [class.active-menu-item]="selectedRange() === 'this-week'"
 					(click)="onDateRangeChange('this-week')">
 					<mat-icon>calendar_view_week</mat-icon>
 					<span>This Week</span>
 				</button>
-				<button mat-menu-item [class.active-menu-item]="selectedRange === 'this-month'"
+				<button mat-menu-item [class.active-menu-item]="selectedRange() === 'this-month'"
 					(click)="onDateRangeChange('this-month')">
 					<mat-icon>calendar_month</mat-icon>
 					<span>This Month</span>
 				</button>
-				<button mat-menu-item [class.active-menu-item]="selectedRange === 'last-month'"
+				<button mat-menu-item [class.active-menu-item]="selectedRange() === 'last-month'"
 					(click)="onDateRangeChange('last-month')">
 					<mat-icon>calendar_view_month</mat-icon>
 					<span>Last Month</span>
 				</button>
 				<!-- //upcoming button -->
-				<button mat-menu-item [class.active-menu-item]="selectedRange === 'upcoming'"
+				<button mat-menu-item [class.active-menu-item]="selectedRange() === 'upcoming'"
 					(click)="onDateRangeChange('upcoming')">
 					<mat-icon>calendar_today</mat-icon>
 					<span>Upcoming</span>
 				</button>
-				<button mat-menu-item [class.active-menu-item]="selectedRange === 'this-year'"
+				<button mat-menu-item [class.active-menu-item]="selectedRange() === 'this-year'"
 					(click)="onDateRangeChange('this-year')">
 					<mat-icon>calendar_today</mat-icon>
 					<span>This Year</span>
 				</button>
 				<mat-divider></mat-divider>
-				<button mat-menu-item [class.active-menu-item]="selectedRange === 'custom'"
+				<button mat-menu-item [class.active-menu-item]="selectedRange() === 'custom'"
 					(click)="openCustomDateRangeDialog()">
 					<mat-icon>date_range</mat-icon>
 					<span>Custom Range</span>
 				</button>
 			</mat-menu>
-
-			<!-- Import Button -->
-			<!-- <button mat-icon-button class="filter-menu-btn import-btn" (click)="openImportDialog()"
-				matTooltip="Import transactions" aria-label="Import transactions">
-				<mat-icon>upload_file</mat-icon>
-				<span class="filter-btn-text">Import</span>
-			</button> -->
 
 			<!-- Chart Button -->
 			<button mat-icon-button class="filter-menu-btn bg-primary" color="primary" (click)="toggleChartView()"
@@ -179,17 +160,17 @@
 
 
 	<!-- Transaction Summary -->
-	<div class="transaction-summary" *ngIf="showFilters && filteredTransactions.length > 0">
+	<div class="transaction-summary" *ngIf="showFilters && filteredTransactions().length > 0">
 		<div class="summary-stats">
 			<div class="stat-item">
-				<span class="stat-value">{{ getFilteredCount() }}</span>
-				<span class="stat-total">/ {{ getTotalCount() }}</span>
+				<span class="stat-value">{{ filteredCount() }}</span>
+				<span class="stat-total">/ {{ totalCount() }}</span>
 			</div>
 			<div class="stat-item">
-				<span class="stat-value income">+{{ getTotalIncome() | currency:{round:true} }}</span>
+				<span class="stat-value income">+{{ totalIncome() | currency:{round:true} }}</span>
 			</div>
 			<div class="stat-item">
-				<span class="stat-value expense">-{{ getTotalExpenses() | currency:{round:true} }}</span>
+				<span class="stat-value expense">-{{ totalExpenses() | currency:{round:true} }}</span>
 			</div>
 		</div>
 	</div>
@@ -198,21 +179,22 @@
 	<div class="transaction-list-container">
 		<div class="transaction-scroll">
 			<!-- Empty State -->
-			<div *ngIf="!filteredTransactions.length" class="empty-state">
+			<div *ngIf="!filteredTransactions().length" class="empty-state">
 				<div class="empty-icon">
 					<mat-icon>receipt_long</mat-icon>
 				</div>
 				<h3 class="empty-title text-base">No transactions found</h3>
 				<p class="empty-description text-base">
-					{{ allTransactions.length === 0 ? 'Start by adding your first transaction' : 'No transactions match
+					{{ allTransactions().length === 0 ? 'Start by adding your first transaction' : 'No transactions
+					match
 					your current filters. Try adjusting your search or filters.' }}
 				</p>
-				<button *ngIf="allTransactions.length === 0" mat-flat-button color="primary" class="add-first-btn"
+				<button *ngIf="allTransactions().length === 0" mat-flat-button color="primary" class="add-first-btn"
 					(click)="onAddTransaction()">
 					<mat-icon>add</mat-icon>
 					<span>Add First Transaction</span>
 				</button>
-				<button *ngIf="allTransactions.length > 0 && hasActiveFilters()" mat-stroked-button
+				<button *ngIf="allTransactions().length > 0 && hasActiveFilters()" mat-stroked-button
 					class="clear-filters-btn-large" (click)="clearAllFilters()">
 					<mat-icon>clear</mat-icon>
 					<span class="text-base">Clear Filters</span>
@@ -220,7 +202,7 @@
 			</div>
 
 			<!-- Transaction Cards -->
-			@for (group of groupedTransactions; track group.date) {
+			@for (group of groupedTransactions(); track group.date) {
 			<div class="date-group">
 				<div class="date-header">
 					{{ group.dateHeader }}
