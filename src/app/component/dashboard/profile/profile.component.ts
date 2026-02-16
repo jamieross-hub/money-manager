@@ -32,6 +32,9 @@ import {
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { BackupRestoreService } from 'src/app/util/service/db/backup-restore.service';
+import { SplitwiseService } from 'src/app/modules/splitwise/services/splitwise.service';
+import { CreateGroupDialogComponent } from 'src/app/modules/splitwise/create-group-dialog/create-group-dialog.component';
+import { SplitwiseGroup, CreateGroupRequest } from 'src/app/util/models/splitwise.model';
 
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -146,7 +149,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     public breakpointService: BreakpointService,
     private userService: UserService,
     private translationService: TranslationService,
-    private backupRestoreService: BackupRestoreService
+    private backupRestoreService: BackupRestoreService,
+    private splitwiseService: SplitwiseService
   ) {
     this.currentUser = this.auth.currentUser;
     // Initialize selectors
@@ -205,12 +209,87 @@ export class ProfileComponent implements OnInit, OnDestroy {
     // Also listen to userAuth$ for direct updates (important for guests)
     this.subscriptions.add(
       this.userService.userAuth$.subscribe(user => {
-        if (user && this.userService.isGuestUser() && !this.userProfile) {
-          this.userProfile = this.mapUserToProfile(user);
-          this.populateForm();
+        if (user) {
+          if (this.userService.isGuestUser() && !this.userProfile) {
+            this.userProfile = this.mapUserToProfile(user);
+            this.populateForm();
+          }
+          // Load family group if exists
+          if (user.preferences?.familyGroupId) {
+            this.loadFamilyGroup(user.preferences.familyGroupId);
+          }
         }
       })
     );
+  }
+
+  familyGroup$: Observable<SplitwiseGroup | null> = new Subject<SplitwiseGroup | null>();
+
+  private loadFamilyGroup(groupId: string): void {
+    if (!groupId) return;
+    this.familyGroup$ = this.splitwiseService.getGroup(groupId);
+  }
+
+  async createFamilyGroup(): Promise<void> {
+    const dialogRef = this.dialog.open(CreateGroupDialogComponent, {
+      disableClose: true,
+      panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
+    });
+
+    dialogRef.afterClosed().subscribe(async (result: CreateGroupRequest) => {
+      if (result) {
+        try {
+          this.isLoading = true;
+          // 1. Create the group
+          const group = await this.splitwiseService.createGroup(result, this.currentUser.uid).toPromise();
+
+          if (group && group.id) {
+            // 2. Update user profile with familyGroupId
+            await this.updateFamilyGroupId(group.id);
+            this.notificationService.success('Family group created successfully');
+            this.loadFamilyGroup(group.id);
+          }
+        } catch (error) {
+          console.error('Error creating family group:', error);
+          this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
+        } finally {
+          this.isLoading = false;
+        }
+      }
+    });
+  }
+
+  async updateFamilyGroupId(groupId: string): Promise<void> {
+    if (!this.userProfile) return;
+
+    const updatedUser: User = {
+      ...this.userProfile,
+      preferences: {
+        ...this.userProfile.preferences,
+        familyGroupId: groupId,
+        // Ensure required properties are present
+        defaultCurrency: this.userProfile.preferences?.defaultCurrency || this.defaultCurrency,
+        timezone: this.userProfile.preferences?.timezone || 'UTC',
+        notifications: this.userProfile.preferences?.notifications ?? true,
+        emailUpdates: this.userProfile.preferences?.emailUpdates ?? true,
+        budgetAlerts: this.userProfile.preferences?.budgetAlerts ?? true,
+      }
+    };
+
+    if (this.userService.isGuestUser()) {
+      this.userService.storageService.setItem(`user-data-${updatedUser.uid}`, updatedUser);
+      this.userService.userAuth$.next(updatedUser);
+      this.userProfile = updatedUser;
+    } else {
+      this.store.dispatch(ProfileActions.updateProfile({
+        userId: this.userProfile.uid,
+        profile: updatedUser
+      }));
+    }
+  }
+
+  viewFamilyGroup(groupId: string): void {
+    this.router.navigate(['/dashboard/splitwise/group', groupId]);
   }
 
   private ensureCurrentTimezoneInList(): void {

@@ -1,17 +1,36 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { Auth } from '@angular/fire/auth';
 import { CreateGroupRequest } from 'src/app/util/models/splitwise.model';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import { Observable } from 'rxjs';
+import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { CommonHeaderComponent } from 'src/app/util/components/dialog/common-header/common-header.component';
+import { CommonBodyContentComponent } from 'src/app/util/components/dialog/common-body-content/common-body-content.component';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-create-group-dialog',
   templateUrl: './create-group-dialog.component.html',
-  styleUrls: ['./create-group-dialog.component.scss']
+  styleUrls: ['./create-group-dialog.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule,
+    CommonHeaderComponent,
+    CommonBodyContentComponent
+  ]
 })
 export class CreateGroupDialogComponent implements OnInit {
   groupForm: FormGroup;
@@ -43,7 +62,7 @@ export class CreateGroupDialogComponent implements OnInit {
       try {
         const formData = this.groupForm.value;
         const userCurrency = this.store.select(ProfileSelectors.selectUserCurrency);
-        
+
         // Get the current currency value
         let currency = 'USD'; // Default fallback
         userCurrency.subscribe(curr => {

@@ -45,6 +45,7 @@ export interface UserPreferences {
 	openaiApiKey?: string;
 	categoryListViewMode?: boolean;
 	appView?: 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+	familyGroupId?: string;
 }
 
 

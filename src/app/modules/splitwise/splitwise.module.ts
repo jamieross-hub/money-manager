@@ -54,7 +54,6 @@ import { SharedModule } from '../shared/shared.module';
 @NgModule({
   declarations: [
     SplitwiseComponent,
-    CreateGroupDialogComponent,
     AddMemberDialogComponent,
     GroupComponent,
     GroupDetailsComponent,
@@ -95,6 +94,7 @@ import { SharedModule } from '../shared/shared.module';
 
     // Standalone Components
     LoaderComponent,
+    CreateGroupDialogComponent,
     // TranslatePipe,
   ],
   providers: [
