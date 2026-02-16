@@ -37,14 +37,19 @@
 	<!-- Profile Content -->
 	<div class="profile-content" *ngIf="userProfile">
 		<form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="profile-form">
+			<!-- <mat-accordion multi> -->
 			<!-- Personal Information Section -->
-			<div class="form-section">
-				<div class="section-header">
-					<mat-icon class="section-icon">person</mat-icon>
-					<h2>{{ 'PROFILE.PERSONAL_INFO' | translate }}</h2>
-				</div>
+			<mat-expansion-panel [expanded]="breakpointService.device.isMobile ? false : true"
+				class="form-section-panel">
+				<mat-expansion-panel-header>
+					<mat-panel-title class="flex items-center gap-2">
+						<mat-icon class="section-icon">person</mat-icon>
+						<p class="text-lg font-semibold text-gray-700 !mb-0 dark:text-gray-200">{{
+							'PROFILE.PERSONAL_INFO' | translate }}</p>
+					</mat-panel-title>
+				</mat-expansion-panel-header>
 
-				<div class="form-grid">
+				<div class="form-grid pt-4">
 					<!-- First Name -->
 					<mat-form-field appearance="fill" class="form-field">
 						<mat-label>{{ 'PROFILE.FIRST_NAME' | translate }} *</mat-label>
@@ -120,16 +125,20 @@
 						</mat-error>
 					</mat-form-field>
 				</div>
-			</div>
+			</mat-expansion-panel>
 
 			<!-- Preferences Section -->
-			<div class="form-section" formGroupName="preferences">
-				<div class="section-header">
-					<mat-icon class="section-icon">settings</mat-icon>
-					<h2>{{ 'PROFILE.PREFERENCES' | translate }}</h2>
-				</div>
+			<mat-expansion-panel [expanded]="breakpointService.device.isMobile ? false : true"
+				class="form-section-panel mt-6" formGroupName="preferences">
+				<mat-expansion-panel-header>
+					<mat-panel-title class="flex items-center gap-2">
+						<mat-icon class="section-icon">settings</mat-icon>
+						<p class="text-lg font-semibold text-gray-700 !mb-0 dark:text-gray-200">{{
+							'PROFILE.PREFERENCES' | translate }}</p>
+					</mat-panel-title>
+				</mat-expansion-panel-header>
 
-				<div class="form-grid">
+				<div class="form-grid pt-4">
 					<!-- ₹ -->
 					<mat-form-field appearance="fill" class="form-field">
 						<mat-label>{{ 'PROFILE.DEFAULT_CURRENCY' | translate }} *</mat-label>
@@ -188,9 +197,6 @@
 					</mat-form-field>
 				</div>
 
-
-
-
 				<!-- Notification Preferences -->
 				<div class="preferences-grid">
 					<div class="preference-item">
@@ -222,7 +228,8 @@
 						<p class="preference-description">{{ 'PROFILE.VIEW_MODE_DESC' | translate }}</p>
 					</div>
 				</div>
-			</div>
+			</mat-expansion-panel>
+			<!-- </mat-accordion> -->
 
 			<!-- Action Buttons -->
 			<div class="form-actions" *ngIf="isEditing">
@@ -239,40 +246,47 @@
 		</form>
 
 		<!-- Account Actions Section -->
-		<div class="account-actions-section">
-			<div class="section-header">
-				<mat-icon class="section-icon">security</mat-icon>
-				<h2>{{ 'PROFILE.ACCOUNT_ACTIONS' | translate }}</h2>
-			</div>
+		<mat-accordion>
+			<mat-expansion-panel [expanded]="breakpointService.device.isMobile ? false : true"
+				class="account-actions-panel">
+				<mat-expansion-panel-header>
+					<mat-panel-title class="flex items-center gap-2">
+						<mat-icon class="section-icon">security</mat-icon>
+						<p class="text-lg font-semibold text-gray-700 !mb-0 dark:text-gray-200">{{
+							'PROFILE.ACCOUNT_ACTIONS' | translate }}</p>
+					</mat-panel-title>
+				</mat-expansion-panel-header>
 
-			<div class="actions-grid">
-				<div class="action-card">
-					<mat-icon class="action-icon">lock</mat-icon>
-					<h3>{{ 'PROFILE.CHANGE_PASSWORD' | translate }}</h3>
-					<p>{{ 'PROFILE.CHANGE_PASSWORD_DESC' | translate }}</p>
-					<button mat-stroked-button (click)="changePassword()" class="action-btn" [disabled]="isGuestMode()">
-						{{ 'PROFILE.CHANGE_PASSWORD' | translate }}
-					</button>
-				</div>
+				<div class="actions-grid pt-4">
+					<div class="action-card">
+						<mat-icon class="action-icon">lock</mat-icon>
+						<h3>{{ 'PROFILE.CHANGE_PASSWORD' | translate }}</h3>
+						<p>{{ 'PROFILE.CHANGE_PASSWORD_DESC' | translate }}</p>
+						<button mat-stroked-button (click)="changePassword()" class="action-btn"
+							[disabled]="isGuestMode()">
+							{{ 'PROFILE.CHANGE_PASSWORD' | translate }}
+						</button>
+					</div>
 
-				<div class="action-card">
-					<mat-icon class="action-icon">download</mat-icon>
-					<h3>{{ 'PROFILE.EXPORT_DATA' | translate }}</h3>
-					<p>{{ 'PROFILE.EXPORT_DATA_DESC' | translate }}</p>
-					<button mat-stroked-button (click)="exportData()" class="action-btn">
-						{{ 'PROFILE.EXPORT_DATA' | translate }}
-					</button>
-				</div>
+					<div class="action-card">
+						<mat-icon class="action-icon">download</mat-icon>
+						<h3>{{ 'PROFILE.EXPORT_DATA' | translate }}</h3>
+						<p>{{ 'PROFILE.EXPORT_DATA_DESC' | translate }}</p>
+						<button mat-stroked-button (click)="exportData()" class="action-btn">
+							{{ 'PROFILE.EXPORT_DATA' | translate }}
+						</button>
+					</div>
 
-				<div class="action-card danger">
-					<mat-icon class="action-icon">delete_forever</mat-icon>
-					<h3>{{ 'PROFILE.DELETE_ACCOUNT' | translate }}</h3>
-					<p>{{ 'PROFILE.DELETE_ACCOUNT_DESC' | translate }}</p>
-					<button mat-stroked-button color="warn" (click)="deleteAccount()" class="action-btn">
-						{{ 'PROFILE.DELETE_ACCOUNT' | translate }}
-					</button>
+					<div class="action-card danger">
+						<mat-icon class="action-icon">delete_forever</mat-icon>
+						<h3>{{ 'PROFILE.DELETE_ACCOUNT' | translate }}</h3>
+						<p>{{ 'PROFILE.DELETE_ACCOUNT_DESC' | translate }}</p>
+						<button mat-stroked-button color="warn" (click)="deleteAccount()" class="action-btn">
+							{{ 'PROFILE.DELETE_ACCOUNT' | translate }}
+						</button>
+					</div>
 				</div>
-			</div>
-		</div>
+			</mat-expansion-panel>
+		</mat-accordion>
 	</div>
 </div>

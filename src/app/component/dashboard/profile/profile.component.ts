@@ -45,6 +45,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { TranslateModule } from '@ngx-translate/core';
 import { QuickActionsFabComponent } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
@@ -68,7 +69,8 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
     MatProgressSpinnerModule,
     MatSlideToggleModule,
     TranslateModule,
-    QuickActionsFabComponent
+    QuickActionsFabComponent,
+    MatExpansionModule
   ]
 })
 export class ProfileComponent implements OnInit, OnDestroy {
