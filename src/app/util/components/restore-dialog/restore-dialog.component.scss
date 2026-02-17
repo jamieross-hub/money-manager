@@ -1,0 +1,186 @@
+@use '@angular/material' as mat;
+
+.restore-dialog-container {
+    padding: 1.5rem;
+    max-width: 500px;
+    font-family: 'Inter', sans-serif; // Assuming Inter or system font
+    background: #ffffff;
+    border-radius: 12px; // Rounded corners for modal content if not handled by dialog container
+}
+
+// Header
+.dialog-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+
+    .icon-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 50%;
+        background-color: #fef3c7; // Amber-100
+        color: #d97706; // Amber-600
+
+        mat-icon {
+            font-size: 1.75rem;
+            width: 1.75rem;
+            height: 1.75rem;
+        }
+    }
+
+    .header-text {
+        .dialog-title {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111827; // Gray-900
+        }
+
+        .dialog-subtitle {
+            margin: 0.25rem 0 0;
+            font-size: 0.875rem;
+            color: #6b7280; // Gray-500
+        }
+    }
+}
+
+// Content
+.dialog-content {
+    margin-bottom: 2rem;
+
+    .description {
+        margin: 0 0 1rem;
+        font-size: 0.95rem;
+        color: #374151; // Gray-700
+        line-height: 1.5;
+    }
+
+    .options-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .option-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border: 1px solid #e5e7eb; // Gray-200
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        position: relative;
+
+        &:hover {
+            background-color: #f9fafb; // Gray-50
+            border-color: #d1d5db; // Gray-300
+        }
+
+        &.selected {
+            background-color: #eff6ff; // Blue-50
+            border-color: #3b82f6; // Blue-500
+            
+            &.replace {
+                background-color: #fef2f2; // Red-50
+                border-color: #ef4444; // Red-500
+                
+                .radio-indicator {
+                    border-color: #ef4444;
+                    &::after { background-color: #ef4444; }
+                }
+            }
+
+            .radio-indicator {
+                border-color: #3b82f6;
+                &::after {
+                    transform: scale(1);
+                }
+            }
+        }
+
+        .option-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            
+            mat-icon {
+                font-size: 1.5rem;
+                width: 1.5rem;
+                height: 1.5rem;
+            }
+        }
+
+        .option-details {
+            flex: 1;
+
+            h3 {
+                margin: 0;
+                font-size: 1rem;
+                font-weight: 600;
+                color: #1f2937;
+            }
+
+            p {
+                margin: 0.25rem 0 0;
+                font-size: 0.85rem;
+                color: #6b7280;
+                line-height: 1.4;
+            }
+
+            .danger-text {
+                color: #dc2626; // Red-600
+                font-weight: 500;
+            }
+        }
+
+        .radio-indicator {
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid #d1d5db;
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+
+            &::after {
+                content: '';
+                width: 0.75rem;
+                height: 0.75rem;
+                background-color: #3b82f6;
+                border-radius: 50%;
+                transform: scale(0);
+                transition: transform 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+            }
+        }
+    }
+}
+
+// Actions
+.dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f3f4f6; // Gray-100
+
+    .cancel-btn {
+        color: #4b5563;
+        font-weight: 500;
+    }
+
+    .confirm-btn {
+        font-weight: 600;
+        padding: 0 1.5rem;
+        
+        // Dynamic color handling via class or attribute if needed, but 'color="primary"' logic handles base
+        // If replace is selected, component logic changes button text/color binding effectively
+    }
+}

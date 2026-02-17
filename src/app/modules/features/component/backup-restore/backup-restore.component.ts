@@ -1,5 +1,5 @@
-import { Component, OnInit , ChangeDetectionStrategy} from '@angular/core';
-import { BackupRestoreService, BackupData } from '../../../../util/service/db/backup-restore.service';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { BackupRestoreService, BackupData } from '../../../../util/service/backupRestore.service';
 import { NotificationService } from '../../../../util/service/notification.service';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../../../../util/components/confirm-dialog/confirm-dialog.component';
@@ -9,7 +9,7 @@ import { TranslateService } from '@ngx-translate/core';
     selector: 'app-backup-restore',
     templateUrl: './backup-restore.component.html',
     styleUrls: ['./backup-restore.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BackupRestoreComponent implements OnInit {
     isLoading = false;
@@ -70,26 +70,18 @@ export class BackupRestoreComponent implements OnInit {
             if (result) {
                 this.isLoading = true;
                 try {
-                    const reader = new FileReader();
-                    reader.onload = async (e: any) => {
-                        try {
-                            const backup = JSON.parse(e.target.result) as BackupData;
-                            const response = await this.backupRestoreService.importData(backup, mode);
-                            if (response.success) {
-                                this.notificationService.success(response.message);
-                                this.importSummary = response.summary;
-                            } else {
-                                this.notificationService.error(response.message);
-                            }
-                        } catch (err) {
-                            this.notificationService.error('BACKUP.PARSE_ERROR');
-                        } finally {
-                            this.isLoading = false;
-                        }
-                    };
-                    reader.readAsText(this.selectedFile!);
-                } catch (error) {
-                    this.notificationService.error('BACKUP.IMPORT_FAILED');
+                    const backup = await this.backupRestoreService.readJsonFile(this.selectedFile!) as BackupData;
+                    const response = await this.backupRestoreService.importData(backup, mode);
+                    if (response.success) {
+                        this.notificationService.success(response.message);
+                        this.importSummary = response.summary;
+                    } else {
+                        this.notificationService.error(response.message);
+                    }
+                } catch (err) {
+                    console.error('Import error:', err);
+                    this.notificationService.error('BACKUP.PARSE_ERROR');
+                } finally {
                     this.isLoading = false;
                 }
             }

@@ -22,6 +22,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
+import { BackupRestoreService } from 'src/app/util/service/backupRestore.service';
 import { Account } from 'src/app/util/models/account.model';
 import { Category } from 'src/app/util/models';
 import { AppState } from 'src/app/store/app.state';
@@ -98,7 +99,8 @@ export class ImportTransactionsComponent implements OnDestroy {
     private auth: Auth,
     private store: Store<AppState>,
     private ssrService: SsrService,
-    private userService: UserService
+    private userService: UserService,
+    private backupRestoreService: BackupRestoreService
   ) {
     this.categories = this.data.categories;
     this.setupDragAndDrop();
@@ -226,18 +228,11 @@ export class ImportTransactionsComponent implements OnDestroy {
       return;
     }
 
-    const validExtensions = ['.json'];
-    const fileExtension = file.name
-      .toLowerCase()
-      .substring(file.name.lastIndexOf('.'));
-
-    if (!validExtensions.includes(fileExtension)) {
-      this.notificationService.error('Please select a JSON file (.json)');
-      return;
-    }
-
     this.selectedFile = file;
-    this.fileType = fileExtension.toUpperCase();
+    // Extract extension for display purposes only, validation happens in service
+    const fileExtension = file.name.split('.').pop() || '';
+    this.fileType = `.${fileExtension.toUpperCase()}`;
+
     this.error = '';
     this.isLoading = true;
     this.notificationService.info(`Processing ${this.fileType} file...`);
@@ -245,92 +240,33 @@ export class ImportTransactionsComponent implements OnDestroy {
     this.parseJsonFile(file);
   }
 
-  parseJsonFile(file: File) {
-    const reader = new FileReader();
-    reader.onload = (e: any) => {
-      try {
-        const jsonString = e.target.result;
-        const jsonData = JSON.parse(jsonString);
+  async parseJsonFile(file: File) {
+    try {
+      const parsedData = await this.backupRestoreService.parseTransactionExport(file);
 
-        if (!Array.isArray(jsonData)) {
-          this.isLoading = false;
-          this.error = 'JSON file must contain an array of transactions.';
-          this.notificationService.error('Invalid JSON format');
-          return;
-        }
-
-        if (jsonData.length === 0) {
-          this.isLoading = false;
-          this.error = 'JSON file is empty.';
-          this.notificationService.error('No data found in JSON file');
-          return;
-        }
-
+      if (!parsedData || parsedData.length === 0) {
         this.isLoading = false;
-        this.processParsedData(jsonData);
-        this.notificationService.success(
-          `Successfully parsed ${this.parsedTransactions.length} transactions from JSON file`
-        );
-
-      } catch (error) {
-        this.isLoading = false;
-        this.error = 'Error parsing JSON file. Please check the format.';
-        this.notificationService.error('Failed to parse JSON file');
-        console.error('JSON parsing error:', error);
+        this.error = 'No valid transactions found in the file.';
+        this.notificationService.error('No valid transactions found');
+        return;
       }
-    };
 
-    reader.onerror = () => {
       this.isLoading = false;
-      this.error = 'Error reading JSON file.';
-      this.notificationService.error('Failed to read JSON file');
-    };
+      this.parsedTransactions = parsedData;
 
-    reader.readAsText(file);
-  }
+      // Select all transactions by default
+      this.selectedToImport = new Set(this.parsedTransactions.map((_, index) => index));
 
-  processParsedData(data: any[]) {
-    if (!data || data.length === 0) {
-      this.error = 'No valid data found in the file.';
-      this.notificationService.error('No transactions found in the file');
-      return;
+      this.notificationService.success(
+        `Successfully parsed ${this.parsedTransactions.length} transactions from JSON file`
+      );
+
+    } catch (error: any) {
+      this.isLoading = false;
+      this.error = error.message || 'Error parsing JSON file. Please check the format.';
+      this.notificationService.error(this.error);
+      console.error('JSON parsing error:', error);
     }
-
-    this.parseStandardFormat(data);
-
-    if (this.parsedTransactions.length === 0) {
-      this.error = 'No valid transactions found in the file.';
-      this.notificationService.error('No valid transactions found');
-      return;
-    }
-
-    // Select all transactions by default
-    this.selectedToImport = new Set(this.parsedTransactions.map((_, index) => index));
-  }
-
-  parseStandardFormat(data: any[]) {
-    this.parsedTransactions = data.map((row) => {
-      return {
-        type: (
-          row['type'] ||
-          row['Type'] ||
-          row['TYPE'] ||
-          'expense'
-        ).toLowerCase(),
-        category:
-          row['category'] || row['Category'] || row['CATEGORY'] || 'Other',
-        date:
-          row['date'] ||
-          row['Date'] ||
-          row['DATE'] ||
-          new Date().toISOString().split('T')[0],
-        description: row['description'] || row['Description'] || row['DESCRIPTION'] || row['payee'] || row['Payee'] || row['PAYEE'] || '',
-        amount: parseFloat(
-          row['amount'] || row['Amount'] || row['AMOUNT'] || '0'
-        ),
-        notes: row['notes'] || row['Notes'] || ''
-      };
-    });
   }
 
   toggleSelect(idx: number) {
@@ -354,38 +290,7 @@ export class ImportTransactionsComponent implements OnDestroy {
   downloadTemplate() {
     try {
       if (this.ssrService.isClientSide()) {
-        const templateData = [
-          {
-            "payee": "Salary Payment",
-            "amount": 50000,
-            "type": "income",
-            "category": "Salary",
-            "date": "2024-01-15",
-            "notes": "Monthly salary"
-          },
-          {
-            "payee": "Grocery Store",
-            "amount": 1500,
-            "type": "expense",
-            "category": "Food & Dining",
-            "date": "2024-01-16",
-            "notes": "Weekly groceries"
-          }
-        ];
-
-        const jsonContent = JSON.stringify(templateData, null, 2);
-        const blob = new Blob([jsonContent], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'transaction_import_template.json';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        URL.revokeObjectURL(url);
-
+        this.backupRestoreService.downloadTransactionTemplate();
         this.notificationService.success('JSON template downloaded successfully');
       }
     } catch (error) {

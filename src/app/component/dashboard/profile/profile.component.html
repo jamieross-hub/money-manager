@@ -34,6 +34,14 @@
 
 
 				</button>
+				<button mat-flat-button (click)="logout()" *ngIf="!isGuestMode() && breakpointService.device.isMobile"
+					[disabled]="isLoading" class="google-signin-btn ml-2 mt-5 !text-white !bg-secondary-600">
+					<span class="flex items-center gap-2">
+						<mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+						<mat-icon *ngIf="!isLoading">logout</mat-icon>
+						{{ isLoading ? 'Loading...' : 'AUTH.SIGN_OUT' | translate }}
+					</span>
+				</button>
 			</div>
 		</div>
 	</div>
@@ -316,7 +324,7 @@
 		<!-- Account Actions Section -->
 		<mat-accordion>
 			<mat-expansion-panel [expanded]="breakpointService.device.isMobile ? false : true"
-				class="account-actions-panel">
+				class="bg-white dark:bg-gray-800 rounded-2xl !shadow-none border border-gray-200 dark:border-gray-700">
 				<mat-expansion-panel-header>
 					<mat-panel-title class="flex items-center gap-2">
 						<mat-icon class="section-icon">security</mat-icon>
@@ -325,31 +333,55 @@
 					</mat-panel-title>
 				</mat-expansion-panel-header>
 
-				<div class="actions-grid pt-4">
-					<div class="action-card">
-						<mat-icon class="action-icon">lock</mat-icon>
-						<h3>{{ 'PROFILE.CHANGE_PASSWORD' | translate }}</h3>
-						<p>{{ 'PROFILE.CHANGE_PASSWORD_DESC' | translate }}</p>
-						<button mat-stroked-button (click)="changePassword()" class="action-btn"
-							[disabled]="isGuestMode()">
-							{{ 'PROFILE.CHANGE_PASSWORD' | translate }}
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+
+					<div
+						class="p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 text-center transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-lg flex flex-col justify-between">
+						<div>
+							<div class="flex items-center gap-2">
+								<mat-icon class="text-primary-500 !w-8 !h-8 !text-[32px]">download</mat-icon>
+								<p class="text-sm font-medium !mb-0">{{ 'PROFILE.EXPORT_DATA' | translate }}</p>
+							</div>
+							<p class="text-xs font-normal my-5 text-left text-gray-500 dark:text-gray-400 !mt-4">{{
+								'PROFILE.EXPORT_DATA_DESC' | translate }}</p>
+						</div>
+						<button mat-stroked-button (click)="exportData()" class="w-full md:w-auto min-w-[140px]">
+							{{ 'PROFILE.DOWNLOAD_DATA' | translate }}
 						</button>
 					</div>
 
-					<div class="action-card">
-						<mat-icon class="action-icon">download</mat-icon>
-						<h3>{{ 'PROFILE.EXPORT_DATA' | translate }}</h3>
-						<p>{{ 'PROFILE.EXPORT_DATA_DESC' | translate }}</p>
-						<button mat-stroked-button (click)="exportData()" class="action-btn">
-							{{ 'PROFILE.EXPORT_DATA' | translate }}
+					<div
+						class="p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 text-center transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-lg flex flex-col justify-between">
+						<div>
+							<div class="flex items-center gap-2">
+								<mat-icon class="text-primary-500 !w-8 !h-8 !text-[32px]">upload</mat-icon>
+								<p class="text-sm font-medium !mb-0">{{ 'PROFILE.IMPORT_DATA' | translate }}</p>
+							</div>
+							<p class="text-xs font-normal my-5 text-left text-gray-500 dark:text-gray-400">{{
+								'PROFILE.IMPORT_DATA_DESC' | translate }}</p>
+						</div>
+						<input type="file" id="importFileInput" (change)="onFileSelected($event)" accept=".json"
+							class="hidden">
+						<button mat-stroked-button (click)="importData()"
+							class="w-full md:w-auto min-w-[140px] !bg-primary-500 !text-white">
+							{{ 'PROFILE.IMPORT_DATA' | translate }}
 						</button>
 					</div>
 
-					<div class="action-card danger">
-						<mat-icon class="action-icon">delete_forever</mat-icon>
-						<h3>{{ 'PROFILE.DELETE_ACCOUNT' | translate }}</h3>
-						<p>{{ 'PROFILE.DELETE_ACCOUNT_DESC' | translate }}</p>
-						<button mat-stroked-button color="warn" (click)="deleteAccount()" class="action-btn">
+					<div
+						class="p-6 bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-200 dark:border-red-800 text-center transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-lg flex flex-col justify-between">
+						<div>
+							<div class="flex items-center gap-2">
+								<mat-icon
+									class="text-red-600 dark:text-red-400 !w-8 !h-8 !text-[32px]">delete_forever</mat-icon>
+								<p class="text-sm font-medium text-red-800 dark:text-red-200 mb-0">{{
+									'PROFILE.DELETE_ACCOUNT' | translate }}</p>
+							</div>
+							<p class="text-xs text-red-600/70 dark:text-red-300/70 font-normal my-5 text-left">{{
+								'PROFILE.DELETE_ACCOUNT_DESC' | translate }}</p>
+						</div>
+						<button mat-stroked-button color="warn" (click)="deleteAccount()"
+							class="w-full md:w-auto min-w-[140px]">
 							{{ 'PROFILE.DELETE_ACCOUNT' | translate }}
 						</button>
 					</div>

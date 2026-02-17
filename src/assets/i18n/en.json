@@ -98,6 +98,8 @@
         "VIEW_MODE_DESC": "Display categories in list view instead of grid view",
         "CHANGE_PASSWORD_DESC": "Update your account password for better security",
         "EXPORT_DATA_DESC": "Download all your financial data as a backup",
+        "IMPORT_DATA": "Import Data",
+        "IMPORT_DATA_DESC": "Restore your data from a backup file",
         "DELETE_ACCOUNT_DESC": "Permanently delete your account and all associated data",
         "FIRST_NAME_REQUIRED": "First name is required",
         "LAST_NAME_REQUIRED": "Last name is required",
@@ -111,7 +113,8 @@
         "APP_VIEW": "App View",
         "APP_VIEW_WEEKLY": "Weekly",
         "APP_VIEW_MONTHLY": "Monthly",
-        "APP_VIEW_YEARLY": "Yearly"
+        "APP_VIEW_YEARLY": "Yearly",
+        "DOWNLOAD_DATA": "Download Data"
     },
     "USER_MENU": {
         "VIEW_PROFILE": "View Profile",

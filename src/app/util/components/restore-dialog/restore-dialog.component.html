@@ -1,0 +1,50 @@
+<div class="restore-dialog-container">
+    <div class="dialog-header">
+        <div class="icon-wrapper warning-icon">
+            <mat-icon>warning_amber</mat-icon>
+        </div>
+        <div class="header-text">
+            <h2 class="dialog-title">Restore Backup</h2>
+            <p class="dialog-subtitle">Choose how to handle existing data</p>
+        </div>
+    </div>
+
+    <div class="dialog-content">
+        <p class="description">
+            You are about to restore data from a backup file. This action will affect your current data.
+        </p>
+
+        <div class="options-grid">
+            <div class="option-card merge" (click)="onSelect('merge')" [class.selected]="selectedMode === 'merge'">
+                <div class="option-icon">
+                    <mat-icon>merge_type</mat-icon>
+                </div>
+                <div class="option-details">
+                    <h3>Merge Data</h3>
+                    <p>Adds new data and updates existing items. Safe for preserving current entries.</p>
+                </div>
+                <div class="radio-indicator"></div>
+            </div>
+
+            <div class="option-card replace" (click)="onSelect('replace')"
+                [class.selected]="selectedMode === 'replace'">
+                <div class="option-icon">
+                    <mat-icon>delete_forever</mat-icon>
+                </div>
+                <div class="option-details">
+                    <h3>Replace All</h3>
+                    <p>Wipes all current data and replaces it with the backup. <span
+                            class="danger-text">Irreversible.</span></p>
+                </div>
+                <div class="radio-indicator"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dialog-actions">
+        <button mat-button class="cancel-btn" (click)="onCancel()">Cancel</button>
+        <button mat-raised-button color="primary" class="confirm-btn" [disabled]="!selectedMode" (click)="onConfirm()">
+            {{ selectedMode === 'replace' ? 'Replace Data' : 'Merge Data' }}
+        </button>
+    </div>
+</div>

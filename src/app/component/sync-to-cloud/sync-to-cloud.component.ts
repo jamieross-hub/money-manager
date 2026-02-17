@@ -1,4 +1,4 @@
-import { Component, OnInit , ChangeDetectionStrategy} from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
@@ -6,13 +6,8 @@ import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
 import { selectAllTransactions } from 'src/app/store/transactions/transactions.selectors';
 import { take } from 'rxjs';
-import { ExportService } from 'src/app/util/service/export.service';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
-import { createAccount } from 'src/app/store/accounts/accounts.actions';
-import { createCategory } from 'src/app/store/categories/categories.actions';
-import { createTransaction } from 'src/app/store/transactions/transactions.actions';
-import { Account, Category, Transaction } from 'src/app/util/models';
 
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { StepperOrientation } from '@angular/material/stepper';
@@ -27,7 +22,7 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatInputModule } from '@angular/material/input';
+import { BackupRestoreService } from 'src/app/util/service/backupRestore.service';
 
 @Component({
     selector: 'app-sync-to-cloud',
@@ -44,7 +39,7 @@ import { MatInputModule } from '@angular/material/input';
         MatDividerModule,
         MatProgressBarModule
     ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SyncToCloudComponent implements OnInit {
     currentStep = 1;
@@ -62,7 +57,7 @@ export class SyncToCloudComponent implements OnInit {
     constructor(
         private router: Router,
         private store: Store<AppState>,
-        private exportService: ExportService,
+        private backupRestoreService: BackupRestoreService,
         private userService: UserService,
         private notificationService: NotificationService,
         breakpointObserver: BreakpointObserver
@@ -98,7 +93,7 @@ export class SyncToCloudComponent implements OnInit {
     async exportData() {
         this.isExporting = true;
         try {
-            this.exportService.exportFullBackup({
+            this.backupRestoreService.exportFullBackup({
                 transactions: this.transactions,
                 accounts: this.accounts,
                 categories: this.categories
@@ -244,7 +239,7 @@ export class SyncToCloudComponent implements OnInit {
                 // I will implement `importFullBackup` in `ExportService` (or `CommonSyncService`) after this step.
                 // I will stub the call here.
 
-                await this.exportService.importFullBackup(json, userId);
+                await this.backupRestoreService.importFullBackup(json, userId);
 
                 this.importProgress = 100;
                 this.notificationService.success("Import successful!");

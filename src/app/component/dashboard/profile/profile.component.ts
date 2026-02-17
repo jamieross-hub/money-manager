@@ -31,7 +31,7 @@ import {
 } from 'src/app/util/config/enums';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
-import { BackupRestoreService } from 'src/app/util/service/db/backup-restore.service';
+import { BackupRestoreService } from 'src/app/util/service/backupRestore.service';
 import { SplitwiseService } from 'src/app/modules/splitwise/services/splitwise.service';
 import { CreateGroupDialogComponent } from 'src/app/modules/splitwise/create-group-dialog/create-group-dialog.component';
 import { SplitwiseGroup, CreateGroupRequest } from 'src/app/util/models/splitwise.model';
@@ -150,8 +150,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     public breakpointService: BreakpointService,
     private userService: UserService,
     private translationService: TranslationService,
-    private backupRestoreService: BackupRestoreService,
     private splitwiseService: SplitwiseService,
+    private backupRestoreService: BackupRestoreService,
     private cdr: ChangeDetectorRef
   ) {
     this.currentUser = this.auth.currentUser;
@@ -509,6 +509,20 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
   }
 
+  async logout(): Promise<void> {
+    try {
+      this.isLoading = true;
+      await this.userService.logout();
+      this.notificationService.success('Logged out successfully');
+      window.location.reload();
+    } catch (error) {
+      console.error('Error logging out:', error);
+      this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
   cancelEdit(): void {
     this.populateForm();
     this.isEditing = false;
@@ -526,7 +540,29 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   async deleteAccount(): Promise<void> {
     if (this.userService.isGuestUser()) {
-      this.notificationService.warning('Guest accounts cannot be deleted. Simply logout or clear browser data.');
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        data: {
+          title: 'Sign Out?',
+          message: 'Are you sure you want to sign out? All your guest data will be permanently deleted.',
+          confirmText: 'Sign Out',
+          cancelText: 'Cancel',
+          type: 'warning'
+        }
+      });
+
+      dialogRef.afterClosed().subscribe(async (result) => {
+        if (result) {
+          try {
+            await this.userService.storageService.clear();
+            await this.userService.signOut();
+            this.notificationService.success('Signed out and guest data cleared');
+            this.router.navigate(['/sign-in']);
+          } catch (error) {
+            console.error('Error signing out guest:', error);
+            this.notificationService.error('Failed to sign out');
+          }
+        }
+      });
       return;
     }
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
@@ -559,14 +595,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     });
   }
 
-  async changePassword(): Promise<void> {
-    if (this.userService.isGuestUser()) {
-      this.notificationService.warning('Password change is not available for guest users.');
-      return;
-    }
-    this.notificationService.info('Password change feature coming soon');
-  }
-
   async exportData(): Promise<void> {
     try {
       // Check if export functionality is enabled
@@ -583,6 +611,40 @@ export class ProfileComponent implements OnInit, OnDestroy {
       console.error('Error exporting data:', error);
       this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
     }
+  }
+
+  importData(): void {
+    const fileInput = document.getElementById('importFileInput') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
+    }
+  }
+
+  async onFileSelected(event: any): Promise<void> {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Reset input value so same file can be selected again
+    event.target.value = '';
+
+    this.isLoading = true;
+    this.backupRestoreService.handleRestore(file).subscribe({
+      next: (result) => {
+        if (result.success) {
+          this.notificationService.success(result.message);
+        } else if (result.message) { // Only show error if message is present (user cancellation returns empty)
+          this.notificationService.error(result.message);
+        }
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.error('Restore failed:', error);
+        this.notificationService.error('BACKUP.IMPORT_FAILED');
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   getFullName(): string {

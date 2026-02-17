@@ -438,147 +438,7 @@
   }
 }
 
-.account-actions-section {
-  background: var(--surface-200);
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--neutral-200);
 
-  @media (max-width: 1024px) {
-    padding: 28px;
-  }
-
-  @media (max-width: 768px) {
-    padding: 24px 20px;
-  }
-
-  @media (max-width: 480px) {
-    padding: 20px 16px;
-  }
-}
-
-.actions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
-  margin-top: 24px;
-
-  @media (max-width: 1024px) {
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 20px;
-  }
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  @media (max-width: 480px) {
-    gap: 16px;
-    margin-top: 20px;
-  }
-}
-
-.action-card {
-  padding: 24px;
-  background: var(--surface-200);
-  border-radius: 12px;
-  border: 1px solid var(--neutral-200);
-  text-align: center;
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  }
-
-  &.danger {
-    border-color: var(--error-500);
-    background: var(--error-50);
-
-    .action-icon {
-      color: var(--error-600);
-    }
-  }
-
-  @media (max-width: 768px) {
-    padding: 20px;
-  }
-
-  @media (max-width: 480px) {
-    padding: 16px;
-  }
-}
-
-.action-icon {
-  font-size: 32px;
-  width: 32px;
-  height: 32px;
-  color: var(--primary-500);
-  margin-bottom: 16px;
-
-  @media (max-width: 768px) {
-    font-size: 28px;
-    width: 28px;
-    height: 28px;
-    margin-bottom: 12px;
-  }
-
-  @media (max-width: 480px) {
-    font-size: 24px;
-    width: 24px;
-    height: 24px;
-    margin-bottom: 10px;
-  }
-}
-
-.action-card h3 {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 12px 0;
-  color: var(--neutral-900);
-
-  @media (max-width: 768px) {
-    font-size: 16px;
-    margin: 0 0 10px 0;
-  }
-
-  @media (max-width: 480px) {
-    font-size: 15px;
-    margin: 0 0 8px 0;
-  }
-}
-
-.action-card p {
-  font-size: 14px;
-  color: var(--neutral-500);
-  margin: 0 0 20px 0;
-  line-height: 1.5;
-
-  @media (max-width: 768px) {
-    font-size: 13px;
-    margin: 0 0 16px 0;
-  }
-
-  @media (max-width: 480px) {
-    font-size: 12px;
-    margin: 0 0 14px 0;
-  }
-}
-
-.action-btn {
-  min-width: 140px;
-
-  @media (max-width: 1024px) {
-    min-width: 130px;
-  }
-
-  @media (max-width: 768px) {
-    width: 100%;
-    min-width: unset;
-  }
-}
 
 // Dark theme adjustments removed as global variables handle both themes
 
@@ -625,7 +485,6 @@
 
 // Ensure proper text wrapping and overflow handling
 .user-info,
-.action-card,
 .preference-item {
   overflow-wrap: break-word;
   word-wrap: break-word;
@@ -646,8 +505,7 @@ button {
   }
 
   .profile-header,
-  .form-section,
-  .account-actions-section {
+  .form-section {
     padding: 20px 16px;
   }
 
@@ -708,8 +566,7 @@ button {
   }
 
   .profile-header,
-  .form-section,
-  .account-actions-section {
+  .form-section {
     padding: 16px 12px;
   }
 
@@ -732,13 +589,7 @@ button {
     font-size: 15px;
   }
 
-  .action-card h3 {
-    font-size: 14px;
-  }
 
-  .action-card p {
-    font-size: 11px;
-  }
 
   .form-actions button {
     padding: 10px 12px;
@@ -752,7 +603,6 @@ button {
     min-height: 48px;
   }
 
-  .action-btn,
   .edit-btn,
   .save-btn,
   .cancel-btn {
@@ -774,15 +624,11 @@ button {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .actions-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+
 }
 
 .form-section-panel {
   background: var(--surface-200);
 }
 
-.account-actions-panel {
-  background: var(--surface-200);
-}
+
