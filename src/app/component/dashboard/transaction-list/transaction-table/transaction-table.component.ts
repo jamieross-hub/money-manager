@@ -16,7 +16,7 @@ import { Transaction } from '../../../../util/models/transaction.model';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { Subscription, Observable } from 'rxjs';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { DateService } from 'src/app/util/service/date.service';
 import { FilterService } from 'src/app/util/service/filter.service';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
@@ -210,7 +210,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
 
   private updateFilteredData() {
     // Use FilterService to get filtered and sorted transactions
-    const currentYear = moment().year();
+    const currentYear = dayjs().year();
     let filteredData: Transaction[];
 
     // Check if we have specific date filters applied
@@ -361,7 +361,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   getCurrentYear(): number {
-    return moment().year();
+    return dayjs().year();
   }
 
   // Get current sort state
@@ -442,6 +442,9 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   // FilterService interaction methods
   clearAllFilters(): void {
     this.filterService.clearAllFilters();
+    if (this.sort) {
+      this.sort.sort({ id: 'Date', start: 'desc', disableClear: false });
+    }
   }
 
   getActiveFiltersCount(): number {
@@ -594,4 +597,4 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
     // Fallback
     return new Date(date).getTime();
   }
-} 
+}

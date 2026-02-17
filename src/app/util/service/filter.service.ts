@@ -1,9 +1,13 @@
+
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map, distinctUntilChanged } from 'rxjs/operators';
-import moment from 'moment';
+import dayjs from 'dayjs';
+import isBetween from 'dayjs/plugin/isBetween';
 import { LocalIndexDBStorageService } from './indexdb-storage.service';
 import { LocalStorageKey } from '../models/local-storage.model';
+
+dayjs.extend(isBetween);
 
 export interface DateRange {
   startDate: Date;
@@ -133,15 +137,15 @@ export class FilterService {
 
     // If the date range represents a full month within a specific year,
     // keep the year filter to maintain context
-    const startMoment = moment(startDate);
-    const endMoment = moment(endDate);
-    const startYear = startMoment.year();
-    const endYear = endMoment.year();
+    const startDay = dayjs(startDate);
+    const endDay = dayjs(endDate);
+    const startYear = startDay.year();
+    const endYear = endDay.year();
 
     // Check if this is a full month range (same year, start of month to end of month)
     if (startYear === endYear &&
-      startMoment.isSame(startMoment.clone().startOf('month')) &&
-      endMoment.isSame(endMoment.clone().endOf('month'))) {
+      startDay.isSame(startDay.startOf('month'), 'day') &&
+      endDay.isSame(endDay.endOf('month'), 'day')) {
       // Don't clear the year filter in this case
       return;
     }
@@ -166,16 +170,16 @@ export class FilterService {
     // Check if there's an existing date range that represents a month within this year
     const currentDateRange = this.selectedDateRangeSubject.value;
     if (currentDateRange) {
-      const startMoment = moment(currentDateRange.startDate);
-      const endMoment = moment(currentDateRange.endDate);
-      const rangeStartYear = startMoment.year();
-      const rangeEndYear = endMoment.year();
+      const startDay = dayjs(currentDateRange.startDate);
+      const endDay = dayjs(currentDateRange.endDate);
+      const rangeStartYear = startDay.year();
+      const rangeEndYear = endDay.year();
 
       // If the date range is within the selected year and represents a full month, keep it
       if (rangeStartYear === rangeEndYear &&
         rangeStartYear === startYear &&
-        startMoment.isSame(startMoment.clone().startOf('month')) &&
-        endMoment.isSame(endMoment.clone().endOf('month'))) {
+        startDay.isSame(startDay.startOf('month'), 'day') &&
+        endDay.isSame(endDay.endOf('month'), 'day')) {
         return;
       }
     }
@@ -543,8 +547,8 @@ export class FilterService {
         filter: {
           ...this.getDefaultFilterState(),
           selectedDateRange: {
-            startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-            endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+            startDate: dayjs().startOf('month').toDate(),
+            endDate: dayjs().endOf('month').toDate()
           }
         }
       }
@@ -631,24 +635,24 @@ export class FilterService {
 
     // Apply date filter
     if (state.selectedDate) {
-      const selectedMoment = moment(state.selectedDate).startOf('day');
+      const selectedDay = dayjs(state.selectedDate).startOf('day');
       filtered = filtered.filter(transaction => {
         const transactionDate = this.getTransactionDate(transaction.date);
         if (!transactionDate) return false;
-        const txMoment = moment(transactionDate).startOf('day');
-        return txMoment.isSame(selectedMoment, 'day');
+        const txDay = dayjs(transactionDate).startOf('day');
+        return txDay.isSame(selectedDay, 'day');
       });
     }
 
     // Apply date range filter
     if (state.selectedDateRange && state.selectedDateRange.startDate && state.selectedDateRange.endDate) {
-      const startMoment = moment(state.selectedDateRange.startDate).startOf('day');
-      const endMoment = moment(state.selectedDateRange.endDate).endOf('day');
+      const startDay = dayjs(state.selectedDateRange.startDate).startOf('day');
+      const endDay = dayjs(state.selectedDateRange.endDate).endOf('day');
       filtered = filtered.filter(transaction => {
         const transactionDate = this.getTransactionDate(transaction.date);
         if (!transactionDate) return false;
-        const txMoment = moment(transactionDate);
-        return txMoment.isBetween(startMoment, endMoment, 'day', '[]');
+        const txDay = dayjs(transactionDate);
+        return txDay.isBetween(startDay, endDay, 'day', '[]');
       });
     }
 
@@ -657,7 +661,7 @@ export class FilterService {
       filtered = filtered.filter(transaction => {
         const transactionDate = this.getTransactionDate(transaction.date);
         if (!transactionDate) return false;
-        const txYear = moment(transactionDate).year();
+        const txYear = dayjs(transactionDate).year();
         return txYear >= state.selectedYear!.startYear && txYear <= state.selectedYear!.endYear;
       });
     }
@@ -799,22 +803,11 @@ export class FilterService {
    */
   private getTransactionDate(date: any): Date | null {
     if (!date) return null;
-
-    if (date && typeof date === 'object' && 'seconds' in date) {
-      // Handle Firestore Timestamp
-      return new Date(date.seconds * 1000);
-    } else if (date instanceof Date) {
-      // Handle Date object
-      return date;
-    } else if (typeof date === 'string') {
-      // Handle date string
-      const parsed = new Date(date);
-      return isNaN(parsed.getTime()) ? null : parsed;
-    } else if (typeof date === 'number') {
-      // Handle timestamp
-      return new Date(date);
-    }
-
+    if (date instanceof Date) return date;
+    if (typeof date === 'string') return new Date(date);
+    if (date && typeof date.toDate === 'function') return date.toDate();
+    if (date && date.seconds) return new Date(date.seconds * 1000); // Firestore Timestamp, if needed manually
+    if (typeof date === 'number') return new Date(date);
     return null;
   }
 
@@ -825,11 +818,11 @@ export class FilterService {
    * @returns Filtered transactions for current year
    */
   filterCurrentYearTransactions(transactions: any[], filterState?: TransactionFilter): any[] {
-    const currentYear = moment().year();
+    const currentYear = dayjs().year();
     const yearFiltered = transactions.filter(tx => {
       const txDate = this.getTransactionDate(tx.date);
       if (!txDate) return false;
-      return moment(txDate).year() === currentYear;
+      return dayjs(txDate).year() === currentYear;
     });
 
     return this.filterTransactions(yearFiltered, filterState);
@@ -846,7 +839,7 @@ export class FilterService {
     const yearFiltered = transactions.filter(tx => {
       const txDate = this.getTransactionDate(tx.date);
       if (!txDate) return false;
-      return moment(txDate).year() === year;
+      return dayjs(txDate).year() === year;
     });
 
     return this.filterTransactions(yearFiltered, filterState);
@@ -873,4 +866,4 @@ export class FilterService {
     const filtered = this.filterCurrentYearTransactions(transactions, filterState);
     return filtered.length;
   }
-} 
+}

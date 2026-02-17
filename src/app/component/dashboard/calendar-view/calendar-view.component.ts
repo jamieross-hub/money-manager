@@ -16,7 +16,8 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { TotalBalanceComponent } from 'src/app/util/components/cards/total-balance/total-balance.component';
 
 import { Subscription } from 'rxjs';
-import moment from 'moment';
+import dayjs from 'dayjs';
+import isBetween from 'dayjs/plugin/isBetween';
 import { DateService } from 'src/app/util/service/date.service';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
@@ -26,6 +27,7 @@ import { Transaction } from 'src/app/util/models/transaction.model';
 import { Category } from 'src/app/util/models/category.model';
 import { TransactionType } from 'src/app/util/config/enums';
 
+dayjs.extend(isBetween);
 
 @Component({
   selector: 'calendar-view',
@@ -225,8 +227,8 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     this.filterService.setSelectedCategory([categoryId]);
 
     // Also set the date range to the current month/year for context
-    const startDate = moment([this.selectedYear, this.selectedMonth, 1]).startOf('month').toDate();
-    const endDate = moment([this.selectedYear, this.selectedMonth, 1]).endOf('month').toDate();
+    const startDate = dayjs(new Date(this.selectedYear, this.selectedMonth, 1)).startOf('month').toDate();
+    const endDate = dayjs(new Date(this.selectedYear, this.selectedMonth, 1)).endOf('month').toDate();
     this.filterService.setSelectedDateRange(startDate, endDate);
 
     // Show success notification
@@ -239,11 +241,11 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
 
   // Get filtered transactions based on year/month selection
   getFilteredTransactions(): Transaction[] {
-    const startOfMonth = moment([this.selectedYear, this.selectedMonth, 1]);
-    const endOfMonth = moment(startOfMonth).endOf('month');
+    const startOfMonth = dayjs(new Date(this.selectedYear, this.selectedMonth, 1));
+    const endOfMonth = dayjs(startOfMonth).endOf('month');
 
     return this.transactions.filter(transaction => {
-      const transactionDate = moment(this.dateService.toDate(transaction.date));
+      const transactionDate = dayjs(this.dateService.toDate(transaction.date));
       return transactionDate.isBetween(startOfMonth, endOfMonth, 'day', '[]') &&
         transaction.type === 'expense';
     });
@@ -329,14 +331,14 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
 
   // Calendar navigation methods
   goToPreviousMonth() {
-    this.currentViewDate = moment(this.currentViewDate).subtract(1, 'month').toDate();
+    this.currentViewDate = dayjs(this.currentViewDate).subtract(1, 'month').toDate();
     if (this.calendar) {
       this.calendar.activeDate = this.currentViewDate;
     }
   }
 
   goToNextMonth() {
-    this.currentViewDate = moment(this.currentViewDate).add(1, 'month').toDate();
+    this.currentViewDate = dayjs(this.currentViewDate).add(1, 'month').toDate();
     if (this.calendar) {
       this.calendar.activeDate = this.currentViewDate;
     }
@@ -349,20 +351,20 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Custom date class function to highlight dates with transactions and range selection using Moment.js
+  // Custom date class function to highlight dates with transactions and range selection using dayjs
   dateClass: MatCalendarCellClassFunction<Date> = (cellDate, view) => {
     if (view === 'month') {
-      const cellMoment = moment(cellDate).startOf('day');
+      const cellMoment = dayjs(cellDate).startOf('day');
       let classes = '';
 
       // Check if date has transactions
       const isIncomeTx = this.transactions.some(transaction => {
-        const transactionMoment = moment(this.dateService.toDate(transaction.date)).startOf('day');
+        const transactionMoment = dayjs(this.dateService.toDate(transaction.date)).startOf('day');
         return transactionMoment.isSame(cellMoment, 'day') && transaction.type === TransactionType.INCOME;
       });
 
       const hasTransactions = this.transactions.some(transaction => {
-        const transactionMoment = moment(this.dateService.toDate(transaction.date)).startOf('day');
+        const transactionMoment = dayjs(this.dateService.toDate(transaction.date)).startOf('day');
         return transactionMoment.isSame(cellMoment, 'day');
       });
 
@@ -376,22 +378,22 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
 
       // Range mode highlighting
       if (this.isRangeMode) {
-        if (this.startDate && moment(this.startDate).startOf('day').isSame(cellMoment, 'day')) {
+        if (this.startDate && dayjs(this.startDate).startOf('day').isSame(cellMoment, 'day')) {
           classes += 'range-start ';
         }
-        if (this.endDate && moment(this.endDate).startOf('day').isSame(cellMoment, 'day')) {
+        if (this.endDate && dayjs(this.endDate).startOf('day').isSame(cellMoment, 'day')) {
           classes += 'range-end ';
         }
         if (this.startDate && this.endDate) {
-          const startMoment = moment(this.startDate).startOf('day');
-          const endMoment = moment(this.endDate).endOf('day');
+          const startMoment = dayjs(this.startDate).startOf('day');
+          const endMoment = dayjs(this.endDate).endOf('day');
           if (cellMoment.isBetween(startMoment, endMoment, 'day', '[]')) {
             classes += 'range-in-between ';
           }
         }
       } else {
         // Single date mode highlighting
-        if (this.selectedDate && moment(this.selectedDate).startOf('day').isSame(cellMoment, 'day')) {
+        if (this.selectedDate && dayjs(this.selectedDate).startOf('day').isSame(cellMoment, 'day')) {
           classes += 'selected-date ';
         }
       }
@@ -448,31 +450,31 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Get transactions for a specific date using Moment.js
+  // Get transactions for a specific date using dayjs
   getTransactionsForDate(date: Date): Transaction[] {
-    const targetMoment = moment(date).startOf('day');
+    const targetMoment = dayjs(date).startOf('day');
 
     return this.transactions.filter(transaction => {
-      const transactionMoment = moment(this.dateService.toDate(transaction.date)).startOf('day');
+      const transactionMoment = dayjs(this.dateService.toDate(transaction.date)).startOf('day');
       return transactionMoment.isSame(targetMoment, 'day');
     });
   }
 
-  // Get transactions for a date range using Moment.js
+  // Get transactions for a date range using dayjs
   getTransactionsForDateRange(startDate: Date, endDate: Date): Transaction[] {
-    const startMoment = moment(startDate).startOf('day');
-    const endMoment = moment(endDate).endOf('day');
+    const startMoment = dayjs(startDate).startOf('day');
+    const endMoment = dayjs(endDate).endOf('day');
 
     return this.transactions.filter(transaction => {
-      const transactionMoment = moment(this.dateService.toDate(transaction.date));
+      const transactionMoment = dayjs(this.dateService.toDate(transaction.date));
       return transactionMoment.isBetween(startMoment, endMoment, 'day', '[]'); // inclusive
     });
 
   }
 
-  // Format date to string for comparison using Moment.js
+  // Format date to string for comparison using dayjs
   private formatDate(date: Date): string {
-    return moment(date).format('YYYY-MM-DD');
+    return dayjs(date).format('YYYY-MM-DD');
   }
 
   // Get total income for selected date
@@ -550,8 +552,8 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
       return '';
     }
 
-    const startMoment = moment(this.startDate);
-    const endMoment = moment(this.endDate);
+    const startMoment = dayjs(this.startDate);
+    const endMoment = dayjs(this.endDate);
 
     if (startMoment.isSame(endMoment, 'day')) {
       return startMoment.format('MMM DD, YYYY');
@@ -568,24 +570,24 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
       return 0;
     }
 
-    const startMoment = moment(this.startDate);
-    const endMoment = moment(this.endDate);
-    return endMoment.diff(startMoment, 'days') + 1; // +1 to include both start and end dates
+    const startMoment = dayjs(this.startDate);
+    const endMoment = dayjs(this.endDate);
+    return endMoment.diff(startMoment, 'day') + 1; // +1 to include both start and end dates
   }
 
   // Utility method to check if a date is today
   isToday(date: Date): boolean {
-    return moment(date).isSame(moment(), 'day');
+    return dayjs(date).isSame(dayjs(), 'day');
   }
 
   // Utility method to check if a date is in the past
   isPastDate(date: Date): boolean {
-    return moment(date).isBefore(moment(), 'day');
+    return dayjs(date).isBefore(dayjs(), 'day');
   }
 
   // Utility method to check if a date is in the future
   isFutureDate(date: Date): boolean {
-    return moment(date).isAfter(moment(), 'day');
+    return dayjs(date).isAfter(dayjs(), 'day');
   }
 
   clearAll() {
@@ -603,8 +605,8 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
           if (this.selectedYear !== newYear) {
             this.selectedYear = newYear;
             // Update the calendar's active view to the selected year
-            const currentMonth = moment(this.currentViewDate).month();
-            this.currentViewDate = moment([newYear, currentMonth, 1]).toDate();
+            const currentMonth = dayjs(this.currentViewDate).month();
+            this.currentViewDate = dayjs(new Date(newYear, currentMonth, 1)).toDate();
             if (this.calendar) {
               this.calendar.activeDate = this.currentViewDate;
             }
@@ -618,8 +620,8 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     this.subscription.add(
       this.filterService.selectedDateRange$.subscribe(dateRange => {
         if (dateRange) {
-          const startMoment = moment(dateRange.startDate);
-          const endMoment = moment(dateRange.endDate);
+          const startMoment = dayjs(dateRange.startDate);
+          const endMoment = dayjs(dateRange.endDate);
 
           this.selectedYear = startMoment.year();
 

@@ -1,4 +1,4 @@
-import { Component, OnInit , ChangeDetectionStrategy} from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -8,7 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { Inject } from '@angular/core';
-import moment from 'moment';
+import dayjs from 'dayjs';
 
 export interface CustomDateRangeData {
   startDate?: Date;
@@ -60,8 +60,8 @@ export class CustomDateRangeDialogComponent implements OnInit {
       return;
     }
 
-    const startMoment = moment(this.startDate);
-    const endMoment = moment(this.endDate);
+    const startMoment = dayjs(this.startDate);
+    const endMoment = dayjs(this.endDate);
 
     if (!startMoment.isValid() || !endMoment.isValid()) {
       this.errorMessage = 'Please enter valid dates.';
@@ -110,4 +110,4 @@ export class CustomDateRangeDialogComponent implements OnInit {
     this.endDate = endDate;
     this.errorMessage = '';
   }
-} 
+}

@@ -18,7 +18,7 @@ import * as CategoriesSelectors from '../../../../store/categories/categories.se
 import { selectAllTransactions } from '../../../../store/transactions/transactions.selectors';
 import { Category } from '../../../../util/models';
 import { Subscription, Observable } from 'rxjs';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { DateService } from 'src/app/util/service/date.service';
 import { FilterService } from '../../../../util/service/filter.service';
 
@@ -56,8 +56,8 @@ export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
   searchTerm: string = '';
   selectedCategory: string = 'all';
   selectedType: string = 'all';
-  selectedYear: number = moment().year();
-  selectedMonth: number = moment().month();
+  selectedYear: number = dayjs().year();
+  selectedMonth: number = dayjs().month();
   selectedMonthOption: string = 'all';
   selectedDate: Date | null = null;
   selectedDateRange: { start: Date; end: Date } | null = null;
@@ -83,7 +83,7 @@ export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
     private filterService: FilterService,
     private cdr: ChangeDetectorRef
   ) {
-    this.currentYear = moment().year();
+    this.currentYear = dayjs().year();
   }
 
   ngOnInit() {
@@ -231,7 +231,7 @@ export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
 
       this.allTransactions.forEach(tx => {
         if (tx.date) {
-          const year = moment(this.dateService.toDate(tx.date)).year();
+          const year = dayjs(this.dateService.toDate(tx.date)).year();
           yearsSet.add(year);
         }
       });
@@ -312,8 +312,8 @@ export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
     // If a specific month is selected, update the date range for the new year
     if (this.selectedMonthOption !== 'all') {
       const month = parseInt(this.selectedMonthOption);
-      const startDate = moment().year(year).month(month).startOf('month').toDate();
-      const endDate = moment().year(year).month(month).endOf('month').toDate();
+      const startDate = dayjs().year(year).month(month).startOf('month').toDate();
+      const endDate = dayjs().year(year).month(month).endOf('month').toDate();
       this.filterService.setSelectedDateRange(startDate, endDate);
     } else {
       // Use the year selection method
@@ -326,8 +326,8 @@ export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
     if (monthValue !== 'all') {
       // When a specific month is selected, set the date range for that month
       const month = parseInt(monthValue);
-      const startDate = moment().year(this.selectedYear).month(month).startOf('month').toDate();
-      const endDate = moment().year(this.selectedYear).month(month).endOf('month').toDate();
+      const startDate = dayjs().year(this.selectedYear).month(month).startOf('month').toDate();
+      const endDate = dayjs().year(this.selectedYear).month(month).endOf('month').toDate();
       this.filterService.setSelectedDateRange(startDate, endDate);
     } else {
       // When "all" is selected, clear date filters but keep year filter
@@ -380,7 +380,7 @@ export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
     this.selectedYear = resetYear;
     this.filterService.setSelectedYear(this.selectedYear, this.selectedYear);
     if (this.selectedMonthOption !== 'all') {
-      this.filterService.setSelectedDateRange(moment().year(this.selectedYear).startOf('year').toDate(), moment().year(this.selectedYear).endOf('year').toDate());
+      this.filterService.setSelectedDateRange(dayjs().year(this.selectedYear).startOf('year').toDate(), dayjs().year(this.selectedYear).endOf('year').toDate());
     }
   }
 
@@ -516,4 +516,4 @@ export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
   getFilterHistory() {
     return this.filterService.filterHistory$;
   }
-} 
+}

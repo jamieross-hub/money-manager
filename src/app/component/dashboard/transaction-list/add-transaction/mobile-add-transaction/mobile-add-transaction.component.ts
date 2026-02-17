@@ -1,4 +1,4 @@
-import { Component, Inject, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
+import { Component, Inject, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef, MatDialog } from '@angular/material/dialog';
@@ -23,7 +23,8 @@ import { NotificationService } from 'src/app/util/service/notification.service';
 import { ValidationService } from 'src/app/util/service/validation.service';
 import { AddAccountDialogComponent } from 'src/app/component/dashboard/accounts/add-account-dialog/add-account-dialog.component';
 import { MobileCategoryAddEditPopupComponent } from 'src/app/component/dashboard/category/mobile-category-add-edit-popup/mobile-category-add-edit-popup.component';
-import moment from 'moment';
+import dayjs from 'dayjs';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { LoaderService } from 'src/app/util/service/loader.service';
 import { DateService } from 'src/app/util/service/date.service';
 import { AppState } from 'src/app/store/app.state';
@@ -52,6 +53,8 @@ import { UserService } from 'src/app/util/service/db/user.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonHeaderComponent } from 'src/app/util/components/dialog/common-header/common-header.component';
 import { CommonBodyContentComponent } from 'src/app/util/components/dialog/common-body-content/common-body-content.component';
+
+dayjs.extend(isSameOrBefore);
 
 @Component({
   selector: 'app-mobile-add-transaction',
@@ -138,8 +141,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     private bottomSheet: MatBottomSheet
   ) {
     this.isGuestUser = this.userService.isGuestUser();
-    this.recurringMinDate = moment().add(1, 'day').format('YYYY-MM-DD');
-    this.recurringMaxDate = moment().add(1, 'year').format('YYYY-MM-DD');
+    this.recurringMinDate = dayjs().add(1, 'day').format('YYYY-MM-DD');
+    this.recurringMaxDate = dayjs().add(1, 'year').format('YYYY-MM-DD');
     this.store.dispatch(loadGroups());// Load groups
     this.groups$ = this.store.select(selectGroups);
     this.categoryList$ = this.store.select(selectAllCategories);
@@ -160,7 +163,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     this.transactionForm = this.fb.group({
       payee: [''],
       amount: ['', this.validationService.getTransactionAmountValidators()],
-      date: [moment().format('YYYY-MM-DD'), Validators.required],
+      date: [dayjs().format('YYYY-MM-DD'), Validators.required],
       description: [''],
       categoryId: ['', Validators.required],
       categoryName: ['', Validators.required],
@@ -173,8 +176,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       // Recurring fields
       isRecurring: [false],
       recurringInterval: [RecurringInterval.MONTHLY],
-      recurringStartDate: [moment().format('YYYY-MM-DD')],
-      recurringEndDate: [moment().add(1, 'year').format('YYYY-MM-DD')],
+      recurringStartDate: [dayjs().format('YYYY-MM-DD')],
+      recurringEndDate: [dayjs().add(1, 'year').format('YYYY-MM-DD')],
       recurringAmount: [0],
       recurringNotes: [''],
       recurringCategoryId: [''],
@@ -206,8 +209,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       payee: transaction.payee || '',
       amount: transaction.amount || '',
       date: transaction.date ?
-        moment(this.dateService.toDate(transaction.date)).format('YYYY-MM-DD') :
-        moment().format('YYYY-MM-DD'),
+        dayjs(this.dateService.toDate(transaction.date)).format('YYYY-MM-DD') :
+        dayjs().format('YYYY-MM-DD'),
       description: transaction.notes || '',
       categoryId: transaction.categoryId || '',
       categoryName: transaction.categoryName || '',
@@ -220,11 +223,11 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       isRecurring: transaction.isRecurring || false,
       recurringInterval: transaction.recurringInterval || RecurringInterval.MONTHLY,
       recurringStartDate: transaction.nextOccurrence ?
-        moment(this.dateService.toDate(transaction.nextOccurrence)).format('YYYY-MM-DD') :
-        moment().format('YYYY-MM-DD'),
+        dayjs(this.dateService.toDate(transaction.nextOccurrence)).format('YYYY-MM-DD') :
+        dayjs().format('YYYY-MM-DD'),
       recurringEndDate: transaction.recurringEndDate ?
-        moment(this.dateService.toDate(transaction.recurringEndDate)).format('YYYY-MM-DD') :
-        moment().add(1, 'year').format('YYYY-MM-DD'),
+        dayjs(this.dateService.toDate(transaction.recurringEndDate)).format('YYYY-MM-DD') :
+        dayjs().add(1, 'year').format('YYYY-MM-DD'),
     });
 
     this.transactionForm.get('isSplitTransaction')?.setValue(transaction.isSplitTransaction || false);
@@ -261,7 +264,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       this.transactionForm.patchValue({
         payee: '',
         amount: '',
-        date: moment().format('YYYY-MM-DD'),
+        date: dayjs().format('YYYY-MM-DD'),
         description: '',
         categoryId: '',
         categoryName: '',
@@ -384,8 +387,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           recurringInterval: formData.recurringInterval || RecurringInterval.MONTHLY,
           recurringEndDate: formData.recurringEndDate ? new Date(formData.recurringEndDate) : null,
           nextOccurrence: formData.isRecurring ? (() => {
-            const startDate = moment(formData.recurringStartDate || formData.date);
-            const transactionDate = moment(formData.date);
+            const startDate = dayjs(formData.recurringStartDate || formData.date);
+            const transactionDate = dayjs(formData.date);
 
             // If start date is same or before transaction date, we need to calculate the NEXT occurrence
             // because the current transaction IS the first occurrence

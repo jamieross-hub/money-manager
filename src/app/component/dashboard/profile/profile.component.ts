@@ -12,7 +12,7 @@ import { NotificationService } from 'src/app/util/service/notification.service';
 import { ValidationService } from 'src/app/util/service/validation.service';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '../../../store/app.state';
 import * as ProfileActions from '../../../store/profile/profile.actions';
@@ -368,32 +368,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     };
   }
 
-  // private createDefaultProfile(): User {
-  //   return {
-  //     uid: this.currentUser.uid,
-  //     firstName: this.currentUser.displayName?.split(' ')[0] || '',
-  //     lastName:
-  //       this.currentUser.displayName?.split(' ').slice(1).join(' ') || '',
-  //     email: this.currentUser.email || '',
-  //     phone: '',
-  //     dateOfBirth: undefined,
-  //     occupation: '',
-  //     monthlyIncome: 0,
-  //     preferences: {
-  //       defaultCurrency: this.defaultCurrency,
-  //       timezone: 'UTC',
-  //       language: APP_CONFIG.LANGUAGE.DEFAULT,
-  //       notifications: true,
-  //       emailUpdates: true,
-  //       budgetAlerts: true,
-  //       categoryListViewMode: false,
-  //     },
-  //     role: UserRole.FREE,
-  //     createdAt: new Date(),
-  //     updatedAt: new Date(),
-  //   };
-  // }
-
   private populateForm(): void {
     if (this.userProfile) {
       this.profileForm.patchValue({
@@ -648,11 +622,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     // Handle Firestore Timestamp
     if (date?.seconds) {
-      return moment(date.seconds * 1000).format('MMM DD, YYYY');
+      return dayjs(date.seconds * 1000).format('MMM DD, YYYY');
     }
 
     // Handle Date object or timestamp
-    return moment(date).format('MMM DD, YYYY');
+    return dayjs(date).format('MMM DD, YYYY');
   }
 
   // Error handling methods

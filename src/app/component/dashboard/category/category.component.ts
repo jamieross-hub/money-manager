@@ -26,7 +26,8 @@ import * as ProfileSelectors from '../../../store/profile/profile.selectors';
 import { TransactionType } from 'src/app/util/config/enums';
 import { Transaction } from 'src/app/util/models/transaction.model';
 import { DateService } from 'src/app/util/service/date.service';
-import moment from 'moment';
+import dayjs from 'dayjs';
+import isBetween from 'dayjs/plugin/isBetween';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { CategoryService } from 'src/app/util/service/db/category.service';
 import { Router } from '@angular/router';
@@ -49,6 +50,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { QuickActionsFabComponent } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { CategoryCardComponent } from './category-card/category-card.component';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
+
+dayjs.extend(isBetween);
 
 @Component({
   selector: 'user-category',
@@ -220,23 +223,23 @@ export class CategoryComponent implements OnInit, OnDestroy {
         // Previous Period Calculation
         let prevExpense = 0;
         let prevIncome = 0;
-        const now = moment();
-        let prevStart: moment.Moment;
-        let prevEnd: moment.Moment;
+        const now = dayjs();
+        let prevStart: dayjs.Dayjs;
+        let prevEnd: dayjs.Dayjs;
 
         if (appView === 'WEEKLY') {
-          prevStart = moment().subtract(1, 'week').startOf('week');
-          prevEnd = moment().subtract(1, 'week').endOf('week');
+          prevStart = dayjs().subtract(1, 'week').startOf('week');
+          prevEnd = dayjs().subtract(1, 'week').endOf('week');
         } else if (appView === 'YEARLY') {
-          prevStart = moment().subtract(1, 'year').startOf('year');
-          prevEnd = moment().subtract(1, 'year').endOf('year');
+          prevStart = dayjs().subtract(1, 'year').startOf('year');
+          prevEnd = dayjs().subtract(1, 'year').endOf('year');
         } else {
-          prevStart = moment().subtract(1, 'month').startOf('month');
-          prevEnd = moment().subtract(1, 'month').endOf('month');
+          prevStart = dayjs().subtract(1, 'month').startOf('month');
+          prevEnd = dayjs().subtract(1, 'month').endOf('month');
         }
 
         const prevTransactions = transactions.filter(t => {
-          const tDate = moment(this.dateService.toDate(t.date));
+          const tDate = dayjs(this.dateService.toDate(t.date));
           return tDate.isBetween(prevStart, prevEnd, undefined, '[]');
         });
 

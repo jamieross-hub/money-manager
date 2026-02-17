@@ -5,7 +5,7 @@ import { map, tap } from 'rxjs/operators';
 import { AppState } from '../../store/app.state';
 import * as ProfileSelectors from '../../store/profile/profile.selectors';
 import { DateService } from './date.service';
-import moment from 'moment';
+import dayjs from 'dayjs';
 
 export type AppView = 'WEEKLY' | 'MONTHLY' | 'YEARLY';
 
@@ -38,14 +38,15 @@ export class AppViewService {
         if (!d) return false;
 
         const now = new Date();
-        const momentDate = moment(d);
+        const dateObj = dayjs(d);
+        const nowObj = dayjs(now);
 
         if (this.appView === 'WEEKLY') {
-            return momentDate.isSame(now, 'week');
+            return dateObj.isSame(nowObj, 'week');
         } else if (this.appView === 'YEARLY') {
-            return momentDate.isSame(now, 'year');
+            return dateObj.isSame(nowObj, 'year');
         } else {
-            return momentDate.isSame(now, 'month');
+            return dateObj.isSame(nowObj, 'month');
         }
     }
 

@@ -10,10 +10,15 @@ import { AppState } from '../../../../store/app.state';
 import * as TransactionsSelectors from '../../../../store/transactions/transactions.selectors';
 import { Transaction } from '../../../models/transaction.model';
 import { FilterService } from '../../../service/filter.service';
-import moment from 'moment';
+import dayjs from 'dayjs';
+import isBetween from 'dayjs/plugin/isBetween';
+import localeData from 'dayjs/plugin/localeData';
 import { CurrencyPipe } from 'src/app/util/pipes';
 
 import { AppViewService } from '../../../../util/service/app-view.service';
+
+dayjs.extend(isBetween);
+dayjs.extend(localeData);
 
 @Component({
     selector: 'app-monthly-expenditure-card',
@@ -34,8 +39,8 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
     totalIncome = 0;
     totalExpenses = 0;
 
-    selectedYear = moment().year();
-    selectedMonth = moment().month();
+    selectedYear = dayjs().year();
+    selectedMonth = dayjs().month();
 
     currentView: 'WEEKLY' | 'MONTHLY' | 'YEARLY' = 'MONTHLY';
     chartTitle = 'Monthly Expenditure';
@@ -71,7 +76,7 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
                     this.selectedYear = yearRange.startYear;
                 }
                 if (dateRange) {
-                    const start = moment(dateRange.startDate);
+                    const start = dayjs(dateRange.startDate);
                     this.selectedMonth = start.month();
                     this.selectedYear = start.year();
                 }
@@ -158,8 +163,8 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
     }
 
     private processWeeklyTransactions(transactions: Transaction[]) {
-        const startOfWeek = moment().startOf('week');
-        const endOfWeek = moment().endOf('week');
+        const startOfWeek = dayjs().startOf('week');
+        const endOfWeek = dayjs().endOf('week');
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const totals: { [day: string]: number } = {};
         days.forEach(d => totals[d] = 0);
@@ -167,7 +172,7 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
         this.resetTotals();
 
         transactions.forEach(t => {
-            const txDate = moment(this.convertToDate(t.date));
+            const txDate = dayjs(this.convertToDate(t.date));
             if (txDate.isBetween(startOfWeek, endOfWeek, 'day', '[]')) {
                 if (t.type === 'expense') {
                     const dayName = txDate.format('ddd');
@@ -188,8 +193,8 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
     }
 
     private processMonthlyTransactions(transactions: Transaction[]) {
-        const startOfMonth = moment().startOf('month');
-        const endOfMonth = moment().endOf('month');
+        const startOfMonth = dayjs().startOf('month');
+        const endOfMonth = dayjs().endOf('month');
         const daysInMonth = startOfMonth.daysInMonth();
         const days: string[] = [];
         for (let i = 1; i <= daysInMonth; i++) {
@@ -202,7 +207,7 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
         this.resetTotals();
 
         transactions.forEach(t => {
-            const txDate = moment(this.convertToDate(t.date));
+            const txDate = dayjs(this.convertToDate(t.date));
             if (txDate.isBetween(startOfMonth, endOfMonth, 'day', '[]')) {
                 if (t.type === 'expense') {
                     const dayObj = txDate.date().toString();
@@ -223,19 +228,19 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
     }
 
     private processYearlyTransactions(transactions: Transaction[]) {
-        const year = moment().year(); // In yearly view, usually we show current year or selected year
+        // const year = dayjs().year(); // In yearly view, usually we show current year or selected year
         // We can respect selectedYear if needed, usually 'this-year' implies current year.
         // But let's use the year from filters if available, or current year.
-        const targetYear = this.selectedYear || moment().year();
+        const targetYear = this.selectedYear || dayjs().year();
 
-        const months = moment.monthsShort();
+        const months = dayjs.monthsShort();
         const totals: { [month: string]: number } = {};
         months.forEach(m => totals[m] = 0);
 
         this.resetTotals();
 
         transactions.forEach(t => {
-            const txDate = moment(this.convertToDate(t.date));
+            const txDate = dayjs(this.convertToDate(t.date));
             if (txDate.year() === targetYear) {
                 if (t.type === 'expense') {
                     const monthName = txDate.format('MMM');

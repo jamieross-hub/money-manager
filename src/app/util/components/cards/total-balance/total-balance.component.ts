@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CurrencyPipe } from 'src/app/util/pipes';
 import { Auth } from '@angular/fire/auth';
@@ -6,7 +6,7 @@ import { NotificationService } from 'src/app/util/service/notification.service';
 import { CurrencyService } from 'src/app/util/service/currency.service';
 import { Store } from '@ngrx/store';
 import { Observable, Subscription } from 'rxjs';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { AppState } from 'src/app/store/app.state';
 import * as TransactionsActions from 'src/app/store/transactions/transactions.actions';
 import * as TransactionsSelectors from 'src/app/store/transactions/transactions.selectors';
@@ -44,9 +44,9 @@ export class TotalBalanceComponent implements OnInit, OnDestroy {
   ) {
     // Initialize selectors
     this.totalIncome$ = this.store.select(TransactionsSelectors.selectTotalIncome);
-    this.totalIncomeByMonth$ = this.store.select(TransactionsSelectors.selectTotalIncomeByMonth(moment().month(), moment().year()));
+    this.totalIncomeByMonth$ = this.store.select(TransactionsSelectors.selectTotalIncomeByMonth(dayjs().month(), dayjs().year()));
     this.totalExpenses$ = this.store.select(TransactionsSelectors.selectTotalExpenses);
-    this.totalExpensesByMonth$ = this.store.select(TransactionsSelectors.selectTotalExpensesByMonth(moment().month(), moment().year()));
+    this.totalExpensesByMonth$ = this.store.select(TransactionsSelectors.selectTotalExpensesByMonth(dayjs().month(), dayjs().year()));
     this.netBalance$ = this.store.select(TransactionsSelectors.selectNetBalance);
   }
 

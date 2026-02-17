@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -16,7 +16,7 @@ import { TransactionType, RecurringInterval, TransactionStatus, PaymentMethod } 
 import { Transaction } from 'src/app/util/models/transaction.model';
 import { Observable, of, Subject, takeUntil } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { CommonModule } from '@angular/common';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -544,7 +544,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
     const start = new Date(startDate);
 
     // Calculate months elapsed since loan start
-    const monthsElapsed = Math.round(moment(today).diff(moment(start), 'months', true));
+    const monthsElapsed = Math.round(dayjs(today).diff(dayjs(start), 'month', true));
 
     // Calculate total payments made based on frequency
     let paymentsMade = 0;
