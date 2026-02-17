@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, Timestamp, onSnapshot } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { DateService } from '../date.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { LocalStorageKeyHelper } from '../../models/local-storage.model';
@@ -29,6 +29,14 @@ export class GoalsService {
 
     // 🔹 Create a new goal
     async createGoal(userId: string, goal: Goal): Promise<void> {
+        if (userId === 'offline-guest') {
+            this.localStorageUtility.saveEntity('goals', {
+                ...goal,
+                currentAmount: 0
+            }, 'goalId');
+            return;
+        }
+
         const goalRef = doc(this.firestore, `users/${userId}/goals/${goal.goalId}`);
         await setDoc(goalRef, {
             ...goal,
@@ -39,6 +47,11 @@ export class GoalsService {
 
     // 🔹 Get all goals for a user
     getGoals(userId: string): Observable<Goal[]> {
+        if (userId === 'offline-guest') {
+            const localGoals = this.localStorageUtility.getEntities<Goal>('goals');
+            return of(localGoals);
+        }
+
         const goalsRef = collection(this.firestore, `users/${userId}/goals`);
 
         return new Observable<Goal[]>(observer => {
@@ -90,6 +103,11 @@ export class GoalsService {
 
     // 🔹 Get a single goal by its ID
     async getGoal(userId: string, goalId: string): Promise<Goal | undefined> {
+        if (userId === 'offline-guest') {
+            const goals = this.localStorageUtility.getEntities<Goal>('goals');
+            return goals.find(g => g.goalId === goalId);
+        }
+
         const goalRef = doc(this.firestore, `users/${userId}/goals/${goalId}`);
         const goalSnap = await getDoc(goalRef);
         if (goalSnap.exists()) {
@@ -100,18 +118,44 @@ export class GoalsService {
 
     // 🔹 Update an existing goal
     async updateGoal(userId: string, goalId: string, updatedGoal: Partial<Goal>): Promise<void> {
+        if (userId === 'offline-guest') {
+            const goals = this.localStorageUtility.getEntities<Goal>('goals');
+            const index = goals.findIndex(g => g.goalId === goalId);
+            if (index !== -1) {
+                goals[index] = { ...goals[index], ...updatedGoal };
+                this.localStorageUtility.saveEntities('goals', goals);
+            }
+            return;
+        }
+
         const goalRef = doc(this.firestore, `users/${userId}/goals/${goalId}`);
         await updateDoc(goalRef, updatedGoal);
     }
 
     // 🔹 Delete a goal
     async deleteGoal(userId: string, goalId: string): Promise<void> {
+        if (userId === 'offline-guest') {
+            this.localStorageUtility.deleteEntity('goals', goalId, 'goalId');
+            return;
+        }
+
         const goalRef = doc(this.firestore, `users/${userId}/goals/${goalId}`);
         await deleteDoc(goalRef);
     }
 
     // 🔹 Update the current amount for a goal
     async updateCurrentAmount(userId: string, goalId: string, amount: number): Promise<void> {
+        if (userId === 'offline-guest') {
+            const goals = this.localStorageUtility.getEntities<Goal>('goals');
+            const index = goals.findIndex(g => g.goalId === goalId);
+            if (index !== -1) {
+                const currentAmount = goals[index].currentAmount || 0;
+                goals[index].currentAmount = currentAmount + amount;
+                this.localStorageUtility.saveEntities('goals', goals);
+            }
+            return;
+        }
+
         const goalRef = doc(this.firestore, `users/${userId}/goals/${goalId}`);
         const goalSnap = await getDoc(goalRef);
         if (goalSnap.exists()) {

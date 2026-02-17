@@ -30,6 +30,14 @@ export class BudgetsService {
 
   // 🔹 Create a new budget
   async createBudget(userId: string, budget: Budget): Promise<void> {
+    if (userId === 'offline-guest') {
+      this.localStorageUtility.saveEntity('budgets', {
+        ...budget,
+        spent: 0
+      }, 'budgetId');
+      return;
+    }
+
     const budgetRef = doc(this.firestore, `users/${userId}/budgets/${budget.budgetId}`);
     await setDoc(budgetRef, {
       ...budget,
@@ -41,6 +49,11 @@ export class BudgetsService {
 
   // 🔹 Get all budgets for a user
   getBudgets(userId: string): Observable<Budget[]> {
+    if (userId === 'offline-guest') {
+      const localBudgets = this.localStorageUtility.getEntities<Budget>('budgets');
+      return of(localBudgets);
+    }
+
     const budgetsRef = collection(this.firestore, `users/${userId}/budgets`);
 
     return new Observable<Budget[]>(observer => {
@@ -92,6 +105,11 @@ export class BudgetsService {
 
   // 🔹 Get a single budget by its ID
   async getBudget(userId: string, budgetId: string): Promise<Budget | undefined> {
+    if (userId === 'offline-guest') {
+      const budgets = this.localStorageUtility.getEntities<Budget>('budgets');
+      return budgets.find(b => b.budgetId === budgetId);
+    }
+
     const budgetRef = doc(this.firestore, `users/${userId}/budgets/${budgetId}`);
     const budgetSnap = await getDoc(budgetRef);
     if (budgetSnap.exists()) {
@@ -102,18 +120,44 @@ export class BudgetsService {
 
   // 🔹 Update an existing budget
   async updateBudget(userId: string, budgetId: string, updatedBudget: Partial<Budget>): Promise<void> {
+    if (userId === 'offline-guest') {
+      const budgets = this.localStorageUtility.getEntities<Budget>('budgets');
+      const index = budgets.findIndex(b => b.budgetId === budgetId);
+      if (index !== -1) {
+        budgets[index] = { ...budgets[index], ...updatedBudget };
+        this.localStorageUtility.saveEntities('budgets', budgets);
+      }
+      return;
+    }
+
     const budgetRef = doc(this.firestore, `users/${userId}/budgets/${budgetId}`);
     await updateDoc(budgetRef, updatedBudget);
   }
 
   // 🔹 Delete a budget
   async deleteBudget(userId: string, budgetId: string): Promise<void> {
+    if (userId === 'offline-guest') {
+      this.localStorageUtility.deleteEntity('budgets', budgetId, 'budgetId');
+      return;
+    }
+
     const budgetRef = doc(this.firestore, `users/${userId}/budgets/${budgetId}`);
     await deleteDoc(budgetRef);
   }
 
   // 🔹 Update the spent amount for a budget
   async updateSpent(userId: string, budgetId: string, amount: number): Promise<void> {
+    if (userId === 'offline-guest') {
+      const budgets = this.localStorageUtility.getEntities<Budget>('budgets');
+      const index = budgets.findIndex(b => b.budgetId === budgetId);
+      if (index !== -1) {
+        const currentSpent = budgets[index].spent || 0;
+        budgets[index].spent = currentSpent + amount;
+        this.localStorageUtility.saveEntities('budgets', budgets);
+      }
+      return;
+    }
+
     const budgetRef = doc(this.firestore, `users/${userId}/budgets/${budgetId}`);
     const budgetSnap = await getDoc(budgetRef);
     if (budgetSnap.exists()) {
