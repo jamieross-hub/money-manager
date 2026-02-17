@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { IExportService } from './interfaces';
 import { Observable, from, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
-import { ExportFormat, CurrencyCode } from '../config/enums';
+import { catchError } from 'rxjs/operators';
+import { ExportFormat } from '../config/enums';
 import { APP_CONFIG, ERROR_MESSAGES } from '../config/config';
 import { CurrencyService } from './currency.service';
+import { Firestore, writeBatch, doc } from '@angular/fire/firestore';
 
 /**
  * Export options interface
@@ -30,12 +31,7 @@ export interface ExportResult {
 }
 
 /**
- * Export service providing data export functionality in multiple formats
- */
-import { Firestore, writeBatch, doc, collection } from '@angular/fire/firestore';
-
-/**
- * Export service providing data export functionality in multiple formats
+ * Export service providing data export functionality in JSON format
  */
 @Injectable({
   providedIn: 'root'
@@ -46,45 +42,6 @@ export class ExportService implements IExportService {
     private firestore: Firestore,
     private currencyService: CurrencyService
   ) { }
-
-  /**
-   * Export data to CSV format
-   */
-  exportToCSV(data: any[], filename: string): void {
-    try {
-      const csvContent = this.convertToCSV(data);
-      this.downloadFile(csvContent, filename, 'text/csv');
-    } catch (error) {
-      console.error('CSV export failed:', error);
-      throw new Error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
-    }
-  }
-
-  /**
-   * Export data to PDF format
-   */
-  exportToPDF(data: any[], filename: string): void {
-    try {
-      const pdfContent = this.convertToPDF(data);
-      this.downloadFile(pdfContent, filename, 'application/pdf');
-    } catch (error) {
-      console.error('PDF export failed:', error);
-      throw new Error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
-    }
-  }
-
-  /**
-   * Export data to Excel format
-   */
-  exportToExcel(data: any[], filename: string): void {
-    try {
-      const excelContent = this.convertToExcel(data);
-      this.downloadFile(excelContent, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    } catch (error) {
-      console.error('Excel export failed:', error);
-      throw new Error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
-    }
-  }
 
   /**
    * Export data to JSON format
@@ -100,7 +57,7 @@ export class ExportService implements IExportService {
   }
 
   /**
-   * Generate report in specified format
+   * Generate report in JSON format
    */
   generateReport(data: any, format: string): Observable<Blob> {
     return from(this.generateReportAsync(data, format)).pipe(
@@ -110,18 +67,10 @@ export class ExportService implements IExportService {
 
   private async generateReportAsync(data: any, format: string): Promise<Blob> {
     try {
-      switch (format.toLowerCase()) {
-        case 'csv':
-          return this.generateCSVBlob(data);
-        case 'pdf':
-          return this.generatePDFBlob(data);
-        case 'excel':
-          return this.generateExcelBlob(data);
-        case 'json':
-          return this.generateJSONBlob(data);
-        default:
-          throw new Error(`Unsupported format: ${format}`);
+      if (format.toLowerCase() === 'json') {
+        return this.generateJSONBlob(data);
       }
+      throw new Error(`Unsupported format: ${format}. Only JSON is supported.`);
     } catch (error) {
       console.error('Report generation failed:', error);
       throw error;
@@ -129,7 +78,7 @@ export class ExportService implements IExportService {
   }
 
   /**
-   * Export transactions with advanced options
+   * Export transactions with advanced options (JSON only)
    */
   exportTransactions(transactions: any[], options: ExportOptions): Observable<ExportResult> {
     return from(this.exportTransactionsAsync(transactions, options)).pipe(
@@ -143,25 +92,11 @@ export class ExportService implements IExportService {
       let blob: Blob;
       let filename = options.filename || `transactions_${new Date().toISOString().split('T')[0]}`;
 
-      switch (options.format) {
-        case ExportFormat.CSV:
-          blob = this.generateCSVBlob(processedData);
-          filename += '.csv';
-          break;
-        case ExportFormat.PDF:
-          blob = this.generatePDFBlob(processedData);
-          filename += '.pdf';
-          break;
-        case ExportFormat.EXCEL:
-          blob = this.generateExcelBlob(processedData);
-          filename += '.xlsx';
-          break;
-        case ExportFormat.JSON:
-          blob = this.generateJSONBlob(processedData);
-          filename += '.json';
-          break;
-        default:
-          throw new Error(`Unsupported format: ${options.format}`);
+      if (options.format === ExportFormat.JSON) {
+        blob = this.generateJSONBlob(processedData);
+        filename += '.json';
+      } else {
+        throw new Error(`Unsupported format: ${options.format}. Only JSON is supported.`);
       }
 
       return {
@@ -198,7 +133,7 @@ export class ExportService implements IExportService {
   }
 
   /**
-   * Export accounts data
+   * Export accounts data (JSON only)
    */
   exportAccounts(accounts: any[], options: ExportOptions): Observable<ExportResult> {
     return from(this.exportAccountsAsync(accounts, options)).pipe(
@@ -212,25 +147,11 @@ export class ExportService implements IExportService {
       let blob: Blob;
       let filename = options.filename || `accounts_${new Date().toISOString().split('T')[0]}`;
 
-      switch (options.format) {
-        case ExportFormat.CSV:
-          blob = this.generateCSVBlob(processedData);
-          filename += '.csv';
-          break;
-        case ExportFormat.PDF:
-          blob = this.generatePDFBlob(processedData);
-          filename += '.pdf';
-          break;
-        case ExportFormat.EXCEL:
-          blob = this.generateExcelBlob(processedData);
-          filename += '.xlsx';
-          break;
-        case ExportFormat.JSON:
-          blob = this.generateJSONBlob(processedData);
-          filename += '.json';
-          break;
-        default:
-          throw new Error(`Unsupported format: ${options.format}`);
+      if (options.format === ExportFormat.JSON) {
+        blob = this.generateJSONBlob(processedData);
+        filename += '.json';
+      } else {
+        throw new Error(`Unsupported format: ${options.format}. Only JSON is supported.`);
       }
 
       return {
@@ -245,93 +166,6 @@ export class ExportService implements IExportService {
         error: error instanceof Error ? error.message : 'Unknown error occurred'
       };
     }
-  }
-
-  /**
-   * Convert data to CSV format
-   */
-  private convertToCSV(data: any[]): string {
-    if (!data || data.length === 0) {
-      return '';
-    }
-
-    const headers = Object.keys(data[0]);
-    const csvRows = [];
-
-    // Add headers
-    csvRows.push(headers.join(','));
-
-    // Add data rows
-    for (const row of data) {
-      const values = headers.map(header => {
-        const value = row[header];
-        // Escape commas and quotes
-        const escapedValue = String(value).replace(/"/g, '""');
-        return `"${escapedValue}"`;
-      });
-      csvRows.push(values.join(','));
-    }
-
-    return csvRows.join('\n');
-  }
-
-  /**
-   * Convert data to PDF format (simplified implementation)
-   */
-  private convertToPDF(data: any[]): string {
-    // This is a simplified implementation
-    // In a real application, you would use a library like jsPDF
-    let pdfContent = '%PDF-1.4\n';
-    pdfContent += '1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n';
-    pdfContent += '2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n';
-
-    // Add content
-    let content = '';
-    for (const row of data) {
-      content += Object.values(row).join(' | ') + '\n';
-    }
-
-    pdfContent += `3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/Contents 4 0 R\n>>\nendobj\n`;
-    pdfContent += `4 0 obj\n<<\n/Length ${content.length}\n>>\nstream\n${content}\nendstream\nendobj\n`;
-
-    return pdfContent;
-  }
-
-  /**
-   * Convert data to Excel format (simplified implementation)
-   */
-  private convertToExcel(data: any[]): string {
-    // This is a simplified implementation
-    // In a real application, you would use a library like SheetJS
-    let excelContent = '<?xml version="1.0" encoding="UTF-8"?>\n';
-    excelContent += '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">\n';
-    excelContent += '<sheets>\n<sheet name="Data" sheetId="1" r:id="rId1"/>\n</sheets>\n</workbook>';
-
-    return excelContent;
-  }
-
-  /**
-   * Generate CSV blob
-   */
-  private generateCSVBlob(data: any[]): Blob {
-    const csvContent = this.convertToCSV(data);
-    return new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  }
-
-  /**
-   * Generate PDF blob
-   */
-  private generatePDFBlob(data: any[]): Blob {
-    const pdfContent = this.convertToPDF(data);
-    return new Blob([pdfContent], { type: 'application/pdf' });
-  }
-
-  /**
-   * Generate Excel blob
-   */
-  private generateExcelBlob(data: any[]): Blob {
-    const excelContent = this.convertToExcel(data);
-    return new Blob([excelContent], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   }
 
   /**
@@ -430,25 +264,17 @@ export class ExportService implements IExportService {
    * Get supported export formats
    */
   getSupportedFormats(): ExportFormat[] {
-    return Object.values(ExportFormat);
+    return [ExportFormat.JSON];
   }
 
   /**
    * Get format MIME type
    */
   getFormatMimeType(format: ExportFormat): string {
-    switch (format) {
-      case ExportFormat.CSV:
-        return 'text/csv';
-      case ExportFormat.PDF:
-        return 'application/pdf';
-      case ExportFormat.EXCEL:
-        return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-      case ExportFormat.JSON:
-        return 'application/json';
-      default:
-        return 'application/octet-stream';
+    if (format === ExportFormat.JSON) {
+      return 'application/json';
     }
+    return 'application/octet-stream';
   }
 
   /**
@@ -470,10 +296,6 @@ export class ExportService implements IExportService {
       // 1. Import Categories
       if (data.categories && Array.isArray(data.categories)) {
         for (const cat of data.categories) {
-          // We use set() with merge: true or just overwrite to ensure ID is preserved
-          // Assuming 'id' field is present in category object.
-          // If export includes 'id', we use it. If not, we can't link, but Guest Mode IDs are usually UUIDs generated by client or simple strings.
-          // We MUST assume export data has 'id'.
           if (cat.id) {
             const ref = doc(this.firestore, `users/${userId}/categories/${cat.id}`);
             batch.set(ref, cat);
@@ -484,7 +306,7 @@ export class ExportService implements IExportService {
       // 2. Import Accounts
       if (data.accounts && Array.isArray(data.accounts)) {
         for (const acc of data.accounts) {
-          if (acc.accountId) { // Accounts usually use 'accountId' in this app based on previous files
+          if (acc.accountId) {
             const ref = doc(this.firestore, `users/${userId}/accounts/${acc.accountId}`);
             batch.set(ref, acc);
           }

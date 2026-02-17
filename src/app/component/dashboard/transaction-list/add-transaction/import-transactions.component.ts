@@ -20,7 +20,6 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslateModule } from '@ngx-translate/core';
 import { NotificationService } from 'src/app/util/service/notification.service';
-import * as XLSX from 'xlsx';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { Account } from 'src/app/util/models/account.model';
@@ -117,11 +116,11 @@ export class ImportTransactionsComponent implements OnDestroy {
         this.filterCategories();
       });
 
-    // Check if data was passed from Google Sheets
+    // Check if data was passed from Google Sheets (kept for compatibility if needed, though mostly unused now)
     if (data && data.transactions && Array.isArray(data.transactions)) {
       this.parsedTransactions = this.setCategory(data.transactions);
       this.selectedToImport = new Set(this.parsedTransactions.map((_, index) => index));
-      this.notificationService.success(`Loaded ${this.parsedTransactions.length} transactions from Google Sheets`);
+      this.notificationService.success(`Loaded ${this.parsedTransactions.length} transactions`);
     }
 
   }
@@ -227,13 +226,13 @@ export class ImportTransactionsComponent implements OnDestroy {
       return;
     }
 
-    const validExtensions = ['.xlsx', '.xls'];
+    const validExtensions = ['.json'];
     const fileExtension = file.name
       .toLowerCase()
       .substring(file.name.lastIndexOf('.'));
 
     if (!validExtensions.includes(fileExtension)) {
-      this.notificationService.error('Please select an Excel file (XLSX or XLS)');
+      this.notificationService.error('Please select a JSON file (.json)');
       return;
     }
 
@@ -243,84 +242,51 @@ export class ImportTransactionsComponent implements OnDestroy {
     this.isLoading = true;
     this.notificationService.info(`Processing ${this.fileType} file...`);
 
-    this.parseExcelFile(file);
+    this.parseJsonFile(file);
   }
 
-  parseExcelFile(file: File) {
+  parseJsonFile(file: File) {
     const reader = new FileReader();
     reader.onload = (e: any) => {
       try {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
+        const jsonString = e.target.result;
+        const jsonData = JSON.parse(jsonString);
 
-        if (workbook.SheetNames.length === 0) {
+        if (!Array.isArray(jsonData)) {
           this.isLoading = false;
-          this.error = 'Excel file contains no sheets.';
-          this.notificationService.error('No sheets found in Excel file');
+          this.error = 'JSON file must contain an array of transactions.';
+          this.notificationService.error('Invalid JSON format');
           return;
         }
 
-        // Get the first sheet
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-
-        // Convert to JSON with header row
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-        if (jsonData.length < 2) {
+        if (jsonData.length === 0) {
           this.isLoading = false;
-          this.error = 'Excel file is empty or has no data rows.';
-          this.notificationService.error('No data found in Excel file');
-          return;
-        }
-
-        // Convert to array of objects with headers
-        const headers = jsonData[0] as string[];
-        const rows = jsonData.slice(1) as any[][];
-
-        // Validate headers
-        if (!headers || headers.length === 0) {
-          this.isLoading = false;
-          this.error = 'Excel file must have a header row.';
-          this.notificationService.error(
-            'Invalid Excel format - missing headers'
-          );
-          return;
-        }
-
-        const excelData = XLSX.utils.sheet_to_json(worksheet, {
-          defval: '',
-          raw: true,
-        });
-
-        if (excelData.length === 0) {
-          this.isLoading = false;
-          this.error = 'No valid data rows found in Excel file.';
-          this.notificationService.error('No valid data in Excel file');
+          this.error = 'JSON file is empty.';
+          this.notificationService.error('No data found in JSON file');
           return;
         }
 
         this.isLoading = false;
-        this.processParsedData(excelData);
+        this.processParsedData(jsonData);
         this.notificationService.success(
-          `Successfully parsed ${this.parsedTransactions.length} transactions from Excel file`
+          `Successfully parsed ${this.parsedTransactions.length} transactions from JSON file`
         );
 
       } catch (error) {
         this.isLoading = false;
-        this.error = 'Error parsing Excel file. Please check the format.';
-        this.notificationService.error('Failed to parse Excel file');
-        console.error('Excel parsing error:', error);
+        this.error = 'Error parsing JSON file. Please check the format.';
+        this.notificationService.error('Failed to parse JSON file');
+        console.error('JSON parsing error:', error);
       }
     };
 
     reader.onerror = () => {
       this.isLoading = false;
-      this.error = 'Error reading Excel file.';
-      this.notificationService.error('Failed to read Excel file');
+      this.error = 'Error reading JSON file.';
+      this.notificationService.error('Failed to read JSON file');
     };
 
-    reader.readAsArrayBuffer(file);
+    reader.readAsText(file);
   }
 
   processParsedData(data: any[]) {
@@ -362,6 +328,7 @@ export class ImportTransactionsComponent implements OnDestroy {
         amount: parseFloat(
           row['amount'] || row['Amount'] || row['AMOUNT'] || '0'
         ),
+        notes: row['notes'] || row['Notes'] || ''
       };
     });
   }
@@ -387,55 +354,39 @@ export class ImportTransactionsComponent implements OnDestroy {
   downloadTemplate() {
     try {
       if (this.ssrService.isClientSide()) {
-        const excelData = [
-          ['Payee', 'Amount', 'Type', 'Category', 'Date', 'Notes'],
-          ['Salary Payment', 50000, 'income', 'Salary', '2024-01-15', 'Monthly salary'],
+        const templateData = [
+          {
+            "payee": "Salary Payment",
+            "amount": 50000,
+            "type": "income",
+            "category": "Salary",
+            "date": "2024-01-15",
+            "notes": "Monthly salary"
+          },
+          {
+            "payee": "Grocery Store",
+            "amount": 1500,
+            "type": "expense",
+            "category": "Food & Dining",
+            "date": "2024-01-16",
+            "notes": "Weekly groceries"
+          }
         ];
 
-        const ws = XLSX.utils.aoa_to_sheet(excelData);
-        ws['!cols'] = [
-          { width: 20 }, { width: 12 }, { width: 10 },
-          { width: 18 }, { width: 12 }, { width: 25 },
-        ];
+        const jsonContent = JSON.stringify(templateData, null, 2);
+        const blob = new Blob([jsonContent], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
 
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'transaction_import_template.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
 
-        // Simple instructions sheet
-        const instructionsData = [
-          ['Transaction Import Template - Instructions'],
-          [''],
-          ['Column Descriptions:'],
-          ['Payee', 'Name of the person, merchant, or company'],
-          ['Amount', 'Transaction amount (positive number)'],
-          ['Type', 'Must be either "income" or "expense"'],
-          ['Category', 'Transaction category (e.g., Salary, Food & Dining, etc.)'],
-          ['Date', 'Transaction date in YYYY-MM-DD format'],
-          ['Notes', 'Optional description or notes'],
-          [''],
-          ['Important Notes:'],
-          ['- Keep the header row as is (Row 1)'],
-          ['- Use YYYY-MM-DD format for dates'],
-          ['- Delete sample row (Row 2) before adding your data'],
-        ];
+        URL.revokeObjectURL(url);
 
-        const instructionsWs = XLSX.utils.aoa_to_sheet(instructionsData);
-        instructionsWs['!cols'] = [{ width: 60 }];
-        XLSX.utils.book_append_sheet(wb, instructionsWs, 'Instructions');
-
-        // Generate Excel file
-        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-        const excelBlob = new Blob([excelBuffer], {
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        });
-        const excelUrl = window.URL.createObjectURL(excelBlob);
-        const excelLink = document.createElement('a');
-        excelLink.href = excelUrl;
-        excelLink.download = 'transaction_import_template.xlsx';
-        excelLink.click();
-        window.URL.revokeObjectURL(excelUrl);
-
-        this.notificationService.success('Excel template downloaded successfully');
+        this.notificationService.success('JSON template downloaded successfully');
       }
     } catch (error) {
       console.error('Error downloading template:', error);

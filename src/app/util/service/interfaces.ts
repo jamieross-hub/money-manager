@@ -1,35 +1,35 @@
 import { Observable } from 'rxjs';
-import { 
-  Transaction, 
-  CreateTransactionRequest, 
-  UpdateTransactionRequest, 
-  TransactionFilter, 
+import {
+  Transaction,
+  CreateTransactionRequest,
+  UpdateTransactionRequest,
+  TransactionFilter,
   TransactionQueryParams,
   TransactionSummary,
   BulkImportResult,
-  TransactionExportOptions 
+  TransactionExportOptions
 } from '../models/transaction.model';
-import { 
-  Account, 
-  CreateAccountRequest, 
-  UpdateAccountRequest 
+import {
+  Account,
+  CreateAccountRequest,
+  UpdateAccountRequest
 } from '../models/account.model';
-import { 
-  User, 
-  UserPreferences 
+import {
+  User,
+  UserPreferences
 } from '../models/user.model';
-import { 
+import {
   Category,
 } from '../models/category.model';
-import { 
-  Budget, 
-  CreateBudgetRequest, 
-  UpdateBudgetRequest 
+import {
+  Budget,
+  CreateBudgetRequest,
+  UpdateBudgetRequest
 } from '../models/budget.model';
-import { 
-  Goal, 
-  CreateGoalRequest, 
-  UpdateGoalRequest 
+import {
+  Goal,
+  CreateGoalRequest,
+  UpdateGoalRequest
 } from '../models/goal.model';
 
 /**
@@ -168,9 +168,6 @@ export interface ILanguageService {
  * Export service interface
  */
 export interface IExportService {
-  exportToCSV(data: any[], filename: string): void;
-  exportToPDF(data: any[], filename: string): void;
-  exportToExcel(data: any[], filename: string): void;
   exportToJSON(data: any, filename: string): void;
   generateReport(data: any, format: string): Observable<Blob>;
 }

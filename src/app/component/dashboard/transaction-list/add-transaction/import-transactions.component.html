@@ -25,21 +25,21 @@
 		<div *ngIf="!data?.transactions" class="mb-2 flex justify-end">
 			<button mat-stroked-button color="primary" (click)="downloadTemplate()" class="w-full sm:w-auto">
 				<mat-icon>download</mat-icon>
-				Download Excel Template
+				Download JSON Template
 			</button>
 		</div>
 
 		<!-- File Upload Section -->
 		<div *ngIf="!data?.transactions" class="mb-6">
 			<div class="file-upload-container" #fileUploadContainer [class.drag-over]="isDragOver">
-				<input type="file" accept=".xlsx,.xls" (change)="onFileSelected($event)" class="file-input"
+				<input type="file" accept=".json" (change)="onFileSelected($event)" class="file-input"
 					[disabled]="isLoading" />
 				<div class="file-upload-overlay">
 					<mat-icon class="text-4xl mb-2">cloud_upload</mat-icon>
 					<p class="text-sm text-gray-600">
 						{{ isLoading ? 'Processing...' : 'Click to select file or drag and drop' }}
 					</p>
-					<p class="text-xs text-gray-500 mt-1">Supports Excel (XLSX, XLS) files only</p>
+					<p class="text-xs text-gray-500 mt-1">Supports JSON files only</p>
 					<div *ngIf="selectedFile" class="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-700">
 						<mat-icon class="text-sm mr-1">file_present</mat-icon>
 						{{ selectedFile.name }} ({{ fileType }})
