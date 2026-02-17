@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Subscription } from 'rxjs';
+
 import { ValidationService } from './validation.service';
 import { Budget, Category } from '../models/category.model';
 import { APP_CONFIG } from '../config/config';
@@ -37,7 +39,8 @@ export class CategoryBudgetService {
   /**
    * Initialize budget form with existing category data
    */
-  initializeBudgetForm(form: FormGroup, category?: Category): void {
+  initializeBudgetForm(form: FormGroup, category?: Category): Subscription {
+
     if (category?.budget?.hasBudget) {
       form.patchValue({
         hasBudget: category.budget?.hasBudget,
@@ -51,14 +54,16 @@ export class CategoryBudgetService {
     }
 
     // Update form validation based on hasBudget toggle
-    this.setupBudgetFormValidation(form);
+    return this.setupBudgetFormValidation(form);
   }
+
 
   /**
    * Setup form validation based on hasBudget toggle
    */
-  setupBudgetFormValidation(form: FormGroup): void {
-    form.get('hasBudget')?.valueChanges.subscribe(hasBudget => {
+  setupBudgetFormValidation(form: FormGroup): Subscription {
+    const sub = form.get('hasBudget')?.valueChanges.subscribe(hasBudget => {
+
       if (hasBudget) {
         form.get('budgetAmount')?.enable();
         form.get('budgetPeriod')?.enable();
@@ -78,7 +83,9 @@ export class CategoryBudgetService {
 
     // Trigger initial validation
     form.get('hasBudget')?.updateValueAndValidity();
+    return sub || new Subscription();
   }
+
 
   /**
    * Get budget data from form

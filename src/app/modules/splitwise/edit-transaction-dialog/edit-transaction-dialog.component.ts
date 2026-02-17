@@ -1,8 +1,11 @@
-import { Component, Inject, OnInit , ChangeDetectionStrategy} from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { SplitTransaction, TransactionSplit } from '../../../util/models/splitwise.model';
 import { CurrencyService } from 'src/app/util/service/currency.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
 
 export interface EditTransactionDialogData {
   transaction: SplitTransaction;
@@ -15,7 +18,7 @@ export interface EditTransactionDialogData {
   styleUrls: ['./edit-transaction-dialog.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class EditTransactionDialogComponent implements OnInit {
+export class EditTransactionDialogComponent implements OnInit, OnDestroy {
   editForm!: FormGroup;
   transaction: SplitTransaction;
   groupMembers: any[];
@@ -23,6 +26,8 @@ export class EditTransactionDialogComponent implements OnInit {
   splitMode: 'percentage' | 'amount' = 'percentage';
   isSubmitting: boolean = false;
   Math = Math; // Make Math available in template
+  private destroy$ = new Subject<void>();
+
 
   constructor(
     private fb: FormBuilder,
@@ -34,6 +39,12 @@ export class EditTransactionDialogComponent implements OnInit {
     this.groupMembers = data.groupMembers;
     this.totalAmount = this.transaction.totalAmount;
   }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
 
   ngOnInit(): void {
     this.initForm();
@@ -51,10 +62,12 @@ export class EditTransactionDialogComponent implements OnInit {
     });
 
     // Watch for total amount changes
-    this.editForm.get('totalAmount')?.valueChanges.subscribe(newTotal => {
-      this.totalAmount = newTotal;
-      this.updateSplitPercentages();
-    });
+    this.editForm.get('totalAmount')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(newTotal => {
+        this.totalAmount = newTotal;
+        this.updateSplitPercentages();
+      });
   }
 
   get splitsArray(): FormArray {
@@ -74,20 +87,25 @@ export class EditTransactionDialogComponent implements OnInit {
     this.splitsArray.push(splitGroup);
 
     // Watch for amount changes to update percentage
-    splitGroup.get('amount')?.valueChanges.subscribe(amount => {
-      if (this.totalAmount > 0 && amount !== null && amount !== undefined) {
-        const percentage = (amount / this.totalAmount) * 100;
-        splitGroup.patchValue({ percentage: Math.round(percentage * 100) / 100 }, { emitEvent: false });
-      }
-    });
+    splitGroup.get('amount')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(amount => {
+        if (this.totalAmount > 0 && amount !== null && amount !== undefined) {
+          const percentage = (amount / this.totalAmount) * 100;
+          splitGroup.patchValue({ percentage: Math.round(percentage * 100) / 100 }, { emitEvent: false });
+        }
+      });
+
 
     // Watch for percentage changes to update amount
-    splitGroup.get('percentage')?.valueChanges.subscribe(percentage => {
-      if (percentage !== null && percentage !== undefined) {
-        const amount = (percentage / 100) * this.totalAmount;
-        splitGroup.patchValue({ amount: Math.round(amount * 100) / 100 }, { emitEvent: false });
-      }
-    });
+    splitGroup.get('percentage')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(percentage => {
+        if (percentage !== null && percentage !== undefined) {
+          const amount = (percentage / 100) * this.totalAmount;
+          splitGroup.patchValue({ amount: Math.round(amount * 100) / 100 }, { emitEvent: false });
+        }
+      });
   }
 
   removeSplit(index: number): void {

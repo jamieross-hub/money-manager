@@ -1,8 +1,10 @@
-import { Component, Inject, OnInit , ChangeDetectionStrategy} from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Category } from 'src/app/util/models/category.model';
 import { CategoryBudgetService } from 'src/app/util/service/category-budget.service';
+import { Subscription } from 'rxjs';
+
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -41,11 +43,13 @@ export interface CategoryBudgetDialogData {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CategoryBudgetDialogComponent implements OnInit {
+export class CategoryBudgetDialogComponent implements OnInit, OnDestroy {
   budgetForm: FormGroup;
   budgetPeriods: Array<{ value: string; label: string }>;
   minDate: Date = new Date();
   maxDate: Date = new Date(new Date().getFullYear() + 1, 11, 31);
+  private subscription = new Subscription();
+
 
   constructor(
     private dialogRef: MatDialogRef<CategoryBudgetDialogComponent>,
@@ -57,8 +61,13 @@ export class CategoryBudgetDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.budgetService.initializeBudgetForm(this.budgetForm, this.data.category);
+    this.subscription = this.budgetService.initializeBudgetForm(this.budgetForm, this.data.category);
   }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+  }
+
 
   onCancel(): void {
     this.dialogRef.close();

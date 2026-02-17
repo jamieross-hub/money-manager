@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit , ChangeDetectionStrategy} from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
@@ -9,7 +9,9 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
 import { Category } from '../../models/category.model';
 import { CategorySplit } from '../../models/transaction.model';
 import { AppState } from '../../../store/app.state';
@@ -36,12 +38,14 @@ import * as CategoriesSelectors from '../../../store/categories/categories.selec
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CategorySplitDialogComponent implements OnInit {
+export class CategorySplitDialogComponent implements OnInit, OnDestroy {
   categorySplitForm: FormGroup;
   categories$: Observable<Category[]>;
   totalAmount: number;
   remainingAmount: number = 0;
   isSubmitting = false;
+  private destroy$ = new Subject<void>();
+
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: {
@@ -60,6 +64,12 @@ export class CategorySplitDialogComponent implements OnInit {
       splits: this.fb.array([])
     });
   }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
 
   ngOnInit(): void {
     if (this.data.existingSplits && this.data.existingSplits.length > 0) {
@@ -88,34 +98,40 @@ export class CategorySplitDialogComponent implements OnInit {
     this.splitsArray.push(splitGroup);
 
     // Watch for amount changes to update percentage
-    splitGroup.get('amount')?.valueChanges.subscribe(amount => {
-      if (this.totalAmount > 0 && amount !== null && amount !== undefined) {
-        const percentage = (amount / this.totalAmount) * 100;
-        splitGroup.patchValue({ percentage: Math.round(percentage * 100) / 100 }, { emitEvent: false });
-        this.updateRemainingAmount();
-      }
-    });
+    splitGroup.get('amount')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(amount => {
+        if (this.totalAmount > 0 && amount !== null && amount !== undefined) {
+          const percentage = (amount / this.totalAmount) * 100;
+          splitGroup.patchValue({ percentage: Math.round(percentage * 100) / 100 }, { emitEvent: false });
+          this.updateRemainingAmount();
+        }
+      });
 
     // Watch for percentage changes to update amount
-    splitGroup.get('percentage')?.valueChanges.subscribe(percentage => {
-      if (percentage !== null && percentage !== undefined) {
-        const amount = (percentage / 100) * this.totalAmount;
-        splitGroup.patchValue({ amount: Math.round(amount * 100) / 100 }, { emitEvent: false });
-        this.updateRemainingAmount();
-      }
-    });
+    splitGroup.get('percentage')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(percentage => {
+        if (percentage !== null && percentage !== undefined) {
+          const amount = (percentage / 100) * this.totalAmount;
+          splitGroup.patchValue({ amount: Math.round(amount * 100) / 100 }, { emitEvent: false });
+          this.updateRemainingAmount();
+        }
+      });
 
     // Watch for category changes to update category name
-    splitGroup.get('categoryId')?.valueChanges.subscribe(categoryId => {
-      if (categoryId) {
-        this.categories$.subscribe(categories => {
-          const category = categories.find(c => c.id === categoryId);
-          if (category) {
-            splitGroup.patchValue({ categoryName: category.name }, { emitEvent: false });
-          }
-        });
-      }
-    });
+    splitGroup.get('categoryId')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(categoryId => {
+        if (categoryId) {
+          this.categories$.pipe(takeUntil(this.destroy$)).subscribe(categories => {
+            const category = categories.find(c => c.id === categoryId);
+            if (category) {
+              splitGroup.patchValue({ categoryName: category.name }, { emitEvent: false });
+            }
+          });
+        }
+      });
   }
 
   removeSplit(index: number): void {
@@ -147,7 +163,7 @@ export class CategorySplitDialogComponent implements OnInit {
   }
 
   onCategoryChange(categoryId: string, index: number): void {
-    this.categories$.subscribe(categories => {
+    this.categories$.pipe(takeUntil(this.destroy$)).subscribe(categories => {
       const category = categories.find(c => c.id === categoryId);
       if (category) {
         this.splitsArray.at(index).patchValue({ categoryName: category.name }, { emitEvent: false });
