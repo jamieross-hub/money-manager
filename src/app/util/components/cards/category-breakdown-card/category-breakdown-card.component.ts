@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, Inject, NgZone, PLATFORM_ID , ChangeDetectionStrategy} from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, Inject, NgZone, PLATFORM_ID, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -7,10 +7,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, combineLatest } from 'rxjs';
 import { takeUntil, map, startWith, filter } from 'rxjs/operators';
-import * as am5 from "@amcharts/amcharts5";
-import * as am5xy from "@amcharts/amcharts5/xy";
-import * as am5radar from "@amcharts/amcharts5/radar";
-import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
+
 import { AppState } from '../../../../store/app.state';
 import * as TransactionsSelectors from '../../../../store/transactions/transactions.selectors';
 import * as CategoriesSelectors from '../../../../store/categories/categories.selectors';
@@ -106,10 +103,11 @@ export class CategoryBreakdownCardComponent implements OnInit, OnDestroy {
   categoryBreakdown$: Observable<CategoryBreakdown[]>;
   isLoading$: Observable<boolean>;
 
-  // AmCharts
-  private root: am5.Root | undefined;
-  private chart: am5xy.XYChart | am5radar.RadarChart | undefined;
+  // AmCharts removed
+  // private root: am5.Root | undefined;
+  // private chart: am5xy.XYChart | am5radar.RadarChart | undefined;
   currentChartType: 'bar' | 'radial' = 'radial';
+
 
   // Generate unique chart container ID
   chartContainerId: string;
@@ -143,7 +141,8 @@ export class CategoryBreakdownCardComponent implements OnInit, OnDestroy {
     private currencyService: CurrencyService
   ) {
     // Generate unique chart container ID with chart type
-    this.chartContainerId = `category-breakdown-chart-${this.currentChartType}`;
+    this.chartContainerId = `category-breakdown-chart-removed`;
+
 
     // Initialize store selectors
     this.transactions$ = this.store.select(TransactionsSelectors.selectAllTransactions);
@@ -180,7 +179,7 @@ export class CategoryBreakdownCardComponent implements OnInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.browserOnly(() => {
-      this.initializeChart();
+      // this.initializeChart();
       this.subscribeToData();
     });
   }
@@ -190,9 +189,9 @@ export class CategoryBreakdownCardComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
 
     this.browserOnly(() => {
-      if (this.root) {
-        this.root.dispose();
-      }
+      // if (this.root) {
+      //   this.root.dispose();
+      // }
     });
   }
 
@@ -206,208 +205,26 @@ export class CategoryBreakdownCardComponent implements OnInit, OnDestroy {
   }
 
   private initializeChart(): void {
-    try {
-      this.root = am5.Root.new(this.chartContainerId);
-      this.root.setThemes([am5themes_Animated.new(this.root)]);
-
-      // Create chart based on current type
-      if (this.currentChartType === 'radial') {
-        this.createRadialChart();
-      } else {
-        this.createBarChart();
-      }
-    } catch (error) {
-      console.error('Error initializing chart:', error);
-    }
+    // Chart initialization removed
   }
 
   private createBarChart(): void {
-    if (!this.root) return;
-
-    console.log('Creating bar chart...');
-
-    // Dispose existing chart if any
-    if (this.chart) {
-      this.chart.dispose();
-      this.chart = undefined;
-    }
-
-    // Create XY chart for bar chart
-    this.chart = this.root.container.children.push(
-      am5xy.XYChart.new(this.root, {
-        layout: this.root.verticalLayout,
-        paddingTop: 20,
-        paddingRight: 20,
-        paddingBottom: 20,
-        paddingLeft: 20
-      })
-    );
-
-    // Create X axis (categories)
-    const xAxis = this.chart.xAxes.push(
-      am5xy.CategoryAxis.new(this.root, {
-        categoryField: "category",
-        renderer: am5xy.AxisRendererX.new(this.root, {
-          minGridDistance: 30,
-          cellStartLocation: 0.1,
-          cellEndLocation: 0.9
-        })
-      })
-    );
-
-    // Create Y axis (values)
-    const yAxis = this.chart.yAxes.push(
-      am5xy.ValueAxis.new(this.root, {
-        renderer: am5xy.AxisRendererY.new(this.root, {})
-      })
-    );
-
-    // Create series
-    const series = this.chart.series.push(
-      am5xy.ColumnSeries.new(this.root, {
-        name: 'Amount',
-        xAxis,
-        yAxis,
-        valueYField: 'amount',
-        categoryXField: 'category',
-        tooltip: am5.Tooltip.new(this.root, {
-          labelText: '{categoryX}: {valueY}'
-        })
-      })
-    );
-
-    // Configure series appearance
-    series.columns.template.setAll({
-      cornerRadiusTL: 5,
-      cornerRadiusTR: 5,
-      strokeOpacity: 0,
-      fillOpacity: 0.8
-    });
-
-    // Add color set
-    const colorSet = am5.ColorSet.new(this.root, {});
-    colorSet.set("colors", this.premiumColors.map(color => am5.color(color)));
-    series.columns.template.set("fill", colorSet.next());
-
-    // Add hover effects
-    series.columns.template.states.create("hover", {
-      fillOpacity: 1,
-      scale: 1.05
-    });
-
-    // Store references for data updates
-    this.xAxis = xAxis;
-    this.yAxis = yAxis;
-    this.series = series;
-
-    console.log('Bar chart created successfully');
-    series.appear(1000);
-    this.chart.appear(1000, 100);
+    // Bar chart creation removed
   }
 
   private createRadialChart(): void {
-    if (!this.root) return;
-
-    console.log('Creating radial bar chart...');
-
-    // Dispose existing chart if any
-    if (this.chart) {
-      this.chart.dispose();
-      this.chart = undefined;
-    }
-
-    // Create radar chart
-    this.chart = this.root.container.children.push(
-      am5radar.RadarChart.new(this.root, {
-        panX: false,
-        panY: false,
-        wheelX: "panX",
-        wheelY: "zoomX",
-        innerRadius: am5.percent(40)
-      })
-    );
-
-    // Add cursor
-    const radarChart = this.chart as am5radar.RadarChart;
-    const cursor = radarChart.set("cursor", am5radar.RadarCursor.new(this.root, {
-      behavior: "zoomX"
-    }));
-    cursor.lineY.set("visible", false);
-
-    // Create axes and their renderers
-    const xRenderer = am5radar.AxisRendererCircular.new(this.root, {
-      strokeOpacity: 0.1,
-      minGridDistance: 50
-    });
-
-    xRenderer.labels.template.setAll({
-      radius: 10,
-      maxPosition: 0.98
-    });
-
-    const xAxis = radarChart.xAxes.push(
-      am5xy.ValueAxis.new(this.root, {
-        renderer: xRenderer,
-        extraMax: 0.1,
-        tooltip: am5.Tooltip.new(this.root, {})
-      })
-    );
-
-    const yAxis = radarChart.yAxes.push(
-      am5xy.CategoryAxis.new(this.root, {
-        categoryField: "category",
-        renderer: am5radar.AxisRendererRadial.new(this.root, { minGridDistance: 20 })
-      })
-    );
-
-    // Create series
-    const series = radarChart.series.push(
-      am5radar.RadarColumnSeries.new(this.root, {
-        name: "Amount",
-        xAxis: xAxis,
-        yAxis: yAxis,
-        valueXField: "amount",
-        categoryYField: "category"
-      })
-    );
-
-    // Configure series appearance
-    series.set("stroke", this.root.interfaceColors.get("background"));
-    series.columns.template.setAll({
-      width: am5.p100,
-      strokeOpacity: 0.1,
-      tooltipText: "[bold]{category}[/]\nAmount: {valueX}\nPercentage: {valuePercentTotal.formatNumber('#.0')}%"
-    });
-
-    // Add color set
-    const colorSet = am5.ColorSet.new(this.root, {});
-    colorSet.set("colors", this.premiumColors.map(color => am5.color(color)));
-    series.columns.template.set("fill", colorSet.next());
-
-    // Add hover effects
-    series.columns.template.states.create("hover", {
-      fillOpacity: 1,
-      scale: 1.05
-    });
-
-    // Store references for data updates
-    this.radarXAxis = xAxis;
-    this.radarYAxis = yAxis;
-    this.radarSeries = series;
-
-    console.log('Radial bar chart created successfully');
-    series.appear(1000);
-    this.chart.appear(1000, 100);
+    // Radial chart creation removed
   }
 
   // Store chart components for data updates
-  private xAxis: am5xy.CategoryAxis<am5xy.AxisRenderer> | undefined;
-  private yAxis: am5xy.ValueAxis<am5xy.AxisRenderer> | undefined;
-  private series: am5xy.ColumnSeries | undefined;
-  private radarXAxis: am5xy.ValueAxis<any> | undefined;
-  private radarYAxis: am5xy.CategoryAxis<any> | undefined;
-  private radarSeries: am5radar.RadarColumnSeries | undefined;
-  private legend: am5.Legend | undefined;
+  // private xAxis: am5xy.CategoryAxis<am5xy.AxisRenderer> | undefined;
+  // private yAxis: am5xy.ValueAxis<am5xy.AxisRenderer> | undefined;
+  // private series: am5xy.ColumnSeries | undefined;
+  // private radarXAxis: am5xy.ValueAxis<any> | undefined;
+  // private radarYAxis: am5xy.CategoryAxis<any> | undefined;
+  // private radarSeries: am5radar.RadarColumnSeries | undefined;
+  // private legend: am5.Legend | undefined;
+
 
   private subscribeToData(): void {
     this.categoryBreakdown$.pipe(
@@ -429,60 +246,11 @@ export class CategoryBreakdownCardComponent implements OnInit, OnDestroy {
 
 
   private updateChartData(breakdown: CategoryBreakdown[]): void {
-    if (!this.root) {
-      console.error('Root not available for data update');
-      return;
-    }
-
-    const data = breakdown.map(item => ({
-      category: item.category,
-      amount: item.amount,
-      count: item.count,
-      percentage: item.percentage,
-      color: item.color
-    }));
-
-    console.log('Updating chart data:', data);
-
-    if (this.currentChartType === 'radial') {
-      if (this.radarSeries && this.radarYAxis) {
-        console.log('Setting radial chart data');
-
-        // Set data for both axis and series
-        this.radarYAxis.data.setAll(data);
-        this.radarSeries.data.setAll(data);
-
-        this.radarSeries.appear(1000, 100);
-      } else {
-        console.error('Radar series not available');
-      }
-    } else {
-      if (this.series && this.xAxis) {
-        console.log('Setting bar chart data');
-        this.xAxis.data.setAll(data);
-        this.series.data.setAll(data);
-      } else {
-        console.error('Bar series or axis not available');
-      }
-    }
+    // Chart updates removed
   }
 
   private clearChartData(): void {
-    if (!this.root) return;
-
-    if (this.currentChartType === 'radial') {
-      if (this.radarSeries) {
-        this.radarSeries.data.clear();
-      }
-      if (this.radarYAxis) {
-        this.radarYAxis.data.clear();
-      }
-    } else {
-      if (this.series && this.xAxis) {
-        this.xAxis.data.clear();
-        this.series.data.clear();
-      }
-    }
+    // Chart clearing removed
   }
 
   private calculateCategoryBreakdown(): Observable<CategoryBreakdown[]> {
@@ -653,13 +421,8 @@ export class CategoryBreakdownCardComponent implements OnInit, OnDestroy {
 
   get chartOptions(): Observable<any> {
     return new Observable(observer => {
-      if (this.chart) {
-        observer.next(this.chart);
-        observer.complete();
-      } else {
-        observer.next(null);
-        observer.complete();
-      }
+      observer.next(null);
+      observer.complete();
     });
   }
 

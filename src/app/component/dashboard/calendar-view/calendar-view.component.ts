@@ -1,5 +1,5 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { Component, OnInit, OnDestroy, ViewChild, Inject, NgZone, PLATFORM_ID , ChangeDetectionStrategy} from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, Inject, NgZone, PLATFORM_ID, ChangeDetectionStrategy } from '@angular/core';
 import { MatCalendar, MatCalendarCellClassFunction } from '@angular/material/datepicker';
 import { UserService } from '../../../util/service/db/user.service';
 import { FilterService } from '../../../util/service/filter.service';
@@ -25,10 +25,7 @@ import * as CategoriesSelectors from '../../../store/categories/categories.selec
 import { Transaction } from 'src/app/util/models/transaction.model';
 import { Category } from 'src/app/util/models/category.model';
 import { TransactionType } from 'src/app/util/config/enums';
-import * as am5 from "@amcharts/amcharts5";
-import * as am5xy from "@amcharts/amcharts5/xy";
-import * as am5radar from "@amcharts/amcharts5/radar";
-import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
+
 
 @Component({
   selector: 'calendar-view',
@@ -69,15 +66,15 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
   // Collapsible controls
   isControlsExpanded = false;
 
-  // AM Charts properties
-  private root: am5.Root | undefined;
-  private chart: am5radar.RadarChart | undefined;
-  private series1: am5radar.RadarColumnSeries | undefined;
-  private series2: am5radar.RadarColumnSeries | undefined;
+  // AmCharts removed
+  // private root: am5.Root | undefined;
+  // private chart: am5radar.RadarChart | undefined;
+  // private series1: am5radar.RadarColumnSeries | undefined;
+  // private series2: am5radar.RadarColumnSeries | undefined;
   chartContainerId = 'calendar-gauge-chart';
   showPieChart = false;
   showCalendar = true;
-  chartViewMode: 'income-expense' | 'category' = 'category';
+  // chartViewMode: 'income-expense' | 'category' = 'category'; // Removed as part of AmCharts removal
 
   // Calendar navigation
   currentViewDate = new Date();
@@ -101,25 +98,25 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     { value: 11, label: 'December' }
   ];
 
-  // Premium color palette
-  private premiumColors: string[] = [
-    '#6366F1', // Indigo
-    '#8B5CF6', // Violet
-    '#EC4899', // Pink
-    '#EF4444', // Red
-    '#F97316', // Orange
-    '#EAB308', // Yellow
-    '#22C55E', // Green
-    '#06B6D4', // Cyan
-    '#3B82F6', // Blue
-    '#84CC16', // Lime
-    '#F59E0B', // Amber
-    '#10B981', // Emerald
-    '#8B5A2B', // Brown
-    '#6B7280', // Gray
-    '#1F2937', // Dark Gray
-    '#DC2626'  // Dark Red
-  ];
+  // Premium color palette - Removed as part of AmCharts removal
+  // private premiumColors: string[] = [
+  //   '#6366F1', // Indigo
+  //   '#8B5CF6', // Violet
+  //   '#EC4899', // Pink
+  //   '#EF4444', // Red
+  //   '#F97316', // Orange
+  //   '#EAB308', // Yellow
+  //   '#22C55E', // Green
+  //   '#06B6D4', // Cyan
+  //   '#3B82F6', // Blue
+  //   '#84CC16', // Lime
+  //   '#F59E0B', // Amber
+  //   '#10B981', // Emerald
+  //   '#8B5A2B', // Brown
+  //   '#6B7280', // Gray
+  //   '#1F2937', // Dark Gray
+  //   '#DC2626'  // Dark Red
+  // ];
 
   private subscription = new Subscription();
 
@@ -146,16 +143,16 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
 
   ngAfterViewInit() {
     this.browserOnly(() => {
-      this.initializeChart();
+      // this.initializeChart(); // Removed as part of AmCharts removal
     });
   }
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
     this.browserOnly(() => {
-      if (this.root) {
-        this.root.dispose();
-      }
+      // if (this.root) {
+      //   this.root.dispose();
+      // } // Removed as part of AmCharts removal
     });
   }
 
@@ -168,113 +165,8 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Method removed
   private initializeChart(): void {
-    try {
-      this.root = am5.Root.new(this.chartContainerId);
-      this.root.setThemes([am5themes_Animated.new(this.root)]);
-
-      // Create radar chart for solid gauge effect
-      this.chart = this.root.container.children.push(
-        am5radar.RadarChart.new(this.root, {
-          panX: false,
-          panY: false,
-          wheelX: "panX",
-          wheelY: "zoomX",
-          innerRadius: am5.percent(20),
-          startAngle: -90,
-          endAngle: 180
-        })
-      );
-
-      // Add cursor
-      let cursor = this.chart.set("cursor", am5radar.RadarCursor.new(this.root, {
-        behavior: "zoomX"
-      }));
-      cursor.lineY.set("visible", false);
-
-      // Create axes and their renderers
-      let xRenderer = am5radar.AxisRendererCircular.new(this.root, {});
-      xRenderer.labels.template.setAll({
-        radius: 10
-      });
-      xRenderer.grid.template.setAll({
-        forceHidden: true
-      });
-
-      let xAxis = this.chart.xAxes.push(am5xy.ValueAxis.new(this.root, {
-        renderer: xRenderer,
-        min: 0,
-        max: 100,
-        strictMinMax: true,
-        numberFormat: "₹#'",
-        tooltip: am5.Tooltip.new(this.root, {})
-      }));
-
-      let yRenderer = am5radar.AxisRendererRadial.new(this.root, {
-        minGridDistance: 20
-      });
-      yRenderer.labels.template.setAll({
-        centerX: am5.p100,
-        fontWeight: "500",
-        fontSize: 18,
-        templateField: "columnSettings"
-      });
-      yRenderer.grid.template.setAll({
-        forceHidden: true
-      });
-
-      let yAxis = this.chart.yAxes.push(am5xy.CategoryAxis.new(this.root, {
-        categoryField: "category",
-        renderer: yRenderer
-      }));
-
-      // Create series for background (full value)
-      this.series1 = this.chart.series.push(am5radar.RadarColumnSeries.new(this.root, {
-        xAxis: xAxis,
-        yAxis: yAxis,
-        clustered: false,
-        valueXField: "full",
-        categoryYField: "category",
-        fill: this.root.interfaceColors.get("alternativeBackground")
-      }));
-
-      this.series1.columns.template.setAll({
-        width: am5.p100,
-        fillOpacity: 0.08,
-        strokeOpacity: 0,
-        cornerRadius: 20
-      });
-
-      // Create series for actual values
-      this.series2 = this.chart.series.push(am5radar.RadarColumnSeries.new(this.root, {
-        xAxis: xAxis,
-        yAxis: yAxis,
-        clustered: false,
-        valueXField: "value",
-        categoryYField: "category"
-      }));
-
-      this.series2.columns.template.setAll({
-        width: am5.p100,
-        strokeOpacity: 0,
-        tooltipText: "[bold]{category}[/]\nAmount: ₹{valueX.formatNumber('#,###.##')}",
-        cornerRadius: 20,
-        templateField: "columnSettings"
-      });
-
-      // Add click handler
-      this.series2.columns.template.events.on("click", (ev: any) => {
-        const dataItem = ev.target.dataItem;
-        if (dataItem && this.chartViewMode === 'category' && !this.isMobile) {
-          const data = dataItem.dataContext as any;
-          this.applyCategoryFilter(data.categoryId || data.category);
-        }
-      });
-
-      console.log('Solid gauge chart initialized successfully');
-    } catch (error) {
-      console.error('Error initializing AM Charts:', error);
-    }
   }
 
   loadTransactions() {
@@ -282,7 +174,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
       this.store.select(TransactionsSelectors.selectAllTransactions).subscribe({
         next: (transactions) => {
           this.transactions = transactions;
-          this.updatePieChart();
+          // this.updatePieChart(); // Removed as part of AmCharts removal
           this.updateCalendar();
         },
         error: (error) => {
@@ -315,58 +207,12 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Update pie chart data
+  // Method removed
   updatePieChart() {
-    if (this.chartViewMode === 'category') {
-      this.updateCategoryChart();
-    } else {
-      this.updateIncomeExpenseChart();
-    }
   }
 
-  // Update category-wise spending chart
+  // Method removed
   updateCategoryChart() {
-    const filteredTransactions = this.getFilteredTransactions();
-    const categoryData = this.getCategorySpendingData(filteredTransactions);
-
-    this.browserOnly(() => {
-      if (this.series1 && this.series2 && this.chart) {
-        // Get the maximum amount for scaling
-        const maxAmount = Math.max(...categoryData.map(item => item.value), 1);
-
-        // Update x-axis max value
-        const xAxis = this.chart.xAxes.getIndex(0);
-        if (xAxis) {
-          (xAxis as any).set("max", maxAmount);
-        }
-
-        // Convert data to gauge format
-        const gaugeData = categoryData.map((item, index) => ({
-          category: item.name,
-          categoryId: item.categoryId,
-          value: item.value,
-          full: maxAmount,
-          columnSettings: {
-            fill: am5.color(this.premiumColors[index % this.premiumColors.length])
-          }
-        }));
-
-        // Set data for both series
-        this.series1.data.setAll(gaugeData);
-        this.series2.data.setAll(gaugeData);
-
-        // Update y-axis data
-        const yAxis = this.chart.yAxes.getIndex(0);
-        if (yAxis) {
-          yAxis.data.setAll(gaugeData);
-        }
-
-        // Animate chart
-        this.series1.appear(1000);
-        this.series2.appear(1000);
-        this.chart.appear(1000, 100);
-      }
-    });
   }
 
   // Apply category filter to transaction list
@@ -387,65 +233,8 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     this.notificationService.success(`Filtering transactions for ${categoryName} in ${this.availableMonths[this.selectedMonth].label} ${this.selectedYear}`);
   }
 
-  // Update income vs expense chart
+  // Method removed
   updateIncomeExpenseChart() {
-    let income = 0;
-    let expenses = 0;
-
-    if (this.isRangeMode && this.startDate && this.endDate) {
-      income = this.getRangeTotalIncome();
-      expenses = this.getRangeTotalExpenses();
-    } else if (this.selectedDate) {
-      income = this.getTotalIncome();
-      expenses = this.getTotalExpenses();
-    }
-
-    // Find the maximum amount for scaling
-    const maxAmount = Math.max(income, expenses, 1);
-
-    const data = [
-      {
-        category: 'Income',
-        value: income,
-        full: maxAmount,
-        columnSettings: {
-          fill: am5.color('#10b981')
-        }
-      },
-      {
-        category: 'Expenses',
-        value: expenses,
-        full: maxAmount,
-        columnSettings: {
-          fill: am5.color('#ef4444')
-        }
-      }
-    ];
-
-    this.browserOnly(() => {
-      if (this.series1 && this.series2 && this.chart) {
-        // Update x-axis max value
-        const xAxis = this.chart.xAxes.getIndex(0);
-        if (xAxis) {
-          (xAxis as any).set("max", maxAmount);
-        }
-
-        // Set data for both series
-        this.series1.data.setAll(data);
-        this.series2.data.setAll(data);
-
-        // Update y-axis data
-        const yAxis = this.chart.yAxes.getIndex(0);
-        if (yAxis) {
-          yAxis.data.setAll(data);
-        }
-
-        // Animate chart
-        this.series1.appear(1000);
-        this.series2.appear(1000);
-        this.chart.appear(1000, 100);
-      }
-    });
   }
 
   // Get filtered transactions based on year/month selection
@@ -492,17 +281,27 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
       categoryId: category.id,
       value: category.amount,
       maxValue: maxAmount,
-      itemStyle: { color: this.premiumColors[index % this.premiumColors.length] }
+      itemStyle: { color: this.getCategoryColor(category.id) }
     }));
+  }
+
+  // Helper to get a consistent color for a category
+  getCategoryColor(categoryId: string): string {
+    // This is a placeholder. In a real app, you'd have a more robust color assignment.
+    // For now, we'll use a simple hash-based approach or a predefined list.
+    const colors = ['#6366f1', '#f97316', '#10b981', '#ef4444', '#eab308', '#a855f7', '#06b6d4', '#f43f5e'];
+    let hash = 0;
+    for (let i = 0; i < categoryId.length; i++) {
+      hash = categoryId.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash % colors.length);
+    return colors[index];
   }
 
   // Toggle pie chart visibility
   togglePieChart() {
     this.showPieChart = !this.showPieChart;
-    this.showCalendar = !this.showCalendar;
-    if (this.showPieChart) {
-      this.updatePieChart();
-    }
+    // Chart toggle logic removed
   }
 
   // Toggle calendar visibility
@@ -513,8 +312,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
 
   // Toggle chart view mode
   toggleChartViewMode() {
-    this.chartViewMode = this.chartViewMode === 'category' ? 'income-expense' : 'category';
-    this.updatePieChart();
+    // Logic removed
   }
 
   // Handle year change

@@ -140,22 +140,45 @@
                     </div>
                 </div>
 
-                <div class="flex-grow flex items-center justify-center relative chart-box">
-                    <div [id]="chartContainerId" style="width: 100%; height: 100%;"></div>
-
-                    <!-- Summary Labels inside the card -->
-                    <div class="summary-label left animate-fadeUp">
-                        <p class="label-text !text-[8px] md:!text-[9px] mb-0.5 md:mb-1">{{ 'LOAN_CALCULATOR.PRINCIPAL' |
-                            translate }}</p>
-                        <p class="data-text text-theme-primary text-xs md:text-base mb-0">{{
-                            currencyService.formatAmount(loanAmount,{round:true}) }}</p>
+                <div class="flex-grow flex flex-col items-center justify-center relative chart-box w-full px-4">
+                    <!-- Simple CSS Bar for Principal vs Interest -->
+                    <div
+                        class="w-full h-8 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden flex relative mb-6">
+                        <div class="h-full bg-theme-primary transition-all duration-500"
+                            [style.width.%]="(loanAmount / totalAmount) * 100"
+                            [matTooltip]="('LOAN_CALCULATOR.PRINCIPAL' | translate)">
+                        </div>
+                        <div class="h-full bg-theme-tertiary transition-all duration-500"
+                            [style.width.%]="(totalInterest / totalAmount) * 100"
+                            [matTooltip]="('LOAN_CALCULATOR.INTEREST' | translate)">
+                        </div>
                     </div>
 
-                    <div class="summary-label right animate-fadeUp [animation-delay:200ms]">
-                        <p class="label-text !text-[8px] md:!text-[9px] mb-0.5 md:mb-1">{{ 'LOAN_CALCULATOR.INTEREST' |
-                            translate }}</p>
-                        <p class="data-text text-theme-tertiary text-xs md:text-base mb-0">{{
-                            currencyService.formatAmount(totalInterest,{round:true}) }}</p>
+                    <!-- Summary Labels inside the card -->
+                    <div class="flex justify-between w-full">
+                        <div class="summary-label left animate-fadeUp">
+                            <div class="flex items-center gap-1 mb-1">
+                                <div class="w-2 h-2 rounded-full bg-theme-primary"></div>
+                                <p class="label-text !text-[10px] md:!text-[11px] mb-0">{{ 'LOAN_CALCULATOR.PRINCIPAL' |
+                                    translate }}</p>
+                            </div>
+                            <p class="data-text text-theme-primary text-sm md:text-lg mb-0 font-bold">{{
+                                currencyService.formatAmount(loanAmount,{round:true}) }}</p>
+                            <p class="text-[10px] text-gray-500">({{ (loanAmount / totalAmount * 100) | number:'1.0-1'
+                                }}%)</p>
+                        </div>
+
+                        <div class="summary-label right animate-fadeUp [animation-delay:200ms] text-right">
+                            <div class="flex items-center justify-end gap-1 mb-1">
+                                <div class="w-2 h-2 rounded-full bg-theme-tertiary"></div>
+                                <p class="label-text !text-[10px] md:!text-[11px] mb-0">{{ 'LOAN_CALCULATOR.INTEREST' |
+                                    translate }}</p>
+                            </div>
+                            <p class="data-text text-theme-tertiary text-sm md:text-lg mb-0 font-bold">{{
+                                currencyService.formatAmount(totalInterest,{round:true}) }}</p>
+                            <p class="text-[10px] text-gray-500">({{ (totalInterest / totalAmount * 100) |
+                                number:'1.0-1' }}%)</p>
+                        </div>
                     </div>
                 </div>
 

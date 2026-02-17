@@ -13,12 +13,9 @@
         <button mat-icon-button color="warn" (click)="clearAll()" matTooltip="Clear selection" *ngIf="hasSelection()">
           <mat-icon>clear</mat-icon>
         </button>
-        <button mat-icon-button (click)="togglePieChart()" class="{{showPieChart ? 'active' : ''}}"
-          matTooltip="{{ showPieChart ? 'Hide gauge chart' : 'Show gauge chart' }}">
-          <mat-icon>pie_chart</mat-icon>
-        </button>
-        <button mat-icon-button (click)="toggleCalendar()" class="{{showCalendar && !showPieChart ? 'active' : ''}}"
-          matTooltip="{{ showCalendar && !showPieChart ? 'Hide calendar' : 'Show calendar' }}">
+        <!-- Chart Button Removed -->
+        <button mat-icon-button (click)="toggleCalendar()" class="{{showCalendar ? 'active' : ''}}"
+          matTooltip="{{ showCalendar ? 'Hide calendar' : 'Show calendar' }}">
           <mat-icon>calendar_month</mat-icon>
         </button>
         <button mat-icon-button *ngIf="!isMobile" (click)="toggleControls()" [class.rotated]="isControlsExpanded"
@@ -41,46 +38,9 @@
         </button>
       </div>
 
-      <!-- Chart View Mode Toggle -->
-      <div class="chart-mode-toggle" *ngIf="showPieChart">
-        <button mat-raised-button [color]="chartViewMode === 'category' ? 'primary' : 'basic'"
-          (click)="toggleChartViewMode()">
-          <mat-icon>category</mat-icon>
-          Category View
-        </button>
-        <button mat-raised-button [color]="chartViewMode === 'income-expense' ? 'primary' : 'basic'"
-          (click)="toggleChartViewMode()">
-          <mat-icon>compare_arrows</mat-icon>
-          Income vs Expense
-        </button>
-      </div>
+      <!-- Chart View Mode Toggle Removed -->
 
-      <!-- Date Filters for Category Chart -->
-      <div class="date-filters" *ngIf="showPieChart && chartViewMode === 'category'">
-        <div class="filter-row">
-          <mat-form-field appearance="fill" class="year-select">
-            <mat-label>Year</mat-label>
-            <mat-select [(value)]="selectedYear" (selectionChange)="onYearChange($event.value)">
-              @for (year of availableYears; track year) {
-              <mat-option [value]="year">
-                {{ year }}
-              </mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="fill" class="month-select">
-            <mat-label>Month</mat-label>
-            <mat-select [(value)]="selectedMonth" (selectionChange)="onMonthChange($event.value)">
-              @for (month of availableMonths; track month.value) {
-              <mat-option [value]="month.value">
-                {{ month.label }}
-              </mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-        </div>
-      </div>
+      <!-- Date Filters for Category Chart Removed -->
 
       <!-- Calendar Navigation Controls -->
       <div class="calendar-navigation" *ngIf="showCalendar">
@@ -99,11 +59,7 @@
   </div>
 
   <!-- Solid Gauge Chart Section -->
-  <div class="gauge-chart-section" [style.display]="showPieChart ? 'block' : 'none'">
-    <div class="chart-container">
-      <div [id]="chartContainerId" class="amcharts-container"></div>
-    </div>
-  </div>
+  <!-- Solid Gauge Chart Section Removed -->
 
   <!-- Range Selection Status -->
   <div *ngIf="isRangeMode && showCalendar" class="status-section">
@@ -184,7 +140,7 @@
   </div>
 
   <!-- Calendar -->
-  <div class="calendar-container" *ngIf="showCalendar && !showPieChart">
+  <div class="calendar-container" *ngIf="showCalendar">
     <mat-calendar #calendar [dateClass]="dateClass" [selected]="selectedDate" (selectedChange)="onDateSelected($event)">
     </mat-calendar>
   </div>

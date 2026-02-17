@@ -1,11 +1,6 @@
 <div class="mobile-transaction-container">
 	<!-- Chart area (amCharts) -->
-	<div *ngIf="showChart" class="chart-wrapper">
-		<button mat-icon-button class="close-chart-btn" (click)="toggleChartView()">
-			<mat-icon>close</mat-icon>
-		</button>
-		<div id="transactionChart" class="transaction-chart"></div>
-	</div>
+	<!-- Chart area removed -->
 
 	<!-- Mobile Filter Header -->
 	<div class="mobile-filter-header" *ngIf="showFilters && !showChart">
@@ -149,11 +144,7 @@
 			</mat-menu>
 
 			<!-- Chart Button -->
-			<button mat-icon-button class="filter-menu-btn bg-primary" color="primary" (click)="toggleChartView()"
-				matTooltip="Show chart" aria-label="Show chart">
-				<mat-icon>pie_chart</mat-icon>
-				<span class="filter-btn-text">{{showChart ? 'Hide Chart' : 'Show Chart'}}</span>
-			</button>
+			<!-- Chart Button Removed -->
 		</div>
 	</div>
 

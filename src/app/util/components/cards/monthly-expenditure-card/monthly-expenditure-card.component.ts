@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, NgZone, AfterViewInit , ChangeDetectionStrategy} from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, NgZone, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,9 +12,7 @@ import { Transaction } from '../../../models/transaction.model';
 import { FilterService } from '../../../service/filter.service';
 import moment from 'moment';
 import { CurrencyPipe } from 'src/app/util/pipes';
-import * as am5 from "@amcharts/amcharts5";
-import * as am5xy from "@amcharts/amcharts5/xy";
-import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
+
 import { AppViewService } from '../../../../util/service/app-view.service';
 
 @Component({
@@ -23,13 +21,14 @@ import { AppViewService } from '../../../../util/service/app-view.service';
     imports: [CommonModule, MatCardModule, MatIconModule, MatButtonModule, MatTooltipModule, CurrencyPipe],
     templateUrl: './monthly-expenditure-card.component.html',
     styleUrl: './monthly-expenditure-card.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, AfterViewInit {
-    chartId = 'daily-trend-chart-' + Math.random().toString(36).substr(2, 9);
-    private root: am5.Root | undefined;
-    private series: am5xy.XYSeries | undefined;
-    private xAxis: am5xy.CategoryAxis<any> | undefined;
+    chartId = 'daily-trend-chart-removed';
+    // private root: am5.Root | undefined;
+    // private series: am5xy.XYSeries | undefined;
+    // private xAxis: am5xy.CategoryAxis<any> | undefined;
+
 
     chartType: 'line' | 'bar' = 'line';
     totalIncome = 0;
@@ -85,7 +84,7 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
         this.browserOnly(() => {
             // Small timeout to ensure DOM is ready
             setTimeout(() => {
-                this.initChart();
+                // this.initChart();
                 this.subscribeToData();
             }, 100);
         });
@@ -94,9 +93,10 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
     ngOnDestroy(): void {
         this.subscription.unsubscribe();
         this.browserOnly(() => {
-            if (this.root) {
-                this.root.dispose();
-            }
+            // if (this.root) {
+            //     this.root.dispose();
+            // }
+
         });
     }
 
@@ -126,125 +126,9 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
         }
     }
 
-    private initChart() {
-        //this.chartId = 'daily-trend-chart-' + Math.random().toString(36).substr(2, 9);
-        this.root = am5.Root.new(this.chartId);
-        this.root.setThemes([am5themes_Animated.new(this.root)]);
 
-        const chart = this.root.container.children.push(
-            am5xy.XYChart.new(this.root, {
-                panX: false,
-                panY: false,
-                wheelX: "none",
-                wheelY: "none",
-                layout: this.root.verticalLayout
-            })
-        );
 
-        const xRenderer = am5xy.AxisRendererX.new(this.root, {
-            minGridDistance: 30,
-            cellStartLocation: 0.1,
-            cellEndLocation: 0.9
-        });
 
-        xRenderer.grid.template.set("visible", false);
-        xRenderer.labels.template.setAll({
-            fontSize: 10,
-            fill: am5.color(0x9ca3af)
-        });
-
-        this.xAxis = chart.xAxes.push(
-            am5xy.CategoryAxis.new(this.root, {
-                categoryField: "period",
-                renderer: xRenderer,
-                tooltip: am5.Tooltip.new(this.root, {})
-            })
-        );
-
-        const yRenderer = am5xy.AxisRendererY.new(this.root, {});
-        yRenderer.grid.template.setAll({
-            strokeDasharray: [3, 3],
-            strokeOpacity: 0.2
-        });
-        yRenderer.labels.template.setAll({
-            fontSize: 10,
-            fill: am5.color(0x9ca3af)
-        });
-
-        const yAxis = chart.yAxes.push(
-            am5xy.ValueAxis.new(this.root, {
-                renderer: yRenderer,
-                min: 0
-            })
-        );
-
-        this.renderSeries(chart, yAxis);
-
-        chart.set("cursor", am5xy.XYCursor.new(this.root, {
-            behavior: "none",
-            xAxis: this.xAxis
-        }));
-
-        chart.appear(1000, 100);
-    }
-
-    private renderSeries(chart: am5xy.XYChart, yAxis: am5xy.ValueAxis<any>) {
-        if (this.chartType === 'line') {
-            const series = chart.series.push(
-                am5xy.LineSeries.new(this.root!, {
-                    name: "Expenditure",
-                    xAxis: this.xAxis!,
-                    yAxis: yAxis,
-                    valueYField: "value",
-                    categoryXField: "period",
-                    stroke: am5.color(0x0d9488),
-                    tooltip: am5.Tooltip.new(this.root!, {
-                        labelText: "{valueY}"
-                    })
-                })
-            );
-
-            series.fills.template.setAll({
-                fillOpacity: 0.1,
-                visible: true,
-                fill: am5.color(0x0d9488)
-            });
-
-            series.strokes.template.setAll({
-                strokeWidth: 3
-            });
-
-            series.set("fill", am5.color(0x0d9488));
-
-            // Smooth the line
-            series.set("curveFactory", (am5 as any).curveBasis);
-
-            this.series = series;
-        } else {
-            const series = chart.series.push(
-                am5xy.ColumnSeries.new(this.root!, {
-                    name: "Expenditure",
-                    xAxis: this.xAxis!,
-                    yAxis: yAxis,
-                    valueYField: "value",
-                    categoryXField: "period",
-                    fill: am5.color(0x0d9488),
-                    stroke: am5.color(0x0d9488),
-                    tooltip: am5.Tooltip.new(this.root!, {
-                        labelText: "{valueY}"
-                    })
-                })
-            );
-
-            series.columns.template.setAll({
-                cornerRadiusTL: 5,
-                cornerRadiusTR: 5,
-                width: am5.percent(70)
-            });
-
-            this.series = series;
-        }
-    }
 
     private subscribeToData() {
         this.subscription.add(
@@ -383,12 +267,7 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
     }
 
     private updateChart(data: any[]) {
-        this.browserOnly(() => {
-            if (this.series && this.xAxis) {
-                this.series.data.setAll(data);
-                this.xAxis.data.setAll(data);
-            }
-        });
+        // Chart actions removed
     }
 
     toggleChartType(type: 'line' | 'bar') {
@@ -396,11 +275,7 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
         this.chartType = type;
 
         this.browserOnly(() => {
-            if (this.root) {
-                this.root.dispose();
-                this.initChart();
-                this.updateData();
-            }
+            // Chart toggle removed
         });
     }
 }

@@ -11,9 +11,7 @@
   <div *ngIf="hasError" class="error-container">
     <mat-icon class="error-icon">error</mat-icon>
     <span class="error-message">{{ effectiveConfig.error }}</span>
-    <button *ngIf="effectiveConfig.onRefresh" 
-            (click)="onRefreshClick()" 
-            class="retry-button">
+    <button *ngIf="effectiveConfig.onRefresh" (click)="onRefreshClick()" class="retry-button">
       <mat-icon>refresh</mat-icon>
       Retry
     </button>
@@ -26,16 +24,25 @@
   </div>
 
 
-  <!-- Two-Level Pie Chart Container - Always Present -->
-  <div class="pie-chart-container">
-    <div class="pie-chart-header">
-      <h4 class="pie-chart-title">Financial Distribution</h4>
-      <p class="pie-chart-subtitle">{{ effectiveConfig.subtitle }}</p>
-    </div>
-    <div 
-      [id]="chartContainerId" 
-      class="pie-chart"
-      [style.height]="effectiveConfig.pieChartHeight">
+  <!-- Chart Container - Replaced with Summary View -->
+  <div class="pie-chart-container flex flex-col justify-center items-center p-4">
+    <div *ngIf="metrics$ | async as metrics" class="w-full space-y-4">
+      <!-- Net Savings -->
+      <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <span class="text-gray-600 dark:text-gray-300 font-medium">Net Savings</span>
+        <span class="text-xl font-bold"
+          [ngClass]="metrics.savings >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+          {{ formatCurrency(metrics.savings) }}
+        </span>
+      </div>
+
+      <!-- Expenses -->
+      <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <span class="text-gray-600 dark:text-gray-300 font-medium">Total Expenses</span>
+        <span class="text-xl font-bold text-red-600 dark:text-red-400">
+          {{ formatCurrency(metrics.expenses) }}
+        </span>
+      </div>
     </div>
   </div>
 
@@ -45,4 +52,4 @@
       {{ effectiveConfig.footerText }}: {{ getLastUpdatedTime() }}
     </span>
   </div> -->
-</div> 
+</div>

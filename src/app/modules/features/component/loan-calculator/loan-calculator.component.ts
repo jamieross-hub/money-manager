@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Inject, NgZone, PLATFORM_ID, AfterViewInit , ChangeDetectionStrategy} from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, NgZone, PLATFORM_ID, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -13,9 +13,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
-import * as am5 from "@amcharts/amcharts5";
-import * as am5percent from "@amcharts/amcharts5/percent";
-import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
+
 import { CurrencyService } from '../../../../util/service/currency.service';
 import { ThemeSwitchingService } from '../../../../util/service/theme-switching.service';
 
@@ -39,7 +37,7 @@ import { ThemeSwitchingService } from '../../../../util/service/theme-switching.
     ],
     templateUrl: './loan-calculator.component.html',
     styleUrl: './loan-calculator.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy {
     // Model values
@@ -60,11 +58,9 @@ export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy
     maxRate = 30;
 
     // amCharts
-    private root: am5.Root | undefined;
-    private chart: am5percent.PieChart | undefined;
-    private series: am5percent.PieSeries | undefined;
+    // amCharts (Removed)
     private themeSubscription: Subscription | undefined;
-    chartContainerId: string = 'loan-breakdown-chart';
+
 
     constructor(
         @Inject(PLATFORM_ID) private platformId: Object,
@@ -86,12 +82,9 @@ export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy
         });
 
         // Subscribe to theme changes for chart colors
+        // Subscribe to theme changes for chart colors
         this.themeSubscription = this.themeService.currentTheme.subscribe(() => {
-            // Check if chart is initialized and we're in browser
-            if (this.series && isPlatformBrowser(this.platformId)) {
-                // Small delay to ensure CSS variables are applied to the body
-                setTimeout(() => this.updateChartColors(), 100);
-            }
+            // Theme changes no longer need to update chart colors
         });
 
         this.calculateEMI();
@@ -99,16 +92,13 @@ export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy
 
     ngAfterViewInit(): void {
         this.browserOnly(() => {
-            this.initChart();
+            // Chart init removed
+
         });
     }
 
     ngOnDestroy(): void {
-        this.browserOnly(() => {
-            if (this.root) {
-                this.root.dispose();
-            }
-        });
+
         if (this.themeSubscription) {
             this.themeSubscription.unsubscribe();
         }
@@ -128,7 +118,7 @@ export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy
         this.totalAmount = this.monthlyEmi * N;
         this.totalInterest = this.totalAmount - P;
 
-        this.updateChart();
+        // this.updateChart();
     }
 
     resetToDefaults(): void {
@@ -153,74 +143,7 @@ export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy
         });
     }
 
-    private initChart(): void {
-        this.root = am5.Root.new(this.chartContainerId);
-        this.root.setThemes([am5themes_Animated.new(this.root)]);
 
-        this.chart = this.root.container.children.push(
-            am5percent.PieChart.new(this.root, {
-                innerRadius: am5.percent(60),
-                layout: this.root.verticalLayout
-            })
-        );
-
-        this.series = this.chart.series.push(
-            am5percent.PieSeries.new(this.root, {
-                valueField: "value",
-                categoryField: "category",
-                alignLabels: false
-            })
-        );
-
-        this.series.labels.template.set("forceHidden", true);
-        this.series.ticks.template.set("forceHidden", true);
-
-        this.series.slices.template.setAll({
-            strokeOpacity: 0,
-            fillOpacity: 0.9,
-            tooltipText: "{category}: [bold]{value}[/]"
-        });
-
-        this.series.slices.template.states.create("hover", {
-            fillOpacity: 1,
-            scale: 1.05
-        });
-
-        // Custom colors matching the app theme
-        this.updateChartColors();
-
-        this.updateChart();
-        this.series.appear(1000, 100);
-    }
-
-    private updateChartColors(): void {
-        if (this.series) {
-            const primaryColor = this.getColorFromTheme('--primary-500', '#3B82F6');
-            const tertiaryColor = this.getColorFromTheme('--tertiary-500', '#F97316');
-
-            this.series.get("colors")?.set("colors", [
-                am5.color(primaryColor),
-                am5.color(tertiaryColor)
-            ]);
-        }
-    }
-
-    private getColorFromTheme(variable: string, fallback: string): string {
-        if (isPlatformBrowser(this.platformId)) {
-            const value = getComputedStyle(document.body).getPropertyValue(variable).trim();
-            return value || fallback;
-        }
-        return fallback;
-    }
-
-    private updateChart(): void {
-        if (this.series) {
-            this.series.data.setAll([
-                { category: this.translate.instant('LOAN_CALCULATOR.PRINCIPAL'), value: this.loanAmount },
-                { category: this.translate.instant('LOAN_CALCULATOR.INTEREST'), value: this.totalInterest }
-            ]);
-        }
-    }
 
     private browserOnly(f: () => void) {
         if (isPlatformBrowser(this.platformId)) {

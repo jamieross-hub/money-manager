@@ -25,9 +25,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDividerModule } from '@angular/material/divider';
 import { TranslateModule } from '@ngx-translate/core';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
-import * as am5 from '@amcharts/amcharts5';
-import * as am5xy from '@amcharts/amcharts5/xy';
-import am5themes_Animated from '@amcharts/amcharts5/themes/Animated';
+
 import { MatDialog } from '@angular/material/dialog';
 import { Transaction } from '../../../../util/models/transaction.model';
 import { Subject, Subscription, Observable } from 'rxjs';
@@ -103,7 +101,7 @@ export class MobileTransactionListComponent
   ];
 
   showChart: boolean = false;
-  private chartRoot: am5.Root | null = null;
+  // private chartRoot: am5.Root | null = null;
 
   private subscription = new Subscription();
   destroy$: Subject<void> = new Subject<void>();
@@ -847,233 +845,15 @@ export class MobileTransactionListComponent
 
   toggleChartView() {
     this.showChart = !this.showChart;
-    if (this.showChart) {
-      setTimeout(() => this.renderChart(), 50);
-    } else {
-      this.disposeChart();
-    }
+    this.showChart = !this.showChart;
+    // Chart toggle logic disabled
   }
 
   private renderChart() {
-    this.disposeChart();
-
-    const root = am5.Root.new('transactionChart');
-    root.setThemes([am5themes_Animated.new(root)]);
-
-    const isDark = this.themeService.currentTheme.value === 'dark-theme';
-    const textColor = isDark ? am5.color(0xe5e7eb) : am5.color(0x9ca3af);
-    const gridColor = isDark ? am5.color(0xffffff) : am5.color(0x000000);
-
-    const chart = root.container.children.push(
-      am5xy.XYChart.new(root, {
-        panX: true,
-        panY: false,
-        wheelX: 'panX',
-        wheelY: 'zoomX',
-        layout: root.verticalLayout,
-      })
-    );
-
-    const xRenderer = am5xy.AxisRendererX.new(root, {
-      minGridDistance: 30,
-      cellStartLocation: 0.1,
-      cellEndLocation: 0.9,
-    });
-
-    xRenderer.grid.template.set('visible', false);
-
-    xRenderer.labels.template.setAll({
-      rotation: -45,
-      centerY: am5.p50,
-      centerX: am5.p100,
-      paddingRight: 15,
-      fontSize: 10,
-      fill: textColor,
-    });
-
-    const xAxis = chart.xAxes.push(
-      am5xy.CategoryAxis.new(root, {
-        categoryField: 'category',
-        renderer: xRenderer,
-        tooltip: am5.Tooltip.new(root, {}),
-      })
-    );
-
-    const yRenderer = am5xy.AxisRendererY.new(root, {});
-    yRenderer.grid.template.setAll({
-      strokeDasharray: [3, 3],
-      strokeOpacity: 0.2,
-      stroke: gridColor,
-    });
-
-    yRenderer.labels.template.setAll({
-      fontSize: 10,
-      fill: textColor,
-    });
-
-    yRenderer.labels.template.adapters.add('text', (text, target) => {
-      if (
-        target.dataItem &&
-        typeof (target.dataItem as any).get('value') === 'number'
-      ) {
-        return this.currencyService.formatAmount(
-          (target.dataItem as any).get('value') as number,
-          {
-            compact: true,
-            decimalPlaces: 0,
-          }
-        );
-      }
-      return text;
-    });
-
-    const categoryMap = new Map<string, number>();
-    let totalAmount = 0;
-
-    this.filteredTransactions().forEach((tx) => {
-      if (tx.type === 'income') return;
-      const catId = tx.categoryId;
-      const current = categoryMap.get(catId) || 0;
-      categoryMap.set(catId, current + tx.amount);
-      totalAmount += tx.amount;
-    });
-
-    const sortedEntries = Array.from(categoryMap.entries()).sort(
-      (a, b) => b[1] - a[1]
-    );
-
-    let cumulative = 0;
-    const data = sortedEntries.map(([catId, value]) => {
-      cumulative += value;
-      const percentage = totalAmount > 0 ? (cumulative / totalAmount) * 100 : 0;
-      const individualPercentage = totalAmount > 0 ? (value / totalAmount) * 100 : 0;
-
-      return {
-        category: this.getCategoryName(catId).substring(0, 3).toUpperCase(),
-        fullCategory: this.getCategoryName(catId),
-        value: value,
-        formattedValue: this.currencyService.formatAmount(value),
-        pareto: percentage,
-        paretoVal: individualPercentage,
-      };
-    });
-
-    let maxValue = 0;
-    data.forEach((item) => {
-      if (item.value > maxValue) {
-        maxValue = item.value;
-      }
-    });
-
-    const yAxis = chart.yAxes.push(
-      am5xy.ValueAxis.new(root, {
-        renderer: yRenderer,
-        min: 0,
-        max: maxValue,
-        strictMinMax: true,
-        extraMax: 0,
-        maxPrecision: 0,
-      })
-    );
-
-    const paretoRenderer = am5xy.AxisRendererY.new(root, {
-      opposite: true,
-    });
-
-    paretoRenderer.labels.template.setAll({
-      fontSize: 10,
-      fill: textColor,
-    });
-
-    const paretoAxis = chart.yAxes.push(
-      am5xy.ValueAxis.new(root, {
-        renderer: paretoRenderer,
-        min: 0,
-        max: 100,
-        strictMinMax: true,
-      })
-    );
-
-    const series = chart.series.push(
-      am5xy.ColumnSeries.new(root, {
-        name: 'Amount',
-        xAxis: xAxis,
-        yAxis: yAxis,
-        valueYField: 'value',
-        categoryXField: 'category',
-        tooltip: am5.Tooltip.new(root, {
-          labelText: '{fullCategory}: {formattedValue} ({paretoVal.formatNumber(\'#.0\')}%)',
-        }),
-      })
-    );
-
-    series.columns.template.setAll({
-      cornerRadiusTL: 5,
-      cornerRadiusTR: 5,
-      width: am5.percent(70),
-      strokeOpacity: 0,
-    });
-
-    series.columns.template.adapters.add('fill', (fill, target) => {
-      return chart.get('colors')?.getIndex(series.columns.indexOf(target));
-    });
-
-    series.columns.template.adapters.add('stroke', (stroke, target) => {
-      return chart.get('colors')?.getIndex(series.columns.indexOf(target));
-    });
-
-    const paretoSeries = chart.series.push(
-      am5xy.LineSeries.new(root, {
-        name: 'Cumulative %',
-        xAxis: xAxis,
-        yAxis: paretoAxis,
-        valueYField: 'pareto',
-        categoryXField: 'category',
-        tooltip: am5.Tooltip.new(root, {
-          labelText: '{valueY.formatNumber(\'#.0\')}%',
-        }),
-      })
-    );
-
-    paretoSeries.strokes.template.setAll({
-      stroke: am5.color(0xff0000),
-      strokeWidth: 2,
-    });
-
-    paretoSeries.bullets.push(() => {
-      return am5.Bullet.new(root, {
-        sprite: am5.Circle.new(root, {
-          radius: 4,
-          fill: am5.color(0xff0000),
-          stroke: root.interfaceColors.get('background'),
-          strokeWidth: 2,
-        }),
-      });
-    });
-
-    xAxis.data.setAll(data);
-    series.data.setAll(data);
-    paretoSeries.data.setAll(data);
-
-    chart.set(
-      'cursor',
-      am5xy.XYCursor.new(root, {
-        behavior: 'none',
-        xAxis: xAxis,
-      })
-    );
-
-    this.chartRoot = root;
+    // Chart rendering removed
   }
 
   private disposeChart() {
-    try {
-      if (this.chartRoot) {
-        this.chartRoot.dispose();
-        this.chartRoot = null;
-      }
-    } catch (e) {
-      // ignore disposal errors
-    }
+    // Chart disposal removed
   }
 }
