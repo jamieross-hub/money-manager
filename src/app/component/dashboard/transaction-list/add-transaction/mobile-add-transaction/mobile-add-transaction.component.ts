@@ -1,4 +1,4 @@
-import { Component, Inject, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy } from '@angular/core';
+import { Component, Inject, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef, MatDialog } from '@angular/material/dialog';
@@ -81,7 +81,8 @@ import { CommonBodyContentComponent } from 'src/app/util/components/dialog/commo
     MatExpansionModule,
     CommonHeaderComponent,
     CommonBodyContentComponent
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('amountInput', { static: false }) amountInput!: ElementRef;

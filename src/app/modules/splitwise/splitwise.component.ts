@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Store } from '@ngrx/store';
@@ -20,7 +20,8 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 @Component({
   selector: 'app-splitwise',
   templateUrl: './splitwise.component.html',
-  styleUrls: ['./splitwise.component.scss']
+  styleUrls: ['./splitwise.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SplitwiseComponent implements OnInit, OnDestroy {
   groups: SplitwiseGroup[] = [];

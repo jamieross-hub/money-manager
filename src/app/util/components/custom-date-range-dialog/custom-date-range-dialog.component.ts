@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -29,7 +29,8 @@ export interface CustomDateRangeData {
     MatButtonModule,
     MatDialogModule,
     MatIconModule
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CustomDateRangeDialogComponent implements OnInit {
   startDate: Date | null = null;

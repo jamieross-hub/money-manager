@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Inject, NgZone, PLATFORM_ID, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, NgZone, PLATFORM_ID, AfterViewInit , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -38,7 +38,8 @@ import { ThemeSwitchingService } from '../../../../util/service/theme-switching.
         TranslateModule
     ],
     templateUrl: './loan-calculator.component.html',
-    styleUrl: './loan-calculator.component.scss'
+    styleUrl: './loan-calculator.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy {
     // Model values

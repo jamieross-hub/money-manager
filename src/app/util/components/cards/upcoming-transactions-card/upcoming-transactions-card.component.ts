@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -62,7 +62,8 @@ export interface UpcomingTransactionsConfig {
   standalone: true,
   imports: [CommonModule, MatCardModule, MatIconModule],
   templateUrl: './upcoming-transactions-card.component.html',
-  styleUrl: './upcoming-transactions-card.component.scss'
+  styleUrl: './upcoming-transactions-card.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UpcomingTransactionsCardComponent implements OnInit, OnDestroy {
   @Input() config: UpcomingTransactionsConfig = {

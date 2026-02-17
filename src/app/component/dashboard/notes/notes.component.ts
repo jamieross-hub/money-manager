@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { NotificationService } from 'src/app/util/service/notification.service';
 
 interface Note {
@@ -33,7 +33,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatCardModule,
     MatCheckboxModule,
     MatTooltipModule
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NotesComponent implements OnInit {
 

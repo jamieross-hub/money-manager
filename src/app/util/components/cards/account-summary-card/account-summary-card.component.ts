@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { Observable, Subject, takeUntil } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { Account, LoanDetails } from 'src/app/util/models/account.model';
@@ -15,7 +15,8 @@ import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
   templateUrl: './account-summary-card.component.html',
   styleUrls: ['./account-summary-card.component.scss'],
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatCardModule, CurrencyPipe]
+  imports: [CommonModule, MatIconModule, MatCardModule, CurrencyPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AccountSummaryCardComponent implements OnInit, OnDestroy {
 

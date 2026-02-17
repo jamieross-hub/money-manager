@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter , ChangeDetectionStrategy} from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { Auth } from '@angular/fire/auth';
@@ -10,7 +10,8 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 @Component({
   selector: 'app-group',
   templateUrl: './group.component.html',
-  styleUrls: ['./group.component.scss']
+  styleUrls: ['./group.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class GroupComponent {
   @Input() group!: SplitwiseGroup;

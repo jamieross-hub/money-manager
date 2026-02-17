@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component , ChangeDetectionStrategy} from '@angular/core';
 
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -10,7 +10,8 @@ import { TranslateModule } from '@ngx-translate/core';
   templateUrl: './pre-footer.component.html',
   styleUrls: ['./pre-footer.component.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule, MatIconModule, TranslateModule]
+  imports: [CommonModule, RouterModule, MatIconModule, TranslateModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PreFooterComponent {
   currentYear = new Date().getFullYear();

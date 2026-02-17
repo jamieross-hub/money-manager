@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component , ChangeDetectionStrategy} from '@angular/core';
 
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,7 +9,8 @@ import { TranslateModule } from '@ngx-translate/core';
   templateUrl: './terms-conditions.component.html',
   styleUrls: ['./terms-conditions.component.scss'],
   standalone: true,
-  imports: [CommonModule, MatIconModule, TranslateModule]
+  imports: [CommonModule, MatIconModule, TranslateModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TermsConditionsComponent {
 

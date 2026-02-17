@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { SplitTransaction, TransactionSplit } from '../../../util/models/splitwise.model';
@@ -12,7 +12,8 @@ export interface EditTransactionDialogData {
 @Component({
   selector: 'app-edit-transaction-dialog',
   templateUrl: './edit-transaction-dialog.component.html',
-  styleUrls: ['./edit-transaction-dialog.component.scss']
+  styleUrls: ['./edit-transaction-dialog.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class EditTransactionDialogComponent implements OnInit {
   editForm!: FormGroup;

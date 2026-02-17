@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { Auth } from '@angular/fire/auth';
@@ -30,7 +30,8 @@ import { MatIconModule } from '@angular/material/icon';
     MatIconModule,
     CommonHeaderComponent,
     CommonBodyContentComponent
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CreateGroupDialogComponent implements OnInit {
   groupForm: FormGroup;

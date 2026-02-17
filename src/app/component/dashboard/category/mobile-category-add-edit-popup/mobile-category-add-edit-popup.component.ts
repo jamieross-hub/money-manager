@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { FormBuilder, FormControl, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -106,7 +106,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatSliderModule,
     MatStepperModule,
     MatBottomSheetModule,
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
   categoryForm: FormGroup;

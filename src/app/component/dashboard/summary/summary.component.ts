@@ -1,6 +1,6 @@
 
 
-import { Component } from '@angular/core';
+import { Component , ChangeDetectionStrategy} from '@angular/core';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { CategoryComponent } from '../category/category.component';
@@ -17,7 +17,8 @@ import { AccountsComponent } from '../accounts/accounts.component';
         MatIconModule,
         CategoryComponent,
         AccountsComponent
-    ]
+    ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SummaryComponent {
 

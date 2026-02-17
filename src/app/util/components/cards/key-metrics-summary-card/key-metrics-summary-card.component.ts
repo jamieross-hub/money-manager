@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -81,7 +81,8 @@ export interface KeyMetricsConfig {
   standalone: true,
   imports: [CommonModule, MatCardModule, MatIconModule],
   templateUrl: './key-metrics-summary-card.component.html',
-  styleUrl: './key-metrics-summary-card.component.scss'
+  styleUrl: './key-metrics-summary-card.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class KeyMetricsSummaryCardComponent implements OnInit, OnDestroy {
   @Input() config: KeyMetricsConfig = {

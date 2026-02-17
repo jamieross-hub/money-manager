@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, ChangeDetectionStrategy } from "@angular/core";
 import { FormBuilder, FormGroup, Validators, FormArray, FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
 import { NotificationService } from "src/app/util/service/notification.service";
@@ -86,6 +86,7 @@ export const defaultBankAccounts: BankAccount[] = [
 		TranslateModule,
 		MatProgressSpinnerModule,
 	],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RegistrationComponent implements OnInit {
 	registrationForm: FormGroup;

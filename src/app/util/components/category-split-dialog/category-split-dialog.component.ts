@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
@@ -33,7 +33,8 @@ import * as CategoriesSelectors from '../../../store/categories/categories.selec
     MatIconModule,
     MatButtonModule,
     CurrencyPipe
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CategorySplitDialogComponent implements OnInit {
   categorySplitForm: FormGroup;

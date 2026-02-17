@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component , ChangeDetectionStrategy} from '@angular/core';
 import { Router } from '@angular/router';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 
@@ -13,7 +13,8 @@ import { TranslateModule } from '@ngx-translate/core';
   templateUrl: './pre-login-header.component.html',
   styleUrls: ['./pre-login-header.component.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule, MatButtonModule, MatIconModule, TranslateModule]
+  imports: [CommonModule, RouterModule, MatButtonModule, MatIconModule, TranslateModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PreLoginHeaderComponent {
   isMobileMenuOpen = false;

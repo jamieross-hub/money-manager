@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Store } from '@ngrx/store';
 import { Observable, Subject, takeUntil, combineLatest } from 'rxjs';
@@ -75,6 +75,7 @@ export interface AccountStatementDialogData {
     TranslateModule,
     CurrencyPipe,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AccountStatementDialogComponent implements OnInit, OnDestroy {
   account: Account;

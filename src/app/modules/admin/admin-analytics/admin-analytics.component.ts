@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { UserService } from 'src/app/util/service/db/user.service';
@@ -30,7 +30,8 @@ export interface AnalyticsData {
 @Component({
   selector: 'app-admin-analytics',
   templateUrl: './admin-analytics.component.html',
-  styleUrls: ['./admin-analytics.component.scss']
+  styleUrls: ['./admin-analytics.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminAnalyticsComponent implements OnInit, OnDestroy {
   analyticsData: AnalyticsData | null = null;

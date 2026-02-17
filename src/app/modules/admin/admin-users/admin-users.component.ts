@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
@@ -26,7 +26,8 @@ export interface UserData {
 @Component({
   selector: 'app-admin-users',
   templateUrl: './admin-users.component.html',
-  styleUrls: ['./admin-users.component.scss']
+  styleUrls: ['./admin-users.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminUsersComponent implements OnInit, OnDestroy {
   usersList: UserData[] = [];

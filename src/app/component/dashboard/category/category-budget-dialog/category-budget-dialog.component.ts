@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Category } from 'src/app/util/models/category.model';
@@ -38,7 +38,8 @@ export interface CategoryBudgetDialogData {
     MatNativeDateModule,
     CommonHeaderComponent,
     CommonBodyContentComponent
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CategoryBudgetDialogComponent implements OnInit {
   budgetForm: FormGroup;

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { Router } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
@@ -105,7 +105,8 @@ interface UserPreferences {
 @Component({
   selector: 'app-reports',
   templateUrl: './reports.component.html',
-  styleUrls: ['./reports.component.scss']
+  styleUrls: ['./reports.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ReportsComponent implements OnInit, OnDestroy {
   // Observables from store

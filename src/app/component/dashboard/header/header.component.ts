@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component , ChangeDetectionStrategy} from '@angular/core';
 import { SideBarComponent } from '../side-bar/side-bar.component';
 import { UserComponent } from './user/user.component';
 
@@ -7,7 +7,8 @@ import { UserComponent } from './user/user.component';
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
   standalone: true,
-  imports: [SideBarComponent, UserComponent]
+  imports: [SideBarComponent, UserComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HeaderComponent {
 

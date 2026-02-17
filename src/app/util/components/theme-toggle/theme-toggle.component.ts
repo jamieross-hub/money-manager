@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -10,17 +10,22 @@ import { ThemeType } from '../../models/theme.model';
   templateUrl: './theme-toggle.component.html',
   styleUrl: './theme-toggle.component.scss',
   standalone: true,
-  imports: [MatIconModule, MatSlideToggleModule, MatTooltipModule]
+  imports: [MatIconModule, MatSlideToggleModule, MatTooltipModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ThemeToggleComponent implements OnInit {
   isDarkTheme: boolean = false;
 
-  constructor(private _themeSwitchingService: ThemeSwitchingService) { }
+  constructor(
+    private _themeSwitchingService: ThemeSwitchingService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit() {
     // Subscribe to theme changes to update the toggle state
     this._themeSwitchingService.currentTheme.subscribe(theme => {
       this.isDarkTheme = theme === 'dark-theme';
+      this.cdr.markForCheck();
     });
   }
 

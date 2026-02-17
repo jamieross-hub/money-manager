@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CurrencyPipe } from 'src/app/util/pipes';
 import { Auth } from '@angular/fire/auth';
@@ -17,7 +17,8 @@ import { UserService } from 'src/app/util/service/db/user.service';
   templateUrl: './total-balance.component.html',
   styleUrl: './total-balance.component.scss',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe]
+  imports: [CommonModule, CurrencyPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TotalBalanceComponent implements OnInit, OnDestroy {
 

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
 import { Router } from '@angular/router';
 import { NotificationService } from 'src/app/util/service/notification.service';
@@ -30,7 +30,8 @@ import { HeaderComponent } from '../dashboard/header/header.component';
     MatIconModule,
     HeaderComponent,
     TranslateModule
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LandingComponent implements OnInit {
   features = [

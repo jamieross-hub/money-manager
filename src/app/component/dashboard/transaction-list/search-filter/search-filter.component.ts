@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -39,7 +39,8 @@ import { FilterService } from '../../../../util/service/filter.service';
     MatChipsModule,
     TranslateModule,
     FormsModule
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
   // Remove the @Input() filteredCount property
@@ -79,7 +80,8 @@ export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
     private notificationService: NotificationService,
     private store: Store<AppState>,
     public dateService: DateService,
-    private filterService: FilterService
+    private filterService: FilterService,
+    private cdr: ChangeDetectorRef
   ) {
     this.currentYear = moment().year();
   }
@@ -112,6 +114,7 @@ export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
         this.updateAvailableYears();
         this.updateCategoriesFromTransactions();
         this.updateFilteredCount();
+        this.cdr.markForCheck();
       })
     );
   }
@@ -122,6 +125,7 @@ export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
       this.filterService.searchTerm$.subscribe(searchTerm => {
         this.searchTerm = searchTerm;
         this.updateFilteredCount();
+        this.cdr.markForCheck();
       })
     );
 
@@ -129,6 +133,7 @@ export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
       this.filterService.selectedCategory$.subscribe(categories => {
         this.selectedCategory = categories.includes('all') ? 'all' : categories[0] || 'all';
         this.updateFilteredCount();
+        this.cdr.markForCheck();
       })
     );
 
@@ -136,6 +141,7 @@ export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
       this.filterService.selectedType$.subscribe(type => {
         this.selectedType = type;
         this.updateFilteredCount();
+        this.cdr.markForCheck();
       })
     );
 
@@ -146,6 +152,7 @@ export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
           this.selectedDateRange = null;
         }
         this.updateFilteredCount();
+        this.cdr.markForCheck();
       })
     );
 
@@ -159,6 +166,7 @@ export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
           this.selectedDate = null;
         }
         this.updateFilteredCount();
+        this.cdr.markForCheck();
       })
     );
 
@@ -168,6 +176,7 @@ export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
           this.selectedYear = yearRange.startYear;
         }
         this.updateFilteredCount();
+        this.cdr.markForCheck();
       })
     );
 
@@ -175,6 +184,7 @@ export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
       this.filterService.isRecurring$.subscribe(isRecurring => {
         this.isRecurring = isRecurring;
         this.updateFilteredCount();
+        this.cdr.markForCheck();
       })
     );
   }
@@ -186,6 +196,7 @@ export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
           id: category.id || '',
           name: category.name
         })).sort((a, b) => a.name.localeCompare(b.name));
+        this.cdr.markForCheck();
       })
     );
   }

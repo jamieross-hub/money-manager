@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription, take } from 'rxjs';
@@ -14,7 +14,8 @@ import { CurrencyService } from '../../../../util/service/currency.service';
 @Component({
   selector: 'app-tax',
   templateUrl: './tax.component.html',
-  styleUrls: ['./tax.component.scss']
+  styleUrls: ['./tax.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TaxComponent implements OnInit, OnDestroy {
 

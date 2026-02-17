@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, ChangeDetectorRef, AfterViewInit } from '@angular/core';
+import { Component, ElementRef, ViewChild, ChangeDetectorRef, AfterViewInit , ChangeDetectionStrategy} from '@angular/core';
 import { TransactionType } from 'src/app/util/config/enums';
 import { Category } from 'src/app/util/models';
 import { ChatFacadeService } from 'src/app/util/service/ai-chat/chat-facade-service';
@@ -38,7 +38,8 @@ import { SafeHtmlPipe } from 'src/app/util/pipes/safe-html.pipe';
     ChatCategoryDropdownComponent,
     BudgetCardComponent,
     SafeHtmlPipe
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ChatComponent implements AfterViewInit {
 

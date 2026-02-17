@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Subject } from 'rxjs';
@@ -19,7 +19,8 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 @Component({
   selector: 'app-members-page',
   templateUrl: './members-page.component.html',
-  styleUrls: ['./members-page.component.scss']
+  styleUrls: ['./members-page.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MembersPageComponent implements OnInit, OnDestroy {
   group: SplitwiseGroup | null = null;

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter , ChangeDetectionStrategy} from '@angular/core';
 import { PwaNavigationService, NavigationState } from '../../service/pwa-navigation.service';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -82,7 +82,8 @@ import { CommonModule } from '@angular/common';
         min-height: 48px;
       }
     }
-  `]
+  `],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PwaBackButtonComponent implements OnInit, OnDestroy {
   @Input() showText: boolean = true;

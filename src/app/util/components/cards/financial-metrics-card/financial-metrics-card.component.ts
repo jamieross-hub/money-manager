@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, Inject, NgZone, PLATFORM_ID } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, Inject, NgZone, PLATFORM_ID , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -42,7 +42,8 @@ export interface FinancialMetricsConfig {
   standalone: true,
   imports: [CommonModule, MatCardModule, MatIconModule],
   templateUrl: './financial-metrics-card.component.html',
-  styleUrl: './financial-metrics-card.component.scss'
+  styleUrl: './financial-metrics-card.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FinancialMetricsCardComponent implements OnInit, OnDestroy {
   @Input() config: FinancialMetricsConfig = {

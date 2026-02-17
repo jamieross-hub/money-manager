@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { Router } from '@angular/router';
@@ -22,7 +22,8 @@ import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
   templateUrl: './goals.component.html',
   styleUrls: ['./goals.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe]
+  imports: [CommonModule, FormsModule, CurrencyPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class GoalsComponent implements OnInit, OnDestroy {
   // Observables from store
@@ -50,7 +51,8 @@ export class GoalsComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private store: Store<AppState>,
     public dateService: DateService,
-    private userService: UserService
+    private userService: UserService,
+    private cdr: ChangeDetectorRef
   ) {
     // Initialize selectors
     this.goals$ = this.store.select(GoalsSelectors.selectAllGoals);
@@ -83,6 +85,7 @@ export class GoalsComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.goals$.subscribe(goals => {
         this.goals = goals;
+        this.cdr.markForCheck();
       })
     );
 

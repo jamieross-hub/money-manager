@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetModule, MatBottomSheetRef } from '@angular/material/bottom-sheet';
@@ -64,6 +64,7 @@ export interface ColorSelectorDialogData {
     MatPaginatorModule,
     MatSortModule,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ColorSelectorDialogComponent implements OnInit {
   public availableColors: { label: string; value: string }[] = CATEGORY_COLORS;

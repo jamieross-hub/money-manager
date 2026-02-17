@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, NgZone, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, NgZone, AfterViewInit , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -22,7 +22,8 @@ import { AppViewService } from '../../../../util/service/app-view.service';
     standalone: true,
     imports: [CommonModule, MatCardModule, MatIconModule, MatButtonModule, MatTooltipModule, CurrencyPipe],
     templateUrl: './monthly-expenditure-card.component.html',
-    styleUrl: './monthly-expenditure-card.component.scss'
+    styleUrl: './monthly-expenditure-card.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, AfterViewInit {
     chartId = 'daily-trend-chart-' + Math.random().toString(36).substr(2, 9);

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, Output, EventEmitter , ChangeDetectionStrategy} from '@angular/core';
 import { PwaSwService } from '../../service/pwa-sw.service';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 import { LocalStorageKey } from 'src/app/util/models/local-storage.model';
@@ -242,7 +242,8 @@ import { CommonModule } from '@angular/common';
         color: #f1f5f9;
       }
     }
-  `]
+  `],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PwaInstallPromptComponent implements OnInit, OnDestroy {
   @Output() installClicked = new EventEmitter<void>();

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { Router } from '@angular/router';
 import { Timestamp } from '@angular/fire/firestore';
@@ -16,7 +16,8 @@ import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
   templateUrl: './subscription.component.html',
   styleUrls: ['./subscription.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe]
+  imports: [CommonModule, FormsModule, CurrencyPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SubscriptionComponent implements OnInit {
   userId: string = '';

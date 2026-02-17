@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component , ChangeDetectionStrategy} from '@angular/core';
 
 @Component({
   selector: 'app-app-shell',
   templateUrl: './app-shell.component.html',
-  styleUrl: './app-shell.component.scss'
+  styleUrl: './app-shell.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppShellComponent {
 

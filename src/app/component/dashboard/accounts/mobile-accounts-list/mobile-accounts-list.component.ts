@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import { Account } from 'src/app/util/models/account.model';
 import { AccountType } from 'src/app/util/config/enums';
@@ -59,6 +59,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 		MatPaginatorModule,
 		MatSortModule,
 	],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MobileAccountsListComponent implements OnInit, OnDestroy {
 	@Input() accounts: Account[] = [];

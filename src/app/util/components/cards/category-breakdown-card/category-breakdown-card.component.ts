@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, Inject, NgZone, PLATFORM_ID } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, Inject, NgZone, PLATFORM_ID , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -64,7 +64,8 @@ export interface CategoryBreakdownConfig {
   standalone: true,
   imports: [CommonModule, MatCardModule, MatIconModule, MatButtonModule, MatTooltipModule],
   templateUrl: './category-breakdown-card.component.html',
-  styleUrl: './category-breakdown-card.component.scss'
+  styleUrl: './category-breakdown-card.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CategoryBreakdownCardComponent implements OnInit, OnDestroy {
   @Input() config: CategoryBreakdownConfig = {

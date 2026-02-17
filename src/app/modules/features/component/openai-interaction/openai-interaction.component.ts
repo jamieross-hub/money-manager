@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { UserService } from 'src/app/util/service/db/user.service';
@@ -11,7 +11,8 @@ import { User } from '../../../../util/models';
 @Component({
   selector: 'app-openai-interaction',
   templateUrl: './openai-interaction.component.html',
-  styleUrls: ['./openai-interaction.component.scss']
+  styleUrls: ['./openai-interaction.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OpenaiInteractionComponent implements OnInit {
   isConnected: boolean = false;

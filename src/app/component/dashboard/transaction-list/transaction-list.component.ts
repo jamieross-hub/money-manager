@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, AfterViewInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, AfterViewInit, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -85,7 +85,8 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     private router: Router,
     private transactionsService: TransactionsService,
     private userService: UserService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) {
     this.isTransactionsPage = this.router.url.includes('transactions') ? true : false;
 
@@ -128,6 +129,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       if (params['search']) {
         this.filterService.setSearchTerm(params['search']);
       }
+      this.cdr.markForCheck();
     });
   }
 
@@ -158,6 +160,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       if (result) {
         this.loadTransactions();
       }
+      this.cdr.markForCheck();
     });
   }
 

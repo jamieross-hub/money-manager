@@ -1,11 +1,12 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter , ChangeDetectionStrategy} from '@angular/core';
 import { SplitwiseGroup } from 'src/app/util/models/splitwise.model';
 import { CurrencyService } from 'src/app/util/service/currency.service';
 
 @Component({
   selector: 'app-members',
   templateUrl: './members.component.html',
-  styleUrls: ['./members.component.scss']
+  styleUrls: ['./members.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MembersComponent {
   @Input() group!: SplitwiseGroup;

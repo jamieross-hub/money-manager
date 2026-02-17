@@ -1,4 +1,4 @@
-import { Component, HostListener, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, HostListener, ElementRef, AfterViewInit , ChangeDetectionStrategy} from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { Router } from '@angular/router';
 import { ViewChild } from '@angular/core';
@@ -25,7 +25,8 @@ import { UserService } from 'src/app/util/service/db/user.service';
     MatTooltipModule,
     RouterModule,
     TranslateModule
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SideBarComponent implements AfterViewInit {
   @ViewChild('drawer') drawer!: MatDrawer;

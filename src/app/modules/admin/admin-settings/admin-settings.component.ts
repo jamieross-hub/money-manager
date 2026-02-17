@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -22,7 +22,8 @@ export interface AdminSettings {
 @Component({
   selector: 'app-admin-settings',
   templateUrl: './admin-settings.component.html',
-  styleUrls: ['./admin-settings.component.scss']
+  styleUrls: ['./admin-settings.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminSettingsComponent implements OnInit, OnDestroy {
   settingsForm: FormGroup;

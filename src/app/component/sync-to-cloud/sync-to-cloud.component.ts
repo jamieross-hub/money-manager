@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
@@ -43,7 +43,8 @@ import { MatInputModule } from '@angular/material/input';
         MatCardModule,
         MatDividerModule,
         MatProgressBarModule
-    ]
+    ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SyncToCloudComponent implements OnInit {
     currentStep = 1;

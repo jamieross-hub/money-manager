@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { LoaderService } from '../../service/loader.service';
 import { AsyncPipe } from '@angular/common';
 
@@ -7,7 +7,8 @@ import { AsyncPipe } from '@angular/common';
   templateUrl: './loader.component.html',
   styleUrl: './loader.component.scss',
   standalone: true,
-  imports: [AsyncPipe]
+  imports: [AsyncPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoaderComponent implements OnInit, OnDestroy {
   @Input() message: string = '';

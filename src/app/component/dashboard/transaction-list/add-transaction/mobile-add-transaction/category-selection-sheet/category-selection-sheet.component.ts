@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
@@ -30,7 +30,8 @@ import { DateService } from 'src/app/util/service/date.service';
         MatFormFieldModule,
         MatInputModule,
         ReactiveFormsModule
-    ]
+    ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CategorySelectionSheetComponent implements OnInit {
     categories$: Observable<Category[]>;

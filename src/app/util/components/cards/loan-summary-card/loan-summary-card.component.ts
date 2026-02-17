@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, NgIf, NgClass, NgStyle } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { Store } from '@ngrx/store';
@@ -16,7 +16,8 @@ import { User } from 'src/app/util/models/index';
     standalone: true,
     imports: [NgIf, NgClass, NgStyle, MatIconModule, CurrencyPipe],
     templateUrl: './loan-summary-card.component.html',
-    styleUrls: ['./loan-summary-card.component.scss']
+    styleUrls: ['./loan-summary-card.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoanSummaryCardComponent implements OnInit, OnDestroy {
     @Input() set loansInput(value: Account[] | null) {

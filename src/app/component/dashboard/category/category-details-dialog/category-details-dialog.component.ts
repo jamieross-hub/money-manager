@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { Category } from 'src/app/util/models/category.model';
 import { Transaction } from 'src/app/util/models/transaction.model';
@@ -90,7 +90,8 @@ export interface CategoryDetailsDialogData {
     CategoryCardComponent,
     CurrencyPipe,
     TranslateModule,
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CategoryDetailsDialogComponent implements OnInit {
   selectedTabIndex = 0;

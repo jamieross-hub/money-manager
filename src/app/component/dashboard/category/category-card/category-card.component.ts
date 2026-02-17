@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter , ChangeDetectionStrategy} from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Category, Budget } from 'src/app/util/models';
 import { Transaction } from 'src/app/util/models/transaction.model';
@@ -96,7 +96,8 @@ import { MatToolbarModule } from '@angular/material/toolbar';
     MatSliderModule,
     MatStepperModule,
     MatBottomSheetModule,
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CategoryCardComponent {
   @Input() category!: Category;

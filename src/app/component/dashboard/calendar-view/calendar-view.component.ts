@@ -1,5 +1,5 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { Component, OnInit, OnDestroy, ViewChild, Inject, NgZone, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, Inject, NgZone, PLATFORM_ID , ChangeDetectionStrategy} from '@angular/core';
 import { MatCalendar, MatCalendarCellClassFunction } from '@angular/material/datepicker';
 import { UserService } from '../../../util/service/db/user.service';
 import { FilterService } from '../../../util/service/filter.service';
@@ -46,7 +46,8 @@ import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
     MatSelectModule,
     MatNativeDateModule,
     TotalBalanceComponent
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CalendarViewComponent implements OnInit, OnDestroy {
 

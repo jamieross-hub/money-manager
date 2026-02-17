@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter , ChangeDetectionStrategy} from '@angular/core';
 import { PwaNavigationService, NavigationState } from '../../service/pwa-navigation.service';
 import { CommonSyncService } from '../../service/common-sync.service';
 import { Subject, takeUntil } from 'rxjs';
@@ -214,7 +214,8 @@ import { PwaBackButtonComponent } from '../pwa-back-button/pwa-back-button.compo
         background: #334155;
       }
     }
-  `]
+  `],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PwaNavigationBarComponent implements OnInit, OnDestroy {
   @Input() title: string = '';

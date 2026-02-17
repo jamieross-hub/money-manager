@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { Auth } from '@angular/fire/auth';
@@ -9,7 +9,8 @@ import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/c
 @Component({
   selector: 'app-add-member-dialog',
   templateUrl: './add-member-dialog.component.html',
-  styleUrls: ['./add-member-dialog.component.scss']
+  styleUrls: ['./add-member-dialog.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AddMemberDialogComponent implements OnInit {
   memberForm: FormGroup;

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component , ChangeDetectionStrategy} from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ContactService } from 'src/app/util/service/db/contact.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
@@ -22,7 +22,8 @@ import { TranslateModule } from '@ngx-translate/core';
         MatInputModule,
         MatButtonModule,
         TranslateModule
-    ]
+    ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ContactFormComponent {
     contactForm: FormGroup;

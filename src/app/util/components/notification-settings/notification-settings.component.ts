@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 import { LocalStorageKey, LocalStorageKeyHelper } from 'src/app/util/models/local-storage.model';
 import { Subject, takeUntil, Subscription } from 'rxjs';
@@ -81,7 +81,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     MatSliderModule,
     MatStepperModule,
     MatBottomSheetModule,
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NotificationSettingsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -161,7 +162,8 @@ export class NotificationSettingsComponent implements OnInit, OnDestroy {
     private messagingService: FirebaseMessagingService,
     private notificationService: NotificationService,
     private snackBar: MatSnackBar,
-    private storageService: LocalIndexDBStorageService
+    private storageService: LocalIndexDBStorageService,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
@@ -222,13 +224,16 @@ export class NotificationSettingsComponent implements OnInit, OnDestroy {
           this.notificationsEnabled = false;
           this.saveNotificationsEnabled();
         }
+        this.cdr.markForCheck();
       });
 
     this.messagingService.token$
       .pipe(takeUntil(this.destroy$))
       .subscribe(token => {
         this.fcmToken = token;
+        this.fcmToken = token;
         this.collectDebugInfo();
+        this.cdr.markForCheck();
       });
   }
 

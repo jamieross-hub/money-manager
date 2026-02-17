@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { trigger, state, style, transition, animate } from '@angular/animations';
@@ -30,7 +30,8 @@ import { APP_CONFIG } from '../../config/config';
         animate('0.2s ease-in')
       ])
     ])
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OfflineIndicatorComponent implements OnInit, OnDestroy {
   isOnline = true;

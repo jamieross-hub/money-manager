@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -71,7 +71,8 @@ export interface AnalyticsSummaryConfig {
   standalone: true,
   imports: [CommonModule, MatCardModule, MatIconModule],
   templateUrl: './analytics-summary-card.component.html',
-  styleUrl: './analytics-summary-card.component.scss'
+  styleUrl: './analytics-summary-card.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AnalyticsSummaryCardComponent implements OnInit, OnDestroy {
   @Input() config: AnalyticsSummaryConfig = {

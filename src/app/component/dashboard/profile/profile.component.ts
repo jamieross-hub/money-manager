@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
@@ -74,7 +74,8 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
     TranslateModule,
     QuickActionsFabComponent,
     MatExpansionModule
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProfileComponent implements OnInit, OnDestroy {
   // Observables from store
@@ -150,7 +151,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private translationService: TranslationService,
     private backupRestoreService: BackupRestoreService,
-    private splitwiseService: SplitwiseService
+    private splitwiseService: SplitwiseService,
+    private cdr: ChangeDetectorRef
   ) {
     this.currentUser = this.auth.currentUser;
     // Initialize selectors
@@ -219,6 +221,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
             this.loadFamilyGroup(user.preferences.familyGroupId);
           }
         }
+        this.cdr.markForCheck();
       })
     );
   }
@@ -228,6 +231,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   private loadFamilyGroup(groupId: string): void {
     if (!groupId) return;
     this.familyGroup$ = this.splitwiseService.getGroup(groupId);
+    this.cdr.markForCheck();
   }
 
   async createFamilyGroup(): Promise<void> {
@@ -316,12 +320,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
           this.userProfile = this.mapUserToProfile(profile);
           this.populateForm();
         }
+        this.cdr.markForCheck();
       })
     );
 
     this.subscriptions.add(
       this.profileLoading$.subscribe(loading => {
         this.isLoading = loading;
+        this.cdr.markForCheck();
       })
     );
 

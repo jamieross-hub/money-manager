@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component , ChangeDetectionStrategy} from '@angular/core';
 import { CommonSyncService } from '../../service/common-sync.service';
 import { SsrService } from '../../service/ssr.service';
 import { NotificationService } from '../../service/notification.service';
@@ -74,7 +74,8 @@ import { MatButtonModule } from '@angular/material/button';
     :host {
       display: block;
     }
-  `]
+  `],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OfflinePageComponent {
   constructor(

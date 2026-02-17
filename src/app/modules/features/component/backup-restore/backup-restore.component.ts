@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { BackupRestoreService, BackupData } from '../../../../util/service/db/backup-restore.service';
 import { NotificationService } from '../../../../util/service/notification.service';
 import { MatDialog } from '@angular/material/dialog';
@@ -8,7 +8,8 @@ import { TranslateService } from '@ngx-translate/core';
 @Component({
     selector: 'app-backup-restore',
     templateUrl: './backup-restore.component.html',
-    styleUrls: ['./backup-restore.component.scss']
+    styleUrls: ['./backup-restore.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BackupRestoreComponent implements OnInit {
     isLoading = false;

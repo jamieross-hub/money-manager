@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -27,7 +27,8 @@ export interface ParentCategorySelectorData {
     MatListModule,
     CommonHeaderComponent,
     CommonBodyContentComponent
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ParentCategorySelectorDialogComponent implements OnInit {
   selectedCategory: Category | null = null;

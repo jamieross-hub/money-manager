@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -53,7 +53,8 @@ export interface RecentActivityConfig {
   standalone: true,
   imports: [CommonModule, MatCardModule, MatIconModule],
   templateUrl: './recent-activity-card.component.html',
-  styleUrl: './recent-activity-card.component.scss'
+  styleUrl: './recent-activity-card.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RecentActivityCardComponent implements OnInit, OnDestroy {
   @Input() config: RecentActivityConfig = {

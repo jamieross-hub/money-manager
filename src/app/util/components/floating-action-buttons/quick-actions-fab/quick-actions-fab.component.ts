@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -34,7 +34,8 @@ export interface QuickActionsFabConfig {
   standalone: true,
   imports: [CommonModule, MatButtonModule, MatIconModule, MatTooltipModule],
   templateUrl: './quick-actions-fab.component.html',
-  styleUrl: './quick-actions-fab.component.scss'
+  styleUrl: './quick-actions-fab.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class QuickActionsFabComponent implements OnInit, OnDestroy {
   @Input() config: QuickActionsFabConfig = {

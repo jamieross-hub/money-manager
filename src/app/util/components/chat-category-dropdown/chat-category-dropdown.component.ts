@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
@@ -21,7 +21,8 @@ import { AccountType, TransactionType } from '../../config/enums';
   templateUrl: './chat-category-dropdown.component.html',
   styleUrls: ['./chat-category-dropdown.component.scss'],
   standalone: true,
-  imports: [CommonModule, MatFormFieldModule, MatSelectModule, MatIconModule, MatOptionModule, MatChipsModule]
+  imports: [CommonModule, MatFormFieldModule, MatSelectModule, MatIconModule, MatOptionModule, MatChipsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ChatCategoryDropdownComponent implements OnChanges, OnDestroy {
   @Input() placeholder = 'Select category';

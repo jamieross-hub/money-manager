@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -51,7 +51,8 @@ export interface TopCategoriesConfig {
   standalone: true,
   imports: [CommonModule, MatCardModule, MatIconModule, SharedModule],
   templateUrl: './top-categories-card.component.html',
-  styleUrl: './top-categories-card.component.scss'
+  styleUrl: './top-categories-card.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TopCategoriesCardComponent implements OnInit, OnDestroy {
   @Input() config: TopCategoriesConfig = {

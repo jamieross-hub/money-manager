@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, ViewChild, OnInit, OnDestroy, AfterViewInit, HostListener, Input } from '@angular/core';
+import { Component, Output, EventEmitter, ViewChild, OnInit, OnDestroy, AfterViewInit, HostListener, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { MatTableModule } from '@angular/material/table';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
@@ -51,6 +51,7 @@ import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
     CurrencyPipe,
     FormsModule
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
     trigger('listAnimation', [
       transition('* <=> *', [
@@ -106,7 +107,8 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
     private ssrService: SsrService,
     private dialog: MatDialog,
     public breakpointService: BreakpointService,
-    private userService: UserService
+    private userService: UserService,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
@@ -134,6 +136,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   private loadAccounts(): void {
     this.store.select(selectAllAccounts).subscribe((accounts: Account[]) => {
       this.accounts = accounts;
+      this.cdr.markForCheck();
     });
   }
 
@@ -190,6 +193,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
           return (dateB?.getTime() ?? 0) - (dateA?.getTime() ?? 0);
         });
         this.updateFilteredData();
+        this.cdr.markForCheck();
       })
     );
   }
@@ -199,6 +203,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
     this.subscription.add(
       this.filterService.filterState$.subscribe(() => {
         this.updateFilteredData();
+        this.cdr.markForCheck();
       })
     );
   }
@@ -281,6 +286,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
       this.sort.sortChange.subscribe((sort: Sort) => {
         console.log(`Sorting by ${sort.active} in ${sort.direction} order`);
         this.updateFilteredData();
+        this.cdr.markForCheck();
       })
     );
 
@@ -384,6 +390,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
         for (const category of categories) {
           (this.categories as { [key: string]: Category })[category.id as string] = category;
         }
+        this.cdr.markForCheck();
       });
     }
   }

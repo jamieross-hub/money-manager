@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -9,7 +9,8 @@ import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/c
 @Component({
     selector: 'app-admin-contact',
     templateUrl: './admin-contact.component.html',
-    styleUrls: ['./admin-contact.component.scss']
+    styleUrls: ['./admin-contact.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminContactComponent implements OnInit, OnDestroy {
     contactList: GetInTouch[] = [];

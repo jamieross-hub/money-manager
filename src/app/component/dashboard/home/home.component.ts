@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ChatComponent } from '../chat/chat.component';
@@ -15,7 +15,8 @@ import { MobileAddTransactionComponent } from '../transaction-list/add-transacti
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
   standalone: true,
-  imports: [CommonModule, RouterModule, ChatComponent]
+  imports: [CommonModule, RouterModule, ChatComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HomeComponent {
   // topCategoriesConfig: TopCategoriesConfig = {

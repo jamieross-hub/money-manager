@@ -4,6 +4,7 @@ import {
   ElementRef,
   ViewChild,
   OnDestroy,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -53,7 +54,8 @@ import { takeUntil } from 'rxjs/operators';
     MatCheckboxModule,
     MatProgressSpinnerModule,
     TranslateModule
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ImportTransactionsComponent implements OnDestroy {
   @ViewChild('fileUploadContainer') fileUploadContainer!: ElementRef;

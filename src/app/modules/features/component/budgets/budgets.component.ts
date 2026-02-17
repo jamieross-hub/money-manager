@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { Router } from '@angular/router';
@@ -50,7 +50,8 @@ interface MonthlyBreakdown {
 @Component({
   selector: 'app-budgets',
   templateUrl: './budgets.component.html',
-  styleUrls: ['./budgets.component.scss']
+  styleUrls: ['./budgets.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BudgetsComponent implements OnInit, OnDestroy {
   // Observables from store

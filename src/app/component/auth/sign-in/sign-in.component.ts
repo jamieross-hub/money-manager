@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
@@ -81,6 +81,7 @@ import { PreLoginHeaderComponent } from '../../landing/pre-login-header/pre-logi
     MatProgressSpinnerModule,
     PreLoginHeaderComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SignInComponent implements OnInit, OnDestroy {
   public isSignInPage = true;
@@ -111,7 +112,8 @@ export class SignInComponent implements OnInit, OnDestroy {
     private securityService: SecurityService,
     private validationService: ValidationService,
     private store: Store<AppState>,
-    public breakpointService: BreakpointService
+    public breakpointService: BreakpointService,
+    private cdr: ChangeDetectorRef
   ) {
     this.initializeForm();
     this._setIsSignInPage(this.router.url.includes('/sign-in'));
@@ -169,6 +171,7 @@ export class SignInComponent implements OnInit, OnDestroy {
       )
       .subscribe(password => {
         this.passwordStrength = this.calculatePasswordStrength(password);
+        this.cdr.markForCheck();
       });
 
     // Monitor email for suspicious patterns

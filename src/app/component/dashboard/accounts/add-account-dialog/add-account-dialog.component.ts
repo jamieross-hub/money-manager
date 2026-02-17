@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -54,7 +54,8 @@ import { CommonBodyContentComponent } from 'src/app/util/components/dialog/commo
     TranslateModule,
     CommonHeaderComponent,
     CommonBodyContentComponent
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AddAccountDialogComponent implements OnInit, OnDestroy {
   accountForm: FormGroup;

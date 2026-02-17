@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -56,7 +56,8 @@ export interface MonthlyTrendsConfig {
   standalone: true,
   imports: [CommonModule, MatCardModule, MatIconModule],
   templateUrl: './monthly-trends-card.component.html',
-  styleUrl: './monthly-trends-card.component.scss'
+  styleUrl: './monthly-trends-card.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MonthlyTrendsCardComponent implements OnInit, OnDestroy {
   @Input() config: MonthlyTrendsConfig = {

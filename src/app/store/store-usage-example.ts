@@ -1,6 +1,6 @@
 // Example of how to use NgRx store in your components
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { AppState } from './app.state';
@@ -52,7 +52,8 @@ import { TransactionType } from '../util/config/enums';
       <button (click)="loadData()">Load Data</button>
       <button (click)="createTransaction()">Create Transaction</button>
     </div>
-  `
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ExampleComponent implements OnInit {
 

@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
@@ -29,7 +29,8 @@ export interface RecurringTransactionDialogResult {
 @Component({
   selector: 'app-recurring-transaction-confirmation-dialog',
   templateUrl: './recurring-transaction-confirmation-dialog.component.html',
-  styleUrls: ['./recurring-transaction-confirmation-dialog.component.scss']
+  styleUrls: ['./recurring-transaction-confirmation-dialog.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RecurringTransactionConfirmationDialogComponent implements OnInit {
   selectedTransactions: Set<string> = new Set();

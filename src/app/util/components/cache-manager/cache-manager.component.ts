@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component , ChangeDetectionStrategy} from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonSyncService } from '../../service/common-sync.service';
 import { SsrService } from '../../service/ssr.service';
@@ -107,7 +107,8 @@ import { LocalStorageKey } from 'src/app/util/models/local-storage.model';
     :host {
       display: block;
     }
-  `]
+  `],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CacheManagerComponent {
   isClearing = false;
