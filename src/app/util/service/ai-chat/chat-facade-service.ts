@@ -1,4 +1,5 @@
-import { Injectable } from "@angular/core";
+import { Injectable, Signal, effect } from "@angular/core";
+import { toSignal } from "@angular/core/rxjs-interop";
 import { ChatIntentService } from "./chat-intent-service";
 import { ChatFlowService } from "./chat-flow.service";
 import { EntityExtractorService } from "./extractors/entity-extractor.service";
@@ -12,7 +13,7 @@ import { CHAT_CONSTANTS } from "./models/chat-constants";
 import { AppState } from "src/app/store/app.state";
 import { Store } from "@ngrx/store";
 import { selectAllAccounts } from "src/app/store/accounts/accounts.selectors";
-import { Subscription, Observable, isObservable, take, filter, Subject } from "rxjs";
+import { Subscription, Observable, isObservable, take, filter, Subject, map } from "rxjs";
 import { Message } from './models/message.types';
 import { IntentContext } from './models/intent-context.types';
 import { ResponseBuilder } from './response-builder';
@@ -38,6 +39,7 @@ export class ChatFacadeService {
     isTyping = false;
     subscription: Subscription;
     defualtBankAccount: Account | null = null;
+    hasLoans: Signal<boolean>;
 
     constructor(
         private intent: ChatIntentService,
@@ -61,6 +63,20 @@ export class ChatFacadeService {
         private budgetCardHandler: BudgetCardIntentHandler,
         private userService: UserService
     ) {
+        this.hasLoans = toSignal(
+            this.store.select(selectAllAccounts).pipe(
+                filter((accounts) => accounts?.length > 0),
+                map(accounts => accounts.some(account => account.type === 'loan'))
+            ),
+            { initialValue: false }
+        );
+
+        effect(() => {
+            if (this.hasLoans()) {
+                this.pushBot(ResponseBuilder.create().uiElement(INTENTS.LOAN_SUMMARY_CARD).build(), true); // 'true' argument as per user original
+            }
+        });
+
         this.registerHandlers();
         this.initWelcomeMessage();
         this.subscription = this.store.select(selectAllAccounts).subscribe(accounts => {
@@ -88,27 +104,16 @@ export class ChatFacadeService {
     public scrollToTop = new Subject<void>();
 
     private initWelcomeMessage() {
-        this.store.select(selectAllAccounts).pipe(filter((accounts) => accounts?.length > 0),
-            take(1)).subscribe(accounts => {
-                const hasLoans = accounts.some(account => account.type === 'loan');
+        if (this.breakpointService.device.isMobile || this.breakpointService.device.isLaptop) {
 
-                if (this.breakpointService.device.isMobile || this.breakpointService.device.isLaptop) {
-                    if (hasLoans) {
-                        this.pushBot(ResponseBuilder.create().uiElement(INTENTS.LOAN_SUMMARY_CARD).build());
-                    }
-                    this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build());
+            this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build());
 
 
-                } else {
-                    if (hasLoans) {
-                        this.pushBot(ResponseBuilder.create().uiElement(INTENTS.LOAN_SUMMARY_CARD).build());
-                    }
-                    this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build());
-                    // this.pushBot(ResponseBuilder.create().uiElement(INTENTS.RECENT_ACTIVITY_CARD).build());
-                    this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.GREETING).build());
-                }
-
-            });
+        } else {
+            this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build());
+            // this.pushBot(ResponseBuilder.create().uiElement(INTENTS.RECENT_ACTIVITY_CARD).build());
+            this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.GREETING).build());
+        }
     }
 
     startBotReply(userText: string) {
@@ -263,8 +268,12 @@ export class ChatFacadeService {
         this.scrollToBottom();
     }
 
-    private pushBot(message: Message) {
-        this.messages.push(message);
+    private pushBot(message: Message, pushAtTop: boolean = false) {
+        if (pushAtTop) {
+            this.messages.unshift(message);
+        } else {
+            this.messages.push(message);
+        }
         this.isTyping = false;
     }
 
