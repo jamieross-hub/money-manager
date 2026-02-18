@@ -21,7 +21,7 @@
       <span class="text-lg sm:text-xl font-semibold leading-none truncate"
         [class.text-green-600]="((totalBalance$ | async) ?? 0) >= 0"
         [class.text-red-500]="((totalBalance$ | async) ?? 0) < 0" aria-label="Total balance">
-        {{ (totalBalance$ | async) ?? 0 | currency }}
+        {{ (totalBalance$ | async) ?? 0 | currency:{round:true} }}
       </span>
       <span class="balance-period text-xs dark:text-slate-500">as of today</span>
     </div>
