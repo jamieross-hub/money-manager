@@ -1058,6 +1058,8 @@ export class UserService {
       );
       if (cachedUserData) {
         // If we have cached data, return it immediately for fast UI
+        if (!cachedUserData.photoURL && currentUser.photoURL) cachedUserData.photoURL = currentUser.photoURL;
+        if (!cachedUserData.displayName && currentUser.displayName) cachedUserData.displayName = currentUser.displayName;
         return cachedUserData;
       }
 
@@ -1073,6 +1075,8 @@ export class UserService {
 
       if (userSnap.exists()) {
         const userData = userSnap.data() as User;
+        if (!userData.photoURL && currentUser.photoURL) userData.photoURL = currentUser.photoURL;
+        if (!userData.displayName && currentUser.displayName) userData.displayName = currentUser.displayName;
         this.storageService.setItem(
           `user-data-${currentUser.uid}`,
           userData
@@ -1148,6 +1152,14 @@ export class UserService {
 
       if (userSnap.exists()) {
         const userData = userSnap.data() as User;
+
+        // Ensure auth profile data is merged if missing
+        const currentUser = this.auth.currentUser;
+        if (currentUser) {
+          if (!userData.photoURL && currentUser.photoURL) userData.photoURL = currentUser.photoURL;
+          if (!userData.displayName && currentUser.displayName) userData.displayName = currentUser.displayName;
+        }
+
         this.storageService.setItem(`user-data-${uid}`, userData);
         console.log('[UserService] User data successfully cached from network');
       }

@@ -350,7 +350,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
       phone: user.phone || '',
       dateOfBirth: this.dateService.toDate(user.dateOfBirth || 0) || new Date(),
       occupation: user.occupation || '',
+
       monthlyIncome: user.monthlyIncome || 0,
+      photoURL: user.photoURL || '',
+      displayName: user.displayName || '',
       preferences: {
         defaultCurrency: user.preferences?.defaultCurrency || this.defaultCurrency,
         timezone: user.preferences?.timezone || 'UTC',

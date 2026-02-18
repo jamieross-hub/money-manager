@@ -8,7 +8,9 @@
 		<div class="header-content">
 			<div class="avatar-section">
 				<div class="avatar">
-					<mat-icon class="avatar-icon">person</mat-icon>
+					<img *ngIf="userProfile?.photoURL" [src]="userProfile?.photoURL"
+						class="w-full h-full object-cover rounded-full" alt="Profile Photo">
+					<mat-icon class="avatar-icon" *ngIf="!userProfile?.photoURL">person</mat-icon>
 				</div>
 				<div class="user-info">
 					<p class="user-name">{{ getFullName() }}</p>
