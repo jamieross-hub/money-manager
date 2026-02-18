@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit , ChangeDetectionStrategy} from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { FormBuilder, FormControl, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -190,11 +190,11 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
     if (this.dialogData) {
       // Edit mode - populate form with existing data
       this.categoryForm.patchValue({
-        name: this.dialogData.category.name,
-        type: this.dialogData.category.type,
-        icon: this.dialogData.category.icon || 'category',
-        color: (this.dialogData.category.color || '#10B981').toUpperCase(),
-        group: this.dialogData.category.group || '',
+        name: this.dialogData.category?.name || '',
+        type: this.dialogData.category?.type || 'expense',
+        icon: this.dialogData.category?.icon || 'category',
+        color: (this.dialogData.category?.color || '#10B981').toUpperCase(),
+        group: this.dialogData.category?.group || '',
       });
 
 
