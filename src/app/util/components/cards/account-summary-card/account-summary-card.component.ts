@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { Observable, Subject, takeUntil } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { Account, LoanDetails } from 'src/app/util/models/account.model';
@@ -9,6 +9,7 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
+import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 
 @Component({
   selector: 'app-account-summary-card',
@@ -29,7 +30,7 @@ export class AccountSummaryCardComponent implements OnInit, OnDestroy {
   public accounts: Account[] = [];
   private destroy$ = new Subject<void>();
 
-  constructor(private store: Store<AppState>) {
+  constructor(private store: Store<AppState>, public breakpointService: BreakpointService) {
     // Initialize selectors
     this.accounts$ = this.store.select(AccountsSelectors.selectAllAccounts);
     this.totalBalance$ = this.store.select(AccountsSelectors.selectTotalBalance);
