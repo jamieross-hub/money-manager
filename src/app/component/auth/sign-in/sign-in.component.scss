@@ -6,14 +6,6 @@
 .auth-section {
   position: relative;
   overflow: hidden;
-  
-  :host-context(.dark-theme) & {
-    background: linear-gradient(to bottom right, 
-      mat.get-theme-color(dark.$dark-theme, primary, 0),
-      mat.get-theme-color(dark.$dark-theme, primary, 10),
-      mat.get-theme-color(dark.$dark-theme, primary, 20)
-    );
-  }
 
   &::before {
     content: '';
@@ -22,64 +14,49 @@
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
-    animation: pulse 15s ease-in-out infinite;
-
-    :host-context(.dark-theme) & {
-      background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
-    }
+    background: radial-gradient(circle, rgba(var(--primary-500), 0.08) 0%, transparent 70%);
+    animation: subtlePulse 20s ease-in-out infinite;
   }
 }
 
-// @keyframes pulse {
-//   0%, 100% { transform: scale(1) rotate(0deg); }
-//   50% { transform: scale(1.1) rotate(5deg); }
-// }
+@keyframes subtlePulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
 
 /* Auth Container */
 .auth-container {
   position: relative;
   z-index: 10;
-  backdrop-filter: blur(10px);
-
-  :host-context(.dark-theme) & {
-    background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 10);
-    border: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  }
+  backdrop-filter: blur(12px);
 }
 
-/* Auth Content Scrolling */
+/* Auth Content */
 .auth-content {
   scrollbar-width: thin;
-  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
-  
+  scrollbar-color: var(--neutral-300) transparent;
+
   &::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background: transparent;
   }
-  
+
   &::-webkit-scrollbar-thumb {
-    background-color: rgba(156, 163, 175, 0.3);
-    border-radius: 3px;
-    
+    background-color: var(--neutral-300);
+    border-radius: 2px;
+
     &:hover {
-      background-color: rgba(156, 163, 175, 0.5);
-    }
-  }
-
-  :host-context(.dark-theme) & {
-    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
-
-    &::-webkit-scrollbar-thumb {
-      background-color: rgba(255, 255, 255, 0.1);
-      
-      &:hover {
-        background-color: rgba(255, 255, 255, 0.2);
-      }
+      background-color: var(--neutral-400);
     }
   }
 }
@@ -87,75 +64,44 @@
 /* Form Input Styles */
 .auth-input {
   font-size: 16px; /* Prevent zoom on iOS */
-  
+
   &::placeholder {
-    color: #9ca3af;
+    color: var(--neutral-400);
   }
-  
+
   &:focus {
     transform: translateY(-1px);
   }
+}
 
-  :host-context(.dark-theme) & {
-    background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
-    border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
-    color: mat.get-theme-color(dark.$dark-theme, neutral, 100);
-
-    &:focus {
-      background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
-      border-color: mat.get-theme-color(dark.$dark-theme, primary, 50);
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
-    }
-
-    &::placeholder {
-      color: rgba(255, 255, 255, 0.4);
-    }
+/* Fade-in animation for content */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Form Group Animation */
-.form-group {
-  animation: fadeInUp 0.4s ease-out backwards;
-  
-  @for $i from 1 through 10 {
-    &:nth-child(#{$i}) {
-      animation-delay: #{$i * 0.05}s;
-    }
-  }
-}
-
-// @keyframes fadeInUp {
-//   from {
-//     opacity: 0;
-//     transform: translateY(10px);
-//   }
-//   to {
-//     opacity: 1;
-//     transform: translateY(0);
-//   }
-// }
-
-/* Security Notice Animation */
-.security-notice {
-  opacity: 0;
-  transform: translateY(10px);
-  animation: fadeInUp 0.3s ease-out 0.5s forwards;
-
-  :host-context(.dark-theme) & {
-    background-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
-    border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
-  }
-}
-
-/* Form Container Optimization */
+/* Form Container */
 .form-container {
   will-change: transform;
   contain: layout style paint;
+  animation: fadeInUp 0.5s ease-out 0.1s both;
 }
 
-/* Responsive Adjustments */
+/* Security Notice */
+.security-notice {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: fadeInUp 0.4s ease-out 0.6s forwards;
+}
+
+/* Responsive */
 @media (max-width: 640px) {
-  /* Ensure inputs don't zoom on iOS */
   .auth-input {
     font-size: 16px !important;
   }

@@ -1,53 +1,52 @@
-<app-pre-login-header *ngIf="!breakpointService.device.isMobile"></app-pre-login-header>
+<!-- <app-pre-login-header *ngIf="!breakpointService.device.isMobile"></app-pre-login-header> -->
 
-<section
-  class="auth-section flex items-center justify-center min-h-[100dvh] bg-gradient-to-br from-primary-50 via-white to-primary-100 dark:from-gray-900 dark:via-black dark:to-gray-950 p-0 sm:px-4 sm:py-12">
+<section class="auth-section flex items-center justify-center min-h-[100dvh] p-0 sm:px-4 sm:py-12">
   <div
-    class="auth-container w-full sm:h-auto sm:max-w-md lg:max-w-lg bg-white dark:bg-neutral-900 dark:border-neutral-800 sm:rounded-2xl sm:shadow-2xl lg:overflow-hidden min-h-[100dvh] sm:min-h-0 flex flex-col justify-center sm:block">
+    class="auth-container w-full sm:h-auto sm:max-w-md lg:max-w-lg bg-surface-50  sm:rounded-2xl sm:shadow-2xl lg:overflow-hidden min-h-[100dvh] sm:min-h-0 flex flex-col justify-center sm:block">
     <div
       class="auth-content px-6 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12 sm:overflow-y-auto sm:max-h-[calc(100vh-8rem)]">
 
       <!-- Logo -->
-      <div class="flex justify-center mb-6">
-        <img class="w-auto h-14 sm:h-16 lg:h-20" src="assets/images/logo.svg" alt="Logo" loading="eager" />
+      <div class="flex justify-center mb-3">
+        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-transparent flex items-center justify-center">
+          <img src="assets/images/logo.svg" alt="Money Manager" loading="eager" />
+        </div>
       </div>
 
-      <!-- Welcome Text -->
-      <p class="text-2xl sm:text-3xl font-bold text-center text-gray-900 dark:text-white mb-2">
-        {{ isSignInPage ? 'Welcome Back!' : 'Create Account' }}
+      <!-- App Name -->
+      <p class="text-xl sm:text-2xl font-bold text-center text-neutral-600 !mb-0.5 tracking-tight">
+        {{ 'COMMON.APP_NAME' | translate }}
       </p>
-      <!-- <p class="text-sm sm:text-base text-center text-gray-600 dark:text-gray-400 mb-6">
-        {{ isSignInPage ? ('welcomeBack' | translate) : 'Join us to manage your finances better' }}
-      </p> -->
+
+      <!-- Welcome Text -->
+      <p class="text-sm text-center text-neutral-400 !mb-8">
+        {{ isSignInPage ? 'Smart budgeting, simplified.' : 'Create your account' }}
+      </p>
 
       <!-- Security Status Alerts -->
-      <div *ngIf="isAccountLocked"
-        class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 dark:border-red-600 rounded-lg">
-        <div class="flex items-start">
-          <svg class="w-5 h-5 mr-3 mt-0.5 text-red-500 dark:text-red-400 flex-shrink-0" fill="currentColor"
-            viewBox="0 0 20 20">
-            <path fill-rule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-              clip-rule="evenodd"></path>
-          </svg>
-          <div class="flex-1">
-            <p class="font-semibold text-red-800 dark:text-red-200 text-sm sm:text-base">Account Temporarily Locked</p>
-            <p class="mt-1 text-sm text-red-700 dark:text-red-300">Too many failed login attempts. Please try again
-              later.</p>
-            <p *ngIf="lockoutTimeRemaining > 0" class="mt-1 text-sm text-red-700 dark:text-red-300 font-medium">
-              Time remaining: {{ getLockoutTimeRemaining() }} minutes
+      <div *ngIf="isAccountLocked" class="mb-6 p-4 bg-error-50 border border-error-200 rounded-xl">
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-full bg-error-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <mat-icon class="text-error-500 !text-lg">lock</mat-icon>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-error-800 text-sm">Account Temporarily Locked</p>
+            <p class="mt-0.5 text-xs text-error-600">Too many failed attempts. Please try again later.</p>
+            <p *ngIf="lockoutTimeRemaining > 0" class="mt-1 text-xs text-error-600 font-medium">
+              Unlocks in {{ getLockoutTimeRemaining() }} min
             </p>
           </div>
         </div>
       </div>
 
       <!-- Actions -->
-      <div class="form-container space-y-5">
-        <div class="mt-8 space-y-3">
+      <div class="form-container">
+        <div class="space-y-3">
+          <!-- Google Sign-In Button -->
           <button type="button" (click)="signInWithGoogle()" [disabled]="isLoading || isAccountLocked"
-            class="w-full px-6 py-3.5 text-base font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-neutral-800 border-2 border-gray-300 dark:border-neutral-700 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 hover:border-gray-400 dark:hover:border-neutral-600 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg">
-            <div class="flex items-center justify-center">
-              <svg *ngIf="!isLoading" class="w-5 h-5 mr-2 flex-shrink-0" viewBox="0 0 40 40">
+            class="group w-full px-5 py-4 text-lg font-semibold text-secondary-500 bg-surface-500  border border-neutral-200 rounded-xl hover:bg-surface-200 hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98]">
+            <div class="flex items-center justify-center gap-3">
+              <svg *ngIf="!isLoading" class="w-5 h-5 flex-shrink-0" viewBox="0 0 40 40">
                 <path
                   d="M36.3425 16.7358H35V16.6667H20V23.3333H29.4192C28.045 27.2142 24.3525 30 20 30C14.4775 30 10 25.5225 10 20C10 14.4775 14.4775 9.99999 20 9.99999C22.5492 9.99999 24.8683 10.9617 26.6342 12.5325L31.3483 7.81833C28.3717 5.04416 24.39 3.33333 20 3.33333C10.7958 3.33333 3.33335 10.7958 3.33335 20C3.33335 29.2042 10.7958 36.6667 20 36.6667C29.2042 36.6667 36.6667 29.2042 36.6667 20C36.6667 18.8825 36.5517 17.7917 36.3425 16.7358Z"
                   fill="#FFC107" />
@@ -61,41 +60,62 @@
                   d="M36.3425 16.7358H35V16.6667H20V23.3333H29.4192C28.7592 25.1975 27.56 26.805 26.0133 27.9758C26.0142 27.975 26.015 27.975 26.0158 27.9742L31.1742 32.3392C30.8092 32.6708 36.6667 28.3333 36.6667 20C36.6667 18.8825 36.5517 17.7917 36.3425 16.7358Z"
                   fill="#1976D2" />
               </svg>
-              <mat-spinner *ngIf="isLoading" diameter="20" class="mr-2"></mat-spinner>
-              <span class="whitespace-nowrap">{{ isLoading ? 'Signing in...' : (( 'COMMON.SIGN_IN' | translate) + ' with
-                Google')
-                }}</span>
+              <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+              <span>{{ isLoading ? 'Signing in...' : (('COMMON.SIGN_IN' | translate) + ' with Google') }}</span>
             </div>
           </button>
 
+          <!-- Divider -->
+          <div class="flex items-center gap-3 py-1">
+            <div class="flex-1 h-px bg-neutral-200"></div>
+            <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">or</span>
+            <div class="flex-1 h-px bg-neutral-200"></div>
+          </div>
+
+          <!-- Use Offline Button -->
           <button type="button" (click)="continueAsGuest()" [disabled]="isLoading || isAccountLocked"
-            class="w-full px-6 py-3.5 text-base font-medium text-primary dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 border-2 border-primary-200 dark:border-primary-800 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/30 hover:border-primary-300 dark:hover:border-primary-700 focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md">
-            <div class="flex items-center justify-center dark:text-black">
-              <mat-icon>wifi_off</mat-icon>
-              <span class="ml-2">Use Offline</span>
+            class="group w-full px-5 py-4 text-base font-semibold text-neutral-500 bg-surface-300 border border-neutral-200 rounded-xl hover:bg-surface-300 hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-neutral-300/50 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.98]">
+            <div class="flex items-center justify-center gap-2">
+              <mat-icon class="!text-lg text-neutral-400">wifi_off</mat-icon>
+              <span>Use Offline</span>
             </div>
           </button>
         </div>
 
-        <!-- Security Notice -->
-        <div *ngIf="showSecurityNotice"
-          class="mt-6 p-3 bg-gray-50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-lg security-notice">
-          <div class="flex items-center mb-1">
-            <svg class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400 flex-shrink-0" fill="currentColor"
-              viewBox="0 0 16 16">
-              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0-1A6 6 0 1 0 8 2a6 6 0 0 0 0 12z" />
-              <path
-                d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z" />
-            </svg>
-            <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">Security</span>
+        <!-- Trust Indicators -->
+        <div class="mt-6 pt-5 border-neutral-100">
+          <div class="grid grid-cols-3 gap-3 text-center w-3/4 mx-auto">
+            <div class="flex flex-col items-center gap-1">
+              <div class="w-7 h-7 rounded-full flex items-center justify-center">
+                <mat-icon class="!text-base text-primary-500">lock</mat-icon>
+              </div>
+              <span class="text-[10px] sm:text-xs font-medium text-neutral-400 leading-tight">Encrypted</span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <div class="w-7 h-7 rounded-full flex items-center justify-center">
+                <mat-icon class="!text-base text-primary-500">cloud_off</mat-icon>
+              </div>
+              <span class="text-[10px] sm:text-xs font-medium text-neutral-400 leading-tight">Offline Ready</span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <div class="w-7 h-7 rounded-full flex items-center justify-center">
+                <mat-icon class="!text-base text-primary-500">visibility_off</mat-icon>
+              </div>
+              <span class="text-[10px] sm:text-xs font-medium text-neutral-400 leading-tight">Private</span>
+            </div>
           </div>
-          <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-            Enterprise-grade encryption and secure authentication protect your data.
-          </p>
+        </div>
+
+        <!-- Security Notice -->
+        <div class="mt-4 p-3 bg-surface-100  rounded-xl security-notice">
+          <div class="flex items-center gap-2">
+            <mat-icon class="!text-sm text-neutral-400 flex-shrink-0">shield</mat-icon>
+            <p class="text-[11px] text-neutral-400 leading-relaxed">
+              Your data is protected with enterprise-grade encryption. We never sell your information.
+            </p>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
-<!-- 
-<app-pre-footer></app-pre-footer> -->

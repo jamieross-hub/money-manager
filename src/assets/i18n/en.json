@@ -1,5 +1,6 @@
 {
     "COMMON": {
+        "APP_NAME": "Family Expense Tracker",
         "LOADING": "Loading...",
         "ERROR": "Error",
         "SUCCESS": "Success",
