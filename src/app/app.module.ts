@@ -113,7 +113,7 @@ import { LoaderComponent } from './util/components/loader/loader.component';
 
     // Firebase Initialization
     provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
-    ...(isDevMode() ? [] : [provideAnalytics(() => getAnalytics())]),
+    provideAnalytics(() => getAnalytics()),
     UserTrackingService,
     ScreenTrackingService,
 

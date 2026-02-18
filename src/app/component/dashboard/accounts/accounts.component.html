@@ -3,7 +3,7 @@
 <div class="accounts-page fade-in dark:bg-slate-950 lg:px-16 xl:px-32 2xl:px-48">
 	<!-- Header Section -->
 	<header class="page-header max-w-8xl mx-auto">
-		<div class="header-left">
+		<div class="header-left" *ngIf="!breakpointService.device.isMobile">
 			<p class="page-title dark:text-white">Accounts</p>
 			<p class="page-description dark:text-slate-400">Manage your financial accounts</p>
 		</div>

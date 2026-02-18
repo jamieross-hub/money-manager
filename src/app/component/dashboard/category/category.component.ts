@@ -50,6 +50,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { QuickActionsFabComponent } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { CategoryCardComponent } from './category-card/category-card.component';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
+import { CategorySummaryCardComponent } from 'src/app/util/components/cards/category-summary-card/category-summary-card.component';
 
 dayjs.extend(isBetween);
 
@@ -75,7 +76,8 @@ dayjs.extend(isBetween);
     TranslateModule,
     QuickActionsFabComponent,
     CategoryCardComponent,
-    CurrencyPipe
+    CurrencyPipe,
+    CategorySummaryCardComponent
   ]
 })
 export class CategoryComponent implements OnInit, OnDestroy {

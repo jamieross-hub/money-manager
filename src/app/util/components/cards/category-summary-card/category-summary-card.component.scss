@@ -1,0 +1,43 @@
+.account-summary-card {
+  transition: all 0.3s ease;
+  background: var(--surface-50);
+}
+
+.summary-icon-wrap {
+  :host-context(.light-theme) & {
+    background-color: #f0f7ff;
+    color: #3b82f6;
+  }
+}
+
+.balance-title {
+  :host-context(.light-theme) & { color: #1e293b; }
+}
+
+.balance-subtitle, .balance-period, .breakdown-subtitle {
+  :host-context(.light-theme) & { color: #64748b; }
+}
+
+.card-divider {
+  border-top: 1px solid;
+  :host-context(.light-theme) & { border-color: #f1f5f9; }
+}
+
+.breakdown-label {
+  font-weight: 500;
+  :host-context(.light-theme) & { color: #475569; }
+}
+
+.asset-icon-wrap {
+  :host-context(.light-theme) & {
+    background-color: #f0fdf4;
+    color: #22c55e;
+  }
+}
+
+.liability-icon-wrap {
+  :host-context(.light-theme) & {
+    background-color: #fef2f2;
+    color: #ef4444;
+  }
+}
