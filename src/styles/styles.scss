@@ -522,6 +522,10 @@ app-chat {
   min-height: 80vh;
 }
 
+.mat-mdc-tab-header{
+  z-index: 99 !important;
+}
+
 // app-landing{
 //   overflow: scroll;
 //   height: 100vh;
