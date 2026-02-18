@@ -1,5 +1,4 @@
-import { Injectable, Signal, effect } from "@angular/core";
-import { toSignal } from "@angular/core/rxjs-interop";
+import { Injectable } from "@angular/core";
 import { ChatIntentService } from "./chat-intent-service";
 import { ChatFlowService } from "./chat-flow.service";
 import { EntityExtractorService } from "./extractors/entity-extractor.service";
@@ -13,7 +12,7 @@ import { CHAT_CONSTANTS } from "./models/chat-constants";
 import { AppState } from "src/app/store/app.state";
 import { Store } from "@ngrx/store";
 import { selectAllAccounts } from "src/app/store/accounts/accounts.selectors";
-import { Subscription, Observable, isObservable, take, filter, Subject, map } from "rxjs";
+import { Subscription, Observable, isObservable, take, filter, Subject, map, distinctUntilChanged } from "rxjs";
 import { Message } from './models/message.types';
 import { IntentContext } from './models/intent-context.types';
 import { ResponseBuilder } from './response-builder';
@@ -39,7 +38,6 @@ export class ChatFacadeService {
     isTyping = false;
     subscription: Subscription;
     defualtBankAccount: Account | null = null;
-    hasLoans: Signal<boolean>;
 
     constructor(
         private intent: ChatIntentService,
@@ -63,18 +61,13 @@ export class ChatFacadeService {
         private budgetCardHandler: BudgetCardIntentHandler,
         private userService: UserService
     ) {
-        this.hasLoans = toSignal(
-            this.store.select(selectAllAccounts).pipe(
-                filter((accounts) => accounts?.length > 0),
-                map(accounts => accounts.some(account => account.type === 'loan'))
-            ),
-            { initialValue: false }
-        );
-
-        effect(() => {
-            if (this.hasLoans()) {
-                this.pushBot(ResponseBuilder.create().uiElement(INTENTS.LOAN_SUMMARY_CARD).build(), true); // 'true' argument as per user original
-            }
+        this.store.select(selectAllAccounts).pipe(
+            filter((accounts) => accounts?.length > 0),
+            map(accounts => accounts.some(account => account.type === 'loan')),
+            distinctUntilChanged(),
+            filter(hasLoans => hasLoans)
+        ).subscribe(() => {
+            this.pushBot(ResponseBuilder.create().uiElement(INTENTS.LOAN_SUMMARY_CARD).build(), true); // 'true' argument as per user original
         });
 
         this.registerHandlers();
@@ -117,6 +110,7 @@ export class ChatFacadeService {
     }
 
     startBotReply(userText: string) {
+        this.scrollToBottom();
         this.isTyping = true;
         const userId = this.userService.getCurrentUserId();
 
@@ -142,8 +136,6 @@ export class ChatFacadeService {
 
         // 2. New Intent / Command
         this.handleNewIntent(detectedIntent, userText, amount, accounts);
-
-        this.scrollToBottom();
     }
 
 
@@ -251,8 +243,6 @@ export class ChatFacadeService {
         } else {
             this.pushBot(message);
         }
-
-        this.scrollToBottom();
     }
 
     // Helper to standardise flow reply pushing
@@ -264,8 +254,6 @@ export class ChatFacadeService {
         } else {
             this.pushBot(ResponseBuilder.create().html(reply).build());
         }
-
-        this.scrollToBottom();
     }
 
     private pushBot(message: Message, pushAtTop: boolean = false) {
@@ -275,6 +263,7 @@ export class ChatFacadeService {
             this.messages.push(message);
         }
         this.isTyping = false;
+        this.scrollToBottom();
     }
 
     private scrollToBottom() {

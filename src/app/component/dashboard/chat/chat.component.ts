@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, ChangeDetectorRef, AfterViewInit , ChangeDetectionStrategy} from '@angular/core';
+import { Component, ElementRef, ViewChild, ChangeDetectorRef, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';
 import { TransactionType } from 'src/app/util/config/enums';
 import { Category } from 'src/app/util/models';
 import { ChatFacadeService } from 'src/app/util/service/ai-chat/chat-facade-service';
@@ -69,6 +69,7 @@ export class ChatComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     this.chatFacadeService.scrollToTop.subscribe(() => {
+      this.cdr.detectChanges();
       if (this.chatScrollContainer) {
         // it is scroll to bottom
         this.chatScrollContainer.nativeElement.scrollTop = this.chatScrollContainer.nativeElement.scrollHeight;
