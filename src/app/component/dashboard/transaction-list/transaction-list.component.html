@@ -1,13 +1,22 @@
-@if (breakpointService.device.isMobile || (breakpointService.device.isTablePortrait && isTransactionsPage)) {
+@if (breakpointService.device.isMobile || (breakpointService.device.isTablePortrait && isTransactionsPage())) {
 <mobile-transaction-list (editTransaction)="editTransaction($event)" (deleteTransaction)="deleteTransaction($event)"
 	(addTransaction)="addTransactionDialog()" (importTransactions)="openImportDialog()">
 </mobile-transaction-list>
 
-} @else if (!isHome && !breakpointService.device.isMobile && !breakpointService.device.isTablePortrait) {
+} @else if (!isHome() && !breakpointService.device.isMobile && !breakpointService.device.isTablePortrait) {
 <div class="grid grid-cols-12 gap-5  lg:px-16 xl:px-32  2xl:px-48">
 	<div class="col-span-3 hidden 2xl:block">
+		@defer (on viewport) {
 		<calendar-view></calendar-view>
+		} @placeholder {
+		<div class="h-64 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"></div>
+		}
+
+		@defer (on viewport) {
 		<app-monthly-expenditure-card></app-monthly-expenditure-card>
+		} @placeholder {
+		<div class="h-48 mt-5 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"></div>
+		}
 	</div>
 	<div class="col-span-12 2xl:col-span-9">
 		<!-- <total-balance ></total-balance> -->
@@ -18,12 +27,16 @@
 
 		<hr class="mt-5 dark:border-slate-800">
 		<!-- Table Container -->
+		@defer (on viewport) {
 		<transaction-table (editTransaction)="editTransaction($event)" (deleteTransaction)="deleteTransaction($event)"
 			(startRowEdit)="startRowEdit($event)" (saveRowEdit)="saveRowEdit($event)"
 			(cancelRowEdit)="cancelRowEdit($event)" (addTransaction)="addTransactionDialog()"
 			(bulkDeleteTransactions)="bulkDeleteTransactions($event)" (bulkUpdateCategory)="bulkUpdateCategory($event)"
-			[isHome]="isHome">
+			[isHome]="isHome()">
 		</transaction-table>
+		} @placeholder {
+		<div class="h-96 w-full bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse mt-4"></div>
+		}
 	</div>
 </div>
 }

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, AfterViewInit, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, AfterViewInit, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef, signal, input, effect, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -57,19 +57,19 @@ import { TransactionsService } from 'src/app/util/service/db/transactions.servic
   ]
 })
 export class TransactionListComponent implements OnInit, OnDestroy {
-  @Input() isHome: boolean = false;
+  isHome = input<boolean>(false);
 
-  // Observables from store
-  transactions$: Observable<Transaction[]>;
-  transactionsLoading$: Observable<boolean>;
-  transactionsError$: Observable<any>;
+  // Signals from store
+  transactions = this.store.selectSignal(TransactionsSelectors.selectAllTransactions);
+  transactionsLoading = this.store.selectSignal(TransactionsSelectors.selectTransactionsLoading);
+  transactionsError = this.store.selectSignal(TransactionsSelectors.selectTransactionsError);
 
-  selectedTx: any = null;
-  selectedTabIndex: number = 0;
+  selectedTx = signal<any>(null);
+  selectedTabIndex = signal<number>(0);
 
   // UI State
-  showFullTable: boolean = false;
-  isTransactionsPage: boolean = false;
+  showFullTable = signal<boolean>(false);
+  isTransactionsPage = signal<boolean>(false);
 
   private destroy$ = new Subject<void>();
 
@@ -88,31 +88,31 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
   ) {
-    this.isTransactionsPage = this.router.url.includes('transactions') ? true : false;
+    this.isTransactionsPage.set(this.router.url.includes('transactions') ? true : false);
 
-    // Initialize selectors
-    this.transactions$ = this.store.select(TransactionsSelectors.selectAllTransactions);
-    this.transactionsLoading$ = this.store.select(TransactionsSelectors.selectTransactionsLoading);
-    this.transactionsError$ = this.store.select(TransactionsSelectors.selectTransactionsError);
-  }
-
-  ngOnInit() {
-    this.loadTransactions();
-    this.checkQueryParams();
-
-    // Subscribe to errors only (using takeUntil)
-    this.transactionsError$.pipe(takeUntil(this.destroy$)).subscribe(error => {
+    // Effect for error handling
+    effect(() => {
+      const error = this.transactionsError();
       if (error) {
         console.error('Error loading transactions:', error);
+        // Use untracked if we don't want to loop, but here it's just a reaction to error
         this.notificationService.error('Failed to load transactions');
         this.loaderService.hide();
       }
     });
 
-    // We can hide loader when loading is false
-    this.transactionsLoading$.pipe(takeUntil(this.destroy$)).subscribe(loading => {
-      if (!loading) this.loaderService.hide();
+    // Effect for loading state
+    effect(() => {
+      const loading = this.transactionsLoading();
+      if (!loading) {
+        this.loaderService.hide();
+      }
     });
+  }
+
+  ngOnInit() {
+    this.loadTransactions();
+    this.checkQueryParams();
   }
 
   ngOnDestroy() {
@@ -123,17 +123,18 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   private checkQueryParams() {
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
       if (params['tab'] === 'recurring') {
-        this.selectedTabIndex = 3;
+        this.selectedTabIndex.set(3);
         this.onTabChange(3);
       }
       if (params['search']) {
         this.filterService.setSearchTerm(params['search']);
       }
-      this.cdr.markForCheck();
+      // Signals auto-update template, but keeping strict check just in case mixed with OnPush and async pipe elsewhere (though we removed async pipes)
     });
   }
 
   onTabChange(index: number) {
+    this.selectedTabIndex.set(index);
     if (index === 3) {
       this.filterService.setIsRecurring(true);
     } else {
@@ -160,7 +161,6 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       if (result) {
         this.loadTransactions();
       }
-      this.cdr.markForCheck();
     });
   }
 
@@ -173,7 +173,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   }
 
   onLongPress(tx: any) {
-    this.selectedTx = tx;
+    this.selectedTx.set(tx);
   }
 
   // Row-level editing methods
@@ -255,12 +255,6 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       let successCount = 0;
       let errorCount = 0;
 
-      // OPTIMIZATION: Process sequentially to avoid flooding but parallelize if backend supports it.
-      // Firestore batching would be better, but dispatching individual actions is safer with current store pattern.
-      // We will keep loop but optimize where possible. 
-      // Actually, dispatching 100 actions is heavy. Ideal is bulkCreate action.
-      // Assuming no bulkCreate action exists, we keep loop.
-
       for (const tx of transactions) {
         try {
           const date = new Date(tx.date);
@@ -314,9 +308,6 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     }
   }
 
-  // NOTE: exportToExcel was removed as it relied on implicit DataSource which was redundant.
-  // If needed, it should select transactions$ from store.
-
   refreshTransactions(): void {
     const userId = this.userService.getCurrentUserId();
     if (userId) {
@@ -347,7 +338,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   }
 
   expandTable(): void {
-    this.showFullTable = !this.showFullTable;
+    this.showFullTable.update(v => !v);
   }
 
   // Bulk operations - Optimized
