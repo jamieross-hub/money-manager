@@ -16,7 +16,6 @@ import { MatBottomSheetModule, MatBottomSheet } from '@angular/material/bottom-s
 import { MatExpansionModule } from '@angular/material/expansion';
 import { TranslateModule } from '@ngx-translate/core';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
-import { Auth } from '@angular/fire/auth';
 import { Router } from '@angular/router';
 import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
@@ -126,7 +125,6 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     private store: Store<AppState>,
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<MobileAddTransactionComponent>,
-    private auth: Auth,
     private notificationService: NotificationService,
     private router: Router,
     private hapticFeedback: HapticFeedbackService,
@@ -143,7 +141,10 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     this.isGuestUser = this.userService.isGuestUser();
     this.recurringMinDate = dayjs().add(1, 'day').format('YYYY-MM-DD');
     this.recurringMaxDate = dayjs().add(1, 'year').format('YYYY-MM-DD');
-    this.store.dispatch(loadGroups());// Load groups
+
+    if (!this.isGuestUser) {
+      this.store.dispatch(loadGroups());// Load groups
+    }
     this.groups$ = this.store.select(selectGroups);
     this.categoryList$ = this.store.select(selectAllCategories);
     this.accountList$ = this.store.select(selectAllAccounts);
