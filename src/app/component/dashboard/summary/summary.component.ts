@@ -1,11 +1,11 @@
 
-
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { CategoryComponent } from '../category/category.component';
 import { AccountsComponent } from '../accounts/accounts.component';
 import { CategorySummaryCardComponent } from 'src/app/util/components/cards/category-summary-card/category-summary-card.component';
+import { ReportsComponent } from 'src/app/modules/features/component/reports/reports.component';
 
 
 @Component({
@@ -18,7 +18,8 @@ import { CategorySummaryCardComponent } from 'src/app/util/components/cards/cate
         MatIconModule,
         CategoryComponent,
         AccountsComponent,
-        CategorySummaryCardComponent
+        CategorySummaryCardComponent,
+        ReportsComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })

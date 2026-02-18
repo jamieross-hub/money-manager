@@ -6,16 +6,17 @@ import { TaxComponent } from './component/tax/tax.component';
 import { GoogleSheetsComponent } from './component/google-sheets/google-sheets.component';
 import { OpenaiInteractionComponent } from './component/openai-interaction/openai-interaction.component';
 import { LoanCalculatorComponent } from './component/loan-calculator/loan-calculator.component';
+import { ReportsComponent } from './component/reports/reports.component';
 
 const routes: Routes = [
-    // {
-    //     path: 'reports',
-    //     component: ReportsComponent,
-    //     data: {
-    //         roles: ['premium', 'admin'],
-    //         requireEmailVerification: true
-    //     }
-    // },
+    {
+        path: 'reports',
+        component: ReportsComponent,
+        data: {
+            roles: ['free', 'premium', 'admin'],
+            requireEmailVerification: true
+        }
+    },
     {
         path: 'tax',
         component: TaxComponent,

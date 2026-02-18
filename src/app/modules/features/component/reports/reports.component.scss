@@ -1,0 +1,184 @@
+// Reports component styles
+
+:host {
+  display: block;
+}
+
+// ── Mat Tabs ──
+.reports-tabs {
+  ::ng-deep {
+    .mat-mdc-tab-header {
+      border-bottom: 1px solid var(--neutral-200, #e5e7eb);
+    }
+
+    .mat-mdc-tab-labels {
+      gap: 4px;
+    }
+
+    .mat-mdc-tab {
+      border-radius: 12px 12px 0 0;
+      min-width: 140px;
+
+      .mdc-tab__text-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        letter-spacing: 0;
+      }
+    }
+
+    .mat-mdc-tab-body-wrapper {
+      flex: 1;
+    }
+  }
+}
+
+// ── Mat Button Toggle Group (Period Selector) ──
+.period-toggle {
+  ::ng-deep {
+    .mat-button-toggle-appearance-standard {
+      border-radius: 8px;
+
+      .mat-button-toggle-label-content {
+        font-size: 0.8125rem;
+        font-weight: 500;
+        padding: 0 16px;
+        line-height: 36px;
+      }
+    }
+
+    .mat-button-toggle-checked {
+      background-color: var(--primary-500, #6366f1);
+      color: white;
+      border-radius: 8px;
+
+      .mat-button-toggle-label-content {
+        color: white;
+      }
+    }
+
+    .mat-button-toggle-group {
+      border-radius: 10px;
+      border: 1px solid var(--neutral-200, #e5e7eb);
+    }
+  }
+}
+
+// ── Mat Progress Bar (Income/Expense/Category bars) ──
+.income-bar {
+  ::ng-deep {
+    .mdc-linear-progress__bar-inner {
+      border-color: var(--success-400, #4ade80);
+    }
+    .mdc-linear-progress__buffer-bar {
+      background-color: var(--surface-200, #f1f5f9);
+    }
+  }
+}
+
+.expense-bar {
+  ::ng-deep {
+    .mdc-linear-progress__bar-inner {
+      border-color: var(--error-400, #f87171);
+    }
+    .mdc-linear-progress__buffer-bar {
+      background-color: var(--surface-200, #f1f5f9);
+    }
+  }
+}
+
+.category-bar {
+  ::ng-deep {
+    .mdc-linear-progress__buffer-bar {
+      background-color: var(--surface-200, #f1f5f9);
+    }
+  }
+}
+
+// ── Mat Table ──
+.history-table {
+  ::ng-deep {
+    .mat-mdc-header-row {
+      background-color: var(--surface-200, #f1f5f9);
+    }
+
+    .mat-mdc-header-cell {
+      font-weight: 600;
+      font-size: 0.8125rem;
+      color: var(--neutral-600, #4b5563);
+    }
+
+    .mat-mdc-cell {
+      font-size: 0.875rem;
+    }
+
+    .mat-mdc-row {
+      transition: background-color 0.15s ease;
+
+      &:hover {
+        background-color: var(--surface-100, #f8fafc);
+      }
+    }
+  }
+}
+
+// ── Mat Card tweaks ──
+mat-card {
+  &.mat-mdc-card {
+    border: 1px solid var(--neutral-100, #f3f4f6);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04);
+  }
+}
+
+// ── Mat Expansion Panel ──
+mat-expansion-panel {
+  &.mat-expansion-panel {
+    border: 1px solid var(--neutral-100, #f3f4f6);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04);
+  }
+}
+
+// ── Mat List tweaks ──
+mat-list-item {
+  ::ng-deep {
+    .mdc-list-item__content {
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+  }
+}
+
+// ── Smooth transitions ──
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// ── Scrollbar styling ──
+.overflow-x-auto {
+  scrollbar-width: thin;
+  scrollbar-color: var(--neutral-300, #d1d5db) transparent;
+
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--neutral-300, #d1d5db);
+    border-radius: 4px;
+  }
+}
+
+// ── Mat Chip overrides ──
+::ng-deep mat-chip {
+  &.mat-mdc-chip {
+    font-size: 0.75rem;
+    min-height: 24px;
+    padding: 0 10px;
+  }
+}
