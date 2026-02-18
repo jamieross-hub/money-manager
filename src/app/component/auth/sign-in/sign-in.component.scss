@@ -5,7 +5,7 @@
 /* Auth Section */
 .auth-section {
   position: relative;
-  overflow-x: hidden;
+  overflow: hidden;
   
   :host-context(.dark-theme) & {
     background: linear-gradient(to bottom right, 

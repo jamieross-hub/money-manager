@@ -17,7 +17,8 @@
         "SETTINGS": "Settings",
         "SEARCH": "Search",
         "CONFIRM": "Confirm",
-        "SAVING": "Saving..."
+        "SAVING": "Saving...",
+        "SIGN_IN": "Sign In"
     },
     "NAVIGATION": {
         "NAV_SECTION": "Navigation",
