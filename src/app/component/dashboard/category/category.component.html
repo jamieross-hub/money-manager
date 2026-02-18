@@ -35,7 +35,7 @@
 					</div>
 					<mat-card-subtitle class="card-label">Expenses</mat-card-subtitle>
 					<mat-card-title class="card-amount text-error-600">
-						{{ vm.summary.totalExpense | currency }}
+						{{ vm.summary.totalExpense | currency:{round:true} }}
 					</mat-card-title>
 				</mat-card-header>
 				<mat-card-content>
@@ -62,7 +62,7 @@
 					</div>
 					<mat-card-subtitle class="card-label">Income</mat-card-subtitle>
 					<mat-card-title class="card-amount text-neutral-500">
-						{{ vm.summary.totalIncome | currency }}
+						{{ vm.summary.totalIncome | currency:{round:true} }}
 					</mat-card-title>
 				</mat-card-header>
 				<mat-card-content>

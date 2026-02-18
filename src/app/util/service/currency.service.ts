@@ -67,6 +67,13 @@ export class CurrencyService {
     return this.currentLanguageSubject.value;
   }
 
+  getCurrentLanguageForCurrency(): string {
+    const lang = this.currentLanguageSubject.value;
+    if (lang === 'en') return 'en-IN';
+    if (lang === 'hi') return 'hi-IN';
+    return lang;
+  }
+
   setCurrentLanguage(languageCode: string): void {
     if (this.currentLanguageSubject.value !== languageCode) {
       this.currentLanguageSubject.next(languageCode);
@@ -108,7 +115,7 @@ export class CurrencyService {
 
     const {
       currency = this.getCurrentCurrency(),
-      locale = this.getCurrentLanguage(),
+      locale = this.getCurrentLanguageForCurrency(),
       showSymbol = true,
       showCode = false,
       decimalPlaces,
