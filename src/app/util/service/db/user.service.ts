@@ -140,6 +140,13 @@ export class UserService {
 
       if (user) {
         const userData = await this.getCurrentUser();
+
+        // Sync vital display info from Auth object if missing in Firestore/Cache
+        if (userData) {
+          if (!userData.photoURL && user.photoURL) userData.photoURL = user.photoURL;
+          if (!userData.displayName && user.displayName) userData.displayName = user.displayName;
+        }
+
         this.userAuth$.next(userData);
         if (userData?.preferences?.language) {
           this.translationService.setLanguage(userData.preferences.language as Language);
@@ -494,6 +501,8 @@ export class UserService {
           uid: userCredential.user.uid,
           firstName: name,
           lastName: '',
+          displayName: name,
+          photoURL: userCredential.user.photoURL || '',
           email,
           role: 'free',
           createdAt: new Date(),
@@ -787,6 +796,8 @@ export class UserService {
       firstName: firebaseUser.displayName?.split(' ')[0] || '',
       lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
       email: firebaseUser.email || '',
+      displayName: firebaseUser.displayName || '',
+      photoURL: firebaseUser.photoURL || '',
       role: 'free',
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -819,7 +830,37 @@ export class UserService {
   ): Promise<void> {
     console.log('✅ User already exists in Firestore');
 
-    const userData = userSnap.data();
+    let userData = userSnap.data();
+
+    // Check if we need to update the user's photo or display name from Google
+    let needsUpdate = false;
+    const updates: any = {};
+
+    if (firebaseUser.photoURL && userData['photoURL'] !== firebaseUser.photoURL) {
+      if (!userData['photoURL'] || userData['photoURL'].includes('googleusercontent.com')) {
+        // Only update if missing or if it looks like a google profile image (to avoid overwriting custom uploads if we ever support them)
+        // For now, assume google auth source is truth for google profile images
+        updates.photoURL = firebaseUser.photoURL;
+        needsUpdate = true;
+      }
+    }
+
+    if (firebaseUser.displayName && !userData['displayName']) {
+      updates.displayName = firebaseUser.displayName;
+      needsUpdate = true;
+    }
+
+    if (needsUpdate) {
+      console.log('Updating user profile from Google data', updates);
+      await this.createOrUpdateUser({
+        ...userData,
+        ...updates
+      });
+      // Update local object to reflect what we just saved
+      userData = { ...userData, ...updates };
+    }
+
+
     this.storageService.setItem(
       `user-data-${firebaseUser.uid}`,
       userData

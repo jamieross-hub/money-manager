@@ -1,4 +1,4 @@
-import { Component , ChangeDetectionStrategy} from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -54,9 +54,11 @@ export class UserComponent {
   user: {
     displayName: string;
     photoURL: string;
+    firstName?: string;
   } = {
       displayName: '',
       photoURL: '',
+      firstName: '',
     };
 
   constructor(
@@ -88,6 +90,7 @@ export class UserComponent {
         this.user = {
           displayName: user?.displayName,
           photoURL: user?.photoURL,
+          firstName: user?.firstName,
         };
       }
     });
