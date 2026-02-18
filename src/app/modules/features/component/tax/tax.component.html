@@ -1,259 +1,503 @@
-<div class="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
-  <!-- Header Section -->
+<div class="min-h-screen bg-surface-100 p-4 sm:p-6 lg:p-8">
   <div class="max-w-7xl mx-auto">
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+
+    <!-- ═══════════ HEADER ═══════════ -->
+    <div class="bg-surface-50 rounded-xl shadow-sm border border-neutral-100 p-6 mb-6">
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div class="flex-1">
-          <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Tax Analysis</h2>
-          <p class="text-gray-600 text-sm sm:text-base">New Tax Regime calculation for FY {{ currentYear }}-{{ currentYear + 1 }}</p>
+          <h2 class="text-2xl sm:text-3xl font-bold text-neutral-900 mb-1">Tax Analysis</h2>
+          <p class="text-neutral-400 text-sm sm:text-base">
+            New Tax Regime (Section 115BAC) · FY {{ currentYear }}-{{ currentYear + 1 }}
+          </p>
         </div>
-        <div class="flex items-center">
-          <mat-icon class="text-blue-600 mr-2">new_releases</mat-icon>
-          <span class="text-blue-600 font-medium">New Regime</span>
+        <div class="flex items-center gap-2">
+          <span
+            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary-50 text-primary-600 text-xs font-semibold">
+            <mat-icon class="!text-sm">new_releases</mat-icon>
+            New Regime
+          </span>
         </div>
       </div>
     </div>
 
-    <!-- Income Source Selection -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-      <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-        <mat-icon class="text-green-600 mr-3">account_balance_wallet</mat-icon>
+    <!-- ═══════════ ABOUT SECTION (collapsible) ═══════════ -->
+    <div class="bg-surface-50 rounded-xl shadow-sm border border-neutral-100 mb-6 overflow-hidden">
+      <button (click)="showInfo = !showInfo"
+        class="w-full flex items-center justify-between p-5 text-left hover:bg-surface-100 transition-colors">
+        <div class="flex items-center gap-3">
+          <mat-icon class="text-primary-500">info</mat-icon>
+          <span class="font-semibold text-neutral-800">What is the New Tax Regime?</span>
+        </div>
+        <mat-icon class="text-neutral-400 transition-transform"
+          [style.transform]="showInfo ? 'rotate(180deg)' : ''">expand_more</mat-icon>
+      </button>
+
+      <div *ngIf="showInfo" class="px-5 pb-5 border-t border-neutral-100 pt-4 space-y-3">
+        <p class="text-sm text-neutral-500 leading-relaxed">
+          The <strong class="text-neutral-700">New Tax Regime (Section 115BAC)</strong> is the
+          default tax system in India from FY 2023-24 onwards. It offers <strong class="text-neutral-700">lower tax
+            rates</strong>
+          with fewer slabs, but most deductions like 80C, 80D, HRA, and home loan interest (self-occupied) are
+          <strong class="text-error-500">not allowed</strong>.
+        </p>
+
+        <div class="bg-primary-50 rounded-lg p-4">
+          <h5 class="font-semibold text-primary-700 text-sm mb-2">Key Features:</h5>
+          <ul class="text-sm text-primary-600 space-y-1.5">
+            <li class="flex items-start gap-2">
+              <mat-icon class="!text-sm text-primary-500 mt-0.5">check_circle</mat-icon>
+              <span>Standard deduction of <strong>₹75,000</strong> for salaried & pension income</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <mat-icon class="!text-sm text-primary-500 mt-0.5">check_circle</mat-icon>
+              <span>Section 87A rebate: Zero tax if taxable income ≤ ₹12,00,000</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <mat-icon class="!text-sm text-primary-500 mt-0.5">check_circle</mat-icon>
+              <span>Effectively <strong>zero tax up to ₹12.75L</strong> for salaried individuals</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <mat-icon class="!text-sm text-primary-500 mt-0.5">check_circle</mat-icon>
+              <span>4% Health &amp; Education Cess on calculated tax</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <mat-icon class="!text-sm text-primary-500 mt-0.5">check_circle</mat-icon>
+              <span>Surcharge applicable for income above ₹50 Lakhs</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="bg-warning-50 rounded-lg p-4">
+          <h5 class="font-semibold text-warning-700 text-sm mb-2">Deductions NOT Allowed:</h5>
+          <div class="grid grid-cols-2 gap-1 text-sm text-warning-600">
+            <span>• Section 80C (PPF, ELSS)</span>
+            <span>• Section 80D (Health)</span>
+            <span>• HRA Exemption</span>
+            <span>• Home Loan Interest (Self)</span>
+            <span>• Section 80E (Education)</span>
+            <span>• LTA Exemption</span>
+          </div>
+        </div>
+
+        <div class="bg-success-50 rounded-lg p-4">
+          <h5 class="font-semibold text-success-700 text-sm mb-2">Limited Deductions Allowed:</h5>
+          <div class="text-sm text-success-600 space-y-1">
+            <span class="block">• Standard Deduction (₹75,000)</span>
+            <span class="block">• Employer NPS contribution (Sec 80CCD(2))</span>
+            <span class="block">• Agniveer Corpus Fund (Sec 80CCH)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ INCOME SOURCE ═══════════ -->
+    <div class="bg-surface-50 rounded-xl shadow-sm border border-neutral-100 p-6 mb-6">
+      <h3 class="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2">
+        <mat-icon class="text-success-500">account_balance_wallet</mat-icon>
         Income Source
       </h3>
-      
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <button 
-          mat-raised-button 
-          [color]="!useManualIncome ? 'primary' : 'basic'"
-          (click)="toggleIncomeSource()"
-          class="flex items-center justify-center space-x-3 p-4 h-auto min-h-[60px] transition-all duration-200 hover:shadow-md"
-          [class.bg-blue-600]="!useManualIncome"
-          [class.text-white]="!useManualIncome"
-          [class.bg-gray-100]="useManualIncome"
-          [class.text-gray-700]="useManualIncome"
-        >
+
+      <!-- Salaried toggle -->
+      <div class="flex items-center gap-3 mb-4 p-3 bg-surface-100 rounded-lg">
+        <mat-icon class="text-neutral-400 !text-base">work</mat-icon>
+        <span class="text-sm text-neutral-600 flex-1">Are you salaried / receive pension?</span>
+        <button (click)="toggleSalaried()"
+          class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+          [class.bg-primary-500]="isSalaried" [class.bg-neutral-300]="!isSalaried">
+          <span class="sr-only">Toggle salaried</span>
+          <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform"
+            [class.translate-x-6]="isSalaried" [class.translate-x-1]="!isSalaried"></span>
+        </button>
+        <span class="text-xs font-medium w-8" [class.text-primary-500]="isSalaried"
+          [class.text-neutral-400]="!isSalaried">
+          {{ isSalaried ? 'Yes' : 'No' }}
+        </span>
+      </div>
+
+      <!-- Source toggle buttons -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+        <button mat-raised-button [color]="!useManualIncome ? 'primary' : 'basic'" (click)="toggleIncomeSource()"
+          class="flex items-center justify-center space-x-3 p-4 h-auto min-h-[56px] transition-all duration-200 hover:shadow-md rounded-xl"
+          [class.bg-primary-500]="!useManualIncome" [class.text-white]="!useManualIncome"
+          [class.bg-surface-200]="useManualIncome" [class.text-neutral-600]="useManualIncome">
           <mat-icon class="text-xl">sync</mat-icon>
           <div class="text-left">
-            <div class="font-semibold">Auto from Transactions</div>
+            <div class="font-semibold text-sm">Auto from Transactions</div>
             <div class="text-xs opacity-80">Use your transaction data</div>
           </div>
         </button>
-        <button 
-          mat-raised-button 
-          [color]="useManualIncome ? 'primary' : 'basic'"
-          (click)="toggleIncomeSource()"
-          class="flex items-center justify-center space-x-3 p-4 h-auto min-h-[60px] transition-all duration-200 hover:shadow-md"
-          [class.bg-blue-600]="useManualIncome"
-          [class.text-white]="useManualIncome"
-          [class.bg-gray-100]="!useManualIncome"
-          [class.text-gray-700]="!useManualIncome"
-        >
+        <button mat-raised-button [color]="useManualIncome ? 'primary' : 'basic'" (click)="toggleIncomeSource()"
+          class="flex items-center justify-center space-x-3 p-4 h-auto min-h-[56px] transition-all duration-200 hover:shadow-md rounded-xl"
+          [class.bg-primary-500]="useManualIncome" [class.text-white]="useManualIncome"
+          [class.bg-surface-200]="!useManualIncome" [class.text-neutral-600]="!useManualIncome">
           <mat-icon class="text-xl">edit</mat-icon>
           <div class="text-left">
-            <div class="font-semibold">Manual Entry</div>
+            <div class="font-semibold text-sm">Manual Entry</div>
             <div class="text-xs opacity-80">Enter income manually</div>
           </div>
         </button>
       </div>
 
       <!-- Manual Income Input -->
-      <div *ngIf="useManualIncome" class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+      <div *ngIf="useManualIncome" class="bg-primary-50 p-5 rounded-xl border border-primary-200">
         <form [formGroup]="taxForm" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Annual Income (₹)</label>
-            <input 
-              type="number" 
-              formControlName="manualIncome"
-              (input)="onInputChange($event)"
+            <label class="block text-sm font-medium text-neutral-600 mb-2">Annual Gross Income (₹)</label>
+            <input type="number" formControlName="manualIncome" (input)="onInputChange($event)"
               (blur)="onManualIncomeChange()"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter your annual income"
-            >
-            <div class="text-xs text-gray-500 mt-1">
-              Enter your total annual income for FY {{ currentYear }}-{{ currentYear + 1 }}
+              class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-surface-50 text-neutral-900"
+              placeholder="Enter your annual income">
+            <div class="text-xs text-neutral-400 mt-1">
+              Enter total annual gross income for FY {{ currentYear }}-{{ currentYear + 1 }}
             </div>
-            <div *ngIf="taxForm.get('manualIncome')?.invalid && taxForm.get('manualIncome')?.touched" class="text-red-500 text-xs mt-1">
+            <div *ngIf="taxForm.get('manualIncome')?.invalid && taxForm.get('manualIncome')?.touched"
+              class="text-error-500 text-xs mt-1">
               Please enter a valid income amount
+            </div>
+          </div>
+
+          <!-- Quick-fill examples -->
+          <div>
+            <span class="text-xs font-medium text-neutral-400 block mb-2">Try an example:</span>
+            <div class="flex flex-wrap gap-2">
+              <button *ngFor="let amt of exampleIncomes" type="button" (click)="setExampleIncome(amt)"
+                class="px-3 py-1.5 text-xs font-medium rounded-full border border-primary-200 text-primary-600 bg-surface-50 hover:bg-primary-100 transition-colors">
+                {{ formatLakhs(amt) }}
+              </button>
             </div>
           </div>
         </form>
       </div>
 
       <!-- Auto Income Display -->
-      <div *ngIf="!useManualIncome" class="bg-green-50 p-4 rounded-lg border border-green-200">
+      <div *ngIf="!useManualIncome" class="bg-success-50 p-5 rounded-xl border border-success-200">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-sm font-medium text-green-800">Income from Transactions</div>
-            <div class="text-2xl font-bold text-green-700">{{ formatCurrency(totalIncome) }}</div>
-            <div class="text-xs text-green-600 mt-1">
-              Calculated from your income transactions for FY {{ currentYear }}-{{ currentYear + 1 }}
+            <div class="text-sm font-medium text-success-700">Income from Transactions</div>
+            <div class="text-2xl font-bold text-success-600">{{ formatCurrency(totalIncome) }}</div>
+            <div class="text-xs text-success-500 mt-1">
+              FY {{ currentYear }}-{{ currentYear + 1 }} · Income transactions
             </div>
           </div>
-          <mat-icon class="text-green-600 text-3xl">check_circle</mat-icon>
+          <mat-icon class="text-success-500 text-3xl">check_circle</mat-icon>
         </div>
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div *ngIf="isLoading" class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-6">
-      <div class="flex items-center justify-center">
-        <mat-spinner diameter="40" class="mr-4"></mat-spinner>
-        <span class="text-gray-600">Calculating tax from your transactions...</span>
+    <!-- ═══════════ LOADING ═══════════ -->
+    <div *ngIf="isLoading" class="bg-surface-50 rounded-xl shadow-sm border border-neutral-100 p-8 mb-6">
+      <div class="flex items-center justify-center gap-4">
+        <mat-spinner diameter="36"></mat-spinner>
+        <span class="text-neutral-500">Calculating tax…</span>
       </div>
     </div>
 
-    <!-- Tax Calculation Results -->
-    <div *ngIf="!isLoading && taxCalculation && (useManualIncome ? isManualIncomeValid() : true)" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-      <!-- Income Tax Calculation -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <mat-icon class="text-blue-600 mr-3">account_balance</mat-icon>
-          Tax Calculation Summary
-        </h4>
-        <div class="space-y-4">
-          <div class="flex justify-between items-center py-3 border-b border-gray-100">
-            <span class="text-gray-600">Total Income (FY {{ currentYear }}-{{ currentYear + 1 }})</span>
-            <span class="font-semibold text-gray-900 text-lg">{{ formatCurrency(taxCalculation.totalIncome) }}</span>
-          </div>
-          <div class="flex justify-between items-center py-3 border-b border-gray-100">
-            <span class="text-gray-600">Standard Deduction</span>
-            <span class="font-semibold text-green-600 text-lg">{{ formatCurrency(taxCalculation.totalDeductions) }}</span>
-          </div>
-          <div class="flex justify-between items-center py-3 border-b-2 border-blue-200 bg-blue-50 px-4 rounded-lg">
-            <span class="text-gray-700 font-medium">Taxable Income</span>
-            <span class="font-bold text-blue-700 text-lg">{{ formatCurrency(taxCalculation.taxableIncome) }}</span>
-          </div>
-          <div class="flex justify-between items-center py-3 border-b border-gray-100">
-            <span class="text-gray-600">Income Tax</span>
-            <span class="font-semibold text-red-600 text-lg">{{ formatCurrency(taxCalculation.incomeTax) }}</span>
-          </div>
-          <div class="flex justify-between items-center py-3 border-b border-gray-100">
-            <span class="text-gray-600">Cess (4%)</span>
-            <span class="font-semibold text-red-600 text-lg">{{ formatCurrency(taxCalculation.cess) }}</span>
-          </div>
-          <div class="flex justify-between items-center py-4 bg-red-50 px-4 rounded-lg border-2 border-red-200">
-            <span class="text-gray-700 font-semibold">Total Tax Liability</span>
-            <span class="font-bold text-red-700 text-xl">{{ formatCurrency(taxCalculation.totalTaxLiability) }}</span>
+    <!-- ═══════════ RESULTS ═══════════ -->
+    <div *ngIf="!isLoading && taxCalculation && (useManualIncome ? isManualIncomeValid() : true)"
+      class="space-y-6 mb-6">
+
+      <!-- Results Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- LEFT: Tax Calculation -->
+        <div class="bg-surface-50 rounded-xl shadow-sm border border-neutral-100 p-6">
+          <h4 class="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2">
+            <mat-icon class="text-primary-500">account_balance</mat-icon>
+            Tax Calculation
+          </h4>
+
+          <div class="space-y-3">
+            <!-- Gross Income -->
+            <div class="flex justify-between items-center py-3 border-b border-neutral-100">
+              <span class="text-neutral-500 text-sm">Gross Income</span>
+              <span class="font-semibold text-neutral-900">{{ formatCurrency(taxCalculation.totalIncome) }}</span>
+            </div>
+
+            <!-- Standard Deduction -->
+            <div *ngIf="taxCalculation.standardDeduction > 0"
+              class="flex justify-between items-center py-3 border-b border-neutral-100">
+              <span class="text-neutral-500 text-sm">Standard Deduction</span>
+              <span class="font-semibold text-success-500">- {{ formatCurrency(taxCalculation.standardDeduction)
+                }}</span>
+            </div>
+
+            <!-- Taxable Income -->
+            <div class="flex justify-between items-center py-3 bg-primary-50 px-4 rounded-lg border border-primary-200">
+              <span class="text-neutral-700 font-medium text-sm">Taxable Income</span>
+              <span class="font-bold text-primary-600">{{ formatCurrency(taxCalculation.taxableIncome) }}</span>
+            </div>
+
+            <!-- Income Tax -->
+            <div class="flex justify-between items-center py-3 border-b border-neutral-100">
+              <span class="text-neutral-500 text-sm">Income Tax (Slab-wise)</span>
+              <span class="font-semibold text-error-500">{{ formatCurrency(taxCalculation.incomeTax) }}</span>
+            </div>
+
+            <!-- Rebate -->
+            <div *ngIf="taxCalculation.rebate87A > 0"
+              class="flex justify-between items-center py-3 border-b border-neutral-100">
+              <span class="text-neutral-500 text-sm">Section 87A Rebate</span>
+              <span class="font-semibold text-success-500">- {{ formatCurrency(taxCalculation.rebate87A) }}</span>
+            </div>
+
+            <!-- Tax After Rebate -->
+            <div *ngIf="taxCalculation.rebate87A > 0"
+              class="flex justify-between items-center py-3 border-b border-neutral-100">
+              <span class="text-neutral-500 text-sm">Tax After Rebate</span>
+              <span class="font-semibold text-neutral-900">{{ formatCurrency(taxCalculation.taxAfterRebate) }}</span>
+            </div>
+
+            <!-- Surcharge -->
+            <div *ngIf="taxCalculation.surcharge.amount > 0"
+              class="flex justify-between items-center py-3 border-b border-neutral-100">
+              <div>
+                <span class="text-neutral-500 text-sm">Surcharge ({{ taxCalculation.surcharge.rate }}%)</span>
+                <span *ngIf="taxCalculation.surcharge.marginalRelief"
+                  class="ml-1 text-[10px] text-success-500">(marginal relief applied)</span>
+              </div>
+              <span class="font-semibold text-error-500">{{ formatCurrency(taxCalculation.surcharge.amount) }}</span>
+            </div>
+
+            <!-- Cess -->
+            <div class="flex justify-between items-center py-3 border-b border-neutral-100">
+              <span class="text-neutral-500 text-sm">Health &amp; Education Cess (4%)</span>
+              <span class="font-semibold text-error-500">{{ formatCurrency(taxCalculation.cess) }}</span>
+            </div>
+
+            <!-- TOTAL -->
+            <div class="flex justify-between items-center py-4 bg-error-50 px-4 rounded-lg border-2 border-error-200">
+              <span class="text-neutral-700 font-semibold">Total Tax Liability</span>
+              <span class="font-bold text-error-600 text-xl">{{ formatCurrency(taxCalculation.totalTaxLiability)
+                }}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Tax Details -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <mat-icon class="text-green-600 mr-3">info</mat-icon>
-          Tax Details
-        </h4>
-        <div class="space-y-4">
-          <div class="flex justify-between items-center py-3 border-b border-gray-100">
-            <span class="text-gray-600">Current Tax Slab</span>
-            <span class="font-semibold text-blue-600">{{ getCurrentTaxSlab() }}</span>
-          </div>
-          <div class="flex justify-between items-center py-3 border-b border-gray-100">
-            <span class="text-gray-600">Effective Tax Rate</span>
-            <span class="font-semibold text-blue-600">{{ taxCalculation.totalIncome > 0 ? ((taxCalculation.totalTaxLiability / taxCalculation.totalIncome) * 100).toFixed(2) : '0' }}%</span>
-          </div>
-          <div class="flex justify-between items-center py-3 border-b border-gray-100">
-            <span class="text-gray-600">Monthly Tax</span>
-            <span class="font-semibold text-red-600">{{ formatCurrency(taxCalculation.totalTaxLiability / 12) }}</span>
-          </div>
-          <div class="flex justify-between items-center py-3 border-b border-gray-100">
-            <span class="text-gray-600">Net Income After Tax</span>
-            <span class="font-semibold text-green-600">{{ formatCurrency(taxCalculation.totalIncome - taxCalculation.totalTaxLiability) }}</span>
-          </div>
-          <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <div class="text-sm text-blue-800">
-              <strong>Note:</strong> This calculation uses the new tax regime with simplified rates and standard deduction of ₹50,000.
+        <!-- RIGHT: Summary -->
+        <div class="bg-surface-50 rounded-xl shadow-sm border border-neutral-100 p-6">
+          <h4 class="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2">
+            <mat-icon class="text-success-500">insights</mat-icon>
+            Summary
+          </h4>
+
+          <div class="space-y-3">
+            <div class="flex justify-between items-center py-3 border-b border-neutral-100">
+              <span class="text-neutral-500 text-sm">Current Tax Slab</span>
+              <span class="font-semibold text-primary-500 text-sm">{{ getCurrentTaxSlab() }}</span>
+            </div>
+            <div class="flex justify-between items-center py-3 border-b border-neutral-100">
+              <span class="text-neutral-500 text-sm">Effective Tax Rate</span>
+              <span class="font-semibold text-primary-500">{{ taxCalculation.effectiveTaxRate | number: '1.2-2'
+                }}%</span>
+            </div>
+            <div class="flex justify-between items-center py-3 border-b border-neutral-100">
+              <span class="text-neutral-500 text-sm">Monthly Tax</span>
+              <span class="font-semibold text-error-500">{{ formatCurrency(taxCalculation.monthlyTax) }}</span>
+            </div>
+            <div class="flex justify-between items-center py-3 border-b border-neutral-100">
+              <span class="text-neutral-500 text-sm">Net Annual Income</span>
+              <span class="font-semibold text-success-500">{{ formatCurrency(taxCalculation.netIncomeAfterTax) }}</span>
+            </div>
+            <div class="flex justify-between items-center py-3 border-b border-neutral-100">
+              <span class="text-neutral-500 text-sm">Net Monthly Income</span>
+              <span class="font-semibold text-success-500">{{ formatCurrency(taxCalculation.netIncomeAfterTax / 12)
+                }}</span>
+            </div>
+
+            <!-- Rebate banner -->
+            <div *ngIf="taxCalculation.rebate87A > 0" class="bg-success-50 p-4 rounded-lg border border-success-200">
+              <div class="flex items-center gap-2">
+                <mat-icon class="text-success-500 !text-base">celebration</mat-icon>
+                <span class="text-sm font-semibold text-success-700">Section 87A Rebate Applied!</span>
+              </div>
+              <p class="text-xs text-success-600 mt-1">
+                Your taxable income is ≤ ₹12,00,000 so your tax is reduced by {{
+                formatCurrency(taxCalculation.rebate87A) }}.
+              </p>
+            </div>
+
+            <!-- Surcharge note -->
+            <div *ngIf="taxCalculation.surcharge.amount > 0"
+              class="bg-warning-50 p-4 rounded-lg border border-warning-200">
+              <div class="flex items-center gap-2">
+                <mat-icon class="text-warning-500 !text-base">info</mat-icon>
+                <span class="text-sm font-semibold text-warning-700">Surcharge Applicable</span>
+              </div>
+              <p class="text-xs text-warning-600 mt-1">
+                Surcharge of {{ taxCalculation.surcharge.rate }}% applies on income above ₹50 Lakhs.
+                {{ taxCalculation.surcharge.marginalRelief ? 'Marginal relief has been applied.' : '' }}
+              </p>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Slab-wise Breakdown (collapsible) -->
+      <div class="bg-surface-50 rounded-xl shadow-sm border border-neutral-100 overflow-hidden">
+        <button (click)="showDeductions = !showDeductions"
+          class="w-full flex items-center justify-between p-5 text-left hover:bg-surface-100 transition-colors">
+          <div class="flex items-center gap-2">
+            <mat-icon class="text-tertiary-500">receipt_long</mat-icon>
+            <span class="font-semibold text-neutral-800">Slab-wise Tax Breakdown</span>
+          </div>
+          <mat-icon class="text-neutral-400 transition-transform"
+            [style.transform]="showDeductions ? 'rotate(180deg)' : ''">expand_more</mat-icon>
+        </button>
+
+        <div *ngIf="showDeductions" class="px-5 pb-5 border-t border-neutral-100 pt-4">
+          <div class="overflow-x-auto rounded-lg border border-neutral-200">
+            <table class="w-full">
+              <thead>
+                <tr class="bg-surface-200">
+                  <th class="px-4 py-3 text-left font-semibold text-neutral-600 text-sm">Slab</th>
+                  <th class="px-4 py-3 text-left font-semibold text-neutral-600 text-sm">Rate</th>
+                  <th class="px-4 py-3 text-right font-semibold text-neutral-600 text-sm">Income in Slab</th>
+                  <th class="px-4 py-3 text-right font-semibold text-neutral-600 text-sm">Tax</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-neutral-100">
+                <tr *ngFor="let row of taxCalculation.slabWiseTax" class="hover:bg-surface-100 transition-colors"
+                  [class.text-neutral-300]="row.incomeInSlab === 0">
+                  <td class="px-4 py-3 text-sm">{{ row.slab.description }}</td>
+                  <td class="px-4 py-3 text-sm" [class.text-success-500]="row.slab.rate === 0">
+                    {{ row.slab.rate === 0 ? 'Nil' : row.slab.rate + '%' }}
+                  </td>
+                  <td class="px-4 py-3 text-sm text-right">{{ formatCurrency(row.incomeInSlab) }}</td>
+                  <td class="px-4 py-3 text-sm text-right font-medium" [class.text-error-500]="row.taxOnSlab > 0">
+                    {{ formatCurrency(row.taxOnSlab) }}
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class="bg-surface-200 font-semibold">
+                  <td class="px-4 py-3 text-sm" colspan="2">Total</td>
+                  <td class="px-4 py-3 text-sm text-right">{{ formatCurrency(taxCalculation.taxableIncome) }}</td>
+                  <td class="px-4 py-3 text-sm text-right text-error-500">{{ formatCurrency(taxCalculation.incomeTax) }}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- No Income Message -->
-    <div *ngIf="!isLoading && getCurrentIncome() === 0" class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-6">
+    <!-- ═══════════ NO INCOME ═══════════ -->
+    <div *ngIf="!isLoading && getCurrentIncome() === 0"
+      class="bg-surface-50 rounded-xl shadow-sm border border-neutral-100 p-8 mb-6">
       <div class="text-center">
-        <mat-icon class="text-gray-400 text-6xl mb-4">account_balance_wallet</mat-icon>
-        <h3 class="text-xl font-semibold text-gray-700 mb-2">
+        <mat-icon class="text-neutral-300 !text-6xl mb-4">account_balance_wallet</mat-icon>
+        <h3 class="text-xl font-semibold text-neutral-600 mb-2">
           {{ useManualIncome ? 'No Income Entered' : 'No Income Transactions Found' }}
         </h3>
-        <p class="text-gray-500 mb-4">
-          {{ useManualIncome ? 'Please enter your annual income to see the tax calculation.' : 'We couldn\'t find any income transactions for FY ' + currentYear + '-' + (currentYear + 1) + '.' }}
+        <p class="text-neutral-400 mb-4 text-sm">
+          {{ useManualIncome
+          ? 'Enter your annual income above to see the tax calculation.'
+          : 'No income transactions found for FY ' + currentYear + '-' + (currentYear + 1) + '.' }}
         </p>
-        <p class="text-sm text-gray-400">
-          {{ useManualIncome ? 'Enter your income in the manual input field above.' : 'Add income transactions to see your tax calculation.' }}
+        <p class="text-xs text-neutral-300">
+          {{ useManualIncome ? 'Or try one of the example amounts.' : 'Switch to Manual Entry to calculate tax for any
+          amount.' }}
         </p>
       </div>
     </div>
 
-    <!-- New Regime Tax Slabs -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-      <h4 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-        <mat-icon class="text-purple-600 mr-3">table_chart</mat-icon>
-        New Tax Regime Slabs (FY {{ currentYear }}-{{ currentYear + 1 }})
+    <!-- ═══════════ TAX SLABS TABLE ═══════════ -->
+    <div class="bg-surface-50 rounded-xl shadow-sm border border-neutral-100 p-6 mb-6">
+      <h4 class="text-lg font-semibold text-neutral-900 mb-5 flex items-center gap-2">
+        <mat-icon class="text-tertiary-500">table_chart</mat-icon>
+        New Tax Regime Slabs — FY {{ currentYear }}-{{ currentYear + 1 }}
       </h4>
-      
-      <div class="overflow-x-auto rounded-lg border border-gray-200">
+
+      <div class="overflow-x-auto rounded-lg border border-neutral-200">
         <table class="w-full">
           <thead>
-            <tr class="bg-gray-50">
-              <th class="px-4 py-3 text-left font-semibold text-gray-700 text-sm">Income Range</th>
-              <th class="px-4 py-3 text-left font-semibold text-gray-700 text-sm">Tax Rate</th>
-              <th class="px-4 py-3 text-left font-semibold text-gray-700 text-sm">Cess</th>
-              <th class="px-4 py-3 text-left font-semibold text-gray-700 text-sm">Effective Rate</th>
+            <tr class="bg-surface-200">
+              <th class="px-4 py-3 text-left font-semibold text-neutral-600 text-sm">Income Range</th>
+              <th class="px-4 py-3 text-left font-semibold text-neutral-600 text-sm">Tax Rate</th>
+              <th class="px-4 py-3 text-left font-semibold text-neutral-600 text-sm">Cess</th>
+              <th class="px-4 py-3 text-left font-semibold text-neutral-600 text-sm">Effective Rate</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-200">
-            <tr class="hover:bg-gray-50 transition-colors">
-              <td class="px-4 py-3 text-sm">Up to ₹3,00,000</td>
-              <td class="px-4 py-3 text-green-600 font-medium text-sm">Nil</td>
-              <td class="px-4 py-3 text-sm">-</td>
-              <td class="px-4 py-3 text-green-600 font-medium text-sm">0%</td>
+          <tbody class="divide-y divide-neutral-200">
+            <tr class="hover:bg-surface-100 transition-colors">
+              <td class="px-4 py-3 text-sm">Up to ₹4,00,000</td>
+              <td class="px-4 py-3 text-success-500 font-medium text-sm">Nil</td>
+              <td class="px-4 py-3 text-sm text-neutral-400">—</td>
+              <td class="px-4 py-3 text-success-500 font-medium text-sm">0%</td>
             </tr>
-            <tr class="hover:bg-gray-50 transition-colors">
-              <td class="px-4 py-3 text-sm">₹3,00,001 - ₹6,00,000</td>
+            <tr class="hover:bg-surface-100 transition-colors">
+              <td class="px-4 py-3 text-sm">₹4,00,001 – ₹8,00,000</td>
               <td class="px-4 py-3 text-sm">5%</td>
-              <td class="px-4 py-3 text-sm">4%</td>
-              <td class="px-4 py-3 text-sm">5.2%</td>
+              <td class="px-4 py-3 text-sm text-neutral-400">4%</td>
+              <td class="px-4 py-3 text-sm">5.20%</td>
             </tr>
-            <tr class="hover:bg-gray-50 transition-colors">
-              <td class="px-4 py-3 text-sm">₹6,00,001 - ₹9,00,000</td>
+            <tr class="hover:bg-surface-100 transition-colors">
+              <td class="px-4 py-3 text-sm">₹8,00,001 – ₹12,00,000</td>
               <td class="px-4 py-3 text-sm">10%</td>
-              <td class="px-4 py-3 text-sm">4%</td>
-              <td class="px-4 py-3 text-sm">10.4%</td>
+              <td class="px-4 py-3 text-sm text-neutral-400">4%</td>
+              <td class="px-4 py-3 text-sm">10.40%</td>
             </tr>
-            <tr class="hover:bg-gray-50 transition-colors">
-              <td class="px-4 py-3 text-sm">₹9,00,001 - ₹12,00,000</td>
+            <tr class="hover:bg-surface-100 transition-colors">
+              <td class="px-4 py-3 text-sm">₹12,00,001 – ₹16,00,000</td>
               <td class="px-4 py-3 text-sm">15%</td>
-              <td class="px-4 py-3 text-sm">4%</td>
-              <td class="px-4 py-3 text-sm">15.6%</td>
+              <td class="px-4 py-3 text-sm text-neutral-400">4%</td>
+              <td class="px-4 py-3 text-sm">15.60%</td>
             </tr>
-            <tr class="hover:bg-gray-50 transition-colors">
-              <td class="px-4 py-3 text-sm">₹12,00,001 - ₹15,00,000</td>
+            <tr class="hover:bg-surface-100 transition-colors">
+              <td class="px-4 py-3 text-sm">₹16,00,001 – ₹20,00,000</td>
               <td class="px-4 py-3 text-sm">20%</td>
-              <td class="px-4 py-3 text-sm">4%</td>
-              <td class="px-4 py-3 text-sm">20.8%</td>
+              <td class="px-4 py-3 text-sm text-neutral-400">4%</td>
+              <td class="px-4 py-3 text-sm">20.80%</td>
             </tr>
-            <tr class="hover:bg-red-50 transition-colors bg-red-50">
-              <td class="px-4 py-3 font-medium text-sm">Above ₹15,00,000</td>
+            <tr class="hover:bg-surface-100 transition-colors">
+              <td class="px-4 py-3 text-sm">₹20,00,001 – ₹24,00,000</td>
+              <td class="px-4 py-3 text-sm">25%</td>
+              <td class="px-4 py-3 text-sm text-neutral-400">4%</td>
+              <td class="px-4 py-3 text-sm">26.00%</td>
+            </tr>
+            <tr class="hover:bg-surface-100 transition-colors bg-error-50">
+              <td class="px-4 py-3 font-medium text-sm">Above ₹24,00,000</td>
               <td class="px-4 py-3 font-medium text-sm">30%</td>
-              <td class="px-4 py-3 text-sm">4%</td>
-              <td class="px-4 py-3 font-medium text-sm">31.2%</td>
+              <td class="px-4 py-3 text-sm text-neutral-400">4%</td>
+              <td class="px-4 py-3 font-medium text-sm">31.20%</td>
             </tr>
           </tbody>
         </table>
       </div>
-      
-      <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-        <h5 class="font-semibold text-blue-800 mb-2">New Regime Benefits:</h5>
-        <ul class="text-sm text-blue-700 space-y-1">
-          <li>• Standard deduction of ₹50,000 automatically applied</li>
-          <li>• Lower tax rates compared to old regime</li>
-          <li>• No need to maintain investment proofs</li>
-          <li>• Simplified tax filing process</li>
-          <li>• No deductions except standard deduction</li>
-        </ul>
+
+      <!-- Section 87A + Surcharge note -->
+      <div class="mt-5 space-y-3">
+        <div class="p-4 bg-primary-50 rounded-lg border border-primary-200">
+          <h5 class="font-semibold text-primary-700 text-sm mb-1">Section 87A Rebate</h5>
+          <p class="text-sm text-primary-600">
+            If your <strong>taxable income</strong> is ≤ <strong>₹12,00,000</strong>, your tax is rebated to
+            <strong>₹0</strong>.
+            For salaried individuals with the ₹75,000 standard deduction, this means
+            <strong>zero tax up to ₹12,75,000</strong> gross income.
+          </p>
+        </div>
+
+        <div class="p-4 bg-warning-50 rounded-lg border border-warning-200">
+          <h5 class="font-semibold text-warning-700 text-sm mb-1">Surcharge (High Income)</h5>
+          <div class="text-sm text-warning-600 space-y-0.5">
+            <p>₹50L – ₹1Cr → 10% surcharge</p>
+            <p>₹1Cr – ₹2Cr → 15% surcharge</p>
+            <p>Above ₹2Cr → 25% surcharge (max for new regime)</p>
+            <p class="text-xs mt-1 text-warning-500">Marginal relief may apply at threshold boundaries.</p>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- ═══════════ DISCLAIMER ═══════════ -->
+    <div class="p-4 bg-surface-200 rounded-xl text-center">
+      <p class="text-xs text-neutral-400 leading-relaxed">
+        <mat-icon class="!text-xs align-middle mr-1">info</mat-icon>
+        This is an <strong>indicative calculation</strong> based on the New Tax Regime (Section 115BAC) for
+        FY {{ currentYear }}-{{ currentYear + 1 }}.
+        Actual tax may vary. Consult a tax professional for accurate filing.
+      </p>
+    </div>
   </div>
-</div> 
+</div>

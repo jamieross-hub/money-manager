@@ -1,5 +1,4 @@
-import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
-import { Auth } from '@angular/fire/auth';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription, take } from 'rxjs';
 import { Transaction } from '../../../../util/models/transaction.model';
@@ -19,22 +18,28 @@ import { CurrencyService } from '../../../../util/service/currency.service';
 })
 export class TaxComponent implements OnInit, OnDestroy {
 
-  // Tax calculation data
+  // Tax calculation
   taxCalculation: TaxCalculation | null = null;
 
   // Transaction data
   transactions: Transaction[] = [];
-  totalIncome: number = 0;
-  currentYear: number = new Date().getFullYear();
+  totalIncome = 0;
+  currentYear = new Date().getFullYear();
 
-  // Form data
+  // Form
   taxForm: FormGroup;
-  useManualIncome: boolean = false;
+  useManualIncome = false;
+  isSalaried = true;
 
-  // UI states
-  isLoading: boolean = false;
+  // UI
+  isLoading = false;
+  showInfo = false;
+  showDeductions = false;
 
   private subscriptions: Subscription[] = [];
+
+  // Example incomes for quick-fill
+  readonly exampleIncomes = [800000, 1200000, 1500000, 2500000];
 
   constructor(
     private userService: UserService,
@@ -42,7 +47,8 @@ export class TaxComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private store: Store<AppState>,
     private fb: FormBuilder,
-    private currencyService: CurrencyService
+    private currencyService: CurrencyService,
+    private cdr: ChangeDetectorRef
   ) {
     this.taxForm = this.fb.group({
       manualIncome: [0, [Validators.required, Validators.min(0)]]
@@ -57,125 +63,132 @@ export class TaxComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-  /**
-   * Load transactions from the service
-   */
+  // ──────────────────────────────────────────
+  // Data Loading
+  // ──────────────────────────────────────────
+
   private loadTransactions(): void {
     const userId = this.userService.getCurrentUserId();
-    if (userId) {
-      const sub = this.store.select(TransactionsSelectors.selectAllTransactions).pipe(take(1)).subscribe({
+    if (!userId) return;
+
+    this.isLoading = true;
+    this.cdr.markForCheck();
+
+    const sub = this.store.select(TransactionsSelectors.selectAllTransactions)
+      .pipe(take(1))
+      .subscribe({
         next: (transactions) => {
           this.transactions = transactions;
           this.calculateTaxFromTransactions();
         },
-        error: (error) => {
-          console.error('Error loading transactions:', error);
+        error: (err) => {
+          console.error('Error loading transactions:', err);
           this.notificationService.error('Failed to load transaction data');
+          this.isLoading = false;
+          this.cdr.markForCheck();
         }
       });
-      this.subscriptions.push(sub);
-    }
+    this.subscriptions.push(sub);
   }
 
-  /**
-   * Calculate tax based on transactions
-   */
   private calculateTaxFromTransactions(): void {
-    this.isLoading = true;
-
     try {
-      // Calculate total income from current year transactions
       this.totalIncome = this.taxService.calculateTotalIncome(this.transactions, this.currentYear);
-
-      // Calculate new regime tax
       this.calculateTax();
 
       if (this.totalIncome > 0) {
-        this.notificationService.success('Tax calculation completed successfully!');
+        this.notificationService.success('Tax calculation completed!');
       }
-
     } catch (error) {
       console.error('Error calculating tax:', error);
       this.notificationService.error('Failed to calculate tax.');
     } finally {
       this.isLoading = false;
+      this.cdr.markForCheck();
     }
   }
 
-  /**
-   * Calculate tax based on current income source
-   */
+  // ──────────────────────────────────────────
+  // Calculation
+  // ──────────────────────────────────────────
+
   private calculateTax(): void {
-    const incomeToUse = this.getCurrentIncome();
-    this.taxCalculation = this.taxService.calculateNewRegimeTax(incomeToUse);
+    const income = this.getCurrentIncome();
+    this.taxCalculation = this.taxService.calculateNewRegimeTax(income, this.isSalaried);
+    this.cdr.markForCheck();
   }
 
-  /**
-   * Toggle between manual and automatic income
-   */
+  // ──────────────────────────────────────────
+  // User Actions
+  // ──────────────────────────────────────────
+
   toggleIncomeSource(): void {
     this.useManualIncome = !this.useManualIncome;
 
     if (this.useManualIncome) {
-      // Set manual income to current total income if available, otherwise 0
-      const initialValue = this.totalIncome > 0 ? this.totalIncome : 0;
-      this.taxForm.patchValue({ manualIncome: initialValue });
-      // Trigger calculation with the new value
-      setTimeout(() => this.calculateTax(), 0);
-    } else {
-      // Switch back to auto mode
-      this.calculateTax();
+      const initial = this.totalIncome > 0 ? this.totalIncome : 0;
+      this.taxForm.patchValue({ manualIncome: initial });
     }
+    this.calculateTax();
   }
 
-  /**
-   * Handle manual income input change
-   */
+  toggleSalaried(): void {
+    this.isSalaried = !this.isSalaried;
+    this.calculateTax();
+  }
+
   onManualIncomeChange(): void {
     if (this.useManualIncome) {
-      const manualIncome = this.taxForm.value.manualIncome;
-      // Calculate tax if we have a valid number (not null, undefined, or negative)
-      if (manualIncome !== null && manualIncome !== undefined && manualIncome >= 0) {
+      const val = this.taxForm.value.manualIncome;
+      if (val !== null && val !== undefined && val >= 0) {
         this.calculateTax();
       }
     }
   }
 
-  /**
-   * Handle input event for real-time calculation
-   */
   onInputChange(event: any): void {
     const value = event.target.value;
     if (this.useManualIncome && value !== '') {
-      const numValue = parseFloat(value);
-      if (!isNaN(numValue) && numValue >= 0) {
-        this.taxForm.patchValue({ manualIncome: numValue });
+      const num = parseFloat(value);
+      if (!isNaN(num) && num >= 0) {
+        this.taxForm.patchValue({ manualIncome: num });
         this.calculateTax();
       }
     }
   }
 
-  /**
-   * Get current income being used for calculation
-   */
+  setExampleIncome(amount: number): void {
+    this.useManualIncome = true;
+    this.taxForm.patchValue({ manualIncome: amount });
+    this.calculateTax();
+  }
+
+  // ──────────────────────────────────────────
+  // Getters
+  // ──────────────────────────────────────────
+
   getCurrentIncome(): number {
     if (this.useManualIncome) {
-      const manualIncome = this.taxForm.value.manualIncome;
-      return manualIncome !== null && manualIncome !== undefined && manualIncome >= 0 ? manualIncome : 0;
+      const val = this.taxForm.value.manualIncome;
+      return val !== null && val !== undefined && val >= 0 ? val : 0;
     }
     return this.totalIncome;
   }
 
-  /**
-   * Format currency for display
-   */
   formatCurrency(amount: number): string {
     return this.currencyService.formatAmount(amount);
   }
 
-  /**
-   * Get tax slab for current income
-   */
+  formatLakhs(amount: number): string {
+    if (amount >= 10000000) {
+      return `₹${(amount / 10000000).toFixed(1)}Cr`;
+    }
+    if (amount >= 100000) {
+      return `₹${(amount / 100000).toFixed(1)}L`;
+    }
+    return `₹${amount.toLocaleString('en-IN')}`;
+  }
+
   getCurrentTaxSlab(): string {
     if (!this.taxCalculation) return 'N/A';
 
@@ -187,14 +200,26 @@ export class TaxComponent implements OnInit, OnDestroy {
         return `${slab.description} (${slab.rate}%)`;
       }
     }
-
-    return 'Above ₹15,00,000 (30%)';
+    return 'Above ₹24,00,000 (30%)';
   }
 
-  /**
-   * Check if manual income form is valid
-   */
   isManualIncomeValid(): boolean {
     return this.taxForm.get('manualIncome')?.valid || false;
   }
-} 
+
+  get standardDeduction(): number {
+    return this.taxService.STANDARD_DEDUCTION;
+  }
+
+  get rebateLimit(): number {
+    return this.taxService.REBATE_87A_LIMIT;
+  }
+
+  get effectiveRebateLimit(): number {
+    return this.taxService.REBATE_87A_LIMIT + this.taxService.STANDARD_DEDUCTION;
+  }
+
+  get slabs() {
+    return this.taxService.getTaxSlabs('new');
+  }
+}
