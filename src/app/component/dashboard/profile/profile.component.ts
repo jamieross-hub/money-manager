@@ -1,13 +1,11 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, effect } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { Router } from '@angular/router';
-import { Subject, Observable, Subscription } from 'rxjs';
 import { TranslationService, Language } from 'src/app/util/service/translation.service';
-import {
-  User,
-} from 'src/app/util/models';
+import { User } from 'src/app/util/models';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { ValidationService } from 'src/app/util/service/validation.service';
 import { MatDialog } from '@angular/material/dialog';
@@ -27,9 +25,7 @@ import {
 import {
   UserRole,
   CurrencyCode,
-  LanguageCode
 } from 'src/app/util/config/enums';
-import { BreakpointObserver } from '@angular/cdk/layout';
 import { QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { BackupRestoreService } from 'src/app/util/service/backupRestore.service';
 import { SplitwiseService } from 'src/app/modules/splitwise/services/splitwise.service';
@@ -77,23 +73,29 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProfileComponent implements OnInit, OnDestroy {
-  // Observables from store
-  profile$: Observable<User | null>;
-  profileLoading$: Observable<boolean>;
-  profileError$: Observable<any>;
+export class ProfileComponent {
+  // Injected services via inject()
+  private readonly fb = inject(FormBuilder);
+  private readonly auth = inject(Auth);
+  private readonly router = inject(Router);
+  private readonly notificationService = inject(NotificationService);
+  private readonly validationService = inject(ValidationService);
+  private readonly dialog = inject(MatDialog);
+  private readonly dateService = inject(DateService);
+  private readonly store = inject(Store<AppState>);
+  readonly breakpointService = inject(BreakpointService);
+  private readonly userService = inject(UserService);
+  private readonly translationService = inject(TranslationService);
+  private readonly splitwiseService = inject(SplitwiseService);
+  private readonly backupRestoreService = inject(BackupRestoreService);
 
-  profileForm: FormGroup;
-  isLoading = false;
-  isEditing = false;
-  currentUser: any;
-  userProfile: User | null = null;
+  // ─── Signals (State) ───────────────────────────────────────────────
+  readonly isLoading = signal(false);
+  readonly isEditing = signal(false);
+  readonly userProfile = signal<User | null>(null);
+  readonly familyGroup = signal<SplitwiseGroup | null>(null);
 
-  // Use configurations from config.ts
-  currencies = Object.values(CurrencyCode);
-  defaultCurrency = APP_CONFIG.REGIONAL.CURRENCY_DEFAULT;
-
-  quickActionsFabConfig: QuickActionsFabConfig = {
+  readonly quickActionsFabConfig = signal<QuickActionsFabConfig>({
     title: 'Profile',
     mainButtonIcon: 'edit',
     mainButtonColor: 'primary',
@@ -104,12 +106,29 @@ export class ProfileComponent implements OnInit, OnDestroy {
     autoHideDelay: 3000,
     theme: 'auto',
     actions: [],
-    onMainButtonClick: () => this.isEditing ? this.saveProfile() : this.toggleEdit(),
-  };
+    onMainButtonClick: () => this.isEditing() ? this.saveProfile() : this.toggleEdit(),
+  });
 
+  // ─── Computed Signals ──────────────────────────────────────────────
+  readonly fullName = computed(() => {
+    const profile = this.userProfile();
+    if (profile) {
+      return `${profile.firstName} ${profile.lastName}`.trim() || 'User';
+    }
+    return 'User';
+  });
 
+  // ─── Reactive Form ────────────────────────────────────────────────
+  readonly profileForm: FormGroup;
+  readonly currentUser: any;
 
-  countries = Object.entries(APP_CONFIG.REGIONAL.COUNTRY_MAPPING).map(([code, config]) => ({
+  // ─── Static Config ────────────────────────────────────────────────
+  readonly currencies = Object.values(CurrencyCode);
+  readonly defaultCurrency = APP_CONFIG.REGIONAL.CURRENCY_DEFAULT;
+  readonly validation = APP_CONFIG.VALIDATION;
+  timezones = [...TIMEZONES];
+
+  readonly countries = Object.entries(APP_CONFIG.REGIONAL.COUNTRY_MAPPING).map(([code, config]) => ({
     code,
     languageName: (config as any).languages?.[0]?.name || code,
     countryName: (config as any).countryName || code,
@@ -117,49 +136,22 @@ export class ProfileComponent implements OnInit, OnDestroy {
     currency: (config as any).currency
   })).sort((a, b) => a.countryName.localeCompare(b.countryName));
 
-  languages = Object.values(APP_CONFIG.REGIONAL.COUNTRY_MAPPING)
+  readonly languages = Object.values(APP_CONFIG.REGIONAL.COUNTRY_MAPPING)
     .flatMap(config => (config as any).languages || [])
     .filter((v, i, a) => a.findIndex(t => t.code === v.code) === i)
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  appViewOptions = [
+  readonly appViewOptions = [
     { value: 'WEEKLY', label: 'PROFILE.APP_VIEW_WEEKLY' },
     { value: 'MONTHLY', label: 'PROFILE.APP_VIEW_MONTHLY' },
     { value: 'YEARLY', label: 'PROFILE.APP_VIEW_YEARLY' }
   ];
 
-
-
-  // Validation constants from config
-  validation = APP_CONFIG.VALIDATION;
-  timezones = TIMEZONES;
-  isMobile = false;
-
-  private destroy$ = new Subject<void>();
-  private subscriptions = new Subscription();
-
-  constructor(
-    private fb: FormBuilder,
-    private auth: Auth,
-    private router: Router,
-    private notificationService: NotificationService,
-    private validationService: ValidationService,
-    private dialog: MatDialog,
-    private dateService: DateService,
-    private store: Store<AppState>,
-    public breakpointService: BreakpointService,
-    private userService: UserService,
-    private translationService: TranslationService,
-    private splitwiseService: SplitwiseService,
-    private backupRestoreService: BackupRestoreService,
-    private cdr: ChangeDetectorRef
-  ) {
+  constructor() {
     this.currentUser = this.auth.currentUser;
-    // Initialize selectors
-    this.profile$ = this.store.select(ProfileSelectors.selectProfile);
-    this.profileLoading$ = this.store.select(ProfileSelectors.selectProfileLoading);
-    this.profileError$ = this.store.select(ProfileSelectors.selectProfileError);
+    this.ensureCurrentTimezoneInList();
 
+    // Initialize form
     this.profileForm = this.fb.group({
       firstName: [{ value: '', disabled: true }, this.validationService.getProfileNameValidators()],
       lastName: [{ value: '', disabled: true }, this.validationService.getProfileNameValidators()],
@@ -172,7 +164,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         defaultCurrency: [{ value: this.defaultCurrency, disabled: true }, Validators.required],
         timezone: [{ value: 'UTC', disabled: true }, Validators.required],
         language: [{ value: '', disabled: true }, Validators.required],
-        country: [{ value: 'IN', disabled: true }], // Default to IN or derive from language
+        country: [{ value: 'IN', disabled: true }],
         notifications: [{ value: true, disabled: true }],
         emailUpdates: [{ value: true, disabled: true }],
         budgetAlerts: [{ value: true, disabled: true }],
@@ -181,57 +173,64 @@ export class ProfileComponent implements OnInit, OnDestroy {
       }),
     });
 
-    // Listen to country changes to sync language and currency
-    // this.profileForm.get('preferences.country')?.valueChanges.subscribe(countryCode => {
-    //   if (this.isEditing && countryCode) {
-    //     const country = APP_CONFIG.REGIONAL.COUNTRY_MAPPING[countryCode as keyof typeof APP_CONFIG.REGIONAL.COUNTRY_MAPPING];
-    //     if (country) {
-    //       this.profileForm.get('preferences')?.patchValue({
-    //         language: (country as any).language,
-    //         defaultCurrency: (country as any).currency
-    //       }, { emitEvent: false });
-    //     }
-    //   }
-    // });
-  }
-
-  ngOnInit(): void {
-    // Add current user's timezone to list if missing
-    this.ensureCurrentTimezoneInList();
-
-    // Subscribe to store data (works for both real and guest users now)
-    this.subscribeToStoreData();
-
-    // Dispatch action to load profile
+    // Dispatch profile load
     const uid = this.userService.isGuestUser() ? 'offline-guest' : this.currentUser?.uid;
     if (uid) {
       this.store.dispatch(ProfileActions.loadProfile({ userId: uid }));
     }
 
-    // Also listen to userAuth$ for direct updates (important for guests)
-    this.subscriptions.add(
-      this.userService.userAuth$.subscribe(user => {
-        if (user) {
-          if (this.userService.isGuestUser() && !this.userProfile) {
-            this.userProfile = this.mapUserToProfile(user);
-            this.populateForm();
-          }
-          // Load family group if exists
-          if (user.preferences?.familyGroupId) {
-            this.loadFamilyGroup(user.preferences.familyGroupId);
-          }
+    // React to store profile changes
+    this.store.select(ProfileSelectors.selectProfile).pipe(
+      takeUntilDestroyed()
+    ).subscribe(profile => {
+      if (profile) {
+        this.userProfile.set(this.mapUserToProfile(profile));
+        this.populateForm();
+      }
+    });
+
+    // React to store loading changes
+    this.store.select(ProfileSelectors.selectProfileLoading).pipe(
+      takeUntilDestroyed()
+    ).subscribe(loading => {
+      this.isLoading.set(loading);
+    });
+
+    // React to store error changes
+    this.store.select(ProfileSelectors.selectProfileError).pipe(
+      takeUntilDestroyed()
+    ).subscribe(error => {
+      if (error) {
+        console.error('Error loading profile:', error);
+        this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
+      }
+    });
+
+    // Listen to userAuth$ for direct updates (important for guests)
+    this.userService.userAuth$.pipe(
+      takeUntilDestroyed()
+    ).subscribe(user => {
+      if (user) {
+        if (this.userService.isGuestUser() && !this.userProfile()) {
+          this.userProfile.set(this.mapUserToProfile(user));
+          this.populateForm();
         }
-        this.cdr.markForCheck();
-      })
-    );
+        if (user.preferences?.familyGroupId) {
+          this.loadFamilyGroup(user.preferences.familyGroupId);
+        }
+      }
+    });
   }
 
-  familyGroup$: Observable<SplitwiseGroup | null> = new Subject<SplitwiseGroup | null>();
+  // ─── Family Group ──────────────────────────────────────────────────
 
   private loadFamilyGroup(groupId: string): void {
     if (!groupId) return;
-    this.familyGroup$ = this.splitwiseService.getGroup(groupId);
-    this.cdr.markForCheck();
+    this.splitwiseService.getGroup(groupId).pipe(
+      takeUntilDestroyed()
+    ).subscribe(group => {
+      this.familyGroup.set(group);
+    });
   }
 
   async createFamilyGroup(): Promise<void> {
@@ -243,12 +242,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe(async (result: CreateGroupRequest) => {
       if (result) {
         try {
-          this.isLoading = true;
-          // 1. Create the group
+          this.isLoading.set(true);
           const group = await this.splitwiseService.createGroup(result, this.currentUser.uid).toPromise();
 
           if (group && group.id) {
-            // 2. Update user profile with familyGroupId
             await this.updateFamilyGroupId(group.id);
             this.notificationService.success('Family group created successfully');
             this.loadFamilyGroup(group.id);
@@ -257,36 +254,36 @@ export class ProfileComponent implements OnInit, OnDestroy {
           console.error('Error creating family group:', error);
           this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
         } finally {
-          this.isLoading = false;
+          this.isLoading.set(false);
         }
       }
     });
   }
 
   async updateFamilyGroupId(groupId: string): Promise<void> {
-    if (!this.userProfile) return;
+    const profile = this.userProfile();
+    if (!profile) return;
 
     const updatedUser: User = {
-      ...this.userProfile,
+      ...profile,
       preferences: {
-        ...this.userProfile.preferences,
+        ...profile.preferences,
         familyGroupId: groupId,
-        // Ensure required properties are present
-        defaultCurrency: this.userProfile.preferences?.defaultCurrency || this.defaultCurrency,
-        timezone: this.userProfile.preferences?.timezone || 'UTC',
-        notifications: this.userProfile.preferences?.notifications ?? true,
-        emailUpdates: this.userProfile.preferences?.emailUpdates ?? true,
-        budgetAlerts: this.userProfile.preferences?.budgetAlerts ?? true,
+        defaultCurrency: profile.preferences?.defaultCurrency || this.defaultCurrency,
+        timezone: profile.preferences?.timezone || 'UTC',
+        notifications: profile.preferences?.notifications ?? true,
+        emailUpdates: profile.preferences?.emailUpdates ?? true,
+        budgetAlerts: profile.preferences?.budgetAlerts ?? true,
       }
     };
 
     if (this.userService.isGuestUser()) {
       this.userService.storageService.setItem(`user-data-${updatedUser.uid}`, updatedUser);
       this.userService.userAuth$.next(updatedUser);
-      this.userProfile = updatedUser;
+      this.userProfile.set(updatedUser);
     } else {
       this.store.dispatch(ProfileActions.updateProfile({
-        userId: this.userProfile.uid,
+        userId: profile.uid,
         profile: updatedUser
       }));
     }
@@ -295,6 +292,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
   viewFamilyGroup(groupId: string): void {
     this.router.navigate(['/dashboard/splitwise/group', groupId]);
   }
+
+  // ─── Timezone ──────────────────────────────────────────────────────
 
   private ensureCurrentTimezoneInList(): void {
     const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -306,40 +305,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  // Subscribe to store data for backward compatibility
-  private subscribeToStoreData(): void {
-    this.subscriptions.add(
-      this.profile$.subscribe(profile => {
-        if (profile) {
-          this.userProfile = this.mapUserToProfile(profile);
-          this.populateForm();
-        }
-        this.cdr.markForCheck();
-      })
-    );
-
-    this.subscriptions.add(
-      this.profileLoading$.subscribe(loading => {
-        this.isLoading = loading;
-        this.cdr.markForCheck();
-      })
-    );
-
-    this.subscriptions.add(
-      this.profileError$.subscribe(error => {
-        if (error) {
-          console.error('Error loading profile:', error);
-          this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
-        }
-      })
-    );
-  }
+  // ─── Form Helpers ──────────────────────────────────────────────────
 
   private mapUserToProfile(user: User): User {
     return {
@@ -350,7 +316,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
       phone: user.phone || '',
       dateOfBirth: this.dateService.toDate(user.dateOfBirth || 0) || new Date(),
       occupation: user.occupation || '',
-
       monthlyIncome: user.monthlyIncome || 0,
       photoURL: user.photoURL || '',
       displayName: user.displayName || '',
@@ -372,25 +337,26 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   private populateForm(): void {
-    if (this.userProfile) {
+    const profile = this.userProfile();
+    if (profile) {
       this.profileForm.patchValue({
-        firstName: this.userProfile.firstName,
-        lastName: this.userProfile.lastName,
-        email: this.userProfile.email,
-        phone: this.userProfile.phone || '',
-        dateOfBirth: this.userProfile.dateOfBirth || '',
-        occupation: this.userProfile.occupation || '',
-        monthlyIncome: this.userProfile.monthlyIncome || 0,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        email: profile.email,
+        phone: profile.phone || '',
+        dateOfBirth: profile.dateOfBirth || '',
+        occupation: profile.occupation || '',
+        monthlyIncome: profile.monthlyIncome || 0,
         preferences: {
-          defaultCurrency: this.userProfile.preferences?.defaultCurrency || this.defaultCurrency,
-          timezone: this.userProfile.preferences?.timezone || 'UTC',
-          language: this.userProfile.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT,
-          country: this.userProfile.preferences?.country || this.deriveCountryFromLanguage(this.userProfile.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT),
-          notifications: this.userProfile.preferences?.notifications || true,
-          emailUpdates: this.userProfile.preferences?.emailUpdates || true,
-          budgetAlerts: this.userProfile.preferences?.budgetAlerts || true,
-          categoryListViewMode: this.userProfile.preferences?.categoryListViewMode || false,
-          appView: this.userProfile.preferences?.appView || 'MONTHLY',
+          defaultCurrency: profile.preferences?.defaultCurrency || this.defaultCurrency,
+          timezone: profile.preferences?.timezone || 'UTC',
+          language: profile.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT,
+          country: profile.preferences?.country || this.deriveCountryFromLanguage(profile.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT),
+          notifications: profile.preferences?.notifications || true,
+          emailUpdates: profile.preferences?.emailUpdates || true,
+          budgetAlerts: profile.preferences?.budgetAlerts || true,
+          categoryListViewMode: profile.preferences?.categoryListViewMode || false,
+          appView: profile.preferences?.appView || 'MONTHLY',
         },
       });
 
@@ -405,41 +371,40 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
   }
 
+  // ─── Edit / Save ──────────────────────────────────────────────────
+
   toggleEdit(): void {
-    if (this.isEditing) {
-      // Trying to save
+    if (this.isEditing()) {
       this.saveProfile();
     } else {
-      // Trying to edit
-      this.isEditing = true;
+      this.isEditing.set(true);
       this.profileForm.enable();
-      this.quickActionsFabConfig = {
-        ...this.quickActionsFabConfig,
+      this.quickActionsFabConfig.update(config => ({
+        ...config,
         mainButtonIcon: 'save',
         mainButtonTooltip: 'Save Profile'
-      };
+      }));
     }
   }
 
   async saveProfile(): Promise<void> {
     if (this.profileForm.invalid) {
       this.profileForm.markAllAsTouched();
-      this.notificationService.warning(
-        ERROR_MESSAGES.VALIDATION.REQUIRED_FIELD
-      );
+      this.notificationService.warning(ERROR_MESSAGES.VALIDATION.REQUIRED_FIELD);
       return;
     }
 
     try {
-      this.isLoading = true;
+      this.isLoading.set(true);
       const formValue = this.profileForm.value;
+      const profile = this.userProfile();
 
-      if (this.userProfile) {
+      if (profile) {
         const updatedUser: User = {
-          uid: this.userProfile.uid,
+          uid: profile.uid,
           email: formValue.email,
-          role: this.userProfile.role || UserRole.FREE,
-          createdAt: this.userProfile.createdAt,
+          role: profile.role || UserRole.FREE,
+          createdAt: profile.createdAt,
           preferences: formValue.preferences,
           firstName: formValue.firstName,
           lastName: formValue.lastName,
@@ -451,21 +416,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
         };
 
         if (this.userService.isGuestUser()) {
-          // For guest users, save to storage and update userAuth$
           this.userService.storageService.setItem(`user-data-${updatedUser.uid}`, updatedUser);
           this.userService.userAuth$.next(updatedUser);
-
-          // Update local userProfile
-          this.userProfile = updatedUser;
-
+          this.userProfile.set(updatedUser);
           this.notificationService.success('Profile updated successfully (saved locally)');
         } else {
-          // For authenticated users, dispatch to store (which will update Firestore)
           this.store.dispatch(ProfileActions.updateProfile({
-            userId: this.userProfile.uid,
+            userId: profile.uid,
             profile: updatedUser
           }));
-
           this.notificationService.success(SUCCESS_MESSAGES.GENERAL.UPDATED);
         }
 
@@ -474,47 +433,56 @@ export class ProfileComponent implements OnInit, OnDestroy {
           this.translationService.setLanguage(updatedUser.preferences.language as Language);
         }
 
-        this.isEditing = false;
+        this.isEditing.set(false);
         this.profileForm.disable();
 
-        // Reset FAB state
-        this.quickActionsFabConfig = {
-          ...this.quickActionsFabConfig,
+        this.quickActionsFabConfig.update(config => ({
+          ...config,
           mainButtonIcon: 'edit',
           mainButtonTooltip: 'Edit Profile'
-        };
+        }));
       }
     } catch (error) {
       console.error('Error saving profile:', error);
       this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
     } finally {
-      this.isLoading = false;
+      this.isLoading.set(false);
     }
   }
 
+  cancelEdit(): void {
+    this.populateForm();
+    this.isEditing.set(false);
+    this.profileForm.disable();
+
+    this.quickActionsFabConfig.update(config => ({
+      ...config,
+      mainButtonIcon: 'edit',
+      mainButtonTooltip: 'Edit Profile'
+    }));
+
+    this.notificationService.info('Changes cancelled');
+  }
+
+  // ─── Auth Actions ──────────────────────────────────────────────────
+
   async signInWithGoogle(): Promise<void> {
     try {
-      this.isLoading = true;
+      this.isLoading.set(true);
       await this.userService.signInWithGoogle();
-
-      // After successful sign-in, the auth state change listener in UserService 
-      // will update the userAuth$ subject, which we are subscribed to.
-      // However, we might want to manually refresh the profile or navigate if needed.
-      // For now, the existing subscription should handle the UI update.
-
       this.notificationService.success('Successfully signed in with Google');
       window.location.reload();
     } catch (error) {
       console.error('Error signing in with Google:', error);
       this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
     } finally {
-      this.isLoading = false;
+      this.isLoading.set(false);
     }
   }
 
   async logout(): Promise<void> {
     try {
-      this.isLoading = true;
+      this.isLoading.set(true);
       await this.userService.logout();
       this.notificationService.success('Logged out successfully');
       window.location.reload();
@@ -522,23 +490,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
       console.error('Error logging out:', error);
       this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
     } finally {
-      this.isLoading = false;
+      this.isLoading.set(false);
     }
-  }
-
-  cancelEdit(): void {
-    this.populateForm();
-    this.isEditing = false;
-    this.profileForm.disable();
-
-    // Reset FAB state
-    this.quickActionsFabConfig = {
-      ...this.quickActionsFabConfig,
-      mainButtonIcon: 'edit',
-      mainButtonTooltip: 'Edit Profile'
-    };
-
-    this.notificationService.info('Changes cancelled');
   }
 
   async deleteAccount(): Promise<void> {
@@ -568,6 +521,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       });
       return;
     }
+
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
@@ -583,8 +537,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
         try {
-          this.isLoading = true;
-          // Delete user account from Firebase Auth
+          this.isLoading.set(true);
           await this.currentUser.delete();
           this.notificationService.success('Account deleted successfully');
           this.router.navigate(['/sign-in']);
@@ -592,23 +545,21 @@ export class ProfileComponent implements OnInit, OnDestroy {
           console.error('Error deleting account:', error);
           this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
         } finally {
-          this.isLoading = false;
+          this.isLoading.set(false);
         }
       }
     });
   }
 
+  // ─── Export / Import ──────────────────────────────────────────────
+
   async exportData(): Promise<void> {
     try {
-      // Check if export functionality is enabled
       if (!APP_CONFIG.FEATURES.EXPORT_FUNCTIONALITY) {
         this.notificationService.warning(ERROR_MESSAGES.PERMISSION.FEATURE_NOT_AVAILABLE);
         return;
       }
-
-      // Use the newly implemented local backup service
       await this.backupRestoreService.exportData();
-
       this.notificationService.success(SUCCESS_MESSAGES.BACKUP.EXPORT_SUCCESS);
     } catch (error) {
       console.error('Error exporting data:', error);
@@ -623,43 +574,31 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
   }
 
-  async onFileSelected(event: any): Promise<void> {
+  onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Reset input value so same file can be selected again
     event.target.value = '';
+    this.isLoading.set(true);
 
-    this.isLoading = true;
     this.backupRestoreService.handleRestore(file).subscribe({
       next: (result) => {
         if (result.success) {
           this.notificationService.success(result.message);
-        } else if (result.message) { // Only show error if message is present (user cancellation returns empty)
+        } else if (result.message) {
           this.notificationService.error(result.message);
         }
-        this.isLoading = false;
-        this.cdr.markForCheck();
+        this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Restore failed:', error);
         this.notificationService.error('BACKUP.IMPORT_FAILED');
-        this.isLoading = false;
-        this.cdr.markForCheck();
+        this.isLoading.set(false);
       }
     });
   }
 
-  getFullName(): string {
-    if (this.userProfile) {
-      return `${this.userProfile.firstName} ${this.userProfile.lastName}`.trim();
-    }
-    return 'User';
-  }
-
-  // getCurrencySymbol(currencyCode: string): string {
-  //   return CurrencyPipe.getCurrencySymbol(currencyCode);
-  // }
+  // ─── Utility Methods ──────────────────────────────────────────────
 
   getTimezoneLabel(timezoneValue: string): string {
     const timezone = this.timezones.find((t) => t.value === timezoneValue);
@@ -681,55 +620,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   getFormattedDate(date: any): string {
-    if (!date) {
-      return 'N/A';
-    }
-
-    // Handle Firestore Timestamp
+    if (!date) return 'N/A';
     if (date?.seconds) {
       return dayjs(date.seconds * 1000).format('MMM DD, YYYY');
     }
-
-    // Handle Date object or timestamp
     return dayjs(date).format('MMM DD, YYYY');
   }
 
-  // Error handling methods
-  getFirstNameError(): string {
-    const control = this.profileForm.get('firstName');
-    return control ? this.validationService.getProfileNameError(control) : '';
-  }
-
-  getLastNameError(): string {
-    const control = this.profileForm.get('lastName');
-    return control ? this.validationService.getProfileNameError(control) : '';
-  }
-
-  getEmailError(): string {
-    const control = this.profileForm.get('email');
-    return control ? this.validationService.getProfileEmailError(control) : '';
-  }
-
-  getPhoneError(): string {
-    const control = this.profileForm.get('phone');
-    return control ? this.validationService.getProfilePhoneError(control) : '';
-  }
-
-  getOccupationError(): string {
-    const control = this.profileForm.get('occupation');
-    return control ? this.validationService.getProfileOccupationError(control) : '';
-  }
-
-  getIncomeError(): string {
-    const control = this.profileForm.get('monthlyIncome');
-    return control ? this.validationService.getProfileIncomeError(control) : '';
-  }
-
-  /**
-   * Check if current user is in guest mode
-   */
   isGuestMode(): boolean {
     return this.userService.isGuestUser();
   }
-
 }

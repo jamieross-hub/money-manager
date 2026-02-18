@@ -664,192 +664,105 @@ export const TIMEZONES = [
 
 
 // Available icons for category selection
-export const CATEGORY_ICONS: string[] = [
-  // 💰 Finance & Budgeting
-  'account_balance',
-  'account_balance_wallet',
-  'calculate',
-  'monetization_on',
-  'payments',
-  'receipt',
-  'receipt_long',
-  'savings',
-  'trending_up',
+export interface CategoryIcon {
+  icon: string;
+  name: string;
+}
 
-  // 🛒 Expenses & Purchases
-  'card_giftcard',
-  'local_mall',
-  'local_offer',
-  'production_quantity_limits',
-  'sell',
-  'shopping_bag',
-  'shopping_cart',
-  'shoppingmode',
-  'store',
-  'storefront',
+export const CATEGORY_ICONS: CategoryIcon[] = [
+  // 💰 Finance & Budgeting
+  { icon: 'account_balance', name: 'Bank' },
+  { icon: 'account_balance_wallet', name: 'Wallet' },
+  { icon: 'monetization_on', name: 'Money' },
+  { icon: 'payments', name: 'Payments' },
+  { icon: 'receipt', name: 'Receipt' },
+  { icon: 'receipt_long', name: 'Bills' },
+  { icon: 'savings', name: 'Savings' },
+  { icon: 'trending_up', name: 'Growth' },
+  { icon: 'attach_money', name: 'Cash' },
+
+  // 🛒 Shopping & Purchases
+  { icon: 'card_giftcard', name: 'Gift Card' },
+  { icon: 'local_offer', name: 'Deals' },
+  { icon: 'shopping_bag', name: 'Shopping Bag' },
+  { icon: 'shopping_cart', name: 'Shopping' },
+  { icon: 'store', name: 'Store' },
+  { icon: 'storefront', name: 'Market' },
 
   // 🍽️ Food & Dining
-  'brunch_dining',
-  'dining',
-  'fastfood',
-  'liquor',
-  'local_cafe',
-  'local_dining',
-  'ramen_dining',
-  'restaurant',
+  { icon: 'fastfood', name: 'Fast Food' },
+  { icon: 'liquor', name: 'Drinks' },
+  { icon: 'local_cafe', name: 'Cafe' },
+  { icon: 'local_dining', name: 'Dining' },
+  { icon: 'restaurant', name: 'Restaurant' },
 
   // 🚗 Transportation & Travel
-  'airport_shuttle',
-  'car_repair',
-  'commute',
-  'directions_boat',
-  'directions_bus',
-  'directions_car',
-  'directions_railway',
-  'directions_subway',
-  'flight',
-  'train',
-  'two_wheeler',
+  { icon: 'commute', name: 'Commute' },
+  { icon: 'directions_bus', name: 'Bus' },
+  { icon: 'directions_car', name: 'Car' },
+  { icon: 'flight', name: 'Flight' },
+  { icon: 'two_wheeler', name: 'Bike' },
+  { icon: 'local_gas_station', name: 'Fuel' },
 
   // 🏠 Home & Bills
-  'cable',
-  'chair',
-  'electrical_services',
-  'foundation',
-  'home',
-  'home_repair_service',
-  'kitchen',
-  'lightbulb',
-  'phone',
-  'water_drop',
-  'wifi',
+  { icon: 'home', name: 'Home' },
+  { icon: 'electrical_services', name: 'Electricity' },
+  { icon: 'kitchen', name: 'Kitchen' },
+  { icon: 'lightbulb', name: 'Utilities' },
+  { icon: 'phone', name: 'Phone' },
+  { icon: 'water_drop', name: 'Water' },
+  { icon: 'wifi', name: 'Internet' },
 
-  // 🧾 Utilities & Services
-  'admin_panel_settings',
-  'app_settings_alt',
-  'build',
-  'construction',
-  'engineering',
-  'handyman',
-  'plumbing',
-  'settings',
-  'support',
-  'tune',
-
-  // 🏥 Health & Insurance
-  'health_and_safety',
-  'local_hospital',
-  'vaccines',
+  // 🏥 Health & Wellness
+  { icon: 'health_and_safety', name: 'Health' },
+  { icon: 'local_hospital', name: 'Hospital' },
+  { icon: 'fitness_center', name: 'Gym' },
+  { icon: 'spa', name: 'Spa' },
+  { icon: 'self_improvement', name: 'Wellness' },
 
   // 🎓 Education
-  'backpack',
-  'cast_for_education',
-  'co_present',
-  'menu_book',
-  'quiz',
-  'school',
-  'workspace_premium',
-
-  // 🧘‍♂️ Fitness & Lifestyle
-  'fitness_center',
-  'hiking',
-  'kayaking',
-  'roller_skating',
-  'self_improvement',
-  'spa',
+  { icon: 'menu_book', name: 'Books' },
+  { icon: 'school', name: 'School' },
 
   // 🧒 Family & Children
-  'child_care',
-  'child_friendly',
-  'crib',
-  'family_restroom',
+  { icon: 'child_care', name: 'Childcare' },
+  { icon: 'child_friendly', name: 'Kids' },
+  { icon: 'family_restroom', name: 'Family' },
 
   // 🎉 Entertainment & Leisure
-  'celebration',
-  'event',
-  'library_music',
-  'live_tv',
-  'movie',
-  'movie_filter',
-  'music_note',
-  'sports_esports',
-  'theater_comedy',
-  'theaters',
+  { icon: 'celebration', name: 'Party' },
+  { icon: 'movie', name: 'Movies' },
+  { icon: 'music_note', name: 'Music' },
+  { icon: 'sports_esports', name: 'Gaming' },
+  { icon: 'live_tv', name: 'Streaming' },
 
   // 📈 Investment & Income
-  'bar_chart',
-  'donut_large',
-  'insights',
-  'leaderboard',
-  'pie_chart',
-  'query_stats',
-  'show_chart',
-  'stacked_line_chart',
+  { icon: 'show_chart', name: 'Stocks' },
+  { icon: 'insights', name: 'Insights' },
 
   // 💼 Work & Business
-  'badge',
-  'business_center',
-  'pending_actions',
-  'schedule',
-  'task_alt',
-  'view_timeline',
-  'work',
-  'workspaces',
+  { icon: 'business_center', name: 'Business' },
+  { icon: 'work', name: 'Work' },
+  { icon: 'schedule', name: 'Schedule' },
+  { icon: 'computer', name: 'Tech' },
 
   // 🤝 Charity & Giving
-  'diversity_1',
-  'diversity_3',
-  'group_add',
-  'redeem',
-  'volunteer_activism',
+  { icon: 'redeem', name: 'Gifts' },
+  { icon: 'volunteer_activism', name: 'Charity' },
 
-  // 🧾 Tax & Legal
-  'description',
-  'fact_check',
-  'gavel',
-  'policy',
+  // 🧾 Tax & Insurance
+  { icon: 'description', name: 'Documents' },
+  { icon: 'gavel', name: 'Legal' },
+  { icon: 'policy', name: 'Insurance' },
 
-  // 🧠 Personal Growth
-  'bookmark',
-  'bookmarks',
-  'category',
-  'emoji_people',
-  'label',
-  'lightbulb',
-  'psychology',
-  'sentiment_satisfied',
-  'star',
-  'tips_and_updates',
+  // 🐾 Pets
+  { icon: 'pets', name: 'Pets' },
 
-  // 🔧 Actions & Management
-  'add',
-  'cancel',
-  'close',
-  'content_copy',
-  'content_paste',
-  'delete',
-  'done',
-  'edit',
-  'file_copy',
-  'refresh',
-  'save',
-  'upload',
-  'download',
-  'cloud_upload',
-  'cloud_download',
-
-  // 🔔 Notifications & Status
-  'campaign',
-  'check_circle',
-  'error',
-  'help',
-  'info',
-  'notifications',
-  'notifications_active',
-  'priority_high',
-  'support_agent',
-  'warning',
-
+  // 🏷️ General
+  { icon: 'category', name: 'Category' },
+  { icon: 'label', name: 'Label' },
+  { icon: 'star', name: 'Favorite' },
+  { icon: 'bookmark', name: 'Bookmark' },
 ];
 
 

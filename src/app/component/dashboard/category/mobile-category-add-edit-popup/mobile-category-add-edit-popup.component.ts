@@ -26,7 +26,7 @@ import { selectAllCategories } from 'src/app/store/categories/categories.selecto
 import { Subject, takeUntil, Observable, of } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
-import { CATEGORY_ICONS, CATEGORY_COLORS } from 'src/app/util/config/config';
+import { CATEGORY_ICONS, CATEGORY_COLORS, CategoryIcon } from 'src/app/util/config/config';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -119,7 +119,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
   public existingGroups: string[] = [];
   public availableIcons = CATEGORY_ICONS;
   public iconFilterCtrl = new FormControl('');
-  public filteredIcons$!: Observable<string[]>;
+  public filteredIcons$!: Observable<CategoryIcon[]>;
   public availableColors = CATEGORY_COLORS;
   public colorFilterCtrl = new FormControl('');
   public filteredColors$!: Observable<{ label: string; value: string }[]>;
@@ -308,9 +308,12 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
     return this.existingGroups.filter(group => group.toLowerCase().includes(filterValue));
   }
 
-  private _filterIcons(value: string): string[] {
+  private _filterIcons(value: string): CategoryIcon[] {
     const filterValue = value.toLowerCase();
-    return this.availableIcons.filter(icon => icon.toLowerCase().includes(filterValue));
+    return this.availableIcons.filter(item =>
+      item.name.toLowerCase().includes(filterValue) ||
+      item.icon.toLowerCase().includes(filterValue)
+    );
   }
 
   private _filterColors(value: string): { label: string; value: string }[] {
@@ -322,6 +325,12 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
     if (!value) return '';
     const color = this.availableColors.find(c => c.value.toUpperCase() === value.toUpperCase());
     return color ? color.label : value;
+  }
+
+  getIconName(value: string): string {
+    if (!value) return 'Category';
+    const found = this.availableIcons.find(item => item.icon === value);
+    return found ? found.name : value.replace(/_/g, ' ');
   }
 
   isCategoryPresent(): boolean {

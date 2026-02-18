@@ -144,13 +144,13 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         icon: 'feedback',
         order: 4
       },
-      {
-        label: 'NAVIGATION.GITHUB_SUPPORT',
-        route: '',
-        externalUrl: 'https://github.com/prashiln79/money-manager',
-        icon: 'svg:github',
-        order: 5
-      }
+      // {
+      //   label: 'NAVIGATION.GITHUB_SUPPORT',
+      //   route: '',
+      //   externalUrl: 'https://github.com/prashiln79/money-manager',
+      //   icon: 'svg:github',
+      //   order: 5
+      // }
     ]
   },
   {

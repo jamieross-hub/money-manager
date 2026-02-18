@@ -44,13 +44,13 @@
     </div>
 
     <div *ngIf="filteredIcons && filteredIcons.length > 0" class="icons-grid-custom">
-      <button *ngFor="let icon of filteredIcons; trackBy: trackByIcon" type="button" (click)="selectIcon(icon)"
+      <button *ngFor="let item of filteredIcons; trackBy: trackByIcon" type="button" (click)="selectIcon(item.icon)"
         class="icon-option-custom flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200"
-        [class.selected-icon]="selectedIcon === icon" [attr.aria-label]="'Select ' + icon + ' icon'"
-        [attr.aria-selected]="selectedIcon === icon">
-        <mat-icon class="text-3xl mb-1.5 text-primary">{{ icon }}</mat-icon>
+        [class.selected-icon]="selectedIcon === item.icon" [attr.aria-label]="'Select ' + item.name + ' icon'"
+        [attr.aria-selected]="selectedIcon === item.icon">
+        <mat-icon class="text-3xl mb-1.5 text-primary">{{ item.icon }}</mat-icon>
         <span class="text-[9px] font-bold uppercase tracking-widest text-gray-400 text-center truncate w-full px-1">{{
-          icon.replace('_', ' ') }}</span>
+          item.name }}</span>
       </button>
     </div>
   </div>

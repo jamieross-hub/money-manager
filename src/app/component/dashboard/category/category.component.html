@@ -1,6 +1,7 @@
 <app-quick-actions-fab [config]="quickActionsFabConfig" (mainButtonClick)="openAddMobileDialog()"
 	*ngIf="breakpointService.device.isMobile"></app-quick-actions-fab>
 
+@defer {
 <div class="categories-container lg:px-16 xl:px-32 2xl:px-48" *ngIf="vm$ | async as vm">
 	<!-- Error Message Display -->
 	<div *ngIf="errorMessage" class="error-message mb-4 p-3 rounded-lg flex items-center justify-between shadow-sm">
@@ -27,7 +28,9 @@
 
 		<!-- Summary Cards -->
 		<section class="summary-section">
+			@defer {
 			<app-category-summary-card></app-category-summary-card>
+			}
 		</section>
 
 		<!-- Controls: Search & Filter -->
@@ -52,6 +55,7 @@
 
 		<!-- Categories List -->
 		<section class="categories-list-section">
+			@defer {
 			<div *ngIf="vm.categories.length === 0" class="empty-state">
 				<mat-icon>search_off</mat-icon>
 				<p>No categories found.</p>
@@ -294,7 +298,9 @@
 					}
 				</mat-list>
 			</mat-card>
+			}
 		</section>
 
 	</div>
 </div>
+}

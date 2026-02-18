@@ -72,7 +72,7 @@
 											[style.color]="categoryForm.get('color')?.value || '#005cbb'">{{
 											categoryForm.get('icon')?.value || 'category'
 											}}</mat-icon>
-										<span class="icon-name">{{ categoryForm.get('icon')?.value || 'category'
+										<span class="icon-name">{{ getIconName(categoryForm.get('icon')?.value)
 											}}</span>
 									</div>
 									<mat-icon class="dropdown-icon">expand_more</mat-icon>
@@ -84,9 +84,9 @@
 									<mat-select formControlName="icon">
 										<mat-select-trigger>
 											<div class="flex items-center gap-2">
-												<mat-icon>{{ categoryForm.get('icon')?.value || 'category' }}</mat-icon>
-												<span class="capitalize">{{ (categoryForm.get('icon')?.value ||
-													'category').replace('_', ' ') }}</span>
+												<mat-icon>{{ getIconName(categoryForm.get('icon')?.value) }}</mat-icon>
+												<span class="capitalize">{{ getIconName(categoryForm.get('icon')?.value)
+													}}</span>
 											</div>
 										</mat-select-trigger>
 										<mat-option>
@@ -94,10 +94,10 @@
 												placeholderLabel="Search icons..." noEntriesFoundLabel="No icons found">
 											</ngx-mat-select-search>
 										</mat-option>
-										<mat-option *ngFor="let icon of filteredIcons$ | async" [value]="icon">
+										<mat-option *ngFor="let item of filteredIcons$ | async" [value]="item.icon">
 											<div class="flex items-center gap-2">
-												<mat-icon>{{ icon }}</mat-icon>
-												<span class="capitalize text-sm">{{ icon.replace('_', ' ') }}</span>
+												<mat-icon>{{ item.icon }}</mat-icon>
+												<span class="capitalize text-sm">{{ item.name }}</span>
 											</div>
 										</mat-option>
 									</mat-select>

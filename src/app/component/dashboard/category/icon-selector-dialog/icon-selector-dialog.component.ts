@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Inject, OnInit , ChangeDetectionStrategy} from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetModule, MatBottomSheetRef } from '@angular/material/bottom-sheet';
@@ -23,12 +23,12 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { CATEGORY_ICONS } from 'src/app/util/config/config';
+import { CATEGORY_ICONS, CategoryIcon } from 'src/app/util/config/config';
 import { IconModule } from 'src/app/util/icon.module';
 
 export interface IconSelectorDialogData {
   currentIcon: string;
-  availableIcons: string[];
+  availableIcons: CategoryIcon[];
 }
 
 @Component({
@@ -67,10 +67,10 @@ export interface IconSelectorDialogData {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class IconSelectorDialogComponent implements OnInit {
-  public availableIcons: string[] = CATEGORY_ICONS;
+  public availableIcons: CategoryIcon[] = CATEGORY_ICONS;
   public selectedIcon: string;
   public searchTerm: string = '';
-  public filteredIcons: string[] = [];
+  public filteredIcons: CategoryIcon[] = [];
 
   constructor(
     public bottomSheetRef: MatBottomSheetRef<IconSelectorDialogComponent>,
@@ -96,8 +96,10 @@ export class IconSelectorDialogComponent implements OnInit {
     if (!this.searchTerm.trim()) {
       this.filteredIcons = [...this.availableIcons];
     } else {
-      this.filteredIcons = this.availableIcons.filter(icon =>
-        icon.toLowerCase().includes(this.searchTerm.toLowerCase())
+      const term = this.searchTerm.toLowerCase();
+      this.filteredIcons = this.availableIcons.filter(item =>
+        item.name.toLowerCase().includes(term) ||
+        item.icon.toLowerCase().includes(term)
       );
     }
   }
@@ -111,7 +113,7 @@ export class IconSelectorDialogComponent implements OnInit {
     this.bottomSheetRef.dismiss();
   }
 
-  public trackByIcon(index: number, icon: string): string {
-    return icon;
+  public trackByIcon(index: number, item: CategoryIcon): string {
+    return item.icon;
   }
 }
