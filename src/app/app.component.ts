@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { ThemeSwitchingService } from './util/service/theme-switching.service';
 import { Location } from '@angular/common';
 import { LoaderService } from './util/service/loader.service';
@@ -11,6 +11,7 @@ import { FirebaseMessagingService } from './util/service/firebase-messaging.serv
 import { LanguageService } from './util/service/language.service';
 import { LocalIndexDBStorageService } from './util/service/indexdb-storage.service';
 import { LocalStorageKey } from './util/models/local-storage.model';
+import { UserTrackingService, ScreenTrackingService } from '@angular/fire/analytics';
 
 @Component({
   selector: 'app-root',
@@ -34,6 +35,8 @@ export class AppComponent implements OnInit, OnDestroy {
     public themeSwitchingService: ThemeSwitchingService,
     private languageService: LanguageService,
     private localStorageService: LocalIndexDBStorageService,
+    private userTrackingService: UserTrackingService,
+    private screenTrackingService: ScreenTrackingService,
   ) {
     this.navigationState = {
       canGoBack: false,

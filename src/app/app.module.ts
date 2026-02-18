@@ -26,7 +26,7 @@ import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideAuth, getAuth, indexedDBLocalPersistence } from '@angular/fire/auth';
 import { provideFirestore, getFirestore, enableIndexedDbPersistence } from '@angular/fire/firestore';
 import { provideMessaging, getMessaging } from '@angular/fire/messaging';
-import { provideAnalytics, getAnalytics, UserTrackingService } from '@angular/fire/analytics';
+import { provideAnalytics, getAnalytics, UserTrackingService, ScreenTrackingService } from '@angular/fire/analytics';
 
 
 // Service Worker
@@ -115,6 +115,7 @@ import { LoaderComponent } from './util/components/loader/loader.component';
     provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
     provideAnalytics(() => getAnalytics()),
     UserTrackingService,
+    ScreenTrackingService,
 
     // Auth with IndexedDB Persistence
     provideAuth(() => {
