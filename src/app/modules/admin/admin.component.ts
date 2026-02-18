@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -14,7 +14,7 @@ import { AdminSidebarSection, AdminSidebarNavItem } from './admin-sidebar.config
   selector: 'app-admin',
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.Default
 })
 export class AdminComponent implements OnInit, OnDestroy {
   isMobile: boolean = false;
@@ -71,7 +71,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   private async initializeAdmin(): Promise<void> {
     try {
       this.currentUser = await this.auth.currentUser;
-      
+
       if (!this.currentUser) {
         this.notificationService.error('Authentication required');
         this.router.navigate(['/sign-in']);
@@ -80,7 +80,7 @@ export class AdminComponent implements OnInit, OnDestroy {
 
       // Check if user is admin
       this.isAdmin = await this.checkAdminStatus();
-      
+
       if (!this.isAdmin) {
         this.notificationService.error('Admin access required');
         this.router.navigate(['/dashboard']);
@@ -89,10 +89,10 @@ export class AdminComponent implements OnInit, OnDestroy {
 
       // Initialize sidebar service
       this.initializeSidebar();
-      
+
       // Load dashboard statistics
       await this.loadDashboardStats();
-      
+
     } catch (error) {
       console.error('Error initializing admin:', error);
       this.notificationService.error('Failed to initialize admin panel');
@@ -106,7 +106,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   private initializeSidebar(): void {
     // Set user permissions
     this.adminSidebarService.setUserPermissions(this.userPermissions);
-    
+
     // Subscribe to sidebar state changes
     this.adminSidebarService.getSidebarState()
       .pipe(takeUntil(this.destroy$))
@@ -121,11 +121,11 @@ export class AdminComponent implements OnInit, OnDestroy {
     try {
       // Load user statistics
       const userStats = await this.userService.getUserStatistics();
-      
+
       // Load feedback statistics
       const allFeedback = await this.feedbackService.getAllFeedback();
       const pendingFeedback = allFeedback.filter(f => f.status === 'pending').length;
-      
+
       this.dashboardStats = {
         totalUsers: userStats.totalUsers,
         totalFeedback: allFeedback.length,
