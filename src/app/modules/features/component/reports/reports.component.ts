@@ -22,6 +22,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
+import { CategorySummaryCardComponent } from 'src/app/util/components/cards/category-summary-card/category-summary-card.component';
 
 // ── Types ──
 
@@ -87,6 +88,7 @@ export interface Prediction {
         MatDividerModule,
         MatTooltipModule,
         MatIconModule,
+        CategorySummaryCardComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -116,6 +118,10 @@ export class ReportsComponent implements OnInit, OnDestroy {
     avgMonthlySpending = 0;
     highestSpendingCategory: CategoryBreakdownItem | null = null;
     overallSavingsRate = 0;
+
+    // Pre-computed trend data (for template binding with OnPush)
+    savingsTrend: MonthlySummary[] = [];
+    savingsTrendMax = 1;
 
     private subscriptions: Subscription[] = [];
 
@@ -182,6 +188,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
         this.computeKeyMetrics();
         this.computePeriodSummary();
         this.computePredictions();
+        this.computeTrendData();
     }
 
     // ══════════════════════════════════════════
@@ -529,22 +536,20 @@ export class ReportsComponent implements OnInit, OnDestroy {
         };
     }
 
-    // Savings trend line data (last N months, oldest first)
-    getSavingsTrend(): MonthlySummary[] {
-        return [...this.monthlySummaries].reverse().slice(-12);
-    }
-
-    // Max value for savings trend chart scaling
-    getSavingsTrendMax(): number {
-        const trend = this.getSavingsTrend();
-        if (trend.length === 0) return 1;
-        const maxVal = Math.max(...trend.map(m => Math.max(m.income, m.expense)));
-        return maxVal || 1;
+    // Pre-compute trend data (called once in computeAll)
+    private computeTrendData(): void {
+        this.savingsTrend = [...this.monthlySummaries].reverse().slice(-12);
+        if (this.savingsTrend.length === 0) {
+            this.savingsTrendMax = 1;
+        } else {
+            const maxVal = Math.max(...this.savingsTrend.map(m => Math.max(m.income, m.expense)));
+            this.savingsTrendMax = maxVal || 1;
+        }
     }
 
     // Get bar height as percentage for trend chart
-    getTrendBarHeight(value: number, max: number): number {
-        return max > 0 ? (value / max) * 100 : 0;
+    getTrendBarHeight(value: number): number {
+        return this.savingsTrendMax > 0 ? (value / this.savingsTrendMax) * 100 : 0;
     }
 
     getConfidenceColor(confidence: 'low' | 'medium' | 'high'): string {

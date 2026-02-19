@@ -25,10 +25,23 @@ import { ReportsComponent } from 'src/app/modules/features/component/reports/rep
 })
 export class SummaryComponent {
 
-    constructor() { }
+    private static readonly TAB_COUNT = 3;
+    private static readonly SWIPE_THRESHOLD = 50;
 
-    ngOnInit(): void {
+    tabIndex = 0;
+    private touchStartX = 0;
 
+    onTouchStart(e: TouchEvent): void {
+        this.touchStartX = e.touches[0].clientX;
+    }
+
+    onTouchEnd(e: TouchEvent): void {
+        const diff = e.changedTouches[0].clientX - this.touchStartX;
+        if (Math.abs(diff) < SummaryComponent.SWIPE_THRESHOLD) return;
+
+        this.tabIndex = diff > 0
+            ? Math.max(0, this.tabIndex - 1)
+            : Math.min(SummaryComponent.TAB_COUNT - 1, this.tabIndex + 1);
     }
 
 }

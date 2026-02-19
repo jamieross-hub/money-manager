@@ -2,7 +2,19 @@
     <app-category-summary-card></app-category-summary-card>
 </section> -->
 <!-- Mat tab -->
-<mat-tab-group>
+<mat-tab-group animationDuration="300ms" [(selectedIndex)]="tabIndex" (touchstart)="onTouchStart($event)"
+    (touchend)="onTouchEnd($event)">
+    <mat-tab label="Report">
+        <ng-template mat-tab-label>
+            <mat-icon class="mr-2">analytics</mat-icon>
+            Report
+        </ng-template>
+        <ng-template matTabContent>
+            <section class="pt-2">
+                <app-reports></app-reports>
+            </section>
+        </ng-template>
+    </mat-tab>
     <mat-tab>
         <ng-template mat-tab-label>
             <mat-icon class="mr-2">category</mat-icon>
@@ -25,16 +37,4 @@
         </ng-template>
     </mat-tab>
 
-    <!-- report -->
-    <mat-tab label="Report">
-        <ng-template mat-tab-label>
-            <mat-icon class="mr-2">analytics</mat-icon>
-            Report
-        </ng-template>
-        <ng-template matTabContent>
-            <section class="pt-2">
-                <app-reports></app-reports>
-            </section>
-        </ng-template>
-    </mat-tab>
 </mat-tab-group>

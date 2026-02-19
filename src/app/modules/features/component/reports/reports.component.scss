@@ -36,35 +36,35 @@
 }
 
 // ── Mat Button Toggle Group (Period Selector) ──
-.period-toggle {
-  ::ng-deep {
-    .mat-button-toggle-appearance-standard {
-      border-radius: 8px;
+// .period-toggle {
+//   ::ng-deep {
+//     .mat-button-toggle-appearance-standard {
+//       border-radius: 8px;
 
-      .mat-button-toggle-label-content {
-        font-size: 0.8125rem;
-        font-weight: 500;
-        padding: 0 16px;
-        line-height: 36px;
-      }
-    }
+//       .mat-button-toggle-label-content {
+//         font-size: 0.8125rem;
+//         font-weight: 500;
+//         padding: 0 16px;
+//         line-height: 36px;
+//       }
+//     }
 
-    .mat-button-toggle-checked {
-      background-color: var(--primary-500, #6366f1);
-      color: white;
-      border-radius: 8px;
+//     .mat-button-toggle-checked {
+//       background-color: var(--primary-500, #6366f1);
+//       color: white;
+//       border-radius: 8px;
 
-      .mat-button-toggle-label-content {
-        color: white;
-      }
-    }
+//       .mat-button-toggle-label-content {
+//         color: white;
+//       }
+//     }
 
-    .mat-button-toggle-group {
-      border-radius: 10px;
-      border: 1px solid var(--neutral-200, #e5e7eb);
-    }
-  }
-}
+//     .mat-button-toggle-group {
+//       border-radius: 10px;
+//       border: 1px solid var(--neutral-200, #e5e7eb);
+//     }
+//   }
+// }
 
 // ── Mat Progress Bar (Income/Expense/Category bars) ──
 .income-bar {
@@ -120,6 +120,28 @@
       &:hover {
         background-color: var(--surface-100, #f8fafc);
       }
+    }
+  }
+}
+
+.compact-table {
+  ::ng-deep {
+    .mat-mdc-header-cell,
+    .mat-mdc-cell {
+      padding: 8px 10px;
+      white-space: nowrap;
+    }
+
+    .mat-mdc-header-cell {
+      font-size: 0.7rem;
+    }
+
+    .mat-mdc-row {
+      height: 40px;
+    }
+
+    .mat-mdc-header-row {
+      height: 36px;
     }
   }
 }
