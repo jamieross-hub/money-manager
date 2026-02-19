@@ -160,25 +160,43 @@
                             </mat-card>
 
                             <!-- ═══════════ PERIOD SUMMARY ═══════════ -->
-                            <mat-card class="!rounded-xl">
+                            <mat-card class="!rounded-xl !border-none">
                                 <mat-card-content class="pt-4">
-                                    <div class="flex items-center justify-between mb-5">
+                                    <div
+                                        class="flex flex-col items-center sm:flex-row sm:items-center sm:justify-between mb-5 gap-3">
                                         <p class="text-lg font-semibold text-neutral-500 flex items-center gap-2 !mb-0">
                                             <mat-icon class="text-primary-500">date_range</mat-icon>
                                             Period Summary
                                         </p>
-                                        <select class="year-dropdown absolute right-1 top-4" [value]="selectedYear"
-                                            (change)="selectYear(+$any($event.target).value)">
-                                            <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
-                                        </select>
+                                        <mat-form-field appearance="fill" *ngIf="!breakpointService.device.isMobile"
+                                            class="year-select-field !w-auto !text-primary-500 !bg-transparent !border-none">
+                                            <mat-select [value]="selectedYear"
+                                                (selectionChange)="selectYear($event.value)">
+                                                <mat-option *ngFor="let y of availableYears" [value]="y">{{ y
+                                                    }}</mat-option>
+                                            </mat-select>
+                                        </mat-form-field>
                                     </div>
 
                                     <!-- Current Period -->
                                     <div *ngIf="currentPeriodSummary" class="space-y-5">
                                         <div class="space-y-3">
                                             <div class="flex items-center justify-between mb-1">
-                                                <span class="text-sm font-medium text-primary-600">
-                                                    {{ currentPeriodSummary.label }}
+                                                <span
+                                                    class="text-sm font-medium text-primary-600 flex items-center gap-2">
+                                                    {{ breakpointService.device.isMobile? "": currentPeriodSummary.label
+                                                    }}
+
+                                                    <mat-form-field appearance="fill"
+                                                        *ngIf="breakpointService.device.isMobile"
+                                                        class="year-select-field !w-auto !text-primary-500 !bg-transparent !border-none">
+                                                        <mat-select [value]="selectedYear"
+                                                            (selectionChange)="selectYear($event.value)">
+                                                            <mat-option *ngFor="let y of availableYears" [value]="y">{{
+                                                                y
+                                                                }}</mat-option>
+                                                        </mat-select>
+                                                    </mat-form-field>
                                                 </span>
                                             </div>
 
@@ -356,7 +374,7 @@
 
                             @defer (on viewport) {
                             <!-- ═══════════ INCOME VS EXPENSE TREND CHART ═══════════ -->
-                            <mat-card *ngIf="savingsTrend.length > 1" class="!rounded-xl">
+                            <mat-card *ngIf="savingsTrend.length > 1" class="!rounded-xl !border-none">
                                 <mat-card-content class="pt-4">
                                     <p class="text-lg font-semibold text-neutral-500 mb-5 flex items-center gap-2">
                                         <mat-icon class="text-primary-500">show_chart</mat-icon>
@@ -415,7 +433,7 @@
 
                             @defer (on viewport) {
                             <!-- ═══════════ MONTHLY HISTORY ═══════════ -->
-                            <mat-card *ngIf="monthlySummaries.length > 0" class="!rounded-xl">
+                            <mat-card *ngIf="monthlySummaries.length > 0" class="!rounded-xl !border-none">
                                 <mat-card-content class="pt-4">
                                     <p class="text-lg font-semibold text-neutral-500 mb-5 flex items-center gap-2">
                                         <mat-icon class="text-primary-500">calendar_month</mat-icon>

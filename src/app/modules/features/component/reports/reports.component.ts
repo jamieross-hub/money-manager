@@ -26,6 +26,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { CategorySummaryCardComponent } from 'src/app/util/components/cards/category-summary-card/category-summary-card.component';
+import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 
 // ── Types ──
 
@@ -152,7 +153,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
         private store: Store<AppState>,
         private currencyService: CurrencyService,
         private dateService: DateService,
-        private cdr: ChangeDetectorRef
+        private cdr: ChangeDetectorRef,
+        public breakpointService: BreakpointService
     ) { }
 
     ngOnInit(): void {
