@@ -7,7 +7,7 @@ import { INTENTS } from '../../models/intent-config';
 /**
  * Handles BUDGET_CARD intent - displays budget summary UI component
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class BudgetCardIntentHandler implements IntentHandler {
     handle(context: IntentContext): HandlerResult {
         return ResponseBuilder.create()

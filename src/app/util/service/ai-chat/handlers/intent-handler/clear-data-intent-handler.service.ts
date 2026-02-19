@@ -8,7 +8,7 @@ import { CHAT_CONSTANTS } from '../../models/chat-constants';
  * Handles CLEAR_DATA intent - clears chat messages
  * Note: Actual message clearing is handled by facade
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class ClearDataIntentHandler implements IntentHandler {
     handle(context: IntentContext): HandlerResult {
         return ResponseBuilder.create()

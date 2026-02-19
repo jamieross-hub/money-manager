@@ -14,7 +14,7 @@ import { SYSTEM_PROMPTS } from '../../prompts/system.prompts';
  * Consolidated handler for OpenAI-powered responses.
  * Replaces DefaultIntentHandler, AiReplyHandlerService, and OpenaiService.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class OpenAiIntentHandler implements IntentHandler {
 
     constructor(

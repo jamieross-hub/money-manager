@@ -24,7 +24,7 @@ import { CurrencyService } from '../../../currency.service';
  * Manages both direct transactions (when category/account are present)
  * and multi-step transaction flows.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class TransactionIntentHandler implements IntentHandler {
     constructor(
         private flowService: ChatFlowService,

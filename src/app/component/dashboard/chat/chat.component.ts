@@ -21,6 +21,20 @@ import { ChatCategoryDropdownComponent } from 'src/app/util/components/chat-cate
 import { BudgetCardComponent } from 'src/app/util/components/cards/budget-card/budget-card.component';
 import { SafeHtmlPipe } from 'src/app/util/pipes/safe-html.pipe';
 
+import { ChatIntentService } from 'src/app/util/service/ai-chat/chat-intent-service';
+import { ChatFlowService } from 'src/app/util/service/ai-chat/chat-flow.service';
+import { EntityExtractorService } from 'src/app/util/service/ai-chat/extractors/entity-extractor.service';
+import { IntentHandlerRegistry } from 'src/app/util/service/ai-chat/handlers/intent-handler/registry/intent-handler-registry.service';
+import { HelpIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/help-intent-handler.service';
+import { AccountSummaryIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/account-summary-intent-handler.service';
+import { RecentActivityIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/recent-activity-intent-handler.service';
+import { ClearDataIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/clear-data-intent-handler.service';
+import { ReportIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/report-intent-handler.service';
+import { TransactionIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/transaction-intent-handler.service';
+import { LoanSummaryIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/loan-summary-intent-handler.service';
+import { MonthlyExpenditureIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/monthly-expenditure-intent-handler.service';
+import { BudgetCardIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/budget-card-intent-handler.service';
+
 @Component({
   selector: 'app-chat',
   templateUrl: './chat.component.html',
@@ -38,6 +52,23 @@ import { SafeHtmlPipe } from 'src/app/util/pipes/safe-html.pipe';
     ChatCategoryDropdownComponent,
     BudgetCardComponent,
     SafeHtmlPipe
+  ],
+  providers: [
+    ChatFacadeService,
+    ChatIntentService,
+    ChatFlowService,
+    EntityExtractorService,
+    IntentHandlerRegistry,
+    HelpIntentHandler,
+    AccountSummaryIntentHandler,
+    RecentActivityIntentHandler,
+    ClearDataIntentHandler,
+    ReportIntentHandler,
+    TransactionIntentHandler,
+    OpenAiIntentHandler,
+    LoanSummaryIntentHandler,
+    MonthlyExpenditureIntentHandler,
+    BudgetCardIntentHandler
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

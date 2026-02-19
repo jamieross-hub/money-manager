@@ -14,6 +14,7 @@ import { CurrencyService } from '../../../../util/service/currency.service';
   selector: 'app-tax',
   templateUrl: './tax.component.html',
   styleUrls: ['./tax.component.scss'],
+  providers: [TaxService],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TaxComponent implements OnInit, OnDestroy {

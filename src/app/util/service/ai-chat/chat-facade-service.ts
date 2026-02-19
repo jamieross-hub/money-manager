@@ -1,4 +1,4 @@
-import { Injectable } from "@angular/core";
+import { Injectable, OnDestroy } from "@angular/core";
 import { ChatIntentService } from "./chat-intent-service";
 import { ChatFlowService } from "./chat-flow.service";
 import { EntityExtractorService } from "./extractors/entity-extractor.service";
@@ -12,7 +12,7 @@ import { CHAT_CONSTANTS } from "./models/chat-constants";
 import { AppState } from "src/app/store/app.state";
 import { Store } from "@ngrx/store";
 import { selectAllAccounts } from "src/app/store/accounts/accounts.selectors";
-import { Subscription, Observable, isObservable, take, filter, Subject, map, distinctUntilChanged } from "rxjs";
+import { Subscription, Observable, isObservable, take, filter, Subject, map, distinctUntilChanged, takeUntil } from "rxjs";
 import { Message } from './models/message.types';
 import { IntentContext } from './models/intent-context.types';
 import { ResponseBuilder } from './response-builder';
@@ -32,11 +32,11 @@ import { UserService } from "../db/user.service";
 
 // Message type now imported from models/message.types.ts
 
-@Injectable({ providedIn: 'root' })
-export class ChatFacadeService {
+@Injectable()
+export class ChatFacadeService implements OnDestroy {
     messages: Message[] = [];
     isTyping = false;
-    subscription: Subscription;
+    private destroy$ = new Subject<void>();
     defualtBankAccount: Account | null = null;
 
     constructor(
@@ -62,6 +62,7 @@ export class ChatFacadeService {
         private userService: UserService
     ) {
         this.store.select(selectAllAccounts).pipe(
+            takeUntil(this.destroy$),
             filter((accounts) => accounts?.length > 0),
             map(accounts => accounts.some(account => account.type === 'loan')),
             distinctUntilChanged(),
@@ -72,9 +73,11 @@ export class ChatFacadeService {
 
         this.registerHandlers();
         this.initWelcomeMessage();
-        this.subscription = this.store.select(selectAllAccounts).subscribe(accounts => {
-            this.defualtBankAccount = accounts.filter(account => account.type.toLowerCase().includes(AccountType.BANK))[0]; //Bank account as default
-        });
+        this.store.select(selectAllAccounts)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(accounts => {
+                this.defualtBankAccount = accounts.filter(account => account.type.toLowerCase().includes(AccountType.BANK))[0]; //Bank account as default
+            });
     }
 
     /**
@@ -92,6 +95,11 @@ export class ChatFacadeService {
         this.registry.register(INTENTS.MONTHLY_EXPENDITURE_CARD, this.monthlyExpenditureHandler);
         this.registry.register(INTENTS.BUDGET_CARD, this.budgetCardHandler);
         this.registry.register(INTENTS.AI_REPLY, this.openAiHandler);
+    }
+
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 
     public scrollToTop = new Subject<void>();
@@ -215,7 +223,7 @@ export class ChatFacadeService {
         }
 
         if (isObservable(result)) {
-            result.subscribe({
+            result.pipe(takeUntil(this.destroy$)).subscribe({
                 next: (message) => this.handleMessageOrCommand(message),
                 error: (e) => {
                     console.error(e);
@@ -265,6 +273,19 @@ export class ChatFacadeService {
         } else {
             this.messages.push(message);
         }
+
+        // Limit message history to prevent memory leaks
+        if (this.messages.length > 50) {
+            this.messages = this.messages.slice(0, 50); // Keep oldest or newest? Typically newest.
+            // Wait, unshift adds to beginning, push adds to end.
+            // If pushAtTop is true, we are adding to the beginning (Oldest? No, newest usually on top if reverse order).
+            // Let's assume standard chat where bottom is newest.
+            // If we want to keep 50 messages, and we push to end, we should remove from start.
+            if (!pushAtTop && this.messages.length > 50) {
+                this.messages.shift();
+            }
+        }
+
         this.isTyping = false;
         this.scrollToBottom();
     }

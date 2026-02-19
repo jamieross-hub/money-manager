@@ -7,7 +7,7 @@ import { INTENTS } from '../../models/intent-config';
 /**
  * Handles ACCOUNT_SUMMARY_CARD intent - displays account summary UI component
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class AccountSummaryIntentHandler implements IntentHandler {
     handle(context: IntentContext): HandlerResult {
         return ResponseBuilder.create()

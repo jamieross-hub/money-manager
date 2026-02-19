@@ -7,7 +7,7 @@ import { CHAT_CONSTANTS } from '../../models/chat-constants';
 /**
  * Handles HELP intent - displays available commands to user
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class HelpIntentHandler implements IntentHandler {
     handle(context: IntentContext): HandlerResult {
         return ResponseBuilder.create()

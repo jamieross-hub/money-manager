@@ -6,7 +6,7 @@ import { ResponseBuilder } from '../../response-builder';
 /**
  * Handles GET_REPORT intent - generates financial reports
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class ReportIntentHandler implements IntentHandler {
     handle(context: IntentContext): HandlerResult {
         console.log('Generating report...');

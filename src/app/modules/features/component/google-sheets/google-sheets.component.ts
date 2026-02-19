@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -32,6 +32,7 @@ interface ImportTransaction {
   selector: 'app-google-sheets',
   templateUrl: './google-sheets.component.html',
   styleUrls: ['./google-sheets.component.scss'],
+  providers: [GoogleSheetsService],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class GoogleSheetsComponent implements OnInit, OnDestroy {

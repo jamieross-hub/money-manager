@@ -12,7 +12,7 @@ export interface ExtractedEntities {
  * Service dedicated to extracting entities from user input.
  * Centralizes NLP-like tasks for the chat service.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class EntityExtractorService {
 
     /**

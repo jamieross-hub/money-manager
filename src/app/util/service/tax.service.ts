@@ -49,9 +49,7 @@ export interface GSTCalculation {
   totalGST: number;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class TaxService {
 
   // ── FY 2025-26 New Regime Tax Slabs (Section 115BAC) ──

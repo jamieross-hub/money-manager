@@ -1,4 +1,4 @@
-import { Component , ChangeDetectionStrategy} from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ChatComponent } from '../chat/chat.component';
@@ -7,7 +7,7 @@ import { Router } from '@angular/router';
 
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { UserService } from 'src/app/util/service/db/user.service';
-import { ChatFacadeService } from 'src/app/util/service/ai-chat/chat-facade-service';
+
 import { MobileAddTransactionComponent } from '../transaction-list/add-transaction/mobile-add-transaction/mobile-add-transaction.component';
 
 @Component({
@@ -161,7 +161,7 @@ export class HomeComponent {
   //   }
   // };
 
-  constructor(private router: Router, private _dialog: MatDialog, public breakpointService: BreakpointService, public chatFacadeService: ChatFacadeService, private userService: UserService) {
+  constructor(private router: Router, private _dialog: MatDialog, public breakpointService: BreakpointService, private userService: UserService) {
     //check route param action=add-transaction
     if (this.router.url.includes('action=add-transaction')) {
       this._dialog.open(MobileAddTransactionComponent, {

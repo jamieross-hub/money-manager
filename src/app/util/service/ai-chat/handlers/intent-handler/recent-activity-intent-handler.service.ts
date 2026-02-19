@@ -7,7 +7,7 @@ import { INTENTS } from '../../models/intent-config';
 /**
  * Handles RECENT_ACTIVITY_CARD intent - displays recent transactions UI component
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class RecentActivityIntentHandler implements IntentHandler {
     handle(context: IntentContext): HandlerResult {
         return ResponseBuilder.create()

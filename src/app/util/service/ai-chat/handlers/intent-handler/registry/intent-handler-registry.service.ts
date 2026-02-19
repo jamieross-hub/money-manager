@@ -7,7 +7,7 @@ import { IntentHandler } from '../base-intent-handler';
  * 
  * This allows easy addition of new intents without modifying core facade logic.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class IntentHandlerRegistry {
     private handlers = new Map<string, IntentHandler>();
 

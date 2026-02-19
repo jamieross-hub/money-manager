@@ -7,7 +7,7 @@ import { INTENTS } from '../../models/intent-config';
 /**
  * Handles LOAN_SUMMARY_CARD intent - displays loan summary UI component
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class LoanSummaryIntentHandler implements IntentHandler {
     handle(context: IntentContext): HandlerResult {
         return ResponseBuilder.create()

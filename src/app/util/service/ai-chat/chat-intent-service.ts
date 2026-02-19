@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { CHAT_CONSTANTS } from "./models/chat-constants";
 import { INTENT_CONFIG, IntentDefinition, INTENTS } from "./models/intent-config";
 
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class ChatIntentService {
 
   /**

@@ -5,7 +5,7 @@ import { Account } from "src/app/util/models";
 import { ConversationStateMachine, ChatState, ChatEvent } from './state/conversation-state-machine.service';
 import { CurrencyService } from '../currency.service';
 
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class ChatFlowService {
 
     constructor(

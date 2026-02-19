@@ -7,7 +7,7 @@ import { INTENTS } from '../../models/intent-config';
 /**
  * Handles MONTHLY_EXPENDITURE_CARD intent - displays monthly expenditure trend UI component
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class MonthlyExpenditureIntentHandler implements IntentHandler {
     handle(context: IntentContext): HandlerResult {
         return ResponseBuilder.create()

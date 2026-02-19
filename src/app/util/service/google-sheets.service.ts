@@ -23,9 +23,7 @@ export interface GoogleSheetsConnection {
   updatedAt: Date;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class GoogleSheetsService extends BaseService {
   private readonly COLLECTION_NAME = 'googleSheets';
 
