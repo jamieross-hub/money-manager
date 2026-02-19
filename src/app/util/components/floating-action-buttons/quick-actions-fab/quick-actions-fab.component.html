@@ -1,5 +1,5 @@
 <div class="quick-actions-fab fixed z-50 bottom-28 right-4 md:bottom-6 md:right-6 lg:bottom-32 lg:right-10">
-  <div class="flex flex-col space-y-2 md:space-y-3" [ngClass]="animationClass">
+  <div class="flex flex-col items-end space-y-2 md:space-y-3" [ngClass]="animationClass">
     <!-- Single Button Mode (when no actions) -->
     @if (effectiveConfig.actions.length === 0) {
     <button mat-fab [color]="effectiveConfig.mainButtonColor" [ngClass]="getMainButtonClass()"
@@ -11,20 +11,14 @@
 
     <!-- Expandable Menu Mode (when actions exist) -->
     @if (effectiveConfig.actions.length > 0) {
-    <!-- Main FAB Button -->
-    <button mat-fab [color]="effectiveConfig.mainButtonColor"
-      [matTooltip]="isExpanded? 'Close': effectiveConfig.mainButtonTooltip" (click)="toggleExpanded()"
-      class="shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out">
-      <mat-icon>{{ mainButtonIcon }}</mat-icon>
-    </button>
 
-    <!-- Quick Actions Menu -->
-    <div *ngIf="isExpanded" class="flex flex-col space-y-2 md:space-y-3">
+    <!-- Quick Actions Menu (appears ABOVE the main button) -->
+    <div *ngIf="isExpanded" class="flex flex-col items-end space-y-2 md:space-y-3">
       @for (action of effectiveConfig.actions; track action.id) {
       <div class="flex items-center space-x-2 md:space-x-3">
         @if (effectiveConfig.showLabels) {
         <div
-          class="hidden sm:block bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-lg text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap backdrop-blur-sm border border-gray-200 dark:border-gray-700">
+          class="bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-lg text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap backdrop-blur-sm border border-gray-200 dark:border-gray-700">
           {{ action.label }}
         </div>
         }
@@ -37,6 +31,14 @@
       </div>
       }
     </div>
+
+    <!-- Main FAB Button (stays at the bottom) -->
+    <button mat-fab [color]="effectiveConfig.mainButtonColor"
+      [matTooltip]="isExpanded ? 'Close' : effectiveConfig.mainButtonTooltip" (click)="toggleExpanded()"
+      class="shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out">
+      <mat-icon>{{ mainButtonIcon }}</mat-icon>
+    </button>
+
     }
   </div>
 </div>

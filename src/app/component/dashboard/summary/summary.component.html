@@ -1,40 +1,5 @@
-<!-- <section class="summary-section mb-4">
-    <app-category-summary-card></app-category-summary-card>
-</section> -->
-<!-- Mat tab -->
-<mat-tab-group animationDuration="300ms" [(selectedIndex)]="tabIndex" (touchstart)="onTouchStart($event)"
-    (touchend)="onTouchEnd($event)">
-    <mat-tab label="Report">
-        <ng-template mat-tab-label>
-            <mat-icon class="mr-2">analytics</mat-icon>
-            Report
-        </ng-template>
-        <ng-template matTabContent>
-            <section class="pt-2">
-                <app-reports></app-reports>
-            </section>
-        </ng-template>
-    </mat-tab>
-    <mat-tab>
-        <ng-template mat-tab-label>
-            <mat-icon class="mr-2">category</mat-icon>
-            Category
-        </ng-template>
-        <section class="pt-2">
-            <user-category></user-category>
-        </section>
-    </mat-tab>
+<!-- Quick Actions FAB -->
+<app-quick-actions-fab [config]="quickActionsFabConfig" (actionClick)="onFabAction($event)"
+    *ngIf="breakpointService.device.isMobile"></app-quick-actions-fab>
 
-    <mat-tab label="Accounts">
-        <ng-template mat-tab-label>
-            <mat-icon class="mr-2">account_balance</mat-icon>
-            Accounts
-        </ng-template>
-        <ng-template matTabContent>
-            <section class="pt-2">
-                <user-accounts></user-accounts>
-            </section>
-        </ng-template>
-    </mat-tab>
-
-</mat-tab-group>
+<app-reports></app-reports>

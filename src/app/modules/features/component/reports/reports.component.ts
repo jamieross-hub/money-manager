@@ -5,6 +5,7 @@ import { Transaction } from '../../../../util/models/transaction.model';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import * as TransactionsSelectors from '../../../../store/transactions/transactions.selectors';
+import * as CategoriesSelectors from '../../../../store/categories/categories.selectors';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { CurrencyService } from '../../../../util/service/currency.service';
 import { DateService } from '../../../../util/service/date.service';
@@ -40,6 +41,8 @@ export interface MonthlySummary {
 export interface CategoryBreakdownItem {
     categoryId: string;
     categoryName: string;
+    categoryIcon: string;
+    categoryColor: string;
     amount: number;
     percentage: number;
     transactionCount: number;
@@ -128,6 +131,10 @@ export class ReportsComponent implements OnInit, OnDestroy {
     // Period options for template iteration (typed)
     readonly periodOptions: ('monthly' | 'quarterly' | 'yearly')[] = ['monthly', 'quarterly', 'yearly'];
 
+    // Category icon & color lookup
+    private categoryIconMap = new Map<string, string>();
+    private categoryColorMap = new Map<string, string>();
+
     // Month labels
     private readonly MONTHS = [
         'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -161,6 +168,21 @@ export class ReportsComponent implements OnInit, OnDestroy {
             this.cdr.markForCheck();
             return;
         }
+
+        // Load category icons
+        const catSub = this.store.select(CategoriesSelectors.selectAllCategories)
+            .pipe(take(1))
+            .subscribe(categories => {
+                this.categoryIconMap.clear();
+                this.categoryColorMap.clear();
+                for (const cat of categories) {
+                    if (cat.id) {
+                        this.categoryIconMap.set(cat.id, cat.icon || 'category');
+                        this.categoryColorMap.set(cat.id, cat.color || '#9ca3af');
+                    }
+                }
+            });
+        this.subscriptions.push(catSub);
 
         const sub = this.store.select(TransactionsSelectors.selectAllTransactions)
             .pipe(take(1))
@@ -216,7 +238,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
                 const catKey = t.categoryId || t.category || 'Uncategorized';
                 const catName = t.category || 'Uncategorized';
                 if (!entry.categories.has(catKey)) {
-                    entry.categories.set(catKey, { categoryId: catKey, categoryName: catName, amount: 0, percentage: 0, transactionCount: 0 });
+                    entry.categories.set(catKey, { categoryId: catKey, categoryName: catName, categoryIcon: this.categoryIconMap.get(catKey) || 'category', categoryColor: this.categoryColorMap.get(catKey) || '#9ca3af', amount: 0, percentage: 0, transactionCount: 0 });
                 }
                 const cat = entry.categories.get(catKey)!;
                 cat.amount += t.amount;
@@ -278,7 +300,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
         for (const m of this.monthlySummaries) {
             for (const c of m.categoryBreakdown) {
                 if (!catMap.has(c.categoryId)) {
-                    catMap.set(c.categoryId, { ...c, amount: 0, transactionCount: 0, percentage: 0 });
+                    catMap.set(c.categoryId, { ...c, categoryIcon: c.categoryIcon || this.categoryIconMap.get(c.categoryId) || 'category', categoryColor: c.categoryColor || this.categoryColorMap.get(c.categoryId) || '#9ca3af', amount: 0, transactionCount: 0, percentage: 0 });
                 }
                 const existing = catMap.get(c.categoryId)!;
                 existing.amount += c.amount;
@@ -347,7 +369,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
         for (const m of months) {
             for (const c of m.categoryBreakdown) {
                 if (!catMap.has(c.categoryId)) {
-                    catMap.set(c.categoryId, { ...c, amount: 0, transactionCount: 0, percentage: 0 });
+                    catMap.set(c.categoryId, { ...c, categoryIcon: c.categoryIcon || this.categoryIconMap.get(c.categoryId) || 'category', categoryColor: c.categoryColor || this.categoryColorMap.get(c.categoryId) || '#9ca3af', amount: 0, transactionCount: 0, percentage: 0 });
                 }
                 const existing = catMap.get(c.categoryId)!;
                 existing.amount += c.amount;
@@ -437,6 +459,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
                 overspendCategories.push({
                     categoryId: catId,
                     categoryName: data.name,
+                    categoryIcon: this.categoryIconMap.get(catId) || 'category',
+                    categoryColor: this.categoryColorMap.get(catId) || '#9ca3af',
                     amount: latestCatSpend.amount,
                     percentage: catAvg > 0 ? ((latestCatSpend.amount - catAvg) / catAvg) * 100 : 0,
                     transactionCount: latestCatSpend.transactionCount
