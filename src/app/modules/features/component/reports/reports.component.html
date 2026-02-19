@@ -61,12 +61,12 @@
                         <div *ngIf="!isLoading && transactions.length > 0" class="space-y-6">
 
                             <!-- ═══════════ KEY METRICS ═══════════ -->
-                            <mat-card class="!rounded-xl">
+                            <mat-card class="!rounded-xl !border-none">
                                 <mat-card-content class="pt-4">
                                     <div class="flex flex-col md:flex-row">
 
                                         <!-- Row 1 (mobile) / Left half (desktop) -->
-                                        <div class="grid grid-cols-2 divide-x divide-neutral-100 flex-1">
+                                        <div class="grid grid-cols-2 divide-x divide-surface-500 flex-1">
                                             <!-- Avg Monthly Spending -->
                                             <div class="px-4 py-3">
                                                 <div class="flex items-center gap-2 mb-3">
@@ -105,10 +105,10 @@
                                         </div>
 
                                         <!-- Horizontal divider (mobile) / Vertical divider (desktop) -->
-                                        <div class="border-b border-neutral-100 md:border-b-0 md:border-r"></div>
+                                        <div class="border-b border-surface-500 md:border-b-0 md:border-r"></div>
 
                                         <!-- Row 2 (mobile) / Right half (desktop) -->
-                                        <div class="grid grid-cols-2 divide-x divide-neutral-100 flex-1">
+                                        <div class="grid grid-cols-2 divide-x divide-surface-500 flex-1">
                                             <!-- Savings Rate -->
                                             <div class="px-4 py-3">
                                                 <div class="flex items-center gap-2 mb-3">
