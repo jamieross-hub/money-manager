@@ -168,13 +168,7 @@
                                             <mat-icon class="text-primary-500">date_range</mat-icon>
                                             Period Summary
                                         </p>
-                                        <mat-button-toggle-group [value]="selectedPeriod"
-                                            (change)="selectPeriod($event.value)" appearance="standard"
-                                            class="period-toggle">
-                                            <mat-button-toggle *ngFor="let p of periodOptions" [value]="p">
-                                                {{ p | titlecase }}
-                                            </mat-button-toggle>
-                                        </mat-button-toggle-group>
+
                                     </div>
 
                                     <!-- Current Period -->
@@ -276,8 +270,87 @@
                                         <mat-icon class="text-neutral-300 !text-4xl mb-2">event_busy</mat-icon>
                                         <p class="text-neutral-400 text-sm">No data for the selected period</p>
                                     </div>
+
+                                    <div class="flex justify-center mt-5">
+                                        <mat-button-toggle-group [value]="selectedPeriod"
+                                            (change)="selectPeriod($event.value)" appearance="standard"
+                                            class="period-toggle">
+                                            <mat-button-toggle *ngFor="let p of periodOptions" [value]="p">
+                                                {{ p | titlecase }}
+                                            </mat-button-toggle>
+                                        </mat-button-toggle-group>
+                                    </div>
                                 </mat-card-content>
+
+
+
+                                @defer (on viewport) {
+                                <!-- ═══════════ CATEGORY BREAKDOWN ═══════════ -->
+                                <div class="p-4 ">
+                                    <p
+                                        class="text-lg font-semibold text-neutral-500 !mb-0 flex items-center gap-2 word-wrap">
+                                        Spending
+                                        for - {{ currentPeriodSummary?.label }}
+                                    </p>
+
+                                    <div>
+                                        <ng-container
+                                            *ngFor="let cat of currentPeriodSummary?.categoryBreakdown; let i = index; let first = first">
+                                            <mat-divider *ngIf="!first"></mat-divider>
+                                            <div class="py-3 px-2">
+                                                <!-- Top row: rank + name + amount -->
+                                                <div class="flex items-start justify-between gap-3 !mb-0">
+                                                    <div class="flex items-start gap-2 min-w-0">
+                                                        <span
+                                                            class="w-7 h-7 rounded-md flex items-center justify-center text-white flex-shrink-0 mt-0.5"
+                                                            [style.background-color]="cat.categoryColor + '20'"
+                                                            [style.color]="cat.categoryColor">
+                                                            <mat-icon class="!text-[16px] !w-4 !h-4">{{
+                                                                cat.categoryIcon
+                                                                }}</mat-icon>
+                                                        </span>
+                                                        <span
+                                                            class="text-sm text-secondary-500 break-words leading-snug">
+                                                            {{ cat.categoryName }}
+                                                        </span>
+                                                    </div>
+                                                    <span
+                                                        class="text-sm font-semibold text-neutral-600 flex-shrink-0 whitespace-nowrap">
+                                                        {{ formatCurrency(cat.amount) }}
+                                                    </span>
+                                                </div>
+                                                <!-- Bottom row: txn count + percentage -->
+                                                <div
+                                                    class="flex items-center justify-between pl-9 text-xs text-neutral-400 mb-2">
+                                                    <span>{{ cat.transactionCount }} transaction{{
+                                                        cat.transactionCount
+                                                        !==
+                                                        1 ? 's' : '' }}</span>
+                                                    <span>{{ cat.percentage | number:'1.0-0' }}% of total</span>
+                                                </div>
+                                                <div class="pl-9">
+                                                    <mat-progress-bar mode="determinate"
+                                                        [value]="getBarWidth(cat.amount, getMaxCategoryAmount(currentPeriodSummary!.categoryBreakdown))"
+                                                        [color]="i === 0 ? 'primary' : i < 3 ? 'accent' : 'warn'"
+                                                        class="category-bar !rounded-full !h-2">
+                                                    </mat-progress-bar>
+                                                </div>
+                                            </div>
+                                        </ng-container>
+                                    </div>
+                                </div>
+                                } @placeholder {
+                                <div class="space-y-3">
+                                    <div class="h-14 bg-neutral-200 rounded-xl animate-pulse"></div>
+                                    <div class="h-14 bg-neutral-200 rounded-xl animate-pulse"></div>
+                                    <div class="h-14 bg-neutral-200 rounded-xl animate-pulse"></div>
+                                </div>
+                                }
+
                             </mat-card>
+
+
+
 
                             @defer (on viewport) {
                             <!-- ═══════════ INCOME VS EXPENSE TREND CHART ═══════════ -->
@@ -336,69 +409,6 @@
                             </mat-card>
                             } @placeholder {
                             <div class="h-56 bg-neutral-200 rounded-xl animate-pulse"></div>
-                            }
-
-                            @defer (on viewport) {
-                            <!-- ═══════════ CATEGORY BREAKDOWN ═══════════ -->
-                            <mat-card *ngIf="currentPeriodSummary && currentPeriodSummary.categoryBreakdown.length > 0"
-                                class="!rounded-xl">
-                                <mat-card-content class="pt-4">
-                                    <p
-                                        class="text-lg font-semibold text-neutral-500 mb-5 flex items-center gap-2 word-wrap">
-                                        <mat-icon class="text-tertiary-500 ">donut_large</mat-icon>Spending
-                                        for - {{ currentPeriodSummary.label }}
-                                    </p>
-
-                                    <div>
-                                        <ng-container
-                                            *ngFor="let cat of currentPeriodSummary.categoryBreakdown; let i = index; let first = first">
-                                            <mat-divider *ngIf="!first"></mat-divider>
-                                            <div class="py-3 px-2">
-                                                <!-- Top row: rank + name + amount -->
-                                                <div class="flex items-start justify-between gap-3 !mb-0">
-                                                    <div class="flex items-start gap-2 min-w-0">
-                                                        <span
-                                                            class="w-7 h-7 rounded-md flex items-center justify-center text-white flex-shrink-0 mt-0.5"
-                                                            [style.background-color]="cat.categoryColor + '20'"
-                                                            [style.color]="cat.categoryColor">
-                                                            <mat-icon class="!text-[16px] !w-4 !h-4">{{ cat.categoryIcon
-                                                                }}</mat-icon>
-                                                        </span>
-                                                        <span class="text-sm text-primary-500 break-words leading-snug">
-                                                            {{ cat.categoryName }}
-                                                        </span>
-                                                    </div>
-                                                    <span
-                                                        class="text-sm font-semibold text-neutral-500 flex-shrink-0 whitespace-nowrap">
-                                                        {{ formatCurrency(cat.amount) }}
-                                                    </span>
-                                                </div>
-                                                <!-- Bottom row: txn count + percentage -->
-                                                <div
-                                                    class="flex items-center justify-between pl-9 text-xs text-neutral-400 mb-2">
-                                                    <span>{{ cat.transactionCount }} transaction{{ cat.transactionCount
-                                                        !==
-                                                        1 ? 's' : '' }}</span>
-                                                    <span>{{ cat.percentage | number:'1.0-0' }}% of total</span>
-                                                </div>
-                                                <div class="pl-9">
-                                                    <mat-progress-bar mode="determinate"
-                                                        [value]="getBarWidth(cat.amount, getMaxCategoryAmount(currentPeriodSummary!.categoryBreakdown))"
-                                                        [color]="i === 0 ? 'primary' : i < 3 ? 'accent' : 'warn'"
-                                                        class="category-bar !rounded-full !h-2">
-                                                    </mat-progress-bar>
-                                                </div>
-                                            </div>
-                                        </ng-container>
-                                    </div>
-                                </mat-card-content>
-                            </mat-card>
-                            } @placeholder {
-                            <div class="space-y-3">
-                                <div class="h-14 bg-neutral-200 rounded-xl animate-pulse"></div>
-                                <div class="h-14 bg-neutral-200 rounded-xl animate-pulse"></div>
-                                <div class="h-14 bg-neutral-200 rounded-xl animate-pulse"></div>
-                            </div>
                             }
 
                             @defer (on viewport) {
