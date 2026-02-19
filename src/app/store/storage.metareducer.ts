@@ -5,6 +5,7 @@ import { LocalStorageKey } from '../util/models/local-storage.model';
 
 export function storageMetaReducer(reducer: ActionReducer<any>): ActionReducer<any> {
     const storageService = LocalIndexDBStorageService.getInstance();
+    let saveTimeout: any = null;
 
     return function (state, action) {
         // 1. On init, if state is undefined, try to search in storage service
@@ -30,14 +31,21 @@ export function storageMetaReducer(reducer: ActionReducer<any>): ActionReducer<a
         // 2. Compute the next state
         const nextState = reducer(state, action);
 
-        // 3. Save the next state to storage service
-        // We only save if the state is actual data (not undefined)
-        if (nextState) {
-            try {
-                storageService.setItem(LocalStorageKey.APP_STATE, nextState);
-            } catch (e) {
-                console.error('Failed to save state to storage service', e);
+        // 3. Save the next state to storage service with Debounce
+        // We only save if the state is actual data (not undefined) and has changed
+        if (nextState && nextState !== state) {
+            if (saveTimeout) {
+                clearTimeout(saveTimeout);
             }
+
+            saveTimeout = setTimeout(() => {
+                try {
+                    storageService.setItem(LocalStorageKey.APP_STATE, nextState);
+                } catch (e) {
+                    console.error('Failed to save state to storage service', e);
+                }
+                saveTimeout = null;
+            }, 1000); // Debounce for 1 second
         }
 
         return nextState;

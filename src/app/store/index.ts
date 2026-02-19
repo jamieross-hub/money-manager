@@ -40,10 +40,7 @@ export const metaReducers: MetaReducer<any>[] = [storageMetaReducer];
       GoalsEffects,
       ProfileEffects
     ]),
-    StoreDevtoolsModule.instrument({
-      maxAge: 25,
-      logOnly: environment.production
-    })
+    !environment.production ? StoreDevtoolsModule.instrument({ maxAge: 25 }) : []
   ]
 })
 export class AppStoreModule { } 
