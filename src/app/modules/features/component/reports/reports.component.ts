@@ -23,6 +23,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { CategorySummaryCardComponent } from 'src/app/util/components/cards/category-summary-card/category-summary-card.component';
 
 // ── Types ──
@@ -91,6 +93,8 @@ export interface Prediction {
         MatDividerModule,
         MatTooltipModule,
         MatIconModule,
+        MatSelectModule,
+        MatFormFieldModule,
         CategorySummaryCardComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -105,7 +109,9 @@ export class ReportsComponent implements OnInit, OnDestroy {
     activeTab: 'summary' | 'forecast' = 'summary';
 
     // Period selector
-    selectedPeriod: 'monthly' | 'quarterly' | 'yearly' = 'monthly';
+    selectedPeriod: 'monthly' | 'quarterly' | 'yearly' = 'yearly';
+    selectedYear: number = new Date().getFullYear();
+    availableYears: number[] = [];
 
     // Computed
     monthlySummaries: MonthlySummary[] = [];
@@ -207,10 +213,23 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
     private computeAll(): void {
         this.monthlySummaries = this.buildMonthlySummaries();
+        this.extractAvailableYears();
         this.computeKeyMetrics();
         this.computePeriodSummary();
         this.computePredictions();
         this.computeTrendData();
+    }
+
+    private extractAvailableYears(): void {
+        const yearSet = new Set<number>();
+        for (const m of this.monthlySummaries) {
+            yearSet.add(m.year);
+        }
+        this.availableYears = Array.from(yearSet).sort((a, b) => b - a);
+        // Ensure selectedYear is valid
+        if (this.availableYears.length > 0 && !this.availableYears.includes(this.selectedYear)) {
+            this.selectedYear = this.availableYears[0];
+        }
     }
 
     // ══════════════════════════════════════════
@@ -320,27 +339,31 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
     computePeriodSummary(): void {
         const now = new Date();
+        const year = this.selectedYear;
         let currentMonths: MonthlySummary[] = [];
         let previousMonths: MonthlySummary[] = [];
 
         if (this.selectedPeriod === 'monthly') {
-            currentMonths = this.monthlySummaries.filter(m => m.month === now.getMonth() && m.year === now.getFullYear());
-            const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
-            const prevYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+            // For selected year: use the latest available month in that year
+            const monthsInYear = this.monthlySummaries.filter(m => m.year === year).sort((a, b) => b.month - a.month);
+            const currentMonth = year === now.getFullYear() ? now.getMonth() : (monthsInYear.length > 0 ? monthsInYear[0].month : 0);
+            currentMonths = this.monthlySummaries.filter(m => m.month === currentMonth && m.year === year);
+            const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+            const prevYear = currentMonth === 0 ? year - 1 : year;
             previousMonths = this.monthlySummaries.filter(m => m.month === prevMonth && m.year === prevYear);
         } else if (this.selectedPeriod === 'quarterly') {
-            const currentQ = Math.floor(now.getMonth() / 3);
+            const currentQ = year === now.getFullYear() ? Math.floor(now.getMonth() / 3) : 3; // last quarter for past years
             currentMonths = this.monthlySummaries.filter(m =>
-                m.year === now.getFullYear() && Math.floor(m.month / 3) === currentQ
+                m.year === year && Math.floor(m.month / 3) === currentQ
             );
             const prevQ = currentQ === 0 ? 3 : currentQ - 1;
-            const prevYear = currentQ === 0 ? now.getFullYear() - 1 : now.getFullYear();
+            const pYear = currentQ === 0 ? year - 1 : year;
             previousMonths = this.monthlySummaries.filter(m =>
-                m.year === prevYear && Math.floor(m.month / 3) === prevQ
+                m.year === pYear && Math.floor(m.month / 3) === prevQ
             );
         } else {
-            currentMonths = this.monthlySummaries.filter(m => m.year === now.getFullYear());
-            previousMonths = this.monthlySummaries.filter(m => m.year === now.getFullYear() - 1);
+            currentMonths = this.monthlySummaries.filter(m => m.year === year);
+            previousMonths = this.monthlySummaries.filter(m => m.year === year - 1);
         }
 
         this.currentPeriodSummary = this.aggregatePeriod(currentMonths, this.getPeriodLabel('current'));
@@ -389,19 +412,22 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
     private getPeriodLabel(which: 'current' | 'previous'): string {
         const now = new Date();
+        const year = this.selectedYear;
         if (this.selectedPeriod === 'monthly') {
-            if (which === 'current') return `${this.MONTHS[now.getMonth()]} ${now.getFullYear()}`;
-            const pm = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
-            const py = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+            const monthsInYear = this.monthlySummaries.filter(m => m.year === year).sort((a, b) => b.month - a.month);
+            const currentMonth = year === now.getFullYear() ? now.getMonth() : (monthsInYear.length > 0 ? monthsInYear[0].month : 0);
+            if (which === 'current') return `${this.MONTHS[currentMonth]} ${year}`;
+            const pm = currentMonth === 0 ? 11 : currentMonth - 1;
+            const py = currentMonth === 0 ? year - 1 : year;
             return `${this.MONTHS[pm]} ${py}`;
         } else if (this.selectedPeriod === 'quarterly') {
-            const q = Math.floor(now.getMonth() / 3) + 1;
-            if (which === 'current') return `Q${q} ${now.getFullYear()}`;
+            const q = year === now.getFullYear() ? Math.floor(now.getMonth() / 3) + 1 : 4;
+            if (which === 'current') return `Q${q} ${year}`;
             const pq = q === 1 ? 4 : q - 1;
-            const py = q === 1 ? now.getFullYear() - 1 : now.getFullYear();
+            const py = q === 1 ? year - 1 : year;
             return `Q${pq} ${py}`;
         } else {
-            return which === 'current' ? `${now.getFullYear()}` : `${now.getFullYear() - 1}`;
+            return which === 'current' ? `${year}` : `${year - 1}`;
         }
     }
 
@@ -520,6 +546,11 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
     selectPeriod(period: 'monthly' | 'quarterly' | 'yearly'): void {
         this.selectedPeriod = period;
+        this.computePeriodSummary();
+    }
+
+    selectYear(year: number): void {
+        this.selectedYear = year;
         this.computePeriodSummary();
     }
 

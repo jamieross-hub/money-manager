@@ -162,13 +162,15 @@
                             <!-- ═══════════ PERIOD SUMMARY ═══════════ -->
                             <mat-card class="!rounded-xl">
                                 <mat-card-content class="pt-4">
-                                    <div
-                                        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
-                                        <p class="text-lg font-semibold text-neutral-500 flex items-center gap-2">
+                                    <div class="flex items-center justify-between mb-5">
+                                        <p class="text-lg font-semibold text-neutral-500 flex items-center gap-2 !mb-0">
                                             <mat-icon class="text-primary-500">date_range</mat-icon>
                                             Period Summary
                                         </p>
-
+                                        <select class="year-dropdown absolute right-1 top-4" [value]="selectedYear"
+                                            (change)="selectYear(+$any($event.target).value)">
+                                            <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+                                        </select>
                                     </div>
 
                                     <!-- Current Period -->
@@ -288,7 +290,7 @@
                                 <!-- ═══════════ CATEGORY BREAKDOWN ═══════════ -->
                                 <div class="p-4 ">
                                     <p
-                                        class="text-lg font-semibold text-neutral-500 !mb-0 flex items-center gap-2 word-wrap">
+                                        class="text-lg font-semibold text-neutral-500 !mb-0 flex items-center gap-2 justify-center text-center sm:text-left flex-wrap">
                                         Spending
                                         for - {{ currentPeriodSummary?.label }}
                                     </p>

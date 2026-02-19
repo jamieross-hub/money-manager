@@ -220,3 +220,22 @@ mat-list-item {
     padding: 0 10px;
   }
 }
+
+// ── Year dropdown compact ──
+.year-dropdown {
+  appearance: auto;
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--neutral-600, #4b5563);
+  background: var(--surface-100, #f8fafc);
+  border: 1px solid var(--neutral-200, #e5e7eb);
+  border-radius: 8px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s ease;
+
+  &:focus {
+    border-color: var(--primary-400, #818cf8);
+  }
+}
