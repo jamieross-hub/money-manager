@@ -154,6 +154,22 @@ mat-card {
   }
 }
 
+// ── Metric cards equal sizing ──
+.grid > mat-card {
+  display: flex !important;
+  flex-direction: column;
+
+  ::ng-deep .mat-mdc-card-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+
+    &:last-child {
+      padding-bottom: 16px;
+    }
+  }
+}
+
 // ── Mat Expansion Panel ──
 mat-expansion-panel {
   &.mat-expansion-panel {

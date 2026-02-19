@@ -61,86 +61,103 @@
                         <div *ngIf="!isLoading && transactions.length > 0" class="space-y-6">
 
                             <!-- ═══════════ KEY METRICS ═══════════ -->
-                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                <!-- Avg Monthly Spending -->
-                                <mat-card class="!rounded-xl">
-                                    <mat-card-content class="pt-4">
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <div
-                                                class="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center">
-                                                <mat-icon class="!text-base text-primary-500">speed</mat-icon>
-                                            </div>
-                                            <span class="text-xs text-neutral-400 font-medium">Avg Monthly</span>
-                                        </div>
-                                        <div class="text-lg font-bold text-neutral-500">
-                                            {{ formatCompact(avgMonthlySpending) }}</div>
-                                        <div class="text-xs text-neutral-400">spending</div>
-                                    </mat-card-content>
-                                </mat-card>
+                            <mat-card class="!rounded-xl">
+                                <mat-card-content class="pt-4">
+                                    <div class="flex flex-col md:flex-row">
 
-                                <!-- Top Category -->
-                                <mat-card class="!rounded-xl">
-                                    <mat-card-content class="pt-4">
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <div
-                                                class="w-8 h-8 rounded-lg bg-warning-50 flex items-center justify-center">
-                                                <mat-icon class="!text-base text-warning-500">category</mat-icon>
+                                        <!-- Row 1 (mobile) / Left half (desktop) -->
+                                        <div class="grid grid-cols-2 divide-x divide-neutral-100 flex-1">
+                                            <!-- Avg Monthly Spending -->
+                                            <div class="px-4 py-3">
+                                                <div class="flex items-center gap-2 mb-3">
+                                                    <div
+                                                        class="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
+                                                        <mat-icon class="!text-base text-primary-500">speed</mat-icon>
+                                                    </div>
+                                                    <span class="text-xs text-neutral-400 font-medium leading-tight">Avg
+                                                        Monthly</span>
+                                                </div>
+                                                <div class="text-xl font-bold text-neutral-500">
+                                                    {{ formatCompact(avgMonthlySpending) }}
+                                                </div>
+                                                <div class="text-xs text-neutral-400 mt-0.5">spending</div>
                                             </div>
-                                            <span class="text-xs text-neutral-400 font-medium">Top Category</span>
-                                        </div>
-                                        <div class="text-lg font-bold text-neutral-500 truncate">
-                                            {{ highestSpendingCategory?.categoryName || '—' }}
-                                        </div>
-                                        <div class="text-xs text-neutral-400">
-                                            {{ highestSpendingCategory ? (highestSpendingCategory.percentage |
-                                            number:'1.0-0') + '% of spend' : '' }}
-                                        </div>
-                                    </mat-card-content>
-                                </mat-card>
 
-                                <!-- Savings Rate -->
-                                <mat-card class="!rounded-xl">
-                                    <mat-card-content class="pt-4">
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <div
-                                                class="w-8 h-8 rounded-lg bg-success-50 flex items-center justify-center">
-                                                <mat-icon class="!text-base text-success-500">savings</mat-icon>
+                                            <!-- Top Category -->
+                                            <div class="px-4 py-3">
+                                                <div class="flex items-center gap-2 mb-3">
+                                                    <div
+                                                        class="w-8 h-8 rounded-lg bg-warning-50 flex items-center justify-center flex-shrink-0">
+                                                        <mat-icon
+                                                            class="!text-base text-warning-500">category</mat-icon>
+                                                    </div>
+                                                    <span class="text-xs text-neutral-400 font-medium leading-tight">Top
+                                                        Category</span>
+                                                </div>
+                                                <div class="text-base font-bold text-neutral-500 truncate">
+                                                    {{ highestSpendingCategory?.categoryName || '—' }}
+                                                </div>
+                                                <div class="text-xs text-neutral-400 mt-0.5">
+                                                    {{ highestSpendingCategory ? (highestSpendingCategory.percentage |
+                                                    number:'1.0-0') + '% of spend' : '' }}
+                                                </div>
                                             </div>
-                                            <span class="text-xs text-neutral-400 font-medium">Savings Rate</span>
                                         </div>
-                                        <div class="text-lg font-bold"
-                                            [class.text-success-500]="overallSavingsRate >= 0"
-                                            [class.text-error-500]="overallSavingsRate < 0">
-                                            {{ overallSavingsRate | number:'1.1-1' }}%
-                                        </div>
-                                        <div class="text-xs text-neutral-400">of income saved</div>
-                                    </mat-card-content>
-                                </mat-card>
 
-                                <!-- Expense Growth -->
-                                <mat-card class="!rounded-xl">
-                                    <mat-card-content class="pt-4">
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <div
-                                                class="w-8 h-8 rounded-lg bg-error-50 flex items-center justify-center">
-                                                <mat-icon class="!text-base text-error-500">trending_up</mat-icon>
+                                        <!-- Horizontal divider (mobile) / Vertical divider (desktop) -->
+                                        <div class="border-b border-neutral-100 md:border-b-0 md:border-r"></div>
+
+                                        <!-- Row 2 (mobile) / Right half (desktop) -->
+                                        <div class="grid grid-cols-2 divide-x divide-neutral-100 flex-1">
+                                            <!-- Savings Rate -->
+                                            <div class="px-4 py-3">
+                                                <div class="flex items-center gap-2 mb-3">
+                                                    <div
+                                                        class="w-8 h-8 rounded-lg bg-success-50 flex items-center justify-center flex-shrink-0">
+                                                        <mat-icon class="!text-base text-success-500">savings</mat-icon>
+                                                    </div>
+                                                    <span
+                                                        class="text-xs text-neutral-400 font-medium leading-tight">Savings
+                                                        Rate</span>
+                                                </div>
+                                                <div class="text-xl font-bold"
+                                                    [class.text-success-500]="overallSavingsRate >= 0"
+                                                    [class.text-error-500]="overallSavingsRate < 0">
+                                                    {{ overallSavingsRate | number:'1.1-1' }}%
+                                                </div>
+                                                <div class="text-xs text-neutral-400 mt-0.5">of income saved</div>
                                             </div>
-                                            <span class="text-xs text-neutral-400 font-medium">Expense Trend</span>
+
+                                            <!-- Expense Growth -->
+                                            <div class="px-4 py-3">
+                                                <div class="flex items-center gap-2 mb-3">
+                                                    <div
+                                                        class="w-8 h-8 rounded-lg bg-error-50 flex items-center justify-center flex-shrink-0">
+                                                        <mat-icon
+                                                            class="!text-base text-error-500">trending_up</mat-icon>
+                                                    </div>
+                                                    <span
+                                                        class="text-xs text-neutral-400 font-medium leading-tight">Expense
+                                                        Trend</span>
+                                                </div>
+                                                <div class="text-xl font-bold"
+                                                    [class.text-error-500]="currentPeriodSummary?.expenseGrowth !== null && (currentPeriodSummary?.expenseGrowth ?? 0) > 0"
+                                                    [class.text-success-500]="currentPeriodSummary?.expenseGrowth !== null && (currentPeriodSummary?.expenseGrowth ?? 0) <= 0"
+                                                    [class.text-neutral-400]="currentPeriodSummary?.expenseGrowth === null">
+                                                    <span *ngIf="currentPeriodSummary?.expenseGrowth !== null">
+                                                        {{ (currentPeriodSummary?.expenseGrowth ?? 0) > 0 ? '+' : ''
+                                                        }}{{
+                                                        currentPeriodSummary?.expenseGrowth | number:'1.1-1' }}%
+                                                    </span>
+                                                    <span *ngIf="currentPeriodSummary?.expenseGrowth === null">—</span>
+                                                </div>
+                                                <div class="text-xs text-neutral-400 mt-0.5">vs previous period</div>
+                                            </div>
                                         </div>
-                                        <div class="text-lg font-bold"
-                                            [class.text-error-500]="currentPeriodSummary?.expenseGrowth !== null && (currentPeriodSummary?.expenseGrowth ?? 0) > 0"
-                                            [class.text-success-500]="currentPeriodSummary?.expenseGrowth !== null && (currentPeriodSummary?.expenseGrowth ?? 0) <= 0"
-                                            [class.text-neutral-400]="currentPeriodSummary?.expenseGrowth === null">
-                                            <span *ngIf="currentPeriodSummary?.expenseGrowth !== null">
-                                                {{ (currentPeriodSummary?.expenseGrowth ?? 0) > 0 ? '+' : '' }}{{
-                                                currentPeriodSummary?.expenseGrowth | number:'1.1-1' }}%
-                                            </span>
-                                            <span *ngIf="currentPeriodSummary?.expenseGrowth === null">—</span>
-                                        </div>
-                                        <div class="text-xs text-neutral-400">vs previous period</div>
-                                    </mat-card-content>
-                                </mat-card>
-                            </div>
+
+                                    </div>
+                                </mat-card-content>
+                            </mat-card>
 
                             <!-- ═══════════ PERIOD SUMMARY ═══════════ -->
                             <mat-card class="!rounded-xl">
