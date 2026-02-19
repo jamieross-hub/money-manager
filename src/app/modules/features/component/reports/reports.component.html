@@ -50,7 +50,7 @@
                         <mat-card *ngIf="!isLoading && transactions.length === 0" class="!rounded-xl">
                             <mat-card-content class="text-center py-8">
                                 <mat-icon class="text-neutral-300 !text-6xl mb-4">assessment</mat-icon>
-                                <h3 class="text-xl font-semibold text-neutral-600 mb-2">No Transaction Data</h3>
+                                <p class="text-xl font-semibold text-neutral-600 mb-2">No Transaction Data</p>
                                 <p class="text-neutral-400 text-sm">
                                     Add some income and expense transactions to see your financial reports and
                                     predictions.
@@ -213,7 +213,8 @@
                                                 <span class="font-bold"
                                                     [class.text-success-600]="currentPeriodSummary.savings >= 0"
                                                     [class.text-error-600]="currentPeriodSummary.savings < 0">
-                                                    {{ formatCurrency(abs(currentPeriodSummary.savings)) }}
+                                                    {{ currentPeriodSummary.savings >= 0 ? '+' : '-' }}{{
+                                                    formatCurrency(abs(currentPeriodSummary.savings)) }}
                                                     <span class="text-xs font-normal ml-1">
                                                         ({{ currentPeriodSummary.savingsRate | number:'1.1-1' }}%)
                                                     </span>
@@ -230,13 +231,13 @@
                                             <div class="grid grid-cols-3 gap-3 text-center">
                                                 <div>
                                                     <div class="text-xs text-neutral-400 mb-1">Income</div>
-                                                    <div class="text-sm font-semibold text-neutral-700">
+                                                    <div class="text-sm font-semibold text-success-500">
                                                         {{ formatCompact(previousPeriodSummary.income) }}
                                                     </div>
                                                 </div>
                                                 <div>
                                                     <div class="text-xs text-neutral-400 mb-1">Expense</div>
-                                                    <div class="text-sm font-semibold text-neutral-700">
+                                                    <div class="text-sm font-semibold text-error-500">
                                                         {{ formatCompact(previousPeriodSummary.expense) }}
                                                     </div>
                                                 </div>
@@ -245,7 +246,8 @@
                                                     <div class="text-sm font-semibold"
                                                         [class.text-success-500]="previousPeriodSummary.savings >= 0"
                                                         [class.text-error-500]="previousPeriodSummary.savings < 0">
-                                                        {{ formatCompact(abs(previousPeriodSummary.savings)) }}
+                                                        {{ previousPeriodSummary.savings >= 0 ? '+' : '-' }}{{
+                                                        formatCompact(abs(previousPeriodSummary.savings)) }}
                                                     </div>
                                                 </div>
                                             </div>
@@ -426,7 +428,7 @@
                                                     class="!text-right font-semibold !text-xs sm:!text-sm"
                                                     [class.text-success-500]="m.savings >= 0"
                                                     [class.text-error-500]="m.savings < 0">
-                                                    {{ formatCompact(abs(m.savings)) }}
+                                                    {{ m.savings >= 0 ? '+' : '-' }}{{ formatCompact(abs(m.savings)) }}
                                                 </td>
                                             </ng-container>
 
@@ -469,7 +471,7 @@
                         <mat-card *ngIf="!isLoading && transactions.length === 0" class="!rounded-xl">
                             <mat-card-content class="text-center py-8">
                                 <mat-icon class="text-neutral-300 !text-6xl mb-4">assessment</mat-icon>
-                                <h3 class="text-xl font-semibold text-neutral-600 mb-2">No Transaction Data</h3>
+                                <p class="text-xl font-semibold text-neutral-600 mb-2">No Transaction Data</p>
                                 <p class="text-neutral-400 text-sm">
                                     Add some income and expense transactions to generate predictions.
                                 </p>
@@ -482,7 +484,7 @@
                             <mat-card *ngIf="!nextMonthPrediction" class="!rounded-xl">
                                 <mat-card-content class="text-center py-8">
                                     <mat-icon class="text-warning-400 !text-5xl mb-4">auto_graph</mat-icon>
-                                    <h3 class="text-xl font-semibold text-neutral-600 mb-2">Not Enough Data Yet</h3>
+                                    <p class="text-xl font-semibold text-neutral-600 mb-2">Not Enough Data Yet</p>
                                     <p class="text-neutral-400 text-sm max-w-md mx-auto">
                                         We need at least 2 months of transaction history to generate meaningful
                                         predictions.
@@ -496,12 +498,12 @@
                                 <!-- Spending Trend Banner -->
                                 <mat-card class="!rounded-xl">
                                     <mat-card-content class="pt-4">
-                                        <h3 class="text-lg font-semibold text-neutral-500 mb-4 flex items-center gap-2">
+                                        <p class="text-lg font-semibold text-neutral-500 mb-4 flex items-center gap-2">
                                             <mat-icon [class]="getTrendColor(nextMonthPrediction.trend)">
                                                 {{ getTrendIcon(nextMonthPrediction.trend) }}
                                             </mat-icon>
                                             Spending Trend
-                                        </h3>
+                                        </p>
                                         <div class="flex items-center gap-3 p-4 rounded-lg"
                                             [class.bg-error-50]="nextMonthPrediction.trend === 'increasing'"
                                             [class.bg-success-50]="nextMonthPrediction.trend === 'decreasing'"
@@ -532,10 +534,10 @@
                                     <mat-card *ngIf="nextMonthPrediction" class="!rounded-xl">
                                         <mat-card-content class="pt-4">
                                             <div class="flex items-center justify-between mb-4">
-                                                <h4 class="font-semibold text-neutral-800 flex items-center gap-2">
+                                                <p class="font-semibold text-neutral-500 flex items-center gap-2">
                                                     <mat-icon class="text-primary-500 !text-lg">event</mat-icon>
                                                     {{ nextMonthPrediction.label }}
-                                                </h4>
+                                                </p>
                                                 <mat-chip-set>
                                                     <mat-chip [highlighted]="true"
                                                         [color]="nextMonthPrediction.confidence === 'high' ? 'primary' : nextMonthPrediction.confidence === 'medium' ? 'accent' : 'warn'"
@@ -544,22 +546,22 @@
                                                     </mat-chip>
                                                 </mat-chip-set>
                                             </div>
-                                            <mat-list dense>
-                                                <mat-list-item>
+                                            <div class="space-y-0">
+                                                <div class="flex items-center justify-between py-2 px-3">
                                                     <span class="text-sm text-neutral-500">Expected Expense</span>
-                                                    <span class="ml-auto font-semibold text-error-500">
+                                                    <span class="font-semibold text-error-500">
                                                         {{ formatCurrency(nextMonthPrediction.predictedExpense) }}
                                                     </span>
-                                                </mat-list-item>
+                                                </div>
                                                 <mat-divider></mat-divider>
-                                                <mat-list-item>
+                                                <div class="flex items-center justify-between py-2 px-3">
                                                     <span class="text-sm text-neutral-500">Expected Income</span>
-                                                    <span class="ml-auto font-semibold text-success-500">
+                                                    <span class="font-semibold text-success-500">
                                                         {{ formatCurrency(nextMonthPrediction.predictedIncome) }}
                                                     </span>
-                                                </mat-list-item>
+                                                </div>
                                                 <mat-divider></mat-divider>
-                                            </mat-list>
+                                            </div>
                                             <div class="flex justify-between py-2 px-3 rounded-lg mt-2"
                                                 [class.bg-success-50]="nextMonthPrediction.predictedSavings >= 0"
                                                 [class.bg-error-50]="nextMonthPrediction.predictedSavings < 0">
@@ -572,7 +574,8 @@
                                                 <span class="font-bold"
                                                     [class.text-success-600]="nextMonthPrediction.predictedSavings >= 0"
                                                     [class.text-error-600]="nextMonthPrediction.predictedSavings < 0">
-                                                    {{ formatCurrency(abs(nextMonthPrediction.predictedSavings)) }}
+                                                    {{ nextMonthPrediction.predictedSavings >= 0 ? '+' : '-' }}{{
+                                                    formatCurrency(abs(nextMonthPrediction.predictedSavings)) }}
                                                 </span>
                                             </div>
                                         </mat-card-content>
@@ -582,11 +585,11 @@
                                     <mat-card *ngIf="next3MonthsPrediction" class="!rounded-xl">
                                         <mat-card-content class="pt-4">
                                             <div class="flex items-center justify-between mb-4">
-                                                <h4 class="font-semibold text-neutral-800 flex items-center gap-2">
+                                                <p class="font-semibold text-neutral-500 flex items-center gap-2">
                                                     <mat-icon class="text-secondary-500 !text-lg">date_range
                                                     </mat-icon>
                                                     {{ next3MonthsPrediction.label }}
-                                                </h4>
+                                                </p>
                                                 <mat-chip-set>
                                                     <mat-chip [highlighted]="true"
                                                         [color]="next3MonthsPrediction.confidence === 'high' ? 'primary' : next3MonthsPrediction.confidence === 'medium' ? 'accent' : 'warn'"
@@ -595,22 +598,22 @@
                                                     </mat-chip>
                                                 </mat-chip-set>
                                             </div>
-                                            <mat-list dense>
-                                                <mat-list-item>
+                                            <div class="space-y-0">
+                                                <div class="flex items-center justify-between py-2 px-3">
                                                     <span class="text-sm text-neutral-500">Expected Expense</span>
-                                                    <span class="ml-auto font-semibold text-error-500">
+                                                    <span class="font-semibold text-error-500">
                                                         {{ formatCurrency(next3MonthsPrediction.predictedExpense) }}
                                                     </span>
-                                                </mat-list-item>
+                                                </div>
                                                 <mat-divider></mat-divider>
-                                                <mat-list-item>
+                                                <div class="flex items-center justify-between py-2 px-3">
                                                     <span class="text-sm text-neutral-500">Expected Income</span>
-                                                    <span class="ml-auto font-semibold text-success-500">
+                                                    <span class="font-semibold text-success-500">
                                                         {{ formatCurrency(next3MonthsPrediction.predictedIncome) }}
                                                     </span>
-                                                </mat-list-item>
+                                                </div>
                                                 <mat-divider></mat-divider>
-                                            </mat-list>
+                                            </div>
                                             <div class="flex justify-between py-2 px-3 rounded-lg mt-2"
                                                 [class.bg-success-50]="next3MonthsPrediction.predictedSavings >= 0"
                                                 [class.bg-error-50]="next3MonthsPrediction.predictedSavings < 0">
@@ -623,7 +626,8 @@
                                                 <span class="font-bold"
                                                     [class.text-success-600]="next3MonthsPrediction.predictedSavings >= 0"
                                                     [class.text-error-600]="next3MonthsPrediction.predictedSavings < 0">
-                                                    {{ formatCurrency(abs(next3MonthsPrediction.predictedSavings)) }}
+                                                    {{ next3MonthsPrediction.predictedSavings >= 0 ? '+' : '-' }}{{
+                                                    formatCurrency(abs(next3MonthsPrediction.predictedSavings)) }}
                                                 </span>
                                             </div>
                                         </mat-card-content>
@@ -633,11 +637,11 @@
                                     <mat-card *ngIf="yearEndPrediction" class="!rounded-xl">
                                         <mat-card-content class="pt-4">
                                             <div class="flex items-center justify-between mb-4">
-                                                <h4 class="font-semibold text-neutral-800 flex items-center gap-2">
+                                                <p class="font-semibold text-neutral-500 flex items-center gap-2">
                                                     <mat-icon class="text-tertiary-500 !text-lg">event_available
                                                     </mat-icon>
                                                     {{ yearEndPrediction.label }}
-                                                </h4>
+                                                </p>
                                                 <mat-chip-set>
                                                     <mat-chip [highlighted]="true"
                                                         [color]="yearEndPrediction.confidence === 'high' ? 'primary' : yearEndPrediction.confidence === 'medium' ? 'accent' : 'warn'"
@@ -646,22 +650,22 @@
                                                     </mat-chip>
                                                 </mat-chip-set>
                                             </div>
-                                            <mat-list dense>
-                                                <mat-list-item>
+                                            <div class="space-y-0">
+                                                <div class="flex items-center justify-between py-2 px-3">
                                                     <span class="text-sm text-neutral-500">Projected Expense</span>
-                                                    <span class="ml-auto font-semibold text-error-500">
+                                                    <span class="font-semibold text-error-500">
                                                         {{ formatCurrency(yearEndPrediction.predictedExpense) }}
                                                     </span>
-                                                </mat-list-item>
+                                                </div>
                                                 <mat-divider></mat-divider>
-                                                <mat-list-item>
+                                                <div class="flex items-center justify-between py-2 px-3">
                                                     <span class="text-sm text-neutral-500">Projected Income</span>
-                                                    <span class="ml-auto font-semibold text-success-500">
+                                                    <span class="font-semibold text-success-500">
                                                         {{ formatCurrency(yearEndPrediction.predictedIncome) }}
                                                     </span>
-                                                </mat-list-item>
+                                                </div>
                                                 <mat-divider></mat-divider>
-                                            </mat-list>
+                                            </div>
                                             <div class="flex justify-between py-2 px-3 rounded-lg mt-2"
                                                 [class.bg-success-50]="yearEndPrediction.predictedSavings >= 0"
                                                 [class.bg-error-50]="yearEndPrediction.predictedSavings < 0">
@@ -674,7 +678,8 @@
                                                 <span class="font-bold"
                                                     [class.text-success-600]="yearEndPrediction.predictedSavings >= 0"
                                                     [class.text-error-600]="yearEndPrediction.predictedSavings < 0">
-                                                    {{ formatCurrency(abs(yearEndPrediction.predictedSavings)) }}
+                                                    {{ yearEndPrediction.predictedSavings >= 0 ? '+' : '-' }}{{
+                                                    formatCurrency(abs(yearEndPrediction.predictedSavings)) }}
                                                 </span>
                                             </div>
                                         </mat-card-content>
