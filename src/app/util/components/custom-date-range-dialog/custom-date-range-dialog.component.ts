@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Inject } from '@angular/core';
 import dayjs from 'dayjs';
 
@@ -28,13 +29,14 @@ export interface CustomDateRangeData {
     MatInputModule,
     MatButtonModule,
     MatDialogModule,
-    MatIconModule
+    MatIconModule,
+    MatTooltipModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CustomDateRangeDialogComponent implements OnInit {
-  startDate: Date | null = null;
-  endDate: Date | null = null;
+  startDate: string | null = null;
+  endDate: string | null = null;
   errorMessage: string = '';
 
   constructor(
@@ -45,10 +47,10 @@ export class CustomDateRangeDialogComponent implements OnInit {
   ngOnInit() {
     // Initialize with existing date range if provided
     if (this.data?.startDate) {
-      this.startDate = new Date(this.data.startDate);
+      this.startDate = dayjs(this.data.startDate).format('YYYY-MM-DD');
     }
     if (this.data?.endDate) {
-      this.endDate = new Date(this.data.endDate);
+      this.endDate = dayjs(this.data.endDate).format('YYYY-MM-DD');
     }
   }
 
@@ -75,8 +77,8 @@ export class CustomDateRangeDialogComponent implements OnInit {
 
     // Return the date range
     this.dialogRef.close({
-      start: this.startDate,
-      end: this.endDate
+      startDate: startMoment.toDate(),
+      endDate: endMoment.toDate()
     });
   }
 
@@ -85,29 +87,30 @@ export class CustomDateRangeDialogComponent implements OnInit {
   }
 
   selectLast7Days() {
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - 6);
-    this.startDate = startDate;
-    this.endDate = endDate;
+    const end = dayjs();
+    const start = dayjs().subtract(6, 'days');
+
+    this.startDate = start.format('YYYY-MM-DD');
+    this.endDate = end.format('YYYY-MM-DD');
     this.errorMessage = '';
   }
 
   selectLast30Days() {
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - 29);
-    this.startDate = startDate;
-    this.endDate = endDate;
+    const end = dayjs();
+    const start = dayjs().subtract(29, 'days');
+
+    this.startDate = start.format('YYYY-MM-DD');
+    this.endDate = end.format('YYYY-MM-DD');
     this.errorMessage = '';
   }
 
   selectThisMonth() {
-    const now = new Date();
-    const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    this.startDate = startDate;
-    this.endDate = endDate;
+    const today = dayjs();
+    const start = today.startOf('month');
+    const end = today.endOf('month');
+
+    this.startDate = start.format('YYYY-MM-DD');
+    this.endDate = end.format('YYYY-MM-DD');
     this.errorMessage = '';
   }
 }
