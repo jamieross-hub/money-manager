@@ -288,7 +288,9 @@
                                         Monthly Trend
                                     </p>
 
-                                    <div class="overflow-x-auto pb-2">
+                                    <div class="overflow-x-auto pb-2"
+                                        style="touch-action: pan-x; -webkit-overflow-scrolling: touch;"
+                                        (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)">
                                         <div class="flex items-end gap-2 min-w-max" style="height: 220px;">
                                             <div *ngFor="let m of savingsTrend"
                                                 class="flex flex-col items-center flex-shrink-0"
@@ -310,7 +312,8 @@
                                                 </div>
                                                 <span
                                                     class="text-[10px] text-neutral-400 text-center leading-tight mt-1">
-                                                    {{ m.label.split(' ')[0] }}
+                                                    {{ m.label.split(' ')[0] }}<br>
+                                                    <span class="text-[9px]">{{ m.label.split(' ')[1]}}</span>
                                                 </span>
                                             </div>
                                         </div>

@@ -599,4 +599,29 @@ export class ReportsComponent implements OnInit, OnDestroy {
             case 'stable': return 'text-primary-500';
         }
     }
+
+    // ── Touch scroll helpers ──
+    private touchStartX = 0;
+    private touchStartScrollLeft = 0;
+    private touchStartTime = 0;
+
+    onTouchStart(event: TouchEvent): void {
+        const container = event.currentTarget as HTMLElement;
+        this.touchStartX = event.touches[0].clientX;
+        this.touchStartScrollLeft = container.scrollLeft;
+        this.touchStartTime = Date.now();
+    }
+
+    onTouchEnd(event: TouchEvent): void {
+        const container = event.currentTarget as HTMLElement;
+        const touchEndX = event.changedTouches[0].clientX;
+        const deltaX = this.touchStartX - touchEndX;
+        const elapsed = Date.now() - this.touchStartTime;
+
+        // Apply momentum scroll if swipe was fast enough
+        if (elapsed < 300 && Math.abs(deltaX) > 30) {
+            const velocity = (deltaX / elapsed) * 500;
+            container.scrollBy({ left: velocity, behavior: 'smooth' });
+        }
+    }
 }
