@@ -316,20 +316,38 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
     const lastWord = words[words.length - 1];
     
     // Only attempt mid-word completion if they've typed at least 2 chars of the word
-    if (lastWord.length > 1) {
-        // Find a suggestion that contains this last word anywhere
-        const partialMatch = this.suggestions.find(s => 
-           s.toLowerCase().includes(lastWord) && s.toLowerCase() !== lowerV
-        );
+    if (lastWord.length > 0) {
+        // Find a suggestion that contains this last word at a word boundary
+        const partialMatch = this.suggestions.find(s => {
+           const lowerS = s.toLowerCase();
+           let searchIdx = 0;
+           while (true) {
+               const idx = lowerS.indexOf(lastWord, searchIdx);
+               if (idx === -1) return false;
+               if (idx === 0 || lowerS[idx - 1] === ' ') return true;
+               searchIdx = idx + 1;
+           }
+        });
         
         if (partialMatch) {
              const lowerS = partialMatch.toLowerCase();
-             const wordIdx = lowerS.indexOf(lastWord);
-             
-             // Extract only the remainder of the partially typed word and any subsequent words in the suggestion
-             // e.g. typing "sp" -> suggestion "Spent $500" -> autocomplete gives "ent $500"
-             this.suggestion = partialMatch.substring(wordIdx + lastWord.length);
-             return;
+             let wordIdx = -1;
+             let searchIdx = 0;
+             while (true) {
+                 const idx = lowerS.indexOf(lastWord, searchIdx);
+                 if (idx === -1) break;
+                 if (idx === 0 || lowerS[idx - 1] === ' ') {
+                     wordIdx = idx;
+                     break;
+                 }
+                 searchIdx = idx + 1;
+             }
+
+             if (wordIdx !== -1) {
+                 // Extract only the remainder of the partially typed word and any subsequent words in the suggestion
+                 this.suggestion = partialMatch.substring(wordIdx + lastWord.length);
+                 return;
+             }
         }
     }
 

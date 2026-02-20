@@ -71,9 +71,40 @@ export const CHAT_CONSTANTS = {
     },
     PATTERNS,
     SUGGESTIONS: [
-        'Spent ₹',
-        'Income ₹',
-        'Expense ₹',
+        'Spent',
+        'Paid',
+        'Expense',
+        'Income',
+        'Got',
+        'Add expense ',
+        'Add income ',
+        'Transfer',
+
+        'Show balance',
+        'My balance',
+        'Today expenses',
+        'This month expenses',
+        'Monthly report',
+        'Recent activity',
+
+        'Show expenses',
+        'Show income',
+        'Find ',
+        'Search ',
+        'Above ',
+        'Below ',
+
+        'Show budget',
+        'Budget left',
+        'Over budget?',
+        'Highest expense',
+        'Last expense',
+        'Top category',
+
+        'Account summary',
+        'Loan summary',
+        'Help',
+        'Clear data',
         capitalize(PATTERNS.INCOME_KEYWORDS[0]),
         'Show ' + PATTERNS.BALANCE_KEYWORDS[0],
         capitalize(PATTERNS.ACCOUNT_SUMMARY_KEYWORDS[0]),
@@ -87,7 +118,7 @@ export const CHAT_CONSTANTS = {
         capitalize(PATTERNS.HIGHEST_EXPENSE_KEYWORDS[0]),
         capitalize(PATTERNS.LAST_EXPENSE_KEYWORDS[0]),
         capitalize(PATTERNS.QUERY_TRANSACTIONS_KEYWORDS[0]),
-        
+
     ],
     EXIT_KEYWORDS: ['cancel', 'exit', 'quit', 'stop', 'nevermind', 'never mind', 'back', 'abort']
 };
