@@ -70,7 +70,7 @@
 .income-bar {
   ::ng-deep {
     .mdc-linear-progress__bar-inner {
-      border-color: var(--success-400, #4ade80);
+      border-color: var(--success-800);
     }
     .mdc-linear-progress__buffer-bar {
       background-color: var(--surface-200, #f1f5f9);
@@ -81,7 +81,7 @@
 .expense-bar {
   ::ng-deep {
     .mdc-linear-progress__bar-inner {
-      border-color: var(--error-400, #f87171);
+      border-color: var(--error-600);
     }
     .mdc-linear-progress__buffer-bar {
       background-color: var(--surface-200, #f1f5f9);
@@ -228,30 +228,84 @@ mat-list-item {
       display: none;
     }
 
+    // Remove the background fill completely
+    .mdc-line-ripple {
+      display: none !important;
+    }
+    
+    // Remove background, padding and outline 
     .mat-mdc-text-field-wrapper {
-      padding: 0 8px;
+      padding: 0 !important;
+      background-color: transparent !important;
     }
 
     .mat-mdc-form-field-infix {
-      min-height: 36px;
-      padding: 6px 0;
+      min-height: unset;
+      padding: 0;
       width: auto;
-      min-width: 80px;
+      min-width: 60px;
     }
 
+    // Hide any notched outline borders
     .mdc-notched-outline__leading,
     .mdc-notched-outline__trailing,
-    .mdc-notched-outline__notch {
-      border-radius: 8px;
+    .mdc-notched-outline__notch,
+    .mat-mdc-form-field-focus-overlay {
+      display: none !important;
+      border: none !important;
     }
 
     .mat-mdc-select-value-text {
-      font-size: 0.875rem;
-      font-weight: 600;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary-600, #4f46e5);
+    }
+    
+    // Dark mode text color override
+    :host-context(.dark-theme) .mat-mdc-select-value-text {
+      color: var(--primary-400, #818cf8);
     }
 
     .mat-mdc-select-arrow-wrapper {
       padding-left: 4px;
+      transform: translateY(2px); // Align arrow slightly lower
+    }
+    
+    .mat-mdc-select-arrow {
+       color: var(--primary-600, #4f46e5);
+    }
+
+    :host-context(.dark-theme) .mat-mdc-select-arrow {
+      color: var(--primary-400, #818cf8);
     }
   }
 }
+
+  .category-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+            
+            mat-icon {
+                font-size: 1.35rem;
+                width: 1.35rem;
+                height: 1.35rem;
+            }
+            
+            &.small {
+                 width: 32px;
+                 height: 32px;
+                 min-width: 32px;
+                 
+                 mat-icon {
+                     font-size: 18px;
+                     width: 18px;
+                     height: 18px;
+                 }
+            }
+        }

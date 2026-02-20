@@ -9,6 +9,8 @@ import * as CategoriesSelectors from '../../../../store/categories/categories.se
 import { UserService } from 'src/app/util/service/db/user.service';
 import { CurrencyService } from '../../../../util/service/currency.service';
 import { DateService } from '../../../../util/service/date.service';
+import { AppViewService, AppView } from 'src/app/util/service/app-view.service';
+import dayjs from 'dayjs';
 
 // Angular Material
 import { MatCardModule } from '@angular/material/card';
@@ -28,6 +30,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { CategorySummaryCardComponent } from 'src/app/util/components/cards/category-summary-card/category-summary-card.component';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
+import { AccountSummaryCardComponent } from 'src/app/util/components/cards/account-summary-card/account-summary-card.component';
 
 // ── Types ──
 
@@ -99,6 +102,7 @@ export interface Prediction {
         MatFormFieldModule,
         CategorySummaryCardComponent,
         CurrencyPipe,
+        AccountSummaryCardComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -111,8 +115,15 @@ export class ReportsComponent implements OnInit, OnDestroy {
     // Tab
     activeTab: 'summary' | 'forecast' = 'summary';
 
+    // Summary Cards
+    activeSummaryCard: 'category' | 'account' = 'category';
+
+    swapSummaryCard(): void {
+        this.activeSummaryCard = this.activeSummaryCard === 'category' ? 'account' : 'category';
+    }
+
     // Period selector
-    selectedPeriod: 'monthly' | 'quarterly' | 'yearly' = 'yearly';
+    selectedPeriod: 'weekly' | 'monthly' | 'yearly' = 'monthly';
     selectedYear: number = new Date().getFullYear();
     availableYears: number[] = [];
 
@@ -138,7 +149,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     private subscriptions: Subscription[] = [];
 
     // Period options for template iteration (typed)
-    readonly periodOptions: ('monthly' | 'quarterly' | 'yearly')[] = ['monthly', 'quarterly', 'yearly'];
+    readonly periodOptions: ('weekly' | 'monthly' | 'yearly')[] = ['weekly', 'monthly', 'yearly'];
 
     // Category icon & color lookup
     private categoryIconMap = new Map<string, string>();
@@ -155,11 +166,20 @@ export class ReportsComponent implements OnInit, OnDestroy {
         private store: Store<AppState>,
         private currencyService: CurrencyService,
         private dateService: DateService,
+        private appViewService: AppViewService,
         private cdr: ChangeDetectorRef,
         public breakpointService: BreakpointService
     ) { }
 
     ngOnInit(): void {
+        const viewSub = this.appViewService.appView$.subscribe(view => {
+            if (view === 'WEEKLY') this.selectedPeriod = 'weekly';
+            else if (view === 'YEARLY') this.selectedPeriod = 'yearly';
+            else this.selectedPeriod = 'monthly';
+            this.computeAll();
+        });
+        this.subscriptions.push(viewSub);
+
         this.loadTransactions();
     }
 
@@ -355,16 +375,21 @@ export class ReportsComponent implements OnInit, OnDestroy {
             const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
             const prevYear = currentMonth === 0 ? year - 1 : year;
             previousMonths = this.monthlySummaries.filter(m => m.month === prevMonth && m.year === prevYear);
-        } else if (this.selectedPeriod === 'quarterly') {
-            const currentQ = year === now.getFullYear() ? Math.floor(now.getMonth() / 3) : 3; // last quarter for past years
-            currentMonths = this.monthlySummaries.filter(m =>
-                m.year === year && Math.floor(m.month / 3) === currentQ
-            );
-            const prevQ = currentQ === 0 ? 3 : currentQ - 1;
-            const pYear = currentQ === 0 ? year - 1 : year;
-            previousMonths = this.monthlySummaries.filter(m =>
-                m.year === pYear && Math.floor(m.month / 3) === prevQ
-            );
+        } else if (this.selectedPeriod === 'weekly') {
+            const startOfCurrentWeek = dayjs().startOf('week');
+            const endOfCurrentWeek = dayjs().endOf('week');
+            const startOfPrevWeek = dayjs().subtract(1, 'week').startOf('week');
+            const endOfPrevWeek = dayjs().subtract(1, 'week').endOf('week');
+
+            currentMonths = this.buildAdhocSummary(this.transactions.filter(t => {
+                const d = dayjs(this.dateService.toDate(t.date));
+                return d.isAfter(startOfCurrentWeek.subtract(1, 'millisecond')) && d.isBefore(endOfCurrentWeek.add(1, 'millisecond'));
+            }));
+
+            previousMonths = this.buildAdhocSummary(this.transactions.filter(t => {
+                const d = dayjs(this.dateService.toDate(t.date));
+                return d.isAfter(startOfPrevWeek.subtract(1, 'millisecond')) && d.isBefore(endOfPrevWeek.add(1, 'millisecond'));
+            }));
         } else {
             currentMonths = this.monthlySummaries.filter(m => m.year === year);
             previousMonths = this.monthlySummaries.filter(m => m.year === year - 1);
@@ -380,6 +405,38 @@ export class ReportsComponent implements OnInit, OnDestroy {
         }
 
         this.cdr.markForCheck();
+    }
+
+    private buildAdhocSummary(txns: Transaction[]): MonthlySummary[] {
+        if (txns.length === 0) return [];
+        let income = 0;
+        let expense = 0;
+        const catMap = new Map<string, CategoryBreakdownItem>();
+
+        for (const t of txns) {
+            if (t.type === 'income') income += t.amount;
+            else if (t.type === 'expense') {
+                expense += t.amount;
+                const catKey = t.categoryId || t.category || 'Uncategorized';
+                const catName = t.category || 'Uncategorized';
+                if (!catMap.has(catKey)) {
+                    catMap.set(catKey, { categoryId: catKey, categoryName: catName, categoryIcon: this.categoryIconMap.get(catKey) || 'category', categoryColor: this.categoryColorMap.get(catKey) || '#9ca3af', amount: 0, percentage: 0, transactionCount: 0 });
+                }
+                const cat = catMap.get(catKey)!;
+                cat.amount += t.amount;
+                cat.transactionCount += 1;
+            }
+        }
+
+        const categories = Array.from(catMap.values());
+        if (expense > 0) categories.forEach(c => c.percentage = (c.amount / expense) * 100);
+        categories.sort((a, b) => b.amount - a.amount);
+
+        return [{
+            month: 0, year: 0, label: '', income, expense, savings: income - expense,
+            savingsRate: income > 0 ? ((income - expense) / income) * 100 : 0,
+            categoryBreakdown: categories
+        }];
     }
 
     private aggregatePeriod(months: MonthlySummary[], label: string): PeriodSummary | null {
@@ -424,12 +481,9 @@ export class ReportsComponent implements OnInit, OnDestroy {
             const pm = currentMonth === 0 ? 11 : currentMonth - 1;
             const py = currentMonth === 0 ? year - 1 : year;
             return `${this.MONTHS[pm]} ${py}`;
-        } else if (this.selectedPeriod === 'quarterly') {
-            const q = year === now.getFullYear() ? Math.floor(now.getMonth() / 3) + 1 : 4;
-            if (which === 'current') return `Q${q} ${year}`;
-            const pq = q === 1 ? 4 : q - 1;
-            const py = q === 1 ? year - 1 : year;
-            return `Q${pq} ${py}`;
+        } else if (this.selectedPeriod === 'weekly') {
+            if (which === 'current') return `This Week`;
+            return `Last Week`;
         } else {
             return which === 'current' ? `${year}` : `${year - 1}`;
         }
@@ -548,8 +602,10 @@ export class ReportsComponent implements OnInit, OnDestroy {
     // Helpers
     // ══════════════════════════════════════════
 
-    selectPeriod(period: 'monthly' | 'quarterly' | 'yearly'): void {
+    selectPeriod(period: 'weekly' | 'monthly' | 'yearly'): void {
         this.selectedPeriod = period;
+        // Optionally update the global app view here if desired
+        // e.g. this.appViewService.setAppView(period.toUpperCase());
         this.computePeriodSummary();
     }
 
