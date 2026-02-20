@@ -31,6 +31,7 @@ import { CategorySummaryCardComponent } from 'src/app/util/components/cards/cate
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import { AccountSummaryCardComponent } from 'src/app/util/components/cards/account-summary-card/account-summary-card.component';
+import { RouterModule } from '@angular/router';
 
 // ── Types ──
 
@@ -102,7 +103,8 @@ export interface Prediction {
         MatFormFieldModule,
         CategorySummaryCardComponent,
         CurrencyPipe,
-        AccountSummaryCardComponent
+        AccountSummaryCardComponent,
+        RouterModule
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -120,6 +122,30 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
     swapSummaryCard(): void {
         this.activeSummaryCard = this.activeSummaryCard === 'category' ? 'account' : 'category';
+    }
+
+    // ── Summary Card Swipe Helpers ──
+    private summaryTouchStartX = 0;
+    private summaryTouchStartY = 0;
+    private summaryTouchStartTime = 0;
+
+    onSummaryTouchStart(event: TouchEvent): void {
+        this.summaryTouchStartX = event.touches[0].clientX;
+        this.summaryTouchStartY = event.touches[0].clientY;
+        this.summaryTouchStartTime = Date.now();
+    }
+
+    onSummaryTouchEnd(event: TouchEvent): void {
+        const touchEndX = event.changedTouches[0].clientX;
+        const touchEndY = event.changedTouches[0].clientY;
+        const deltaX = this.summaryTouchStartX - touchEndX;
+        const deltaY = this.summaryTouchStartY - touchEndY;
+        const elapsed = Date.now() - this.summaryTouchStartTime;
+
+        // Trigger swap if either horizontal or vertical swipe distance is > 50px and less than 300ms
+        if (elapsed < 300 && (Math.abs(deltaX) > 50 || Math.abs(deltaY) > 50)) {
+            this.swapSummaryCard();
+        }
     }
 
     // Period selector

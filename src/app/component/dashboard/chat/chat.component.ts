@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, ChangeDetectorRef, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ElementRef, ViewChild, ChangeDetectorRef, AfterViewInit, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { TransactionType } from 'src/app/util/config/enums';
 import { Category } from 'src/app/util/models';
 import { ChatFacadeService } from 'src/app/util/service/ai-chat/chat-facade-service';
@@ -72,12 +72,26 @@ import { BudgetCardIntentHandler } from 'src/app/util/service/ai-chat/handlers/i
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ChatComponent implements AfterViewInit {
+export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
 
   visible: boolean = false;
   suggestion: string = '';
   suggestions = CHAT_CONSTANTS.SUGGESTIONS;
   @ViewChild('chatInput', { static: false }) ChatInput!: ElementRef<HTMLInputElement>;
+
+  // Placeholder Animation State
+  placeholders: string[] = [
+    'Ask AI about your spending...',
+    'Enter: "Spent $50 on food"...',
+    'How much did I spend this month?',
+    'What is my highest expense?',
+    'Add $2000 as salary income...'
+  ];
+  currentAnimatedPlaceholder: string = 'Ask AI about your spending...';
+  private currentPlaceholderIndex = 0;
+  private currentCharIndex = 0;
+  private isDeleting = false;
+  private typingTimeout: any;
 
   // Voice Interaction State
   isRecording: boolean = false;
@@ -97,6 +111,43 @@ export class ChatComponent implements AfterViewInit {
     private userService: UserService,
     private notificationService: NotificationService
   ) { }
+
+  ngOnInit() {
+    this.animatePlaceholder();
+  }
+
+  ngOnDestroy() {
+    if (this.typingTimeout) {
+      clearTimeout(this.typingTimeout);
+    }
+  }
+
+  private animatePlaceholder() {
+    const currentText = this.placeholders[this.currentPlaceholderIndex];
+    
+    if (this.isDeleting) {
+      this.currentAnimatedPlaceholder = currentText.substring(0, this.currentCharIndex - 1);
+      this.currentCharIndex--;
+    } else {
+      this.currentAnimatedPlaceholder = currentText.substring(0, this.currentCharIndex + 1);
+      this.currentCharIndex++;
+    }
+    
+    this.cdr.markForCheck();
+
+    let typeSpeed = this.isDeleting ? 30 : 60;
+
+    if (!this.isDeleting && this.currentCharIndex === currentText.length) {
+      typeSpeed = 2500; // Pause at the end before deleting
+      this.isDeleting = true;
+    } else if (this.isDeleting && this.currentCharIndex === 0) {
+      this.isDeleting = false;
+      this.currentPlaceholderIndex = (this.currentPlaceholderIndex + 1) % this.placeholders.length;
+      typeSpeed = 500; // Pause before typing the next phrase
+    }
+
+    this.typingTimeout = setTimeout(() => this.animatePlaceholder(), typeSpeed);
+  }
 
   ngAfterViewInit() {
     this.chatFacadeService.scrollToTop.subscribe(() => {

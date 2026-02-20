@@ -141,7 +141,7 @@
           </div>
 
           <!-- Actual Input -->
-          <input #chatInput type="text" placeholder="Ask AI or enter transaction..."
+          <input #chatInput type="text" [placeholder]="currentAnimatedPlaceholder"
             (keydown.enter)="sendMessage(chatInput)" (keydown)="onTabKey($event, chatInput)"
             (input)="onInputChange(chatInput)" (click)="completeSuggestion(chatInput)"
             class="w-full bg-transparent border-none focus:outline-none px-2 text-sm sm:text-base relative z-10">
