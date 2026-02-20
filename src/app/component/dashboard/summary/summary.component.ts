@@ -8,6 +8,7 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { MobileCategoryAddEditPopupComponent } from '../category/mobile-category-add-edit-popup/mobile-category-add-edit-popup.component';
 import { AddAccountDialogComponent } from '../accounts/add-account-dialog/add-account-dialog.component';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'user-summary',
@@ -50,7 +51,8 @@ export class SummaryComponent {
     constructor(
         public breakpointService: BreakpointService,
         private dialog: MatDialog,
-        private hapticFeedback: HapticFeedbackService
+        private hapticFeedback: HapticFeedbackService,
+        private router: Router
     ) { }
 
     onFabAction(action: QuickAction): void {
@@ -63,6 +65,9 @@ export class SummaryComponent {
                 this.dialog.open(MobileCategoryAddEditPopupComponent, {
                     panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
                     data: { category: null, isEdit: false, allCategories: [] }
+                }).afterClosed().subscribe(() => {
+                    this.hapticFeedback.lightVibration();
+                    this.router.navigate(['/dashboard/category']);
                 });
                 break;
 
@@ -70,6 +75,9 @@ export class SummaryComponent {
                 this.dialog.open(AddAccountDialogComponent, {
                     panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
                     data: null
+                }).afterClosed().subscribe(() => {
+                    this.hapticFeedback.lightVibration();
+                    this.router.navigate(['/dashboard/accounts']);
                 });
                 break;
         }

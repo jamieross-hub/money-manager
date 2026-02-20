@@ -36,7 +36,7 @@
               <div class="transaction-list" *ngIf="data.recentTransactions?.length">
                 <div class="transaction-item" *ngFor="let transaction of data.recentTransactions">
                   <div class="transaction-info">
-                    <span class="description">{{ transaction.payee }}</span>
+                    <span class="description">{{ transaction.category }}</span>
                     <span class="date">{{ dateService.toDate(transaction.date) | date:'shortDate' }}</span>
                   </div>
                   <span class="amount" [class]="transaction.amount >= 0 ? 'positive' : 'negative'">

@@ -35,7 +35,7 @@
 
           <div class="transaction-details">
             <div class="transaction-header">
-              <span class="payee">{{ transaction.payee }}</span>
+              <span class="payee">{{ transaction.category }}</span>
               <span class="amount" [class.income]="transaction.type === 'income'"
                 [class.expense]="transaction.type === 'expense'">
                 {{ formatAmount(transaction.amount) }}

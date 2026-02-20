@@ -15,7 +15,7 @@ import { CurrencyService } from '../../../service/currency.service';
 
 export interface UpcomingTransaction {
   id: string;
-  payee: string;
+
   amount: number;
   type: TransactionType;
   date: Date;
@@ -164,7 +164,7 @@ export class UpcomingTransactionsCardComponent implements OnInit, OnDestroy {
 
             return {
               id: t.id || '',
-              payee: t.payee,
+
               amount: t.amount,
               type: t.type,
               date: txDate,

@@ -63,7 +63,7 @@ export class TransactionIntentHandler implements IntentHandler {
             accountId: account?.accountId || '',
             categoryId: category?.id || '',
             category: category?.name,
-            payee: type === TransactionType.INCOME ? 'Income' : 'Expense',
+
             amount,
             type,
             date: new Date(),

@@ -607,7 +607,7 @@ export class SplitwiseService {
         updatedAt: new Date()
       };
 
-      if (request.payee) updateData.payee = request.payee;
+
       if (request.amount) updateData.amount = request.amount;
       if (request.type) updateData.type = request.type;
       if (request.date) updateData.date = this.dateService.toTimestamp(request.date);

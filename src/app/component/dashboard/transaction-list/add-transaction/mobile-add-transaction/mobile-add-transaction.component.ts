@@ -162,7 +162,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       });
 
     this.transactionForm = this.fb.group({
-      payee: [''],
+
       amount: ['', this.validationService.getTransactionAmountValidators()],
       date: [dayjs().format('YYYY-MM-DD'), Validators.required],
       description: [''],
@@ -207,7 +207,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
   private patchTransactionForm(transaction: any): void {
     this.transactionForm.patchValue({
-      payee: transaction.payee || '',
+
       amount: transaction.amount || '',
       date: transaction.date ?
         dayjs(this.dateService.toDate(transaction.date)).format('YYYY-MM-DD') :
@@ -263,7 +263,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       this.patchTransactionForm(this.dialogData);
     } else {
       this.transactionForm.patchValue({
-        payee: '',
+
         amount: '',
         date: dayjs().format('YYYY-MM-DD'),
         description: '',
@@ -329,7 +329,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           categoryName: transaction.category,
           categoryType: transaction.type,
           categoryId: transaction.categoryId,
-          payee: transaction.payee,
+
           accountId: transaction.accountId,
           isSplitTransaction: transaction.isSplitTransaction,
           splitGroupId: transaction.splitGroupId,
@@ -372,7 +372,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         const formData = this.transactionForm.value;
 
         const transactionData = {
-          payee: formData.payee,
+
           accountId: formData.accountId,
           amount: parseFloat(formData.amount),
           category: formData.categoryName,
@@ -463,8 +463,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     } else {
 
       // Show specific validation errors
-      if (this.transactionForm.get('payee')?.errors) {
-      }
+
       if (this.transactionForm.get('amount')?.errors) {
       }
       if (this.transactionForm.get('categoryId')?.errors) {
@@ -544,7 +543,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         categoryId: category.id,
         categoryName: category.name,
         categoryType: category.type,
-        payee: this.editMode ? this.dialogData.payee : category.name,
+
       });
 
     });

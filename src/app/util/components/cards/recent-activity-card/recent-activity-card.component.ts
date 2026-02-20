@@ -15,7 +15,7 @@ import { CurrencyService } from '../../../service/currency.service';
 
 export interface RecentTransaction {
   id: string;
-  payee: string;
+
   category: string;
   amount: number;
   type: 'income' | 'expense';
@@ -163,7 +163,7 @@ export class RecentActivityCardComponent implements OnInit, OnDestroy {
             const category = categories.find(c => c.id === t.categoryId);
             return {
               id: t.id || '',
-              payee: t.payee || 'Unknown',
+
               category: category?.name || 'Uncategorized',
               amount: t.amount,
               type: (t.type === TransactionType.INCOME ? 'income' : 'expense') as 'income' | 'expense',

@@ -123,7 +123,7 @@
             
             <div class="transaction-details">
               <div class="transaction-header">
-                <span class="transaction-payee">{{ transaction.payee || 'Unknown' }}</span>
+                <span class="transaction-payee">{{ transaction.category || 'Unknown' }}</span>
                 <span class="transaction-amount" [class]="getTransactionTypeClass(transaction)">
                   {{ formatAmount(transaction.amount || 0) }}
                 </span>

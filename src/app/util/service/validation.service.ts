@@ -839,7 +839,7 @@ export class ValidationService implements IValidationService {
     }
 
     // Validate required fields
-    const requiredFields = ['payee', 'amount', 'type', 'date', 'accountId', 'categoryId'];
+    const requiredFields = ['amount', 'type', 'date', 'accountId', 'categoryId'];
     for (const field of requiredFields) {
       if (!this.validateRequired(data[field])) {
         errors.push(`${field} is required`);

@@ -516,12 +516,12 @@ export class TransactionsService extends BaseService {
                         return recurringTransactions.filter(transaction => {
                             // Additional check to ensure transaction is still recurring
                             if (!transaction.isRecurring) {
-                                console.log(`Transaction ${transaction.id} (${transaction.payee}) is no longer recurring, skipping`);
+                                console.log(`Transaction ${transaction.id} (${transaction.category}) is no longer recurring, skipping`);
                                 return false;
                             }
 
                             if (!transaction.nextOccurrence) {
-                                console.log(`Transaction ${transaction.id} (${transaction.payee}) has no next occurrence, skipping`);
+                                console.log(`Transaction ${transaction.id} (${transaction.category}) has no next occurrence, skipping`);
                                 return false;
                             }
 
@@ -530,7 +530,7 @@ export class TransactionsService extends BaseService {
                                 : this.dateService.toDate(transaction.nextOccurrence);
 
                             if (!nextOccurrence) {
-                                console.log(`Transaction ${transaction.id} (${transaction.payee}) has invalid next occurrence, skipping`);
+                                console.log(`Transaction ${transaction.id} (${transaction.category}) has invalid next occurrence, skipping`);
                                 return false;
                             }
 
@@ -541,7 +541,7 @@ export class TransactionsService extends BaseService {
                             const isDue = normalizedNextOccurrence <= today;
 
                             if (!isDue) {
-                                console.log(`Transaction ${transaction.id} (${transaction.payee}) is not due yet, next occurrence: ${normalizedNextOccurrence}`);
+                                console.log(`Transaction ${transaction.id} (${transaction.category}) is not due yet, next occurrence: ${normalizedNextOccurrence}`);
                                 return false;
                             }
 
@@ -553,7 +553,7 @@ export class TransactionsService extends BaseService {
                             );
 
                             if (hasExistingTransaction) {
-                                console.log(`Transaction ${transaction.id} (${transaction.payee}) already has an entry for current period, skipping`);
+                                console.log(`Transaction ${transaction.id} (${transaction.category}) already has an entry for current period, skipping`);
                                 return false;
                             }
 
@@ -565,7 +565,7 @@ export class TransactionsService extends BaseService {
 
                                 if (nextOccurrence) {
                                     const isNextOccurrenceInCurrentMonth = this.isInSamePeriod(nextOccurrence, this.dateService.toDate(transaction.date), RecurringInterval.MONTHLY);
-                                    console.log(`Monthly transaction ${transaction.id} (${transaction.payee}) next occurrence check:`, {
+                                    console.log(`Monthly transaction ${transaction.id} (${transaction.category}) next occurrence check:`, {
                                         nextOccurrence: nextOccurrence,
                                         currentMonth: today,
                                         isNextOccurrenceInCurrentMonth: isNextOccurrenceInCurrentMonth
@@ -578,7 +578,7 @@ export class TransactionsService extends BaseService {
                             }
 
                             // Debug logging
-                            console.log(`Transaction ${transaction.id} (${transaction.payee}):`, {
+                            console.log(`Transaction ${transaction.id} (${transaction.category}):`, {
                                 isRecurring: transaction.isRecurring,
                                 nextOccurrence: normalizedNextOccurrence,
                                 today: today,
@@ -630,7 +630,7 @@ export class TransactionsService extends BaseService {
                             today
                         );
 
-                        console.log(`Processing recurring transaction ${transaction.id} (${transaction.payee}):`, {
+                        console.log(`Processing recurring transaction ${transaction.id} (${transaction.category}):`, {
                             interval: transaction.recurringInterval,
                             today: today,
                             calculatedNextOccurrence: nextOccurrence
@@ -681,9 +681,9 @@ export class TransactionsService extends BaseService {
                 return false;
             }
 
-            // Check if it's the same type of transaction (same payee, amount, category, account)
+            // Check if it's the same type of transaction (same category, amount, account)
             const isSameTransaction =
-                transaction.payee === recurringTransaction.payee &&
+                transaction.category === recurringTransaction.category &&
                 transaction.amount === recurringTransaction.amount &&
                 transaction.categoryId === recurringTransaction.categoryId &&
                 transaction.accountId === recurringTransaction.accountId &&
@@ -705,7 +705,7 @@ export class TransactionsService extends BaseService {
             return this.isInSamePeriod(transactionDate, today, recurringTransaction.recurringInterval!);
         });
 
-        console.log(`Found ${matchingTransactions.length} existing transactions for ${recurringTransaction.payee} in current period:`,
+        console.log(`Found ${matchingTransactions.length} existing transactions for ${recurringTransaction.category} in current period:`,
             matchingTransactions.map(t => ({ id: t.id, date: t.date, amount: t.amount })));
 
         return matchingTransactions.length > 0;

@@ -179,7 +179,6 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   // Row-level editing methods
   startRowEdit(element: any) {
     element.originalValues = {
-      payee: element.payee,
       amount: element.amount,
       type: element.type
     };
@@ -187,11 +186,6 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   }
 
   saveRowEdit(element: any) {
-    if (!element.payee || !element.payee.trim()) {
-      this.notificationService.error('Payee cannot be empty');
-      return;
-    }
-
     const amount = parseFloat(element.amount);
     if (!amount || amount <= 0) {
       this.notificationService.error('Amount must be a positive number');
@@ -204,7 +198,6 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     }
 
     const updateData = {
-      payee: element.payee.trim(),
       amount: amount,
       type: element.type
     };
@@ -223,7 +216,6 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   }
 
   cancelRowEdit(element: any) {
-    element.payee = element.originalValues.payee;
     element.amount = element.originalValues.amount;
     element.type = element.originalValues.type;
     element.isEditing = false;
@@ -263,7 +255,6 @@ export class TransactionListComponent implements OnInit, OnDestroy {
           }
 
           const transactionData = {
-            payee: tx.payee,
             userId: userId,
             accountId: tx.accountId,
             amount: parseFloat(tx.amount),

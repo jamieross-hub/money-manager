@@ -99,7 +99,7 @@ export class MobileTransactionListComponent
     { value: 'date-asc', label: 'Oldest First', icon: 'schedule' },
     { value: 'amount-desc', label: 'Highest Amount', icon: 'trending_up' },
     { value: 'amount-asc', label: 'Lowest Amount', icon: 'trending_down' },
-    { value: 'payee-asc', label: 'Payee A-Z', icon: 'sort_by_alpha' },
+
     { value: 'category-asc', label: 'Category A-Z', icon: 'category' },
   ];
 

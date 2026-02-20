@@ -288,7 +288,7 @@ export class GoogleSheetsComponent implements OnInit, OnDestroy {
         // Create transaction data structure
         const transactionData = {
           userId: userId,
-          payee: tx.description || 'Imported Transaction',
+
           accountId: tx.accountId || 'default',
           amount: parseFloat(tx.amount),
           category: tx.category || 'Uncategorized',

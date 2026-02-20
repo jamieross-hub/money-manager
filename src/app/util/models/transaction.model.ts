@@ -50,7 +50,7 @@ export interface Transaction extends Auditable, RecurrenceInfo {
   accountId: string;
   categoryId: string;
   category: string;
-  payee: string;
+  payee?: string;
   amount: number;
   type: TransactionType;
   date: Date | Timestamp;
@@ -83,7 +83,7 @@ export interface Transaction extends Auditable, RecurrenceInfo {
 export interface TransactionBaseRequest {
   accountId: string;
   categoryId: string;
-  payee: string;
+  payee?: string;
   amount: number;
   type: TransactionType;
   date: Date;
@@ -194,7 +194,7 @@ export interface RecurringTransactionTemplate extends Timestamped {
   userId: string;
   accountId: string;
   categoryId: string;
-  payee: string;
+  payee?: string;
   amount: number;
   type: TransactionType;
   interval: RecurringInterval;
