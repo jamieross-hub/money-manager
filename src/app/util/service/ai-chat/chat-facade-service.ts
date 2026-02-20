@@ -122,13 +122,10 @@ export class ChatFacadeService implements OnDestroy {
     public scrollToTop = new Subject<void>();
 
     private initWelcomeMessage() {
-        if (this.breakpointService.device.isLaptop) {
+        if (this.breakpointService.device.isMobile || this.breakpointService.device.isLaptop) {
 
             this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build());
 
-
-        } else if (this.breakpointService.device.isMobile) {
-            this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.GREETING).build());
 
         } else {
             this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build());
