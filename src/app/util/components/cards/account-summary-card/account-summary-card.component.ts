@@ -55,10 +55,13 @@ export class AccountSummaryCardComponent implements OnInit, OnDestroy {
   public getPositiveAccounts(): Account[] {
     return this.accounts.filter(account => {
       if (account.type === AccountType.LOAN && account.loanDetails) {
-        // For loan accounts, check if remaining balance is negative (meaning it's paid off)
+        // For loan accounts, check if remaining balance is negative (meaning it's paid off / overpaid)
         return -(account.loanDetails.remainingBalance || 0) > 0;
       }
-      return account.balance > 0;
+      if (account.type === AccountType.CREDIT) {
+        return account.balance > 0; // Credit cards are only assets if overpaid
+      }
+      return account.balance >= 0;
     });
   }
 
@@ -69,7 +72,10 @@ export class AccountSummaryCardComponent implements OnInit, OnDestroy {
     return this.accounts.filter(account => {
       if (account.type === AccountType.LOAN && account.loanDetails) {
         // For loan accounts, check if remaining balance is positive (meaning money is owed)
-        return -(account.loanDetails.remainingBalance || 0) < 0;
+        return -(account.loanDetails.remainingBalance || 0) <= 0;
+      }
+      if (account.type === AccountType.CREDIT) {
+        return account.balance <= 0; // Credit cards are usually liabilities, even at $0
       }
       return account.balance < 0;
     });

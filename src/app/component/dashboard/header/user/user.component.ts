@@ -21,12 +21,15 @@ import { ClickOutsideDirective } from 'src/app/util/directives/click-outside.dir
 import { LocalStorageKey } from 'src/app/util/models/local-storage.model';
 
 
+import { ThemeToggleComponent } from 'src/app/util/components/theme-toggle/theme-toggle.component';
+
+
 @Component({
   selector: 'app-user',
   templateUrl: './user.component.html',
   styleUrl: './user.component.scss',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatTooltipModule, RouterModule, TranslateModule, ClickOutsideDirective, MatDialogModule],
+  imports: [CommonModule, MatIconModule, MatTooltipModule, RouterModule, TranslateModule, ClickOutsideDirective, MatDialogModule, ThemeToggleComponent],
   animations: [
     trigger('slideDown', [
       state('void', style({
