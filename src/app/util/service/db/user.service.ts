@@ -232,7 +232,8 @@ export class UserService {
         country: regionalConfig.country,
         notifications: false,
         emailUpdates: false,
-        budgetAlerts: false
+        budgetAlerts: false,
+        theme: 'light-theme'
       }
     };
   }
@@ -514,7 +515,8 @@ export class UserService {
             country: regionalConfig.country,
             notifications: true,
             emailUpdates: true,
-            budgetAlerts: true
+            budgetAlerts: true,
+            theme: 'light-theme'
           }
         };
 
@@ -808,7 +810,8 @@ export class UserService {
         country: regionalConfig.country,
         notifications: true,
         emailUpdates: true,
-        budgetAlerts: true
+        budgetAlerts: true,
+        theme: 'light-theme'
       }
     };
 
@@ -1028,6 +1031,7 @@ export class UserService {
       }, { merge: true });
 
       this.storageService.setItem(`user-data-${user.uid}`, user);
+      this.userAuth$.next(user);
 
       this.logAuditEvent('USER_UPDATED', user.uid, {
         timestamp: new Date().toISOString()

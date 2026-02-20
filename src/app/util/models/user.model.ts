@@ -46,6 +46,7 @@ export interface UserPreferences {
 	categoryListViewMode?: boolean;
 	appView?: 'WEEKLY' | 'MONTHLY' | 'YEARLY';
 	familyGroupId?: string;
+	theme?: string;
 }
 
 

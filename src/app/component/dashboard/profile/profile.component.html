@@ -5,43 +5,71 @@
 @defer {
 <div class="profile-container">
 	<!-- Profile Header -->
-	<div class="profile-header">
-		<div class="header-content">
-			<div class="avatar-section">
-				<div class="avatar">
+	<div
+		class="profile-header bg-white dark:bg-gray-800 rounded-2xl shadow-sm border !border-surface-500 p-6 mb-6 relative">
+
+		<!-- Theme Toggle Badge (Corner) -->
+		<div class=" top-4 right-4 flex items-center justify-between px-3 py-1 bg-gray-50 dark:bg-gray-900 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm w-auto z-10"
+			[ngClass]="{
+				'absolute': !breakpointService.device.isMobile,
+				'fixed': breakpointService.device.isMobile
+			}">
+			<div class="flex items-center gap-1.5 mr-2">
+				<mat-icon class="!w-4 !h-4 !text-[16px]" [class.text-yellow-500]="currentTheme() === 'light-theme'"
+					[class.text-blue-300]="currentTheme() === 'dark-theme'">
+					{{ currentTheme() === 'dark-theme' ? 'dark_mode' : 'light_mode' }}
+				</mat-icon>
+				<span class="text-xs font-medium text-gray-700 dark:text-gray-200 hidden sm:inline">
+					{{ currentTheme() === 'dark-theme' ? 'Dark' : 'Light' }}
+				</span>
+			</div>
+			<div class="scale-75 origin-right translate-y-[2px]">
+				<app-theme-toggle [hideIcons]="true"></app-theme-toggle>
+			</div>
+		</div>
+
+		<div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pt-4 sm:pt-0 mt-6">
+			<!-- Left side: Avatar and Info -->
+			<div class="flex items-center gap-4">
+				<div
+					class="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-primary-400 to-secondary-500 flex items-center justify-center flex-shrink-0 shadow-inner">
 					<img *ngIf="userProfile()?.photoURL" [src]="userProfile()?.photoURL"
-						class="w-full h-full object-cover rounded-full" alt="Profile Photo">
-					<mat-icon class="avatar-icon" *ngIf="!userProfile()?.photoURL">person</mat-icon>
+						class="w-full h-full object-cover" alt="Profile Photo">
+					<mat-icon class="text-white !text-3xl !w-8 !h-8" *ngIf="!userProfile()?.photoURL">person</mat-icon>
 				</div>
-				<div class="user-info">
-					<p class="user-name">{{ fullName() }}</p>
-					<p class="user-email">{{ userProfile()?.email }}</p>
-					<p class="user-role">{{ 'PROFILE.MEMBER_SINCE' | translate }} {{
+				<div class="flex flex-col">
+					<p class="text-xl font-bold text-gray-900 dark:text-white m-0">{{ fullName() }}</p>
+					<p class="text-sm text-gray-500 dark:text-gray-400 m-0 mt-0.5">{{ userProfile()?.email }}</p>
+					<p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ 'PROFILE.MEMBER_SINCE' | translate }} {{
 						getFormattedDate(userProfile()?.createdAt) }}</p>
 				</div>
 			</div>
-			<div class="header-actions">
-				<button mat-raised-button color="primary" (click)="isEditing() ? cancelEdit() : toggleEdit()"
-					[disabled]="isLoading()" class="edit-btn">
-					<mat-icon>{{ isEditing() ? 'close' : 'edit' }}</mat-icon>
+
+			<!-- Right side: Actions -->
+			<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+				<button mat-stroked-button color="primary" (click)="isEditing() ? cancelEdit() : toggleEdit()"
+					[disabled]="isLoading()"
+					class="!h-[42px] !rounded-lg !border-gray-200 dark:!border-gray-700 !bg-white dark:!bg-gray-800">
+					<mat-icon class="!text-[18px] !w-[18px] !h-[18px] mr-1">{{ isEditing() ? 'close' : 'edit'
+						}}</mat-icon>
 					{{ (isEditing() ? 'COMMON.CANCEL_EDIT' : 'PROFILE.EDIT_PROFILE') | translate }}
 				</button>
+
+				<!-- Google Action Buttons (Mobile specifically) -->
 				<button mat-flat-button color="primary" (click)="signInWithGoogle()"
 					*ngIf="isGuestMode() && breakpointService.device.isMobile" [disabled]="isLoading()"
-					class="google-signin-btn ml-2 mt-5 !text-white">
-					<span class="flex items-center gap-2">
+					class="!h-[42px] !rounded-lg !text-white w-full">
+					<span class="flex items-center justify-center gap-2">
 						<mat-spinner *ngIf="isLoading()" diameter="20"></mat-spinner>
-						<mat-icon *ngIf="!isLoading()">login</mat-icon>
+						<mat-icon *ngIf="!isLoading()" class="!text-[18px] !w-[18px] !h-[18px]">login</mat-icon>
 						{{ isLoading() ? 'Loading...' : 'AUTH.SIGN_IN_WITH_GOOGLE' | translate }}
 					</span>
-
-
 				</button>
 				<button mat-flat-button (click)="logout()" *ngIf="!isGuestMode() && breakpointService.device.isMobile"
-					[disabled]="isLoading()" class="google-signin-btn ml-2 mt-5 !text-white !bg-secondary-600">
-					<span class="flex items-center gap-2">
+					[disabled]="isLoading()" class="!h-[42px] !rounded-lg !text-white !bg-primary-700 w-full">
+					<span class="flex items-center justify-center gap-2">
 						<mat-spinner *ngIf="isLoading()" diameter="20"></mat-spinner>
-						<mat-icon *ngIf="!isLoading()">logout</mat-icon>
+						<mat-icon *ngIf="!isLoading()" class="!text-[18px] !w-[18px] !h-[18px]">logout</mat-icon>
 						{{ isLoading() ? 'Loading...' : 'AUTH.SIGN_OUT' | translate }}
 					</span>
 				</button>
@@ -52,6 +80,8 @@
 	<!-- Profile Content -->
 	<div class="profile-content" *ngIf="userProfile()">
 		<form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="profile-form">
+
+
 			<mat-accordion [multi]="!breakpointService.device.isMobile">
 				<!-- Personal Information Section -->
 				<mat-expansion-panel [expanded]="breakpointService.device.isMobile ? false : true"

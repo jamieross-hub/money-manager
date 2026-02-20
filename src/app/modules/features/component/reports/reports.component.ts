@@ -27,6 +27,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { CategorySummaryCardComponent } from 'src/app/util/components/cards/category-summary-card/category-summary-card.component';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
+import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 
 // ── Types ──
 
@@ -96,7 +97,8 @@ export interface Prediction {
         MatIconModule,
         MatSelectModule,
         MatFormFieldModule,
-        CategorySummaryCardComponent
+        CategorySummaryCardComponent,
+        CurrencyPipe,
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })

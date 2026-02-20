@@ -1,9 +1,10 @@
 <div class="flex items-center gap-3">
+  @if (!hideIcons) {
   <mat-icon class="text-yellow-500 text-sm" matTooltip="Light Theme">light_mode</mat-icon>
-  <mat-slide-toggle 
-    [checked]="isDarkTheme" 
-    (change)="toggleTheme()" 
-    color="primary">
+  }
+  <mat-slide-toggle [checked]="isDarkTheme" (change)="toggleTheme()" color="primary">
   </mat-slide-toggle>
+  @if (!hideIcons) {
   <mat-icon class="text-blue-300 text-sm" matTooltip="Dark Theme">dark_mode</mat-icon>
-</div> 
+  }
+</div>

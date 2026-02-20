@@ -29,6 +29,8 @@ import {
 import { QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { BackupRestoreService } from 'src/app/util/service/backupRestore.service';
 import { SplitwiseService } from 'src/app/modules/splitwise/services/splitwise.service';
+import { ThemeSwitchingService } from 'src/app/util/service/theme-switching.service';
+import { ThemeType } from 'src/app/util/models/theme.model';
 import { CreateGroupDialogComponent } from 'src/app/modules/splitwise/create-group-dialog/create-group-dialog.component';
 import { SplitwiseGroup, CreateGroupRequest } from 'src/app/util/models/splitwise.model';
 
@@ -48,6 +50,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { TranslateModule } from '@ngx-translate/core';
 import { QuickActionsFabComponent } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
+import { ThemeToggleComponent } from 'src/app/util/components/theme-toggle/theme-toggle.component';
 
 @Component({
   selector: 'app-profile',
@@ -69,7 +72,8 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
     MatSlideToggleModule,
     TranslateModule,
     QuickActionsFabComponent,
-    MatExpansionModule
+    MatExpansionModule,
+    ThemeToggleComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -88,12 +92,14 @@ export class ProfileComponent {
   private readonly translationService = inject(TranslationService);
   private readonly splitwiseService = inject(SplitwiseService);
   private readonly backupRestoreService = inject(BackupRestoreService);
+  readonly themeSwitchingService = inject(ThemeSwitchingService);
 
   // ─── Signals (State) ───────────────────────────────────────────────
   readonly isLoading = signal(false);
   readonly isEditing = signal(false);
   readonly userProfile = signal<User | null>(null);
   readonly familyGroup = signal<SplitwiseGroup | null>(null);
+  readonly currentTheme = signal<ThemeType>('light-theme');
 
   readonly quickActionsFabConfig = signal<QuickActionsFabConfig>({
     title: 'Profile',
@@ -219,6 +225,13 @@ export class ProfileComponent {
           this.loadFamilyGroup(user.preferences.familyGroupId);
         }
       }
+    });
+
+    // Listen to theme changes
+    this.themeSwitchingService.currentTheme.pipe(
+      takeUntilDestroyed()
+    ).subscribe(theme => {
+      this.currentTheme.set(theme);
     });
   }
 

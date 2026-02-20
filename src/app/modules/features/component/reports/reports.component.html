@@ -66,37 +66,58 @@
                                     <div class="flex flex-col md:flex-row">
 
                                         <!-- Row 1 (mobile) / Left half (desktop) -->
-                                        <div class="grid grid-cols-2 divide-x divide-surface-500 flex-1">
+                                        <div
+                                            class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x bg-surface-100 rounded-xl md:bg-transparent md:rounded-none divide-surface-500 flex-1">
                                             <!-- Avg Monthly Spending -->
-                                            <div class="px-4 py-3">
-                                                <div class="flex items-center gap-2 mb-3">
+                                            <div
+                                                class="px-4 py-3 flex flex-col items-center md:block text-center md:text-left">
+                                                <div
+                                                    class="flex items-center justify-center md:justify-start gap-1 md:gap-2 mb-3">
                                                     <div
                                                         class="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
                                                         <mat-icon class="!text-base text-primary-500">speed</mat-icon>
                                                     </div>
-                                                    <span class="text-xs text-neutral-400 font-medium leading-tight">Avg
-                                                        Monthly</span>
+                                                    <span
+                                                        class="text-xs text-neutral-400 font-medium leading-tight relative top-1">Average
+                                                        Monthly Spending</span>
                                                 </div>
                                                 <div class="text-xl font-bold text-neutral-500">
-                                                    {{ formatCompact(avgMonthlySpending) }}
+                                                    {{ avgMonthlySpending | currency:{round:true} }}
                                                 </div>
-                                                <div class="text-xs text-neutral-400 mt-0.5">spending</div>
                                             </div>
 
                                             <!-- Top Category -->
-                                            <div class="px-4 py-3">
-                                                <div class="flex items-center gap-2 mb-3">
+                                            <div
+                                                class="px-4 py-3 flex flex-col items-center md:block text-center md:text-left bg-primary-50">
+                                                <div
+                                                    class="flex items-center justify-center md:justify-start gap-1 md:gap-2 mb-3">
                                                     <div
-                                                        class="w-8 h-8 rounded-lg bg-warning-50 flex items-center justify-center flex-shrink-0">
-                                                        <mat-icon
-                                                            class="!text-base text-warning-500">category</mat-icon>
+                                                        class="w-8 h-8 rounded-lg bg-warning-50 flex items-center justify-center flex-shrink-0 text-neutral-500">
+                                                        <mat-icon class="!text-base ">category</mat-icon>
                                                     </div>
-                                                    <span class="text-xs text-neutral-400 font-medium leading-tight">Top
-                                                        Category</span>
+                                                    <span
+                                                        class="text-xs text-neutral-400 font-medium leading-tight relative top-1">Highest
+                                                        Spending Category</span>
                                                 </div>
-                                                <div class="text-base font-bold text-neutral-500 truncate">
-                                                    {{ highestSpendingCategory?.categoryName || '—' }}
+                                                <div class="flex items-center justify-center md:justify-start gap-2"
+                                                    *ngIf="highestSpendingCategory; else noCategory">
+                                                    <span
+                                                        class="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+                                                        [style.background-color]="highestSpendingCategory.categoryColor + '20'"
+                                                        [style.color]="highestSpendingCategory.categoryColor">
+                                                        <mat-icon class="!text-[14px] !w-3.5 !h-3.5">{{
+                                                            highestSpendingCategory.categoryIcon }}</mat-icon>
+                                                    </span>
+                                                    <div class="text-base font-bold text-neutral-500 truncate mt-0">
+                                                        {{ highestSpendingCategory.categoryName }}
+                                                    </div>
                                                 </div>
+                                                <ng-template #noCategory>
+                                                    <div
+                                                        class="text-base font-bold text-neutral-500 truncate text-center md:text-left">
+                                                        —
+                                                    </div>
+                                                </ng-template>
                                                 <div class="text-xs text-neutral-400 mt-0.5">
                                                     {{ highestSpendingCategory ? (highestSpendingCategory.percentage |
                                                     number:'1.0-0') + '% of spend' : '' }}
@@ -105,10 +126,12 @@
                                         </div>
 
                                         <!-- Horizontal divider (mobile) / Vertical divider (desktop) -->
-                                        <div class="border-b border-surface-500 md:border-b-0 md:border-r"></div>
+                                        <div class="border-b border-surface-500 md:border-b-0 md:border-r"
+                                            *ngIf="!breakpointService.device.isMobile"></div>
 
                                         <!-- Row 2 (mobile) / Right half (desktop) -->
-                                        <div class="grid grid-cols-2 divide-x divide-surface-500 flex-1">
+                                        <div class="grid grid-cols-2 divide-x divide-surface-500 flex-1"
+                                            *ngIf="!breakpointService.device.isMobile">
                                             <!-- Savings Rate -->
                                             <div class="px-4 py-3">
                                                 <div class="flex items-center gap-2 mb-3">
@@ -117,7 +140,7 @@
                                                         <mat-icon class="!text-base text-success-500">savings</mat-icon>
                                                     </div>
                                                     <span
-                                                        class="text-xs text-neutral-400 font-medium leading-tight">Savings
+                                                        class="text-xs text-neutral-400 font-medium leading-tight relative top-1">Savings
                                                         Rate</span>
                                                 </div>
                                                 <div class="text-xl font-bold"
@@ -137,7 +160,7 @@
                                                             class="!text-base text-error-500">trending_up</mat-icon>
                                                     </div>
                                                     <span
-                                                        class="text-xs text-neutral-400 font-medium leading-tight">Expense
+                                                        class="text-xs text-neutral-400 font-medium leading-tight relative top-1">Expense
                                                         Trend</span>
                                                 </div>
                                                 <div class="text-xl font-bold"

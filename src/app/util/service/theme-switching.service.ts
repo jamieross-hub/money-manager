@@ -4,6 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 import { ThemeType } from '../models/theme.model';
 import { SsrService } from './ssr.service';
 import { Meta } from '@angular/platform-browser';
+import { UserService } from './db/user.service';
 
 @Injectable({
   providedIn: 'root'
@@ -19,7 +20,8 @@ export class ThemeSwitchingService {
     rendererFactory: RendererFactory2,
     @Inject(DOCUMENT) private document: Document,
     private ssrService: SsrService,
-    private meta: Meta
+    private meta: Meta,
+    private userService: UserService
   ) {
     this.renderer = rendererFactory.createRenderer(null, null);
     this.body = this.document.body;
@@ -36,8 +38,21 @@ export class ThemeSwitchingService {
 
     // Run after first paint to avoid Android PWA wrong value
     requestAnimationFrame(() => {
-      const systemTheme = this.getSystemTheme();
-      this.applyTheme(systemTheme);
+      // 1. Immediately apply the locally cached preferred theme (if exists) so there is no layout shift
+      const cachedTheme = this.userService.storageService.getItem<ThemeType>('app_theme_preference');
+      if (cachedTheme) {
+        this.applyTheme(cachedTheme);
+      } else {
+        const systemTheme = this.getSystemTheme();
+        this.applyTheme(systemTheme);
+      }
+
+      // 2. Subscribe to user preferences to sync if they log in from another device
+      this.userService.userAuth$.subscribe(user => {
+        if (user && user.preferences && user.preferences.theme) {
+          this.setTheme(user.preferences.theme as ThemeType);
+        }
+      });
     });
   }
 
@@ -47,6 +62,12 @@ export class ThemeSwitchingService {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
     const handler = () => {
+      // Don't auto-switch if user has explicitly saved a preference locally
+      const cachedTheme = this.userService.storageService.getItem<ThemeType>('app_theme_preference');
+      if (cachedTheme) {
+        return;
+      }
+
       const newTheme: ThemeType = mediaQuery.matches
         ? 'dark-theme'
         : 'light-theme';
@@ -86,6 +107,8 @@ export class ThemeSwitchingService {
   }
 
   public setTheme(theme: ThemeType) {
+    // Save to the ultra-fast synchronous cache to prevent blinking on refresh
+    this.userService.storageService.setItem('app_theme_preference', theme);
     this.applyTheme(theme);
   }
 }
