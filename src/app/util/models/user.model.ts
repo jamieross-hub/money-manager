@@ -43,6 +43,7 @@ export interface UserPreferences {
 	emailUpdates: boolean;
 	budgetAlerts: boolean;
 	openaiApiKey?: string;
+	geminiApiKey?: string;
 	categoryListViewMode?: boolean;
 	appView?: 'WEEKLY' | 'MONTHLY' | 'YEARLY';
 	familyGroupId?: string;

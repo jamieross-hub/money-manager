@@ -29,6 +29,7 @@ import { LoanSummaryIntentHandler } from './handlers/intent-handler/loan-summary
 import { MonthlyExpenditureIntentHandler } from './handlers/intent-handler/monthly-expenditure-intent-handler.service';
 import { BudgetCardIntentHandler } from './handlers/intent-handler/budget-card-intent-handler.service';
 import { LoanReportIntentHandler } from './handlers/intent-handler/loan-report-intent-handler.service';
+import { GeminiIntentHandler } from './handlers/intent-handler/gemini-intent-handler.service';
 import { INTENTS } from "./models/intent-config";
 import { UserService } from "../db/user.service";
 
@@ -63,6 +64,7 @@ export class ChatFacadeService implements OnDestroy {
         private monthlyExpenditureHandler: MonthlyExpenditureIntentHandler,
         private budgetCardHandler: BudgetCardIntentHandler,
         private loanReportHandler: LoanReportIntentHandler,
+        private geminiHandler: GeminiIntentHandler,
         private userService: UserService
     ) {
         this.store.select(selectAllAccounts).pipe(
@@ -107,6 +109,8 @@ export class ChatFacadeService implements OnDestroy {
         this.registry.register(INTENTS.HIGHEST_CATEGORY, this.queryIntentHandler);
         this.registry.register(INTENTS.COMPARE_CATEGORY, this.queryIntentHandler);
         this.registry.register(INTENTS.AI_REPLY, this.openAiHandler);
+        // We could also register Gemini for a specific intent if needed, 
+        // or toggle based on user preference. For now, we'll just have it available.
         this.registry.register(INTENTS.GET_LOAN_REPORT, this.loanReportHandler);
     }
 
@@ -227,9 +231,16 @@ export class ChatFacadeService implements OnDestroy {
             const result = handler.handle(context);
             this.processHandlerResult(result);
         } else {
-            // Fallback to OpenAI handler
-            const result = this.openAiHandler.handle(context);
-            this.processHandlerResult(result);
+            // Fallback logic: check for Gemini key first, then OpenAI
+            const user = this.userService.userAuth$.value;
+            if (user?.preferences?.geminiApiKey && !user?.preferences?.openaiApiKey) {
+                const result = this.geminiHandler.handle(context);
+                this.processHandlerResult(result);
+            } else {
+                // Default to OpenAI handler
+                const result = this.openAiHandler.handle(context);
+                this.processHandlerResult(result);
+            }
         }
     }
 

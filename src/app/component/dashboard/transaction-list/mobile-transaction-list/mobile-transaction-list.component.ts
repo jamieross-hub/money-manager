@@ -161,7 +161,7 @@ export class MobileTransactionListComponent
         _accountType: account?.type || 'Unknown',
         _dateDisplay: dateObj.format('dd MMM '),
         _timeDisplay: dateObj.format('hh:mm a'),
-        _fullDateDisplay: dateObj.format('fullDate'), // check format string validity later if needed, assuming custom or standard
+        _fullDateDisplay: dateObj.format('dddd, DD MMMM YYYY'), 
         _syncStatusColor: this.getSyncStatusColor(tx),
         _syncStatusIcon: this.getSyncStatusIcon(tx),
         _syncStatusInfo: this.getSyncStatusInfo(tx),

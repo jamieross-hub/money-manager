@@ -427,64 +427,7 @@
 
 
 
-                            @defer (on viewport) {
-                            <!-- ═══════════ INCOME VS EXPENSE TREND CHART ═══════════ -->
-                            <mat-card *ngIf="savingsTrend.length > 1" class="!rounded-xl !border-none">
-                                <mat-card-content class="pt-4">
-                                    <p class="text-lg font-semibold text-neutral-500 mb-5 flex items-center gap-2">
-                                        <mat-icon class="text-primary-500">show_chart</mat-icon>
-                                        Monthly Trend
-                                    </p>
-
-                                    <div class="overflow-x-auto pb-2"
-                                        style="touch-action: pan-x; -webkit-overflow-scrolling: touch;"
-                                        (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)">
-                                        <div class="flex items-end gap-2 min-w-max" style="height: 220px;">
-                                            <div *ngFor="let m of savingsTrend"
-                                                class="flex flex-col items-center flex-shrink-0"
-                                                style="width: 48px; height: 100%;"
-                                                [matTooltip]="m.label + ' — Income: ' + formatCompact(m.income) + ', Expense: ' + formatCompact(m.expense)">
-                                                <!-- Bars container -->
-                                                <div class="flex items-end gap-0.5 w-full justify-center"
-                                                    style="height: 180px;">
-                                                    <div class="w-5 rounded-t-sm transition-all duration-500"
-                                                        style="min-height: 2px;"
-                                                        [style.height.px]="getTrendBarHeight(m.income) * 1.8"
-                                                        [class.bg-success-400]="true">
-                                                    </div>
-                                                    <div class="w-5 rounded-t-sm transition-all duration-500"
-                                                        style="min-height: 2px;"
-                                                        [style.height.px]="getTrendBarHeight(m.expense) * 1.8"
-                                                        [class.bg-error-400]="true">
-                                                    </div>
-                                                </div>
-                                                <span
-                                                    class="text-[10px] text-neutral-400 text-center leading-tight mt-1">
-                                                    {{ m.label.split(' ')[0] }}<br>
-                                                    <span class="text-[9px]">{{ m.label.split(' ')[1]}}</span>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <mat-divider class="my-4"></mat-divider>
-
-                                    <!-- Legend -->
-                                    <div class="flex items-center justify-center gap-6">
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-3 h-3 rounded-sm bg-success-400"></div>
-                                            <span class="text-xs text-neutral-500">Income</span>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-3 h-3 rounded-sm bg-error-400"></div>
-                                            <span class="text-xs text-neutral-500">Expense</span>
-                                        </div>
-                                    </div>
-                                </mat-card-content>
-                            </mat-card>
-                            } @placeholder {
-                            <div class="h-56 bg-neutral-200 rounded-xl animate-pulse"></div>
-                            }
+                            
 
                             @defer (on viewport) {
                             <!-- ═══════════ MONTHLY HISTORY ═══════════ -->

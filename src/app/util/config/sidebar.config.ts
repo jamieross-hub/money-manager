@@ -105,7 +105,7 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         isPremium: true
       },
       {
-        label: 'NAVIGATION.OPENAI',
+        label: 'Connect AI Models',
         route: '/dashboard/openai-interaction',
         icon: 'smart_toy',
         order: 6,

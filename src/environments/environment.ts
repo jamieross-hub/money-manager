@@ -14,6 +14,7 @@ export const environment = {
   },
   vapidKey: "",
   openAiApiKey: '',
+  geminiApiKey: '',
   SLACK_WEBHOOK_URL: '',
   googleClientId: '',
   contactSpreadsheetId: ''
