@@ -27,7 +27,7 @@ import { AccountType, TransactionType } from '../../config/enums';
 export class ChatCategoryDropdownComponent implements OnChanges, OnDestroy {
   @Input() placeholder = 'Select category';
   @Input() amount: number = 0;
-  @Input() txType: TransactionType = TransactionType.INCOME;
+  @Input() txType?: TransactionType;
 
   // @Output() selected = new EventEmitter<{ selectedCategory: Category; amount: number; txType: string }>();
   // @Output() accountSelected = new EventEmitter<any>();
@@ -75,7 +75,7 @@ export class ChatCategoryDropdownComponent implements OnChanges, OnDestroy {
   onSubmit() {
     if (!this.currentCategory || !this.currentAccount) return;
     this.isDisabled = true;
-    this.submitSelection.emit({ selectedCategory: this.currentCategory, account: this.currentAccount, amount: this.amount, txType: this.txType });
+    this.submitSelection.emit({ selectedCategory: this.currentCategory, account: this.currentAccount, amount: this.amount, txType: (this.txType ?? this.currentCategory.type) as TransactionType });
   }
 
   ngOnDestroy() {

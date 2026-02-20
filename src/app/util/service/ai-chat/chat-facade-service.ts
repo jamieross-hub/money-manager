@@ -173,8 +173,14 @@ export class ChatFacadeService implements OnDestroy {
         }
 
         if (stage === 'askCategory') {
-            // using rawText to allow proper casing if needed? usually lowerText matches better but let's stick to simple
-            this.pushBot({ sender: 'bot', type: 'html', text: this.flow.handleCategoryReply(rawText.trim(), this.defualtBankAccount) });
+            const categories = this.categoryService.getCachedCategories();
+            const categoryMatch = categories.find(c => c.name.toLowerCase() === lowerText.trim());
+            
+            if (categoryMatch) {
+                this.handleCategorySelection(categoryMatch, this.defualtBankAccount, amount, categoryMatch.type);
+            } else {
+                this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.MISSING_CATEGORY).build());
+            }
             return true;
         }
 
@@ -296,17 +302,19 @@ export class ChatFacadeService implements OnDestroy {
         }, 100);
     }
 
-    // Called by UI dropdown
-    handleCategorySelection(selectedCategory: Category, account: any, amount: number, txType: TransactionType) {
+    // Called by UI dropdown or text input
+    handleCategorySelection(selectedCategory: Category, account: any, amount: number, txType?: TransactionType) {
         if (!selectedCategory) return;
 
-        if (txType === TransactionType.INCOME) {
+        const effectiveType = txType || selectedCategory.type;
+
+        if (effectiveType === TransactionType.INCOME) {
             this.transactionHandler.addIncome(selectedCategory, account, amount);
-        } else if (txType === TransactionType.EXPENSE) {
+        } else if (effectiveType === TransactionType.EXPENSE) {
             this.transactionHandler.addExpense(selectedCategory, account, amount);
         }
 
-        const reply = this.flow.handleCategoryReply(selectedCategory.name, account);
+        const reply = this.flow.handleCategoryReply(selectedCategory.name, account, effectiveType);
         this.pushBot(ResponseBuilder.create().html(reply).build());
     }
 }

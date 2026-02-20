@@ -184,7 +184,7 @@
     border: 1px solid mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
   }
   border: none;
-  height: 3rem;
+  height: 32px;
   transition: all 0.2s ease;
   
   &:hover:not([disabled]) {
@@ -222,8 +222,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   :host-context(.light-theme) & {
     background: mat.get-theme-color(light.$light-theme, neutral, 90);
@@ -236,11 +236,17 @@
   font-weight: 600;
   font-size: 12px;
   flex-shrink: 0;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
 }
 
 .chip-label {
   font-weight: 500;
-  font-size: 14px;
+  font-size: 13px;
   :host-context(.light-theme) & { color: mat.get-theme-color(light.$light-theme, neutral, 20); }
   :host-context(.dark-theme) & { color: mat.get-theme-color(dark.$dark-theme, primary, 100); }
 }

@@ -15,7 +15,15 @@ export class ChatFlowService {
 
     startAmountFlow(amount: number) {
         this.fsm.transition(ChatEvent.AMOUNT_PROVIDED, { amount });
-        return CHAT_CONSTANTS.MSGS.ASK_TYPE(this.currencyService.formatAmount(amount));
+        return {
+            type: 'UI-ELEMENT',
+            text: 'categoryDropdown',
+            data: {
+                placeholder: 'Select category for ' + this.currencyService.formatAmount(amount),
+                amount: amount,
+                txType: undefined
+            }
+        };
     }
 
     startCategoryFlow(type: TransactionType, amount: number) {
@@ -65,12 +73,12 @@ export class ChatFlowService {
         return CHAT_CONSTANTS.MSGS.INVALID_TYPE;
     }
 
-    handleCategoryReply(category: string, account: Account | null) {
+    handleCategoryReply(category: string, account: Account | null, txType?: TransactionType) {
         if (!category) return CHAT_CONSTANTS.MSGS.MISSING_CATEGORY;
 
         const context = this.fsm.getContext();
         const amount = context.amount || 0;
-        const type = context.type;
+        const type = txType || context.type;
 
         // This is usually a confirmation message after the facade adds the transaction
         let result = '';
@@ -80,7 +88,7 @@ export class ChatFlowService {
             result = CHAT_CONSTANTS.MSGS.EXPENSE_ADDED(this.currencyService.formatAmount(amount), account?.name || '', category);
         }
 
-        this.fsm.transition(ChatEvent.CATEGORY_PROVIDED, { category });
+        this.fsm.transition(ChatEvent.CATEGORY_PROVIDED, { category, type });
         this.reset();
         return result;
     }

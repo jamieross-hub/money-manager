@@ -70,12 +70,12 @@ export class ConversationStateMachine {
                 if (event === ChatEvent.START_FLOW) {
                     return ChatState.AWAITING_AMOUNT; // Default if nothing provided
                 }
-                if (event === ChatEvent.AMOUNT_PROVIDED) return ChatState.AWAITING_TYPE;
+                if (event === ChatEvent.AMOUNT_PROVIDED) return ChatState.AWAITING_CATEGORY;
                 if (event === ChatEvent.TYPE_PROVIDED) return ChatState.AWAITING_CATEGORY;
                 break;
 
             case ChatState.AWAITING_AMOUNT:
-                if (event === ChatEvent.AMOUNT_PROVIDED) return ChatState.AWAITING_TYPE;
+                if (event === ChatEvent.AMOUNT_PROVIDED) return ChatState.AWAITING_CATEGORY;
                 break;
 
             case ChatState.AWAITING_TYPE:
