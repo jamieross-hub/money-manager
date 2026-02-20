@@ -3,7 +3,7 @@ import { FirebaseMessagingService, NotificationPayload } from './firebase-messag
 import { APP_CONFIG } from '../config/config';
 import { environment } from '@env/environment';
 import { CurrencyService } from './currency.service';
-import { LocalStorageService } from './indexdb-storage.service';
+import { LocalIndexDBStorageService } from './indexdb-storage.service';
 
 export interface NotificationType {
   key: string;
@@ -34,7 +34,7 @@ export class NotificationManagerService {
   constructor(
     private messagingService: FirebaseMessagingService,
     private currencyService: CurrencyService,
-    private localStorageService: LocalStorageService
+    private localStorageService: LocalIndexDBStorageService
   ) {
     this.loadSettings();
   }

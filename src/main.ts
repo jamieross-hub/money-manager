@@ -122,16 +122,14 @@ function preserveAuthData(): any {
   const authData: any = {};
   const storageService = LocalIndexDBStorageService.getInstance();
 
-  // Preserve Firebase Auth state
-  if (typeof localStorage !== 'undefined') {
-    const authKeys = Object.keys(localStorage).filter(key =>
-      key.startsWith('firebase:authUser:') ||
-      key.startsWith('firebase:persistence:')
-    );
-    authKeys.forEach(key => {
-      authData[key] = storageService.getItem(key);
-    });
-  }
+  // Preserve Firebase Auth state (stored in IndexedDB via storageService)
+  const authKeys = storageService.getAllKeys().filter(key =>
+    key.startsWith('firebase:authUser:') ||
+    key.startsWith('firebase:persistence:')
+  );
+  authKeys.forEach(key => {
+    authData[key] = storageService.getItem(key);
+  });
 
   // Preserve user preferences
   const userPrefs = ['theme', 'language', 'user-settings'];
@@ -176,9 +174,9 @@ async function clearApplicationCaches(): Promise<void> {
       );
     }
 
-    // Clear application-specific localStorage items
+    // Clear application-specific storage items (via IndexedDB-backed service)
     const storageService = LocalIndexDBStorageService.getInstance();
-    const keysToRemove = Object.keys(localStorage).filter(key =>
+    const keysToRemove = storageService.getAllKeys().filter(key =>
       !key.startsWith('firebase:') &&
       !key.startsWith('user') &&
       !key.startsWith('theme') &&
