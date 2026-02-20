@@ -88,9 +88,7 @@ export class PwaSwService {
     };
 
     this.updateInfoSubject.next(updateInfo);
-
-    // Auto-activate update silently without user notification
-    this.activateUpdateSilently();
+    // Don't auto-reload — let the UI show an update banner
   }
 
   private getVersionFromAppData(appData: any): string | undefined {
@@ -105,18 +103,17 @@ export class PwaSwService {
     window.location.reload();
   }
 
-  private activateUpdateSilently(): Promise<boolean> {
+  /** Called by the UI when the user clicks "Refresh" on the update banner */
+  public activateUpdate(): Promise<boolean> {
     return this.swUpdate.activateUpdate()
       .then(() => {
-        console.log('Service worker update activated silently');
+        console.log('Service worker update activated');
         this.updateInfoSubject.next({
           available: false,
           currentVersion: '',
           newVersion: '',
           updateReady: false
         });
-
-        // Reload the page to use the new version without any user notification
         window.location.reload();
         return true;
       })
@@ -126,8 +123,12 @@ export class PwaSwService {
       });
   }
 
-  public activateUpdate(): Promise<boolean> {
-    return this.activateUpdateSilently();
+  /** Dismiss the update banner without refreshing */
+  public dismissUpdate(): void {
+    this.updateInfoSubject.next({
+      ...this.updateInfoSubject.value,
+      available: false
+    });
   }
 
   public checkForUpdate(): Promise<boolean> {

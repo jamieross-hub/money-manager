@@ -18,6 +18,7 @@ import { loadGoals } from 'src/app/store/goals/goals.actions';
 import { loadTransactions } from 'src/app/store/transactions/transactions.actions';
 import { InvitationPopupService } from 'src/app/util/service/invitation-popup.service';
 import { RecurringTransactionService } from 'src/app/util/service/recurring-transaction.service';
+import { PwaSwService } from 'src/app/util/service/pwa-sw.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -30,6 +31,7 @@ import { RecurringTransactionService } from 'src/app/util/service/recurring-tran
 export class DashboardComponent implements OnInit, OnDestroy {
   @ViewChild('mainContent') mainContent!: ElementRef<HTMLElement>;
   isMobile = false;
+  updateAvailable = false;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -39,7 +41,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private invitationPopupService: InvitationPopupService,
     private recurringTransactionService: RecurringTransactionService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private pwaSwService: PwaSwService
   ) { }
 
   ngOnInit() {
@@ -94,5 +97,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.store.dispatch(loadGoals({ userId }));
       this.store.dispatch(loadTransactions({ userId }));
     }
+  }
+
+  refreshApp(): void {
+    this.pwaSwService.activateUpdate();
+  }
+
+  dismissUpdate(): void {
+    this.updateAvailable = false;
+    this.pwaSwService.dismissUpdate();
+    this.cdr.markForCheck();
   }
 }

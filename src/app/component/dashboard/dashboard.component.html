@@ -1,4 +1,17 @@
 <div class="dashboard-wrapper safe-h-screen flex flex-col">
+
+  <!-- PWA Update Banner -->
+  @if (updateAvailable) {
+    <div class="update-banner">
+      <div class="update-banner-content">
+        <span class="update-banner-icon">🔄</span>
+        <span class="update-banner-text">A new version is available!</span>
+        <button class="update-banner-refresh" (click)="refreshApp()">Refresh</button>
+        <button class="update-banner-dismiss" (click)="dismissUpdate()" aria-label="Dismiss">✕</button>
+      </div>
+    </div>
+  }
+
   <!-- Fixed Header -->
   @defer (on timer(200ms)) {
   <app-header class="dashboard-header"></app-header>
