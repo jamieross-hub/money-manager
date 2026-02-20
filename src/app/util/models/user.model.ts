@@ -48,6 +48,7 @@ export interface UserPreferences {
 	familyGroupId?: string;
 	theme?: string;
 	biometricLock?: boolean;
+	biometricRegistered?: boolean;
 }
 
 

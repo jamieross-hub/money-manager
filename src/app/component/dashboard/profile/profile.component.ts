@@ -105,6 +105,7 @@ export class ProfileComponent {
   readonly familyGroup = signal<SplitwiseGroup | null>(null);
   readonly currentTheme = signal<ThemeType>('light-theme');
   readonly isBiometricSupported = signal(false);
+  readonly isBiometricRegistered = signal(false);
 
 
   readonly quickActionsFabConfig = signal<QuickActionsFabConfig>({
@@ -183,6 +184,7 @@ export class ProfileComponent {
         categoryListViewMode: [{ value: false, disabled: true }],
         appView: [{ value: 'MONTHLY', disabled: true }],
         biometricLock: [{ value: false, disabled: true }],
+        biometricRegistered: [{ value: false, disabled: true }],
       }),
     });
 
@@ -362,6 +364,7 @@ export class ProfileComponent {
         categoryListViewMode: user.preferences?.categoryListViewMode || false,
         appView: user.preferences?.appView || 'MONTHLY',
         biometricLock: user.preferences?.biometricLock || false,
+        biometricRegistered: user.preferences?.biometricRegistered || false,
       },
       role: user.role,
 
@@ -392,8 +395,11 @@ export class ProfileComponent {
           categoryListViewMode: profile.preferences?.categoryListViewMode || false,
           appView: profile.preferences?.appView || 'MONTHLY',
           biometricLock: profile.preferences?.biometricLock || false,
+          biometricRegistered: profile.preferences?.biometricRegistered || false,
         },
       });
+
+      this.isBiometricRegistered.set(profile.preferences?.biometricRegistered || false);
 
 
       // Ensure form's current timezone is in the list
@@ -433,6 +439,27 @@ export class ProfileComponent {
       } else {
         this.notificationService.success('Biometric verification successful. Lock enabled.');
       }
+    }
+  }
+
+  async registerBiometric(): Promise<void> {
+    try {
+      this.isLoading.set(true);
+      const success = await this.securityService.registerBiometric();
+      if (success) {
+        this.isBiometricRegistered.set(true);
+        this.profileForm.get('preferences.biometricRegistered')?.setValue(true);
+        this.notificationService.success('Fingerprint registered successfully!');
+        // Automatically save the registration state
+        await this.saveProfile();
+      } else {
+        this.notificationService.error('Biometric registration failed.');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      this.notificationService.error('An error occurred during registration.');
+    } finally {
+      this.isLoading.set(false);
     }
   }
 

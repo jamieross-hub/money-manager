@@ -341,11 +341,30 @@
 						</div>
 
 						<div class="preference-item" *ngIf="isBiometricSupported()">
-							<mat-slide-toggle formControlName="biometricLock" [disabled]="!isEditing()" color="primary"
+							<div class="flex items-center justify-between mb-2">
+								<span class="toggle-label !font-medium">Biometric Lock</span>
+								<button mat-stroked-button color="primary" type="button" size="small"
+									*ngIf="!isBiometricRegistered() && isEditing()" (click)="registerBiometric()"
+									class="!text-xs !h-8 !px-3">
+									<mat-icon class="!text-sm !w-4 !h-4">fingerprint</mat-icon>
+									Register
+								</button>
+							</div>
+							<mat-slide-toggle formControlName="biometricLock"
+								[disabled]="!isEditing() || !isBiometricRegistered()" color="primary"
 								(change)="onBiometricToggleChange($event)">
-								<span class="toggle-label">Biometric Lock</span>
+								<span class="toggle-label text-xs">Enable fingerprint lock</span>
 							</mat-slide-toggle>
 							<p class="preference-description">Require fingerprint to open the app</p>
+							<p class="text-[10px] text-orange-500 mt-1"
+								*ngIf="!isBiometricRegistered() && isEditing()">
+								Register your fingerprint first to enable this feature.
+							</p>
+							<p class="text-[10px] text-green-600 dark:text-green-400 mt-1 flex items-center gap-1"
+								*ngIf="isBiometricRegistered()">
+								<mat-icon class="!text-[12px] !w-3 !h-3">check_circle</mat-icon>
+								Fingerprint registered
+							</p>
 						</div>
 					</div>
 				</mat-expansion-panel>

@@ -163,6 +163,62 @@ export class SecurityService {
   }
 
   /**
+   * Register a new biometric credential for the device
+   */
+  public async registerBiometric(): Promise<boolean> {
+    if (!(await this.isBiometricSupported())) {
+      return false;
+    }
+
+    try {
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+      
+      const userID = this.userService.getCurrentUserId() || 'guest';
+      const userEmail = this.userService.userAuth$.value?.email || 'guest@money-manager.local';
+
+      const options: CredentialCreationOptions = {
+        publicKey: {
+          challenge: challenge,
+          rp: {
+            name: "Money Manager",
+            id: window.location.hostname
+          },
+          user: {
+            id: new TextEncoder().encode(userID),
+            name: userEmail,
+            displayName: userEmail
+          },
+          pubKeyCredParams: [
+            { alg: -7, type: "public-key" }, // ES256
+            { alg: -257, type: "public-key" } // RS256
+          ],
+          authenticatorSelection: {
+            userVerification: "required",
+            authenticatorAttachment: "platform"
+          },
+          timeout: 60000
+        }
+      };
+
+      const credential = await navigator.credentials.create(options);
+      if (credential) {
+        this.logSecurityEvent(
+          SecurityEventType.SECURITY_ALERT,
+          SecurityLevel.LOW,
+          { reason: 'biometric_registered' },
+          userID
+        );
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Biometric registration failed:', error);
+      return false;
+    }
+  }
+
+  /**
    * Set biometric verified state manually (e.g. after successful verification)
    */
   public setBiometricVerified(verified: boolean): void {
