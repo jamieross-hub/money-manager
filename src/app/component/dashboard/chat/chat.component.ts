@@ -85,11 +85,14 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
 
   // Placeholder Animation State
   placeholders: string[] = [
-    'Ask AI about your spending...',
+    'Ask about your spending...',
     'Enter: "Spent $50 on food"...',
     'How much did I spend this month?',
     'What is my highest expense?',
-    'Add $2000 as salary income...'
+    'Add $2000 as salary income...',
+    'Report of last month',
+    'Loan report',
+
   ];
   currentAnimatedPlaceholder: string = 'Ask AI about your spending...';
   private currentPlaceholderIndex = 0;

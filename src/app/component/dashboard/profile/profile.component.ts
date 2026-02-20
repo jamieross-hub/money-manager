@@ -16,6 +16,7 @@ import { AppState } from '../../../store/app.state';
 import * as ProfileActions from '../../../store/profile/profile.actions';
 import * as ProfileSelectors from '../../../store/profile/profile.selectors';
 import { DateService } from 'src/app/util/service/date.service';
+import { SecurityService } from 'src/app/util/service/security.service';
 import {
   APP_CONFIG,
   ERROR_MESSAGES,
@@ -51,6 +52,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { QuickActionsFabComponent } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { ThemeToggleComponent } from 'src/app/util/components/theme-toggle/theme-toggle.component';
+import { SsrService } from 'src/app/util/service/ssr.service';
 
 @Component({
   selector: 'app-profile',
@@ -93,6 +95,8 @@ export class ProfileComponent {
   private readonly splitwiseService = inject(SplitwiseService);
   private readonly backupRestoreService = inject(BackupRestoreService);
   readonly themeSwitchingService = inject(ThemeSwitchingService);
+  private readonly securityService = inject(SecurityService);
+  private readonly ssrService = inject(SsrService);
 
   // ─── Signals (State) ───────────────────────────────────────────────
   readonly isLoading = signal(false);
@@ -100,6 +104,8 @@ export class ProfileComponent {
   readonly userProfile = signal<User | null>(null);
   readonly familyGroup = signal<SplitwiseGroup | null>(null);
   readonly currentTheme = signal<ThemeType>('light-theme');
+  readonly isBiometricSupported = signal(false);
+
 
   readonly quickActionsFabConfig = signal<QuickActionsFabConfig>({
     title: 'Profile',
@@ -176,8 +182,10 @@ export class ProfileComponent {
         budgetAlerts: [{ value: true, disabled: true }],
         categoryListViewMode: [{ value: false, disabled: true }],
         appView: [{ value: 'MONTHLY', disabled: true }],
+        biometricLock: [{ value: false, disabled: true }],
       }),
     });
+
 
     // Dispatch profile load
     const uid = this.userService.isGuestUser() ? 'offline-guest' : this.currentUser?.uid;
@@ -233,7 +241,18 @@ export class ProfileComponent {
     ).subscribe(theme => {
       this.currentTheme.set(theme);
     });
+
+    // Check biometric support
+    this.checkBiometricSupport();
   }
+
+  private async checkBiometricSupport(): Promise<void> {
+    if (!this.ssrService.isClientSide()) return;
+    const supported = await this.securityService.isBiometricSupported();
+    this.isBiometricSupported.set(supported);
+  }
+
+
 
   // ─── Family Group ──────────────────────────────────────────────────
 
@@ -342,8 +361,10 @@ export class ProfileComponent {
         budgetAlerts: user.preferences?.budgetAlerts || true,
         categoryListViewMode: user.preferences?.categoryListViewMode || false,
         appView: user.preferences?.appView || 'MONTHLY',
+        biometricLock: user.preferences?.biometricLock || false,
       },
       role: user.role,
+
       createdAt: user.createdAt,
       updatedAt: this.dateService.toTimestamp(user.updatedAt) || new Date(),
     };
@@ -370,8 +391,10 @@ export class ProfileComponent {
           budgetAlerts: profile.preferences?.budgetAlerts || true,
           categoryListViewMode: profile.preferences?.categoryListViewMode || false,
           appView: profile.preferences?.appView || 'MONTHLY',
+          biometricLock: profile.preferences?.biometricLock || false,
         },
       });
+
 
       // Ensure form's current timezone is in the list
       const formTimezone = this.profileForm.get('preferences.timezone')?.value;
@@ -397,6 +420,19 @@ export class ProfileComponent {
         mainButtonIcon: 'save',
         mainButtonTooltip: 'Save Profile'
       }));
+    }
+  }
+
+  async onBiometricToggleChange(event: any): Promise<void> {
+    if (event.checked) {
+      const verified = await this.securityService.verifyBiometric();
+      if (!verified) {
+        // Reset toggle if verification failed
+        this.profileForm.get('preferences.biometricLock')?.setValue(false);
+        this.notificationService.error('Biometric verification failed. Could not enable biometric lock.');
+      } else {
+        this.notificationService.success('Biometric verification successful. Lock enabled.');
+      }
     }
   }
 

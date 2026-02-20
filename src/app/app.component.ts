@@ -12,6 +12,8 @@ import { LanguageService } from './util/service/language.service';
 import { LocalIndexDBStorageService } from './util/service/indexdb-storage.service';
 import { LocalStorageKey } from './util/models/local-storage.model';
 import { UserTrackingService, ScreenTrackingService } from '@angular/fire/analytics';
+import { UserService } from './util/service/db/user.service';
+import { SecurityService } from './util/service/security.service';
 
 @Component({
   selector: 'app-root',
@@ -37,6 +39,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private localStorageService: LocalIndexDBStorageService,
     private userTrackingService: UserTrackingService,
     private screenTrackingService: ScreenTrackingService,
+    private userService: UserService,
+    private securityService: SecurityService,
   ) {
     this.navigationState = {
       canGoBack: false,
@@ -48,6 +52,10 @@ export class AppComponent implements OnInit, OnDestroy {
     };
   }
 
+  isLocked = false;
+  isBiometricSupported = false;
+
+
   ngOnInit() {
     this.themeSwitchingService; // Initialize theme service
     if (this.ssrService.isClientSide()) {
@@ -56,7 +64,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.initializePwaFeatures();
     this.setupEventListeners();
     this.firebaseMessagingService.listenForMessages();
+    this.checkBiometricLock();
   }
+
 
   ngOnDestroy() {
     this.destroy$.next();
@@ -135,7 +145,38 @@ export class AppComponent implements OnInit, OnDestroy {
       // Refresh data if needed
       this.refreshDataIfNeeded();
     }
+    this.checkBiometricLock();
   }
+
+  private async checkBiometricLock(): Promise<void> {
+    if (!this.ssrService.isClientSide()) return;
+
+    this.isBiometricSupported = await this.securityService.isBiometricSupported();
+    
+    this.userService.userAuth$.pipe(takeUntil(this.destroy$)).subscribe(async (user: any) => {
+      if (user?.preferences?.biometricLock && !this.securityService.isBiometricVerified()) {
+        this.isLocked = true;
+        this.promptBiometric();
+      } else {
+        this.isLocked = false;
+      }
+    });
+
+    // Also check current verified state from security service
+    this.securityService.biometricVerified$.pipe(takeUntil(this.destroy$)).subscribe((verified: boolean) => {
+      if (verified) {
+        this.isLocked = false;
+      }
+    });
+  }
+
+  async promptBiometric(): Promise<void> {
+    const success = await this.securityService.verifyBiometric();
+    if (success) {
+      this.isLocked = false;
+    }
+  }
+
 
   private refreshDataIfNeeded(): void {
     const lastRefresh = this.localStorageService.getItem<string>(LocalStorageKey.LAST_DATA_REFRESH);

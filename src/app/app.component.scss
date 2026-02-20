@@ -6,7 +6,26 @@
   padding: 16px;
 }
 
-
 .offline-banner { 
   position: fixed; top: 0; width: 100%; background: red; color: white; text-align: center; padding: 5px; 
+}
+
+.lock-screen-overlay {
+  transition: all 0.3s ease-in-out;
+  
+  .lock-card {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: slideUp 0.5s ease-out;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

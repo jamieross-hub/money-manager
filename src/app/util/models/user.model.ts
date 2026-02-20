@@ -47,6 +47,7 @@ export interface UserPreferences {
 	appView?: 'WEEKLY' | 'MONTHLY' | 'YEARLY';
 	familyGroupId?: string;
 	theme?: string;
+	biometricLock?: boolean;
 }
 
 

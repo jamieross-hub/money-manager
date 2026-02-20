@@ -8,8 +8,9 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { provideHttpClient, withInterceptors, HttpClient } from '@angular/common/http';
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
-
-// Function for ngx-translate loader
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { CommonModule } from '@angular/common';
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
 }
@@ -71,6 +72,9 @@ import { LoaderComponent } from './util/components/loader/loader.component';
 
     // Utility
     IconModule,
+    MatIconModule,
+    MatButtonModule,
+    CommonModule,
     // TranslatePipe,
     CurrencyPipe,
 

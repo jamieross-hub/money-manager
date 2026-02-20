@@ -93,6 +93,9 @@ export interface SecurityStatus {
 export class SecurityService {
   private readonly securityEvents = new BehaviorSubject<SecurityEvent[]>([]);
   private readonly securityStatus = new BehaviorSubject<SecurityStatus | null>(null);
+  private readonly biometricVerified = new BehaviorSubject<boolean>(false);
+  public readonly biometricVerified$ = this.biometricVerified.asObservable();
+
   private readonly securityConfig: SecurityConfig = {
     SESSION_TIMEOUT: 30 * 60 * 1000, // 30 minutes
     MAX_LOGIN_ATTEMPTS: 5,
@@ -109,6 +112,77 @@ export class SecurityService {
 
   public readonly securityEvents$ = this.securityEvents.asObservable();
   public readonly securityStatus$ = this.securityStatus.asObservable();
+
+  /**
+   * Check if biometric authentication is supported by the browser/device
+   */
+  public async isBiometricSupported(): Promise<boolean> {
+    return typeof window !== 'undefined' && 
+           !!(window.PublicKeyCredential && 
+           PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable && 
+           await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable());
+  }
+
+  /**
+   * Verify user via biometric authentication
+   */
+  public async verifyBiometric(): Promise<boolean> {
+    if (!(await this.isBiometricSupported())) {
+      return false;
+    }
+
+    try {
+      // Note: This is a simplified WebAuthn challenge for local verification.
+      // In a real-world scenario, you'd typically verify this with a backend.
+      // For a "local lock", we just want to ensure the user can authenticate with their device.
+      
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+
+      const options: CredentialRequestOptions = {
+        publicKey: {
+          challenge: challenge,
+          timeout: 60000,
+          userVerification: 'required'
+        }
+      };
+
+      // This will trigger the browser's biometric prompt
+      // Note: We don't actually need to verify the signature server-side
+      // if we're just using this as a "local app lock" UI gate.
+      // Just the successful completion of .get() means the user authenticated.
+      await navigator.credentials.get(options);
+      
+      this.biometricVerified.next(true);
+      return true;
+    } catch (error) {
+      console.error('Biometric verification failed:', error);
+      this.biometricVerified.next(false);
+      return false;
+    }
+  }
+
+  /**
+   * Set biometric verified state manually (e.g. after successful verification)
+   */
+  public setBiometricVerified(verified: boolean): void {
+    this.biometricVerified.next(verified);
+  }
+
+  /**
+   * Check if user is currently biometric-verified in this session
+   */
+  public isBiometricVerified(): boolean {
+    return this.biometricVerified.value;
+  }
+
+  /**
+   * Reset biometric verification state (e.g. on logout)
+   */
+  public resetBiometricVerification(): void {
+    this.biometricVerified.next(false);
+  }
+
 
   constructor(
     private router: Router,
