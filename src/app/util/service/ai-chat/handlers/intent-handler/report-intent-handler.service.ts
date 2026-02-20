@@ -88,15 +88,9 @@ export class ReportIntentHandler implements IntentHandler {
     private determinePeriod(context: IntentContext): { periodLabel: string; filterFn: (d: Date) => boolean } {
         const lowerText = context.lowerText || '';
         const now = new Date();
+        now.setHours(23, 59, 59, 999); // Set to end of day for easier comparison
 
         // 1. Check for specific keywords in user text
-        if (lowerText.includes('today')) {
-            return {
-                periodLabel: 'Today',
-                filterFn: (d) => d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-            };
-        }
-
         if (lowerText.includes('yesterday')) {
             const yesterday = new Date(now);
             yesterday.setDate(now.getDate() - 1);
@@ -106,29 +100,44 @@ export class ReportIntentHandler implements IntentHandler {
             };
         }
 
-        if (lowerText.includes('this week') || lowerText.includes('last 7 days')) {
+        if (lowerText.includes('today') || lowerText.includes(' day')) {
+            return {
+                periodLabel: 'Today',
+                filterFn: (d) => d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+            };
+        }
+
+        if (lowerText.includes('week')) {
             return {
                 periodLabel: 'This Week',
                 filterFn: (d) => {
                     const msInDay = 24 * 60 * 60 * 1000;
-                    return (now.getTime() - d.getTime()) <= (7 * msInDay);
+                    const diffDays = Math.round((now.getTime() - d.getTime()) / msInDay);
+                    return diffDays >= 0 && diffDays <= 7;
                 }
             };
         }
 
-        if (lowerText.includes('this month')) {
+        if (lowerText.includes('month')) {
+            // Check for 'last month' specifically
+            if (lowerText.includes('last month')) {
+                const lastMonth = new Date(now);
+                lastMonth.setMonth(now.getMonth() - 1);
+                return {
+                    periodLabel: 'Last Month',
+                    filterFn: (d) => d.getMonth() === lastMonth.getMonth() && d.getFullYear() === lastMonth.getFullYear()
+                };
+            }
             return {
                 periodLabel: 'This Month',
                 filterFn: (d) => d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
             };
         }
 
-        if (lowerText.includes('last month')) {
-            const lastMonth = new Date(now);
-            lastMonth.setMonth(now.getMonth() - 1);
+        if (lowerText.includes('year')) {
             return {
-                periodLabel: 'Last Month',
-                filterFn: (d) => d.getMonth() === lastMonth.getMonth() && d.getFullYear() === lastMonth.getFullYear()
+                periodLabel: 'This Year',
+                filterFn: (d) => d.getFullYear() === now.getFullYear()
             };
         }
 

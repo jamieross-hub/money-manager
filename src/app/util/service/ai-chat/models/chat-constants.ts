@@ -67,7 +67,7 @@ export const CHAT_CONSTANTS = {
         MISSING_CATEGORY: 'Please provide a category name.',
         FLOW_CANCELLED: 'Okay, cancelled. How else can I help you?',
 
-        HELP_OPTIONS: `<b>You can ask me things like:</b><br><br><b>Add:</b> "Spent 500 on dinner", "Added 5000 to Salary"<br><b>Check:</b> "What is my balance?", "How much cash do I have?"<br><b>Activity:</b> "Show my latest transactions", "What was my last expense?"<br><b>Spending:</b> "How much did I spend today?"<br><b>Categories:</b> "Compare food and travel", "What is my highest expense?"<br><b>Manage Data:</b> "Clear all my data"<br><br><i>Just type naturally! I'll understand.</i><br><i>💡 Type "cancel" anytime to stop.</i>`
+        HELP_OPTIONS: `<b>You can ask me things like:</b><br><br><b>Add:</b> "Spent 500 on dinner", "Added 5000 to Salary"<br><b>Check:</b> "What is my balance?", "How much cash do I have?"<br><b>Activity:</b> "Show my latest transactions", "What was my last expense?"<br><b>Spending:</b> "How much did I spend today?"<br><b>Categories:</b> "Compare food and travel", "What is my highest expense?"<br><b>Manage Data:</b> "Clear all my data"<br><br>💡 Type "cancel" anytime to stop.</i>`
     },
     PATTERNS,
     SUGGESTIONS: [
