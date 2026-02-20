@@ -29,7 +29,11 @@ export class OpenAiIntentHandler implements IntentHandler {
 
                 if (!apiKey) {
                     console.error('OpenAI API key not set in user preferences');
-                    return of(ResponseBuilder.create().html('Please connect your OpenAI API key in the OpenAI Integration to use this OpenAI feature.').build());
+                    return of(ResponseBuilder.create().html(
+                        'Please configure your OpenAI API key in the Settings to enable advanced AI chat.<br/><br/>' +
+                        '<b>In the meantime, you can try these built-in offline commands:</b><br/><br/>' + 
+                        CHAT_CONSTANTS.MSGS.HELP_OPTIONS
+                    ).build());
                 }
 
                 const systemMessage: OpenAIMessage = { ...SYSTEM_PROMPTS['moneyManagerDefault'] };

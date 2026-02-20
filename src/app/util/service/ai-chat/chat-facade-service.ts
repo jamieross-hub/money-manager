@@ -23,6 +23,7 @@ import { RecentActivityIntentHandler } from './handlers/intent-handler/recent-ac
 import { ClearDataIntentHandler } from './handlers/intent-handler/clear-data-intent-handler.service';
 import { ReportIntentHandler } from './handlers/intent-handler/report-intent-handler.service';
 import { TransactionIntentHandler } from './handlers/intent-handler/transaction-intent-handler.service';
+import { QueryIntentHandler } from './handlers/intent-handler/query-intent-handler.service';
 import { OpenAiIntentHandler } from './handlers/intent-handler/openai-intent-handler.service';
 import { LoanSummaryIntentHandler } from './handlers/intent-handler/loan-summary-intent-handler.service';
 import { MonthlyExpenditureIntentHandler } from './handlers/intent-handler/monthly-expenditure-intent-handler.service';
@@ -37,7 +38,7 @@ export class ChatFacadeService implements OnDestroy {
     messages: Message[] = [];
     isTyping = false;
     private destroy$ = new Subject<void>();
-    defualtBankAccount: Account | null = null;
+    defaultBankAccount: Account | null = null;
 
     constructor(
         private intent: ChatIntentService,
@@ -55,6 +56,7 @@ export class ChatFacadeService implements OnDestroy {
         private clearDataHandler: ClearDataIntentHandler,
         private reportIntentHandler: ReportIntentHandler,
         private transactionHandler: TransactionIntentHandler,
+        private queryIntentHandler: QueryIntentHandler,
         private openAiHandler: OpenAiIntentHandler,
         private loanSummaryHandler: LoanSummaryIntentHandler,
         private monthlyExpenditureHandler: MonthlyExpenditureIntentHandler,
@@ -76,7 +78,7 @@ export class ChatFacadeService implements OnDestroy {
         this.store.select(selectAllAccounts)
             .pipe(takeUntil(this.destroy$))
             .subscribe(accounts => {
-                this.defualtBankAccount = accounts.filter(account => account.type.toLowerCase().includes(AccountType.BANK))[0]; //Bank account as default
+                this.defaultBankAccount = accounts.filter(account => account.type.toLowerCase().includes(AccountType.BANK))[0]; //Bank account as default
             });
     }
 
@@ -94,6 +96,14 @@ export class ChatFacadeService implements OnDestroy {
         this.registry.register(INTENTS.LOAN_SUMMARY_CARD, this.loanSummaryHandler);
         this.registry.register(INTENTS.MONTHLY_EXPENDITURE_CARD, this.monthlyExpenditureHandler);
         this.registry.register(INTENTS.BUDGET_CARD, this.budgetCardHandler);
+        this.registry.register(INTENTS.QUERY_SPENDING, this.queryIntentHandler);
+        this.registry.register(INTENTS.CHECK_BALANCE, this.queryIntentHandler);
+        this.registry.register(INTENTS.HIGHEST_EXPENSE, this.queryIntentHandler);
+        this.registry.register(INTENTS.LAST_EXPENSE, this.queryIntentHandler);
+        this.registry.register(INTENTS.QUERY_TRANSACTIONS, this.queryIntentHandler);
+        this.registry.register(INTENTS.QUERY_CATEGORY_SPENDING, this.queryIntentHandler);
+        this.registry.register(INTENTS.HIGHEST_CATEGORY, this.queryIntentHandler);
+        this.registry.register(INTENTS.COMPARE_CATEGORY, this.queryIntentHandler);
         this.registry.register(INTENTS.AI_REPLY, this.openAiHandler);
     }
 
@@ -177,7 +187,7 @@ export class ChatFacadeService implements OnDestroy {
             const categoryMatch = categories.find(c => c.name.toLowerCase() === lowerText.trim());
             
             if (categoryMatch) {
-                this.handleCategorySelection(categoryMatch, this.defualtBankAccount, amount, categoryMatch.type);
+                this.handleCategorySelection(categoryMatch, this.defaultBankAccount, amount, categoryMatch.type);
             } else {
                 this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.MISSING_CATEGORY).build());
             }

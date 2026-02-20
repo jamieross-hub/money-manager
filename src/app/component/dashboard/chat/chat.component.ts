@@ -34,6 +34,7 @@ import { TransactionIntentHandler } from 'src/app/util/service/ai-chat/handlers/
 import { LoanSummaryIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/loan-summary-intent-handler.service';
 import { MonthlyExpenditureIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/monthly-expenditure-intent-handler.service';
 import { BudgetCardIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/budget-card-intent-handler.service';
+import { QueryIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/query-intent-handler.service';
 
 @Component({
   selector: 'app-chat',
@@ -68,7 +69,8 @@ import { BudgetCardIntentHandler } from 'src/app/util/service/ai-chat/handlers/i
     OpenAiIntentHandler,
     LoanSummaryIntentHandler,
     MonthlyExpenditureIntentHandler,
-    BudgetCardIntentHandler
+    BudgetCardIntentHandler,
+    QueryIntentHandler
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -296,16 +298,42 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
       return;
     }
 
-    // Find matching suggestion
-    const match = this.suggestions.find(s =>
-      s.toLowerCase().startsWith(value.toLowerCase()) && s.toLowerCase() !== value.toLowerCase()
+    const lowerV = value.toLowerCase();
+
+    // 1. Direct Prefix Check
+    let match = this.suggestions.find(s =>
+      s.toLowerCase().startsWith(lowerV) && s.toLowerCase() !== lowerV
     );
 
     if (match) {
-      this.suggestion = match.substring(value.length);
-    } else {
-      this.suggestion = '';
+        this.suggestion = match.substring(value.length);
+        return;
     }
+
+    // 2. Word by word matching logic
+    // Split the user's input to isolate the last word being typed
+    const words = lowerV.split(' ');
+    const lastWord = words[words.length - 1];
+    
+    // Only attempt mid-word completion if they've typed at least 2 chars of the word
+    if (lastWord.length > 1) {
+        // Find a suggestion that contains this last word anywhere
+        const partialMatch = this.suggestions.find(s => 
+           s.toLowerCase().includes(lastWord) && s.toLowerCase() !== lowerV
+        );
+        
+        if (partialMatch) {
+             const lowerS = partialMatch.toLowerCase();
+             const wordIdx = lowerS.indexOf(lastWord);
+             
+             // Extract only the remainder of the partially typed word and any subsequent words in the suggestion
+             // e.g. typing "sp" -> suggestion "Spent $500" -> autocomplete gives "ent $500"
+             this.suggestion = partialMatch.substring(wordIdx + lastWord.length);
+             return;
+        }
+    }
+
+    this.suggestion = '';
   }
 
   onTabKey(event: KeyboardEvent, input: HTMLInputElement) {

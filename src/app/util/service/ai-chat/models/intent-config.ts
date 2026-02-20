@@ -21,6 +21,13 @@ export const INTENTS = {
     CLEAR_DATA: 'CLEAR_DATA',
     GET_REPORT: 'GET_REPORT',
     MONTHLY_EXPENDITURE_CARD: 'MONTHLY_EXPENDITURE_CARD',
+    QUERY_SPENDING: 'QUERY_SPENDING',
+    HIGHEST_EXPENSE: 'HIGHEST_EXPENSE',
+    LAST_EXPENSE: 'LAST_EXPENSE',
+    QUERY_TRANSACTIONS: 'QUERY_TRANSACTIONS',
+    QUERY_CATEGORY_SPENDING: 'QUERY_CATEGORY_SPENDING',
+    HIGHEST_CATEGORY: 'HIGHEST_CATEGORY',
+    COMPARE_CATEGORY: 'COMPARE_CATEGORY',
     AI_REPLY: 'AI_REPLY',
     HELP: 'HELP'
 }
@@ -141,6 +148,34 @@ export const INTENT_CONFIG: IntentDefinition[] = [
         priority: 80,
         description: 'Monthly Expenditure',
         examples: ['Monthly expenditure', 'Spending trend', 'Expenditure chart']
+    },
+    {
+        id: INTENTS.QUERY_SPENDING,
+        keywords: CHAT_CONSTANTS.PATTERNS.QUERY_SPENDING_KEYWORDS,
+        priority: 95,
+        description: 'Total Spending Inquiry',
+        examples: ['How much did I spend this month?', 'Total expense']
+    },
+    {
+        id: INTENTS.HIGHEST_EXPENSE,
+        keywords: CHAT_CONSTANTS.PATTERNS.HIGHEST_EXPENSE_KEYWORDS,
+        priority: 95,
+        description: 'Highest Expense Inquiry',
+        examples: ['What is my highest expense?', 'Biggest expense']
+    },
+    {
+        id: INTENTS.LAST_EXPENSE,
+        keywords: CHAT_CONSTANTS.PATTERNS.LAST_EXPENSE_KEYWORDS,
+        priority: 95,
+        description: 'Last Expense Inquiry',
+        examples: ['What was my last expense?', 'Latest expense']
+    },
+    {
+        id: INTENTS.QUERY_TRANSACTIONS,
+        keywords: CHAT_CONSTANTS.PATTERNS.QUERY_TRANSACTIONS_KEYWORDS,
+        priority: 95,
+        description: 'Transaction Inquiry',
+        examples: ['Show today\'s transactions', 'Did I add any expense yesterday?']
     },
     {
         id: INTENTS.BUDGET_CARD,

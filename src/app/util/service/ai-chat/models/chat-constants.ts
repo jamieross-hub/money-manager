@@ -36,6 +36,13 @@ const PATTERNS = {
         'budget tracking', 'spending limit', 'budget progress'
     ],
     INSIGHTS_KEYWORDS: ['advice', 'suggest', 'tips', 'insight', 'analyze'],
+    QUERY_SPENDING_KEYWORDS: ['how much did i spend', 'total expense', 'spending this month', 'how much spent', 'my spending', 'what i spent', 'spend today', 'spent today'],
+    CATEGORY_SPENDING_KEYWORDS: ['spend on', 'spending on', 'expenses for', 'show my', 'how much on'],
+    HIGHEST_CATEGORY_KEYWORDS: ['highest spending category', 'where is most of my money going', 'top category', 'spend the most on'],
+    COMPARE_CATEGORY_KEYWORDS: ['compare', 'vs', 'versus'],
+    HIGHEST_EXPENSE_KEYWORDS: ['highest expense', 'biggest expense', 'max spent', 'largest expense', 'most expensive'],
+    LAST_EXPENSE_KEYWORDS: ['last expense', 'latest expense', 'recent expense'],
+    QUERY_TRANSACTIONS_KEYWORDS: ['transactions today', 'expense yesterday', 'did i add', "show today's transactions", 'recent transactions', 'transactions yesterday'],
     HELP_KEYWORDS: ['help', 'usage', 'command', 'guide', 'instruction', 'what can you do', 'support', 'assist', 'help', 'usage', 'command', 'guide', 'instruction', 'support', 'assist', 'what can you do',
         'how to use', 'features', 'available commands', 'commands list', 'bot commands']
 };
@@ -60,22 +67,7 @@ export const CHAT_CONSTANTS = {
         MISSING_CATEGORY: 'Please provide a category name.',
         FLOW_CANCELLED: 'Okay, cancelled. How else can I help you?',
 
-        HELP_OPTIONS: `
-        <div class="max-w-full">
-            <b class="text-base">Available Commands:</b><br/><br/>
-            <div class="space-y-2 px-2">
-                <div><b class="text-sm">💰 Add Transaction:</b><br/><span class="text-xs">"Spent 500 on food", "Salary 5000"</span></div>
-                <div><b class="text-sm">💳 Check Balance:</b><br/><span class="text-xs">"Show balance", "Account summary"</span></div>
-                <div><b class="text-sm">📊 Recent Activity:</b><br/><span class="text-xs">"Recent transactions", "History"</span></div>
-                <div><b class="text-sm">� Budget Overview:</b><br/><span class="text-xs">"Budget summary", "Show budget"</span></div>
-                <div><b class="text-sm">�📈 Reports:</b><br/><span class="text-xs">"Show report", "Statement"</span></div>
-                <div><b class="text-sm">🗑️ Manage Data:</b><br/><span class="text-xs">"Clear data", "Reset app"</span></div>
-            </div>
-            <br/>
-            <i class="text-xs">Just type naturally! I'll understand.</i><br/>
-            <i class="text-xs">💡 Type "cancel" or "exit" anytime to stop.</i>
-        </div>
-        `
+        HELP_OPTIONS: `<b>You can ask me things like:</b><br><br><b>Add:</b> "Spent 500 on dinner", "Added 5000 to Salary"<br><b>Check:</b> "What is my balance?", "How much cash do I have?"<br><b>Activity:</b> "Show my latest transactions", "What was my last expense?"<br><b>Spending:</b> "How much did I spend today?"<br><b>Categories:</b> "Compare food and travel", "What is my highest expense?"<br><b>Manage Data:</b> "Clear all my data"<br><br><i>Just type naturally! I'll understand.</i><br><i>💡 Type "cancel" anytime to stop.</i>`
     },
     PATTERNS,
     SUGGESTIONS: [
@@ -91,7 +83,11 @@ export const CHAT_CONSTANTS = {
         capitalize(PATTERNS.REPORT_KEYWORDS[0]),
         capitalize(PATTERNS.CLEAR_DATA_KEYWORDS[0]),
         capitalize(PATTERNS.HELP_KEYWORDS[0]),
-        capitalize(PATTERNS.MONTHLY_EXPENDITURE_KEYWORDS[0])
+        capitalize(PATTERNS.MONTHLY_EXPENDITURE_KEYWORDS[0]),
+        capitalize(PATTERNS.HIGHEST_EXPENSE_KEYWORDS[0]),
+        capitalize(PATTERNS.LAST_EXPENSE_KEYWORDS[0]),
+        capitalize(PATTERNS.QUERY_TRANSACTIONS_KEYWORDS[0]),
+        
     ],
     EXIT_KEYWORDS: ['cancel', 'exit', 'quit', 'stop', 'nevermind', 'never mind', 'back', 'abort']
 };
