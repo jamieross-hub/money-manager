@@ -28,6 +28,7 @@ import { OpenAiIntentHandler } from './handlers/intent-handler/openai-intent-han
 import { LoanSummaryIntentHandler } from './handlers/intent-handler/loan-summary-intent-handler.service';
 import { MonthlyExpenditureIntentHandler } from './handlers/intent-handler/monthly-expenditure-intent-handler.service';
 import { BudgetCardIntentHandler } from './handlers/intent-handler/budget-card-intent-handler.service';
+import { LoanReportIntentHandler } from './handlers/intent-handler/loan-report-intent-handler.service';
 import { INTENTS } from "./models/intent-config";
 import { UserService } from "../db/user.service";
 
@@ -61,6 +62,7 @@ export class ChatFacadeService implements OnDestroy {
         private loanSummaryHandler: LoanSummaryIntentHandler,
         private monthlyExpenditureHandler: MonthlyExpenditureIntentHandler,
         private budgetCardHandler: BudgetCardIntentHandler,
+        private loanReportHandler: LoanReportIntentHandler,
         private userService: UserService
     ) {
         this.store.select(selectAllAccounts).pipe(
@@ -105,6 +107,7 @@ export class ChatFacadeService implements OnDestroy {
         this.registry.register(INTENTS.HIGHEST_CATEGORY, this.queryIntentHandler);
         this.registry.register(INTENTS.COMPARE_CATEGORY, this.queryIntentHandler);
         this.registry.register(INTENTS.AI_REPLY, this.openAiHandler);
+        this.registry.register(INTENTS.GET_LOAN_REPORT, this.loanReportHandler);
     }
 
     ngOnDestroy(): void {

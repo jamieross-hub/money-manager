@@ -26,6 +26,7 @@ const PATTERNS = {
         'clear data', 'reset data', 'delete all', 'clear all', 'wipe data', 'erase data', 'reset app', 'factory reset'
     ],
     REPORT_KEYWORDS: ['report', 'statement'],
+    LOAN_REPORT_KEYWORDS: ['loan report', 'loan statement', 'loan details report', 'report for loans', 'report for loan'],
     MONTHLY_EXPENDITURE_KEYWORDS: [
         'monthly expenditure', 'spending trend', 'expenditure chart', 'monthly trend',
         'monthly spending', 'expense trend', 'expenditure trend'

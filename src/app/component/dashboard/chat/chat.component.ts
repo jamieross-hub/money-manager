@@ -34,6 +34,7 @@ import { TransactionIntentHandler } from 'src/app/util/service/ai-chat/handlers/
 import { LoanSummaryIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/loan-summary-intent-handler.service';
 import { MonthlyExpenditureIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/monthly-expenditure-intent-handler.service';
 import { BudgetCardIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/budget-card-intent-handler.service';
+import { LoanReportIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/loan-report-intent-handler.service';
 import { QueryIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/query-intent-handler.service';
 
 @Component({
@@ -70,6 +71,7 @@ import { QueryIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent
     LoanSummaryIntentHandler,
     MonthlyExpenditureIntentHandler,
     BudgetCardIntentHandler,
+    LoanReportIntentHandler,
     QueryIntentHandler
   ],
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -29,7 +29,8 @@ export const INTENTS = {
     HIGHEST_CATEGORY: 'HIGHEST_CATEGORY',
     COMPARE_CATEGORY: 'COMPARE_CATEGORY',
     AI_REPLY: 'AI_REPLY',
-    HELP: 'HELP'
+    HELP: 'HELP',
+    GET_LOAN_REPORT: 'GET_LOAN_REPORT'
 }
 
 /**
@@ -183,5 +184,12 @@ export const INTENT_CONFIG: IntentDefinition[] = [
         priority: 80,
         description: 'Budget Overview',
         examples: ['Budget summary', 'Show budget', 'Budget overview', 'Category budgets']
+    },
+    {
+        id: INTENTS.GET_LOAN_REPORT,
+        keywords: CHAT_CONSTANTS.PATTERNS.LOAN_REPORT_KEYWORDS,
+        priority: 75,
+        description: 'Loan Report',
+        examples: ['Loan report', 'Show loan details', 'All my loans report']
     }
 ];
