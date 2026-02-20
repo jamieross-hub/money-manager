@@ -42,7 +42,7 @@ export class QueryIntentHandler implements IntentHandler {
                         const cashAccounts = accounts.filter(a => a?.type === AccountType.CASH);
                         const cashBalance = cashAccounts.reduce((sum, a) => sum + ((a as any).balance || 0), 0);
                         return ResponseBuilder.create()
-                            .html(`Your total cash balance is **${this.currencyService.formatAmount(cashBalance)}**.`)
+                            .html(`Your total cash balance is ${this.currencyService.formatAmount(cashBalance)}.`)
                             .build();
                     }
 
@@ -54,7 +54,7 @@ export class QueryIntentHandler implements IntentHandler {
                     }, 0);
 
                     return ResponseBuilder.create()
-                        .html(`Your current total balance across all accounts is **${this.currencyService.formatAmount(totalBalance)}**.`)
+                        .html(`Your current total balance across all accounts is ${this.currencyService.formatAmount(totalBalance)}.`)
                         .build();
                 }
 
@@ -125,7 +125,7 @@ export class QueryIntentHandler implements IntentHandler {
                     const totalSpent = expenses.reduce((sum, t) => sum + t.amount, 0);
 
                     return ResponseBuilder.create()
-                        .html(`You have spent **${this.currencyService.formatAmount(totalSpent)}** ${periodLabel}.`)
+                        .html(`You have spent ${this.currencyService.formatAmount(totalSpent)} ${periodLabel}.`)
                         .build();
                 }
 
@@ -145,7 +145,7 @@ export class QueryIntentHandler implements IntentHandler {
                     const totalSpent = expenses.reduce((s, t) => s + t.amount, 0);
 
                     return ResponseBuilder.create()
-                        .html(`You spent **${this.currencyService.formatAmount(totalSpent)}** on ${catNames.join(', ')} ${periodLabel !== 'all time' ? periodLabel : ''}.`)
+                        .html(`You spent ${this.currencyService.formatAmount(totalSpent)} on ${catNames.join(', ')} ${periodLabel !== 'all time' ? periodLabel : ''}.`)
                         .build();
                 }
 
@@ -168,7 +168,7 @@ export class QueryIntentHandler implements IntentHandler {
                     const topCategory = Object.keys(categoryTotals).reduce((a, b) => categoryTotals[a] > categoryTotals[b] ? a : b);
 
                     return ResponseBuilder.create()
-                        .html(`Your highest spending category ${periodLabel !== 'all time' ? periodLabel : 'overall'} is **${topCategory}** with **${this.currencyService.formatAmount(categoryTotals[topCategory])}**.`)
+                        .html(`Your highest spending category ${periodLabel !== 'all time' ? periodLabel : 'overall'} is ${topCategory} with ${this.currencyService.formatAmount(categoryTotals[topCategory])}.`)
                         .build();
                 }
 
@@ -183,7 +183,7 @@ export class QueryIntentHandler implements IntentHandler {
                     let htmlResponse = `Comparison ${periodLabel !== 'all time' ? periodLabel : ''}:<br>`;
                     categoriesMatch.forEach(cat => {
                          const catSpent = expenses.filter(e => e.category === cat.name).reduce((s, t) => s + t.amount, 0);
-                         htmlResponse += `- **${cat.name}**: ${this.currencyService.formatAmount(catSpent)}<br>`;
+                         htmlResponse += `- ${cat.name}: ${this.currencyService.formatAmount(catSpent)}<br>`;
                     });
 
                     return ResponseBuilder.create().html(htmlResponse).build();
@@ -196,7 +196,7 @@ export class QueryIntentHandler implements IntentHandler {
                     }
                     const highest = expenses.reduce((prev, current) => (prev.amount > current.amount) ? prev : current);
                     return ResponseBuilder.create()
-                        .html(`Your highest expense ${periodLabel !== 'all time' ? periodLabel : 'overall'} is **${this.currencyService.formatAmount(highest.amount)}** for ${highest.category || 'an unspecified category'}.`)
+                        .html(`Your highest expense ${periodLabel !== 'all time' ? periodLabel : 'overall'} is ${this.currencyService.formatAmount(highest.amount)} for ${highest.category || 'an unspecified category'}.`)
                         .build();
                 }
 
@@ -210,7 +210,7 @@ export class QueryIntentHandler implements IntentHandler {
                     
                     const last = expenses[0];
                     return ResponseBuilder.create()
-                        .html(`Your last expense was **${this.currencyService.formatAmount(last.amount)}** for ${last.category || 'an unspecified category'} on ${getDatePart(last.date).toLocaleDateString()}.`)
+                        .html(`Your last expense was ${this.currencyService.formatAmount(last.amount)} for ${last.category || 'an unspecified category'} on ${getDatePart(last.date).toLocaleDateString()}.`)
                         .build();
                 }
 
@@ -231,7 +231,7 @@ export class QueryIntentHandler implements IntentHandler {
                     const incomeSum = matches.filter(t => t.type === TransactionType.INCOME).reduce((s, t) => s + t.amount, 0);
 
                     return ResponseBuilder.create()
-                        .html(`For ${periodLabel}, you had ${matches.length} transaction(s).<br>Total Expenses: **${this.currencyService.formatAmount(expenseSum)}**<br>Total Income: **${this.currencyService.formatAmount(incomeSum)}**`)
+                        .html(`For ${periodLabel}, you had ${matches.length} transaction(s).<br>Total Expenses: ${this.currencyService.formatAmount(expenseSum)}<br>Total Income: ${this.currencyService.formatAmount(incomeSum)}`)
                         .build();
                 }
 
