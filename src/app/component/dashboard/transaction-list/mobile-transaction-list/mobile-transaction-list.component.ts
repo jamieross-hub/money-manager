@@ -118,7 +118,7 @@ export class MobileTransactionListComponent
 
   // Store observables
   transactions$: Observable<Transaction[]> = this.store.select(selectAllTransactions);
-  public selectedRange = signal<string>('');
+  public selectedRange = signal<string | null>(null);
 
   // Optimization: Maps for O(1) access
   private categoryMap = new Map<string, Category>();
@@ -141,6 +141,7 @@ export class MobileTransactionListComponent
   // Computed View Models
   groupedTransactions = computed(() => {
     const transactions = this.filteredTransactions();
+    const range = this.selectedRange();
     const groups: { date: string; dateHeader: string; transactions: any[] }[] = [];
     const dateHeaderCache = new Map<string, string>();
     const today = dayjs().startOf('day');
@@ -149,7 +150,13 @@ export class MobileTransactionListComponent
     transactions.forEach(tx => {
       const txDate = this.dateService.toDate(tx.date);
       const dateObj = dayjs(txDate);
-      const dateKey = dateObj.format('YYYY-MM-DD');
+      
+      let dateKey: string;
+      if (range === 'this-year' || range === null) {
+        dateKey = dateObj.format('YYYY-MM');
+      } else {
+        dateKey = dateObj.format('YYYY-MM-DD');
+      }
 
       // Pre-calculate view properties (logic preserved)
       const categoryId = tx.categoryId || '';
@@ -184,12 +191,16 @@ export class MobileTransactionListComponent
       if (!group) {
         let header = dateHeaderCache.get(dateKey);
         if (!header) {
-          if (dateObj.isSame(today, 'day')) {
-            header = 'Today';
-          } else if (dateObj.isSame(yesterday, 'day')) {
-            header = 'Yesterday';
+          if (range === 'this-year' || range === null) {
+            header = dateObj.format('MMMM YYYY');
           } else {
-            header = dateObj.format('dddd, DD MMM YYYY');
+            if (dateObj.isSame(today, 'day')) {
+              header = 'Today';
+            } else if (dateObj.isSame(yesterday, 'day')) {
+              header = 'Yesterday';
+            } else {
+              header = dateObj.format('dddd, DD MMM YYYY');
+            }
           }
           dateHeaderCache.set(dateKey, header);
         }
@@ -472,6 +483,7 @@ export class MobileTransactionListComponent
   }
 
   onDateRangeChange(range: string | null) {
+    this.selectedRange.set(range);
     if (!range) {
       this.filterService.clearSelectedDate();
       return;
