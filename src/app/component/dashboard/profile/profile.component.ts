@@ -437,29 +437,11 @@ export class ProfileComponent {
         this.profileForm.get('preferences.biometricLock')?.setValue(false);
         this.notificationService.error('Biometric verification failed. Could not enable biometric lock.');
       } else {
-        this.notificationService.success('Biometric verification successful. Lock enabled.');
-      }
-    }
-  }
-
-  async registerBiometric(): Promise<void> {
-    try {
-      this.isLoading.set(true);
-      const success = await this.securityService.registerBiometric();
-      if (success) {
+        // Mark as registered too since they just passed the test locally
         this.isBiometricRegistered.set(true);
         this.profileForm.get('preferences.biometricRegistered')?.setValue(true);
-        this.notificationService.success('Fingerprint registered successfully!');
-        // Automatically save the registration state
-        await this.saveProfile();
-      } else {
-        this.notificationService.error('Biometric registration failed.');
+        this.notificationService.success('Biometric lock enabled.');
       }
-    } catch (error) {
-      console.error('Registration error:', error);
-      this.notificationService.error('An error occurred during registration.');
-    } finally {
-      this.isLoading.set(false);
     }
   }
 

@@ -124,7 +124,7 @@ export class SecurityService {
   }
 
   /**
-   * Verify user via biometric authentication
+   * Verify user via biometric authentication (Local App Lock / Passkey Verification)
    */
   public async verifyBiometric(): Promise<boolean> {
     if (!(await this.isBiometricSupported())) {
@@ -132,10 +132,8 @@ export class SecurityService {
     }
 
     try {
-      // Note: This is a simplified WebAuthn challenge for local verification.
-      // In a real-world scenario, you'd typically verify this with a backend.
-      // For a "local lock", we just want to ensure the user can authenticate with their device.
-      
+      // In a real-world scenario, you'd verify a signature server-side.
+      // For a "local app lock", completing the prompt means the user successfully authenticated.
       const challenge = new Uint8Array(32);
       window.crypto.getRandomValues(challenge);
 
@@ -148,72 +146,16 @@ export class SecurityService {
       };
 
       // This will trigger the browser's biometric prompt
-      // Note: We don't actually need to verify the signature server-side
-      // if we're just using this as a "local app lock" UI gate.
-      // Just the successful completion of .get() means the user authenticated.
-      await navigator.credentials.get(options);
+      const assertion = await navigator.credentials.get(options);
       
-      this.biometricVerified.next(true);
-      return true;
-    } catch (error) {
-      console.error('Biometric verification failed:', error);
-      this.biometricVerified.next(false);
-      return false;
-    }
-  }
-
-  /**
-   * Register a new biometric credential for the device
-   */
-  public async registerBiometric(): Promise<boolean> {
-    if (!(await this.isBiometricSupported())) {
-      return false;
-    }
-
-    try {
-      const challenge = new Uint8Array(32);
-      window.crypto.getRandomValues(challenge);
-      
-      const userID = this.userService.getCurrentUserId() || 'guest';
-      const userEmail = this.userService.userAuth$.value?.email || 'guest@money-manager.local';
-
-      const options: CredentialCreationOptions = {
-        publicKey: {
-          challenge: challenge,
-          rp: {
-            name: "Money Manager",
-            id: window.location.hostname
-          },
-          user: {
-            id: new TextEncoder().encode(userID),
-            name: userEmail,
-            displayName: userEmail
-          },
-          pubKeyCredParams: [
-            { alg: -7, type: "public-key" }, // ES256
-            { alg: -257, type: "public-key" } // RS256
-          ],
-          authenticatorSelection: {
-            userVerification: "required",
-            authenticatorAttachment: "platform"
-          },
-          timeout: 60000
-        }
-      };
-
-      const credential = await navigator.credentials.create(options);
-      if (credential) {
-        this.logSecurityEvent(
-          SecurityEventType.SECURITY_ALERT,
-          SecurityLevel.LOW,
-          { reason: 'biometric_registered' },
-          userID
-        );
+      if (assertion) {
+        this.biometricVerified.next(true);
         return true;
       }
       return false;
     } catch (error) {
-      console.error('Biometric registration failed:', error);
+      console.error('Biometric verification failed:', error);
+      this.biometricVerified.next(false);
       return false;
     }
   }
