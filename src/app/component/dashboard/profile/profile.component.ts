@@ -104,8 +104,6 @@ export class ProfileComponent {
   readonly userProfile = signal<User | null>(null);
   readonly familyGroup = signal<SplitwiseGroup | null>(null);
   readonly currentTheme = signal<ThemeType>('light-theme');
-  readonly isBiometricSupported = signal(false);
-  readonly isBiometricRegistered = signal(false);
 
 
   readonly quickActionsFabConfig = signal<QuickActionsFabConfig>({
@@ -183,8 +181,6 @@ export class ProfileComponent {
         budgetAlerts: [{ value: true, disabled: true }],
         categoryListViewMode: [{ value: false, disabled: true }],
         appView: [{ value: 'MONTHLY', disabled: true }],
-        biometricLock: [{ value: false, disabled: true }],
-        biometricRegistered: [{ value: false, disabled: true }],
       }),
     });
 
@@ -243,16 +239,9 @@ export class ProfileComponent {
     ).subscribe(theme => {
       this.currentTheme.set(theme);
     });
-
-    // Check biometric support
-    this.checkBiometricSupport();
   }
 
-  private async checkBiometricSupport(): Promise<void> {
-    if (!this.ssrService.isClientSide()) return;
-    const supported = await this.securityService.isBiometricSupported();
-    this.isBiometricSupported.set(supported);
-  }
+
 
 
 
@@ -363,8 +352,6 @@ export class ProfileComponent {
         budgetAlerts: user.preferences?.budgetAlerts || true,
         categoryListViewMode: user.preferences?.categoryListViewMode || false,
         appView: user.preferences?.appView || 'MONTHLY',
-        biometricLock: user.preferences?.biometricLock || false,
-        biometricRegistered: user.preferences?.biometricRegistered || false,
       },
       role: user.role,
 
@@ -394,12 +381,10 @@ export class ProfileComponent {
           budgetAlerts: profile.preferences?.budgetAlerts || true,
           categoryListViewMode: profile.preferences?.categoryListViewMode || false,
           appView: profile.preferences?.appView || 'MONTHLY',
-          biometricLock: profile.preferences?.biometricLock || false,
-          biometricRegistered: profile.preferences?.biometricRegistered || false,
         },
       });
 
-      this.isBiometricRegistered.set(profile.preferences?.biometricRegistered || false);
+
 
 
       // Ensure form's current timezone is in the list
@@ -429,21 +414,7 @@ export class ProfileComponent {
     }
   }
 
-  async onBiometricToggleChange(event: any): Promise<void> {
-    if (event.checked) {
-      const verified = await this.securityService.verifyBiometric();
-      if (!verified) {
-        // Reset toggle if verification failed
-        this.profileForm.get('preferences.biometricLock')?.setValue(false);
-        this.notificationService.error('Biometric verification failed. Could not enable biometric lock.');
-      } else {
-        // Mark as registered too since they just passed the test locally
-        this.isBiometricRegistered.set(true);
-        this.profileForm.get('preferences.biometricRegistered')?.setValue(true);
-        this.notificationService.success('Biometric lock enabled.');
-      }
-    }
-  }
+
 
   async saveProfile(): Promise<void> {
     if (this.profileForm.invalid) {

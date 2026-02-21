@@ -93,8 +93,7 @@ export interface SecurityStatus {
 export class SecurityService {
   private readonly securityEvents = new BehaviorSubject<SecurityEvent[]>([]);
   private readonly securityStatus = new BehaviorSubject<SecurityStatus | null>(null);
-  private readonly biometricVerified = new BehaviorSubject<boolean>(false);
-  public readonly biometricVerified$ = this.biometricVerified.asObservable();
+
 
   private readonly securityConfig: SecurityConfig = {
     SESSION_TIMEOUT: 30 * 60 * 1000, // 30 minutes
@@ -113,73 +112,7 @@ export class SecurityService {
   public readonly securityEvents$ = this.securityEvents.asObservable();
   public readonly securityStatus$ = this.securityStatus.asObservable();
 
-  /**
-   * Check if biometric authentication is supported by the browser/device
-   */
-  public async isBiometricSupported(): Promise<boolean> {
-    return typeof window !== 'undefined' && 
-           !!(window.PublicKeyCredential && 
-           PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable && 
-           await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable());
-  }
 
-  /**
-   * Verify user via biometric authentication (Local App Lock / Passkey Verification)
-   */
-  public async verifyBiometric(): Promise<boolean> {
-    if (!(await this.isBiometricSupported())) {
-      return false;
-    }
-
-    try {
-      // In a real-world scenario, you'd verify a signature server-side.
-      // For a "local app lock", completing the prompt means the user successfully authenticated.
-      const challenge = new Uint8Array(32);
-      window.crypto.getRandomValues(challenge);
-
-      const options: CredentialRequestOptions = {
-        publicKey: {
-          challenge: challenge,
-          timeout: 60000,
-          userVerification: 'required'
-        }
-      };
-
-      // This will trigger the browser's biometric prompt
-      const assertion = await navigator.credentials.get(options);
-      
-      if (assertion) {
-        this.biometricVerified.next(true);
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Biometric verification failed:', error);
-      this.biometricVerified.next(false);
-      return false;
-    }
-  }
-
-  /**
-   * Set biometric verified state manually (e.g. after successful verification)
-   */
-  public setBiometricVerified(verified: boolean): void {
-    this.biometricVerified.next(verified);
-  }
-
-  /**
-   * Check if user is currently biometric-verified in this session
-   */
-  public isBiometricVerified(): boolean {
-    return this.biometricVerified.value;
-  }
-
-  /**
-   * Reset biometric verification state (e.g. on logout)
-   */
-  public resetBiometricVerification(): void {
-    this.biometricVerified.next(false);
-  }
 
 
   constructor(

@@ -339,18 +339,6 @@
 							</mat-slide-toggle>
 							<p class="preference-description">{{ 'PROFILE.VIEW_MODE_DESC' | translate }}</p>
 						</div>
-
-						<div class="preference-item" *ngIf="isBiometricSupported()">
-							<div class="flex items-center justify-between mb-2">
-								<span class="toggle-label !font-medium">Biometric Lock</span>
-							</div>
-							<mat-slide-toggle formControlName="biometricLock"
-								[disabled]="!isEditing()" color="primary"
-								(change)="onBiometricToggleChange($event)">
-								<span class="toggle-label text-xs">Enable fingerprint lock</span>
-							</mat-slide-toggle>
-							<p class="preference-description">Require fingerprint to open the app</p>
-						</div>
 					</div>
 				</mat-expansion-panel>
 				}

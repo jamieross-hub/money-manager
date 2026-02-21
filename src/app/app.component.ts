@@ -54,8 +54,7 @@ export class AppComponent implements OnInit, OnDestroy {
     };
   }
 
-  isLocked = false;
-  isBiometricSupported = false;
+
 
 
   ngOnInit() {
@@ -66,7 +65,6 @@ export class AppComponent implements OnInit, OnDestroy {
     this.initializePwaFeatures();
     this.setupEventListeners();
     this.firebaseMessagingService.listenForMessages();
-    this.checkBiometricLock();
     this.periodicSyncService.startSync();
   }
 
@@ -148,37 +146,9 @@ export class AppComponent implements OnInit, OnDestroy {
       // Refresh data
       this.periodicSyncService.syncAll().subscribe();
     }
-    this.checkBiometricLock();
   }
 
-  private async checkBiometricLock(): Promise<void> {
-    if (!this.ssrService.isClientSide()) return;
 
-    this.isBiometricSupported = await this.securityService.isBiometricSupported();
-    
-    this.userService.userAuth$.pipe(takeUntil(this.destroy$)).subscribe(async (user: any) => {
-      if (user?.preferences?.biometricLock && !this.securityService.isBiometricVerified()) {
-        this.isLocked = true;
-        this.promptBiometric();
-      } else {
-        this.isLocked = false;
-      }
-    });
-
-    // Also check current verified state from security service
-    this.securityService.biometricVerified$.pipe(takeUntil(this.destroy$)).subscribe((verified: boolean) => {
-      if (verified) {
-        this.isLocked = false;
-      }
-    });
-  }
-
-  async promptBiometric(): Promise<void> {
-    const success = await this.securityService.verifyBiometric();
-    if (success) {
-      this.isLocked = false;
-    }
-  }
 
 
   private refreshDataIfNeeded(): void {
