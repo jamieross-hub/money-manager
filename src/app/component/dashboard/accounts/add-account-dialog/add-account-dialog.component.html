@@ -87,10 +87,15 @@
 				<!-- Repayment & Schedule -->
 				<div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Repayment &amp; Schedule</label>
-					<div class="grid grid-cols-1 sm:grid-cols-5 gap-4">
-						<mat-form-field appearance="fill" class="w-full sm:col-span-2">
+					<div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+						<mat-form-field appearance="fill" class="w-full">
 							<mat-label>Monthly EMI</mat-label>
 							<input matInput type="number" formControlName="customMonthlyPayment" placeholder="0.00" (blur)="recalculateRemainingBalance()" required>
+						</mat-form-field>
+
+						<mat-form-field appearance="fill" class="w-full">
+							<mat-label>Interest Rate (%)</mat-label>
+							<input matInput type="number" formControlName="interestRate" placeholder="0.0" step="0.1" required>
 						</mat-form-field>
 
 						<mat-form-field appearance="fill" class="w-full">
@@ -133,7 +138,7 @@
 					<div class="border-b border-gray-100 dark:border-gray-800 pb-2 flex flex-col">
 						<p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1">Interest Rate</p>
 						<p class="text-sm font-bold text-gray-900 dark:text-gray-100">
-							{{ loanInterestPercentage() || 0 }}%
+							{{ formSnapshot()?.interestRate || 0 | number:'1.1-2' }}%
 						</p>
 					</div>
 

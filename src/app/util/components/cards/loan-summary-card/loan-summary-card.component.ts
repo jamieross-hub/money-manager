@@ -1,175 +1,216 @@
-import { Component, OnInit, OnDestroy, Input , ChangeDetectionStrategy} from '@angular/core';
-import { CommonModule, NgIf, NgClass, NgStyle } from '@angular/common';
+import {
+  Component,
+  OnInit,
+  Input,
+  ChangeDetectionStrategy,
+  inject,
+  signal,
+  computed,
+} from '@angular/core';
+import { NgFor, NgIf, NgClass } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { Store } from '@ngrx/store';
-import { Observable, Subject, takeUntil } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { AppState } from 'src/app/store/app.state';
 import * as AccountsSelectors from 'src/app/store/accounts/accounts.selectors';
 import { Account, LoanDetails } from 'src/app/util/models/account.model';
-import { AccountType } from 'src/app/util/config/enums';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
-import { User } from 'src/app/util/models/index';
 
 @Component({
-    selector: 'app-loan-summary-card',
-    standalone: true,
-    imports: [NgIf, NgClass, NgStyle, MatIconModule, CurrencyPipe],
-    templateUrl: './loan-summary-card.component.html',
-    styleUrls: ['./loan-summary-card.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'app-loan-summary-card',
+  standalone: true,
+  imports: [NgIf, NgFor, NgClass, MatIconModule, CurrencyPipe],
+  templateUrl: './loan-summary-card.component.html',
+  styleUrls: ['./loan-summary-card.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LoanSummaryCardComponent implements OnInit, OnDestroy {
-    @Input() set loansInput(value: Account[] | null) {
-        this.loans = value || [];
-    }
-    public loanAccounts$: Observable<Account[]>;
-    public profile$: Observable<User | null>;
-    public userCurrency$: Observable<string | undefined>;
-    public loans: Account[] = [];
-    public userName: string = '';
-    public userCurrency: string = 'USD';
-    public isExpanded = false;
-    private destroy$ = new Subject<void>();
+export class LoanSummaryCardComponent {
+  private readonly store = inject(Store<AppState>);
 
-    constructor(private store: Store<AppState>) {
-        this.loanAccounts$ = this.store.select(AccountsSelectors.selectAccountsByType('loan'));
-        this.profile$ = this.store.select(ProfileSelectors.selectProfile);
-        this.userCurrency$ = this.store.select(ProfileSelectors.selectUserCurrency);
-    }
+  // ── Signals from store ──────────────────────────────────────────────────────
+  private readonly storeLoans = toSignal(
+    this.store.select(AccountsSelectors.selectAccountsByType('loan')),
+    { initialValue: [] as Account[] }
+  );
 
-    ngOnInit(): void {
-        // If loans are not passed as input, fallback to store selector
-        if (this.loans.length === 0) {
-            this.loanAccounts$
-                .pipe(takeUntil(this.destroy$))
-                .subscribe(accounts => {
-                    this.loans = accounts;
-                });
-        }
+  private readonly profile = toSignal(
+    this.store.select(ProfileSelectors.selectProfile),
+    { initialValue: null }
+  );
 
-        this.profile$
-            .pipe(takeUntil(this.destroy$))
-            .subscribe(profile => {
-                this.userName = profile?.firstName || profile?.displayName?.split(' ')[0] || '';
-            });
+  private readonly currency = toSignal(
+    this.store.select(ProfileSelectors.selectUserCurrency),
+    { initialValue: 'USD' }
+  );
 
-        this.userCurrency$
-            .pipe(takeUntil(this.destroy$))
-            .subscribe(currency => {
-                if (currency) {
-                    this.userCurrency = currency;
-                }
-            });
-    }
+  // ── Input override ──────────────────────────────────────────────────────────
+  private readonly _inputLoans = signal<Account[] | null>(null);
 
-    ngOnDestroy(): void {
-        this.destroy$.next();
-        this.destroy$.complete();
-    }
+  @Input() set loansInput(value: Account[] | null) {
+    this._inputLoans.set(value);
+  }
 
-    get totalDebt(): number {
-        return this.loans.reduce((total, loan) => {
-            return total + (loan.loanDetails?.loanAmount || 0);
-        }, 0);
-    }
+  // ── Derived signals ─────────────────────────────────────────────────────────
+  readonly loans = computed<Account[]>(() => {
+    const input = this._inputLoans();
+    return input !== null ? input : (this.storeLoans() ?? []);
+  });
 
-    get totalRemaining(): number {
-        return this.loans.reduce((total, loan) => {
-            return total + (loan.loanDetails?.remainingBalance || 0);
-        }, 0);
-    }
+  readonly userName = computed(
+    () =>
+      this.profile()?.firstName ||
+      this.profile()?.displayName?.split(' ')[0] ||
+      ''
+  );
 
-    get totalPaid(): number {
-        return this.loans.reduce((total, loan) => {
-            const loanAmount = loan.loanDetails?.loanAmount || 0;
-            const remainingBalance = loan.loanDetails?.remainingBalance || 0;
-            return total + (loanAmount - remainingBalance);
-        }, 0);
-    }
+  readonly userCurrency = computed(() => this.currency() ?? 'USD');
 
-    get monthlyPayment(): number {
-        return this.loans.reduce((total, loan) => {
-            const storedPayment = loan.loanDetails?.monthlyPayment;
-            if (storedPayment && storedPayment > 0) {
-                return total + storedPayment;
-            }
-            // Fallback calculation if field is missing or 0
-            return total + this.calculateMonthlyPayment(loan);
-        }, 0);
-    }
+  // ── UI state ────────────────────────────────────────────────────────────────
+  readonly isExpanded = signal(false);
+  readonly selectedLoanIndex = signal(0);
 
-    private calculateMonthlyPayment(loan: Account): number {
-        const details = loan.loanDetails;
-        if (!details) return 0;
+  // ── Aggregate computed values ───────────────────────────────────────────────
+  readonly totalDebt = computed(() =>
+    this.loans().reduce((sum, l) => sum + (l.loanDetails?.loanAmount ?? 0), 0)
+  );
 
-        const { loanAmount, interestRate, durationMonths } = details;
-        if (durationMonths <= 0) return 0;
-        if (interestRate <= 0) return loanAmount / durationMonths;
+  readonly totalRemaining = computed(() =>
+    this.loans().reduce(
+      (sum, l) => sum + (l.loanDetails?.remainingBalance ?? 0),
+      0
+    )
+  );
 
-        // Monthly interest rate (annual rate / 12)
-        const monthlyRate = interestRate / (12 * 100);
+  readonly totalPaid = computed(() =>
+    this.loans().reduce((sum, l) => {
+      const amount = l.loanDetails?.loanAmount ?? 0;
+      const remaining = l.loanDetails?.remainingBalance ?? 0;
+      return sum + (amount - remaining);
+    }, 0)
+  );
 
-        // Amortization formula: P = L[c(1 + c)^n]/[(1 + c)^n - 1]
-        const numerator = monthlyRate * Math.pow(1 + monthlyRate, durationMonths);
-        const denominator = Math.pow(1 + monthlyRate, durationMonths) - 1;
+  readonly monthlyPayment = computed(() =>
+    this.loans().reduce((sum, l) => {
+      const stored = l.loanDetails?.monthlyPayment;
+      return sum + (stored && stored > 0 ? stored : this._calcMonthly(l));
+    }, 0)
+  );
 
-        if (denominator === 0) return loanAmount / durationMonths;
+  readonly paidPercentage = computed(() => {
+    const debt = this.totalDebt();
+    return debt === 0 ? 0 : Math.round((this.totalPaid() / debt) * 100);
+  });
 
-        const monthlyPayment = loanAmount * (numerator / denominator);
-        return Math.round(monthlyPayment * 100) / 100;
-    }
+  readonly debtFreeYear = computed(() => {
+    const list = this.loans();
+    if (!list.length) return new Date().getFullYear();
+    const endYears = list.map((l) => {
+      const start = this._toDate(l.loanDetails?.startDate);
+      const months = l.loanDetails?.durationMonths ?? 0;
+      return new Date(new Date(start).setMonth(start.getMonth() + months)).getFullYear();
+    });
+    return Math.max(...endYears);
+  });
 
-    get paidPercentage(): number {
-        if (this.totalDebt === 0) return 0;
-        return Math.round((this.totalPaid / this.totalDebt) * 100);
-    }
-    get debtFreeYear(): number {
-        if (this.loans.length === 0) return new Date().getFullYear();
+  readonly remainingMonths = computed(() => {
+    const list = this.loans();
+    if (!list.length) return 0;
+    const now = new Date();
+    const endDates = list.map((l) => {
+      const start = this._toDate(l.loanDetails?.startDate);
+      const months = l.loanDetails?.durationMonths ?? 0;
+      return new Date(new Date(start).setMonth(start.getMonth() + months));
+    });
+    const latest = new Date(Math.max(...endDates.map((d) => d.getTime())));
+    return Math.max(
+      0,
+      (latest.getFullYear() - now.getFullYear()) * 12 +
+        (latest.getMonth() - now.getMonth())
+    );
+  });
 
-        // Find the latest end date among all loans
-        const dates = this.loans.map(loan => {
-            const start = new Date(loan.loanDetails?.startDate || new Date());
-            const duration = loan.loanDetails?.durationMonths || 0;
-            return new Date(start.setMonth(start.getMonth() + duration));
-        });
+  readonly greeting = computed(() => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  });
 
-        return Math.max(...dates.map(d => d.getFullYear()));
-    }
+  readonly journeyTarget = computed(() =>
+    this.loans().length === 1 ? this.loans()[0].name : 'Debt Freedom'
+  );
 
-    get remainingMonths(): number {
-        if (this.loans.length === 0) return 0;
+  // ── Per-loan computed list ──────────────────────────────────────────────────
+  readonly loanItems = computed(() =>
+    this.loans().map((loan, i) => {
+      const details = loan.loanDetails || {} as Partial<LoanDetails>;
+      const loanAmount = details.loanAmount ?? 0;
+      const remainingBalance = details.remainingBalance ?? 0;
+      const paid = loanAmount - remainingBalance;
+      const paidPct =
+        loanAmount > 0
+          ? Math.round((paid / loanAmount) * 100)
+          : 0;
+      const monthlyPmt = details.monthlyPayment ?? 0;
+      const monthly =
+        monthlyPmt > 0
+          ? monthlyPmt
+          : this._calcMonthly(loan);
+      const start = this._toDate(details.startDate);
+      const endDate = new Date(
+        new Date(start).setMonth(start.getMonth() + (details.durationMonths ?? 0))
+      );
+      const now = new Date();
+      const moLeft = Math.max(
+        0,
+        (endDate.getFullYear() - now.getFullYear()) * 12 +
+          (endDate.getMonth() - now.getMonth())
+      );
+      return {
+        index: i,
+        name: loan.name,
+        lender: details.lenderName || 'Unknown Lender',
+        status: details.status || 'Unknown',
+        loanAmount: loanAmount,
+        remaining: remainingBalance,
+        paid,
+        paidPct,
+        monthly,
+        interestRate: details.interestRate ?? 0,
+        moLeft,
+        endYear: endDate.getFullYear(),
+      };
+    })
+  );
 
-        const now = new Date();
-        const dates = this.loans.map(loan => {
-            const start = new Date(loan.loanDetails?.startDate || new Date());
-            const duration = loan.loanDetails?.durationMonths || 0;
-            return new Date(start.setMonth(start.getMonth() + duration));
-        });
+  // ── Methods ─────────────────────────────────────────────────────────────────
+  toggleExpand(): void {
+    this.isExpanded.update((v) => !v);
+  }
 
-        const latestDate = new Date(Math.max(...dates.map(d => d.getTime())));
+  selectLoan(index: number): void {
+    this.selectedLoanIndex.set(index);
+  }
 
-        // Calculate months between now and latestDate
-        const diffInMonths = (latestDate.getFullYear() - now.getFullYear()) * 12 + (latestDate.getMonth() - now.getMonth());
+  /** Safely converts a Firestore Timestamp or Date value to a JS Date. */
+  private _toDate(value: any): Date {
+    if (!value) return new Date();
+    if (typeof value.toDate === 'function') return value.toDate();
+    if (value instanceof Date) return new Date(value.getTime());
+    return new Date(value);
+  }
 
-        return Math.max(0, diffInMonths);
-    }
-
-    get greeting(): string {
-        const hour = new Date().getHours();
-        if (hour < 12) return 'Good morning';
-        if (hour < 17) return 'Good afternoon';
-        return 'Good evening';
-    }
-
-    get journeyTarget(): string {
-        if (this.loans.length === 1) {
-            return this.loans[0].name;
-        }
-        return 'Debt Freedom';
-    }
-
-    public toggleExpand(): void {
-        this.isExpanded = !this.isExpanded;
-    }
+  private _calcMonthly(loan: Account): number {
+    const d = loan.loanDetails;
+    if (!d) return 0;
+    const { loanAmount, interestRate, durationMonths } = d;
+    if (durationMonths <= 0) return 0;
+    if (interestRate <= 0) return loanAmount / durationMonths;
+    const r = interestRate / (12 * 100);
+    const num = r * Math.pow(1 + r, durationMonths);
+    const den = Math.pow(1 + r, durationMonths) - 1;
+    if (den === 0) return loanAmount / durationMonths;
+    return Math.round((loanAmount * (num / den)) * 100) / 100;
+  }
 }

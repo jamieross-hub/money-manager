@@ -200,6 +200,14 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
   }
 
   private patchFormWithExistingAccount(account: Account): void {
+    const toDate = (val: any) => {
+      if (!val) return new Date();
+      if (typeof val.toDate === 'function') return val.toDate(); // Firestore Timestamp obj
+      if (val instanceof Date) return new Date(val.getTime());   // Native Date obj
+      if (val && typeof val.seconds === 'number') return new Date(val.seconds * 1000); // NgRx serialized Timestamp
+      return new Date(val); // string/number fallback
+    };
+
     this.accountForm.patchValue({
       name:        account.name,
       type:        account.type,
@@ -208,14 +216,14 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
       ...(account.loanDetails && {
         lenderName:              account.loanDetails.lenderName,
         loanAmount:              account.loanDetails.loanAmount,
-        interestRate:            account.loanDetails.interestRate,
-        startDate:               account.loanDetails.startDate,
+        interestRate:            account.loanDetails.interestRate ?? 0,
+        startDate:               toDate(account.loanDetails.startDate),
         durationMonths:          account.loanDetails.durationMonths,
         repaymentFrequency:      account.loanDetails.repaymentFrequency,
         status:                  account.loanDetails.status,
         remainingBalance:        account.loanDetails.remainingBalance,
-        nextDueDate:             account.loanDetails.nextDueDate,
-        endDate:                 account.loanDetails.endDate ?? new Date(),
+        nextDueDate:             toDate(account.loanDetails.nextDueDate),
+        endDate:                 toDate(account.loanDetails.endDate ?? new Date()),
         showReminder:            account.loanDetails.showReminder,
         customMonthlyPayment:    account.loanDetails.monthlyPayment ?? 0,
         createRecurringTransaction: true,
