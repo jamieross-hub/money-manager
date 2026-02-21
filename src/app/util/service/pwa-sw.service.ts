@@ -26,6 +26,9 @@ export class PwaSwService {
 
   public updateInfo$: Observable<PwaUpdateInfo> = this.updateInfoSubject.asObservable();
 
+  private backgroundSyncSubject = new BehaviorSubject<boolean>(false);
+  public backgroundSync$ = this.backgroundSyncSubject.asObservable();
+
   constructor(
     private swUpdate: SwUpdate,
     private storageService: LocalIndexDBStorageService
@@ -182,6 +185,10 @@ export class PwaSwService {
               break;
             case 'OFFLINE_MODE':
               console.log('Offline mode activated');
+              break;
+            case 'BACKGROUND_SYNC':
+              console.log('Background sync event received from SW:', event.data);
+              this.backgroundSyncSubject.next(true);
               break;
             default:
               console.log('Unknown service worker message:', event.data);

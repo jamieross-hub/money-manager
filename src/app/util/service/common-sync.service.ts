@@ -273,6 +273,8 @@ export class CommonSyncService {
 
       if (navigator.onLine) {
         await this.processSyncQueue();
+      } else {
+        await this.triggerBackgroundSync('sync-all-data');
       }
 
       console.log('Sync item registered:', syncItem.id);

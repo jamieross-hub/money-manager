@@ -16,6 +16,7 @@ import { GoogleSheetsService } from './google-sheets.service';
 import { SubscriptionService } from './subscription.service';
 import { FeedbackService } from './feedback.service';
 import { ContactService } from './db/contact.service';
+import { PwaSwService } from './pwa-sw.service';
 
 @Injectable({
   providedIn: 'root'
@@ -38,8 +39,24 @@ export class PeriodicSyncService implements OnDestroy {
     private contactService: ContactService,
     private commonSyncService: CommonSyncService,
     private userService: UserService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private pwaSwService: PwaSwService
   ) {}
+
+  /**
+   * Request a background sync from the Service Worker
+   */
+  requestBackgroundSync(): void {
+    if ('serviceWorker' in navigator && 'SyncManager' in window) {
+      navigator.serviceWorker.ready.then((swRegistration: any) => {
+        return swRegistration.sync.register('sync-all-data');
+      }).then(() => {
+        console.log('✅ Background sync "sync-all-data" registered');
+      }).catch((err) => {
+        console.warn('⚠️ Background sync registration failed:', err);
+      });
+    }
+  }
 
   /**
    * Start the periodic sync process
@@ -57,6 +74,16 @@ export class PeriodicSyncService implements OnDestroy {
       filter((user): user is any => !!user && user.uid !== 'offline-guest'),
       distinctUntilChanged((prev, curr) => prev?.uid === curr?.uid),
       switchMap(() => this.syncAll())
+    ).subscribe();
+
+    // Listen for Background Sync API trigger
+    this.pwaSwService.backgroundSync$.pipe(
+      takeUntil(this.destroy$),
+      filter(triggered => triggered),
+      switchMap(() => {
+        console.log('🔄 Triggering sync due to Background Sync SW Event');
+        return this.syncAll();
+      })
     ).subscribe();
 
     // Set up periodic interval

@@ -60,35 +60,6 @@
   ],
   "dataGroups": [
     {
-      "name": "firebase-api",
-      "urls": [
-        "https://www.googleapis.com/**",
-        "https://firestore.googleapis.com/**",
-        "https://firebasestorage.googleapis.com/**",
-        "https://identitytoolkit.googleapis.com/**"
-      ],
-      "cacheConfig": {
-        "strategy": "performance",
-        "maxSize": 1000,
-        "maxAge": "7d",
-        "timeout": "1s"
-      }
-    },
-    {
-      "name": "auth-api",
-      "urls": [
-        "https://securetoken.googleapis.com/**",
-        "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword",
-        "https://identitytoolkit.googleapis.com/v1/accounts:signUp"
-      ],
-      "cacheConfig": {
-        "strategy": "performance",
-        "maxSize": 10,
-        "maxAge": "1h",
-        "timeout": "1s"
-      }
-    },
-    {
       "name": "api-cache",
       "urls": [
         "/api/**"

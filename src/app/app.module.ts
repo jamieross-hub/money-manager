@@ -88,7 +88,7 @@ import { LoaderComponent } from './util/components/loader/loader.component';
 
 
     // Enhanced Service Worker with offline support
-    ServiceWorkerModule.register('ngsw-worker.js', {
+    ServiceWorkerModule.register('custom-sw.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:3000',
       scope: './'

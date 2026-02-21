@@ -44,6 +44,7 @@
                 "output": "./"
               },
               "src/firebase-messaging-sw.js",
+              "src/custom-sw.js",
               "src/robots.txt",
               "src/sitemap.xml"
             ],
