@@ -10,13 +10,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-account-summary-card',
   templateUrl: './account-summary-card.component.html',
   styleUrls: ['./account-summary-card.component.scss'],
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatCardModule, CurrencyPipe],
+  imports: [CommonModule, MatIconModule, MatCardModule, CurrencyPipe , RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AccountSummaryCardComponent {

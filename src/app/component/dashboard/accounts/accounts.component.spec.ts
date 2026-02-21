@@ -80,7 +80,8 @@ describe('AccountsComponent', () => {
         remainingBalance: 25000,
         nextDueDate: new Date('2024-02-01'),
         showReminder: true,
-        monthlyPayment: 478.33
+        monthlyPayment: 478.33,
+        endDate: new Date('2029-01-01')
       },
       createdAt: new Date(),
       updatedAt: new Date()

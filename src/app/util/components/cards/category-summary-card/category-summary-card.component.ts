@@ -15,6 +15,7 @@ import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { RouterModule } from '@angular/router';
 
 dayjs.extend(isBetween);
 
@@ -36,7 +37,8 @@ export interface CategorySummary {
         CommonModule,
         MatCardModule,
         MatIconModule,
-        CurrencyPipe
+        CurrencyPipe,
+        RouterModule
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -1,13 +1,14 @@
-import { Component, Inject, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
-import { Auth } from '@angular/fire/auth';
+import {
+  Component, Inject, OnDestroy, OnInit,
+  ChangeDetectionStrategy, signal, computed
+} from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { UserService } from 'src/app/util/service/db/user.service';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { ValidationService } from 'src/app/util/service/validation.service';
 import { Account } from 'src/app/util/models/account.model';
-import { Store } from '@ngrx/store';
-import { AppState } from 'src/app/store/app.state';
 import { AccountType } from 'src/app/util/config/enums';
 import { TransactionsService } from 'src/app/util/service/db/transactions.service';
 import { CategoryService } from 'src/app/util/service/db/category.service';
@@ -15,7 +16,7 @@ import { AccountsService } from 'src/app/util/service/db/accounts.service';
 import { TransactionType, RecurringInterval, TransactionStatus, PaymentMethod } from 'src/app/util/config/enums';
 import { Transaction } from 'src/app/util/models/transaction.model';
 import { Observable, of, Subject, takeUntil } from 'rxjs';
-import { switchMap, map } from 'rxjs/operators';
+import { switchMap } from 'rxjs/operators';
 import dayjs from 'dayjs';
 import { CommonModule } from '@angular/common';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -28,9 +29,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { TranslateModule } from '@ngx-translate/core';
 import { CommonHeaderComponent } from 'src/app/util/components/dialog/common-header/common-header.component';
 import { CommonBodyContentComponent } from 'src/app/util/components/dialog/common-body-content/common-body-content.component';
+import { CurrencyPipe } from 'src/app/util/pipes';
 
 @Component({
   selector: 'app-add-account-dialog',
@@ -40,7 +41,6 @@ import { CommonBodyContentComponent } from 'src/app/util/components/dialog/commo
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    FormsModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
@@ -51,347 +51,393 @@ import { CommonBodyContentComponent } from 'src/app/util/components/dialog/commo
     MatDatepickerModule,
     MatNativeDateModule,
     MatSlideToggleModule,
-    TranslateModule,
     CommonHeaderComponent,
-    CommonBodyContentComponent
+    CommonBodyContentComponent,
+    CurrencyPipe,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AddAccountDialogComponent implements OnInit, OnDestroy {
-  accountForm: FormGroup;
-  private _onDestroy = new Subject<void>();
+  accountForm!: FormGroup;
+  private readonly destroy$ = new Subject<void>();
 
-  public userId: any;
-  public isSubmitting = false;
-  public accountTypes: { value: AccountType, label: string }[] = [
-    { value: AccountType.BANK, label: 'Bank Account (Checking/Savings)' },
-    { value: AccountType.CASH, label: 'Cash' },
-    { value: AccountType.CREDIT, label: 'Credit Card' },
-    { value: AccountType.LOAN, label: 'Loan' },
+  // ─── State Signals ────────────────────────────────────────────────────────
+  readonly currentUserId = signal<string>('');
+  readonly submitting = signal(false);
+
+  /**
+   * Reactive snapshot of the entire form value.
+   * Initialized in the constructor (after `accountForm` is built).
+   * All computed signals derive from this single source of truth.
+   */
+  readonly formSnapshot!: ReturnType<typeof toSignal<any>>;
+
+  // ─── Computed Flags ───────────────────────────────────────────────────────
+  readonly isLoanAccount  = computed(() => this.formSnapshot()?.type === 'loan');
+  readonly isCreditAccount = computed(() => this.formSnapshot()?.type === 'credit');
+
+  // ─── Computed Loan Analytics ──────────────────────────────────────────────
+  readonly loanDurationMonths = computed<number>(() => {
+    const { startDate, endDate } = this.formSnapshot() ?? {};
+    if (!startDate || !endDate) return 12;
+    return Math.max(1, Math.round(dayjs(endDate).diff(dayjs(startDate), 'month', true)));
+  });
+
+  readonly loanMonthsRemaining = computed<number>(() => {
+    const endDate = this.formSnapshot()?.endDate;
+    if (!endDate) return 0;
+    return Math.max(0, Math.ceil(dayjs(endDate).diff(dayjs(), 'month', true)));
+  });
+
+  readonly loanMonthlyPayment = computed<number>(() => this.formSnapshot()?.customMonthlyPayment || 0);
+
+  readonly loanTotalRepayment = computed<number>(() => this.loanMonthlyPayment() * this.loanDurationMonths());
+
+  readonly loanTotalInterest = computed<number>(() => {
+    const { startDate, endDate, loanAmount } = this.formSnapshot() ?? {};
+    if (!startDate || !endDate) return 0;
+    const diffMonths = dayjs(endDate).diff(dayjs(startDate), 'month', true);
+    return (this.loanMonthlyPayment() * diffMonths) - (loanAmount || 0);
+  });
+
+  readonly loanInterestPercentage = computed<number>(() => {
+    const loanAmount = this.formSnapshot()?.loanAmount || 0;
+    if (!loanAmount) return 0;
+    return Math.round((this.loanTotalInterest() / loanAmount) * 100);
+  });
+
+  // ─── Computed Validation Errors ───────────────────────────────────────────
+  readonly balanceValidationError = computed<string>(() => {
+    this.formSnapshot(); // track form changes
+    const control = this.accountForm?.get('balance');
+    return control ? this.validationService.getAccountBalanceError(control) : '';
+  });
+
+  readonly loanAmountValidationError = computed<string>(() => {
+    this.formSnapshot();
+    const control = this.accountForm?.get('loanAmount');
+    return control ? this.validationService.getLoanAmountError(control) : '';
+  });
+
+  // ─── Static Data ──────────────────────────────────────────────────────────
+  readonly accountTypes: { value: AccountType; label: string }[] = [
+    { value: AccountType.BANK,       label: 'Bank Account (Checking/Savings)' },
+    { value: AccountType.CASH,       label: 'Cash' },
+    { value: AccountType.CREDIT,     label: 'Credit Card' },
+    { value: AccountType.LOAN,       label: 'Loan' },
     { value: AccountType.INVESTMENT, label: 'Investment' },
-  ];
-
-  public repaymentFrequencies = [
-    { value: 'monthly', label: 'Monthly' },
-    { value: 'weekly', label: 'Weekly' },
-  ];
-
-  public loanStatuses = [
-    { value: 'active', label: 'Active' },
-    { value: 'closed', label: 'Closed' },
-    { value: 'defaulted', label: 'Defaulted' },
   ];
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public dialogData: Account | null,
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<AddAccountDialogComponent>,
-    private auth: Auth,
     private notificationService: NotificationService,
     private hapticFeedback: HapticFeedbackService,
     private validationService: ValidationService,
-    private store: Store<AppState>,
     private transactionsService: TransactionsService,
     private categoryService: CategoryService,
     private accountsService: AccountsService,
     private userService: UserService
   ) {
-    this.accountForm = this.fb.group({
-      name: ['', this.validationService.getAccountNameValidators()],
-      type: ['bank', Validators.required],
-      balance: [0, this.validationService.getAccountBalanceValidators()],
-      description: [''],
-      // Loan-specific fields
-      lenderName: [''],
-      loanAmount: [0, this.validationService.getLoanAmountValidators()],
-      interestRate: [0, this.validationService.getInterestRateValidators()],
-      startDate: [new Date()],
-      durationMonths: [12, this.validationService.getDurationMonthsValidators()],
-      repaymentFrequency: ['monthly'],
-      status: ['active'],
-      remainingBalance: [0, [Validators.min(0)]],
-      nextDueDate: [new Date()],
-      showReminder: [true],
-      // Additional loan fields
-      useCalculatedPayment: [true],
-      customMonthlyPayment: [0, [Validators.min(0)]],
-      createRecurringTransaction: [true],
-      // Credit card-specific fields
-      dueDate: [15, [Validators.required, Validators.min(1), Validators.max(31)]],
-      billingCycleStart: [1, [Validators.required, Validators.min(1), Validators.max(31)]],
-      creditLimit: [0, [Validators.min(0)]],
-      minimumPayment: [0, [Validators.min(0)]],
-      creditCardShowReminder: [true],
-    });
+    this.accountForm = this.buildForm();
 
-    // If editing, populate form with existing data
+    // Initialize the reactive form snapshot AFTER the form is built.
+    // Computed signals reference this lazily, so they'll see the correct value.
+    (this as any).formSnapshot = toSignal(
+      this.accountForm.valueChanges,
+      { initialValue: this.accountForm.value }
+    );
+
     if (this.dialogData) {
-      this.accountForm.patchValue({
-        name: this.dialogData.name,
-        type: this.dialogData.type,
-        balance: this.dialogData.balance || 0,
-        description: this.dialogData.description,
-        // Populate loan details if they exist
-        ...(this.dialogData.loanDetails && {
-          lenderName: this.dialogData.loanDetails.lenderName,
-          loanAmount: this.dialogData.loanDetails.loanAmount,
-          interestRate: this.dialogData.loanDetails.interestRate,
-          startDate: this.dialogData.loanDetails.startDate,
-          durationMonths: this.dialogData.loanDetails.durationMonths,
-          repaymentFrequency: this.dialogData.loanDetails.repaymentFrequency,
-          status: this.dialogData.loanDetails.status,
-          remainingBalance: this.dialogData.loanDetails.remainingBalance,
-          nextDueDate: this.dialogData.loanDetails.nextDueDate,
-          showReminder: this.dialogData.loanDetails.showReminder,
-          // Set default values for new fields
-          useCalculatedPayment: true,
-          customMonthlyPayment: this.dialogData.loanDetails.monthlyPayment || 0,
-          createRecurringTransaction: true,
-        }),
-        // Populate credit card details if they exist
-        ...(this.dialogData.creditCardDetails && {
-          dueDate: this.dialogData.creditCardDetails.dueDate,
-          billingCycleStart: this.dialogData.creditCardDetails.billingCycleStart,
-          creditLimit: this.dialogData.creditCardDetails.creditLimit,
-          minimumPayment: this.dialogData.creditCardDetails.minimumPayment,
-          creditCardShowReminder: this.dialogData.creditCardDetails.showReminder,
-        })
+      this.patchFormWithExistingAccount(this.dialogData);
+    }
 
-      })
+    this.setupFormListeners();
+  }
 
-      setTimeout(() => {
-        this.updateRemainingBalance();
-      }, 100);
+  ngOnInit(): void {
+    this.currentUserId.set(this.userService.getCurrentUserId() || '');
+  }
 
-      // Update balance when loan amount changes
-      this.accountForm.get('loanAmount')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(value => {
-        if (this.accountForm.get('type')?.value === 'loan') {
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // ─── Form Setup ───────────────────────────────────────────────────────────
+
+  private buildForm(): FormGroup {
+    const nextYear = new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+
+    return this.fb.group({
+      name:                    ['', this.validationService.getAccountNameValidators()],
+      type:                    ['bank', Validators.required],
+      balance:                 [0, this.validationService.getAccountBalanceValidators()],
+      description:             [''],
+      // Loan fields
+      lenderName:              [''],
+      loanAmount:              [0, this.validationService.getLoanAmountValidators()],
+      interestRate:            [0, this.validationService.getInterestRateValidators()],
+      startDate:               [new Date()],
+      durationMonths:          [12],
+      repaymentFrequency:      ['monthly'],
+      status:                  ['active'],
+      remainingBalance:        [0, [Validators.min(0)]],
+      nextDueDate:             [new Date()],
+      endDate:                 [nextYear],
+      customMonthlyPayment:    [0, [Validators.min(0)]],
+      showReminder:            [true],
+      createRecurringTransaction: [true],
+      // Credit card fields
+      dueDate:                 [15, [Validators.required, Validators.min(1), Validators.max(31)]],
+      billingCycleStart:       [1, [Validators.required, Validators.min(1), Validators.max(31)]],
+      creditLimit:             [0, [Validators.min(0)]],
+      minimumPayment:          [0, [Validators.min(0)]],
+      creditCardShowReminder:  [true],
+    });
+  }
+
+  private patchFormWithExistingAccount(account: Account): void {
+    this.accountForm.patchValue({
+      name:        account.name,
+      type:        account.type,
+      balance:     account.balance ?? 0,
+      description: account.description,
+      ...(account.loanDetails && {
+        lenderName:              account.loanDetails.lenderName,
+        loanAmount:              account.loanDetails.loanAmount,
+        interestRate:            account.loanDetails.interestRate,
+        startDate:               account.loanDetails.startDate,
+        durationMonths:          account.loanDetails.durationMonths,
+        repaymentFrequency:      account.loanDetails.repaymentFrequency,
+        status:                  account.loanDetails.status,
+        remainingBalance:        account.loanDetails.remainingBalance,
+        nextDueDate:             account.loanDetails.nextDueDate,
+        endDate:                 account.loanDetails.endDate ?? new Date(),
+        showReminder:            account.loanDetails.showReminder,
+        customMonthlyPayment:    account.loanDetails.monthlyPayment ?? 0,
+        createRecurringTransaction: true,
+      }),
+      ...(account.creditCardDetails && {
+        dueDate:                account.creditCardDetails.dueDate,
+        billingCycleStart:      account.creditCardDetails.billingCycleStart,
+        creditLimit:            account.creditCardDetails.creditLimit,
+        minimumPayment:         account.creditCardDetails.minimumPayment,
+        creditCardShowReminder: account.creditCardDetails.showReminder,
+      }),
+    });
+  }
+
+  private setupFormListeners(): void {
+    // Sync balance field to be negative of loan amount
+    this.accountForm.get('loanAmount')!.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(value => {
+        if (this.isLoanAccount()) {
           this.accountForm.patchValue({ balance: -value }, { emitEvent: false });
         }
       });
 
-      // Add/remove validation for loan and credit card fields based on account type
-      this.accountForm.get('type')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(type => {
-        const lenderNameControl = this.accountForm.get('lenderName');
-        const loanAmountControl = this.accountForm.get('loanAmount');
-        const interestRateControl = this.accountForm.get('interestRate');
-        const durationMonthsControl = this.accountForm.get('durationMonths');
-        const nextDueDateControl = this.accountForm.get('nextDueDate');
+    // Toggle validators based on account type
+    this.accountForm.get('type')!.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(type => this.updateValidatorsForAccountType(type));
 
-        // Credit card controls
-        const dueDateControl = this.accountForm.get('dueDate');
-        const billingCycleStartControl = this.accountForm.get('billingCycleStart');
-        const creditLimitControl = this.accountForm.get('creditLimit');
-        const minimumPaymentControl = this.accountForm.get('minimumPayment');
-
-        if (type === 'loan') {
-          lenderNameControl?.setValidators([Validators.required]);
-          loanAmountControl?.setValidators([Validators.required, ...this.validationService.getLoanAmountValidators()]);
-          interestRateControl?.setValidators([Validators.required, ...this.validationService.getInterestRateValidators()]);
-          durationMonthsControl?.setValidators([Validators.required, ...this.validationService.getDurationMonthsValidators()]);
-          nextDueDateControl?.setValidators([Validators.required]);
-
-          // Clear credit card validators
-          dueDateControl?.clearValidators();
-          billingCycleStartControl?.clearValidators();
-          creditLimitControl?.clearValidators();
-          minimumPaymentControl?.clearValidators();
-        } else if (type === 'credit') {
-          // Clear loan validators
-          lenderNameControl?.clearValidators();
-          loanAmountControl?.clearValidators();
-          interestRateControl?.clearValidators();
-          durationMonthsControl?.clearValidators();
-          nextDueDateControl?.clearValidators();
-
-          // Set credit card validators
-          dueDateControl?.setValidators([Validators.required, Validators.min(1), Validators.max(31)]);
-          billingCycleStartControl?.setValidators([Validators.required, Validators.min(1), Validators.max(31)]);
-          creditLimitControl?.setValidators([Validators.min(0)]);
-          minimumPaymentControl?.setValidators([Validators.min(0)]);
-        } else {
-          // Clear all specific validators for other account types
-          lenderNameControl?.clearValidators();
-          loanAmountControl?.clearValidators();
-          interestRateControl?.clearValidators();
-          durationMonthsControl?.clearValidators();
-          nextDueDateControl?.clearValidators();
-          dueDateControl?.clearValidators();
-          billingCycleStartControl?.clearValidators();
-          creditLimitControl?.clearValidators();
-          minimumPaymentControl?.clearValidators();
-        }
-
-        lenderNameControl?.updateValueAndValidity();
-        loanAmountControl?.updateValueAndValidity();
-        interestRateControl?.updateValueAndValidity();
-        durationMonthsControl?.updateValueAndValidity();
-        nextDueDateControl?.updateValueAndValidity();
-        dueDateControl?.updateValueAndValidity();
-        billingCycleStartControl?.updateValueAndValidity();
-        creditLimitControl?.updateValueAndValidity();
-        minimumPaymentControl?.updateValueAndValidity();
-      });
-
-      // Update remaining balance based on time elapsed since loan start
-      this.accountForm.get('loanAmount')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(() => {
-        this.updateRemainingBalance();
-      });
-
-      this.accountForm.get('startDate')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(() => {
-        this.updateRemainingBalance();
-      });
-
-      this.accountForm.get('interestRate')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(() => {
-        this.updateRemainingBalance();
-      });
-
-      this.accountForm.get('durationMonths')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(() => {
-        this.updateRemainingBalance();
-      });
-
-      this.accountForm.get('repaymentFrequency')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(() => {
-        this.updateRemainingBalance();
-      });
-
-      // Update custom payment when calculated payment changes
-      this.accountForm.get('useCalculatedPayment')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(useCalculated => {
-        if (useCalculated) {
-          const calculatedPayment = this.getCalculatedMonthlyPayment();
-          this.accountForm.patchValue({
-            customMonthlyPayment: calculatedPayment
-          }, { emitEvent: false });
+    // Auto-fill account name from lender name for loans
+    this.accountForm.get('lenderName')!.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(value => {
+        if (this.isLoanAccount() && value) {
+          this.accountForm.patchValue({ name: value }, { emitEvent: false });
         }
       });
 
-      // Update custom payment when loan details change
-      this.accountForm.get('loanAmount')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(() => {
-        if (this.accountForm.get('useCalculatedPayment')?.value) {
-          const calculatedPayment = this.getCalculatedMonthlyPayment();
-          this.accountForm.patchValue({
-            customMonthlyPayment: calculatedPayment
-          }, { emitEvent: false });
-        }
+    // Recalculate remaining balance & auto-derive interest rate on loan field changes
+    for (const field of ['loanAmount', 'startDate', 'endDate', 'customMonthlyPayment']) {
+      this.accountForm.get(field)!.valueChanges
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          if (this.isLoanAccount()) {
+            this.recalculateRemainingBalance();
+            this.autoDeriveLoanInterestRate();
+          }
+        });
+    }
+
+    this.accountForm.get('repaymentFrequency')!.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (this.isLoanAccount()) this.recalculateRemainingBalance();
       });
 
-      this.accountForm.get('interestRate')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(() => {
-        if (this.accountForm.get('useCalculatedPayment')?.value) {
-          const calculatedPayment = this.getCalculatedMonthlyPayment();
-          this.accountForm.patchValue({
-            customMonthlyPayment: calculatedPayment
-          }, { emitEvent: false });
+    // Recalculate EMI when user manually edits the interest rate
+    this.accountForm.get('interestRate')!.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (this.isLoanAccount() && this.accountForm.get('interestRate')?.dirty) {
+          this.recalculateEMIFromInterestRate();
         }
       });
+  }
 
-      this.accountForm.get('durationMonths')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(() => {
-        if (this.accountForm.get('useCalculatedPayment')?.value) {
-          const calculatedPayment = this.getCalculatedMonthlyPayment();
-          this.accountForm.patchValue({
-            customMonthlyPayment: calculatedPayment
-          }, { emitEvent: false });
-        }
-      });
+  private updateValidatorsForAccountType(type: string): void {
+    const loanFields   = ['lenderName', 'loanAmount', 'interestRate', 'durationMonths', 'nextDueDate', 'endDate', 'customMonthlyPayment'];
+    const creditFields = ['dueDate', 'billingCycleStart', 'creditLimit', 'minimumPayment'];
+    const allFields    = [...loanFields, ...creditFields];
+
+    allFields.forEach(name => this.accountForm.get(name)?.clearValidators());
+
+    if (type === 'loan') {
+      this.accountForm.get('lenderName')?.setValidators([Validators.required]);
+      this.accountForm.get('loanAmount')?.setValidators([Validators.required, ...this.validationService.getLoanAmountValidators()]);
+      this.accountForm.get('interestRate')?.setValidators([Validators.required, ...this.validationService.getInterestRateValidators()]);
+      this.accountForm.get('nextDueDate')?.setValidators([Validators.required]);
+      this.accountForm.get('endDate')?.setValidators([Validators.required]);
+      this.accountForm.get('customMonthlyPayment')?.setValidators([Validators.required, Validators.min(0)]);
+    } else if (type === 'credit') {
+      this.accountForm.get('dueDate')?.setValidators([Validators.required, Validators.min(1), Validators.max(31)]);
+      this.accountForm.get('billingCycleStart')?.setValidators([Validators.required, Validators.min(1), Validators.max(31)]);
+      this.accountForm.get('creditLimit')?.setValidators([Validators.min(0)]);
+      this.accountForm.get('minimumPayment')?.setValidators([Validators.min(0)]);
+    }
+
+    allFields.forEach(name => this.accountForm.get(name)?.updateValueAndValidity());
+  }
+
+  // ─── Loan Calculations ────────────────────────────────────────────────────
+
+  private autoDeriveLoanInterestRate(): void {
+    const principal = this.accountForm.get('loanAmount')?.value || 0;
+    const emi       = this.accountForm.get('customMonthlyPayment')?.value || 0;
+    const months    = this.loanDurationMonths();
+
+    if (principal > 0 && emi > 0 && months > 0) {
+      const annualRate = this.solveInterestRateByBinarySearch(principal, emi, months);
+      this.accountForm.patchValue({ interestRate: Math.round(annualRate * 100) / 100 }, { emitEvent: false });
     }
   }
 
-  ngOnInit(): void {
-    this.userId = this.userService.getCurrentUserId();
+  private recalculateEMIFromInterestRate(): void {
+    const principal  = this.accountForm.get('loanAmount')?.value || 0;
+    const annualRate = this.accountForm.get('interestRate')?.value || 0;
+    const months     = this.loanDurationMonths();
 
-    // Initialize remaining balance for new loan accounts
-    if (!this.dialogData && this.accountForm.get('type')?.value === 'loan') {
-      this.updateRemainingBalance();
+    if (principal > 0 && months > 0) {
+      const r   = annualRate / 12 / 100;
+      const emi = r === 0
+        ? principal / months
+        : (principal * r * Math.pow(1 + r, months)) / (Math.pow(1 + r, months) - 1);
+
+      this.accountForm.patchValue({ customMonthlyPayment: Math.round(emi * 100) / 100 }, { emitEvent: false });
+      this.recalculateRemainingBalance();
     }
   }
+
+  /** Binary search to find the annual interest rate (%) that matches the given EMI. */
+  private solveInterestRateByBinarySearch(principal: number, emi: number, months: number): number {
+    if (emi <= principal / months) return 0;
+    let low = 0, high = 100;
+    for (let i = 0; i < 100; i++) {
+      const mid     = (low + high) / 2;
+      const r       = mid / 12 / 100;
+      const calcEmi = (principal * r * Math.pow(1 + r, months)) / (Math.pow(1 + r, months) - 1);
+      if (Math.abs(calcEmi - emi) < 0.0001) return mid;
+      calcEmi > emi ? (high = mid) : (low = mid);
+    }
+    return (low + high) / 2;
+  }
+
+  recalculateRemainingBalance(): void {
+    if (!this.isLoanAccount()) return;
+
+    const loanAmount     = this.accountForm.get('loanAmount')?.value || 0;
+    const startDate      = this.accountForm.get('startDate')?.value;
+    const endDate        = this.accountForm.get('endDate')?.value;
+    const monthlyPayment = this.accountForm.get('customMonthlyPayment')?.value || 0;
+
+    if (!startDate || !endDate || loanAmount <= 0) {
+      this.accountForm.patchValue({ remainingBalance: loanAmount }, { emitEvent: false });
+      return;
+    }
+
+    const monthsElapsed    = Math.max(0, Math.floor(dayjs().diff(dayjs(startDate), 'month', true)));
+    const remainingBalance = Math.round(Math.max(0, loanAmount - monthsElapsed * monthlyPayment) * 100) / 100;
+    this.accountForm.patchValue({ remainingBalance, balance: -remainingBalance }, { emitEvent: false });
+  }
+
+  // ─── Submit ───────────────────────────────────────────────────────────────
 
   async onSubmit(): Promise<void> {
-    if (this.accountForm.valid && !this.isSubmitting) {
-      this.isSubmitting = true;
+    if (!this.accountForm.valid || this.submitting()) return;
+    this.submitting.set(true);
 
-      try {
-        const formData = this.accountForm.value;
-        const isLoanAccount = formData.type === 'loan';
+    try {
+      const formData = this.accountForm.value;
+      const isLoan   = this.isLoanAccount();
+      const isCredit = this.isCreditAccount();
+      const uid      = this.currentUserId();
 
-        // Prepare account data
-        const accountData: any = {
-          name: formData.name.trim(),
-          type: formData.type,
-          // For credit accounts, we treat the balance as liability (negative)
-          // If user enters 500 owed, we store -500.
-          // If user explicitly enters -100 (credit/overpayment), we store 100? No, standard is debt.
-          // Use standard convention: User enters debt as positive number. Store as negative.
-          balance: formData.type === 'credit'
-            ? -(Math.abs(Number(formData.balance) || 0))
-            : (Number(formData.balance) || 0),
-          description: formData.description || '',
+      const accountData: any = {
+        name:        formData.name.trim(),
+        type:        formData.type,
+        balance:     isCredit ? -(Math.abs(Number(formData.balance) || 0)) : (Number(formData.balance) || 0),
+        description: formData.description || '',
+      };
+
+      if (isLoan) {
+        accountData.loanDetails = {
+          lenderName:          formData.lenderName.trim(),
+          loanAmount:          Number(formData.loanAmount) || 0,
+          interestRate:        Number(formData.interestRate) || 0,
+          startDate:           formData.startDate,
+          durationMonths:      this.loanDurationMonths(),
+          repaymentFrequency:  formData.repaymentFrequency,
+          status:              formData.status,
+          remainingBalance:    Number(formData.remainingBalance) || 0,
+          nextDueDate:         formData.nextDueDate,
+          endDate:             formData.endDate,
+          showReminder:        formData.showReminder,
+          monthlyPayment:      formData.customMonthlyPayment,
         };
-
-        // Add loan details if it's a loan account
-        if (isLoanAccount) {
-          accountData.loanDetails = {
-            lenderName: formData.lenderName.trim(),
-            loanAmount: Number(formData.loanAmount) || 0,
-            interestRate: Number(formData.interestRate) || 0,
-            startDate: formData.startDate,
-            durationMonths: Number(formData.durationMonths) || 12,
-            repaymentFrequency: formData.repaymentFrequency,
-            status: formData.status,
-            remainingBalance: Number(formData.remainingBalance) + this.getCalculatedMonthlyPayment() || 0,
-            nextDueDate: formData.nextDueDate,
-            showReminder: formData.showReminder,
-            monthlyPayment: this.getCalculatedMonthlyPayment(),
-          };
-        }
-
-        // Add credit card details if it's a credit card account
-        if (formData.type === 'credit') {
-          accountData.creditCardDetails = {
-            dueDate: Number(formData.dueDate) || 15,
-            billingCycleStart: Number(formData.billingCycleStart) || 1,
-            creditLimit: Number(formData.creditLimit) || 0,
-            minimumPayment: Number(formData.minimumPayment) || 0,
-            showReminder: formData.creditCardShowReminder,
-            nextDueDate: this.calculateNextCreditCardDueDate(Number(formData.dueDate) || 15)
-          };
-        }
-
-        if (this.dialogData?.accountId) {
-          // Update existing account using service
-          await this.accountsService.updateAccount(
-            this.userId,
-            this.dialogData.accountId,
-            accountData
-          ).toPromise();
-          this.notificationService.success('Account updated successfully');
-        } else {
-          // Create new account using service directly
-          const accountId = await this.accountsService.createAccount(
-            this.userId,
-            accountData
-          ).toPromise();
-
-          // For loan accounts, create recurring transaction after account is created
-          if (isLoanAccount && accountData.loanDetails && this.accountForm.get('createRecurringTransaction')?.value && accountId) {
-            // Create the recurring transaction immediately since we have the accountId
-            this.createLoanPaymentRecurringTransactionAfterAccountCreation(accountData, accountId);
-          }
-
-          if (isLoanAccount && this.accountForm.get('createRecurringTransaction')?.value) {
-            this.notificationService.success('Loan account created successfully! A recurring transaction for loan payments has been set up.');
-          } else if (isLoanAccount) {
-            this.notificationService.success('Loan account created successfully!');
-          } else {
-            this.notificationService.success('Account added successfully');
-          }
-          this.hapticFeedback.successVibration();
-        }
-
-        this.dialogRef.close(true);
-      } catch (error) {
-        this.notificationService.error('Failed to save account');
-        console.error('Error saving account:', error);
-      } finally {
-        this.isSubmitting = false;
       }
+
+      if (isCredit) {
+        accountData.creditCardDetails = {
+          dueDate:           Number(formData.dueDate) || 15,
+          billingCycleStart: Number(formData.billingCycleStart) || 1,
+          creditLimit:       Number(formData.creditLimit) || 0,
+          minimumPayment:    Number(formData.minimumPayment) || 0,
+          showReminder:      formData.creditCardShowReminder,
+          nextDueDate:       this.buildNextCreditCardDueDate(Number(formData.dueDate) || 15),
+        };
+      }
+
+      if (this.dialogData?.accountId) {
+        await this.accountsService.updateAccount(uid, this.dialogData.accountId, accountData).toPromise();
+        this.notificationService.success('Account updated successfully');
+      } else {
+        const newAccountId = await this.accountsService.createAccount(uid, accountData).toPromise();
+
+        if (isLoan && newAccountId && formData.createRecurringTransaction) {
+          this.scheduleLoanPaymentRecurringTransaction(accountData, newAccountId);
+          this.notificationService.success('Loan account created! A recurring transaction for payments has been set up.');
+        } else if (isLoan) {
+          this.notificationService.success('Loan account created successfully!');
+        } else {
+          this.notificationService.success('Account added successfully');
+        }
+
+        this.hapticFeedback.successVibration();
+      }
+
+      this.dialogRef.close(true);
+    } catch (error) {
+      this.notificationService.error('Failed to save account');
+      console.error('Error saving account:', error);
+    } finally {
+      this.submitting.set(false);
     }
   }
 
@@ -399,314 +445,71 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
     this.dialogRef.close();
   }
 
-  getNameError(): string {
-    const control = this.accountForm.get('name');
-    return control ? this.validationService.getAccountNameError(control) : '';
-  }
+  // ─── Private Helpers ──────────────────────────────────────────────────────
 
-  getBalanceError(): string {
-    const control = this.accountForm.get('balance');
-    return control ? this.validationService.getAccountBalanceError(control) : '';
-  }
-
-  /**
-   * Check if current account type is loan
-   */
-  isLoanAccount(): boolean {
-    return this.accountForm.get('type')?.value === 'loan';
-  }
-
-  isCreditCardAccount(): boolean {
-    return this.accountForm.get('type')?.value === 'credit';
-  }
-
-  /**
-   * Get error message for loan amount
-   */
-  getLoanAmountError(): string {
-    const control = this.accountForm.get('loanAmount');
-    return control ? this.validationService.getLoanAmountError(control) : '';
-  }
-
-  /**
-   * Get error message for interest rate
-   */
-  getInterestRateError(): string {
-    const control = this.accountForm.get('interestRate');
-    return control ? this.validationService.getInterestRateError(control) : '';
-  }
-
-  /**
-   * Get error message for duration
-   */
-  getDurationError(): string {
-    const control = this.accountForm.get('durationMonths');
-    return control ? this.validationService.getDurationError(control) : '';
-  }
-
-  /**
-   * Calculate next due date for credit card
-   */
-  private calculateNextCreditCardDueDate(dayOfMonth: number): Date {
+  private buildNextCreditCardDueDate(dayOfMonth: number): Date {
     const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-
-    // Create date for this month
-    let nextDueDate = new Date(currentYear, currentMonth, dayOfMonth);
-
-    // If that date has passed, it's next month
-    if (nextDueDate < today) {
-      nextDueDate = new Date(currentYear, currentMonth + 1, dayOfMonth);
-    }
-
-    return nextDueDate;
+    let next = new Date(today.getFullYear(), today.getMonth(), dayOfMonth);
+    if (next < today) next = new Date(today.getFullYear(), today.getMonth() + 1, dayOfMonth);
+    return next;
   }
 
-  /**
- * Get calculated monthly payment for display
- */
-  getCalculatedMonthlyPayment(): number {
-    if (!this.isLoanAccount()) {
-      return 0;
-    }
-
-    const useCalculated = this.accountForm.get('useCalculatedPayment')?.value;
-
-    if (!useCalculated) {
-      return this.accountForm.get('customMonthlyPayment')?.value || 0;
-    }
-
-    const loanAmount = this.accountForm.get('loanAmount')?.value || 0;
-    const interestRate = this.accountForm.get('interestRate')?.value || 0;
-    const durationMonths = this.accountForm.get('durationMonths')?.value || 12;
-
-    return this.calculateMonthlyPayment(loanAmount, interestRate, durationMonths);
-  }
-
-  /**
-   * Get current remaining balance (for testing/debugging)
-   */
-  getCurrentRemainingBalance(): number {
-    return this.accountForm.get('remainingBalance')?.value || 0;
-  }
-
-  /**
-   * Update remaining balance based on time elapsed since loan start
-   */
-  updateRemainingBalance(): void {
-    if (!this.isLoanAccount()) {
-      return;
-    }
-
-    const loanAmount = this.accountForm.get('loanAmount')?.value || 0;
-    const startDate = this.accountForm.get('startDate')?.value;
-    const durationMonths = this.accountForm.get('durationMonths')?.value || 12;
-    const repaymentFrequency = this.accountForm.get('repaymentFrequency')?.value || 'monthly';
-
-    console.log('Updating remaining balance:', {
-      loanAmount,
-      startDate,
-      durationMonths,
-      repaymentFrequency
-    });
-
-    if (!startDate || loanAmount <= 0) {
-      this.accountForm.patchValue({ remainingBalance: loanAmount }, { emitEvent: false });
-      console.log('Setting remaining balance to loan amount:', loanAmount);
-      return;
-    }
-
-    const remainingBalance = this.calculateRemainingBalance(
-      loanAmount,
-      startDate,
-      durationMonths,
-      repaymentFrequency
-    );
-
-    console.log('Calculated remaining balance:', remainingBalance);
-    this.accountForm.patchValue({
-      remainingBalance,
-      balance: -remainingBalance
-    }, { emitEvent: false });
-  }
-
-  /**
-   * Calculate remaining balance based on time elapsed
-   */
-  private calculateRemainingBalance(
-    loanAmount: number,
-    startDate: Date,
-    durationMonths: number,
-    repaymentFrequency: string
-  ): number {
-    const today = new Date();
-    const start = new Date(startDate);
-
-    // Calculate months elapsed since loan start
-    const monthsElapsed = Math.round(dayjs(today).diff(dayjs(start), 'month', true));
-
-    // Calculate total payments made based on frequency
-    let paymentsMade = 0;
-    if (repaymentFrequency === 'weekly') {
-      // For weekly payments, calculate weeks elapsed
-      const weeksElapsed = Math.floor((today.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000));
-      paymentsMade = Math.max(0, weeksElapsed);
-    } else {
-      // For monthly payments
-      paymentsMade = Math.max(0, monthsElapsed);
-    }
-
-    // Calculate total amount paid using the calculated payment amount
-    const interestRate = this.accountForm.get('interestRate')?.value || 0;
-    const monthlyPayment = this.calculateMonthlyPayment(loanAmount, interestRate, durationMonths);
-    const totalPaid = paymentsMade * monthlyPayment;
-
-    // Calculate remaining balance
-    const remainingBalance = Math.max(0, loanAmount - totalPaid);
-
-    console.log('Remaining balance calculation details:', {
-      today: today.toISOString(),
-      start: start.toISOString(),
-      monthsElapsed,
-      paymentsMade,
-      interestRate,
-      monthlyPayment,
-      totalPaid,
-      remainingBalance
-    });
-
-    return Math.round(remainingBalance * 100) / 100; // Round to 2 decimal places
-  }
-
-
-  /**
-   * Find or create a loan payment category
-   */
   private findOrCreateLoanPaymentCategory(userId: string): Observable<string> {
     return this.categoryService.getCategories(userId).pipe(
       switchMap(categories => {
-        // Look for existing loan payment category
-        const loanPaymentCategory = categories.find(cat =>
-          cat.name.toLowerCase().includes('loan') &&
-          cat.type === TransactionType.EXPENSE
+        const existing = categories.find(c =>
+          c.name.toLowerCase().includes('loan') && c.type === TransactionType.EXPENSE
         );
-
-        if (loanPaymentCategory?.id) {
-          return of(loanPaymentCategory.id);
-        }
-
-        // Create new loan payment category if not found
-        return this.categoryService.createCategory(
-          userId,
-          'Loan Payment',
-          TransactionType.EXPENSE,
-          'account_balance',
-          '#ef4444' // Red color for loan payments
-        );
+        return existing?.id
+          ? of(existing.id)
+          : this.categoryService.createCategory(userId, 'Loan Payment', TransactionType.EXPENSE, 'account_balance', '#ef4444');
       })
     );
   }
 
-  /**
-   * Calculate monthly payment for loan using amortization formula
-   */
-  private calculateMonthlyPayment(loanAmount: number, interestRate: number, durationMonths: number): number {
-    if (durationMonths <= 0 || interestRate <= 0) return loanAmount / durationMonths;
+  private scheduleLoanPaymentRecurringTransaction(accountData: any, accountId: string): void {
+    const { loanDetails } = accountData;
+    const uid = this.currentUserId();
 
-    // Monthly interest rate (annual rate / 12)
-    const monthlyRate = interestRate / (12 * 100);
-
-    // Amortization formula: P = L[c(1 + c)^n]/[(1 + c)^n - 1]
-    // Where: P = monthly payment, L = loan amount, c = monthly interest rate, n = number of payments
-    const numerator = monthlyRate * Math.pow(1 + monthlyRate, durationMonths);
-    const denominator = Math.pow(1 + monthlyRate, durationMonths) - 1;
-
-    if (denominator === 0) return loanAmount / durationMonths;
-
-    const monthlyPayment = loanAmount * (numerator / denominator);
-
-    return Math.round(monthlyPayment * 100) / 100; // Round to 2 decimal places
-  }
-
-  /**
-   * Create recurring transaction for loan payment
-   */
-  private createLoanPaymentRecurringTransaction(
-    userId: string,
-    accountId: string,
-    loanDetails: any
-  ): Observable<void> {
-    return this.findOrCreateLoanPaymentCategory(userId).pipe(
+    this.findOrCreateLoanPaymentCategory(uid).pipe(
       switchMap(categoryId => {
-        if (!categoryId) {
-          throw new Error('Failed to create loan payment category');
-        }
+        if (!categoryId) throw new Error('Failed to find/create loan payment category');
 
-        const monthlyPayment = this.getCalculatedMonthlyPayment();
+        const recurringEndDate = new Date(loanDetails.startDate);
+        recurringEndDate.setMonth(recurringEndDate.getMonth() + loanDetails.durationMonths);
 
-        const recurringTransaction: Omit<Transaction, 'id'> = {
-          userId: userId,
-          accountId: accountId,
-          categoryId: categoryId,
-          category: 'Loan Payment',
-          payee: loanDetails.lenderName,
-          amount: monthlyPayment,
-          type: TransactionType.EXPENSE,
-          date: new Date(),
-          notes: `Monthly payment for ${loanDetails.lenderName} loan`,
-          status: TransactionStatus.COMPLETED,
-          paymentMethod: PaymentMethod.BANK_TRANSFER,
-          isRecurring: true,
-          recurringInterval: loanDetails.repaymentFrequency === 'weekly' ?
-            RecurringInterval.WEEKLY : RecurringInterval.MONTHLY,
-          recurringEndDate: this.calculateLoanEndDate(loanDetails.startDate, loanDetails.durationMonths),
-          nextOccurrence: loanDetails.nextDueDate,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          createdBy: userId,
-          updatedBy: userId,
-          syncStatus: 'synced' as any,
-          isPending: false,
-          lastSyncedAt: new Date()
+        const transaction: Omit<Transaction, 'id'> = {
+          userId:              uid,
+          accountId,
+          categoryId,
+          category:            'Loan Payment',
+          payee:               loanDetails.lenderName,
+          amount:              this.loanMonthlyPayment(),
+          type:                TransactionType.EXPENSE,
+          date:                new Date(),
+          notes:               `Monthly payment for ${loanDetails.lenderName} loan`,
+          status:              TransactionStatus.COMPLETED,
+          paymentMethod:       PaymentMethod.BANK_TRANSFER,
+          isRecurring:         true,
+          recurringInterval:   loanDetails.repaymentFrequency === 'weekly' ? RecurringInterval.WEEKLY : RecurringInterval.MONTHLY,
+          recurringEndDate,
+          nextOccurrence:      loanDetails.nextDueDate,
+          createdAt:           new Date(),
+          updatedAt:           new Date(),
+          createdBy:           uid,
+          updatedBy:           uid,
+          syncStatus:          'synced' as any,
+          isPending:           false,
+          lastSyncedAt:        new Date(),
         };
 
-        return this.transactionsService.createTransaction(userId, recurringTransaction);
+        return this.transactionsService.createTransaction(uid, transaction);
       })
-    );
-  }
-
-  /**
-   * Calculate loan end date based on start date and duration
-   */
-  private calculateLoanEndDate(startDate: Date, durationMonths: number): Date {
-    const endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + durationMonths);
-    return endDate;
-  }
-
-  /**
-   * Create loan payment recurring transaction after account creation
-   */
-  private createLoanPaymentRecurringTransactionAfterAccountCreation(accountData: any, accountId: string): void {
-    // Create the recurring transaction immediately since we have the accountId
-    this.createLoanPaymentRecurringTransaction(
-      this.userId,
-      accountId,
-      accountData.loanDetails
     ).subscribe({
-      next: () => {
-        this.notificationService.success('Loan payment recurring transaction created successfully');
-      },
-      error: (error) => {
-        console.error('Failed to create loan payment recurring transaction:', error);
-        this.notificationService.warning('Account created but failed to create loan payment recurring transaction');
+      error: err => {
+        console.error('Failed to schedule loan payment recurring transaction:', err);
+        this.notificationService.warning('Account created but failed to set up recurring transaction');
       }
     });
-  }
-
-  ngOnDestroy(): void {
-    this._onDestroy.next();
-    this._onDestroy.complete();
   }
 }

@@ -71,6 +71,7 @@ export interface LoanDetails {
 	nextDueDate: Date;
 	showReminder: boolean;
 	monthlyPayment: number;
+	endDate: Date;
 }
 
 /**

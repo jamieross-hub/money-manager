@@ -11,6 +11,7 @@ import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
+import { provideNativeDateAdapter } from '@angular/material/core';
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
 }
@@ -108,6 +109,7 @@ import { PinLockComponent } from './util/components/pin-lock/pin-lock.component'
   ],
   providers: [
     provideAnimationsAsync(),
+    provideNativeDateAdapter(),
     provideHttpClient(withInterceptors([securityInterceptor])),
     provideClientHydration(),
     CommonSyncService,

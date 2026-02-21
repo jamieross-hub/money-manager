@@ -7,9 +7,9 @@ import {
   CanActivateChild
 } from "@angular/router";
 import { Observable, of } from "rxjs";
-import { catchError, timeout } from "rxjs/operators";
+import { catchError, timeout, map, take, finalize } from "rxjs/operators";
 import { UserService } from "../service/db/user.service";
-import { getAuth, onAuthStateChanged, User } from '@angular/fire/auth';
+import { Auth, authState, User } from '@angular/fire/auth';
 import { NotificationService } from "../service/notification.service";
 import { User as AppUser, UserRole } from "../models/user.model";
 import { LoaderService } from "../service/loader.service";
@@ -56,7 +56,8 @@ export class AuthGuard implements CanActivate, CanActivateChild {
     private userService: UserService,
     private notificationService: NotificationService,
     private loaderService: LoaderService,
-    private commonSyncService: CommonSyncService
+    private commonSyncService: CommonSyncService,
+    private auth: Auth
   ) {
     this.startSessionMonitoring();
   }
@@ -72,37 +73,31 @@ export class AuthGuard implements CanActivate, CanActivateChild {
   private performSecurityCheck(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
     this.loaderService.show();
 
-    const auth = getAuth();
-    const currentUser = auth.currentUser;
-
-    if (currentUser || this.userService.isGuestUser()) {
-      this.backgroundSecurityCheck(route, state, currentUser as User);
-      return of(true);
-    }
-
-    return new Observable<boolean>((observer) => {
-      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-        unsubscribe();
-
-        if (!firebaseUser) {
-          this.handleUnauthenticatedUser(state).then(() => {
-            this.loaderService.hide();
-            observer.next(false);
-          });
-        } else {
-          this.backgroundSecurityCheck(route, state, firebaseUser);
-          observer.next(true);
-          this.loaderService.hide();
+    return authState(this.auth).pipe(
+      take(1),
+      map(firebaseUser => {
+        if (firebaseUser || this.userService.isGuestUser()) {
+          this.backgroundSecurityCheck(route, state, firebaseUser as User);
+          return true;
         }
-      });
-    }).pipe(
+
+        // Auto-enable guest mode for unauthenticated access
+        this.handleUnauthenticatedUser(state);
+        return false;
+      }),
       timeout(10000),
       catchError(error => {
         console.error('[AuthGuard] Timeout or error:', error);
+        this.loaderService.hide();
         this.router.navigate(['/sign-in'], {
           queryParams: { error: 'auth_timeout', redirect: state.url }
         });
         return of(false);
+      }),
+      finalize(() => {
+        // Ensure loader is eventually hidden if not already
+        // Note: backgroundSecurityCheck also calls hide() in a timeout(0),
+        // so we must be careful not to hide it too early if it's still doing work.
       })
     );
   }
