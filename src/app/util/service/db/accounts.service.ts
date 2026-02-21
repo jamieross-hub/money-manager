@@ -42,17 +42,26 @@ export class AccountsService {
 
         if (this.isGuest()) {
             this.localStorageUtility.saveEntity('accounts', account, 'accountId');
+            this.store.dispatch(AccountsActions.createAccountSuccess({ account }));
             return of(accountId);
         }
 
         return new Observable<string>(observer => {
             const accountRef = doc(this.firestore, `users/${userId}/accounts/${accountId}`);
-            setDoc(accountRef, account).then(() => {
-                observer.next(accountId);
-                observer.complete();
-            }).catch(error => {
+            
+            // 1. Dispatch store updates immediately (Optimistic)
+            this.store.dispatch(AccountsActions.createAccountSuccess({ account }));
+            
+            // 2. Update cache immediately
+            this.updateAccountCache(userId, 'create', account);
+
+            // 3. Complete observer immediately
+            observer.next(accountId);
+            observer.complete();
+
+            // 4. Perform Firestore operation in background
+            setDoc(accountRef, account).catch(error => {
                 console.error(`Error creating account for ${userId}:`, error);
-                observer.error(error);
             });
         });
     }
@@ -147,8 +156,10 @@ export class AccountsService {
             const accounts = this.localStorageUtility.getEntities<Account>('accounts');
             const index = accounts.findIndex(a => (a as any).accountId === accountId);
             if (index !== -1) {
-                accounts[index] = { ...accounts[index], ...sanitizedData, updatedAt: new Date() as any };
+                const updatedAccount = { ...accounts[index], ...sanitizedData, updatedAt: new Date() as any };
+                accounts[index] = updatedAccount;
                 this.localStorageUtility.saveEntities('accounts', accounts);
+                this.store.dispatch(AccountsActions.updateAccountSuccess({ account: updatedAccount }));
             }
             return of(undefined);
         }
@@ -159,11 +170,20 @@ export class AccountsService {
                 ...sanitizedData,
                 updatedAt: new Date() as any // Firebase Timestamp
             };
-            updateDoc(accountRef, updateData).then(() => {
-                observer.next();
-                observer.complete();
-            }).catch(error => {
-                observer.error(error);
+
+            // 1. Dispatch store updates immediately (Optimistic)
+            this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { accountId, ...sanitizedData } as any }));
+            
+            // 2. Update cache immediately
+            this.updateAccountCache(userId, 'update', { accountId, ...sanitizedData } as any);
+
+            // 3. Complete observer immediately
+            observer.next();
+            observer.complete();
+
+            // 4. Perform Firestore operation in background
+            updateDoc(accountRef, updateData).catch(error => {
+                console.error(`Error updating account for ${userId}:`, error);
             });
         });
     }
@@ -172,16 +192,26 @@ export class AccountsService {
     deleteAccount(userId: string, accountId: string): Observable<void> {
         if (this.isGuest()) {
             this.localStorageUtility.deleteEntity('accounts', accountId, 'accountId');
+            this.store.dispatch(AccountsActions.deleteAccountSuccess({ accountId }));
             return of(undefined);
         }
 
         return new Observable<void>(observer => {
             const accountRef = doc(this.firestore, `users/${userId}/accounts/${accountId}`);
-            deleteDoc(accountRef).then(() => {
-                observer.next();
-                observer.complete();
-            }).catch(error => {
-                observer.error(error);
+
+            // 1. Dispatch store updates immediately (Optimistic)
+            this.store.dispatch(AccountsActions.deleteAccountSuccess({ accountId }));
+
+            // 2. Update cache immediately
+            this.updateAccountCache(userId, 'delete', { accountId } as any);
+
+            // 3. Complete observer immediately
+            observer.next();
+            observer.complete();
+
+            // 4. Perform Firestore operation in background
+            deleteDoc(accountRef).catch(error => {
+                console.error(`Error deleting account for ${userId}:`, error);
             });
         });
     }
@@ -194,16 +224,18 @@ export class AccountsService {
         oldTransaction?: Transaction,
         newTransaction?: Transaction
     ): Observable<number> {
-        if (this.isGuest()) {
-            const accounts = this.localStorageUtility.getEntities<Account>('accounts');
-            const index = accounts.findIndex(a => (a as any).accountId === accountId);
-            if (index === -1) return of(0);
-
+        let optimisticBalance = 0;
+        
+        // 1. Optimistic Update
+        const cacheKey = LocalStorageKeyHelper.getAccountsCacheKey(userId);
+        const accounts = this.localStorageUtility.getItem<Account[]>(cacheKey) || [];
+        const index = accounts.findIndex(a => (a as any).accountId === accountId);
+        
+        if (index !== -1) {
             const account = accounts[index];
             let balanceChange = 0;
             let loanRemainingBalanceChange = 0;
 
-            // Simplified balance calculation logic for local use
             const getEffect = (t: Transaction) => {
                 const amount = Number(t.amount) || 0;
                 return t.type === 'income' ? amount : -amount;
@@ -229,18 +261,28 @@ export class AccountsService {
                 account.loanDetails.remainingBalance = Math.max(0, (Number(account.loanDetails.remainingBalance) || 0) + loanRemainingBalanceChange);
             }
             account.updatedAt = new Date() as any;
-            this.localStorageUtility.saveEntities('accounts', accounts);
-            return of(account.balance);
+            optimisticBalance = account.balance;
+            
+            this.localStorageUtility.setItem(cacheKey, accounts);
+            this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...account } as any }));
+        }
+
+        if (this.isGuest()) {
+            return of(optimisticBalance);
         }
 
         return new Observable<number>(observer => {
+            // 2. Complete observer immediately
+            observer.next(optimisticBalance);
+            observer.complete();
+
+            // 3. Background DB Update
             const updateBalanceAsync = async () => {
                 try {
                     const accountRef = doc(this.firestore, `users/${userId}/accounts/${accountId}`);
                     const accountSnap = await getDoc(accountRef);
 
                     if (!accountSnap.exists()) {
-                        observer.error('Account not found');
                         return;
                     }
 
@@ -280,10 +322,8 @@ export class AccountsService {
                     }
 
                     await updateDoc(accountRef, updateData);
-                    observer.next(newBalance);
-                    observer.complete();
                 } catch (error) {
-                    observer.error(error);
+                    console.error('Error updating account balance:', error);
                 }
             };
             updateBalanceAsync();
@@ -295,26 +335,33 @@ export class AccountsService {
         userId: string,
         transactions: { accountId: string; type: 'income' | 'expense'; amount: number }[]
     ): Observable<void> {
-        if (this.isGuest()) {
-            const accounts = this.localStorageUtility.getEntities<Account>('accounts');
-            transactions.forEach(t => {
-                const index = accounts.findIndex(a => (a as any).accountId === t.accountId);
-                if (index !== -1) {
-                    const account = accounts[index];
-                    const amount = Number(t.amount) || 0;
-                    const balanceChange = t.type === 'income' ? amount : -amount;
-                    account.balance = (Number(account.balance) || 0) + balanceChange;
-                    if (account.type === 'loan' && account.loanDetails && t.type === 'expense') {
-                        account.loanDetails.remainingBalance = Math.max(0, (Number(account.loanDetails.remainingBalance) || 0) - amount);
-                    }
-                    account.updatedAt = new Date() as any;
+        // 1. Optimistic Update
+        const cacheKey = LocalStorageKeyHelper.getAccountsCacheKey(userId);
+        const accounts = this.localStorageUtility.getItem<Account[]>(cacheKey) || [];
+        
+        transactions.forEach(t => {
+            const index = accounts.findIndex(a => (a as any).accountId === t.accountId);
+            if (index !== -1) {
+                const account = accounts[index];
+                const amount = Number(t.amount) || 0;
+                const balanceChange = t.type === 'income' ? amount : -amount;
+                account.balance = (Number(account.balance) || 0) + balanceChange;
+                if (account.type === 'loan' && account.loanDetails && t.type === 'expense') {
+                    account.loanDetails.remainingBalance = Math.max(0, (Number(account.loanDetails.remainingBalance) || 0) - amount);
                 }
-            });
-            this.localStorageUtility.saveEntities('accounts', accounts);
+                account.updatedAt = new Date() as any;
+                this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...account } as any }));
+            }
+        });
+        this.localStorageUtility.setItem(cacheKey, accounts);
+        
+        if (this.isGuest()) {
             return of(undefined);
         }
 
         return new Observable<void>(observer => {
+            observer.next();
+            observer.complete();
             const updateBalancesAsync = async () => {
                 try {
                     const batch = writeBatch(this.firestore);
@@ -364,10 +411,8 @@ export class AccountsService {
                     }
 
                     await batch.commit();
-                    observer.next();
-                    observer.complete();
                 } catch (error) {
-                    observer.error(error);
+                    console.error('Error batch updating account balances:', error);
                 }
             };
 
@@ -382,35 +427,43 @@ export class AccountsService {
         newAccountId: string,
         transaction: Transaction
     ): Observable<void> {
-        if (this.isGuest()) {
-            const accounts = this.localStorageUtility.getEntities<Account>('accounts');
-            const oldIndex = accounts.findIndex(a => (a as any).accountId === oldAccountId);
-            const newIndex = accounts.findIndex(a => (a as any).accountId === newAccountId);
+        // 1. Optimistic Update
+        const cacheKey = LocalStorageKeyHelper.getAccountsCacheKey(userId);
+        const accounts = this.localStorageUtility.getItem<Account[]>(cacheKey) || [];
+        const oldIndex = accounts.findIndex(a => (a as any).accountId === oldAccountId);
+        const newIndex = accounts.findIndex(a => (a as any).accountId === newAccountId);
 
-            if (oldIndex !== -1 && newIndex !== -1) {
-                const oldAccount = accounts[oldIndex];
-                const newAccount = accounts[newIndex];
-                const amount = Number(transaction.amount) || 0;
-                const transactionEffect = transaction.type === 'income' ? amount : -amount;
+        if (oldIndex !== -1 && newIndex !== -1) {
+            const oldAccount = accounts[oldIndex];
+            const newAccount = accounts[newIndex];
+            const amount = Number(transaction.amount) || 0;
+            const transactionEffect = transaction.type === 'income' ? amount : -amount;
 
-                oldAccount.balance = (Number(oldAccount.balance) || 0) - transactionEffect;
-                if (oldAccount.type === 'loan' && oldAccount.loanDetails && transaction.type === 'expense') {
-                    oldAccount.loanDetails.remainingBalance = (Number(oldAccount.loanDetails.remainingBalance) || 0) + amount;
-                }
-
-                newAccount.balance = (Number(newAccount.balance) || 0) + transactionEffect;
-                if (newAccount.type === 'loan' && newAccount.loanDetails && transaction.type === 'expense') {
-                    newAccount.loanDetails.remainingBalance = Math.max(0, (Number(newAccount.loanDetails.remainingBalance) || 0) - amount);
-                }
-
-                oldAccount.updatedAt = new Date() as any;
-                newAccount.updatedAt = new Date() as any;
-                this.localStorageUtility.saveEntities('accounts', accounts);
+            oldAccount.balance = (Number(oldAccount.balance) || 0) - transactionEffect;
+            if (oldAccount.type === 'loan' && oldAccount.loanDetails && transaction.type === 'expense') {
+                oldAccount.loanDetails.remainingBalance = (Number(oldAccount.loanDetails.remainingBalance) || 0) + amount;
             }
+
+            newAccount.balance = (Number(newAccount.balance) || 0) + transactionEffect;
+            if (newAccount.type === 'loan' && newAccount.loanDetails && transaction.type === 'expense') {
+                newAccount.loanDetails.remainingBalance = Math.max(0, (Number(newAccount.loanDetails.remainingBalance) || 0) - amount);
+            }
+
+            oldAccount.updatedAt = new Date() as any;
+            newAccount.updatedAt = new Date() as any;
+            
+            this.localStorageUtility.setItem(cacheKey, accounts);
+            this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...oldAccount } as any }));
+            this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...newAccount } as any }));
+        }
+        
+        if (this.isGuest()) {
             return of(undefined);
         }
 
         return new Observable<void>(observer => {
+            observer.next();
+            observer.complete();
             const updateBalancesAsync = async () => {
                 try {
                     const batch = writeBatch(this.firestore);
@@ -425,7 +478,6 @@ export class AccountsService {
                     ]);
 
                     if (!oldAccountSnap.exists() || !newAccountSnap.exists()) {
-                        observer.error('One or both accounts not found');
                         return;
                     }
 
@@ -471,10 +523,8 @@ export class AccountsService {
                     batch.update(newAccountRef, newAccountUpdateData);
 
                     await batch.commit();
-                    observer.next();
-                    observer.complete();
                 } catch (error) {
-                    observer.error(error);
+                    console.error('Error translating transfer updates online:', error);
                 }
             };
 
@@ -487,5 +537,43 @@ export class AccountsService {
     // 🔹 Generate a unique account ID
     private generateAccountId(): string {
         return 'acc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    /**
+     * Update account cache when accounts are created, updated, or deleted
+     */
+    private updateAccountCache(userId: string, operation: 'create' | 'update' | 'delete', account?: Account): void {
+        try {
+            const cacheKey = LocalStorageKeyHelper.getAccountsCacheKey(userId);
+            const cachedAccounts = this.localStorageUtility.getItem<Account[]>(cacheKey) || [];
+
+            switch (operation) {
+                case 'create':
+                    if (account) {
+                        cachedAccounts.push(account);
+                    }
+                    break;
+                case 'update':
+                    if (account) {
+                        const index = cachedAccounts.findIndex(a => a.accountId === account.accountId);
+                        if (index !== -1) {
+                            cachedAccounts[index] = { ...cachedAccounts[index], ...account };
+                        }
+                    }
+                    break;
+                case 'delete':
+                    if (account) {
+                        const index = cachedAccounts.findIndex(a => a.accountId === account.accountId);
+                        if (index !== -1) {
+                            cachedAccounts.splice(index, 1);
+                        }
+                    }
+                    break;
+            }
+
+            this.localStorageUtility.setItem(cacheKey, cachedAccounts);
+        } catch (error) {
+            console.error('Error updating account cache:', error);
+        }
     }
 }

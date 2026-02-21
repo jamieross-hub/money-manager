@@ -30,9 +30,7 @@ export class CategoriesEffects {
         this.categoryService
           .createCategory(userId, name, categoryType, icon, color, group)
           .pipe(
-            map((categoryId) => CategoriesActions.createCategorySuccess({ 
-              category: { id: categoryId, name, type: categoryType, icon, color, group, createdAt: Date.now() as any } 
-            })),
+            map(() => ({ type: '[Categories] Create Category Success (Handled by Service)' })),
             catchError((error) =>
               of(CategoriesActions.createCategoryFailure({ error }))
             )
@@ -60,9 +58,7 @@ export class CategoriesEffects {
               group
             )
             .pipe(
-              map(() => CategoriesActions.updateCategorySuccess({ 
-                category: { id: categoryId, name, type: categoryType, icon, color, budget: budgetData, parentCategoryId, isSubCategory, group } as any
-              })),
+              map(() => ({ type: '[Categories] Update Category Success (Handled by Service)' })),
               catchError((error) =>
                 of(CategoriesActions.updateCategoryFailure({ error }))
               )
@@ -76,7 +72,7 @@ export class CategoriesEffects {
       ofType(CategoriesActions.deleteCategory),
       mergeMap(({ userId, categoryId }) =>
         this.categoryService.deleteCategory(userId, categoryId).pipe(
-          map(() => CategoriesActions.deleteCategorySuccess({ categoryId })),
+          map(() => ({ type: '[Categories] Delete Category Success (Handled by Service)' })),
           catchError((error) =>
             of(CategoriesActions.deleteCategoryFailure({ error }))
           )

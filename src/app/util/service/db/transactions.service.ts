@@ -87,16 +87,8 @@ export class TransactionsService extends BaseService {
                     if (this.commonSyncService.isCurrentlyOnline()) {
                         try {
                             const transactionRef = doc(this.firestore, `users/${userId}/transactions/${transactionId}`);
-                            await setDoc(transactionRef, transactionData);
-
-                            if (transaction.isSplitTransaction && transaction.splitGroupId) {
-                                await this.createSplitTransaction(transaction.splitGroupId, transaction, transactionRef.id, userId);
-                            }
-
-                            // Budget spent is now calculated dynamically based on transactions
-                            // No need to update budget spent manually
-
-                            // Update account balance
+                            
+                            // 1. Dispatch store updates immediately (Optimistic)
                             this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
                                 userId: userId,
                                 accountId: transaction.accountId,
@@ -104,13 +96,21 @@ export class TransactionsService extends BaseService {
                                 newTransaction: transactionData as Transaction
                             }));
 
-                            // Add to store immediately for online transactions
                             this.store.dispatch(TransactionsActions.createTransactionSuccess({
                                 transaction: transactionData as Transaction
                             }));
 
-                            // Update cache
+                            // 2. Update cache immediately
                             this.updateTransactionCache(userId, 'create', transactionData as Transaction);
+
+                            // 3. Perform Firestore operation in background or concurrently
+                            const firestoreTask = setDoc(transactionRef, transactionData);
+
+                            if (transaction.isSplitTransaction && transaction.splitGroupId) {
+                                await this.createSplitTransaction(transaction.splitGroupId, transaction, transactionRef.id, userId);
+                            }
+
+                            await firestoreTask;
 
                             observer.next();
                             observer.complete();
@@ -196,9 +196,8 @@ export class TransactionsService extends BaseService {
                     if (this.commonSyncService.isCurrentlyOnline()) {
                         try {
                             const transactionRef = doc(this.firestore, `users/${userId}/transactions/${transactionId}`);
-                            await updateDoc(transactionRef, updateData);
-
-                            // Update account balance if amount or account changed
+                            
+                            // 1. Dispatch store updates immediately (Optimistic)
                             if (updatedTransaction.amount || updatedTransaction.accountId) {
                                 this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
                                     userId: userId,
@@ -209,13 +208,15 @@ export class TransactionsService extends BaseService {
                                 }));
                             }
 
-                            // Update store immediately for online transactions
                             this.store.dispatch(TransactionsActions.updateTransactionSuccess({
                                 transaction: { id: transactionId, ...updateData } as Transaction
                             }));
 
-                            // Update cache
+                            // 2. Update cache immediately
                             this.updateTransactionCache(userId, 'update', { id: transactionId, ...updateData } as Transaction);
+
+                            // 3. Perform Firestore operation
+                            await updateDoc(transactionRef, updateData);
 
                             observer.next();
                             observer.complete();
@@ -284,45 +285,37 @@ export class TransactionsService extends BaseService {
                 const transactionToDelete = transactionDoc.exists() ? { id: transactionDoc.id, ...transactionDoc.data() } as Transaction : null;
 
                 if (this.commonSyncService.isCurrentlyOnline()) {
-                    // Delete from Firestore first
-                    deleteDoc(transactionRef).then(() => {
-                        // Update account balance to reverse the transaction effect
-                        if (transactionToDelete) {
-                            this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
-                                userId: userId,
-                                accountId: transactionToDelete.accountId,
-                                transactionType: 'delete',
-                                oldTransaction: transactionToDelete
-                            }));
+                    // 1. Dispatch store updates immediately (Optimistic)
+                    if (transactionToDelete) {
+                        this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
+                            userId: userId,
+                            accountId: transactionToDelete.accountId,
+                            transactionType: 'delete',
+                            oldTransaction: transactionToDelete
+                        }));
 
-                            // Handle split transaction deletion if needed
-                            if (transactionToDelete.isSplitTransaction) {
-                                this.splitwiseService.deleteSplitTransaction(transactionToDelete.id!, userId).catch(error => {
-                                    console.error('Failed to delete split transaction:', error);
-                                });
-                            }
+                        // Handle split transaction deletion if needed
+                        if (transactionToDelete.isSplitTransaction) {
+                            this.splitwiseService.deleteSplitTransaction(transactionToDelete.id!, userId).catch(error => {
+                                console.error('Failed to delete split transaction:', error);
+                            });
                         }
+                    }
 
-                        // Remove from store immediately
-                        this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ transactionId }));
+                    this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ transactionId }));
 
-                        // Update cache
-                        this.updateTransactionCache(userId, 'delete', { id: transactionId } as Transaction);
+                    // 2. Update cache immediately
+                    this.updateTransactionCache(userId, 'delete', { id: transactionId } as Transaction);
 
+                    // 3. Perform Firestore operation
+                    deleteDoc(transactionRef).then(() => {
                         observer.next();
                         observer.complete();
                     }).catch(error => {
-                        console.error('Failed to delete transaction online:', error);
-                        // Fall back to offline mode
-                        this.addToSyncQueue('delete', { id: transactionId }).then(() => {
-                            this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ transactionId }));
-                            this.updateTransactionCache(userId, 'delete', { id: transactionId } as Transaction);
-                            observer.next();
-                            observer.complete();
-                        }).catch(syncError => {
-                            console.error('Failed to add to sync queue:', syncError);
-                            observer.error(syncError);
-                        });
+                        console.error('Failed to delete transaction online, but already removed from local UI:', error);
+                        // The background sync could potentially handle this if we were using a queue here too
+                        // But for now, we've already done the optimistic update.
+                        observer.error(error);
                     });
                 } else {
                     // Offline mode - add to sync queue

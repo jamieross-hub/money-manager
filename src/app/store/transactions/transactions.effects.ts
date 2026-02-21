@@ -42,7 +42,7 @@ export class TransactionsEffects {
     mergeMap(({ userId, transactionId }) => 
       this.transactionsService.deleteTransaction(userId, transactionId)
         .pipe(
-          map(() => TransactionsActions.deleteTransactionSuccess({ transactionId })),
+          map(() => ({ type: '[Transactions] Delete Transaction Success (Handled by Service)' })),
           catchError(error => of(TransactionsActions.deleteTransactionFailure({ error })))
         ))
   ));

@@ -22,9 +22,7 @@ export class AccountsEffects {
     mergeMap(({ userId, accountData }) => 
       this.accountsService.createAccount(userId, accountData)
         .pipe(
-          map(accountId => AccountsActions.createAccountSuccess({ 
-            account: { accountId, userId, ...accountData, balance: Number(accountData.balance) || 0, createdAt: new Date() as any, isActive: true } 
-          })),
+          map(() => ({ type: '[Accounts] Create Account Success (Handled by Service)' })),
           catchError(error => of(AccountsActions.createAccountFailure({ error })))
         ))
   ));
@@ -34,9 +32,7 @@ export class AccountsEffects {
     mergeMap(({ userId, accountId, accountData }) => 
       this.accountsService.updateAccount(userId, accountId, accountData)
         .pipe(
-          map(() => AccountsActions.updateAccountSuccess({ 
-            account: { accountId, ...accountData } as any 
-          })),
+          map(() => ({ type: '[Accounts] Update Account Success (Handled by Service)' })),
           catchError(error => of(AccountsActions.updateAccountFailure({ error })))
         ))
   ));
@@ -46,7 +42,7 @@ export class AccountsEffects {
     mergeMap(({ userId, accountId }) => 
       this.accountsService.deleteAccount(userId, accountId)
         .pipe(
-          map(() => AccountsActions.deleteAccountSuccess({ accountId })),
+          map(() => ({ type: '[Accounts] Delete Account Success (Handled by Service)' })),
           catchError(error => of(AccountsActions.deleteAccountFailure({ error })))
         ))
   ));
@@ -72,12 +68,7 @@ export class AccountsEffects {
     mergeMap(({ userId, accountId, transactionType, oldTransaction, newTransaction }) => 
       this.accountsService.updateAccountBalanceForTransaction(userId, accountId, transactionType, oldTransaction, newTransaction)
         .pipe(
-          map((newBalance) => {
-            return AccountsActions.updateAccountBalanceForTransactionSuccess({ 
-              accountId, 
-              newBalance 
-            });
-          }),
+          map(() => ({ type: '[Accounts] Update Balance For Transaction Success (Handled by Service)' })),
           catchError(error => of(AccountsActions.updateAccountBalanceForTransactionFailure({ error })))
         ))
   ));
@@ -87,7 +78,7 @@ export class AccountsEffects {
     mergeMap(({ userId, transactions }) => 
       this.accountsService.updateAccountBalanceForTransactions(userId, transactions)
         .pipe(
-          map(() => AccountsActions.updateAccountBalanceForTransactionsSuccess()),
+          map(() => ({ type: '[Accounts] Update Balance For Transactions Success (Handled by Service)' })),
           catchError(error => of(AccountsActions.updateAccountBalanceForTransactionsFailure({ error })))
         ))
   ));
@@ -97,7 +88,7 @@ export class AccountsEffects {
     mergeMap(({ userId, oldAccountId, newAccountId, transaction }) => 
       this.accountsService.updateAccountBalanceForAccountTransfer(userId, oldAccountId, newAccountId, transaction)
         .pipe(
-          map(() => AccountsActions.updateAccountBalanceForAccountTransferSuccess()),
+          map(() => ({ type: '[Accounts] Update Balance For Transfer Success (Handled by Service)' })),
           catchError(error => of(AccountsActions.updateAccountBalanceForAccountTransferFailure({ error })))
         ))
   ));
