@@ -436,9 +436,6 @@ export class CategoryComponent implements OnInit, OnDestroy {
     });
 
     dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
-      if (result) {
-        this.loadUserCategories();
-      }
     });
   }
 
@@ -530,9 +527,6 @@ export class CategoryComponent implements OnInit, OnDestroy {
     });
 
     dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
-      if (result) {
-        this.loadUserCategories();
-      }
     });
   }
 

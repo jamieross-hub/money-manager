@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
-import { map, mergeMap, catchError } from 'rxjs/operators';
+import { map, mergeMap, catchError, switchMap } from 'rxjs/operators';
 import { AccountsService } from '../../util/service/db/accounts.service';
 import * as AccountsActions from './accounts.actions';
 
@@ -10,7 +10,7 @@ export class AccountsEffects {
   
   loadAccounts$ = createEffect(() => this.actions$.pipe(
     ofType(AccountsActions.loadAccounts),
-    mergeMap(({ userId }) => this.accountsService.getAccounts(userId)
+    switchMap(({ userId }) => this.accountsService.getAccounts(userId)
       .pipe(
         map(accounts => AccountsActions.loadAccountsSuccess({ accounts })),
         catchError(error => of(AccountsActions.loadAccountsFailure({ error })))
@@ -22,10 +22,9 @@ export class AccountsEffects {
     mergeMap(({ userId, accountData }) => 
       this.accountsService.createAccount(userId, accountData)
         .pipe(
-          map(accountId => {
-            // Since the service returns accountId, we need to reload to get the full account
-            return AccountsActions.loadAccounts({ userId });
-          }),
+          map(accountId => AccountsActions.createAccountSuccess({ 
+            account: { accountId, userId, ...accountData, balance: Number(accountData.balance) || 0, createdAt: new Date() as any, isActive: true } 
+          })),
           catchError(error => of(AccountsActions.createAccountFailure({ error })))
         ))
   ));
@@ -35,10 +34,9 @@ export class AccountsEffects {
     mergeMap(({ userId, accountId, accountData }) => 
       this.accountsService.updateAccount(userId, accountId, accountData)
         .pipe(
-          map(() => {
-            // Reload accounts to get the updated data
-            return AccountsActions.loadAccounts({ userId });
-          }),
+          map(() => AccountsActions.updateAccountSuccess({ 
+            account: { accountId, ...accountData } as any 
+          })),
           catchError(error => of(AccountsActions.updateAccountFailure({ error })))
         ))
   ));
@@ -99,10 +97,7 @@ export class AccountsEffects {
     mergeMap(({ userId, oldAccountId, newAccountId, transaction }) => 
       this.accountsService.updateAccountBalanceForAccountTransfer(userId, oldAccountId, newAccountId, transaction)
         .pipe(
-          map(() => {
-            // Reload accounts to get the updated balances
-            return AccountsActions.loadAccounts({ userId });
-          }),
+          map(() => AccountsActions.updateAccountBalanceForAccountTransferSuccess()),
           catchError(error => of(AccountsActions.updateAccountBalanceForAccountTransferFailure({ error })))
         ))
   ));

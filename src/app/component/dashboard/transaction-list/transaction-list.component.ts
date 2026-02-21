@@ -158,9 +158,6 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     });
 
     dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
-      if (result) {
-        this.loadTransactions();
-      }
     });
   }
 

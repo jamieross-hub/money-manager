@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
-import { map, mergeMap, catchError } from 'rxjs/operators';
+import { map, mergeMap, catchError, switchMap } from 'rxjs/operators';
 import { CategoryService } from '../../util/service/db/category.service';
 import * as CategoriesActions from './categories.actions';
 
@@ -10,7 +10,7 @@ export class CategoriesEffects {
   loadCategories$ = createEffect(() =>
     this.actions$.pipe(
       ofType(CategoriesActions.loadCategories),
-      mergeMap(({ userId }) =>
+      switchMap(({ userId }) =>
         this.categoryService.getCategories(userId).pipe(
           map((categories) =>
             CategoriesActions.loadCategoriesSuccess({ categories })
@@ -30,10 +30,9 @@ export class CategoriesEffects {
         this.categoryService
           .createCategory(userId, name, categoryType, icon, color, group)
           .pipe(
-            map(() => {
-              // Reload categories to get the updated list
-              return CategoriesActions.loadCategories({ userId });
-            }),
+            map((categoryId) => CategoriesActions.createCategorySuccess({ 
+              category: { id: categoryId, name, type: categoryType, icon, color, group, createdAt: Date.now() as any } 
+            })),
             catchError((error) =>
               of(CategoriesActions.createCategoryFailure({ error }))
             )
@@ -61,10 +60,9 @@ export class CategoriesEffects {
               group
             )
             .pipe(
-              map(() => {
-                // Reload categories to get the updated data
-                return CategoriesActions.loadCategories({ userId });
-              }),
+              map(() => CategoriesActions.updateCategorySuccess({ 
+                category: { id: categoryId, name, type: categoryType, icon, color, budget: budgetData, parentCategoryId, isSubCategory, group } as any
+              })),
               catchError((error) =>
                 of(CategoriesActions.updateCategoryFailure({ error }))
               )
@@ -94,10 +92,7 @@ export class CategoriesEffects {
         this.categoryService
           .removeFromParentCategory(userId, categoryId)
           .pipe(
-            map(() => {
-              // Reload categories to get the updated data
-              return CategoriesActions.loadCategories({ userId });
-            }),
+            map(() => CategoriesActions.removeFromParentCategorySuccess({ categoryId })),
             catchError((error) =>
               of(CategoriesActions.removeFromParentCategoryFailure({ error }))
             )

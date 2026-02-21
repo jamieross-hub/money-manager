@@ -384,16 +384,16 @@ describe('AccountsComponent', () => {
 
   describe('UI State Management', () => {
     it('should get balance class correctly', () => {
-      expect(component.getBalanceClass(mockAccounts[0])).toBe('positive');
-      expect(component.getBalanceClass(mockAccounts[1])).toBe('negative');
+      expect(component.getBalanceClass(mockAccounts[0])).toBe('positive-balance');
+      expect(component.getBalanceClass(mockAccounts[1])).toBe('negative-balance');
     });
 
     it('should get account icon correctly', () => {
       expect(component.getAccountIcon(AccountType.BANK)).toBe('account_balance');
       expect(component.getAccountIcon(AccountType.CREDIT)).toBe('credit_card');
       expect(component.getAccountIcon(AccountType.LOAN)).toBe('account_balance_wallet');
-      expect(component.getAccountIcon(AccountType.CASH)).toBe('money');
-      expect(component.getAccountIcon(AccountType.INVESTMENT)).toBe('trending_up');
+      expect(component.getAccountIcon(AccountType.CASH)).toBe('payments');
+      expect(component.getAccountIcon(AccountType.INVESTMENT)).toBe('account_balance');
     });
 
     it('should clear error message', () => {

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
-import { map, mergeMap, catchError } from 'rxjs/operators';
+import { map, mergeMap, catchError, switchMap } from 'rxjs/operators';
 import { TransactionsService } from '../../util/service/db/transactions.service';
 import * as TransactionsActions from './transactions.actions';
 
@@ -10,7 +10,7 @@ export class TransactionsEffects {
   
   loadTransactions$ = createEffect(() => this.actions$.pipe(
     ofType(TransactionsActions.loadTransactions),
-    mergeMap(({ userId }) => this.transactionsService.getTransactions(userId)
+    switchMap(({ userId }) => this.transactionsService.getTransactions(userId)
       .pipe(
         map(transactions => TransactionsActions.loadTransactionsSuccess({ transactions })),
         catchError(error => of(TransactionsActions.loadTransactionsFailure({ error })))
@@ -22,11 +22,7 @@ export class TransactionsEffects {
     mergeMap(({ userId, transaction }) => 
       this.transactionsService.createTransaction(userId, transaction)
         .pipe(
-          map(() => {
-            // Since the service doesn't return the created transaction, we'll need to reload
-            // In a real app, you might want to modify the service to return the created transaction
-            return TransactionsActions.loadTransactions({ userId });
-          }),
+          map(() => ({ type: '[Transactions] Create Transaction Success (Handled by Service)' })),
           catchError(error => of(TransactionsActions.createTransactionFailure({ error })))
         ))
   ));
@@ -36,10 +32,7 @@ export class TransactionsEffects {
     mergeMap(({ userId, transactionId, transaction }) => 
       this.transactionsService.updateTransaction(userId, transactionId, transaction)
         .pipe(
-          map(() => {
-            // Reload transactions to get the updated data
-            return TransactionsActions.loadTransactions({ userId });
-          }),
+          map(() => ({ type: '[Transactions] Update Transaction Success (Handled by Service)' })),
           catchError(error => of(TransactionsActions.updateTransactionFailure({ error })))
         ))
   ));

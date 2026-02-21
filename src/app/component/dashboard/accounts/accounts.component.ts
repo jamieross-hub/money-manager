@@ -318,9 +318,6 @@ export class AccountsComponent implements OnInit, OnDestroy {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.store.dispatch(AccountsActions.loadAccounts({ userId: this.userId }));
-      }
     });
   }
 
