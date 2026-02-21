@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { Subject } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { ContactService, GetInTouch } from 'src/app/util/service/db/contact.service';
@@ -34,16 +34,15 @@ export class AdminContactComponent implements OnInit, OnDestroy {
 
     async loadContacts(): Promise<void> {
         this.isLoading = true;
-        this.contactService.getAll()
-            .then((contacts) => {
-                this.contactList = contacts
-                this.isLoading = false;
-            })
-            .catch((error) => {
-                console.error('Error loading contacts:', error);
-                this.notificationService.error('Failed to load contact messages');
-                this.isLoading = false;
-            });
+        try {
+            const contacts = await firstValueFrom(this.contactService.getAll());
+            this.contactList = contacts;
+            this.isLoading = false;
+        } catch (error) {
+            console.error('Error loading contacts:', error);
+            this.notificationService.error('Failed to load contact messages');
+            this.isLoading = false;
+        }
     }
 
     formatDate(date: any): string {

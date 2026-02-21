@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { Subject, Observable } from 'rxjs';
+import { Subject, Observable, firstValueFrom } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Auth } from '@angular/fire/auth';
 import { NotificationService } from 'src/app/util/service/notification.service';
@@ -140,7 +140,7 @@ export class AdminFeedbackComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     try {
       // Load feedback from the service
-      this.feedbackList = await this.feedbackService.getAllFeedback();
+      this.feedbackList = await firstValueFrom(this.feedbackService.getAllFeedback());
       this.applyFilters();
     } catch (error) {
       console.error('Error loading feedback:', error);

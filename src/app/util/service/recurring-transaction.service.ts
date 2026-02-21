@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { TransactionsService } from './db/transactions.service';
 import { UserService } from './db/user.service';
+import { DateService } from './date.service';
 import { NotificationService } from './notification.service';
 import { Transaction } from '../models/transaction.model';
 import { RecurringTransactionConfirmationDialogComponent } from '../../util/components/recurring-transaction-confirmation-dialog/recurring-transaction-confirmation-dialog.component';
@@ -16,6 +17,7 @@ export class RecurringTransactionService {
   constructor(
     private transactionsService: TransactionsService,
     private userService: UserService,
+    private dateService: DateService,
     private notificationService: NotificationService,
     private dialog: MatDialog
   ) {}
@@ -150,9 +152,7 @@ export class RecurringTransactionService {
 
         const due = transactions.filter(t => {
           if (!t.isRecurring || !t.nextOccurrence) return false;
-          const nextOccurrence = t.nextOccurrence instanceof Date 
-            ? t.nextOccurrence 
-            : t.nextOccurrence.toDate();
+          const nextOccurrence = this.dateService.toDate(t.nextOccurrence);
           if (!nextOccurrence) return false;
           
           const normalizedNextOccurrence = new Date(nextOccurrence);
@@ -162,9 +162,7 @@ export class RecurringTransactionService {
 
         const upcoming = transactions.filter(t => {
           if (!t.isRecurring || !t.nextOccurrence) return false;
-          const nextOccurrence = t.nextOccurrence instanceof Date 
-            ? t.nextOccurrence 
-            : t.nextOccurrence.toDate();
+          const nextOccurrence = this.dateService.toDate(t.nextOccurrence);
           if (!nextOccurrence) return false;
           
           const normalizedNextOccurrence = new Date(nextOccurrence);

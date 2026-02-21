@@ -3,8 +3,12 @@ import { BaseService } from './base.service';
 import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, Timestamp, addDoc, onSnapshot, writeBatch, serverTimestamp } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { Observable, from, throwError, of } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { catchError, map, tap, switchMap } from 'rxjs/operators';
 import { CurrencyService } from './currency.service';
+import { LocalIndexDBStorageService } from './indexdb-storage.service';
+import { LocalStorageKeyHelper } from '../models/local-storage.model';
+import { Store } from '@ngrx/store';
+import { AppState } from 'src/app/store/app.state';
 
 export interface GoogleSheetsConfig {
   spreadsheetId: string;
@@ -23,14 +27,18 @@ export interface GoogleSheetsConnection {
   updatedAt: Date;
 }
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class GoogleSheetsService extends BaseService {
   private readonly COLLECTION_NAME = 'googleSheets';
 
   constructor(
     protected override readonly firestore: Firestore,
     protected override readonly auth: Auth,
-    protected override readonly currencyService: CurrencyService
+    protected override readonly currencyService: CurrencyService,
+    private readonly storageService: LocalIndexDBStorageService,
+    private readonly store: Store<AppState>
   ) {
     super(firestore, auth, currencyService);
   }
@@ -64,24 +72,52 @@ export class GoogleSheetsService extends BaseService {
   }
 
   /**
-   * Get all Google Sheets connections for the current user
+   * Get all Google Sheets connections for the current user (Local-Only)
    */
   getConnections(): Observable<GoogleSheetsConnection[]> {
-    try {
-      const collectionRef = this.getCollectionRef(this.COLLECTION_NAME);
+    const userId = this.getCurrentUserId();
+    if (!userId) return of([]);
 
-      return from(getDocs(collectionRef)).pipe(
-        map(snapshot => {
-          return snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          } as GoogleSheetsConnection));
-        }),
-        catchError(error => this.handleError(error, 'getConnections'))
-      );
-    } catch (error) {
-      return this.handleError(error, 'getConnections');
-    }
+    return new Observable<GoogleSheetsConnection[]>(observer => {
+      try {
+        const cached = this.storageService.getItem<GoogleSheetsConnection[]>(LocalStorageKeyHelper.getGoogleSheetsCacheKey(userId));
+        observer.next(cached || []);
+      } catch (error) {
+        console.warn('[GoogleSheetsService] Failed to load cached connections:', error);
+        observer.next([]);
+      }
+      observer.complete();
+    });
+  }
+
+  /**
+   * Pull connections from Firestore and update local cache
+   */
+  pullFromFirestore(userId: string): Observable<void> {
+    const collectionRef = this.getCollectionRef(this.COLLECTION_NAME);
+
+    console.log(`[GoogleSheetsService] Pulling connections for user: ${userId}`);
+
+    return from(getDocs(collectionRef)).pipe(
+      tap(snapshot => {
+        const connections = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as GoogleSheetsConnection));
+
+        console.log(`[GoogleSheetsService] Pulled ${connections.length} connections from Firestore`);
+
+        // Cache the fresh data
+        this.storageService.setItem(LocalStorageKeyHelper.getGoogleSheetsCacheKey(userId), connections);
+        
+        // Note: Dispatched to store if googleSheets integration exists in store
+      }),
+      map(() => undefined),
+      catchError(error => {
+        console.error('[GoogleSheetsService] Pull failed:', error);
+        return of(undefined);
+      })
+    );
   }
 
   /**

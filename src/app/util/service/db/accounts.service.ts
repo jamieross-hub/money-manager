@@ -7,7 +7,10 @@ import { Transaction } from '../../models/transaction.model';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { LocalStorageKeyHelper } from '../../models/local-storage.model';
 import { UserService } from './user.service';
-import { of, map } from 'rxjs';
+import { of, map, from, catchError, tap } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { AppState } from 'src/app/store/app.state';
+import * as AccountsActions from 'src/app/store/accounts/accounts.actions';
 
 @Injectable({
     providedIn: 'root'
@@ -17,7 +20,8 @@ export class AccountsService {
         private firestore: Firestore,
         private auth: Auth,
         private localStorageUtility: LocalIndexDBStorageService,
-        private userService: UserService
+        private userService: UserService,
+        private store: Store<AppState>
     ) { }
 
     private isGuest(): boolean {
@@ -53,62 +57,61 @@ export class AccountsService {
         });
     }
 
-    // 🔹 Get all accounts for the logged-in user
+    /**
+     * Get all accounts for a user (Local-Only)
+     */
     getAccounts(userId: string): Observable<Account[]> {
         if (this.isGuest()) {
             return of(this.localStorageUtility.getEntities<Account>('accounts'));
         }
 
-        const accountsRef = collection(this.firestore, `users/${userId}/accounts`);
-
         return new Observable<Account[]>(observer => {
-            // 1. Emit cached data immediately if available
             try {
                 const cachedAccounts = this.localStorageUtility.getItem<Account[]>(LocalStorageKeyHelper.getAccountsCacheKey(userId));
-                if (cachedAccounts && cachedAccounts.length > 0) {
-                    console.log(`[AccountsService] Emitting ${cachedAccounts.length} cached accounts`);
+                if (cachedAccounts) {
                     observer.next(cachedAccounts);
+                } else {
+                    observer.next([]);
                 }
             } catch (error) {
                 console.warn('[AccountsService] Failed to load cached accounts:', error);
+                observer.next([]);
             }
-
-            // 2. Subscribe to realtime updates
-            const unsubscribe = onSnapshot(accountsRef,
-                (querySnapshot) => {
-                    const accounts: Account[] = [];
-                    querySnapshot.forEach(docSnap => {
-                        accounts.push(docSnap.data() as Account);
-                    });
-
-                    console.log(`[AccountsService] Received ${accounts.length} accounts from Firestore`);
-
-                    // Update cache for next time
-                    try {
-                        this.localStorageUtility.setItem(LocalStorageKeyHelper.getAccountsCacheKey(userId), accounts);
-                    } catch (error) {
-                        console.warn('[AccountsService] Failed to cache accounts:', error);
-                    }
-
-                    observer.next(accounts);
-                },
-                (error) => {
-                    console.error(`[AccountsService] Error in onSnapshot for ${userId}:`, error);
-                    // If we haven't emitted anything yet (e.g. no cache), we might want to error or emit empty
-                    // For now, let the initial cache emission (if any) stand, or error if no cache was found.
-                    if (!observer.closed) {
-                        // If we are offline and have cache, we don't necessarily want to error out the whole stream
-                        if (error.code === 'unavailable' || !navigator.onLine) {
-                            console.warn('[AccountsService] Firestore unavailable, relying on cache');
-                        } else {
-                            observer.error(error);
-                        }
-                    }
-                }
-            );
-
-            return () => unsubscribe();
+            observer.complete();
         });
+    }
+
+    /**
+     * Pull accounts from Firestore and update local cache
+     */
+    pullFromFirestore(userId: string): Observable<void> {
+        if (this.isGuest()) return of(undefined);
+
+        const accountsRef = collection(this.firestore, `users/${userId}/accounts`);
+
+        console.log(`[AccountsService] Pulling accounts for user: ${userId}`);
+
+        return from(getDocs(accountsRef)).pipe(
+            tap(querySnapshot => {
+                const accounts: Account[] = [];
+                querySnapshot.forEach(docSnap => {
+                    accounts.push(docSnap.data() as Account);
+                });
+
+                console.log(`[AccountsService] Pulled ${accounts.length} accounts from Firestore`);
+
+                // Update cache
+                this.localStorageUtility.setItem(LocalStorageKeyHelper.getAccountsCacheKey(userId), accounts);
+                
+                // Update NgRx state
+                this.store.dispatch(AccountsActions.loadAccountsSuccess({ accounts }));
+            }),
+            map(() => undefined),
+            catchError(error => {
+                console.error('[AccountsService] Pull failed:', error);
+                return of(undefined);
+            })
+        );
     }
 
     // 🔹 Get a single account by its ID

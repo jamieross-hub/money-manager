@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Firestore, collection, doc, updateDoc, deleteDoc, getDoc, addDoc, onSnapshot, setDoc } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
-import { orderBy, query, Timestamp } from '@angular/fire/firestore';
+import { Observable, BehaviorSubject, from, of } from 'rxjs';
+import { map, switchMap, tap, catchError } from 'rxjs/operators';
+import { orderBy, query, Timestamp, getDocs } from '@angular/fire/firestore';
 import { DateService } from '../date.service';
 import { Transaction } from '../../models/transaction.model';
 import { RecurringInterval, SyncStatus } from '../../config/enums';
@@ -13,6 +13,7 @@ import * as CategoriesActions from '../../../store/categories/categories.actions
 import * as TransactionsActions from '../../../store/transactions/transactions.actions';
 import { AccountsService } from './accounts.service';
 import * as AccountsActions from '../../../store/accounts/accounts.actions';
+import * as TransactionsSelectors from '../../../store/transactions/transactions.selectors';
 import { CreateSplitTransactionRequest } from '../../models/splitwise.model';
 import { SplitwiseService } from 'src/app/modules/splitwise/services/splitwise.service';
 import { CommonSyncService, SyncItem } from '../common-sync.service';
@@ -20,7 +21,6 @@ import { BaseService } from '../base.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { UserService } from './user.service';
 import { LocalStorageKeyHelper } from '../../models/local-storage.model';
-import { of } from 'rxjs';
 import { CurrencyService } from '../currency.service';
 
 @Injectable({
@@ -339,7 +339,7 @@ export class TransactionsService extends BaseService {
     }
 
     /**
-     * Get all transactions for a user
+     * Get all transactions for a user (Local-Only)
      */
     getTransactions(userId: string): Observable<Transaction[]> {
         if (this.isGuest()) {
@@ -348,65 +348,53 @@ export class TransactionsService extends BaseService {
             return of(transactions);
         }
 
+        return new Observable<Transaction[]>(observer => {
+            // Emit cached transactions immediately
+            const transactions = this.getCachedTransactions(userId);
+            this.transactionsSubject.next(transactions);
+            observer.next(transactions);
+            // Complete as it's a one-time emit from local cache
+            observer.complete();
+        });
+    }
+
+    /**
+     * Pull transactions from Firestore once and update local cache
+     */
+    pullFromFirestore(userId: string): Observable<void> {
+        if (this.isGuest()) return of(undefined);
+
         const transactionsRef = query(
             collection(this.firestore, `users/${userId}/transactions`),
             orderBy('date', 'desc')
         );
 
-        return new Observable<Transaction[]>(observer => {
-            // Emit cached transactions immediately for fast initial load
-            const initialCachedTransactions = this.getCachedTransactions(userId);
-            if (initialCachedTransactions.length > 0) {
-                this.transactionsSubject.next(initialCachedTransactions);
-                observer.next(initialCachedTransactions);
-            }
+        console.log(`[TransactionsService] Pulling transactions for user: ${userId}`);
 
-            const unsubscribe = onSnapshot(
-                transactionsRef,
-                (querySnapshot) => {
-                    const transactions: Transaction[] = [];
+        return from(getDocs(transactionsRef)).pipe(
+            tap(querySnapshot => {
+                const transactions: Transaction[] = [];
+                querySnapshot.forEach(docSnap => {
+                    transactions.push({ id: docSnap.id, ...docSnap.data() } as Transaction);
+                });
 
-                    querySnapshot.forEach(doc => {
-                        const transaction = { id: doc.id, ...doc.data() } as Transaction;
-                        transactions.push(transaction);
-                    });
+                console.log(`[TransactionsService] Pulled ${transactions.length} transactions from Firestore`);
 
-                    // If offline, also load any cached transactions
-                    if (!this.commonSyncService.isCurrentlyOnline()) {
-                        const cachedTransactions = this.getCachedTransactions(userId);
-
-                        // Merge online and cached transactions, avoiding duplicates
-                        const onlineTransactionIds = transactions.map(t => t.id);
-                        const uniqueCachedTransactions = cachedTransactions.filter(t =>
-                            t.id && !onlineTransactionIds.includes(t.id)
-                        );
-
-                        transactions.push(...uniqueCachedTransactions);
-                    }
-
-                    // Cache transactions for offline use
-                    this.cacheTransactions(userId, transactions);
-
-                    this.transactionsSubject.next(transactions);
-                    observer.next(transactions);
-                },
-                (error) => {
-                    console.error('Failed to fetch transactions:', error);
-
-                    // If offline and error, try to load from cache
-                    if (!this.commonSyncService.isCurrentlyOnline()) {
-                        const cachedTransactions = this.getCachedTransactions(userId);
-                        this.transactionsSubject.next(cachedTransactions);
-                        observer.next(cachedTransactions);
-                    } else {
-                        observer.next([]);
-                    }
-                }
-            );
-
-            return () => unsubscribe();
-        });
-
+                // Cache the fresh data
+                this.cacheTransactions(userId, transactions);
+                
+                // Update the subject for active components
+                this.transactionsSubject.next(transactions);
+                
+                // Update NgRx state via success action
+                this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions }));
+            }),
+            map(() => undefined),
+            catchError(error => {
+                console.error('[TransactionsService] Pull failed:', error);
+                return of(undefined);
+            })
+        );
     }
 
     /**
@@ -459,7 +447,7 @@ export class TransactionsService extends BaseService {
     }
 
     /**
-     * Get recurring transactions for a user
+     * Get recurring transactions for a user (Store-based)
      */
     getRecurringTransactions(userId: string): Observable<Transaction[]> {
         if (this.isGuest()) {
@@ -468,128 +456,76 @@ export class TransactionsService extends BaseService {
             return of(recurringTransactions);
         }
 
-        const transactionsRef = query(
-            collection(this.firestore, `users/${userId}/transactions`),
-            orderBy('date', 'desc')
+        return this.store.select(TransactionsSelectors.selectAllTransactions).pipe(
+            map(transactions => transactions.filter(t => t.isRecurring === true))
         );
-
-        return new Observable<Transaction[]>(observer => {
-            const unsubscribe = onSnapshot(
-                transactionsRef,
-                (querySnapshot) => {
-                    const transactions: Transaction[] = [];
-
-                    querySnapshot.forEach(doc => {
-                        const transaction = { id: doc.id, ...doc.data() } as Transaction;
-                        transactions.push(transaction);
-                    });
-
-                    // Filter only recurring transactions
-                    const recurringTransactions = transactions.filter(t => t.isRecurring === true);
-
-                    observer.next(recurringTransactions);
-                },
-                (error) => {
-                    console.error('Failed to fetch recurring transactions:', error);
-                    observer.next([]);
-                }
-            );
-
-            return () => unsubscribe();
-        });
     }
 
     /**
      * Get recurring transactions that are due (next occurrence is today or in the past)
      */
     getDueRecurringTransactions(userId: string): Observable<Transaction[]> {
-        return this.getRecurringTransactions(userId).pipe(
-            switchMap(recurringTransactions => {
-                console.log(`Checking ${recurringTransactions.length} recurring transactions for due status`);
+        return this.store.select(TransactionsSelectors.selectAllTransactions).pipe(
+            map(allTransactions => {
+                const recurringTransactions = allTransactions.filter(t => t.isRecurring === true);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
 
-                // Get all transactions to check for existing ones in current period
-                return this.getTransactions(userId).pipe(
-                    map(allTransactions => {
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
+                return recurringTransactions.filter(transaction => {
+                    // Additional check to ensure transaction is still recurring
+                    if (!transaction.isRecurring) {
+                        return false;
+                    }
 
-                        return recurringTransactions.filter(transaction => {
-                            // Additional check to ensure transaction is still recurring
-                            if (!transaction.isRecurring) {
-                                console.log(`Transaction ${transaction.id} (${transaction.category}) is no longer recurring, skipping`);
+                    if (!transaction.nextOccurrence) {
+                        return false;
+                    }
+
+                    const nextOccurrence = transaction.nextOccurrence instanceof Date
+                        ? transaction.nextOccurrence
+                        : this.dateService.toDate(transaction.nextOccurrence);
+
+                    if (!nextOccurrence) {
+                        return false;
+                    }
+
+                    // Create a new Date object to avoid modifying the original
+                    const normalizedNextOccurrence = new Date(nextOccurrence);
+                    normalizedNextOccurrence.setHours(0, 0, 0, 0);
+
+                    const isDue = normalizedNextOccurrence <= today;
+
+                    if (!isDue) {
+                        return false;
+                    }
+
+                    // Check if a transaction for this period already exists
+                    const hasExistingTransaction = this.checkExistingTransactionInPeriod(
+                        allTransactions,
+                        transaction,
+                        today
+                    );
+
+                    if (hasExistingTransaction) {
+                        return false;
+                    }
+
+                    // For monthly recurring transactions, check if next occurrence is in current month
+                    if (transaction.recurringInterval === RecurringInterval.MONTHLY) {
+                        const nextOccurrence = transaction.nextOccurrence instanceof Date
+                            ? transaction.nextOccurrence
+                            : this.dateService.toDate(transaction.nextOccurrence);
+
+                        if (nextOccurrence) {
+                            const isNextOccurrenceInCurrentMonth = this.isInSamePeriod(nextOccurrence, this.dateService.toDate(transaction.date), RecurringInterval.MONTHLY);
+                            if (isNextOccurrenceInCurrentMonth) {
                                 return false;
                             }
+                        }
+                    }
 
-                            if (!transaction.nextOccurrence) {
-                                console.log(`Transaction ${transaction.id} (${transaction.category}) has no next occurrence, skipping`);
-                                return false;
-                            }
-
-                            const nextOccurrence = transaction.nextOccurrence instanceof Date
-                                ? transaction.nextOccurrence
-                                : this.dateService.toDate(transaction.nextOccurrence);
-
-                            if (!nextOccurrence) {
-                                console.log(`Transaction ${transaction.id} (${transaction.category}) has invalid next occurrence, skipping`);
-                                return false;
-                            }
-
-                            // Create a new Date object to avoid modifying the original
-                            const normalizedNextOccurrence = new Date(nextOccurrence);
-                            normalizedNextOccurrence.setHours(0, 0, 0, 0);
-
-                            const isDue = normalizedNextOccurrence <= today;
-
-                            if (!isDue) {
-                                console.log(`Transaction ${transaction.id} (${transaction.category}) is not due yet, next occurrence: ${normalizedNextOccurrence}`);
-                                return false;
-                            }
-
-                            // Check if a transaction for this period already exists
-                            const hasExistingTransaction = this.checkExistingTransactionInPeriod(
-                                allTransactions,
-                                transaction,
-                                today
-                            );
-
-                            if (hasExistingTransaction) {
-                                console.log(`Transaction ${transaction.id} (${transaction.category}) already has an entry for current period, skipping`);
-                                return false;
-                            }
-
-                            // For monthly recurring transactions, check if next occurrence is in current month
-                            if (transaction.recurringInterval === RecurringInterval.MONTHLY) {
-                                const nextOccurrence = transaction.nextOccurrence instanceof Date
-                                    ? transaction.nextOccurrence
-                                    : this.dateService.toDate(transaction.nextOccurrence);
-
-                                if (nextOccurrence) {
-                                    const isNextOccurrenceInCurrentMonth = this.isInSamePeriod(nextOccurrence, this.dateService.toDate(transaction.date), RecurringInterval.MONTHLY);
-                                    console.log(`Monthly transaction ${transaction.id} (${transaction.category}) next occurrence check:`, {
-                                        nextOccurrence: nextOccurrence,
-                                        currentMonth: today,
-                                        isNextOccurrenceInCurrentMonth: isNextOccurrenceInCurrentMonth
-                                    });
-
-                                    if (isNextOccurrenceInCurrentMonth) {
-                                        return false;
-                                    }
-                                }
-                            }
-
-                            // Debug logging
-                            console.log(`Transaction ${transaction.id} (${transaction.category}):`, {
-                                isRecurring: transaction.isRecurring,
-                                nextOccurrence: normalizedNextOccurrence,
-                                today: today,
-                                isDue: isDue,
-                                hasExistingTransaction: hasExistingTransaction
-                            });
-
-                            return true;
-                        });
-                    })
-                );
+                    return true;
+                });
             })
         );
     }

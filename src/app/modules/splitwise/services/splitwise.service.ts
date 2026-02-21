@@ -29,6 +29,13 @@ import { NotificationService } from 'src/app/util/service/notification.service';
 import { DateService } from 'src/app/util/service/date.service';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
+import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
+import { LocalStorageKeyHelper } from 'src/app/util/models/local-storage.model';
+import { Store } from '@ngrx/store';
+import { AppState } from 'src/app/store/app.state';
+import * as SplitwiseActions from '../store/splitwise.actions';
+import * as SplitwiseSelectors from '../store/splitwise.selectors';
+import { tap } from 'rxjs/operators';
 import { environment } from '@env/environment';
 
 @Injectable({
@@ -42,41 +49,48 @@ export class SplitwiseService {
     private notificationService: NotificationService,
     private dateService: DateService,
     private userService: UserService,
-    private hapticFeedback: HapticFeedbackService
+    private hapticFeedback: HapticFeedbackService,
+    private storageService: LocalIndexDBStorageService,
+    private store: Store<AppState>
   ) { }
 
-  // Groups - Now using common/shared groups
+  // Groups - Store-based
   getUserGroups(userId: string): Observable<SplitwiseGroup[]> {
-    const currentUser = this.auth.currentUser;
-    if (!currentUser?.email) {
-      return of([]);
-    }
+    if (userId === 'offline-guest') return of([]);
+    return this.store.select(SplitwiseSelectors.selectGroups);
+  }
 
-    // Query groups where the current user is a member
+  /**
+   * Pull Splitwise groups from Firestore
+   */
+  pullGroupsFromFirestore(userId: string): Observable<void> {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser?.email) return of(undefined);
+
     const groupsRef = collection(this.firestore, 'splitwise-groups');
-    const q = query(
-      groupsRef,
-      where('isActive', '==', true),
-      orderBy('createdAt', 'desc')
-    );
+    const q = query(groupsRef, where('isActive', '==', true), orderBy('createdAt', 'desc'));
+
+    console.log(`[SplitwiseService] Pulling groups for user: ${userId}`);
 
     return from(getDocs(q)).pipe(
-      map(snapshot => {
-        // Filter groups where the current user is a member
-        return snapshot.docs
-          .map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          } as SplitwiseGroup))
+      tap(snapshot => {
+        const groups = snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() } as SplitwiseGroup))
           .filter(group =>
             group.members.some(member =>
               member.email.toLowerCase() === currentUser.email?.toLowerCase() && member.isActive
             )
           );
+
+        console.log(`[SplitwiseService] Pulled ${groups.length} groups`);
+
+        this.storageService.setItem(LocalStorageKeyHelper.getSplitwiseGroupsCacheKey(userId), groups);
+        this.store.dispatch(SplitwiseActions.loadGroupsSuccess({ groups }));
       }),
+      map(() => undefined),
       catchError(error => {
-        console.error('Error fetching user groups:', error);
-        return of([]);
+        console.error('[SplitwiseService] Groups pull failed:', error);
+        return of(undefined);
       })
     );
   }
@@ -133,14 +147,19 @@ export class SplitwiseService {
     }));
   }
 
-  // Invitations
+  // Invitations - Store-based
   getUserInvitations(userId: string): Observable<GroupInvitation[]> {
-    const currentUser = this.auth.currentUser;
-    if (!currentUser?.email) {
-      return of([]);
-    }
+    if (userId === 'offline-guest') return of([]);
+    return this.store.select(SplitwiseSelectors.selectInvitations);
+  }
 
-    // Use only common invitations collection
+  /**
+   * Pull invitations from Firestore
+   */
+  pullInvitationsFromFirestore(userId: string): Observable<void> {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser?.email) return of(undefined);
+
     const invitationsRef = collection(this.firestore, 'splitwise-invitations');
     const q = query(
       invitationsRef,
@@ -149,15 +168,21 @@ export class SplitwiseService {
       orderBy('createdAt', 'desc')
     );
 
+    console.log(`[SplitwiseService] Pulling invitations for user: ${userId}`);
+
     return from(getDocs(q)).pipe(
-      map(snapshot => snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as GroupInvitation))),
-      map(invitations => invitations.filter(invitation => !this.isInvitationExpired(invitation))),
+      tap(snapshot => {
+        const invitations = snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() } as GroupInvitation))
+          .filter(invitation => !this.isInvitationExpired(invitation));
+
+        console.log(`[SplitwiseService] Pulled ${invitations.length} invitations`);
+        this.store.dispatch(SplitwiseActions.loadInvitationsSuccess({ invitations }));
+      }),
+      map(() => undefined),
       catchError(error => {
-        console.error('Error fetching invitations:', error);
-        return of([]);
+        console.error('[SplitwiseService] Invitations pull failed:', error);
+        return of(undefined);
       })
     );
   }

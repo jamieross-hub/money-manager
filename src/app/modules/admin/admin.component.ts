@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { Subject } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Auth } from '@angular/fire/auth';
 import { Router } from '@angular/router';
@@ -123,8 +123,8 @@ export class AdminComponent implements OnInit, OnDestroy {
       const userStats = await this.userService.getUserStatistics();
 
       // Load feedback statistics
-      const allFeedback = await this.feedbackService.getAllFeedback();
-      const pendingFeedback = allFeedback.filter(f => f.status === 'pending').length;
+      const allFeedback = await firstValueFrom(this.feedbackService.getAllFeedback());
+      const pendingFeedback = allFeedback.filter((f: any) => f.status === 'pending').length;
 
       this.dashboardStats = {
         totalUsers: userStats.totalUsers,

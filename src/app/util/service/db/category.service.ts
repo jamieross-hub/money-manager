@@ -16,7 +16,7 @@ import { HapticFeedbackService } from '../haptic-feedback.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { UserService } from './user.service';
 import { LocalStorageKeyHelper } from '../../models/local-storage.model';
-import { of, map } from 'rxjs';
+import { of, map, from, catchError, tap } from 'rxjs';
 
 @Injectable({
     providedIn: 'root'
@@ -49,73 +49,71 @@ export class CategoryService {
         return collection(this.firestore, `users/${userId}/categories`);
     }
 
-    /** Get all categories */
+    /** Get all categories (Local-Only) */
     getCategories(userId: string): Observable<Category[]> {
         if (this.isGuest()) {
             return of(this.localStorageUtility.getEntities<Category>('categories'));
         }
 
-        const categoriesRef = this.getUserCategoriesCollection(userId);
-
         return new Observable<Category[]>(observer => {
-            // 1. Emit cached data immediately if available
             try {
                 const cachedCategories = this.localStorageUtility.getItem<Category[]>(LocalStorageKeyHelper.getCategoriesCacheKey(userId));
-                if (cachedCategories && cachedCategories.length > 0) {
-                    console.log(`[CategoryService] Emitting ${cachedCategories.length} cached categories`);
+                if (cachedCategories) {
                     observer.next(cachedCategories);
+                } else {
+                    observer.next([]);
                 }
             } catch (error) {
                 console.warn('[CategoryService] Failed to load cached categories:', error);
+                observer.next([]);
             }
-
-            // 2. Subscribe to realtime updates
-            const unsubscribe = onSnapshot(categoriesRef,
-                (querySnapshot) => {
-                    const categories: Category[] = [];
-                    querySnapshot.forEach(docSnap => {
-                        const data: any = docSnap.data();
-                        const category: Category = {
-                            id: docSnap.id,
-                            name: data?.name,
-                            type: data?.type,
-                            icon: data?.icon || 'category',
-                            color: data?.color || '#46777f',
-                            createdAt: data?.createdAt,
-                            budget: data?.budget || null,
-                            parentCategoryId: data?.parentCategoryId || null,
-                            isSubCategory: data?.isSubCategory || false,
-                            subCategories: data?.subCategories || [],
-                            group: data?.group
-                        };
-                        categories.push(category);
-                    });
-
-                    console.log(`[CategoryService] Received ${categories.length} categories from Firestore`);
-
-                    // Update cache for next time
-                    try {
-                        this.localStorageUtility.setItem(LocalStorageKeyHelper.getCategoriesCacheKey(userId), categories);
-                    } catch (error) {
-                        console.warn('[CategoryService] Failed to cache categories:', error);
-                    }
-
-                    observer.next(categories);
-                },
-                (error) => {
-                    console.error(`[CategoryService] Error in onSnapshot for ${userId}:`, error);
-                    if (!observer.closed) {
-                        if (error.code === 'unavailable' || !navigator.onLine) {
-                            console.warn('[CategoryService] Firestore unavailable, relying on cache');
-                        } else {
-                            observer.error(error);
-                        }
-                    }
-                }
-            );
-
-            return () => unsubscribe();
+            observer.complete();
         });
+    }
+
+    /** Pull categories from Firestore once and update local cache */
+    pullFromFirestore(userId: string): Observable<void> {
+        if (this.isGuest()) return of(undefined);
+
+        const categoriesRef = this.getUserCategoriesCollection(userId);
+
+        console.log(`[CategoryService] Pulling categories for user: ${userId}`);
+
+        return from(getDocs(categoriesRef)).pipe(
+            tap(querySnapshot => {
+                const categories: Category[] = [];
+                querySnapshot.forEach(docSnap => {
+                    const data: any = docSnap.data();
+                    const category: Category = {
+                        id: docSnap.id,
+                        name: data?.name,
+                        type: data?.type,
+                        icon: data?.icon || 'category',
+                        color: data?.color || '#46777f',
+                        createdAt: data?.createdAt,
+                        budget: data?.budget || null,
+                        parentCategoryId: data?.parentCategoryId || null,
+                        isSubCategory: data?.isSubCategory || false,
+                        subCategories: data?.subCategories || [],
+                        group: data?.group
+                    };
+                    categories.push(category);
+                });
+
+                console.log(`[CategoryService] Pulled ${categories.length} categories from Firestore`);
+
+                // Update cache
+                this.localStorageUtility.setItem(LocalStorageKeyHelper.getCategoriesCacheKey(userId), categories);
+                
+                // Update NgRx state
+                this.store.dispatch(CategoriesActions.loadCategoriesSuccess({ categories }));
+            }),
+            map(() => undefined),
+            catchError(error => {
+                console.error('[CategoryService] Pull failed:', error);
+                return of(undefined);
+            })
+        );
     }
 
     createCategory(userId: string, name: string, type: TransactionType, icon: string, color: string, group?: string): Observable<string> {

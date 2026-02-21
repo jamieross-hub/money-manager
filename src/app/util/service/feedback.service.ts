@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Firestore, collection, addDoc, serverTimestamp, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
-import { Observable, from } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { Observable, from, of } from 'rxjs';
+import { map, catchError, tap } from 'rxjs/operators';
 import { FeedbackForm } from '../../component/feedback/feedback.component';
 import { UserService } from './db/user.service';
+import { LocalIndexDBStorageService } from './indexdb-storage.service';
 
 export interface FeedbackData extends FeedbackForm {
   id?: string;
@@ -19,11 +20,13 @@ export interface FeedbackData extends FeedbackForm {
   providedIn: 'root'
 })
 export class FeedbackService {
+  private readonly CACHE_KEY = 'admin_feedback';
 
   constructor(
     private firestore: Firestore,
     private auth: Auth,
-    private userService: UserService
+    private userService: UserService,
+    private storageService: LocalIndexDBStorageService
   ) { }
 
   /**
@@ -53,42 +56,37 @@ export class FeedbackService {
   }
 
   /**
-   * Get category label
+   * Get all feedback (Cache-first)
    */
-  private getCategoryLabel(category: string): string {
-    const categories: { [key: string]: string } = {
-      bug: 'Bug Report',
-      feature: 'Feature Request',
-      improvement: 'Improvement Suggestion',
-      general: 'General Feedback',
-      support: 'Support Request'
-    };
-    return categories[category] || category;
+  getAllFeedback(): Observable<FeedbackData[]> {
+    const cached = this.storageService.getItem<FeedbackData[]>(this.CACHE_KEY);
+    return of(cached || []);
   }
 
   /**
-   * Get all feedback for admin purposes
+   * Pull feedback from Firestore
    */
-  async getAllFeedback(): Promise<FeedbackData[]> {
-    try {
-      const feedbackRef = collection(this.firestore, 'feedback');
-      const q = query(feedbackRef, orderBy('timestamp', 'desc'));
-      const querySnapshot = await getDocs(q);
+  pullFromFirestore(): Observable<void> {
+    const feedbackRef = collection(this.firestore, 'feedback');
+    const q = query(feedbackRef, orderBy('timestamp', 'desc'));
 
-      const feedbackList: FeedbackData[] = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data() as FeedbackData;
-        feedbackList.push({
-          ...data,
-          id: doc.id
+    return from(getDocs(q)).pipe(
+      tap(querySnapshot => {
+        const feedbackList: FeedbackData[] = [];
+        querySnapshot.forEach((doc) => {
+          feedbackList.push({
+            ...(doc.data() as FeedbackData),
+            id: doc.id
+          });
         });
-      });
-
-      return feedbackList;
-    } catch (error) {
-      console.error('Error fetching feedback:', error);
-      throw error;
-    }
+        this.storageService.setItem(this.CACHE_KEY, feedbackList);
+      }),
+      map(() => undefined),
+      catchError(error => {
+        console.error('[FeedbackService] Pull failed:', error);
+        return of(undefined);
+      })
+    );
   }
 
   /**
@@ -101,6 +99,16 @@ export class FeedbackService {
         status: status,
         updatedAt: serverTimestamp()
       });
+
+      // Update local cache if exists
+      const cached = this.storageService.getItem<FeedbackData[]>(this.CACHE_KEY);
+      if (cached) {
+        const index = cached.findIndex(f => f.id === feedbackId);
+        if (index !== -1) {
+          cached[index].status = status;
+          this.storageService.setItem(this.CACHE_KEY, cached);
+        }
+      }
     } catch (error) {
       console.error('Error updating feedback status:', error);
       throw error;
@@ -114,9 +122,17 @@ export class FeedbackService {
     try {
       const feedbackRef = doc(this.firestore, 'feedback', feedbackId);
       await deleteDoc(feedbackRef);
+
+      // Update local cache if exists
+      const cached = this.storageService.getItem<FeedbackData[]>(this.CACHE_KEY);
+      if (cached) {
+        const updated = cached.filter(f => f.id !== feedbackId);
+        this.storageService.setItem(this.CACHE_KEY, updated);
+      }
     } catch (error) {
       console.error('Error deleting feedback:', error);
       throw error;
     }
   }
-} 
+}
+ 

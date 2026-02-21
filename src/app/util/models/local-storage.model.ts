@@ -61,6 +61,10 @@ export enum LocalStorageKey {
     ACCOUNTS_CACHE = 'accounts-cache',
     BUDGETS_CACHE = 'budgets-cache',
     GOALS_CACHE = 'goals-cache',
+    GOOGLE_SHEETS_CACHE = 'google-sheets-cache',
+    SPLITWISE_GROUPS_CACHE = 'splitwise-groups-cache',
+    SPLITWISE_TRANSACTIONS_CACHE = 'splitwise-transactions-cache',
+    SPLITWISE_SETTLEMENTS_CACHE = 'splitwise-settlements-cache',
 }
 
 /**
@@ -175,6 +179,34 @@ export class LocalStorageKeyHelper {
      */
     static getGoalsCacheKey(uid: string): string {
         return `${LocalStorageKey.GOALS_CACHE}-${uid}`;
+    }
+
+    /**
+     * Get google sheets cache key
+     */
+    static getGoogleSheetsCacheKey(uid: string): string {
+        return `${LocalStorageKey.GOOGLE_SHEETS_CACHE}-${uid}`;
+    }
+
+    /**
+     * Get splitwise groups cache key
+     */
+    static getSplitwiseGroupsCacheKey(uid: string): string {
+        return `${LocalStorageKey.SPLITWISE_GROUPS_CACHE}-${uid}`;
+    }
+
+    /**
+     * Get splitwise transactions cache key
+     */
+    static getSplitwiseTransactionsCacheKey(groupId: string): string {
+        return `${LocalStorageKey.SPLITWISE_TRANSACTIONS_CACHE}-${groupId}`;
+    }
+
+    /**
+     * Get splitwise settlements cache key
+     */
+    static getSplitwiseSettlementsCacheKey(groupId: string): string {
+        return `${LocalStorageKey.SPLITWISE_SETTLEMENTS_CACHE}-${groupId}`;
     }
 
     /**

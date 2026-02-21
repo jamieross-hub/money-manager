@@ -5,6 +5,7 @@ import { Timestamp } from '@angular/fire/firestore';
 import { Subscription, SubscriptionService } from 'src/app/util/service/subscription.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { DateService } from 'src/app/util/service/date.service';
+import { firstValueFrom } from 'rxjs';
 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -47,7 +48,7 @@ export class SubscriptionComponent implements OnInit {
     if (user) {
       try {
         this.userId = user.uid;
-        this.subscription = await this.subscriptionService.getSubscription(this.userId);
+        this.subscription = await firstValueFrom(this.subscriptionService.getSubscription(this.userId));
       } catch (error) {
         console.error('Error loading subscription:', error);
         this.notificationService.error('Failed to load subscription data');

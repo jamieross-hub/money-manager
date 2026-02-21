@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
-import { Subject } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { FeedbackService } from 'src/app/util/service/feedback.service';
@@ -60,7 +60,7 @@ export class AdminAnalyticsComponent implements OnInit, OnDestroy {
       const userStats = await this.userService.getUserStatistics();
       
       // Load feedback data
-      const allFeedback = await this.feedbackService.getAllFeedback();
+      const allFeedback = await firstValueFrom(this.feedbackService.getAllFeedback());
       
       // Generate analytics data
       this.analyticsData = this.generateAnalyticsData(userStats, allFeedback);

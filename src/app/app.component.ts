@@ -14,6 +14,7 @@ import { LocalStorageKey } from './util/models/local-storage.model';
 import { UserTrackingService, ScreenTrackingService } from '@angular/fire/analytics';
 import { UserService } from './util/service/db/user.service';
 import { SecurityService } from './util/service/security.service';
+import { PeriodicSyncService } from './util/service/periodic-sync.service';
 
 @Component({
   selector: 'app-root',
@@ -41,6 +42,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private screenTrackingService: ScreenTrackingService,
     private userService: UserService,
     private securityService: SecurityService,
+    private periodicSyncService: PeriodicSyncService
   ) {
     this.navigationState = {
       canGoBack: false,
@@ -65,6 +67,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.setupEventListeners();
     this.firebaseMessagingService.listenForMessages();
     this.checkBiometricLock();
+    this.periodicSyncService.startSync();
   }
 
 
@@ -142,8 +145,8 @@ export class AppComponent implements OnInit, OnDestroy {
     // App is coming to foreground
     // Check if we need to refresh data
     if (this.isOnline) {
-      // Refresh data if needed
-      this.refreshDataIfNeeded();
+      // Refresh data
+      this.periodicSyncService.syncAll().subscribe();
     }
     this.checkBiometricLock();
   }
@@ -179,14 +182,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
 
   private refreshDataIfNeeded(): void {
-    const lastRefresh = this.localStorageService.getItem<string>(LocalStorageKey.LAST_DATA_REFRESH);
-    const now = Date.now();
-    const refreshInterval = APP_CONFIG.OFFLINE.SYNC_INTERVAL; // Use config sync interval
-
-    if (!lastRefresh || (now - parseInt(lastRefresh)) > refreshInterval) {
-      // Trigger data refresh
-      this.localStorageService.setItem(LocalStorageKey.LAST_DATA_REFRESH, now.toString());
-      // You can emit an event here to refresh data in components
+    if (this.isOnline) {
+      this.periodicSyncService.syncAll().subscribe();
     }
   }
 

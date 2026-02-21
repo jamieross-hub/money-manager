@@ -1,10 +1,16 @@
 import { Injectable } from '@angular/core';
 import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, Timestamp, onSnapshot } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
-import { Observable, of } from 'rxjs';
+import { Observable, of, from } from 'rxjs';
+import { map, catchError, tap } from 'rxjs/operators';
 import { DateService } from '../date.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { LocalStorageKeyHelper } from '../../models/local-storage.model';
+
+import { Store } from '@ngrx/store';
+import { AppState } from 'src/app/store/app.state';
+import * as BudgetsActions from 'src/app/store/budgets/budgets.actions';
+import * as BudgetsSelectors from 'src/app/store/budgets/budgets.selectors';
 
 export interface Budget {
   budgetId: string;
@@ -25,7 +31,8 @@ export class BudgetsService {
     private firestore: Firestore,
     private auth: Auth,
     private dateService: DateService,
-    private localStorageUtility: LocalIndexDBStorageService
+    private localStorageUtility: LocalIndexDBStorageService,
+    private store: Store<AppState>
   ) { }
 
   // 🔹 Create a new budget
@@ -47,60 +54,14 @@ export class BudgetsService {
     });
   }
 
-  // 🔹 Get all budgets for a user
+  /** Get all budgets (Store-based) */
   getBudgets(userId: string): Observable<Budget[]> {
     if (userId === 'offline-guest') {
-      const localBudgets = this.localStorageUtility.getEntities<Budget>('budgets');
-      return of(localBudgets);
+      const budgets = this.localStorageUtility.getEntities<Budget>('budgets');
+      return of(budgets);
     }
 
-    const budgetsRef = collection(this.firestore, `users/${userId}/budgets`);
-
-    return new Observable<Budget[]>(observer => {
-      // 1. Emit cached data immediately if available
-      try {
-        const cachedBudgets = this.localStorageUtility.getItem<Budget[]>(LocalStorageKeyHelper.getBudgetsCacheKey(userId));
-        if (cachedBudgets && cachedBudgets.length > 0) {
-          console.log(`[BudgetsService] Emitting ${cachedBudgets.length} cached budgets`);
-          observer.next(cachedBudgets);
-        }
-      } catch (error) {
-        console.warn('[BudgetsService] Failed to load cached budgets:', error);
-      }
-
-      // 2. Subscribe to realtime updates
-      const unsubscribe = onSnapshot(budgetsRef,
-        (querySnapshot) => {
-          const budgets: Budget[] = [];
-          querySnapshot.forEach(docSnap => {
-            budgets.push(docSnap.data() as Budget);
-          });
-
-          console.log(`[BudgetsService] Received ${budgets.length} budgets from Firestore`);
-
-          // Update cache for next time
-          try {
-            this.localStorageUtility.setItem(LocalStorageKeyHelper.getBudgetsCacheKey(userId), budgets);
-          } catch (error) {
-            console.warn('[BudgetsService] Failed to cache budgets:', error);
-          }
-
-          observer.next(budgets);
-        },
-        (error) => {
-          console.error(`[BudgetsService] Error in onSnapshot for ${userId}:`, error);
-          if (!observer.closed) {
-            if (error.code === 'unavailable' || !navigator.onLine) {
-              console.warn('[BudgetsService] Firestore unavailable, relying on cache');
-            } else {
-              observer.error(error);
-            }
-          }
-        }
-      );
-
-      return () => unsubscribe();
-    });
+    return this.store.select(BudgetsSelectors.selectAllBudgets);
   }
 
   // 🔹 Get a single budget by its ID
@@ -165,5 +126,36 @@ export class BudgetsService {
       const newSpent = currentSpent + amount;
       await updateDoc(budgetRef, { spent: newSpent });
     }
+  }
+
+  /** Pull budgets from Firestore and update local cache */
+  pullFromFirestore(userId: string): Observable<void> {
+    if (userId === 'offline-guest') return of(undefined);
+
+    const budgetsRef = collection(this.firestore, `users/${userId}/budgets`);
+
+    console.log(`[BudgetsService] Pulling budgets for user: ${userId}`);
+
+    return from(getDocs(budgetsRef)).pipe(
+      tap(querySnapshot => {
+        const budgets: Budget[] = [];
+        querySnapshot.forEach(docSnap => {
+          budgets.push(docSnap.data() as Budget);
+        });
+
+        console.log(`[BudgetsService] Pulled ${budgets.length} budgets from Firestore`);
+
+        // Update cache
+        this.localStorageUtility.setItem(LocalStorageKeyHelper.getBudgetsCacheKey(userId), budgets);
+        
+        // Update NgRx state
+        this.store.dispatch(BudgetsActions.loadBudgetsSuccess({ budgets }));
+      }),
+      map(() => undefined),
+      catchError(error => {
+        console.error('[BudgetsService] Pull failed:', error);
+        return of(undefined);
+      })
+    );
   }
 }
