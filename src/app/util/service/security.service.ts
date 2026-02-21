@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, map } from 'rxjs';
 import { UserService } from './db/user.service';
 import { NotificationService } from './notification.service';
 
@@ -93,6 +93,8 @@ export interface SecurityStatus {
 export class SecurityService {
   private readonly securityEvents = new BehaviorSubject<SecurityEvent[]>([]);
   private readonly securityStatus = new BehaviorSubject<SecurityStatus | null>(null);
+  private readonly pinVerified = new BehaviorSubject<boolean>(false);
+  public readonly pinVerified$ = this.pinVerified.asObservable();
 
 
   private readonly securityConfig: SecurityConfig = {
@@ -111,6 +113,57 @@ export class SecurityService {
 
   public readonly securityEvents$ = this.securityEvents.asObservable();
   public readonly securityStatus$ = this.securityStatus.asObservable();
+
+  /**
+   * Observable representing if the app should be locked (PIN enabled + Not verified)
+   */
+  public readonly isLocked$: Observable<boolean> = combineLatest([
+    this.userService.userAuth$,
+    this.pinVerified$
+  ]).pipe(
+    map(([user, verified]) => {
+      return !!(user?.preferences?.pinEnabled && !verified);
+    })
+  );
+
+
+  /**
+   * Set PIN verified state manually
+   */
+  public setPinVerified(verified: boolean): void {
+    this.pinVerified.next(verified);
+  }
+
+  /**
+   * Check if PIN is currently verified in this session
+   */
+  public isPinVerified(): boolean {
+    return this.pinVerified.value;
+  }
+
+  /**
+   * Simple hash function for PIN (for local use)
+   * In a real app, use a more robust crypto library if possible.
+   */
+  public async hashPin(pin: string): Promise<string> {
+    const msgUint8 = new TextEncoder().encode(pin);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  /**
+   * Verify PIN against a hash
+   */
+  public async verifyPin(pin: string, hash: string): Promise<boolean> {
+    const hashedPin = await this.hashPin(pin);
+    const match = hashedPin === hash;
+    if (match) {
+      this.setPinVerified(true);
+    }
+    return match;
+  }
+
 
 
 

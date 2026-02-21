@@ -59,6 +59,8 @@ import { CurrencyPipe } from './util/pipes';
 import { OfflineIndicatorComponent } from './util/components/offline-indicator/offline-indicator.component';
 import { PwaInstallPromptComponent } from './util/components/pwa-install-prompt/pwa-install-prompt.component';
 import { LoaderComponent } from './util/components/loader/loader.component';
+import { PinLockComponent } from './util/components/pin-lock/pin-lock.component';
+
 
 
 @NgModule({
@@ -85,6 +87,8 @@ import { LoaderComponent } from './util/components/loader/loader.component';
     OfflineIndicatorComponent,
     PwaInstallPromptComponent,
     LoaderComponent,
+    PinLockComponent,
+
 
 
     // Enhanced Service Worker with offline support

@@ -9,7 +9,12 @@
 </app-pwa-install-prompt>
 
 <!-- Main App Content -->
-<div>
+<div [class.blur-md]="isLocked$ | async">
   <app-loader></app-loader>
   <router-outlet></router-outlet>
 </div>
+
+<!-- PIN Lock Component -->
+<app-pin-lock></app-pin-lock>
+
+

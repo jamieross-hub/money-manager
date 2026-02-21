@@ -339,6 +339,45 @@
 							</mat-slide-toggle>
 							<p class="preference-description">{{ 'PROFILE.VIEW_MODE_DESC' | translate }}</p>
 						</div>
+
+						<!-- PIN Lock Section -->
+						<div class="preference-item border-t border-gray-100 dark:border-gray-700 pt-4 mt-2">
+							<div class="flex items-center justify-between mb-2">
+								<span class="toggle-label !font-medium">PIN Lock</span>
+								<button mat-stroked-button color="primary" type="button" size="small"
+									*ngIf="isEditing()" (click)="showPinSetup.set(!showPinSetup())"
+									class="!text-xs !h-8 !px-3">
+									<mat-icon class="!text-sm !w-4 !h-4">{{ showPinSetup() ? 'close' : 'lock' }}</mat-icon>
+									{{ (userProfile()?.preferences?.pinHash ? 'Change PIN' : 'Set PIN') }}
+								</button>
+							</div>
+							
+							<mat-slide-toggle formControlName="pinEnabled"
+								color="primary">
+								<span class="toggle-label text-xs">Enable PIN lock on startup</span>
+							</mat-slide-toggle>
+							<p class="preference-description">Require a 4-digit PIN to open the app</p>
+
+							<!-- PIN Setup Inline -->
+							<div *ngIf="showPinSetup() && isEditing()" class="mt-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2">
+								<p class="text-xs font-medium mb-3">Enter New 4-Digit PIN</p>
+								<div class="flex flex-col gap-3">
+									<mat-form-field appearance="fill" class="!mb-0">
+										<mat-label>New PIN</mat-label>
+										<input matInput type="password" maxlength="4" placeholder="••••" 
+											   [formControl]="newPinControl"
+											   (keypress)="onlyNumbers($event)">
+										<mat-hint>Choose a 4-digit numeric PIN</mat-hint>
+									</mat-form-field>
+									
+									<button mat-flat-button color="primary" 
+											[disabled]="newPinControl.invalid"
+											(click)="updatePin()">
+										Confirm New PIN
+									</button>
+								</div>
+							</div>
+						</div>
 					</div>
 				</mat-expansion-panel>
 				}

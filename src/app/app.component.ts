@@ -24,6 +24,7 @@ import { PeriodicSyncService } from './util/service/periodic-sync.service';
 })
 export class AppComponent implements OnInit, OnDestroy {
   public title = APP_CONFIG.APP_NAME;
+  public isLocked$ = this.securityService.isLocked$;
   isOnline = false; // Will be set properly in ngOnInit
   navigationState: NavigationState;
   private destroy$ = new Subject<void>();
@@ -53,6 +54,9 @@ export class AppComponent implements OnInit, OnDestroy {
       isMobile: false
     };
   }
+
+
+
 
 
 
@@ -147,6 +151,18 @@ export class AppComponent implements OnInit, OnDestroy {
       this.periodicSyncService.syncAll().subscribe();
     }
   }
+
+
+  async logout(): Promise<void> {
+    try {
+      await this.userService.signOut();
+      this.securityService.setPinVerified(false);
+      window.location.reload();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  }
+
 
 
 

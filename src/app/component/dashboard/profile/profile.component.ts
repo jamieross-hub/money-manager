@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, signal, computed, inject, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { Router } from '@angular/router';
@@ -104,6 +104,9 @@ export class ProfileComponent {
   readonly userProfile = signal<User | null>(null);
   readonly familyGroup = signal<SplitwiseGroup | null>(null);
   readonly currentTheme = signal<ThemeType>('light-theme');
+  readonly showPinSetup = signal(false);
+  readonly newPinControl = new FormControl('', [Validators.required, Validators.pattern(/^\d{4}$/)]);
+
 
 
   readonly quickActionsFabConfig = signal<QuickActionsFabConfig>({
@@ -181,6 +184,7 @@ export class ProfileComponent {
         budgetAlerts: [{ value: true, disabled: true }],
         categoryListViewMode: [{ value: false, disabled: true }],
         appView: [{ value: 'MONTHLY', disabled: true }],
+        pinEnabled: [{ value: false, disabled: true }],
       }),
     });
 
@@ -352,6 +356,8 @@ export class ProfileComponent {
         budgetAlerts: user.preferences?.budgetAlerts || true,
         categoryListViewMode: user.preferences?.categoryListViewMode || false,
         appView: user.preferences?.appView || 'MONTHLY',
+        pinEnabled: user.preferences?.pinEnabled || false,
+        pinHash: user.preferences?.pinHash || '',
       },
       role: user.role,
 
@@ -381,6 +387,7 @@ export class ProfileComponent {
           budgetAlerts: profile.preferences?.budgetAlerts || true,
           categoryListViewMode: profile.preferences?.categoryListViewMode || false,
           appView: profile.preferences?.appView || 'MONTHLY',
+          pinEnabled: profile.preferences?.pinEnabled || false,
         },
       });
 
@@ -406,6 +413,10 @@ export class ProfileComponent {
     } else {
       this.isEditing.set(true);
       this.profileForm.enable();
+      // Keep pinEnabled disabled if no PIN hash exists
+      if (!this.userProfile()?.preferences?.pinHash) {
+        this.profileForm.get('preferences.pinEnabled')?.disable();
+      }
       this.quickActionsFabConfig.update(config => ({
         ...config,
         mainButtonIcon: 'save',
@@ -434,7 +445,10 @@ export class ProfileComponent {
           email: formValue.email,
           role: profile.role || UserRole.FREE,
           createdAt: profile.createdAt,
-          preferences: formValue.preferences,
+          preferences: {
+            ...profile.preferences,
+            ...formValue.preferences
+          },
           firstName: formValue.firstName,
           lastName: formValue.lastName,
           phone: formValue.phone,
@@ -654,6 +668,44 @@ export class ProfileComponent {
       return dayjs(date.seconds * 1000).format('MMM DD, YYYY');
     }
     return dayjs(date).format('MMM DD, YYYY');
+  }
+
+  onlyNumbers(event: any): boolean {
+    const charCode = (event.which) ? event.which : event.keyCode;
+    if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+      return false;
+    }
+    return true;
+  }
+
+  async updatePin(): Promise<void> {
+    const newPin = this.newPinControl.value;
+    if (newPin && /^\d{4}$/.test(newPin)) {
+      const pinHash = await this.securityService.hashPin(newPin);
+      const profile = this.userProfile();
+      if (profile) {
+        // Update current profile signal and form
+        const updatedProfile: User = {
+          ...profile,
+          preferences: {
+            ...profile.preferences,
+            defaultCurrency: profile.preferences?.defaultCurrency || 'USD',
+            timezone: profile.preferences?.timezone || 'UTC',
+            notifications: profile.preferences?.notifications ?? true,
+            emailUpdates: profile.preferences?.emailUpdates ?? true,
+            budgetAlerts: profile.preferences?.budgetAlerts ?? true,
+            pinHash: pinHash,
+            pinEnabled: true
+          }
+        };
+        this.userProfile.set(updatedProfile);
+        this.profileForm.get('preferences.pinEnabled')?.setValue(true);
+        this.profileForm.get('preferences.pinEnabled')?.enable();
+        this.newPinControl.reset();
+        this.showPinSetup.set(false);
+        this.notificationService.success('PIN updated successfully. Remember to save your changes.');
+      }
+    }
   }
 
   isGuestMode(): boolean {
