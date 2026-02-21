@@ -31,7 +31,7 @@ export class SubscriptionService {
 
   // 🔹 Create a new subscription
   async createSubscription(userId: string, subscription: Subscription): Promise<void> {
-    const subscriptionRef = doc(this.firestore, `users/${userId}/subscription`);
+    const subscriptionRef = doc(this.firestore, `users/${userId}/subscription/info`);
     const data = {
       ...subscription,
       startDate: this.dateService.toTimestamp(subscription.startDate),
@@ -51,7 +51,7 @@ export class SubscriptionService {
    * Pull subscription from Firestore
    */
   pullFromFirestore(userId: string): Observable<void> {
-    const subscriptionRef = doc(this.firestore, `users/${userId}/subscription`);
+    const subscriptionRef = doc(this.firestore, `users/${userId}/subscription/info`);
     return from(getDoc(subscriptionRef)).pipe(
       tap(docSnap => {
         if (docSnap.exists()) {
@@ -69,7 +69,7 @@ export class SubscriptionService {
 
   // 🔹 Update the subscription plan
   async updateSubscriptionPlan(userId: string, newPlan: string): Promise<void> {
-    const subscriptionRef = doc(this.firestore, `users/${userId}/subscription`);
+    const subscriptionRef = doc(this.firestore, `users/${userId}/subscription/info`);
     await updateDoc(subscriptionRef, { plan: newPlan });
     
     const cached = this.storageService.getItem<Subscription>(this.getCacheKey(userId));
@@ -81,7 +81,7 @@ export class SubscriptionService {
 
   // 🔹 Update subscription dates
   async updateSubscriptionDates(userId: string, startDate: Date, endDate: Date): Promise<void> {
-    const subscriptionRef = doc(this.firestore, `users/${userId}/subscription`);
+    const subscriptionRef = doc(this.firestore, `users/${userId}/subscription/info`);
     const updates = {
       startDate: Timestamp.fromDate(startDate),
       endDate: Timestamp.fromDate(endDate),
@@ -96,7 +96,7 @@ export class SubscriptionService {
 
   // 🔹 Delete the subscription
   async deleteSubscription(userId: string): Promise<void> {
-    const subscriptionRef = doc(this.firestore, `users/${userId}/subscription`);
+    const subscriptionRef = doc(this.firestore, `users/${userId}/subscription/info`);
     await deleteDoc(subscriptionRef);
     this.storageService.removeItem(this.getCacheKey(userId));
   }

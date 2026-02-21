@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { interval, Subscription, from, of, forkJoin } from 'rxjs';
-import { switchMap, catchError, tap, take, map } from 'rxjs/operators';
+import { interval, Subscription, from, of, forkJoin, Subject } from 'rxjs';
+import { switchMap, catchError, tap, take, map, filter, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { TransactionsService } from './db/transactions.service';
 import { AccountsService } from './db/accounts.service';
 import { CategoryService } from './db/category.service';
@@ -22,6 +22,7 @@ import { ContactService } from './db/contact.service';
 })
 export class PeriodicSyncService implements OnDestroy {
   private syncSubscription: Subscription | null = null;
+  private readonly destroy$ = new Subject<void>();
   private readonly SYNC_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
   constructor(
@@ -50,8 +51,13 @@ export class PeriodicSyncService implements OnDestroy {
 
     console.log('🔄 Starting Periodic Sync Service (Interval: 5m)');
 
-    // Initial sync on startup
-    this.syncAll().subscribe();
+    // Listen for user login to trigger immediate sync
+    this.userService.userAuth$.pipe(
+      takeUntil(this.destroy$),
+      filter((user): user is any => !!user && user.uid !== 'offline-guest'),
+      distinctUntilChanged((prev, curr) => prev?.uid === curr?.uid),
+      switchMap(() => this.syncAll())
+    ).subscribe();
 
     // Set up periodic interval
     this.syncSubscription = interval(this.SYNC_INTERVAL).pipe(
@@ -78,7 +84,20 @@ export class PeriodicSyncService implements OnDestroy {
    */
   syncAll() {
     const userId = this.userService.getCurrentUserId();
-    if (!userId || userId === 'offline-guest') {
+    
+    // 1. Handle Guest Mode
+    if (userId === 'offline-guest') {
+      console.log('🔄 Sync skipped: Guest Mode (Local Only)');
+      return of(null);
+    }
+
+    if (!userId) {
+      return of(null);
+    }
+
+    // 2. Handle Network Offline
+    if (!this.commonSyncService.isCurrentlyOnline()) {
+      console.log('🔄 Sync skipped: Device is Offline');
       return of(null);
     }
 
@@ -116,5 +135,7 @@ export class PeriodicSyncService implements OnDestroy {
 
   ngOnDestroy(): void {
     this.stopSync();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
