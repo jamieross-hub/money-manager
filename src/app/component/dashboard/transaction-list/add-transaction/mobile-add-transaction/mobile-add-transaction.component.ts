@@ -119,6 +119,9 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   public filteredCategories: ReplaySubject<Category[]> = new ReplaySubject<Category[]>(1);
   protected _onDestroy = new Subject<void>();
   public isGuestUser: boolean = false;
+  private popstateListener = () => {
+    this.dialogRef.close();
+  };
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public dialogData: any,
@@ -198,10 +201,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     this.userId = this.userService.getCurrentUserId();
     this.initializeFormData();
 
-    window.addEventListener('popstate', (event) => {
-      this.dialogRef.close();
-      event.preventDefault();
-    });
+    window.addEventListener('popstate', this.popstateListener);
   }
 
 
@@ -726,6 +726,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   }
 
   ngOnDestroy() {
+    window.removeEventListener('popstate', this.popstateListener);
     this._onDestroy.next();
     this._onDestroy.complete();
   }

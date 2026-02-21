@@ -117,7 +117,6 @@ export class CommonSyncService {
   private async initializeServices(): Promise<void> {
     await Promise.all([
       this.initializeNetworkMonitoring(),
-      this.initializeServiceWorkerUpdates(),
       this.initializeBackgroundSync(),
       this.loadSyncQueue()
     ]);
@@ -160,32 +159,7 @@ export class CommonSyncService {
     }
   }
 
-  /**
-   * Initialize service worker updates
-   */
-  private initializeServiceWorkerUpdates(): void {
-    if (this.swUpdate.isEnabled) {
-      const updateInterval = this.isMobileDevice()
-        ? APP_CONFIG.PWA.MOBILE_UPDATE_INTERVAL
-        : APP_CONFIG.PWA.DESKTOP_UPDATE_INTERVAL;
 
-      setInterval(() => {
-        this.swUpdate.checkForUpdate();
-      }, updateInterval);
-
-      this.swUpdate.versionUpdates.subscribe(event => {
-        console.log('Service worker update event:', event);
-
-        if (event.type === 'VERSION_READY') {
-          console.log('New version available, activating silently:', event);
-          this.activateUpdateSilently();
-        } else if (event.type === 'VERSION_INSTALLATION_FAILED') {
-          console.error('Service worker installation failed:', event);
-          this.handleUpdateFailure();
-        }
-      });
-    }
-  }
 
   /**
    * Initialize background sync functionality
@@ -241,24 +215,9 @@ export class CommonSyncService {
     console.log('You are offline', 'Changes will be saved locally and synced when you reconnect.');
   }
 
-  /**
-   * Activate update silently
-   */
-  private activateUpdateSilently(): void {
-    this.swUpdate.activateUpdate().then(() => {
-      console.log('Update activated successfully');
-      window.location.reload();
-    }).catch(error => {
-      console.error('Failed to activate update:', error);
-    });
-  }
 
-  /**
-   * Handle update failure
-   */
-  private handleUpdateFailure(): void {
-    console.error('Service worker update failed');
-  }
+
+
 
   /**
    * Check if mobile device
