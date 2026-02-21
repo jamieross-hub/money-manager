@@ -56,13 +56,20 @@ export class ProfileEffects {
       return from(this.userService.getCurrentUser()).pipe(
         mergeMap(currentUser => {
           if (currentUser) {
-            const updatedUser = { ...currentUser, preferences };
-            return from(this.userService.createOrUpdateUser(updatedUser));
+            const updatedUser = { 
+              ...currentUser, 
+              preferences: {
+                ...currentUser.preferences,
+                ...preferences
+              } 
+            };
+            return from(this.userService.createOrUpdateUser(updatedUser)).pipe(
+              map(() => ProfileActions.updatePreferencesSuccess({ profile: updatedUser }))
+            );
           } else {
             throw new Error('User not found');
           }
         }),
-        map(() => ProfileActions.updatePreferencesSuccess({ profile: { preferences } as any })),
         catchError(error => of(ProfileActions.updatePreferencesFailure({ error })))
       );
     })

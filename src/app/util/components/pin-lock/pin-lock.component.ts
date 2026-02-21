@@ -79,6 +79,10 @@ export class PinLockComponent implements OnInit, OnDestroy {
           this.pinError = '';
         }, 3000);
       }
+    } else {
+      // If pinEnabled is true but pinHash is missing, bypass and log
+      console.warn('PIN enabled but no hash found. Bypassing lock.');
+      this.securityService.setPinVerified(true);
     }
   }
 

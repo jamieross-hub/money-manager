@@ -34,7 +34,7 @@ export const profileReducer = createReducer(
   
   on(ProfileActions.updateProfileSuccess, (state, { profile }) => ({
     ...state,
-    profile,
+    profile: state.profile ? { ...state.profile, ...profile } : profile,
     loading: false,
     error: null
   })),
@@ -94,7 +94,7 @@ export const profileReducer = createReducer(
   
   on(ProfileActions.updatePreferencesSuccess, (state, { profile }) => ({
     ...state,
-    profile,
+    profile: state.profile ? { ...state.profile, ...profile } : profile,
     loading: false,
     error: null
   })),

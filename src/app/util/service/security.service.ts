@@ -122,7 +122,8 @@ export class SecurityService {
     this.pinVerified$
   ]).pipe(
     map(([user, verified]) => {
-      return !!(user?.preferences?.pinEnabled && !verified);
+      // App is locked if PIN is enabled, has a hash, and is not already verified
+      return !!(user?.preferences?.pinEnabled && user?.preferences?.pinHash && !verified);
     })
   );
 

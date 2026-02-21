@@ -441,20 +441,12 @@ export class ProfileComponent {
 
       if (profile) {
         const updatedUser: User = {
-          uid: profile.uid,
-          email: formValue.email,
-          role: profile.role || UserRole.FREE,
-          createdAt: profile.createdAt,
+          ...profile,
+          ...formValue,
           preferences: {
             ...profile.preferences,
             ...formValue.preferences
           },
-          firstName: formValue.firstName,
-          lastName: formValue.lastName,
-          phone: formValue.phone,
-          dateOfBirth: formValue.dateOfBirth,
-          occupation: formValue.occupation,
-          monthlyIncome: formValue.monthlyIncome,
           updatedAt: new Date(),
         };
 
