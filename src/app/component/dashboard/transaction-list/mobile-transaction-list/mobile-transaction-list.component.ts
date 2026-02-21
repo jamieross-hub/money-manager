@@ -51,6 +51,7 @@ import { CategoryService } from 'src/app/util/service/db/category.service';
 import { CurrencyService } from 'src/app/util/service/currency.service';
 import { ThemeSwitchingService } from 'src/app/util/service/theme-switching.service';
 import { AppViewService } from 'src/app/util/service/app-view.service';
+import { UserService } from 'src/app/util/service/db/user.service';
 
 dayjs.extend(weekOfYear);
 
@@ -152,6 +153,9 @@ export class MobileTransactionListComponent
       const accountId = tx.accountId || '';
       const account = this.accountMap.get(accountId);
 
+      const createdDate = tx.createdAt || tx.date;
+      const createdDateObj = dayjs(this.dateService.toDate(createdDate));
+
       const txView = {
         ...tx,
         _categoryColor: category?.color || '#46777f',
@@ -161,13 +165,15 @@ export class MobileTransactionListComponent
         _accountType: account?.type || 'Unknown',
         _dateDisplay: dateObj.format('dd MMM '),
         _timeDisplay: dateObj.format('hh:mm a'),
-        _fullDateDisplay: dateObj.format('dddd, DD MMMM YYYY'), 
+        _fullDateDisplay: createdDateObj.format('DD MMM YYYY, hh:mm a'), 
         _syncStatusColor: this.getSyncStatusColor(tx),
         _syncStatusIcon: this.getSyncStatusIcon(tx),
         _syncStatusInfo: this.getSyncStatusInfo(tx),
         _recurringInfo: this.getRecurringInfo(tx),
         _isIncome: tx.type === 'income',
-        _categoryBgColor: (category?.color || '#46777f') + '20'
+        _categoryBgColor: (category?.color || '#46777f') + '20',
+        _updatedDisplay: tx.updatedAt ? dayjs(this.dateService.toDate(tx.updatedAt)).format('DD MMM YYYY, hh:mm a') : 
+                        (tx.createdAt ? dayjs(this.dateService.toDate(tx.createdAt)).format('DD MMM YYYY, hh:mm a') : 'N/A')
       };
 
       let group = groups.find(g => g.date === dateKey);
@@ -225,6 +231,8 @@ export class MobileTransactionListComponent
     return count;
   });
 
+  isGuest = computed(() => this.userService.isGuestUser());
+
   // Labels (Computed)
   currentSortLabel = computed(() => {
     const option = this.sortOptions.find(opt => opt.value === this.selectedSort());
@@ -273,6 +281,7 @@ export class MobileTransactionListComponent
     private readonly currencyService: CurrencyService,
     private readonly themeService: ThemeSwitchingService,
     private readonly appViewService: AppViewService,
+    public readonly userService: UserService,
     private readonly cdr: ChangeDetectorRef
   ) { }
 

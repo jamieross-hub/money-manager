@@ -308,7 +308,7 @@
 							</div>
 
 							<!-- Sync Status -->
-							<div class="detail-row">
+							<div class="detail-row" *ngIf="!isGuest()">
 								<div class="detail-label">
 									<mat-icon class="detail-icon" [style.color]="tx._syncStatusColor">{{
 										tx._syncStatusIcon }}</mat-icon>
@@ -335,12 +335,11 @@
 							<!-- Created Time -->
 							<div class="detail-row">
 								<div class="detail-label">
-									<mat-icon class="detail-icon">schedule</mat-icon>
-									<span>Created Time</span>
+									<mat-icon class="detail-icon">update</mat-icon>
+									<span>Update Date</span>
 								</div>
 								<div class="detail-value">
-									<span class="created-time">{{ tx._timeDisplay
-										}}</span>
+									<span class="created-time">{{ tx._updatedDisplay }}</span>
 								</div>
 							</div>
 

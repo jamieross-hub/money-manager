@@ -53,10 +53,15 @@ export class TransactionsService extends BaseService {
      */
     createTransaction(userId: string, transaction: Omit<Transaction, 'id'>): Observable<void> {
         const transactionId = this.generateId();
+        const now = new Date();
         const transactionData: Transaction = {
             ...transaction,
             id: transactionId,
-            date: this.dateService.toDate(transaction.date) || new Date(),
+            date: this.dateService.toDate(transaction.date) || now,
+            createdAt: now,
+            updatedAt: now,
+            createdBy: userId,
+            updatedBy: userId,
             syncStatus: SyncStatus.SYNCED
         };
 
@@ -806,7 +811,7 @@ export class TransactionsService extends BaseService {
                     if (transaction) {
                         const index = cachedTransactions.findIndex(t => t.id === transaction.id);
                         if (index !== -1) {
-                            cachedTransactions[index] = transaction;
+                            cachedTransactions[index] = { ...cachedTransactions[index], ...transaction };
                         }
                     }
                     break;

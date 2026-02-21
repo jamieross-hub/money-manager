@@ -79,7 +79,10 @@ export const transactionsReducer = createReducer(
       ...state,
       entities: {
         ...state.entities,
-        [transaction.id]: transaction
+        [transaction.id]: {
+          ...state.entities[transaction.id],
+          ...transaction
+        }
       },
       loading: false,
       error: null
