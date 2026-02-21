@@ -28,14 +28,14 @@
 			</div>
 		</div>
 
-		<div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pt-4 sm:pt-0 mt-6">
+		<div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pt-0 sm:pt-0 mt-0">
 			<!-- Left side: Avatar and Info -->
-			<div class="flex items-center gap-4">
+			<div class="flex items-start gap-4 ">
 				<div
-					class="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-primary-400 to-secondary-500 flex items-center justify-center flex-shrink-0 shadow-inner">
+					class="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-primary-400 to-secondary-500 flex items-center justify-center flex-shrink-0 shadow-inner mt-1">
 					<img *ngIf="userProfile()?.photoURL" [src]="userProfile()?.photoURL"
-						class="w-full h-full object-cover" alt="Profile Photo">
-					<mat-icon class="text-white !text-3xl !w-8 !h-8" *ngIf="!userProfile()?.photoURL">person</mat-icon>
+						class="w-full h-full object-cover " alt="Profile Photo">
+					<mat-icon class="text-white " *ngIf="!userProfile()?.photoURL">person</mat-icon>
 				</div>
 				<div class="flex flex-col">
 					<p class="text-xl font-bold text-gray-900 dark:text-white m-0">{{ fullName() }}</p>
@@ -174,69 +174,6 @@
 					</div>
 				</mat-expansion-panel>
 
-				<!-- Family Group Section -->
-				@defer {
-				<mat-expansion-panel [expanded]="breakpointService.device.isMobile ? false : true"
-					class="form-section-panel mt-6">
-					<mat-expansion-panel-header>
-						<mat-panel-title class="flex items-center gap-2">
-							<mat-icon class="section-icon">group</mat-icon>
-							<p class="text-sm font-medium text-gray-700 !mb-0 dark:text-gray-200">
-								Family Group
-							</p>
-						</mat-panel-title>
-					</mat-expansion-panel-header>
-
-					<div class="form-grid pt-4">
-						<ng-container *ngIf="familyGroup() as group; else noFamilyGroup">
-							<div class="col-span-full">
-								<div
-									class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-									<div>
-										<h3
-											class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-											{{ group.name }}
-											<span
-												class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-												*ngIf="group.isActive">
-												Active
-											</span>
-										</h3>
-										<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-											{{ group.members.length }} members • Created {{
-											getFormattedDate(group.createdAt) }}
-										</p>
-									</div>
-									<button mat-stroked-button color="primary" type="button"
-										(click)="viewFamilyGroup(group.id!)">
-										<mat-icon>visibility</mat-icon>
-										View Group
-									</button>
-								</div>
-							</div>
-						</ng-container>
-
-						<ng-template #noFamilyGroup>
-							<div
-								class="col-span-full flex flex-col items-center justify-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 text-center">
-								<mat-icon class="text-4xl text-gray-400 mb-2 h-10 w-10">group_add</mat-icon>
-								<h3 class="text-lg font-medium text-gray-700 dark:text-gray-200">No Family Group
-									Connected
-								</h3>
-								<p class="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-sm">
-									Create a family group to track shared expenses and settle up with family members
-									easily.
-								</p>
-								<button mat-raised-button color="primary" type="button" (click)="createFamilyGroup()"
-									[disabled]="isLoading()">
-									<mat-icon>add</mat-icon>
-									Create Family Group
-								</button>
-							</div>
-						</ng-template>
-					</div>
-				</mat-expansion-panel>
-				}
 
 				<!-- Preferences Section -->
 				@defer {
@@ -381,6 +318,71 @@
 					</div>
 				</mat-expansion-panel>
 				}
+
+				<!-- Family Group Section -->
+				@defer {
+				<mat-expansion-panel [expanded]="breakpointService.device.isMobile ? false : true"
+					class="form-section-panel mt-6">
+					<mat-expansion-panel-header>
+						<mat-panel-title class="flex items-center gap-2">
+							<mat-icon class="section-icon">group</mat-icon>
+							<p class="text-sm font-medium text-gray-700 !mb-0 dark:text-gray-200">
+								Family Group
+							</p>
+						</mat-panel-title>
+					</mat-expansion-panel-header>
+
+					<div class="form-grid pt-4">
+						<ng-container *ngIf="familyGroup() as group; else noFamilyGroup">
+							<div class="col-span-full">
+								<div
+									class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+									<div>
+										<h3
+											class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+											{{ group.name }}
+											<span
+												class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+												*ngIf="group.isActive">
+												Active
+											</span>
+										</h3>
+										<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+											{{ group.members.length }} members • Created {{
+											getFormattedDate(group.createdAt) }}
+										</p>
+									</div>
+									<button mat-stroked-button color="primary" type="button"
+										(click)="viewFamilyGroup(group.id!)">
+										<mat-icon>visibility</mat-icon>
+										View Group
+									</button>
+								</div>
+							</div>
+						</ng-container>
+
+						<ng-template #noFamilyGroup>
+							<div
+								class="col-span-full flex flex-col items-center justify-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 text-center">
+								<mat-icon class="text-4xl text-gray-400 mb-2 h-10 w-10">group_add</mat-icon>
+								<h3 class="text-lg font-medium text-gray-700 dark:text-gray-200">No Family Group
+									Connected
+								</h3>
+								<p class="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-sm">
+									Create a family group to track shared expenses and settle up with family members
+									easily.
+								</p>
+								<button mat-raised-button color="primary" type="button" (click)="createFamilyGroup()"
+									[disabled]="isLoading()">
+									<mat-icon>add</mat-icon>
+									Create Family Group
+								</button>
+							</div>
+						</ng-template>
+					</div>
+				</mat-expansion-panel>
+				}
+
 			</mat-accordion>
 
 			<!-- Action Buttons -->

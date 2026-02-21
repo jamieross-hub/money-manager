@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, combineLatest, map } from 'rxjs';
 import { UserService } from './db/user.service';
 import { NotificationService } from './notification.service';
+import { environment } from 'src/environments/environment';
 
 /**
  * Security event types
@@ -122,6 +123,10 @@ export class SecurityService {
     this.pinVerified$
   ]).pipe(
     map(([user, verified]) => {
+      // Bypass PIN lock in development mode
+      if (!environment.production) {
+        return false;
+      }
       // App is locked if PIN is enabled, has a hash, and is not already verified
       return !!(user?.preferences?.pinEnabled && user?.preferences?.pinHash && !verified);
     })
