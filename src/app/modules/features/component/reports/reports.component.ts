@@ -151,10 +151,13 @@ export class ReportsComponent implements OnInit, OnDestroy {
     // Period selector
     selectedPeriod: 'weekly' | 'monthly' | 'yearly' = 'monthly';
     selectedYear: number = new Date().getFullYear();
+    selectedMonth: number | null = null;
+    selectedWeekOffset: number = 0;
     availableYears: number[] = [];
 
     // Computed
     monthlySummaries: MonthlySummary[] = [];
+    filteredMonthlySummaries: MonthlySummary[] = [];
     currentPeriodSummary: PeriodSummary | null = null;
     previousPeriodSummary: PeriodSummary | null = null;
 
@@ -396,16 +399,21 @@ export class ReportsComponent implements OnInit, OnDestroy {
         if (this.selectedPeriod === 'monthly') {
             // For selected year: use the latest available month in that year
             const monthsInYear = this.monthlySummaries.filter(m => m.year === year).sort((a, b) => b.month - a.month);
-            const currentMonth = year === now.getFullYear() ? now.getMonth() : (monthsInYear.length > 0 ? monthsInYear[0].month : 0);
+            
+            if (this.selectedMonth === null) {
+                this.selectedMonth = year === now.getFullYear() ? now.getMonth() : (monthsInYear.length > 0 ? monthsInYear[0].month : 0);
+            }
+            
+            const currentMonth = this.selectedMonth;
             currentMonths = this.monthlySummaries.filter(m => m.month === currentMonth && m.year === year);
             const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
             const prevYear = currentMonth === 0 ? year - 1 : year;
             previousMonths = this.monthlySummaries.filter(m => m.month === prevMonth && m.year === prevYear);
         } else if (this.selectedPeriod === 'weekly') {
-            const startOfCurrentWeek = dayjs().startOf('week');
-            const endOfCurrentWeek = dayjs().endOf('week');
-            const startOfPrevWeek = dayjs().subtract(1, 'week').startOf('week');
-            const endOfPrevWeek = dayjs().subtract(1, 'week').endOf('week');
+            const startOfCurrentWeek = dayjs().add(this.selectedWeekOffset, 'week').startOf('week');
+            const endOfCurrentWeek = dayjs().add(this.selectedWeekOffset, 'week').endOf('week');
+            const startOfPrevWeek = dayjs().add(this.selectedWeekOffset - 1, 'week').startOf('week');
+            const endOfPrevWeek = dayjs().add(this.selectedWeekOffset - 1, 'week').endOf('week');
 
             currentMonths = this.buildAdhocSummary(this.transactions.filter(t => {
                 const d = dayjs(this.dateService.toDate(t.date));
@@ -429,6 +437,9 @@ export class ReportsComponent implements OnInit, OnDestroy {
             this.currentPeriodSummary.expenseGrowth =
                 ((this.currentPeriodSummary.expense - this.previousPeriodSummary.expense) / this.previousPeriodSummary.expense) * 100;
         }
+
+        // Filter monthly history for the table
+        this.filteredMonthlySummaries = this.monthlySummaries.filter(m => m.year === this.selectedYear);
 
         this.cdr.markForCheck();
     }
@@ -497,19 +508,24 @@ export class ReportsComponent implements OnInit, OnDestroy {
         };
     }
 
-    private getPeriodLabel(which: 'current' | 'previous'): string {
+    public getPeriodLabel(which: 'current' | 'previous'): string {
         const now = new Date();
         const year = this.selectedYear;
         if (this.selectedPeriod === 'monthly') {
-            const monthsInYear = this.monthlySummaries.filter(m => m.year === year).sort((a, b) => b.month - a.month);
-            const currentMonth = year === now.getFullYear() ? now.getMonth() : (monthsInYear.length > 0 ? monthsInYear[0].month : 0);
+            const currentMonth = this.selectedMonth !== null ? this.selectedMonth : (year === now.getFullYear() ? now.getMonth() : 0);
             if (which === 'current') return `${this.MONTHS[currentMonth]} ${year}`;
             const pm = currentMonth === 0 ? 11 : currentMonth - 1;
             const py = currentMonth === 0 ? year - 1 : year;
             return `${this.MONTHS[pm]} ${py}`;
         } else if (this.selectedPeriod === 'weekly') {
-            if (which === 'current') return `This Week`;
-            return `Last Week`;
+            const offset = which === 'current' ? this.selectedWeekOffset : this.selectedWeekOffset - 1;
+            const start = dayjs().add(offset, 'week').startOf('week');
+            const end = dayjs().add(offset, 'week').endOf('week');
+            
+            if (offset === 0 && which === 'current') return 'This Week';
+            if (offset === -1 && which === 'previous') return 'Last Week';
+            
+            return `${start.format('D MMM')} - ${end.format('D MMM YYYY')}`;
         } else {
             return which === 'current' ? `${year}` : `${year - 1}`;
         }
@@ -630,6 +646,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
     selectPeriod(period: 'weekly' | 'monthly' | 'yearly'): void {
         this.selectedPeriod = period;
+        this.selectedWeekOffset = 0;
+        this.selectedMonth = null;
         // Optionally update the global app view here if desired
         // e.g. this.appViewService.setAppView(period.toUpperCase());
         this.computePeriodSummary();
@@ -637,12 +655,64 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
     selectYear(year: number): void {
         this.selectedYear = year;
+        this.selectedMonth = null;
+        this.selectedWeekOffset = 0;
         this.computePeriodSummary();
     }
 
     selectTab(tab: 'summary' | 'forecast'): void {
         this.activeTab = tab;
         this.cdr.markForCheck();
+    }
+
+    previousMonth(): void {
+        if (this.selectedPeriod !== 'monthly') return;
+        if (this.selectedMonth === null) {
+            const now = new Date();
+            this.selectedMonth = this.selectedYear === now.getFullYear() ? now.getMonth() : 0;
+        }
+        
+        if (this.selectedMonth === 0) {
+            this.selectedMonth = 11;
+            this.selectedYear--;
+            if (this.availableYears.length > 0 && !this.availableYears.includes(this.selectedYear)) {
+                this.availableYears = [...this.availableYears, this.selectedYear].sort((a,b) => b - a);
+            }
+        } else {
+            this.selectedMonth--;
+        }
+        this.computePeriodSummary();
+    }
+
+    nextMonth(): void {
+        if (this.selectedPeriod !== 'monthly') return;
+        if (this.selectedMonth === null) {
+            const now = new Date();
+            this.selectedMonth = this.selectedYear === now.getFullYear() ? now.getMonth() : 0;
+        }
+        
+        if (this.selectedMonth === 11) {
+            this.selectedMonth = 0;
+            this.selectedYear++;
+            if (this.availableYears.length > 0 && !this.availableYears.includes(this.selectedYear)) {
+                this.availableYears = [...this.availableYears, this.selectedYear].sort((a,b) => b - a);
+            }
+        } else {
+            this.selectedMonth++;
+        }
+        this.computePeriodSummary();
+    }
+
+    previousWeek(): void {
+        if (this.selectedPeriod !== 'weekly') return;
+        this.selectedWeekOffset--;
+        this.computePeriodSummary();
+    }
+
+    nextWeek(): void {
+        if (this.selectedPeriod !== 'weekly') return;
+        this.selectedWeekOffset++;
+        this.computePeriodSummary();
     }
 
     formatCurrency(amount: number): string {

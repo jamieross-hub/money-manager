@@ -11,6 +11,7 @@ import {
   WritableSignal,
   Signal,
   effect,
+  input
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -90,6 +91,8 @@ export class MobileTransactionListComponent
   @Output() addTransaction = new EventEmitter<void>();
   @Output() importTransactions = new EventEmitter<void>();
 
+  isRecurring = input<boolean>(false);
+
   selectedTx: Transaction | null = null;
   showFilters: boolean = false;
 
@@ -133,6 +136,7 @@ export class MobileTransactionListComponent
   selectedDate = signal<Date | null>(null);
   selectedDateRange = signal<{ startDate: Date; endDate: Date } | null>(null);
   selectedSort = signal<string>('date-desc');
+  isRecurringFilter = signal<boolean | null>(null);
 
   // Computed View Models
   groupedTransactions = computed(() => {
@@ -283,7 +287,10 @@ export class MobileTransactionListComponent
     private readonly appViewService: AppViewService,
     public readonly userService: UserService,
     private readonly cdr: ChangeDetectorRef
-  ) { }
+  ) {
+    // Watch for Input changes and hook into filterService
+    // Effect removed because the parent TransactionListComponent already calls filterService.setIsRecurring() directly.
+  }
 
   ngOnInit() {
     this.setupFilterServiceSubscriptions();
@@ -377,6 +384,13 @@ export class MobileTransactionListComponent
         this.filterTransactions();
       })
     );
+
+    this.subscription.add(
+      this.filterService.isRecurring$.subscribe(isRec => {
+        this.isRecurringFilter.set(isRec);
+        this.filterTransactions();
+      })
+    );
   }
 
   // NOTE: We could use effects() instead of manual subscription + filterTransactions call,
@@ -406,7 +420,8 @@ export class MobileTransactionListComponent
         accountFilter: [],
         amountRange: { min: null, max: null },
         statusFilter: [],
-        tags: []
+        tags: [],
+        isRecurring: this.isRecurringFilter(),
       }
     );
 

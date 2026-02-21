@@ -4,7 +4,8 @@
 
         <!-- ═══════════ HEADER ═══════════ -->
         <div class="mb-10 mt-6 group relative">
-            <div class="grid items-start" style="grid-template-areas: 'stack';" (touchstart)="onSummaryTouchStart($event)" (touchend)="onSummaryTouchEnd($event)">
+            <div class="grid items-start" style="grid-template-areas: 'stack';"
+                (touchstart)="onSummaryTouchStart($event)" (touchend)="onSummaryTouchEnd($event)">
                 <!-- Category Card -->
                 <div class="w-full transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] cursor-pointer origin-top"
                     style="grid-area: stack;"
@@ -13,9 +14,9 @@
                         : 'z-0 -translate-y-4 scale-[0.97] opacity-60 blur-[1px] drop-shadow-md pointer-events-none group-hover:-translate-y-6'">
                     <app-category-summary-card class="block rounded-2xl"></app-category-summary-card>
                     <!-- view all category button -->
-                    <button 
-                        class="absolute bottom-4 hover:underline right-1 bg-white hover:bg-neutral-50 text-primary-600 border-none px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 transition-colors z-20 dark:bg-slate-800 dark:border-slate-700 dark:text-primary-400 dark:hover:bg-slate-700" 
-                        routerLink="/dashboard/category" >
+                    <button
+                        class="absolute bottom-4 hover:underline right-1 bg-white hover:bg-neutral-50 text-primary-600 border-none px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 transition-colors z-20 dark:bg-slate-800 dark:border-slate-700 dark:text-primary-400 dark:hover:bg-slate-700"
+                        routerLink="/dashboard/category">
                         View All Categories
                         <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">arrow_forward</mat-icon>
                     </button>
@@ -29,9 +30,9 @@
                         : 'z-0 -translate-y-4 scale-[0.97] opacity-60 blur-[1px] drop-shadow-md pointer-events-none group-hover:-translate-y-6'">
                     <app-account-summary-card class="block rounded-2xl"></app-account-summary-card>
 
-                    <button 
-                        class="absolute bottom-4 hover:underline right-1 bg-white hover:bg-neutral-50 text-primary-600 border-none px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 transition-colors z-20 dark:bg-slate-800 dark:border-slate-700 dark:text-primary-400 dark:hover:bg-slate-700" 
-                        routerLink="/dashboard/accounts" >
+                    <button
+                        class="absolute bottom-4 hover:underline right-1 bg-white hover:bg-neutral-50 text-primary-600 border-none px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 transition-colors z-20 dark:bg-slate-800 dark:border-slate-700 dark:text-primary-400 dark:hover:bg-slate-700"
+                        routerLink="/dashboard/accounts">
                         View All Accounts
                         <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">arrow_forward</mat-icon>
                     </button>
@@ -213,6 +214,15 @@
                                 </mat-card-content>
                             </mat-card>
 
+                            <div class="flex justify-center mt-10">
+                                <mat-button-toggle-group [value]="selectedPeriod" (change)="selectPeriod($event.value)"
+                                    appearance="standard" class="period-toggle">
+                                    <mat-button-toggle *ngFor="let p of periodOptions" [value]="p">
+                                        {{ p | titlecase }}
+                                    </mat-button-toggle>
+                                </mat-button-toggle-group>
+                            </div>
+
                             <!-- ═══════════ PERIOD SUMMARY ═══════════ -->
                             <mat-card class="!rounded-xl !border-none">
                                 <mat-card-content class="pt-4">
@@ -232,28 +242,38 @@
                                         </mat-form-field>
                                     </div>
 
+                                    <div class="flex items-center justify-between mb-4 flex-wrap gap-2 px-4">
+                                        <div class="flex items-center gap-1 w-full justify-between px-4">
+                                            <button *ngIf="selectedPeriod === 'monthly' || selectedPeriod === 'weekly'" 
+                                                (click)="selectedPeriod === 'monthly' ? previousMonth() : previousWeek()"
+                                                class="w-7 h-7 flex items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200 transition-colors text-neutral-600 cursor-pointer border-none outline-none dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-neutral-300">
+                                                <mat-icon class="!text-sm !w-auto !h-auto leading-none">chevron_left</mat-icon>
+                                            </button>
+
+                                            <span class="text-sm font-medium text-primary-600 flex items-center gap-2 mx-1 text-center">
+                                                {{ (breakpointService.device.isMobile && (selectedPeriod !== 'monthly' && selectedPeriod !== 'weekly')) ? "" : getPeriodLabel('current') }}
+
+                                                <mat-form-field appearance="fill"
+                                                    *ngIf="breakpointService.device.isMobile && (selectedPeriod !== 'monthly' && selectedPeriod !== 'weekly')"
+                                                    class="year-select-field !w-auto !text-primary-500 !bg-transparent !border-none mb-0">
+                                                    <mat-select [value]="selectedYear"
+                                                        (selectionChange)="selectYear($event.value)">
+                                                        <mat-option *ngFor="let y of availableYears" [value]="y">{{ y }}</mat-option>
+                                                    </mat-select>
+                                                </mat-form-field>
+                                            </span>
+
+                                            <button *ngIf="selectedPeriod === 'monthly' || selectedPeriod === 'weekly'" 
+                                                (click)="selectedPeriod === 'monthly' ? nextMonth() : nextWeek()"
+                                                class="w-7 h-7 flex items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200 transition-colors text-neutral-600 cursor-pointer border-none outline-none dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-neutral-300">
+                                                <mat-icon class="!text-sm !w-auto !h-auto leading-none">chevron_right</mat-icon>
+                                            </button>
+                                        </div>
+                                    </div>
+
                                     <!-- Current Period -->
                                     <div *ngIf="currentPeriodSummary" class="space-y-5">
                                         <div class="space-y-3">
-                                            <div class="flex items-center justify-between mb-1">
-                                                <span
-                                                    class="text-sm font-medium text-primary-600 flex items-center gap-2">
-                                                    {{ breakpointService.device.isMobile? "": currentPeriodSummary.label
-                                                    }}
-
-                                                    <mat-form-field appearance="fill"
-                                                        *ngIf="breakpointService.device.isMobile"
-                                                        class="year-select-field !w-auto !text-primary-500 !bg-transparent !border-none">
-                                                        <mat-select [value]="selectedYear"
-                                                            (selectionChange)="selectYear($event.value)">
-                                                            <mat-option *ngFor="let y of availableYears" [value]="y">{{
-                                                                y
-                                                                }}</mat-option>
-                                                        </mat-select>
-                                                    </mat-form-field>
-                                                </span>
-                                            </div>
-
                                             <!-- Income bar -->
                                             <div>
                                                 <div class="flex justify-between text-sm mb-1">
@@ -308,7 +328,7 @@
                                         </div>
 
                                         <!-- Previous Period Comparison -->
-                                        <div *ngIf="previousPeriodSummary"
+                                        <!-- <div *ngIf="previousPeriodSummary"
                                             class="p-4 bg-surface-100 rounded-lg border border-neutral-200">
                                             <div class="text-xs font-semibold text-neutral-400 uppercase mb-3">
                                                 vs {{ previousPeriodSummary.label }}
@@ -336,7 +356,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </div> -->
                                     </div>
 
                                     <!-- No data for period -->
@@ -345,15 +365,7 @@
                                         <p class="text-neutral-400 text-sm">No data for the selected period</p>
                                     </div>
 
-                                    <div class="flex justify-center mt-10">
-                                        <mat-button-toggle-group [value]="selectedPeriod"
-                                            (change)="selectPeriod($event.value)" appearance="standard"
-                                            class="period-toggle">
-                                            <mat-button-toggle *ngFor="let p of periodOptions" [value]="p">
-                                                {{ p | titlecase }}
-                                            </mat-button-toggle>
-                                        </mat-button-toggle-group>
-                                    </div>
+
                                 </mat-card-content>
 
 
@@ -427,19 +439,19 @@
 
 
 
-                            
+
 
                             @defer (on viewport) {
                             <!-- ═══════════ MONTHLY HISTORY ═══════════ -->
-                            <mat-card *ngIf="monthlySummaries.length > 0" class="!rounded-xl !border-none">
+                            <mat-card *ngIf="filteredMonthlySummaries.length > 0" class="!rounded-xl !border-none">
                                 <mat-card-content class="pt-4">
                                     <p class="text-lg font-semibold text-neutral-500 mb-5 flex items-center gap-2">
                                         <mat-icon class="text-primary-500">calendar_month</mat-icon>
-                                        Monthly History
+                                        Monthly History ({{ selectedYear }})
                                     </p>
 
                                     <div class="overflow-x-auto rounded-lg mat-elevation-z1">
-                                        <table mat-table [dataSource]="monthlySummaries"
+                                        <table mat-table [dataSource]="filteredMonthlySummaries"
                                             class="w-full history-table compact-table">
 
                                             <!-- Month Column -->

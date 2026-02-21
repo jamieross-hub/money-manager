@@ -70,6 +70,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   // UI State
   showFullTable = signal<boolean>(false);
   isTransactionsPage = signal<boolean>(false);
+  isRecurringTab = signal<boolean>(false);
 
   private destroy$ = new Subject<void>();
 
@@ -125,6 +126,9 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       if (params['tab'] === 'recurring') {
         this.selectedTabIndex.set(3);
         this.onTabChange(3);
+      } else {
+        this.selectedTabIndex.set(0);
+        this.onTabChange(0);
       }
       if (params['search']) {
         this.filterService.setSearchTerm(params['search']);
@@ -137,8 +141,10 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.selectedTabIndex.set(index);
     if (index === 3) {
       this.filterService.setIsRecurring(true);
+      this.isRecurringTab.set(true);
     } else {
       this.filterService.setIsRecurring(null);
+      this.isRecurringTab.set(false);
     }
   }
 
