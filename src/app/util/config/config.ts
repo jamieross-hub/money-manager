@@ -622,7 +622,8 @@ export const SUCCESS_MESSAGES = {
     SAVED: 'Changes saved successfully',
     DELETED: 'Item deleted successfully',
     CREATED: 'Item created successfully',
-    UPDATED: 'Item updated successfully'
+    UPDATED: 'Item updated successfully',
+    PROFILE_UPDATED: 'Profile updated successfully'
   },
 
   // Authentication success messages

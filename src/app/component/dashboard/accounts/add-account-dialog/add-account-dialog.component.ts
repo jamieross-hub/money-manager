@@ -178,16 +178,17 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
       description:             [''],
       // Loan fields
       lenderName:              [''],
-      loanAmount:              [0, this.validationService.getLoanAmountValidators()],
+      loanAmount:              ['', this.validationService.getLoanAmountValidators()],
       interestRate:            [0, this.validationService.getInterestRateValidators()],
       startDate:               [new Date()],
       durationMonths:          [12],
+      durationYears:           [1, [Validators.required, Validators.min(0.1)]],
       repaymentFrequency:      ['monthly'],
       status:                  ['active'],
       remainingBalance:        [0, [Validators.min(0)]],
       nextDueDate:             [new Date()],
       endDate:                 [nextYear],
-      customMonthlyPayment:    [0, [Validators.min(0)]],
+      customMonthlyPayment:    ['', [Validators.min(0)]],
       showReminder:            [true],
       createRecurringTransaction: [true],
       // Credit card fields
@@ -219,6 +220,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
         interestRate:            account.loanDetails.interestRate ?? 0,
         startDate:               toDate(account.loanDetails.startDate),
         durationMonths:          account.loanDetails.durationMonths,
+        durationYears:           Math.max(0.1, Math.round(dayjs(toDate(account.loanDetails.endDate ?? new Date())).diff(dayjs(toDate(account.loanDetails.startDate)), 'year', true) * 10) / 10),
         repaymentFrequency:      account.loanDetails.repaymentFrequency,
         status:                  account.loanDetails.status,
         remainingBalance:        account.loanDetails.remainingBalance,
@@ -262,12 +264,35 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
         }
       });
 
+    // Update endDate when durationYears changes
+    this.accountForm.get('durationYears')!.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(years => {
+        if (this.isLoanAccount() && this.accountForm.get('durationYears')?.dirty && years > 0) {
+          const startDate = this.accountForm.get('startDate')?.value;
+          if (startDate) {
+            const endDate = dayjs(startDate).add(years, 'year').toDate();
+            this.accountForm.patchValue({ endDate }, { emitEvent: false });
+            this.recalculateRemainingBalance();
+            this.autoDeriveLoanInterestRate();
+          }
+        }
+      });
+
     // Recalculate remaining balance & auto-derive interest rate on loan field changes
     for (const field of ['loanAmount', 'startDate', 'endDate', 'customMonthlyPayment']) {
       this.accountForm.get(field)!.valueChanges
         .pipe(takeUntil(this.destroy$))
         .subscribe(() => {
           if (this.isLoanAccount()) {
+            if ((field === 'startDate' || field === 'endDate') && this.accountForm.get(field)?.dirty) {
+               const start = this.accountForm.get('startDate')?.value;
+               const end = this.accountForm.get('endDate')?.value;
+               if (start && end) {
+                  const y = Math.max(0.1, Math.round(dayjs(end).diff(dayjs(start), 'year', true) * 10) / 10);
+                  this.accountForm.patchValue({ durationYears: y }, { emitEvent: false });
+               }
+            }
             this.recalculateRemainingBalance();
             this.autoDeriveLoanInterestRate();
           }
@@ -291,7 +316,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
   }
 
   private updateValidatorsForAccountType(type: string): void {
-    const loanFields   = ['lenderName', 'loanAmount', 'interestRate', 'durationMonths', 'nextDueDate', 'endDate', 'customMonthlyPayment'];
+    const loanFields   = ['lenderName', 'loanAmount', 'interestRate', 'durationMonths', 'durationYears', 'nextDueDate', 'endDate', 'customMonthlyPayment'];
     const creditFields = ['dueDate', 'billingCycleStart', 'creditLimit', 'minimumPayment'];
     const allFields    = [...loanFields, ...creditFields];
 
@@ -301,6 +326,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
       this.accountForm.get('lenderName')?.setValidators([Validators.required]);
       this.accountForm.get('loanAmount')?.setValidators([Validators.required, ...this.validationService.getLoanAmountValidators()]);
       this.accountForm.get('interestRate')?.setValidators([Validators.required, ...this.validationService.getInterestRateValidators()]);
+      this.accountForm.get('durationYears')?.setValidators([Validators.required, Validators.min(0.1)]);
       this.accountForm.get('nextDueDate')?.setValidators([Validators.required]);
       this.accountForm.get('endDate')?.setValidators([Validators.required]);
       this.accountForm.get('customMonthlyPayment')?.setValidators([Validators.required, Validators.min(0)]);
@@ -323,7 +349,8 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
 
     if (principal > 0 && emi > 0 && months > 0) {
       const annualRate = this.solveInterestRateByBinarySearch(principal, emi, months);
-      this.accountForm.patchValue({ interestRate: Math.round(annualRate * 100) / 100 }, { emitEvent: false });
+      // Format to 2 decimal places to maintain precision but clean appearance
+      this.accountForm.patchValue({ interestRate: Number(annualRate.toFixed(2)) }, { emitEvent: false });
     }
   }
 
@@ -343,15 +370,21 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Binary search to find the annual interest rate (%) that matches the given EMI. */
+  /** Binary search to find the annual interest rate (%) that matches the given EMI exactly according to standard amortization formula. */
   private solveInterestRateByBinarySearch(principal: number, emi: number, months: number): number {
     if (emi <= principal / months) return 0;
-    let low = 0, high = 100;
+    let low = 0, high = 100; // Search between 0% and 100% annual interest
+    
+    // Perform binary search to find the exact rate
     for (let i = 0; i < 100; i++) {
-      const mid     = (low + high) / 2;
-      const r       = mid / 12 / 100;
-      const calcEmi = (principal * r * Math.pow(1 + r, months)) / (Math.pow(1 + r, months) - 1);
-      if (Math.abs(calcEmi - emi) < 0.0001) return mid;
+      const mid = (low + high) / 2;
+      const r = mid / 12 / 100; // Monthly interest rate as a decimal
+      
+      // Amortization formula: EMI = P * r * (1+r)^n / ((1+r)^n - 1)
+      const factor = Math.pow(1 + r, months);
+      const calcEmi = (principal * r * factor) / (factor - 1);
+      
+      if (Math.abs(calcEmi - emi) < 0.000001) return mid;
       calcEmi > emi ? (high = mid) : (low = mid);
     }
     return (low + high) / 2;
@@ -373,6 +406,19 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
     const monthsElapsed    = Math.max(0, Math.floor(dayjs().diff(dayjs(startDate), 'month', true)));
     const remainingBalance = Math.round(Math.max(0, loanAmount - monthsElapsed * monthlyPayment) * 100) / 100;
     this.accountForm.patchValue({ remainingBalance, balance: -remainingBalance }, { emitEvent: false });
+  }
+
+  updateEndDateFromDuration(): void {
+    if (!this.isLoanAccount()) return;
+    const years = this.accountForm.get('durationYears')?.value || 0;
+    const startDate = this.accountForm.get('startDate')?.value;
+
+    if (years > 0 && startDate) {
+      const endDate = dayjs(startDate).add(years, 'year').toDate();
+      this.accountForm.patchValue({ endDate }, { emitEvent: false });
+      this.recalculateRemainingBalance();
+      this.autoDeriveLoanInterestRate();
+    }
   }
 
   // ─── Submit ───────────────────────────────────────────────────────────────

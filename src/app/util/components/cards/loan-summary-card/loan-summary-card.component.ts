@@ -107,10 +107,12 @@ export class LoanSummaryCardComponent {
     if (!list.length) return new Date().getFullYear();
     const endYears = list.map((l) => {
       const start = this._toDate(l.loanDetails?.startDate);
-      const months = l.loanDetails?.durationMonths ?? 0;
-      return new Date(new Date(start).setMonth(start.getMonth() + months)).getFullYear();
+      const months = Number(l.loanDetails?.durationMonths) || 0;
+      const yr = new Date(new Date(start).setMonth(start.getMonth() + months)).getFullYear();
+      return isNaN(yr) ? new Date().getFullYear() : yr;
     });
-    return Math.max(...endYears);
+    const maxYr = Math.max(...endYears);
+    return isNaN(maxYr) ? new Date().getFullYear() : maxYr;
   });
 
   readonly remainingMonths = computed(() => {
@@ -119,15 +121,18 @@ export class LoanSummaryCardComponent {
     const now = new Date();
     const endDates = list.map((l) => {
       const start = this._toDate(l.loanDetails?.startDate);
-      const months = l.loanDetails?.durationMonths ?? 0;
+      const months = Number(l.loanDetails?.durationMonths) || 0;
       return new Date(new Date(start).setMonth(start.getMonth() + months));
     });
-    const latest = new Date(Math.max(...endDates.map((d) => d.getTime())));
-    return Math.max(
+    const validTimes = endDates.map((d) => d.getTime()).filter((t) => !isNaN(t));
+    if (!validTimes.length) return 0;
+    const latest = new Date(Math.max(...validTimes));
+    const result = Math.max(
       0,
       (latest.getFullYear() - now.getFullYear()) * 12 +
         (latest.getMonth() - now.getMonth())
     );
+    return isNaN(result) ? 0 : result;
   });
 
   readonly greeting = computed(() => {
@@ -158,15 +163,19 @@ export class LoanSummaryCardComponent {
           ? monthlyPmt
           : this._calcMonthly(loan);
       const start = this._toDate(details.startDate);
+      const months = Number(details.durationMonths) || 0;
       const endDate = new Date(
-        new Date(start).setMonth(start.getMonth() + (details.durationMonths ?? 0))
+        new Date(start).setMonth(start.getMonth() + months)
       );
       const now = new Date();
-      const moLeft = Math.max(
+      let moLeft = Math.max(
         0,
         (endDate.getFullYear() - now.getFullYear()) * 12 +
           (endDate.getMonth() - now.getMonth())
       );
+      if (isNaN(moLeft)) moLeft = 0;
+      const endYear = isNaN(endDate.getFullYear()) ? now.getFullYear() : endDate.getFullYear();
+
       return {
         index: i,
         name: loan.name,
@@ -179,7 +188,7 @@ export class LoanSummaryCardComponent {
         monthly,
         interestRate: details.interestRate ?? 0,
         moLeft,
-        endYear: endDate.getFullYear(),
+        endYear,
       };
     })
   );
@@ -198,7 +207,11 @@ export class LoanSummaryCardComponent {
     if (!value) return new Date();
     if (typeof value.toDate === 'function') return value.toDate();
     if (value instanceof Date) return new Date(value.getTime());
-    return new Date(value);
+    if (typeof value === 'object' && 'seconds' in value) {
+      return new Date(value.seconds * 1000);
+    }
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? new Date() : d;
   }
 
   private _calcMonthly(loan: Account): number {

@@ -63,8 +63,8 @@
 			<div class="space-y-4">
 				<!-- Lender & Principal -->
 				<div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
-					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Lender &amp; Principal</label>
-					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Lender, Principal &amp; Duration</label>
+					<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 						<mat-form-field appearance="fill" class="w-full">
 							<mat-label>Loan Name (Lender)</mat-label>
 							<input matInput formControlName="lenderName" placeholder="e.g. HDFC Home Loan" required>
@@ -81,6 +81,14 @@
 								<mat-error>{{ loanAmountValidationError() }}</mat-error>
 							}
 						</mat-form-field>
+						
+						<mat-form-field appearance="fill" class="w-full">
+							<mat-label>Duration (Years)</mat-label>
+							<input matInput type="number" formControlName="durationYears" placeholder="1" min="0.1" step="0.1" required (blur)="updateEndDateFromDuration()">
+							@if(accountForm.get('durationYears')?.hasError('required') || accountForm.get('durationYears')?.hasError('min')) {
+								<mat-error>Valid duration required</mat-error>
+							}
+						</mat-form-field>
 					</div>
 				</div>
 
@@ -91,11 +99,6 @@
 						<mat-form-field appearance="fill" class="w-full">
 							<mat-label>Monthly EMI</mat-label>
 							<input matInput type="number" formControlName="customMonthlyPayment" placeholder="0.00" (blur)="recalculateRemainingBalance()" required>
-						</mat-form-field>
-
-						<mat-form-field appearance="fill" class="w-full">
-							<mat-label>Interest Rate (%)</mat-label>
-							<input matInput type="number" formControlName="interestRate" placeholder="0.0" step="0.1" required>
 						</mat-form-field>
 
 						<mat-form-field appearance="fill" class="w-full">
@@ -110,6 +113,11 @@
 							<input matInput [matDatepicker]="endPicker" formControlName="endDate" (dateChange)="recalculateRemainingBalance()">
 							<mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
 							<mat-datepicker #endPicker></mat-datepicker>
+						</mat-form-field>
+
+						<mat-form-field appearance="fill" class="w-full">
+							<mat-label>Interest Rate (%)</mat-label>
+							<input matInput readonly type="number" formControlName="interestRate" placeholder="0.0" step="0.1" required>
 						</mat-form-field>
 					</div>
 				</div>

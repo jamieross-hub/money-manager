@@ -454,13 +454,13 @@ export class ProfileComponent {
           this.userService.storageService.setItem(`user-data-${updatedUser.uid}`, updatedUser);
           this.userService.userAuth$.next(updatedUser);
           this.userProfile.set(updatedUser);
-          this.notificationService.success('Profile updated successfully (saved locally)');
+          this.notificationService.success('Profile updated successfully.');
         } else {
           this.store.dispatch(ProfileActions.updateProfile({
             userId: profile.uid,
             profile: updatedUser
           }));
-          this.notificationService.success(SUCCESS_MESSAGES.GENERAL.UPDATED);
+          this.notificationService.success(SUCCESS_MESSAGES.GENERAL.PROFILE_UPDATED);
         }
 
         // Sync language with translation service

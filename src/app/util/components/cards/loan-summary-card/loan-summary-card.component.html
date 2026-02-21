@@ -20,14 +20,14 @@
 
       <div class="progress-section">
         <div class="progress-info">
-          <div class="progress-bar-container">
+          <!-- <div class="progress-bar-container">
             <div class="progress-bar" [style.width.%]="paidPercentage()"></div>
-          </div>
-          <span class="text-sm font-semibold">{{ paidPercentage() }}% · {{ remainingMonths() }} months left</span>
+          </div> -->
+          <span class="text-sm font-semibold">{{ remainingMonths() }} months left</span>
         </div>
         <div class="paid-info text-right">
           <p class="text-xs opacity-90 m-0">Paid so far</p>
-          <p class="text-2xl font-bold m-0">{{ totalPaid() | currency:{compact:true,round:true} }}</p>
+          <p class="text-2xl font-bold m-0">{{ totalPaid() | currency:{compact:true} }}</p>
         </div>
       </div>
     </div>
@@ -120,7 +120,7 @@
           <div class="loan-card-footer">
             <span class="loan-rate">
               <mat-icon class="rate-icon">percent</mat-icon>
-              {{ item.interestRate }}% p.a.
+              {{ item.interestRate }} p.a.
             </span>
             <span class="loan-end-year">
               <mat-icon class="rate-icon">flag</mat-icon>
