@@ -267,7 +267,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
             name: group.name,
             accounts: accountViewModels,
             totalBalance,
-            formattedTotalBalance: this.currencyService.formatAmount(totalBalance),
+            formattedTotalBalance: this.currencyService.formatAmount(totalBalance ,{compact:true}),
             isCollapsed: collapsedMap.get(group.id) || false,
             count: groupAccounts.length
           } as GroupViewModel;
@@ -346,8 +346,19 @@ export class AccountsComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
         try {
+          // Delete all transactions linked to this account first
+          const linkedTransactions = this.transactions.filter(t => t.accountId === account.accountId);
+          linkedTransactions.forEach(t => {
+            this.store.dispatch(TransactionsActions.deleteTransaction({ userId: this.userId, transactionId: t.id! }));
+          });
+
+          // Then delete the account itself
           this.store.dispatch(AccountsActions.deleteAccount({ userId: this.userId, accountId: account.accountId }));
-          this.notificationService.success('Account deleted successfully');
+
+          const txMsg = linkedTransactions.length > 0
+            ? ` and ${linkedTransactions.length} linked transaction(s) deleted.`
+            : '';
+          this.notificationService.success(`Account deleted successfully${txMsg}`);
         } catch (error) {
           this.notificationService.error('Failed to delete account');
           console.error('Error deleting account:', error);

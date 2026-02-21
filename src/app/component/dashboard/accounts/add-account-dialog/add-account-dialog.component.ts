@@ -420,11 +420,34 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
       } else {
         const newAccountId = await this.accountsService.createAccount(uid, accountData).toPromise();
 
-        if (isLoan && newAccountId && formData.createRecurringTransaction) {
-          this.scheduleLoanPaymentRecurringTransaction(accountData, newAccountId);
-          this.notificationService.success('Loan account created! A recurring transaction for payments has been set up.');
-        } else if (isLoan) {
-          this.notificationService.success('Loan account created successfully!');
+        if (isLoan && newAccountId) {
+          // Count how many payment dates have already occurred by iterating
+          // month by month on the start day. e.g. start=Nov 7 → counts Nov 7,
+          // Dec 7, Jan 7, Feb 7 (all ≤ today Feb 21) = 4, NOT 3 from Math.floor.
+          const startDayjs = dayjs(formData.startDate);
+          const today = dayjs().startOf('day');
+          let pastMonths = 0;
+          let paymentDate = startDayjs.startOf('day');
+          while (!paymentDate.isAfter(today)) {
+            pastMonths++;
+            paymentDate = paymentDate.add(1, 'month');
+          }
+
+          if (pastMonths > 0) {
+            // Backfill one COMPLETED transaction per month that has already passed
+            this.backfillPastLoanPayments(accountData, newAccountId, pastMonths);
+          }
+
+          if (formData.createRecurringTransaction) {
+            this.scheduleLoanPaymentRecurringTransaction(accountData, newAccountId);
+            this.notificationService.success(
+              pastMonths > 0
+                ? `Loan account created! ${pastMonths} past payment(s) recorded and recurring payments scheduled.`
+                : 'Loan account created! A recurring transaction for payments has been set up.'
+            );
+          } else {
+            this.notificationService.success('Loan account created successfully!');
+          }
         } else {
           this.notificationService.success('Account added successfully');
         }
@@ -467,6 +490,71 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
     );
   }
 
+  /**
+   * Create one COMPLETED transaction for each month that has already elapsed
+   * since the loan start date. This backfills the payment history so the
+   * account's transaction list reflects reality when the loan is entered late.
+   */
+  private backfillPastLoanPayments(accountData: any, accountId: string, monthsElapsed: number): void {
+    const { loanDetails } = accountData;
+    const uid = this.currentUserId();
+    const emi = this.loanMonthlyPayment();
+    const startDate = dayjs(loanDetails.startDate);
+    // Payment day is always the same day-of-month as the loan start date.
+    // e.g. start = 07 Dec 2025 → every payment falls on the 7th of its month.
+    const paymentDay = startDate.date();
+
+    this.findOrCreateLoanPaymentCategory(uid).pipe(
+      switchMap(categoryId => {
+        if (!categoryId) throw new Error('Failed to find/create loan payment category');
+
+        // Build one transaction per elapsed month
+        const pastPayments = Array.from({ length: monthsElapsed }, (_, i) => {
+          // Payment date = same day-of-month, in month (startMonth + i)
+          const paymentDate = startDate.add(i, 'month').date(paymentDay).toDate();
+
+          const tx: Omit<Transaction, 'id'> = {
+            userId:            uid,
+            accountId,
+            categoryId,
+            category:          'Loan Payment',
+            payee:             loanDetails.lenderName,
+            amount:            emi,
+            type:              TransactionType.EXPENSE,
+            date:              paymentDate,
+            notes:             `EMI payment for ${loanDetails.lenderName} loan (month ${i + 1})`,
+            status:            TransactionStatus.COMPLETED,
+            paymentMethod:     PaymentMethod.BANK_TRANSFER,
+            isRecurring:       true,
+            recurringInterval: loanDetails.repaymentFrequency === 'weekly' ? RecurringInterval.WEEKLY : RecurringInterval.MONTHLY,
+            createdAt:         new Date(),
+            updatedAt:         new Date(),
+            createdBy:         uid,
+            updatedBy:         uid,
+            syncStatus:        'synced' as any,
+            isPending:         false,
+            lastSyncedAt:      new Date(),
+          };
+          return this.transactionsService.createTransaction(uid, tx);
+        });
+
+        // Fire them in parallel
+        return pastPayments.length > 0
+          ? new Observable(observer => {
+              Promise.all(pastPayments.map(obs => obs.toPromise()))
+                .then(() => { observer.next(); observer.complete(); })
+                .catch(err => observer.error(err));
+            })
+          : of(null);
+      })
+    ).subscribe({
+      error: err => {
+        console.error('Failed to backfill past loan payments:', err);
+        this.notificationService.warning('Loan created but some past payments could not be recorded');
+      }
+    });
+  }
+
   private scheduleLoanPaymentRecurringTransaction(accountData: any, accountId: string): void {
     const { loanDetails } = accountData;
     const uid = this.currentUserId();
@@ -478,6 +566,17 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
         const recurringEndDate = new Date(loanDetails.startDate);
         recurringEndDate.setMonth(recurringEndDate.getMonth() + loanDetails.durationMonths);
 
+        // Derive nextDueDate from the startDate's day-of-month.
+        // e.g. start = 07/12/2025 → recurring fires on the 7th of each month.
+        const startDay = dayjs(loanDetails.startDate).date();
+        const today = dayjs();
+        // Try this month's occurrence first; if it has already passed, use next month
+        let nextDueDate = today.date(startDay).startOf('day');
+        if (nextDueDate.isBefore(today, 'day')) {
+          nextDueDate = nextDueDate.add(1, 'month');
+        }
+        const nextDueDateAsDate = nextDueDate.toDate();
+
         const transaction: Omit<Transaction, 'id'> = {
           userId:              uid,
           accountId,
@@ -486,20 +585,20 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
           payee:               loanDetails.lenderName,
           amount:              this.loanMonthlyPayment(),
           type:                TransactionType.EXPENSE,
-          date:                new Date(),
+          date:                nextDueDateAsDate,          // first future payment, not today
           notes:               `Monthly payment for ${loanDetails.lenderName} loan`,
-          status:              TransactionStatus.COMPLETED,
+          status:              TransactionStatus.PENDING, // upcoming — not yet debited
           paymentMethod:       PaymentMethod.BANK_TRANSFER,
           isRecurring:         true,
           recurringInterval:   loanDetails.repaymentFrequency === 'weekly' ? RecurringInterval.WEEKLY : RecurringInterval.MONTHLY,
           recurringEndDate,
-          nextOccurrence:      loanDetails.nextDueDate,
+          nextOccurrence:      nextDueDateAsDate,
           createdAt:           new Date(),
           updatedAt:           new Date(),
           createdBy:           uid,
           updatedBy:           uid,
           syncStatus:          'synced' as any,
-          isPending:           false,
+          isPending:           true,
           lastSyncedAt:        new Date(),
         };
 
