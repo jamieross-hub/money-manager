@@ -44,6 +44,20 @@ export class SummaryComponent {
                 icon: 'account_balance',
                 color: 'primary',
                 tooltip: 'Add a new account'
+            },
+            {
+                id: 'view-categories',
+                label: 'View Categories',
+                icon: 'view_list',
+                color: 'basic',
+                tooltip: 'View all categories'
+            },
+            {
+                id: 'view-accounts',
+                label: 'View Accounts',
+                icon: 'account_balance_wallet',
+                color: 'basic',
+                tooltip: 'View all accounts'
             }
         ]
     };
@@ -79,6 +93,14 @@ export class SummaryComponent {
                     this.hapticFeedback.lightVibration();
                     this.router.navigate(['/dashboard/accounts']);
                 });
+                break;
+            
+            case 'view-categories':
+                this.router.navigate(['/dashboard/category']);
+                break;
+            
+            case 'view-accounts':
+                this.router.navigate(['/dashboard/accounts']);
                 break;
         }
     }

@@ -473,7 +473,7 @@
 						Tax Amount
 					</label>
 					<input type="number" formControlName="taxAmount" placeholder="0.00" step="0.01"
-						(input)="onTaxAmountChange()" [disabled]="viewMode"
+						(input)="updateTaxCalculations('taxAmount')" [disabled]="viewMode"
 						class="w-full py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 						[class.bg-gray-100]="viewMode" />
 					@if(transactionForm.get('taxAmount')?.hasError('min') && transactionForm.get('taxAmount')?.touched)
@@ -488,7 +488,7 @@
 						Tax Percentage (%)
 					</label>
 					<input type="number" formControlName="taxPercentage" placeholder="0" step="0.01" min="0" max="100"
-						(input)="onTaxPercentageChange()" [disabled]="viewMode"
+						(input)="updateTaxCalculations('percentage')" [disabled]="viewMode"
 						class="w-full py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 						[class.bg-gray-100]="viewMode" />
 					<div class="flex justify-between items-center mt-1">
