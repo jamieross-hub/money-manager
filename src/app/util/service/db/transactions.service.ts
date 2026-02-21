@@ -118,6 +118,15 @@ export class TransactionsService extends BaseService {
                             console.error('Failed to create transaction online:', error);
                             // Fall back to offline mode
                             await this.addToSyncQueue('create', transactionData);
+                            
+                            // Update account balance even if offline
+                            this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
+                                userId: userId,
+                                accountId: transaction.accountId,
+                                transactionType: 'create',
+                                newTransaction: transactionData as Transaction
+                            }));
+
                             // Add to store immediately for offline transactions
                             this.store.dispatch(TransactionsActions.createTransactionSuccess({
                                 transaction: transactionData as Transaction
@@ -131,6 +140,15 @@ export class TransactionsService extends BaseService {
                     } else {
                         // Store offline
                         await this.addToSyncQueue('create', transactionData);
+
+                        // Update account balance even if offline
+                        this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
+                            userId: userId,
+                            accountId: transaction.accountId,
+                            transactionType: 'create',
+                            newTransaction: transactionData as Transaction
+                        }));
+
                         // Add to store immediately for offline transactions
                         this.store.dispatch(TransactionsActions.createTransactionSuccess({
                             transaction: transactionData as Transaction
@@ -171,13 +189,22 @@ export class TransactionsService extends BaseService {
 
                 // Update account balance if amount or account changed
                 if (updatedTransaction.amount || updatedTransaction.accountId) {
-                    this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
-                        userId: userId,
-                        accountId: updatedTransaction.accountId || oldTransaction.accountId,
-                        transactionType: 'update',
-                        oldTransaction: oldTransaction as Transaction,
-                        newTransaction: newTransaction as Transaction
-                    }));
+                    if (updatedTransaction.accountId && updatedTransaction.accountId !== oldTransaction.accountId) {
+                        this.store.dispatch(AccountsActions.updateAccountBalanceForAccountTransfer({
+                            userId: userId,
+                            oldAccountId: oldTransaction.accountId,
+                            newAccountId: updatedTransaction.accountId,
+                            transaction: newTransaction as Transaction
+                        }));
+                    } else {
+                        this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
+                            userId: userId,
+                            accountId: oldTransaction.accountId,
+                            transactionType: 'update',
+                            oldTransaction: oldTransaction as Transaction,
+                            newTransaction: newTransaction as Transaction
+                        }));
+                    }
                 }
             }
             return of(undefined);
@@ -186,6 +213,10 @@ export class TransactionsService extends BaseService {
         return new Observable<void>(observer => {
             const updateTransactionAsync = async () => {
                 try {
+                    // Fetch old transaction for balance calculation
+                    const cachedTransactions = this.getCachedTransactions(userId);
+                    const oldTransaction = cachedTransactions.find(t => t.id === transactionId);
+
                     const updateData = {
                         ...updatedTransaction,
                         updatedAt: new Date(),
@@ -193,27 +224,44 @@ export class TransactionsService extends BaseService {
                         syncStatus: this.commonSyncService.isCurrentlyOnline() ? SyncStatus.SYNCED : SyncStatus.PENDING
                     };
 
+                    const newTransaction = { ...oldTransaction, ...updateData } as Transaction;
+
+                    const handleBalanceUpdate = () => {
+                        if (oldTransaction && (updatedTransaction.amount !== undefined || (updatedTransaction.accountId && updatedTransaction.accountId !== oldTransaction.accountId))) {
+                            if (updatedTransaction.accountId && updatedTransaction.accountId !== oldTransaction.accountId) {
+                                // Account changed - use account transfer action
+                                this.store.dispatch(AccountsActions.updateAccountBalanceForAccountTransfer({
+                                    userId: userId,
+                                    oldAccountId: oldTransaction.accountId,
+                                    newAccountId: updatedTransaction.accountId,
+                                    transaction: newTransaction
+                                }));
+                            } else {
+                                // Only amount or other details changed - use standard update action
+                                this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
+                                    userId: userId,
+                                    accountId: oldTransaction.accountId,
+                                    transactionType: 'update',
+                                    oldTransaction: oldTransaction,
+                                    newTransaction: newTransaction
+                                }));
+                            }
+                        }
+                    };
+
                     if (this.commonSyncService.isCurrentlyOnline()) {
                         try {
                             const transactionRef = doc(this.firestore, `users/${userId}/transactions/${transactionId}`);
                             
                             // 1. Dispatch store updates immediately (Optimistic)
-                            if (updatedTransaction.amount || updatedTransaction.accountId) {
-                                this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
-                                    userId: userId,
-                                    accountId: updatedTransaction.accountId || '',
-                                    transactionType: 'update',
-                                    oldTransaction: { id: transactionId } as Transaction,
-                                    newTransaction: updateData as Transaction
-                                }));
-                            }
+                            handleBalanceUpdate();
 
                             this.store.dispatch(TransactionsActions.updateTransactionSuccess({
-                                transaction: { id: transactionId, ...updateData } as Transaction
+                                transaction: newTransaction
                             }));
 
                             // 2. Update cache immediately
-                            this.updateTransactionCache(userId, 'update', { id: transactionId, ...updateData } as Transaction);
+                            this.updateTransactionCache(userId, 'update', newTransaction);
 
                             // 3. Perform Firestore operation
                             await updateDoc(transactionRef, updateData);
@@ -223,25 +271,33 @@ export class TransactionsService extends BaseService {
                         } catch (error) {
                             console.error('Failed to update transaction online:', error);
                             await this.addToSyncQueue('update', { id: transactionId, ...updateData });
+
+                            // Handle balance update even if offline
+                            handleBalanceUpdate();
+
                             // Update store immediately for offline transactions
                             this.store.dispatch(TransactionsActions.updateTransactionSuccess({
-                                transaction: { id: transactionId, ...updateData } as Transaction
+                                transaction: newTransaction
                             }));
 
                             // Update cache
-                            this.updateTransactionCache(userId, 'update', { id: transactionId, ...updateData } as Transaction);
+                            this.updateTransactionCache(userId, 'update', newTransaction);
                             observer.next();
                             observer.complete();
                         }
                     } else {
                         await this.addToSyncQueue('update', { id: transactionId, ...updateData });
+
+                        // Handle balance update even if offline
+                        handleBalanceUpdate();
+
                         // Update store immediately for offline transactions
                         this.store.dispatch(TransactionsActions.updateTransactionSuccess({
-                            transaction: { id: transactionId, ...updateData } as Transaction
+                            transaction: newTransaction
                         }));
 
                         // Update cache
-                        this.updateTransactionCache(userId, 'update', { id: transactionId, ...updateData } as Transaction);
+                        this.updateTransactionCache(userId, 'update', newTransaction);
                         observer.next();
                         observer.complete();
                     }
@@ -278,61 +334,62 @@ export class TransactionsService extends BaseService {
         }
 
         return new Observable<void>(observer => {
-            // Get transaction data for balance update first
+            // Get transaction data for balance update first from cache
+            const cachedTransactions = this.getCachedTransactions(userId);
+            const transactionToDelete = cachedTransactions.find(t => t.id === transactionId);
+
+            const handleBalanceDeletion = () => {
+                if (transactionToDelete) {
+                    this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
+                        userId: userId,
+                        accountId: transactionToDelete.accountId,
+                        transactionType: 'delete',
+                        oldTransaction: transactionToDelete
+                    }));
+
+                    // Handle split transaction deletion if needed
+                    if (transactionToDelete.isSplitTransaction) {
+                        this.splitwiseService.deleteSplitTransaction(transactionToDelete.id!, userId).catch(error => {
+                            console.error('Failed to delete split transaction:', error);
+                        });
+                    }
+                }
+            };
+
             const transactionRef = doc(this.firestore, `users/${userId}/transactions/${transactionId}`);
 
-            getDoc(transactionRef).then(transactionDoc => {
-                const transactionToDelete = transactionDoc.exists() ? { id: transactionDoc.id, ...transactionDoc.data() } as Transaction : null;
+            if (this.commonSyncService.isCurrentlyOnline()) {
+                // 1. Dispatch store updates immediately (Optimistic)
+                handleBalanceDeletion();
 
-                if (this.commonSyncService.isCurrentlyOnline()) {
-                    // 1. Dispatch store updates immediately (Optimistic)
-                    if (transactionToDelete) {
-                        this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
-                            userId: userId,
-                            accountId: transactionToDelete.accountId,
-                            transactionType: 'delete',
-                            oldTransaction: transactionToDelete
-                        }));
+                this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ transactionId }));
 
-                        // Handle split transaction deletion if needed
-                        if (transactionToDelete.isSplitTransaction) {
-                            this.splitwiseService.deleteSplitTransaction(transactionToDelete.id!, userId).catch(error => {
-                                console.error('Failed to delete split transaction:', error);
-                            });
-                        }
-                    }
+                // 2. Update cache immediately
+                this.updateTransactionCache(userId, 'delete', { id: transactionId } as Transaction);
+
+                // 3. Perform Firestore operation
+                deleteDoc(transactionRef).then(() => {
+                    observer.next();
+                    observer.complete();
+                }).catch(error => {
+                    console.error('Failed to delete transaction online, but already removed from local UI:', error);
+                    observer.error(error);
+                });
+            } else {
+                // Offline mode - add to sync queue
+                this.addToSyncQueue('delete', { id: transactionId }).then(() => {
+                    // Handle balance deletion locally even if offline
+                    handleBalanceDeletion();
 
                     this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ transactionId }));
-
-                    // 2. Update cache immediately
                     this.updateTransactionCache(userId, 'delete', { id: transactionId } as Transaction);
-
-                    // 3. Perform Firestore operation
-                    deleteDoc(transactionRef).then(() => {
-                        observer.next();
-                        observer.complete();
-                    }).catch(error => {
-                        console.error('Failed to delete transaction online, but already removed from local UI:', error);
-                        // The background sync could potentially handle this if we were using a queue here too
-                        // But for now, we've already done the optimistic update.
-                        observer.error(error);
-                    });
-                } else {
-                    // Offline mode - add to sync queue
-                    this.addToSyncQueue('delete', { id: transactionId }).then(() => {
-                        this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ transactionId }));
-                        this.updateTransactionCache(userId, 'delete', { id: transactionId } as Transaction);
-                        observer.next();
-                        observer.complete();
-                    }).catch(error => {
-                        console.error('Failed to add to sync queue:', error);
-                        observer.error(error);
-                    });
-                }
-            }).catch(error => {
-                console.error('Failed to get transaction for deletion:', error);
-                observer.error(error);
-            });
+                    observer.next();
+                    observer.complete();
+                }).catch(error => {
+                    console.error('Failed to add to sync queue:', error);
+                    observer.error(error);
+                });
+            }
         });
     }
 

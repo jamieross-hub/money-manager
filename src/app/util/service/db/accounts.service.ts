@@ -227,8 +227,16 @@ export class AccountsService {
         let optimisticBalance = 0;
         
         // 1. Optimistic Update
+        const isGuest = userId === 'offline-guest';
+        let accounts: Account[] = [];
         const cacheKey = LocalStorageKeyHelper.getAccountsCacheKey(userId);
-        const accounts = this.localStorageUtility.getItem<Account[]>(cacheKey) || [];
+
+        if (isGuest) {
+            accounts = this.localStorageUtility.getEntities<Account>('accounts');
+        } else {
+            accounts = this.localStorageUtility.getItem<Account[]>(cacheKey) || [];
+        }
+
         const index = accounts.findIndex(a => (a as any).accountId === accountId);
         
         if (index !== -1) {
@@ -263,7 +271,11 @@ export class AccountsService {
             account.updatedAt = new Date() as any;
             optimisticBalance = account.balance;
             
-            this.localStorageUtility.setItem(cacheKey, accounts);
+            if (isGuest) {
+                this.localStorageUtility.saveEntities('accounts', accounts);
+            } else {
+                this.localStorageUtility.setItem(cacheKey, accounts);
+            }
             this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...account } as any }));
         }
 
@@ -336,8 +348,15 @@ export class AccountsService {
         transactions: { accountId: string; type: 'income' | 'expense'; amount: number }[]
     ): Observable<void> {
         // 1. Optimistic Update
+        const isGuest = userId === 'offline-guest';
+        let accounts: Account[] = [];
         const cacheKey = LocalStorageKeyHelper.getAccountsCacheKey(userId);
-        const accounts = this.localStorageUtility.getItem<Account[]>(cacheKey) || [];
+
+        if (isGuest) {
+            accounts = this.localStorageUtility.getEntities<Account>('accounts');
+        } else {
+            accounts = this.localStorageUtility.getItem<Account[]>(cacheKey) || [];
+        }
         
         transactions.forEach(t => {
             const index = accounts.findIndex(a => (a as any).accountId === t.accountId);
@@ -353,7 +372,12 @@ export class AccountsService {
                 this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...account } as any }));
             }
         });
-        this.localStorageUtility.setItem(cacheKey, accounts);
+
+        if (isGuest) {
+            this.localStorageUtility.saveEntities('accounts', accounts);
+        } else {
+            this.localStorageUtility.setItem(cacheKey, accounts);
+        }
         
         if (this.isGuest()) {
             return of(undefined);
@@ -428,8 +452,16 @@ export class AccountsService {
         transaction: Transaction
     ): Observable<void> {
         // 1. Optimistic Update
+        const isGuest = userId === 'offline-guest';
+        let accounts: Account[] = [];
         const cacheKey = LocalStorageKeyHelper.getAccountsCacheKey(userId);
-        const accounts = this.localStorageUtility.getItem<Account[]>(cacheKey) || [];
+
+        if (isGuest) {
+            accounts = this.localStorageUtility.getEntities<Account>('accounts');
+        } else {
+            accounts = this.localStorageUtility.getItem<Account[]>(cacheKey) || [];
+        }
+
         const oldIndex = accounts.findIndex(a => (a as any).accountId === oldAccountId);
         const newIndex = accounts.findIndex(a => (a as any).accountId === newAccountId);
 
@@ -452,7 +484,11 @@ export class AccountsService {
             oldAccount.updatedAt = new Date() as any;
             newAccount.updatedAt = new Date() as any;
             
-            this.localStorageUtility.setItem(cacheKey, accounts);
+            if (isGuest) {
+                this.localStorageUtility.saveEntities('accounts', accounts);
+            } else {
+                this.localStorageUtility.setItem(cacheKey, accounts);
+            }
             this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...oldAccount } as any }));
             this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...newAccount } as any }));
         }

@@ -138,32 +138,63 @@ export const accountsReducer = createReducer(
     error
   })),
   
-  // Update Account Balance for Transaction
-  on(AccountsActions.updateAccountBalanceForTransaction, (state) => ({
-    ...state,
-    loading: true,
-    error: null
-  })),
-  
-  on(AccountsActions.updateAccountBalanceForTransactionSuccess, (state, { accountId, newBalance }) => {
+  // Update Account Balance for Transaction (Optimistic Reducer Logic)
+  on(AccountsActions.updateAccountBalanceForTransaction, (state, { accountId, transactionType, oldTransaction, newTransaction }) => {
     const account = state.entities[accountId];
-    if (account) {
-      return {
-        ...state,
-        entities: {
-          ...state.entities,
-          [accountId]: {
-            ...account,
-            balance: newBalance,
-            updatedAt: new Date()
-          }
-        },
-        loading: false,
-        error: null
+    if (!account) return { ...state, loading: true };
+
+    let balanceChange = 0;
+    let loanRemainingBalanceChange = 0;
+
+    const getEffect = (t: any) => {
+      const amount = Number(t.amount) || 0;
+      return t.type === 'income' ? amount : -amount;
+    };
+    const getLoanEffect = (t: any) => {
+      const amount = Number(t.amount) || 0;
+      return t.type === 'expense' ? -amount : 0;
+    };
+
+    if (transactionType === 'create' && newTransaction) {
+      balanceChange = getEffect(newTransaction);
+      if (account.type === 'loan') loanRemainingBalanceChange = getLoanEffect(newTransaction);
+    } else if (transactionType === 'update' && oldTransaction && newTransaction) {
+      balanceChange = getEffect(newTransaction) - getEffect(oldTransaction);
+      if (account.type === 'loan') loanRemainingBalanceChange = getLoanEffect(newTransaction) - getLoanEffect(oldTransaction);
+    } else if (transactionType === 'delete' && oldTransaction) {
+      balanceChange = -getEffect(oldTransaction);
+      if (account.type === 'loan') loanRemainingBalanceChange = -getLoanEffect(oldTransaction);
+    }
+
+    const updatedAccount = {
+      ...account,
+      balance: (Number(account.balance) || 0) + balanceChange,
+      updatedAt: new Date()
+    };
+
+    if (account.type === 'loan' && account.loanDetails) {
+      updatedAccount.loanDetails = {
+        ...account.loanDetails,
+        remainingBalance: Math.max(0, (Number(account.loanDetails.remainingBalance) || 0) + loanRemainingBalanceChange)
       };
     }
-    return state;
+
+    return {
+      ...state,
+      entities: {
+        ...state.entities,
+        [accountId]: updatedAccount
+      },
+      loading: true,
+      error: null
+    };
   }),
+  
+  on(AccountsActions.updateAccountBalanceForTransactionSuccess, (state, { accountId, newBalance }) => ({
+    ...state,
+    loading: false,
+    error: null
+  })),
   
   on(AccountsActions.updateAccountBalanceForTransactionFailure, (state, { error }) => ({
     ...state,
@@ -171,13 +202,41 @@ export const accountsReducer = createReducer(
     error
   })),
   
-  // Update Account Balance for Multiple Transactions
-  on(AccountsActions.updateAccountBalanceForTransactions, (state) => ({
-    ...state,
-    loading: true,
-    error: null
-  })),
-  
+  // Update Account Balance for Multiple Transactions (Optimistic Reducer Logic)
+  on(AccountsActions.updateAccountBalanceForTransactions, (state, { transactions }) => {
+    const updatedEntities = { ...state.entities };
+    
+    transactions.forEach(t => {
+      const account = updatedEntities[t.accountId];
+      if (account) {
+        const amount = Number(t.amount) || 0;
+        const balanceChange = t.type === 'income' ? amount : -amount;
+        
+        let updatedAccount = {
+          ...account,
+          balance: (Number(account.balance) || 0) + balanceChange,
+          updatedAt: new Date()
+        };
+
+        if (account.type === 'loan' && account.loanDetails && t.type === 'expense') {
+          updatedAccount.loanDetails = {
+            ...account.loanDetails,
+            remainingBalance: Math.max(0, (Number(account.loanDetails.remainingBalance) || 0) - amount)
+          };
+        }
+        
+        updatedEntities[t.accountId] = updatedAccount;
+      }
+    });
+
+    return {
+      ...state,
+      entities: updatedEntities,
+      loading: true,
+      error: null
+    };
+  }),
+
   on(AccountsActions.updateAccountBalanceForTransactionsSuccess, (state) => ({
     ...state,
     loading: false,
@@ -190,13 +249,54 @@ export const accountsReducer = createReducer(
     error
   })),
   
-  // Update Account Balance for Account Transfer
-  on(AccountsActions.updateAccountBalanceForAccountTransfer, (state) => ({
-    ...state,
-    loading: true,
-    error: null
-  })),
-  
+  // Update Account Balance for Account Transfer (Optimistic Reducer Logic)
+  on(AccountsActions.updateAccountBalanceForAccountTransfer, (state, { oldAccountId, newAccountId, transaction }) => {
+    const oldAccount = state.entities[oldAccountId];
+    const newAccount = state.entities[newAccountId];
+    
+    if (!oldAccount || !newAccount) return { ...state, loading: true };
+
+    const amount = Number(transaction.amount) || 0;
+    const transactionEffect = transaction.type === 'income' ? amount : -amount;
+
+    // Update old account (remove transaction effect)
+    const updatedOldAccount = {
+      ...oldAccount,
+      balance: (Number(oldAccount.balance) || 0) - transactionEffect,
+      updatedAt: new Date()
+    };
+    if (oldAccount.type === 'loan' && oldAccount.loanDetails && transaction.type === 'expense') {
+      updatedOldAccount.loanDetails = {
+        ...oldAccount.loanDetails,
+        remainingBalance: (Number(oldAccount.loanDetails.remainingBalance) || 0) + amount
+      };
+    }
+
+    // Update new account (add transaction effect)
+    const updatedNewAccount = {
+      ...newAccount,
+      balance: (Number(newAccount.balance) || 0) + transactionEffect,
+      updatedAt: new Date()
+    };
+    if (newAccount.type === 'loan' && newAccount.loanDetails && transaction.type === 'expense') {
+      updatedNewAccount.loanDetails = {
+        ...newAccount.loanDetails,
+        remainingBalance: Math.max(0, (Number(newAccount.loanDetails.remainingBalance) || 0) - amount)
+      };
+    }
+
+    return {
+      ...state,
+      entities: {
+        ...state.entities,
+        [oldAccountId]: updatedOldAccount,
+        [newAccountId]: updatedNewAccount
+      },
+      loading: true,
+      error: null
+    };
+  }),
+
   on(AccountsActions.updateAccountBalanceForAccountTransferSuccess, (state) => ({
     ...state,
     loading: false,

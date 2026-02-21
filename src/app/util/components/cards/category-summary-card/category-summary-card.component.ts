@@ -1,5 +1,5 @@
 
-import { ChangeDetectionStrategy, Component, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,11 +10,11 @@ import * as CategoriesSelectors from 'src/app/store/categories/categories.select
 import * as TransactionsSelectors from 'src/app/store/transactions/transactions.selectors';
 import { AppViewService } from 'src/app/util/service/app-view.service';
 import { DateService } from 'src/app/util/service/date.service';
-import { Subject, Observable, combineLatest, map } from 'rxjs';
 import { TransactionType } from 'src/app/util/config/enums';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 dayjs.extend(isBetween);
 
@@ -40,81 +40,69 @@ export interface CategorySummary {
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CategorySummaryCardComponent implements OnInit, OnDestroy {
-    public Math = Math;
-    private destroy$ = new Subject<void>();
+export class CategorySummaryCardComponent {
+    public readonly Math = Math;
+    private readonly store = inject(Store<AppState>);
+    public readonly appViewService = inject(AppViewService);
+    private readonly dateService = inject(DateService);
+    public readonly breakpointService = inject(BreakpointService);
 
-    public summary$: Observable<CategorySummary>;
+    private readonly categories = toSignal(this.store.select(CategoriesSelectors.selectAllCategories), { initialValue: [] });
+    private readonly transactions = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions), { initialValue: [] });
+    private readonly appView = toSignal(this.appViewService.appView$, { initialValue: 'MONTHLY' });
 
-    constructor(
-        private store: Store<AppState>,
-        public appViewService: AppViewService,
-        private dateService: DateService,
-        public breakpointService: BreakpointService
-    ) {
-        this.summary$ = combineLatest([
-            this.store.select(CategoriesSelectors.selectAllCategories),
-            this.store.select(TransactionsSelectors.selectAllTransactions),
-            this.appViewService.appView$
-        ]).pipe(
-            map(([categories, transactions, appView]) => {
-                const viewTransactions = transactions.filter(t => this.appViewService.isDateInView(t.date));
-                const totalExpense = viewTransactions.filter(t => t.type === TransactionType.EXPENSE).reduce((sum, t) => sum + Math.abs(t.amount), 0);
-                const totalIncome = viewTransactions.filter(t => t.type === TransactionType.INCOME).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+    public readonly summary = computed<CategorySummary>(() => {
+        const categories = this.categories();
+        const transactions = this.transactions();
+        const appView = this.appView();
 
-                // Previous Period Calculation
-                let prevExpense = 0;
-                let prevIncome = 0;
-                let prevStart: dayjs.Dayjs;
-                let prevEnd: dayjs.Dayjs;
+        const viewTransactions = transactions.filter(t => this.appViewService.isDateInView(t.date));
+        const totalExpense = viewTransactions.filter(t => t.type === TransactionType.EXPENSE).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        const totalIncome = viewTransactions.filter(t => t.type === TransactionType.INCOME).reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-                if (appView === 'WEEKLY') {
-                    prevStart = dayjs().subtract(1, 'week').startOf('week');
-                    prevEnd = dayjs().subtract(1, 'week').endOf('week');
-                } else if (appView === 'YEARLY') {
-                    prevStart = dayjs().subtract(1, 'year').startOf('year');
-                    prevEnd = dayjs().subtract(1, 'year').endOf('year');
-                } else {
-                    prevStart = dayjs().subtract(1, 'month').startOf('month');
-                    prevEnd = dayjs().subtract(1, 'month').endOf('month');
-                }
+        // Previous Period Calculation
+        let prevExpense = 0;
+        let prevIncome = 0;
+        let prevStart: dayjs.Dayjs;
+        let prevEnd: dayjs.Dayjs;
 
-                const prevTransactions = transactions.filter(t => {
-                    const tDate = dayjs(this.dateService.toDate(t.date));
-                    return tDate.isBetween(prevStart, prevEnd, undefined, '[]');
-                });
+        if (appView === 'WEEKLY') {
+            prevStart = dayjs().subtract(1, 'week').startOf('week');
+            prevEnd = dayjs().subtract(1, 'week').endOf('week');
+        } else if (appView === 'YEARLY') {
+            prevStart = dayjs().subtract(1, 'year').startOf('year');
+            prevEnd = dayjs().subtract(1, 'year').endOf('year');
+        } else {
+            prevStart = dayjs().subtract(1, 'month').startOf('month');
+            prevEnd = dayjs().subtract(1, 'month').endOf('month');
+        }
 
-                prevExpense = prevTransactions.filter(t => t.type === TransactionType.EXPENSE).reduce((sum, t) => sum + Math.abs(t.amount), 0);
-                prevIncome = prevTransactions.filter(t => t.type === TransactionType.INCOME).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        const prevTransactions = transactions.filter(t => {
+            const tDate = dayjs(this.dateService.toDate(t.date));
+            return tDate.isBetween(prevStart, prevEnd, undefined, '[]');
+        });
 
-                const calculateChange = (current: number, previous: number) => {
-                    if (previous === 0) return current > 0 ? 100 : 0;
-                    return ((current - previous) / previous) * 100;
-                };
+        prevExpense = prevTransactions.filter(t => t.type === TransactionType.EXPENSE).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        prevIncome = prevTransactions.filter(t => t.type === TransactionType.INCOME).reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-                const expenseChange = calculateChange(totalExpense, prevExpense);
-                const incomeChange = calculateChange(totalIncome, prevIncome);
+        const calculateChange = (current: number, previous: number) => {
+            if (previous === 0) return current > 0 ? 100 : 0;
+            return ((current - previous) / previous) * 100;
+        };
 
-                const expenseCount = categories.filter(c => c.type === 'expense').length;
-                const incomeCount = categories.filter(c => c.type === 'income').length;
+        const expenseChange = calculateChange(totalExpense, prevExpense);
+        const incomeChange = calculateChange(totalIncome, prevIncome);
 
-                return {
-                    totalExpense,
-                    totalIncome,
-                    expenseCount,
-                    incomeCount,
-                    expenseChange,
-                    incomeChange
-                };
-            })
-        );
-    }
+        const expenseCount = categories.filter(c => c.type === 'expense').length;
+        const incomeCount = categories.filter(c => c.type === 'income').length;
 
-    ngOnInit(): void {
-    }
-
-    ngOnDestroy(): void {
-        this.destroy$.next();
-        this.destroy$.complete();
-    }
+        return {
+            totalExpense,
+            totalIncome,
+            expenseCount,
+            incomeCount,
+            expenseChange,
+            incomeChange
+        };
+    });
 }

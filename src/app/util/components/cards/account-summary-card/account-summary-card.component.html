@@ -12,17 +12,17 @@
         <p class="balance-title text-xl font-medium !m-0 dark:text-slate-100">
           Total Balance
         </p>
-        <div class="balance-subtitle text-xs dark:text-slate-400">Balance across {{ (getPositiveAccounts().length ) +
-          (getNegativeAccounts().length ) }} accounts</div>
+        <div class="balance-subtitle text-xs dark:text-slate-400">Balance across {{ (positiveAccounts().length ) +
+          (negativeAccounts().length ) }} accounts</div>
       </div>
     </div>
 
     <div class="flex flex-col items-center w-full sm:items-end mt-3 sm:mt-0 min-w-0"
-      *ngIf="!breakpointService.device.isMobile">
+      *ngIf="!breakpointService.isMobile()">
       <span class="text-lg sm:text-xl font-semibold leading-none truncate"
-        [class.text-green-600]="((totalBalance$ | async) ?? 0) >= 0"
-        [class.text-red-500]="((totalBalance$ | async) ?? 0) < 0" aria-label="Total balance">
-        {{ (totalBalance$ | async) ?? 0 | currency:{round:true} }}
+        [class.text-green-600]="totalBalance() >= 0"
+        [class.text-red-500]="totalBalance() < 0" aria-label="Total balance">
+        {{ totalBalance() | currency:{round:true} }}
       </span>
       <span class="balance-period text-xs dark:text-slate-500">as of today</span>
     </div>
@@ -33,7 +33,7 @@
 
   <!-- Breakdown -->
   <div class="text-sm">
-    <div *ngIf="getPositiveAccounts().length" class="flex items-center gap-3">
+    <div *ngIf="positiveAccounts().length" class="flex items-center gap-3">
       <div
         class="asset-icon-wrap rounded-lg p-2 flex items-center justify-center dark:bg-green-900/20 dark:text-green-400">
         <mat-icon aria-hidden="true" class="dark:text-green-400">arrow_upward</mat-icon>
@@ -41,15 +41,15 @@
       <div class="w-full">
         <div class="flex items-center justify-between">
           <div class="breakdown-label dark:text-slate-300">Assets</div>
-          <div class="breakdown-subtitle text-xs dark:text-slate-400">{{ getPositiveAccounts().length }} accounts</div>
+          <div class="breakdown-subtitle text-xs dark:text-slate-400">{{ positiveAccounts().length }} accounts</div>
         </div>
         <div class="mt-1 font-medium text-green-600 dark:text-green-400" aria-label="Assets total">{{
-          getTotalPositiveBalance() | currency:{round:true}
+          totalPositiveBalance() | currency:{round:true}
           }}</div>
       </div>
     </div>
 
-    <div *ngIf="getNegativeAccounts()?.length" class="flex items-center gap-3">
+    <div *ngIf="negativeAccounts().length" class="flex items-center gap-3">
       <div
         class="liability-icon-wrap rounded-lg p-2 flex items-center justify-center dark:bg-red-900/20 dark:text-red-400">
         <mat-icon aria-hidden="true" class="dark:text-red-400">arrow_downward</mat-icon>
@@ -57,10 +57,10 @@
       <div class="w-full">
         <div class="flex items-center justify-between">
           <div class="breakdown-label dark:text-slate-300">Liabilities</div>
-          <div class="breakdown-subtitle text-xs dark:text-slate-400">{{ getNegativeAccounts().length }} accounts</div>
+          <div class="breakdown-subtitle text-xs dark:text-slate-400">{{ negativeAccounts().length }} accounts</div>
         </div>
         <div class="mt-1 font-medium text-red-500 dark:text-red-400" aria-label="Liabilities total">{{
-          getTotalNegativeBalance() |
+          totalNegativeBalance() |
           currency:{round:true} }}</div>
       </div>
     </div>

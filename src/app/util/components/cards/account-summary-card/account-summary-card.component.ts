@@ -1,5 +1,5 @@
-import { Component, Input, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
-import { Observable, Subject, takeUntil } from 'rxjs';
+import { Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { Store } from '@ngrx/store';
 import { Account, LoanDetails } from 'src/app/util/models/account.model';
 import { AccountType } from 'src/app/util/config/enums';
@@ -19,90 +19,67 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
   imports: [CommonModule, MatIconModule, MatCardModule, CurrencyPipe],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AccountSummaryCardComponent implements OnInit, OnDestroy {
+export class AccountSummaryCardComponent {
+  private readonly store = inject(Store<AppState>);
+  public readonly breakpointService = inject(BreakpointService);
 
-
-
-  // Observables from store
-  public accounts$: Observable<Account[]>;
-  public totalBalance$: Observable<number>;
-
-  public accounts: Account[] = [];
-  private destroy$ = new Subject<void>();
-
-  constructor(private store: Store<AppState>, public breakpointService: BreakpointService) {
-    // Initialize selectors
-    this.accounts$ = this.store.select(AccountsSelectors.selectAllAccounts);
-    this.totalBalance$ = this.store.select(AccountsSelectors.selectTotalBalance);
-  }
-
-  ngOnInit(): void {
-    this.accounts$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(accounts => {
-        this.accounts = accounts;
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
+  // Signals from store
+  public readonly accounts = toSignal(this.store.select(AccountsSelectors.selectAllAccounts), { initialValue: [] });
+  public readonly totalBalance = toSignal(this.store.select(AccountsSelectors.selectTotalBalance), { initialValue: 0 });
 
   /**
-   * Get positive balance accounts
+   * Positive balance accounts
    */
-  public getPositiveAccounts(): Account[] {
-    return this.accounts.filter(account => {
+  public readonly positiveAccounts = computed(() => 
+    this.accounts().filter(account => {
       if (account.type === AccountType.LOAN && account.loanDetails) {
-        // For loan accounts, check if remaining balance is negative (meaning it's paid off / overpaid)
         return -(account.loanDetails.remainingBalance || 0) > 0;
       }
       if (account.type === AccountType.CREDIT) {
-        return account.balance > 0; // Credit cards are only assets if overpaid
+        return account.balance > 0;
       }
       return account.balance >= 0;
-    });
-  }
+    })
+  );
 
   /**
-   * Get negative balance accounts
+   * Negative balance accounts
    */
-  public getNegativeAccounts(): Account[] {
-    return this.accounts.filter(account => {
+  public readonly negativeAccounts = computed(() => 
+    this.accounts().filter(account => {
       if (account.type === AccountType.LOAN && account.loanDetails) {
-        // For loan accounts, check if remaining balance is positive (meaning money is owed)
         return -(account.loanDetails.remainingBalance || 0) <= 0;
       }
       if (account.type === AccountType.CREDIT) {
-        return account.balance <= 0; // Credit cards are usually liabilities, even at $0
+        return account.balance <= 0;
       }
       return account.balance < 0;
-    });
-  }
+    })
+  );
 
   /**
-   * Get total positive balance
+   * Total positive balance
    */
-  public getTotalPositiveBalance(): number {
-    return this.getPositiveAccounts().reduce((total, account) => {
+  public readonly totalPositiveBalance = computed(() => 
+    this.positiveAccounts().reduce((total, account) => {
       if (account.type === AccountType.LOAN && account.loanDetails) {
         return total + (-(account.loanDetails.remainingBalance || 0));
       }
       return total + account.balance;
-    }, 0);
-  }
+    }, 0)
+  );
 
   /**
-   * Get total negative balance
+   * Total negative balance
    */
-  public getTotalNegativeBalance(): number {
-    return this.getNegativeAccounts().reduce((total, account) => {
+  public readonly totalNegativeBalance = computed(() => 
+    this.negativeAccounts().reduce((total, account) => {
       if (account.type === AccountType.LOAN) {
         const loanDetails = account.loanDetails as LoanDetails;
         return total - loanDetails.remainingBalance;
       }
       return total + account.balance;
-    }, 0);
-  }
-} 
+    }, 0)
+  );
+}
+ 
