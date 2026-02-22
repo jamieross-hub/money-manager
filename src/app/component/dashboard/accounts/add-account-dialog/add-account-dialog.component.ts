@@ -269,7 +269,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
         if (this.isLoanAccount() && this.accountForm.get('durationYears')?.dirty && years > 0) {
           const startDate = this.accountForm.get('startDate')?.value;
           if (startDate) {
-            const endDate = dayjs(startDate).add(years, 'year').toDate();
+            const endDate = dayjs(startDate).add(Math.round(Number(years) * 12), 'month').toDate();
             this.accountForm.patchValue({ endDate }, { emitEvent: false });
             this.recalculateRemainingBalance();
             this.autoDeriveLoanInterestRate();
@@ -283,13 +283,15 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe(() => {
           if (this.isLoanAccount()) {
-            if ((field === 'startDate' || field === 'endDate') && this.accountForm.get(field)?.dirty) {
-               const start = this.accountForm.get('startDate')?.value;
-               const end = this.accountForm.get('endDate')?.value;
-               if (start && end) {
-                  const y = Math.max(0.1, Math.round(dayjs(end).diff(dayjs(start), 'year', true) * 10) / 10);
-                  this.accountForm.patchValue({ durationYears: y }, { emitEvent: false });
-               }
+            if (field === 'startDate' && this.accountForm.get('startDate')?.dirty) {
+              this.updateEndDateFromDuration();
+            } else if (field === 'endDate' && this.accountForm.get('endDate')?.dirty) {
+              const start = this.accountForm.get('startDate')?.value;
+              const end = this.accountForm.get('endDate')?.value;
+              if (start && end) {
+                const y = Math.max(0.1, Math.round(dayjs(end).diff(dayjs(start), 'year', true) * 10) / 10);
+                this.accountForm.patchValue({ durationYears: y }, { emitEvent: false });
+              }
             }
             this.recalculateRemainingBalance();
             this.autoDeriveLoanInterestRate();
@@ -412,11 +414,30 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
     const startDate = this.accountForm.get('startDate')?.value;
 
     if (years > 0 && startDate) {
-      const endDate = dayjs(startDate).add(years, 'year').toDate();
+      const endDate = dayjs(startDate).add(Math.round(Number(years) * 12), 'month').toDate();
       this.accountForm.patchValue({ endDate }, { emitEvent: false });
       this.recalculateRemainingBalance();
       this.autoDeriveLoanInterestRate();
     }
+  }
+
+  /** Allow only digits and a single decimal point */
+  validateNumericInput(event: any, controlName: string): void {
+    const input = event.target as HTMLInputElement;
+    let value = input.value;
+    
+    // Remove characters that are not digits or a decimal point
+    value = value.replace(/[^0-9.]/g, '');
+    
+    // Ensure only one decimal point exists
+    const parts = value.split('.');
+    if (parts.length > 2) {
+      value = parts[0] + '.' + parts.slice(1).join('');
+    }
+    
+    // Update the input field value and the form control
+    input.value = value;
+    this.accountForm.get(controlName)?.setValue(value, { emitEvent: true });
   }
 
   // ─── Submit ───────────────────────────────────────────────────────────────
