@@ -1,508 +1,91 @@
-.account-statement-dialog {
-  max-width: 800px;
-  width: 90vw;
-  max-height: 90vh;
+@use '@angular/material' as mat;
+@use '../../../../../styles/dark-theme' as dark;
+@use '../../../../../styles/dialog-mixins' as mixins;
+
+:host {
+  @include mixins.dialog-host-responsive;
   display: flex;
   flex-direction: column;
-  background: var(--surface-color, #ffffff);
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
 
-  .dialog-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 24px;
-    background: var(--primary-color, #1976d2);
-    color: white;
+/* Dark theme background overhaul */
+:host-context(.dark-theme) {
+  background-color: mat.get-theme-color(dark.$dark-theme, neutral, 6);
+}
 
-    .header-content {
-      display: flex;
-      align-items: center;
-      gap: 16px;
+.bg-white,
+:host-context(.dark-theme) .bg-gray-800 {
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+  will-change: transform;
 
-      .header-icon {
-        font-size: 32px;
-        width: 32px;
-        height: 32px;
-      }
-
-      .header-text {
-        .dialog-title {
-          margin: 0;
-          font-size: 24px;
-          font-weight: 600;
-        }
-
-        .account-name {
-          margin: 4px 0 0 0;
-          font-size: 16px;
-          opacity: 0.9;
-        }
-      }
-    }
-
-    .close-button {
-      color: white;
-    }
+  :host-context(.dark-theme) & {
+    background-color: mat.get-theme-color(dark.$dark-theme, neutral, 10) !important;
   }
 
-  .loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 24px;
-    gap: 16px;
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 
-    p {
-      margin: 0;
-      color: var(--text-secondary, #666);
-    }
-  }
-
-  .error-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 24px;
-    gap: 16px;
-
-    .error-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
-      color: var(--error-color, #f44336);
-    }
-
-    .error-message {
-      margin: 0;
-      color: var(--error-color, #f44336);
-      text-align: center;
-    }
-  }
-
-  .dialog-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 24px;
-
-    .section-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 0 0 16px 0;
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--text-primary, #333);
-
-      mat-icon {
-        font-size: 20px;
-        width: 20px;
-        height: 20px;
-      }
-    }
-
-    // Balance Verification Section
-    .balance-verification-section {
-      background: var(--surface-variant, #f5f5f5);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 24px;
-
-      .balance-comparison {
-        display: grid;
-        gap: 12px;
-        margin-bottom: 16px;
-
-        .balance-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 8px 0;
-
-          &.difference {
-            border-top: 1px solid var(--divider-color, #e0e0e0);
-            padding-top: 12px;
-            font-weight: 600;
-
-            &.accurate {
-              color: var(--success-color, #4caf50);
-            }
-
-            &.positive {
-              color: var(--success-color, #4caf50);
-            }
-
-            &.negative {
-              color: var(--error-color, #f44336);
-            }
-          }
-
-          .balance-label {
-            font-weight: 500;
-            color: var(--text-secondary, #666);
-          }
-
-          .balance-value {
-            font-weight: 600;
-            font-size: 16px;
-          }
-        }
-      }
-
-      .balance-status {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px;
-        border-radius: 8px;
-        font-weight: 500;
-
-        &.accurate {
-          background: rgba(76, 175, 80, 0.1);
-          color: var(--success-color, #4caf50);
-        }
-
-        &.positive {
-          background: rgba(76, 175, 80, 0.1);
-          color: var(--success-color, #4caf50);
-        }
-
-        &.negative {
-          background: rgba(244, 67, 54, 0.1);
-          color: var(--error-color, #f44336);
-        }
-
-        mat-icon {
-          font-size: 20px;
-          width: 20px;
-          height: 20px;
-        }
-      }
-    }
-
-    // Summary Section
-    .summary-section {
-      margin-bottom: 24px;
-
-      .summary-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 16px;
-
-        .summary-item {
-          background: var(--surface-variant, #f5f5f5);
-          border-radius: 8px;
-          padding: 16px;
-          text-align: center;
-
-          &.positive {
-            border-left: 4px solid var(--success-color, #4caf50);
-          }
-
-          &.negative {
-            border-left: 4px solid var(--error-color, #f44336);
-          }
-
-          .summary-label {
-            display: block;
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--text-secondary, #666);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-          }
-
-          .summary-value {
-            display: block;
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-primary, #333);
-          }
-        }
-      }
-    }
-
-    // Transactions Section
-    .transactions-section {
-      .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-
-        .export-button {
-          font-size: 12px;
-          padding: 4px 12px;
-          min-width: auto;
-        }
-      }
-
-      .empty-state {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 60px 24px;
-        text-align: center;
-
-        .empty-icon {
-          font-size: 48px;
-          width: 48px;
-          height: 48px;
-          color: var(--text-secondary, #666);
-          margin-bottom: 16px;
-        }
-
-        .empty-text {
-          margin: 0;
-          color: var(--text-secondary, #666);
-        }
-      }
-
-      .transactions-list {
-        max-height: 400px;
-        overflow-y: auto;
-        border: 1px solid var(--divider-color, #e0e0e0);
-        border-radius: 8px;
-
-        .transaction-item {
-          padding: 16px;
-          border-bottom: 1px solid var(--divider-color, #e0e0e0);
-
-          &:last-child {
-            border-bottom: none;
-          }
-
-          .transaction-main {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-
-            .transaction-icon {
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              width: 40px;
-              height: 40px;
-              border-radius: 50%;
-              flex-shrink: 0;
-
-              &.positive {
-                background: rgba(76, 175, 80, 0.1);
-                color: var(--success-color, #4caf50);
-              }
-
-              &.negative {
-                background: rgba(244, 67, 54, 0.1);
-                color: var(--error-color, #f44336);
-              }
-
-              &.transfer {
-                background: rgba(156, 39, 176, 0.1);
-                color: var(--transfer-color, #9c27b0);
-              }
-
-              &.neutral {
-                background: rgba(158, 158, 158, 0.1);
-                color: var(--text-secondary, #666);
-              }
-
-              mat-icon {
-                font-size: 20px;
-                width: 20px;
-                height: 20px;
-              }
-            }
-
-            .transaction-details {
-              flex: 1;
-              min-width: 0;
-
-              .transaction-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-                margin-bottom: 4px;
-
-                .transaction-payee {
-                  font-weight: 500;
-                  color: var(--text-primary, #333);
-                  flex: 1;
-                  margin-right: 12px;
-                }
-
-                .transaction-amount {
-                  font-weight: 600;
-                  font-size: 16px;
-                  flex-shrink: 0;
-
-                  &.positive {
-                    color: var(--success-color, #4caf50);
-                  }
-
-                  &.negative {
-                    color: var(--error-color, #f44336);
-                  }
-
-                  &.transfer {
-                    color: var(--transfer-color, #9c27b0);
-                  }
-
-                  &.neutral {
-                    color: var(--text-secondary, #666);
-                  }
-                }
-              }
-
-              .transaction-meta {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-                font-size: 12px;
-                color: var(--text-secondary, #666);
-
-                                 .transaction-date {
-                   font-weight: 500;
-                 }
-
-                 .transaction-type {
-                   padding: 2px 8px;
-                   border-radius: 12px;
-                   font-size: 10px;
-                   font-weight: 600;
-                   text-transform: uppercase;
-                   letter-spacing: 0.5px;
-
-                   &.positive {
-                     background: rgba(76, 175, 80, 0.1);
-                     color: var(--success-color, #4caf50);
-                   }
-
-                   &.negative {
-                     background: rgba(244, 67, 54, 0.1);
-                     color: var(--error-color, #f44336);
-                   }
-
-                   &.transfer {
-                     background: rgba(156, 39, 176, 0.1);
-                     color: var(--transfer-color, #9c27b0);
-                   }
-
-                   &.neutral {
-                     background: rgba(158, 158, 158, 0.1);
-                     color: var(--text-secondary, #666);
-                   }
-                 }
-
-                 .transaction-category {
-                   background: var(--surface-variant, #f5f5f5);
-                   padding: 2px 8px;
-                   border-radius: 12px;
-                 }
-
-                .transaction-notes {
-                  font-style: italic;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  .dialog-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    padding: 24px;
-    border-top: 1px solid var(--divider-color, #e0e0e0);
-    background: var(--surface-color, #ffffff);
-
-    .cancel-button {
-      color: var(--text-secondary, #666);
-    }
-
-    .export-button {
-      mat-icon {
-        margin-right: 8px;
-      }
+    :host-context(.dark-theme) & {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     }
   }
 }
 
-// Responsive Design
-@media (max-width: 768px) {
-  .account-statement-dialog {
-    width: 100vw;
-    height: 100vh;
-    max-height: 100vh;
-    border-radius: 0;
+/* Fix for dark:bg-gray-850 not being standard */
+.dark-theme-card {
+   :host-context(.dark-theme) & {
+      background-color: #1e293b !important;
+   }
+}
 
-    .dialog-header {
-      padding: 16px;
-
-      .header-content {
-        .header-text {
-          .dialog-title {
-            font-size: 20px;
-          }
-
-          .account-name {
-            font-size: 14px;
-          }
-        }
-      }
-    }
-
-    .dialog-content {
-      padding: 16px;
-
-      .summary-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
-      }
-
-      .transactions-section {
-        .section-header {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 12px;
-        }
-
-        .transactions-list {
-          max-height: 300px;
-        }
-      }
-    }
-
-    .dialog-actions {
-      padding: 16px;
-      flex-direction: column;
-
-      button {
-        width: 100%;
-      }
-    }
+/* Responsive Grid Adjustments */
+@media (max-width: 480px) {
+  .stats-compact-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-// Dark theme support
-@media (prefers-color-scheme: dark) {
-  .account-statement-dialog {
-    --surface-color: #1e1e1e;
-    --surface-variant: #2d2d2d;
-    --text-primary: #ffffff;
-    --text-secondary: #b0b0b0;
-    --divider-color: #404040;
-    --primary-color: #90caf9;
-    --success-color: #81c784;
-    --error-color: #e57373;
-    --transfer-color: #ba68c8;
+/* Custom Emerald Tokens for Dark Mode */
+.dark-theme {
+  .text-emerald-450 { color: #34d399; }
+  .text-red-450 { color: #f87171; }
+  .text-blue-450 { color: #60a5fa; }
+}
+
+/* Animations */
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
   }
-} 
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bg-white, .stats-compact-grid, .space-y-4 > div {
+  animation: slideUpFade 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) both;
+  
+  &:nth-child(1) { animation-delay: 0.05s; }
+  &:nth-child(2) { animation-delay: 0.1s; }
+  &:nth-child(3) { animation-delay: 0.15s; }
+  &:nth-child(4) { animation-delay: 0.2s; }
+  &:nth-child(5) { animation-delay: 0.25s; }
+}
+
+/* Overwrite Material Spinner */
+::ng-deep .mat-mdc-progress-spinner {
+  --mdc-circular-progress-active-indicator-color: #10b981;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    transform: none !important;
+  }
+}
+ 

@@ -171,65 +171,42 @@
 							</mat-card-content>
 						</mat-card>
 
-						<!-- Account Action Buttons & Expanded Details (Mobile only) -->
+						<!-- Account Expanded Panel (Mobile only) -->
 						<ng-container
 							*ngIf="expandedAccount?.accountId === accountVM.account.accountId && breakpointService.device.isMobile">
-							<div class="account-actions dark:bg-slate-900/50 dark:border-slate-800">
-								<div class="actions-container">
-									<button mat-icon-button class="action-button statement-btn"
-										(click)="viewAccountStatement(accountVM.account)" matTooltip="View statement">
-										<mat-icon>receipt_long</mat-icon>
-									</button>
-									<button mat-icon-button class="action-button edit-btn"
-										(click)="editAccount(accountVM.account)" matTooltip="Edit account">
-										<mat-icon>edit</mat-icon>
-									</button>
-									<button mat-icon-button class="action-button delete-btn"
-										(click)="deleteAccount(accountVM.account)" matTooltip="Delete account">
-										<mat-icon>delete</mat-icon>
-									</button>
+							<div class="account-expanded-panel dark:bg-slate-900/40 dark:border-slate-800">
+								<!-- Statistics Grid -->
+								<div class="stats-compact-grid" *ngIf="getAccountStats(accountVM.account) as stats">
+									<div class="stat-mini-item">
+										<mat-icon class="stat-mini-icon">trending_up</mat-icon>
+										<span class="stat-mini-label">In</span>
+										<span class="stat-mini-value">{{ stats.totalDeposits | currency }}</span>
+									</div>
+									<div class="stat-mini-item">
+										<mat-icon class="stat-mini-icon">trending_down</mat-icon>
+										<span class="stat-mini-label">Out</span>
+										<span class="stat-mini-value">{{ stats.totalWithdrawals | currency }}</span>
+									</div>
+									<div class="stat-mini-item">
+										<mat-icon class="stat-mini-icon">receipt_long</mat-icon>
+										<span class="stat-mini-label">Txns</span>
+										<span class="stat-mini-value">{{ stats.totalTransactions }}</span>
+									</div>
 								</div>
-							</div>
 
-							<div class="account-details-expanded dark:bg-slate-900/50 dark:border-slate-800">
-								<div class="details-container" *ngIf="getAccountStats(accountVM.account) as stats">
-									<div class="detail-row">
-										<div class="detail-label">
-											<mat-icon class="detail-icon">trending_up</mat-icon>
-											<span>Deposits</span>
-										</div>
-										<div class="detail-value">
-											{{ stats.totalDeposits | currency }}
-										</div>
-									</div>
-									<div class="detail-row">
-										<div class="detail-label">
-											<mat-icon class="detail-icon">trending_down</mat-icon>
-											<span>Withdrawals</span>
-										</div>
-										<div class="detail-value">
-											{{ stats.totalWithdrawals | currency }}
-										</div>
-									</div>
-									<div class="detail-row">
-										<div class="detail-label">
-											<mat-icon class="detail-icon" [class.positive]="stats.thisMonth >= 0"
-												[class.negative]="stats.thisMonth < 0">
-												{{ stats.thisMonth >= 0 ? 'arrow_upward' : 'arrow_downward' }}
-											</mat-icon>
-											<span>This Month</span>
-										</div>
-										<div class="detail-value" [class.positive]="stats.thisMonth >= 0"
-											[class.negative]="stats.thisMonth < 0">
-											{{ stats.thisMonth | currency }}
-										</div>
-									</div>
-									<div class="detail-row">
-										<div class="detail-label">
-											<mat-icon class="detail-icon">receipt_long</mat-icon>
-											<span>Transactions</span>
-										</div>
-										<div class="detail-value">{{ stats.totalTransactions }}</div>
+								<!-- Unified Action Row -->
+								<div class="panel-action-row">
+									<button mat-flat-button color="primary" class="statement-action-btn" (click)="viewAccountStatement(accountVM.account); $event.stopPropagation()">
+										<mat-icon>receipt_long</mat-icon>
+										<span>Statement</span>
+									</button>
+									<div class="secondary-actions">
+										<button mat-icon-button class="mini-action-btn edit" (click)="editAccount(accountVM.account)" matTooltip="Edit">
+											<mat-icon>edit</mat-icon>
+										</button>
+										<button mat-icon-button class="mini-action-btn delete" (click)="deleteAccount(accountVM.account)" matTooltip="Delete">
+											<mat-icon>delete</mat-icon>
+										</button>
 									</div>
 								</div>
 							</div>

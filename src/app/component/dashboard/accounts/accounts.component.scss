@@ -439,6 +439,7 @@ mat-card.error-message {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: clamp(1.25rem, 3vw, 1.5rem); // Increased gap
+  // background-color: var(--surface-500);
 
   mat-card.account-card {
     padding: 0;
@@ -745,122 +746,92 @@ mat-card.empty-state-card {
   }
 }
 
-// =============================================================================
-// EXPANDABLE MOBILE ACTIONS & DETAILS (ACCOUNTS)
-// =============================================================================
-
-.account-actions {
+.account-expanded-panel {
   background: var(--surface-100);
   border-top: 1px solid var(--neutral-200);
-  padding: 8px 12px;
-  animation: slideDown 0.2s ease;
-  margin-top: -1.25rem;
-  margin-bottom: 1.25rem;
-  border-radius: 0 0 16px 16px;
-
-  .actions-container {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-  }
-
-  .action-button {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-
-    &.edit-btn {
-      border: 1px dashed var(--neutral-400);
-      color: var(--neutral-400);
-      &:hover {
-        background: var(--neutral-100);
-        transform: scale(1.05);
-      }
-    }
-
-    &.statement-btn {
-      border: 1px dashed var(--primary-500);
-      color: var(--primary-500);
-      &:hover {
-        background: var(--primary-50);
-        transform: scale(1.05);
-      }
-    }
-
-    &.delete-btn {
-      border: 1px solid var(--error-500);
-      color: var(--error-500);
-      &:hover {
-        background: var(--error-50);
-        transform: scale(1.05);
-      }
-    }
-  }
-}
-
-.account-details-expanded {
-  background: var(--surface-100);
-  border-top: 1px solid var(--neutral-200);
-  padding: 16px 12px;
-  animation: slideDown 0.3s ease;
+  padding: 12px;
+  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-top: -1.25rem;
   margin-bottom: 1.5rem;
-  border-radius: 0 0 16px 16px;
+  border-radius: 0 0 20px 20px;
 
-  .details-container {
-    display: flex;
-    flex-direction: column;
+  .stats-compact-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
+    margin-bottom: 12px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 12px;
+
+    .stat-mini-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 2px;
+
+      .stat-mini-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+        color: var(--neutral-400);
+      }
+      .stat-mini-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--neutral-500);
+        letter-spacing: 0.02em;
+      }
+      .stat-mini-value {
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--neutral-900);
+      }
+    }
   }
 
-  .detail-row {
+  .panel-action-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--neutral-100);
+    gap: 12px;
 
-    &:last-child {
-      border-bottom: none;
+    .statement-action-btn {
+      flex: 1;
+      height: 44px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      // background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+
+      mat-icon { font-size: 18px; width: 18px; height: 18px; }
     }
-  }
 
-  .detail-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    .secondary-actions {
+      display: flex;
+      gap: 8px;
 
-    .detail-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-      color: var(--neutral-400);
+      .mini-action-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--neutral-50);
+        color: var(--neutral-500);
+        border: 1px solid var(--neutral-200);
+        transition: all 0.2s ease;
 
-      &.positive {
-        color: var(--success-600);
+        mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+        &.edit:hover { background: var(--primary-50); color: var(--primary-600); border-color: var(--primary-200); }
+        &.delete:hover { background: var(--error-50); color: var(--error-600); border-color: var(--error-200); }
       }
-      &.negative {
-        color: var(--error-600);
-      }
-    }
-
-    span {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--neutral-600);
-    }
-  }
-
-  .detail-value {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--neutral-900);
-
-    &.positive {
-      color: var(--success-600);
-    }
-    &.negative {
-      color: var(--error-600);
     }
   }
 }

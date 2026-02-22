@@ -10,6 +10,8 @@ import { selectTransactionsByAccount } from '../../../../store/transactions/tran
 import { DateService } from '../../../../util/service/date.service';
 import { CurrencyService } from '../../../../util/service/currency.service';
 import { CommonModule } from '@angular/common';
+import { CommonHeaderComponent } from 'src/app/util/components/dialog/common-header/common-header.component';
+import { CommonBodyContentComponent } from 'src/app/util/components/dialog/common-body-content/common-body-content.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
@@ -49,6 +51,8 @@ export interface AccountStatementDialogData {
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    CommonBodyContentComponent,
+    CommonHeaderComponent,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
