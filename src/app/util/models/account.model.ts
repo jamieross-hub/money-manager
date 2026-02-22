@@ -14,8 +14,8 @@ export interface LoanAccount {
   durationMonths: number; // Loan term
   repaymentFrequency: 'monthly' | 'weekly';
   status: 'active' | 'closed' | 'defaulted';
-  totalPaid: number;
-  remainingBalance: number;
+  totalPaid?: number;
+  remainingBalance?: number;
   nextDueDate: Date;
   showReminder: boolean;
   createdAt: Date;
@@ -66,8 +66,8 @@ export interface LoanDetails {
 	durationMonths: number;
 	repaymentFrequency: 'monthly' | 'weekly';
 	status: 'active' | 'closed' | 'defaulted';
-	totalPaid: number;
-	remainingBalance: number;
+	totalPaid?: number;
+	remainingBalance?: number;
 	nextDueDate: Date;
 	showReminder: boolean;
 	monthlyPayment: number;

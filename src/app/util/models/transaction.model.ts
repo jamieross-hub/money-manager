@@ -60,6 +60,8 @@ export interface Transaction extends Auditable, RecurrenceInfo {
   tags?: string[];
   isSplitTransaction?: boolean;
   splitGroupId?: string;
+  fromAccountId?: string;
+  toAccountId?: string;
 
   // Category split support
   isCategorySplit?: boolean;

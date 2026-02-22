@@ -1,11 +1,11 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { AccountsState } from './accounts.state';
-import { AccountType } from 'src/app/util/config/enums';
+import { AccountType, TransactionType } from 'src/app/util/config/enums';
 import { LoanDetails } from 'src/app/util/models';
 
 export const selectAccountsState = createFeatureSelector<AccountsState>('accounts');
 
-export const selectAllAccounts = createSelector(
+export const selectAllAccountsRaw = createSelector(
   selectAccountsState,
   (state) => {
     // Only emit if there are actual accounts loaded
@@ -15,6 +15,61 @@ export const selectAllAccounts = createSelector(
     return state.ids.map(id => state.entities[id]).filter(account => account);
   }
 );
+
+/**
+ * Enhanced selector that returns all accounts with derived loan logic applied.
+ * This is the primary selector used by most components.
+ */
+export const selectAllAccounts = createSelector(
+  selectAllAccountsRaw,
+  (state: any) => state.transactions?.entities || {},
+  (accounts, transactionEntities) => {
+    const allTransactions = Object.values(transactionEntities) as any[];
+    
+    return accounts.map(account => {
+      if (account.type !== AccountType.LOAN || !account.loanDetails) {
+        return account;
+      }
+
+      // Find all transactions where this account is involved (source, destination, or primary account)
+      const accountTransactions = allTransactions.filter(t => 
+        t.accountId === account.accountId || 
+        t.toAccountId === account.accountId || 
+        t.fromAccountId === account.accountId
+      );
+
+      const loanAmount = account.loanDetails.loanAmount || 0;
+
+      // Repayments: Income to this account OR transfers TO this account
+      const repayments = accountTransactions.filter((t: any) => 
+        (t.type === TransactionType.INCOME && t.accountId === account.accountId) || 
+        (t.type === TransactionType.TRANSFER && t.toAccountId === account.accountId)
+      );
+      const totalPaid = repayments.reduce((sum: number, t: any) => sum + (Number(t.amount) || 0), 0);
+
+      // Additional Borrowing: Expenses from this account OR transfers FROM this account
+      const borrowing = accountTransactions.filter((t: any) => 
+        (t.type === TransactionType.EXPENSE && t.accountId === account.accountId) || 
+        (t.type === TransactionType.TRANSFER && t.fromAccountId === account.accountId)
+      );
+      const additionalBorrowing = borrowing.reduce((sum: number, t: any) => sum + (Number(t.amount) || 0), 0);
+
+      const remainingBalance = Math.max(0, loanAmount - totalPaid + additionalBorrowing);
+
+      return {
+        ...account,
+        loanDetails: {
+          ...account.loanDetails,
+          remainingBalance,
+          totalPaid
+        },
+        // Also update the general balance for consistency across UI (e.g. Liability lists)
+        balance: -remainingBalance
+      };
+    });
+  }
+);
+
 
 export const selectAccountsLoading = createSelector(
   selectAccountsState,
@@ -115,4 +170,10 @@ export const selectTotalLiabilities = createSelector(
 export const selectAccountsByInstitution = (institution: string) => createSelector(
   selectAllAccounts,
   (accounts) => accounts?.filter(a => a.institution === institution) || []
-); 
+);
+
+// Derived Loan Selectors
+export const selectLoanWithDerivedDetails = (accountId: string) => createSelector(
+  selectAllAccounts,
+  (accounts) => accounts.find(a => a.accountId === accountId)
+);

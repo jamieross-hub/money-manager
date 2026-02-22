@@ -164,14 +164,6 @@ export const accountsReducer = createReducer(
       updatedAt: new Date()
     };
 
-    if (account.type === 'loan' && account.loanDetails) {
-      const loanRemainingBalanceChange = -balanceChange;
-      updatedAccount.loanDetails = {
-        ...account.loanDetails,
-        remainingBalance: Math.max(0, (Number(account.loanDetails.remainingBalance) || 0) + loanRemainingBalanceChange)
-      };
-    }
-
     return {
       ...state,
       entities: {
@@ -210,14 +202,6 @@ export const accountsReducer = createReducer(
           balance: (Number(account.balance) || 0) + balanceChange,
           updatedAt: new Date()
         };
-
-        if (account.type === 'loan' && account.loanDetails) {
-          const loanRemainingBalanceChange = -balanceChange;
-          updatedAccount.loanDetails = {
-            ...account.loanDetails,
-            remainingBalance: Math.max(0, (Number(account.loanDetails.remainingBalance) || 0) + loanRemainingBalanceChange)
-          };
-        }
         
         updatedEntities[t.accountId] = updatedAccount;
       }
@@ -259,12 +243,6 @@ export const accountsReducer = createReducer(
       balance: (Number(oldAccount.balance) || 0) - transactionEffect,
       updatedAt: new Date()
     };
-    if (oldAccount.type === 'loan' && oldAccount.loanDetails) {
-      updatedOldAccount.loanDetails = {
-        ...oldAccount.loanDetails,
-        remainingBalance: (Number(oldAccount.loanDetails.remainingBalance) || 0) + transactionEffect
-      };
-    }
 
     // Update new account (add transaction effect)
     const updatedNewAccount = {
@@ -272,12 +250,6 @@ export const accountsReducer = createReducer(
       balance: (Number(newAccount.balance) || 0) + transactionEffect,
       updatedAt: new Date()
     };
-    if (newAccount.type === 'loan' && newAccount.loanDetails) {
-      updatedNewAccount.loanDetails = {
-        ...newAccount.loanDetails,
-        remainingBalance: Math.max(0, (Number(newAccount.loanDetails.remainingBalance) || 0) - transactionEffect)
-      };
-    }
 
     return {
       ...state,

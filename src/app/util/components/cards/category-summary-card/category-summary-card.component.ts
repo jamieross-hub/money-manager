@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
@@ -38,7 +39,8 @@ export interface CategorySummary {
         MatCardModule,
         MatIconModule,
         CurrencyPipe,
-        RouterModule
+        RouterModule,
+        MatButtonModule
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })

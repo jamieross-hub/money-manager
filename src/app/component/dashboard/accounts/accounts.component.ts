@@ -237,14 +237,14 @@ export class AccountsComponent implements OnInit, OnDestroy {
           const totalBalance = groupAccounts.reduce((total, account) => {
             let balance = account.balance;
             if (account.type === AccountType.LOAN && account.loanDetails) {
-              balance = -(account.loanDetails.remainingBalance || 0);
+              balance = -(account.loanDetails.remainingBalance ?? 0);
             }
             return total + balance;
           }, 0);
 
           const accountViewModels: AccountViewModel[] = groupAccounts.map(account => {
             const rawBalance = account.type === AccountType.LOAN && account.loanDetails
-              ? -(account.loanDetails.remainingBalance || 0)
+              ? -(account.loanDetails.remainingBalance ?? 0)
               : account.balance;
 
             return {
@@ -394,7 +394,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
 
     const { interestRate, remainingBalance } = account.loanDetails;
     // Monthly interest = (Annual Rate / 12) * Remaining Balance
-    return (interestRate / 12 / 100) * remainingBalance;
+    return (interestRate / 12 / 100) * (remainingBalance ?? 0);
   }
 
   /**
@@ -633,7 +633,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
     return groupAccounts.reduce((total, account) => {
       let balance = account.balance;
       if (account.type === AccountType.LOAN && account.loanDetails) {
-        balance = -(account.loanDetails.remainingBalance || 0);
+        balance = -(account.loanDetails.remainingBalance ?? 0);
       }
       return total + balance;
     }, 0);

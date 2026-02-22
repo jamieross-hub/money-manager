@@ -11,13 +11,14 @@ import { MatCardModule } from '@angular/material/card';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { RouterModule } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-account-summary-card',
   templateUrl: './account-summary-card.component.html',
   styleUrls: ['./account-summary-card.component.scss'],
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatCardModule, CurrencyPipe , RouterModule],
+  imports: [CommonModule, MatIconModule, MatCardModule, CurrencyPipe , RouterModule, MatButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AccountSummaryCardComponent {
@@ -34,7 +35,7 @@ export class AccountSummaryCardComponent {
   public readonly positiveAccounts = computed(() => 
     this.accounts().filter(account => {
       if (account.type === AccountType.LOAN && account.loanDetails) {
-        return -(account.loanDetails.remainingBalance || 0) > 0;
+        return -(account.loanDetails.remainingBalance ?? 0) > 0;
       }
       if (account.type === AccountType.CREDIT) {
         return account.balance > 0;
@@ -49,7 +50,7 @@ export class AccountSummaryCardComponent {
   public readonly negativeAccounts = computed(() => 
     this.accounts().filter(account => {
       if (account.type === AccountType.LOAN && account.loanDetails) {
-        return -(account.loanDetails.remainingBalance || 0) <= 0;
+        return -(account.loanDetails.remainingBalance ?? 0) <= 0;
       }
       if (account.type === AccountType.CREDIT) {
         return account.balance <= 0;
@@ -64,7 +65,7 @@ export class AccountSummaryCardComponent {
   public readonly totalPositiveBalance = computed(() => 
     this.positiveAccounts().reduce((total, account) => {
       if (account.type === AccountType.LOAN && account.loanDetails) {
-        return total + (-(account.loanDetails.remainingBalance || 0));
+        return total + (-(account.loanDetails.remainingBalance ?? 0));
       }
       return total + account.balance;
     }, 0)
@@ -77,7 +78,7 @@ export class AccountSummaryCardComponent {
     this.negativeAccounts().reduce((total, account) => {
       if (account.type === AccountType.LOAN) {
         const loanDetails = account.loanDetails as LoanDetails;
-        return total - loanDetails.remainingBalance;
+        return total - (loanDetails.remainingBalance ?? 0);
       }
       return total + account.balance;
     }, 0)

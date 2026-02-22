@@ -535,11 +535,11 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
     return this.categoryService.getCategories(userId).pipe(
       switchMap(categories => {
         const existing = categories.find(c =>
-          c.name.toLowerCase().includes('loan') && c.type === TransactionType.EXPENSE
+          c.name.toLowerCase().includes('loan') && c.type === TransactionType.INCOME
         );
         return existing?.id
           ? of(existing.id)
-          : this.categoryService.createCategory(userId, 'Loan Payment', TransactionType.EXPENSE, 'account_balance', '#ef4444');
+          : this.categoryService.createCategory(userId, 'Loan Payment', TransactionType.INCOME, 'account_balance', '#ef4444');
       })
     );
   }
@@ -574,7 +574,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
             category:          'Loan Payment',
             payee:             loanDetails.lenderName,
             amount:            emi,
-            type:              TransactionType.EXPENSE,
+            type:              TransactionType.INCOME,
             date:              paymentDate,
             notes:             `EMI payment for ${loanDetails.lenderName} loan (month ${i + 1})`,
             status:            TransactionStatus.COMPLETED,
@@ -638,7 +638,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
           category:            'Loan Payment',
           payee:               loanDetails.lenderName,
           amount:              this.loanMonthlyPayment(),
-          type:                TransactionType.EXPENSE,
+          type:                TransactionType.INCOME,
           date:                nextDueDateAsDate,          // first future payment, not today
           notes:               `Monthly payment for ${loanDetails.lenderName} loan`,
           status:              TransactionStatus.PENDING, // upcoming — not yet debited
