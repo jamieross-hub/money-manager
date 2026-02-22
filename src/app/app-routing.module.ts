@@ -99,6 +99,14 @@ export const routes: Routes = [
         }
       },
       {
+        path: 'family',
+        loadChildren: () => import('./modules/family/family.module').then(m => m.FamilyModule),
+        data: {
+          roles: ['free', 'premium', 'admin'],
+          requireEmailVerification: true
+        }
+      },
+      {
         path: 'notes',
         loadComponent: () => import('./component/dashboard/notes/notes.component').then(m => m.NotesComponent),
         data: {

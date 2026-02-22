@@ -1,0 +1,163 @@
+<div class="family-dashboard min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
+
+  <!-- Loading -->
+  <div *ngIf="loading()" class="flex justify-center items-center h-48">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <!-- ── NO FAMILY: Empty state ────────────────────────────────── -->
+  <ng-container *ngIf="!loading() && !family()">
+    <div class="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center">
+      <!-- Illustration -->
+      <div class="w-24 h-24 rounded-full bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center mb-6">
+        <mat-icon class="!text-5xl !w-12 !h-12 text-primary-500">family_restroom</mat-icon>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Family Wallet</h1>
+      <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-xs">
+        Track family income and expenses together. Everyone adds their entries, everyone sees the full picture.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
+        <button mat-flat-button color="primary" class="flex-1 !h-12 !rounded-xl" (click)="createFamily()">
+          <mat-icon class="mr-2">add_home</mat-icon>
+          Create Family
+        </button>
+        <button mat-stroked-button class="flex-1 !h-12 !rounded-xl" (click)="joinFamily()">
+          <mat-icon class="mr-2">group_add</mat-icon>
+          Join with Code
+        </button>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ── HAS FAMILY ─────────────────────────────────────────────── -->
+  <ng-container *ngIf="!loading() && family() as fam">
+
+    <!-- Header -->
+    <div class="bg-white dark:bg-gray-800 shadow-sm px-4 pt-5 pb-4 border-b border-gray-100 dark:border-gray-700">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ fam.name }}</h1>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            {{ members().length }} members · {{ fam.currency }}
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button mat-icon-button [routerLink]="['/dashboard/family/members']" matTooltip="Manage members">
+            <mat-icon>group</mat-icon>
+          </button>
+          <button mat-icon-button [routerLink]="['/dashboard/family/reports']" matTooltip="Reports">
+            <mat-icon>bar_chart</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Invite code chip -->
+      <div class="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-primary-50 dark:bg-primary-900/30 rounded-full border border-primary-200 dark:border-primary-700">
+        <mat-icon class="!text-sm !w-4 !h-4 text-primary-600 dark:text-primary-400">share</mat-icon>
+        <span class="text-xs text-gray-500 dark:text-gray-400">Invite Code:</span>
+        <span class="text-sm font-bold tracking-widest text-primary-700 dark:text-primary-300">{{ fam.inviteCode }}</span>
+        <button mat-icon-button class="!w-6 !h-6 !min-w-0" (click)="copyCode(fam.inviteCode)" matTooltip="Copy code">
+          <mat-icon class="!text-sm !w-4 !h-4 text-gray-400">content_copy</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-3 gap-3 px-4 mt-4">
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-3 text-center shadow-sm border border-gray-100 dark:border-gray-700">
+        <p class="text-xs text-gray-500 dark:text-gray-400">Income</p>
+        <p class="text-base font-bold text-green-600 dark:text-green-400 mt-1 truncate">
+          {{ stats()?.totalIncome | number:'1.0-0' }}
+        </p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-3 text-center shadow-sm border border-gray-100 dark:border-gray-700">
+        <p class="text-xs text-gray-500 dark:text-gray-400">Expenses</p>
+        <p class="text-base font-bold text-red-600 dark:text-red-400 mt-1 truncate">
+          {{ stats()?.totalExpense | number:'1.0-0' }}
+        </p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-3 text-center shadow-sm border border-gray-100 dark:border-gray-700">
+        <p class="text-xs text-gray-500 dark:text-gray-400">Balance</p>
+        <p class="text-base font-bold mt-1 truncate"
+           [class.text-green-600]="(stats()?.netBalance || 0) >= 0"
+           [class.dark:text-green-400]="(stats()?.netBalance || 0) >= 0"
+           [class.text-red-600]="(stats()?.netBalance || 0) < 0"
+           [class.dark:text-red-400]="(stats()?.netBalance || 0) < 0">
+          {{ stats()?.netBalance | number:'1.0-0' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Member Breakdown -->
+    <div class="px-4 mt-4" *ngIf="stats()?.memberBreakdown?.length">
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Member Activity</h2>
+      <div class="flex gap-3 overflow-x-auto pb-2">
+        <div *ngFor="let m of stats()!.memberBreakdown"
+          class="flex-shrink-0 bg-white dark:bg-gray-800 rounded-xl px-4 py-3 min-w-[130px] shadow-sm border border-gray-100 dark:border-gray-700">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
+              [style.background]="memberColor(m.userId)">
+              {{ m.displayName.charAt(0).toUpperCase() }}
+            </div>
+            <span class="text-xs font-medium text-gray-700 dark:text-gray-200 truncate max-w-[80px]">{{ m.displayName }}</span>
+          </div>
+          <p class="text-xs text-red-500">↓ {{ m.totalExpense | number:'1.0-0' }}</p>
+          <p class="text-xs text-green-500">↑ {{ m.totalIncome | number:'1.0-0' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="px-4 mt-5">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Recent Transactions</h2>
+        <button mat-button class="!text-xs" [routerLink]="['/dashboard/family/txns']">View All</button>
+      </div>
+
+      <div *ngIf="!recentTxns().length"
+        class="text-center py-10 bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+        <mat-icon class="text-gray-300 dark:text-gray-600 !text-4xl mb-2">receipt_long</mat-icon>
+        <p class="text-sm text-gray-400">No transactions yet. Add the first one!</p>
+      </div>
+
+      <div class="space-y-2">
+        <div *ngFor="let tx of recentTxns()"
+          class="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-xl px-4 py-3 shadow-sm border border-gray-100 dark:border-gray-700">
+          <!-- Type icon -->
+          <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+            [class.bg-red-50]="tx.type === 'expense'"
+            [class.dark:bg-red-900]="tx.type === 'expense'"
+            [class.bg-green-50]="tx.type === 'income'"
+            [class.dark:bg-green-900]="tx.type === 'income'">
+            <mat-icon class="!text-base"
+              [class.text-red-500]="tx.type === 'expense'"
+              [class.text-green-500]="tx.type === 'income'">
+              {{ tx.type === 'expense' ? 'arrow_downward' : 'arrow_upward' }}
+            </mat-icon>
+          </div>
+          <!-- Info -->
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{{ tx.category }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ tx.userDisplayName }} · {{ formatDate(tx.date) }}</p>
+          </div>
+          <!-- Amount -->
+          <p class="text-sm font-bold"
+            [class.text-red-600]="tx.type === 'expense'"
+            [class.text-green-600]="tx.type === 'income'">
+            {{ tx.type === 'expense' ? '-' : '+' }}{{ tx.amount | number:'1.0-0' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- FAB – Add Transaction -->
+  <button *ngIf="family()" mat-fab color="primary"
+    class="!fixed !bottom-6 !right-6 !z-50 !shadow-lg"
+    (click)="addTransaction()"
+    matTooltip="Add Transaction">
+    <mat-icon>add</mat-icon>
+  </button>
+
+</div>

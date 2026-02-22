@@ -1,0 +1,38 @@
+<div class="p-6 min-w-[320px]">
+  <div class="flex items-center gap-3 mb-6">
+    <div class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+      <mat-icon class="text-primary-600 dark:text-primary-300">family_restroom</mat-icon>
+    </div>
+    <div>
+      <h2 class="text-lg font-bold text-gray-900 dark:text-white m-0">Create Family Wallet</h2>
+      <p class="text-xs text-gray-500 dark:text-gray-400 m-0">Start tracking together</p>
+    </div>
+  </div>
+
+  <form [formGroup]="form" class="flex flex-col gap-4">
+    <mat-form-field appearance="fill">
+      <mat-label>Family Name</mat-label>
+      <input matInput formControlName="name" placeholder="e.g. The Family" />
+      <mat-error *ngIf="form.get('name')?.hasError('required')">Family name is required</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Currency</mat-label>
+      <mat-select formControlName="currency">
+        <mat-option value="INR">₹ INR – Indian Rupee</mat-option>
+        <mat-option value="USD">$ USD – US Dollar</mat-option>
+        <mat-option value="EUR">€ EUR – Euro</mat-option>
+        <mat-option value="GBP">£ GBP – British Pound</mat-option>
+        <mat-option value="AED">AED – UAE Dirham</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <div class="flex gap-3 mt-2">
+      <button mat-stroked-button type="button" class="flex-1" (click)="close()">Cancel</button>
+      <button mat-flat-button color="primary" type="button" class="flex-1" [disabled]="form.invalid" (click)="submit()">
+        <mat-icon class="!text-base mr-1">add</mat-icon>
+        Create Family
+      </button>
+    </div>
+  </form>
+</div>

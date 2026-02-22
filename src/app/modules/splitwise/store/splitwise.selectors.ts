@@ -10,37 +10,37 @@ export const selectSplitwiseState = createSelector(
 
 export const selectGroups = createSelector(
   selectSplitwiseFeature,
-  (state: SplitwiseState) => state.groups
+  (state: SplitwiseState) => state?.groups || []
 );
 
 export const selectInvitations = createSelector(
   selectSplitwiseFeature,
-  (state: SplitwiseState) => state.invitations
+  (state: SplitwiseState) => state?.invitations || []
 );
 
 export const selectTransactions = createSelector(
   selectSplitwiseFeature,
-  (state: SplitwiseState) => state.transactions
+  (state: SplitwiseState) => state?.transactions || []
 );
 
 export const selectSettlements = createSelector(
   selectSplitwiseFeature,
-  (state: SplitwiseState) => state.settlements
+  (state: SplitwiseState) => state?.settlements || []
 );
 
 export const selectSelectedGroup = createSelector(
   selectSplitwiseFeature,
-  (state: SplitwiseState) => state.selectedGroup
+  (state: SplitwiseState) => state?.selectedGroup || null
 );
 
 export const selectLoading = createSelector(
   selectSplitwiseFeature,
-  (state: SplitwiseState) => state.loading
+  (state: SplitwiseState) => state?.loading || false
 );
 
 export const selectError = createSelector(
   selectSplitwiseFeature,
-  (state: SplitwiseState) => state.error
+  (state: SplitwiseState) => state?.error || null
 );
 
 // Computed selectors

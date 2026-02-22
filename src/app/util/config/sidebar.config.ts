@@ -91,6 +91,12 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         isPremium: true
       },
       {
+        label: 'Family Tracker',
+        route: '/dashboard/family',
+        icon: 'family_restroom',
+        order: 3
+      },
+      {
         label: 'NAVIGATION.SPLITWISE',
         route: '/dashboard/splitwise',
         icon: 'group',

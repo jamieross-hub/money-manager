@@ -29,11 +29,12 @@ import {
 } from 'src/app/util/config/enums';
 import { QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { BackupRestoreService } from 'src/app/util/service/backupRestore.service';
-import { SplitwiseService } from 'src/app/modules/splitwise/services/splitwise.service';
 import { ThemeSwitchingService } from 'src/app/util/service/theme-switching.service';
 import { ThemeType } from 'src/app/util/models/theme.model';
-import { CreateGroupDialogComponent } from 'src/app/modules/splitwise/create-group-dialog/create-group-dialog.component';
-import { SplitwiseGroup, CreateGroupRequest } from 'src/app/util/models/splitwise.model';
+import { FamilyService } from 'src/app/modules/family/services/family.service';
+import { Family } from 'src/app/util/models/family.model';
+import { FamilyCreateDialogComponent } from 'src/app/modules/family/dialogs/family-create-dialog/family-create-dialog.component';
+import { FamilyJoinDialogComponent } from 'src/app/modules/family/dialogs/family-join-dialog/family-join-dialog.component';
 
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -92,7 +93,7 @@ export class ProfileComponent {
   readonly breakpointService = inject(BreakpointService);
   private readonly userService = inject(UserService);
   private readonly translationService = inject(TranslationService);
-  private readonly splitwiseService = inject(SplitwiseService);
+  private readonly familyService = inject(FamilyService);
   private readonly backupRestoreService = inject(BackupRestoreService);
   readonly themeSwitchingService = inject(ThemeSwitchingService);
   private readonly securityService = inject(SecurityService);
@@ -102,7 +103,7 @@ export class ProfileComponent {
   readonly isLoading = signal(false);
   readonly isEditing = signal(false);
   readonly userProfile = signal<User | null>(null);
-  readonly familyGroup = signal<SplitwiseGroup | null>(null);
+  readonly familyGroup = signal<Family | null>(null);
   readonly currentTheme = signal<ThemeType>('light-theme');
   readonly showPinSetup = signal(false);
   readonly newPinControl = new FormControl('', [Validators.required, Validators.pattern(/^\d{4}$/)]);
@@ -231,9 +232,7 @@ export class ProfileComponent {
           this.userProfile.set(this.mapUserToProfile(user));
           this.populateForm();
         }
-        if (user.preferences?.familyGroupId) {
-          this.loadFamilyGroup(user.preferences.familyGroupId);
-        }
+        this.loadFamily();
       }
     });
 
@@ -251,35 +250,27 @@ export class ProfileComponent {
 
   // ─── Family Group ──────────────────────────────────────────────────
 
-  private loadFamilyGroup(groupId: string): void {
-    if (!groupId) return;
-    this.splitwiseService.getGroup(groupId).pipe(
-      takeUntilDestroyed()
-    ).subscribe(group => {
-      this.familyGroup.set(group);
-    });
+  private loadFamily(): void {
+    this.familyService.getMyFamily().then(family => {
+      this.familyGroup.set(family);
+    }).catch(() => this.familyGroup.set(null));
   }
 
-  async createFamilyGroup(): Promise<void> {
-    const dialogRef = this.dialog.open(CreateGroupDialogComponent, {
+  createFamilyGroup(): void {
+    const dialogRef = this.dialog.open(FamilyCreateDialogComponent, {
       disableClose: true,
       panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
     });
 
-    dialogRef.afterClosed().subscribe(async (result: CreateGroupRequest) => {
+    dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
         try {
           this.isLoading.set(true);
-          const group = await this.splitwiseService.createGroup(result, this.currentUser.uid).toPromise();
-
-          if (group && group.id) {
-            await this.updateFamilyGroupId(group.id);
-            this.notificationService.success('Family group created successfully');
-            this.loadFamilyGroup(group.id);
-          }
-        } catch (error) {
-          console.error('Error creating family group:', error);
-          this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
+          const family = await this.familyService.createFamily(result);
+          this.familyGroup.set(family);
+          this.notificationService.success('Family created! Share the invite code with family members.');
+        } catch (error: any) {
+          this.notificationService.error(error?.message || ERROR_MESSAGES.NETWORK.SERVER_ERROR);
         } finally {
           this.isLoading.set(false);
         }
@@ -287,38 +278,38 @@ export class ProfileComponent {
     });
   }
 
-  async updateFamilyGroupId(groupId: string): Promise<void> {
-    const profile = this.userProfile();
-    if (!profile) return;
+  joinFamilyGroup(): void {
+    const dialogRef = this.dialog.open(FamilyJoinDialogComponent, {
+      disableClose: true,
+      panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
+    });
 
-    const updatedUser: User = {
-      ...profile,
-      preferences: {
-        ...profile.preferences,
-        familyGroupId: groupId,
-        defaultCurrency: profile.preferences?.defaultCurrency || this.defaultCurrency,
-        timezone: profile.preferences?.timezone || 'UTC',
-        notifications: profile.preferences?.notifications ?? true,
-        emailUpdates: profile.preferences?.emailUpdates ?? true,
-        budgetAlerts: profile.preferences?.budgetAlerts ?? true,
+    dialogRef.afterClosed().subscribe(async (code: string) => {
+      if (code) {
+        try {
+          this.isLoading.set(true);
+          const family = await this.familyService.joinByCode(code);
+          this.familyGroup.set(family);
+          this.notificationService.success(`Joined "${family.name}" family!`);
+        } catch (error: any) {
+          this.notificationService.error(error?.message || ERROR_MESSAGES.NETWORK.SERVER_ERROR);
+        } finally {
+          this.isLoading.set(false);
+        }
       }
-    };
-
-    if (this.userService.isGuestUser()) {
-      this.userService.storageService.setItem(`user-data-${updatedUser.uid}`, updatedUser);
-      this.userService.userAuth$.next(updatedUser);
-      this.userProfile.set(updatedUser);
-    } else {
-      this.store.dispatch(ProfileActions.updateProfile({
-        userId: profile.uid,
-        profile: updatedUser
-      }));
-    }
+    });
   }
 
-  viewFamilyGroup(groupId: string): void {
-    this.router.navigate(['/dashboard/splitwise/group', groupId]);
+  viewFamilyGroup(familyId?: string): void {
+    this.router.navigate(['/dashboard/family']);
   }
+
+  copyFamilyCode(code: string): void {
+    navigator.clipboard.writeText(code).then(() => {
+      this.notificationService.success('Invite code copied!');
+    });
+  }
+
 
   // ─── Timezone ──────────────────────────────────────────────────────
 

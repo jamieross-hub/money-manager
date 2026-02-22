@@ -1,0 +1,96 @@
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
+
+  <!-- Header -->
+  <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 border-b border-gray-100 dark:border-gray-700 shadow-sm">
+    <h1 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Family Transactions</h1>
+
+    <!-- Filters Row -->
+    <div class="flex gap-2 overflow-x-auto pb-1">
+      <!-- Type filter -->
+      <button *ngFor="let f of typeFilters" mat-stroked-button
+        class="!rounded-full !text-xs !h-8 !px-4 flex-shrink-0"
+        [color]="selectedType === f.value ? 'primary' : undefined"
+        (click)="selectedType = f.value">
+        {{ f.label }}
+      </button>
+    </div>
+
+    <!-- Member filter chips -->
+    <div class="flex gap-2 mt-2 overflow-x-auto pb-1" *ngIf="members().length">
+      <button mat-stroked-button class="!rounded-full !text-xs !h-7 !px-3 flex-shrink-0"
+        [color]="!selectedMember ? 'primary' : undefined"
+        (click)="selectedMember = null">All</button>
+      <button *ngFor="let m of members()" mat-stroked-button
+        class="!rounded-full !text-xs !h-7 !px-3 flex-shrink-0"
+        [color]="selectedMember === m.userId ? 'primary' : undefined"
+        (click)="selectedMember = m.userId">
+        {{ m.displayName }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary chips -->
+  <div class="flex gap-3 px-4 mt-3">
+    <div class="bg-green-50 dark:bg-green-900/20 rounded-lg px-3 py-1 text-xs text-green-700 dark:text-green-300 font-medium">
+      ↑ Income: {{ filteredIncome() | number:'1.0-0' }}
+    </div>
+    <div class="bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-1 text-xs text-red-700 dark:text-red-300 font-medium">
+      ↓ Expense: {{ filteredExpense() | number:'1.0-0' }}
+    </div>
+  </div>
+
+  <!-- Transaction List -->
+  <div class="px-4 mt-4 space-y-2">
+    <div *ngIf="loading()" class="flex justify-center py-10"><mat-spinner diameter="32"></mat-spinner></div>
+
+    <div *ngIf="!loading() && !filtered().length" class="text-center py-16">
+      <mat-icon class="!text-5xl text-gray-200 dark:text-gray-700">receipt_long</mat-icon>
+      <p class="text-sm text-gray-400 mt-2">No transactions found</p>
+    </div>
+
+    <div *ngFor="let tx of filtered()"
+      class="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-xl px-4 py-3 shadow-sm border border-gray-100 dark:border-gray-700">
+
+      <!-- Icon -->
+      <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+        [class]="tx.type === 'expense' ? 'bg-red-50 dark:bg-red-900/30' : 'bg-green-50 dark:bg-green-900/30'">
+        <mat-icon [class]="tx.type === 'expense' ? 'text-red-500' : 'text-green-500'" class="!text-lg">
+          {{ tx.type === 'expense' ? 'arrow_downward' : 'arrow_upward' }}
+        </mat-icon>
+      </div>
+
+      <!-- Info -->
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ tx.category }}</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500">
+          {{ tx.userDisplayName }} · {{ formatDate(tx.date) }}
+        </p>
+        <p *ngIf="tx.note" class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ tx.note }}</p>
+      </div>
+
+      <!-- Amount -->
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-bold"
+          [class.text-red-600]="tx.type === 'expense'"
+          [class.text-green-600]="tx.type === 'income'">
+          {{ tx.type === 'expense' ? '-' : '+' }}{{ tx.amount | number:'1.0-2' }}
+        </span>
+
+        <!-- Actions (own transactions only or admin) -->
+        <div *ngIf="canEdit(tx)" class="flex gap-0.5">
+          <button mat-icon-button class="!w-7 !h-7 !min-w-0" (click)="editTx(tx)">
+            <mat-icon class="!text-sm text-gray-400">edit</mat-icon>
+          </button>
+          <button mat-icon-button class="!w-7 !h-7 !min-w-0" (click)="deleteTx(tx)">
+            <mat-icon class="!text-sm text-red-400">delete</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAB -->
+  <button mat-fab color="primary" class="!fixed !bottom-6 !right-6 !z-50" (click)="addTx()">
+    <mat-icon>add</mat-icon>
+  </button>
+</div>
