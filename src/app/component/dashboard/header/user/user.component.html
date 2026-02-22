@@ -4,10 +4,10 @@
 		class="relative z-10 flex items-center p-2 text-sm text-gray-600 bg-transparent border border-transparent rounded-md focus:border-blue-500 focus:ring-opacity-40 dark:focus:ring-opacity-40 focus:ring-blue-300 dark:focus:ring-blue-400 focus:ring dark:text-white focus:outline-none transition-colors"
 		type="button">
 		<img class="flex-shrink-0 object-cover mx-1 rounded-full w-9 h-9 border-2 border-gray-200 dark:border-slate-800"
-			[src]="user.photoURL || 'assets/images/profile.png'" onerror="this.src='assets/images/profile.png'"
+			[src]="profileImage" (error)="onImageError()"
 			alt="avatar" />
 
-		<span class="mx-1 truncate max-w-100" *ngIf="(!isMobile || !user?.photoURL)">{{(user.displayName ?
+		<span class="mx-1 truncate max-w-100" *ngIf="(!isMobile || !user.photoURL)">{{(user.displayName ?
 			user.displayName : (user.firstName ? user.firstName : 'USER_MENU.DEFAULT_USER' | translate)) |
 			titlecase}}</span>
 

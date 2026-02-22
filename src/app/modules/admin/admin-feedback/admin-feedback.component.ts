@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
@@ -81,13 +81,15 @@ export class AdminFeedbackComponent implements OnInit, OnDestroy {
     private feedbackService: FeedbackService,
     private dialog: MatDialog,
     private notificationService: NotificationService,
-    private ssrService: SsrService
+    private ssrService: SsrService,
+    private changeDetectorRef: ChangeDetectorRef
   ) {
     // Observe breakpoints for mobile detection
     this.breakpointObserver.observe([Breakpoints.Handset])
       .pipe(takeUntil(this.destroy$))
       .subscribe(result => {
         this.isMobile = result.matches;
+        this.changeDetectorRef.markForCheck();
       });
   }
 
@@ -138,6 +140,7 @@ export class AdminFeedbackComponent implements OnInit, OnDestroy {
 
   private async loadFeedback(): Promise<void> {
     this.isLoading = true;
+    this.changeDetectorRef.markForCheck();
     try {
       // Load feedback from the service
       this.feedbackList = await firstValueFrom(this.feedbackService.getAllFeedback());
@@ -147,11 +150,13 @@ export class AdminFeedbackComponent implements OnInit, OnDestroy {
       this.notificationService.error('Failed to load feedback');
     } finally {
       this.isLoading = false;
+      this.changeDetectorRef.markForCheck();
     }
   }
 
   private applyFilters(): void {
     let filtered = [...this.feedbackList];
+
 
     // Search filter
     const searchTerm = this.searchControl.value?.toLowerCase();
@@ -198,6 +203,7 @@ export class AdminFeedbackComponent implements OnInit, OnDestroy {
     this.filteredFeedback = filtered;
     this.totalItems = filtered.length;
     this.currentPage = 1;
+    this.changeDetectorRef.markForCheck();
   }
 
   private filterByDateRange(feedback: FeedbackData[], range: string): FeedbackData[] {
@@ -274,6 +280,7 @@ export class AdminFeedbackComponent implements OnInit, OnDestroy {
       await this.feedbackService.updateFeedbackStatus(feedback.id!, newStatus as 'pending' | 'reviewed' | 'resolved');
       feedback.status = newStatus as 'pending' | 'reviewed' | 'resolved';
       this.notificationService.success(`Feedback status updated to ${newStatus}`);
+      this.changeDetectorRef.markForCheck();
     } catch (error) {
       console.error('Error updating feedback status:', error);
       this.notificationService.error('Failed to update feedback status');
@@ -303,6 +310,7 @@ export class AdminFeedbackComponent implements OnInit, OnDestroy {
           console.error('Error deleting feedback:', error);
           this.notificationService.error('Failed to delete feedback');
         }
+        this.changeDetectorRef.markForCheck();
       }
     });
   }

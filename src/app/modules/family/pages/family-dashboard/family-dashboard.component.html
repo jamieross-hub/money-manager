@@ -12,7 +12,7 @@
       <div class="w-24 h-24 rounded-full bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center mb-6">
         <mat-icon class="!text-5xl !w-12 !h-12 text-primary-500">family_restroom</mat-icon>
       </div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Family Wallet</h1>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Family Wallet</p>
       <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-xs">
         Track family income and expenses together. Everyone adds their entries, everyone sees the full picture.
       </p>
@@ -36,7 +36,7 @@
     <div class="bg-white dark:bg-gray-800 shadow-sm px-4 pt-5 pb-4 border-b border-gray-100 dark:border-gray-700">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ fam.name }}</h1>
+          <p class="text-xl font-bold text-gray-900 dark:text-white">{{ fam.name }}</p>
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             {{ members().length }} members · {{ fam.currency }}
           </p>
@@ -56,8 +56,8 @@
         <mat-icon class="!text-sm !w-4 !h-4 text-primary-600 dark:text-primary-400">share</mat-icon>
         <span class="text-xs text-gray-500 dark:text-gray-400">Invite Code:</span>
         <span class="text-sm font-bold tracking-widest text-primary-700 dark:text-primary-300">{{ fam.inviteCode }}</span>
-        <button mat-icon-button class="!w-6 !h-6 !min-w-0" (click)="copyCode(fam.inviteCode)" matTooltip="Copy code">
-          <mat-icon class="!text-sm !w-4 !h-4 text-gray-400">content_copy</mat-icon>
+        <button mat-icon-button  (click)="copyCode(fam.inviteCode)" matTooltip="Copy code">
+          <mat-icon class="!text-sm text-gray-400">content_copy</mat-icon>
         </button>
       </div>
     </div>
@@ -90,7 +90,7 @@
 
     <!-- Member Breakdown -->
     <div class="px-4 mt-4" *ngIf="stats()?.memberBreakdown?.length">
-      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Member Activity</h2>
+      <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Member Activity</p>
       <div class="flex gap-3 overflow-x-auto pb-2">
         <div *ngFor="let m of stats()!.memberBreakdown"
           class="flex-shrink-0 bg-white dark:bg-gray-800 rounded-xl px-4 py-3 min-w-[130px] shadow-sm border border-gray-100 dark:border-gray-700">
@@ -110,7 +110,7 @@
     <!-- Recent Transactions -->
     <div class="px-4 mt-5">
       <div class="flex items-center justify-between mb-3">
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Recent Transactions</h2>
+        <p class="text-sm font-semibold text-gray-700 dark:text-gray-200">Recent Transactions</p>
         <button mat-button class="!text-xs" [routerLink]="['/dashboard/family/txns']">View All</button>
       </div>
 
@@ -152,12 +152,11 @@
 
   </ng-container>
 
-  <!-- FAB – Add Transaction -->
-  <button *ngIf="family()" mat-fab color="primary"
-    class="!fixed !bottom-6 !right-6 !z-50 !shadow-lg"
-    (click)="addTransaction()"
-    matTooltip="Add Transaction">
-    <mat-icon>add</mat-icon>
-  </button>
+  <!-- FAB – Quick Actions -->
+  <app-quick-actions-fab *ngIf="family()"
+    [config]="fabConfig()"
+    (mainButtonClick)="addTransaction()"
+    class="!fixed bottom-6 right-6 z-50">
+  </app-quick-actions-fab>
 
 </div>

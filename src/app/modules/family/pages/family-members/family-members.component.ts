@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, DestroyRef } from '@angular/core';
+import { Location } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -6,21 +7,38 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Auth } from '@angular/fire/auth';
 
 import { AppState } from 'src/app/store/app.state';
 import * as FamilyActions from '../../store/family.actions';
 import * as FamilySelectors from '../../store/family.selectors';
+import { FamilyAddTransactionDialogComponent } from '../../dialogs/family-add-transaction-dialog/family-add-transaction-dialog.component';
+import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { FamilyMember } from 'src/app/util/models/family.model';
 import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
 import { NotificationService } from 'src/app/util/service/notification.service';
+import { CommonHeaderComponent } from 'src/app/util/components/dialog/common-header/common-header.component';
+import { CommonBodyContentComponent } from 'src/app/util/components/dialog/common-body-content/common-body-content.component';
 
 @Component({
   selector: 'app-family-members',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatDialogModule, MatProgressSpinnerModule, MatMenuModule],
+  imports: [
+    CommonModule, 
+    MatButtonModule, 
+    MatIconModule, 
+    MatDialogModule, 
+    MatProgressSpinnerModule, 
+    MatMenuModule,
+    MatDividerModule,
+    MatTooltipModule,
+    CommonHeaderComponent,
+    CommonBodyContentComponent
+  ],
   templateUrl: './family-members.component.html',
   styleUrls: ['./family-members.component.scss']
 })
@@ -29,6 +47,8 @@ export class FamilyMembersComponent implements OnInit {
   private dialog = inject(MatDialog);
   private auth = inject(Auth);
   private notificationService = inject(NotificationService);
+  private location = inject(Location);
+  readonly breakpointService = inject(BreakpointService);
 
   family = signal<any>(null);
   members = signal<FamilyMember[]>([]);
@@ -74,6 +94,24 @@ export class FamilyMembersComponent implements OnInit {
     const code = this.family()?.inviteCode;
     if (code) navigator.clipboard.writeText(code);
     this.notificationService.success('Invite code copied!');
+  }
+
+  goBack() {
+    this.location.back();
+  }
+
+  addTransaction() {
+    const fam = this.family();
+    if (!fam) return;
+    const ref = this.dialog.open(FamilyAddTransactionDialogComponent, {
+      data: { familyId: fam.id, currency: fam.currency },
+      panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : '',
+    });
+    ref.afterClosed().subscribe(result => {
+      if (result?.request) {
+        this.store.dispatch(FamilyActions.addTransaction({ request: result.request }));
+      }
+    });
   }
 
   memberColor(userId: string): string {

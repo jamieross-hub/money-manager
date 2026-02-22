@@ -204,8 +204,7 @@ export class FamilyService {
   getTransactions(familyId: string): Observable<FamilyTransaction[]> {
     const q = query(
       collection(this.firestore, this.TRANSACTIONS_COL),
-      where('familyId', '==', familyId),
-      orderBy('date', 'desc')
+      where('familyId', '==', familyId)
     );
     return from(getDocs(q)).pipe(
       map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() } as FamilyTransaction))),

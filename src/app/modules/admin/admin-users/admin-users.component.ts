@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
+import { Component, OnInit, OnDestroy , ChangeDetectionStrategy, ChangeDetectorRef} from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
@@ -66,13 +66,15 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
     private auth: Auth,
     private userService: UserService,
     private dialog: MatDialog,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private changeDetectorRef: ChangeDetectorRef
   ) {
     // Observe breakpoints for mobile detection
     this.breakpointObserver.observe([Breakpoints.Handset])
       .pipe(takeUntil(this.destroy$))
       .subscribe(result => {
         this.isMobile = result.matches;
+        this.changeDetectorRef.markForCheck();
       });
   }
 
@@ -115,6 +117,7 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
 
   private async loadUsers(): Promise<void> {
     this.isLoading = true;
+    this.changeDetectorRef.markForCheck();
     try {
       // Load users from UserService
       this.usersList = await this.userService.getAllUsers();
@@ -124,6 +127,7 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
       this.notificationService.error('Failed to load users');
     } finally {
       this.isLoading = false;
+      this.changeDetectorRef.markForCheck();
     }
   }
 
@@ -161,6 +165,7 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
     this.filteredUsers = filtered;
     this.totalItems = filtered.length;
     this.currentPage = 1;
+    this.changeDetectorRef.markForCheck();
   }
 
   public getStatusColor(status: string): string {
@@ -204,6 +209,7 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
       await this.userService.updateUserStatus(user.uid, newStatus);
       user.status = newStatus;
       this.notificationService.success(`User status updated to ${newStatus}`);
+      this.changeDetectorRef.markForCheck();
     } catch (error) {
       console.error('Error updating user status:', error);
       this.notificationService.error('Failed to update user status');
@@ -233,6 +239,7 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
           console.error('Error deleting user:', error);
           this.notificationService.error('Failed to delete user');
         }
+        this.changeDetectorRef.markForCheck();
       }
     });
   }
@@ -247,6 +254,7 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
       await this.userService.toggleAdminRole(user.uid);
       user.isAdmin = !user.isAdmin;
       this.notificationService.success(`Admin role ${user.isAdmin ? 'granted' : 'revoked'} for ${user.displayName || user.email}`);
+      this.changeDetectorRef.markForCheck();
     } catch (error) {
       console.error('Error toggling admin role:', error);
       this.notificationService.error('Failed to update admin role');

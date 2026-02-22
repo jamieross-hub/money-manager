@@ -1,7 +1,7 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, DestroyRef } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, effect, DestroyRef } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { Auth } from '@angular/fire/auth';
 import { CommonModule } from '@angular/common';
@@ -18,14 +18,24 @@ import { FamilyService } from '../../services/family.service';
 import { FamilyCreateDialogComponent } from '../../dialogs/family-create-dialog/family-create-dialog.component';
 import { FamilyJoinDialogComponent } from '../../dialogs/family-join-dialog/family-join-dialog.component';
 import { FamilyAddTransactionDialogComponent } from '../../dialogs/family-add-transaction-dialog/family-add-transaction-dialog.component';
-import { FamilyTransaction, FamilyStats } from 'src/app/util/models/family.model';
+import { FamilyTransaction, FamilyStats, Family, FamilyMember } from 'src/app/util/models/family.model';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
+import { QuickActionsFabComponent, QuickActionsFabConfig, QuickAction } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 
 @Component({
   selector: 'app-family-dashboard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, MatTooltipModule, MatRippleModule],
+  imports: [
+    CommonModule, 
+    RouterModule, 
+    MatButtonModule, 
+    MatIconModule, 
+    MatProgressSpinnerModule, 
+    MatTooltipModule, 
+    MatRippleModule,
+    QuickActionsFabComponent
+  ],
   templateUrl: './family-dashboard.component.html',
   styleUrls: ['./family-dashboard.component.scss']
 })
@@ -38,10 +48,21 @@ export class FamilyDashboardComponent implements OnInit {
   readonly breakpointService = inject(BreakpointService);
   private destroyRef = inject(DestroyRef);
 
-  family = signal<any>(null);
-  members = signal<any[]>([]);
-  transactions = signal<FamilyTransaction[]>([]);
-  loading = signal(true);
+  family = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null });
+  members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers), { initialValue: [] as FamilyMember[] });
+  transactions = toSignal(this.store.select(FamilySelectors.selectFamilyTransactions), { initialValue: [] as FamilyTransaction[] });
+  recentTxns = toSignal(this.store.select(FamilySelectors.selectRecentTransactions), { initialValue: [] as FamilyTransaction[] });
+  loading = toSignal(this.store.select(FamilySelectors.selectFamilyLoading), { initialValue: true });
+
+  constructor() {
+    effect(() => {
+      const fam = this.family();
+      if (fam?.id) {
+        this.store.dispatch(FamilyActions.loadMembers({ familyId: fam.id }));
+        this.store.dispatch(FamilyActions.loadTransactions({ familyId: fam.id }));
+      }
+    }, { allowSignalWrites: true });
+  }
 
   stats = computed(() => {
     const fam = this.family();
@@ -49,39 +70,19 @@ export class FamilyDashboardComponent implements OnInit {
     return this.familyService.computeStats(this.transactions(), this.members());
   });
 
-  recentTxns = computed(() => this.transactions().slice(0, 5));
+  // No longer needed: recentTxns is now a toSignal
+
+  fabConfig = computed<QuickActionsFabConfig>(() => ({
+    mainButtonIcon: 'add',
+    mainButtonColor: 'primary',
+    mainButtonTooltip: 'Add Transaction',
+    actions: []
+  }));
 
   private memberColors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
 
   ngOnInit() {
-    this.loadData();
-  }
-
-  private loadData() {
-    this.loading.set(true);
     this.store.dispatch(FamilyActions.loadMyFamily());
-
-    this.store.select(FamilySelectors.selectFamilyLoading)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(l => this.loading.set(l));
-
-    this.store.select(FamilySelectors.selectFamily)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(fam => {
-        this.family.set(fam);
-        if (fam?.id) {
-          this.store.dispatch(FamilyActions.loadMembers({ familyId: fam.id }));
-          this.store.dispatch(FamilyActions.loadTransactions({ familyId: fam.id }));
-        }
-      });
-
-    this.store.select(FamilySelectors.selectFamilyMembers)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(m => this.members.set(m));
-
-    this.store.select(FamilySelectors.selectFamilyTransactions)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(t => this.transactions.set(t));
   }
 
   createFamily() {

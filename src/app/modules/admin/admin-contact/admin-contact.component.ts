@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
+import { Component, OnInit, OnDestroy , ChangeDetectionStrategy, ChangeDetectorRef} from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Subject, firstValueFrom } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -20,7 +20,8 @@ export class AdminContactComponent implements OnInit, OnDestroy {
     constructor(
         private contactService: ContactService,
         private notificationService: NotificationService,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private changeDetectorRef: ChangeDetectorRef
     ) { }
 
     ngOnInit(): void {
@@ -34,6 +35,7 @@ export class AdminContactComponent implements OnInit, OnDestroy {
 
     async loadContacts(): Promise<void> {
         this.isLoading = true;
+        this.changeDetectorRef.markForCheck();
         try {
             const contacts = await firstValueFrom(this.contactService.getAll());
             this.contactList = contacts;
@@ -42,6 +44,8 @@ export class AdminContactComponent implements OnInit, OnDestroy {
             console.error('Error loading contacts:', error);
             this.notificationService.error('Failed to load contact messages');
             this.isLoading = false;
+        } finally {
+            this.changeDetectorRef.markForCheck();
         }
     }
 
@@ -58,6 +62,7 @@ export class AdminContactComponent implements OnInit, OnDestroy {
             await this.contactService.update(contact.id, { status }).toPromise();
             this.notificationService.success(`Status updated to ${status}`);
             this.loadContacts(); // Refresh list to update UI
+            this.changeDetectorRef.markForCheck();
         } catch (error) {
             console.error('Error updating status', error);
             this.notificationService.error('Failed to update status');
@@ -75,6 +80,7 @@ export class AdminContactComponent implements OnInit, OnDestroy {
         dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
             if (result) {
                 this.isLoading = true;
+                this.changeDetectorRef.markForCheck();
                 this.contactService.delete(contact.id).subscribe(() => {
                     this.notificationService.success('Message deleted successfully');
                     this.loadContacts();
@@ -82,6 +88,7 @@ export class AdminContactComponent implements OnInit, OnDestroy {
                     console.error('Error deleting contact:', error);
                     this.notificationService.error('Failed to delete message');
                     this.isLoading = false;
+                    this.changeDetectorRef.markForCheck();
                 });
             }
         });

@@ -139,10 +139,11 @@ export class UserService {
       );
 
       if (user) {
-        const userData = await this.getCurrentUser();
+        let userData = await this.getCurrentUser();
 
         // Sync vital display info from Auth object if missing in Firestore/Cache
         if (userData) {
+          userData = { ...userData };
           if (!userData.photoURL && user.photoURL) userData.photoURL = user.photoURL;
           if (!userData.displayName && user.displayName) userData.displayName = user.displayName;
         }
@@ -1062,9 +1063,10 @@ export class UserService {
       );
       if (cachedUserData) {
         // If we have cached data, return it immediately for fast UI
-        if (!cachedUserData.photoURL && currentUser.photoURL) cachedUserData.photoURL = currentUser.photoURL;
-        if (!cachedUserData.displayName && currentUser.displayName) cachedUserData.displayName = currentUser.displayName;
-        return cachedUserData;
+        const clonedData = { ...cachedUserData };
+        if (!clonedData.photoURL && currentUser.photoURL) clonedData.photoURL = currentUser.photoURL;
+        if (!clonedData.displayName && currentUser.displayName) clonedData.displayName = currentUser.displayName;
+        return clonedData;
       }
 
       // 2. Check if we're offline

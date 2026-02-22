@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
+import { Component, OnInit, OnDestroy , ChangeDetectionStrategy, ChangeDetectorRef} from '@angular/core';
 import { Subject, firstValueFrom } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { UserService } from 'src/app/util/service/db/user.service';
@@ -41,7 +41,8 @@ export class AdminAnalyticsComponent implements OnInit, OnDestroy {
   constructor(
     private userService: UserService,
     private feedbackService: FeedbackService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private changeDetectorRef: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -55,6 +56,7 @@ export class AdminAnalyticsComponent implements OnInit, OnDestroy {
 
   private async loadAnalytics(): Promise<void> {
     this.isLoading = true;
+    this.changeDetectorRef.markForCheck();
     try {
       // Load user statistics
       const userStats = await this.userService.getUserStatistics();
@@ -70,6 +72,7 @@ export class AdminAnalyticsComponent implements OnInit, OnDestroy {
       this.notificationService.error('Failed to load analytics data');
     } finally {
       this.isLoading = false;
+      this.changeDetectorRef.markForCheck();
     }
   }
 

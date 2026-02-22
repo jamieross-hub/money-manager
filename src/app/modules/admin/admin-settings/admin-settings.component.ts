@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
+import { Component, OnInit, OnDestroy , ChangeDetectionStrategy, ChangeDetectorRef} from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -64,7 +64,8 @@ export class AdminSettingsComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private notificationService: NotificationService,
-    private localStorageService: LocalIndexDBStorageService
+    private localStorageService: LocalIndexDBStorageService,
+    private changeDetectorRef: ChangeDetectorRef
   ) {
     this.settingsForm = this.createForm();
   }
@@ -110,6 +111,7 @@ export class AdminSettingsComponent implements OnInit, OnDestroy {
 
   private async loadSettings(): Promise<void> {
     this.isLoading = true;
+    this.changeDetectorRef.markForCheck();
     try {
       // Load settings from localStorage or API
       const settings = this.localStorageService.getItem<any>(LocalStorageKey.ADMIN_SETTINGS);
@@ -121,6 +123,7 @@ export class AdminSettingsComponent implements OnInit, OnDestroy {
       this.notificationService.error('Failed to load settings');
     } finally {
       this.isLoading = false;
+      this.changeDetectorRef.markForCheck();
     }
   }
 
@@ -131,6 +134,7 @@ export class AdminSettingsComponent implements OnInit, OnDestroy {
     }
 
     this.isSaving = true;
+    this.changeDetectorRef.markForCheck();
     try {
       const settings = this.settingsForm.value;
 
@@ -143,6 +147,7 @@ export class AdminSettingsComponent implements OnInit, OnDestroy {
       this.notificationService.error('Failed to save settings');
     } finally {
       this.isSaving = false;
+      this.changeDetectorRef.markForCheck();
     }
   }
 

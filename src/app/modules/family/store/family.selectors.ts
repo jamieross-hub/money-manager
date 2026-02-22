@@ -3,7 +3,7 @@ import { FamilyState } from './family.state';
 
 export const selectFamilyState = createFeatureSelector<FamilyState>('family');
 
-export const selectFamily = createSelector(selectFamilyState, s => s.family);
+export const selectFamily = createSelector(selectFamilyState, s => s?.family || null);
 export const selectFamilyMembers = createSelector(selectFamilyState, s => s.members);
 export const selectFamilyTransactions = createSelector(selectFamilyState, s => s.transactions);
 export const selectFamilyLoading = createSelector(selectFamilyState, s => s.loading);

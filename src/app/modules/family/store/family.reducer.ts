@@ -21,7 +21,8 @@ export const familyReducer = createReducer(
   on(FamilyActions.joinFamilyFailure, (state, { error }) => ({ ...state, loading: false, error })),
 
   // Members
-  on(FamilyActions.loadMembersSuccess, (state, { members }) => ({ ...state, members })),
+  on(FamilyActions.loadMembers, state => ({ ...state, loading: true })),
+  on(FamilyActions.loadMembersSuccess, (state, { members }) => ({ ...state, loading: false, members })),
   on(FamilyActions.removeMemberSuccess, (state, { memberId }) => ({
     ...state,
     members: state.members.filter(m => m.id !== memberId)

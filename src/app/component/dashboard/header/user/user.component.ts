@@ -104,6 +104,20 @@ export class UserComponent {
     });
   }
 
+  get profileImage(): string {
+    const url = this.user?.photoURL;
+    if (!url || url === 'undefined' || url === 'null') {
+      return 'assets/images/profile.png';
+    }
+    return url;
+  }
+
+  onImageError(): void {
+    if (this.user) {
+      this.user.photoURL = 'assets/images/profile.png';
+    }
+  }
+
   toggle(event?: Event) {
     if (event) {
       event.stopPropagation();
