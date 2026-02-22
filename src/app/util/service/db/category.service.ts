@@ -16,7 +16,7 @@ import { HapticFeedbackService } from '../haptic-feedback.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { UserService } from './user.service';
 import { LocalStorageKeyHelper } from '../../models/local-storage.model';
-import { of, map, from, catchError, tap } from 'rxjs';
+import { of, map, from, catchError, tap, timeout } from 'rxjs';
 
 @Injectable({
     providedIn: 'root'
@@ -80,9 +80,10 @@ export class CategoryService {
         console.log(`[CategoryService] Pulling categories for user: ${userId}`);
 
         return from(getDocs(categoriesRef)).pipe(
-            tap(querySnapshot => {
+            timeout(10000),
+            tap((querySnapshot: any) => {
                 const categories: Category[] = [];
-                querySnapshot.forEach(docSnap => {
+                querySnapshot.forEach((docSnap: any) => {
                     const data: any = docSnap.data();
                     const category: Category = {
                         id: docSnap.id,

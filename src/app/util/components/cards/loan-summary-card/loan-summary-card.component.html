@@ -5,8 +5,8 @@
     <div class="hero-content">
       <div class="top-section">
         <div class="greeting">
-          <p class="text-xs opacity-90 m-0">{{ greeting() }},</p>
-          <h2 class="text-2xl font-bold m-0">{{ userName() }}</h2>
+          <p class="greeting-text">{{ greeting() }},</p>
+          <h2 class="user-name">{{ userName() }}</h2>
         </div>
         <div class="expansion-indicator">
           <mat-icon>{{ isExpanded() ? 'expand_less' : 'expand_more' }}</mat-icon>
@@ -14,20 +14,20 @@
       </div>
 
       <div class="journey-section">
-        <p class="text-sm opacity-90 m-0">Your journey to</p>
-        <p class="text-3xl font-extrabold m-0 text-wrap">{{ journeyTarget() }}</p>
+        <p class="journey-label">Your journey to</p>
+        <p class="journey-target text-wrap">{{ journeyTarget() }}</p>
       </div>
 
       <div class="progress-section">
         <div class="progress-info">
-          <!-- <div class="progress-bar-container">
+          <div class="progress-bar-container">
             <div class="progress-bar" [style.width.%]="paidPercentage()"></div>
-          </div> -->
-          <span class="text-sm font-semibold">{{ remainingMonths() }} months left</span>
+          </div>
+          <span class="months-left">{{ remainingMonths() }} months left</span>
         </div>
-        <div class="paid-info text-right">
-          <p class="text-xs opacity-90 m-0">Paid so far</p>
-          <p class="text-2xl font-bold m-0">{{ totalPaid() | currency:{compact:true} }}</p>
+        <div class="paid-info">
+          <p class="paid-label">Paid so far</p>
+          <p class="paid-value">{{ totalPaid() | currency:{compact:true,round:true} }}</p>
         </div>
       </div>
     </div>
@@ -118,14 +118,14 @@
 
           <!-- Footer -->
           <div class="loan-card-footer">
-            <span class="loan-rate">
-              <mat-icon class="rate-icon">percent</mat-icon>
-              {{ item.interestRate }} p.a.
-            </span>
-            <span class="loan-end-year">
-              <mat-icon class="rate-icon">flag</mat-icon>
-              {{ item.endYear }}
-            </span>
+            <div class="loan-footer-item">
+              <mat-icon class="footer-icon">percent</mat-icon>
+              <span>{{ item.interestRate }} p.a.</span>
+            </div>
+            <div class="loan-footer-item">
+              <mat-icon class="footer-icon">flag</mat-icon>
+              <span>Ends {{ item.endYear }}</span>
+            </div>
           </div>
 
         </div>

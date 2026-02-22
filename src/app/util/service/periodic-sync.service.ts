@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { interval, Subscription, from, of, forkJoin, Subject } from 'rxjs';
-import { switchMap, catchError, tap, take, map, filter, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { interval, Subscription, from, of, forkJoin, Subject, fromEvent } from 'rxjs';
+import { switchMap, catchError, tap, take, map, filter, distinctUntilChanged, takeUntil, timeout } from 'rxjs/operators';
 import { TransactionsService } from './db/transactions.service';
 import { AccountsService } from './db/accounts.service';
 import { CategoryService } from './db/category.service';
@@ -86,8 +86,25 @@ export class PeriodicSyncService implements OnDestroy {
       })
     ).subscribe();
 
+    // Passive State Handling: Pause sync when app is in background
+    fromEvent(document, 'visibilitychange').pipe(
+      takeUntil(this.destroy$),
+      map(() => document.visibilityState),
+      distinctUntilChanged(),
+      tap(state => {
+        if (state === 'hidden') {
+          console.log('💤 App went to passive state: Pausing Periodic Sync');
+          this.stopSync();
+        } else {
+          console.log('✨ App resumed: Restarting Periodic Sync');
+          this.startSync();
+        }
+      })
+    ).subscribe();
+
     // Set up periodic interval
     this.syncSubscription = interval(this.SYNC_INTERVAL).pipe(
+      filter(() => document.visibilityState === 'visible'), // Only sync if app is visible
       switchMap(() => this.syncAll()),
       catchError(error => {
         console.error('❌ Periodic sync failed:', error);
@@ -132,6 +149,7 @@ export class PeriodicSyncService implements OnDestroy {
 
     // 1. Push pending changes first
     return from(this.commonSyncService.manualSync()).pipe(
+      timeout(10000), // Timeout after 10s if push hangs
       // 2. Pull changes from all collections
       switchMap(() => {
         return forkJoin([
@@ -146,13 +164,21 @@ export class PeriodicSyncService implements OnDestroy {
           this.subscriptionService.pullFromFirestore(userId),
           this.feedbackService.pullFromFirestore(),
           this.contactService.pullFromFirestore()
-        ]);
+        ]).pipe(
+          timeout(30000) // Timeout after 30s if pull hangs
+        );
       }),
       tap(() => {
         console.log('✅ Sync completed successfully');
       }),
       catchError(error => {
-        console.error('❌ Sync failed:', error);
+        if (error.name === 'TimeoutError') {
+          console.warn('⚠️ Sync timed out: Continuing in offline mode');
+        } else if (error.code === 'unavailable' || error.message?.includes('network')) {
+          console.warn('⚠️ Firestore unavailable: Continuing in offline mode');
+        } else {
+          console.error('❌ Sync failed:', error);
+        }
         return of(null);
       })
     );

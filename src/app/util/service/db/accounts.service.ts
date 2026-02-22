@@ -7,7 +7,7 @@ import { Transaction } from '../../models/transaction.model';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { LocalStorageKeyHelper } from '../../models/local-storage.model';
 import { UserService } from './user.service';
-import { of, map, from, catchError, tap } from 'rxjs';
+import { of, map, from, catchError, tap, timeout } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import * as AccountsActions from 'src/app/store/accounts/accounts.actions';
@@ -101,9 +101,10 @@ export class AccountsService {
         console.log(`[AccountsService] Pulling accounts for user: ${userId}`);
 
         return from(getDocs(accountsRef)).pipe(
-            tap(querySnapshot => {
+            timeout(10000),
+            tap((querySnapshot: any) => {
                 const accounts: Account[] = [];
-                querySnapshot.forEach(docSnap => {
+                querySnapshot.forEach((docSnap: any) => {
                     accounts.push(docSnap.data() as Account);
                 });
 

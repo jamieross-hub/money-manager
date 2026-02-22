@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, Timestamp, onSnapshot } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { Observable, of, from } from 'rxjs';
-import { map, catchError, tap } from 'rxjs/operators';
+import { map, catchError, tap, timeout } from 'rxjs/operators';
 import { DateService } from '../date.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { LocalStorageKeyHelper } from '../../models/local-storage.model';
@@ -70,9 +70,10 @@ export class GoalsService {
         console.log(`[GoalsService] Pulling goals for user: ${userId}`);
 
         return from(getDocs(goalsRef)).pipe(
-            tap(querySnapshot => {
+            timeout(10000),
+            tap((querySnapshot: any) => {
                 const goals: Goal[] = [];
-                querySnapshot.forEach(docSnap => {
+                querySnapshot.forEach((docSnap: any) => {
                     goals.push(docSnap.data() as Goal);
                 });
 

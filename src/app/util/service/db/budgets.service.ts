@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, Timestamp, onSnapshot } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { Observable, of, from } from 'rxjs';
-import { map, catchError, tap } from 'rxjs/operators';
+import { map, catchError, tap, timeout } from 'rxjs/operators';
 import { DateService } from '../date.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { LocalStorageKeyHelper } from '../../models/local-storage.model';
@@ -137,9 +137,10 @@ export class BudgetsService {
     console.log(`[BudgetsService] Pulling budgets for user: ${userId}`);
 
     return from(getDocs(budgetsRef)).pipe(
-      tap(querySnapshot => {
+      timeout(10000),
+      tap((querySnapshot: any) => {
         const budgets: Budget[] = [];
-        querySnapshot.forEach(docSnap => {
+        querySnapshot.forEach((docSnap: any) => {
           budgets.push(docSnap.data() as Budget);
         });
 
