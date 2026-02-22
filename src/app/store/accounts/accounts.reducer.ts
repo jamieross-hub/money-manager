@@ -144,26 +144,18 @@ export const accountsReducer = createReducer(
     if (!account) return { ...state, loading: true };
 
     let balanceChange = 0;
-    let loanRemainingBalanceChange = 0;
 
     const getEffect = (t: any) => {
       const amount = Number(t.amount) || 0;
       return t.type === 'income' ? amount : -amount;
     };
-    const getLoanEffect = (t: any) => {
-      const amount = Number(t.amount) || 0;
-      return t.type === 'expense' ? -amount : 0;
-    };
 
     if (transactionType === 'create' && newTransaction) {
       balanceChange = getEffect(newTransaction);
-      if (account.type === 'loan') loanRemainingBalanceChange = getLoanEffect(newTransaction);
     } else if (transactionType === 'update' && oldTransaction && newTransaction) {
       balanceChange = getEffect(newTransaction) - getEffect(oldTransaction);
-      if (account.type === 'loan') loanRemainingBalanceChange = getLoanEffect(newTransaction) - getLoanEffect(oldTransaction);
     } else if (transactionType === 'delete' && oldTransaction) {
       balanceChange = -getEffect(oldTransaction);
-      if (account.type === 'loan') loanRemainingBalanceChange = -getLoanEffect(oldTransaction);
     }
 
     const updatedAccount = {
@@ -173,6 +165,7 @@ export const accountsReducer = createReducer(
     };
 
     if (account.type === 'loan' && account.loanDetails) {
+      const loanRemainingBalanceChange = -balanceChange;
       updatedAccount.loanDetails = {
         ...account.loanDetails,
         remainingBalance: Math.max(0, (Number(account.loanDetails.remainingBalance) || 0) + loanRemainingBalanceChange)
@@ -218,10 +211,11 @@ export const accountsReducer = createReducer(
           updatedAt: new Date()
         };
 
-        if (account.type === 'loan' && account.loanDetails && t.type === 'expense') {
+        if (account.type === 'loan' && account.loanDetails) {
+          const loanRemainingBalanceChange = -balanceChange;
           updatedAccount.loanDetails = {
             ...account.loanDetails,
-            remainingBalance: Math.max(0, (Number(account.loanDetails.remainingBalance) || 0) - amount)
+            remainingBalance: Math.max(0, (Number(account.loanDetails.remainingBalance) || 0) + loanRemainingBalanceChange)
           };
         }
         
@@ -265,10 +259,10 @@ export const accountsReducer = createReducer(
       balance: (Number(oldAccount.balance) || 0) - transactionEffect,
       updatedAt: new Date()
     };
-    if (oldAccount.type === 'loan' && oldAccount.loanDetails && transaction.type === 'expense') {
+    if (oldAccount.type === 'loan' && oldAccount.loanDetails) {
       updatedOldAccount.loanDetails = {
         ...oldAccount.loanDetails,
-        remainingBalance: (Number(oldAccount.loanDetails.remainingBalance) || 0) + amount
+        remainingBalance: (Number(oldAccount.loanDetails.remainingBalance) || 0) + transactionEffect
       };
     }
 
@@ -278,10 +272,10 @@ export const accountsReducer = createReducer(
       balance: (Number(newAccount.balance) || 0) + transactionEffect,
       updatedAt: new Date()
     };
-    if (newAccount.type === 'loan' && newAccount.loanDetails && transaction.type === 'expense') {
+    if (newAccount.type === 'loan' && newAccount.loanDetails) {
       updatedNewAccount.loanDetails = {
         ...newAccount.loanDetails,
-        remainingBalance: Math.max(0, (Number(newAccount.loanDetails.remainingBalance) || 0) - amount)
+        remainingBalance: Math.max(0, (Number(newAccount.loanDetails.remainingBalance) || 0) - transactionEffect)
       };
     }
 

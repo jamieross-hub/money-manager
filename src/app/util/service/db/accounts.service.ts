@@ -266,6 +266,9 @@ export class AccountsService {
 
             account.balance = (Number(account.balance) || 0) + balanceChange;
             if (account.type === 'loan' && account.loanDetails) {
+                // For loans, balance is negative and remainingBalance is positive.
+                // So remainingBalance change is the opposite of balance change.
+                const loanRemainingBalanceChange = -balanceChange;
                 account.loanDetails.remainingBalance = Math.max(0, (Number(account.loanDetails.remainingBalance) || 0) + loanRemainingBalanceChange);
             }
             account.updatedAt = new Date() as any;
@@ -329,6 +332,7 @@ export class AccountsService {
                     };
 
                     if (account.type === 'loan' && account.loanDetails) {
+                        const loanRemainingBalanceChange = -balanceChange;
                         const newRemainingBalance = Math.max(0, (Number(account.loanDetails.remainingBalance) || 0) + loanRemainingBalanceChange);
                         updateData['loanDetails.remainingBalance'] = newRemainingBalance;
                     }
@@ -365,8 +369,9 @@ export class AccountsService {
                 const amount = Number(t.amount) || 0;
                 const balanceChange = t.type === 'income' ? amount : -amount;
                 account.balance = (Number(account.balance) || 0) + balanceChange;
-                if (account.type === 'loan' && account.loanDetails && t.type === 'expense') {
-                    account.loanDetails.remainingBalance = Math.max(0, (Number(account.loanDetails.remainingBalance) || 0) - amount);
+                if (account.type === 'loan' && account.loanDetails) {
+                    const loanRemainingBalanceChange = -balanceChange;
+                    account.loanDetails.remainingBalance = Math.max(0, (Number(account.loanDetails.remainingBalance) || 0) + loanRemainingBalanceChange);
                 }
                 account.updatedAt = new Date() as any;
                 this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...account } as any }));
@@ -421,13 +426,11 @@ export class AccountsService {
 
                             // Handle loan account updates
                             if (account.type === 'loan' && account.loanDetails) {
-                                const loanChange = accountLoanChanges.get(accountId) || 0;
-                                if (loanChange > 0) {
-                                    const currentRemainingBalance = Number(account.loanDetails.remainingBalance) || 0;
-                                    const newRemainingBalance = Math.max(0, currentRemainingBalance - loanChange);
+                                const loanRemainingBalanceChange = -balanceChange;
+                                const currentRemainingBalance = Number(account.loanDetails.remainingBalance) || 0;
+                                const newRemainingBalance = Math.max(0, currentRemainingBalance + loanRemainingBalanceChange);
 
-                                    updateData['loanDetails.remainingBalance'] = newRemainingBalance;
-                                }
+                                updateData['loanDetails.remainingBalance'] = newRemainingBalance;
                             }
 
                             batch.update(accountRef, updateData);
@@ -472,13 +475,13 @@ export class AccountsService {
             const transactionEffect = transaction.type === 'income' ? amount : -amount;
 
             oldAccount.balance = (Number(oldAccount.balance) || 0) - transactionEffect;
-            if (oldAccount.type === 'loan' && oldAccount.loanDetails && transaction.type === 'expense') {
-                oldAccount.loanDetails.remainingBalance = (Number(oldAccount.loanDetails.remainingBalance) || 0) + amount;
+            if (oldAccount.type === 'loan' && oldAccount.loanDetails) {
+                oldAccount.loanDetails.remainingBalance = (Number(oldAccount.loanDetails.remainingBalance) || 0) + transactionEffect;
             }
 
             newAccount.balance = (Number(newAccount.balance) || 0) + transactionEffect;
-            if (newAccount.type === 'loan' && newAccount.loanDetails && transaction.type === 'expense') {
-                newAccount.loanDetails.remainingBalance = Math.max(0, (Number(newAccount.loanDetails.remainingBalance) || 0) - amount);
+            if (newAccount.type === 'loan' && newAccount.loanDetails) {
+                newAccount.loanDetails.remainingBalance = Math.max(0, (Number(newAccount.loanDetails.remainingBalance) || 0) - transactionEffect);
             }
 
             oldAccount.updatedAt = new Date() as any;
@@ -531,10 +534,10 @@ export class AccountsService {
                     };
 
                     // Handle loan account updates for old account
-                    if (oldAccount.type === 'loan' && oldAccount.loanDetails && transaction.type === 'expense') {
-                        // Remove the loan payment effect from old account
+                    if (oldAccount.type === 'loan' && oldAccount.loanDetails) {
+                        // Remove the transaction effect from old account loan
                         const currentRemainingBalance = Number(oldAccount.loanDetails.remainingBalance) || 0;
-                        const newRemainingBalance = currentRemainingBalance + amount;
+                        const newRemainingBalance = currentRemainingBalance + transactionEffect;
 
                         oldAccountUpdateData['loanDetails.remainingBalance'] = newRemainingBalance;
                     }
@@ -546,10 +549,10 @@ export class AccountsService {
                     };
 
                     // Handle loan account updates for new account
-                    if (newAccount.type === 'loan' && newAccount.loanDetails && transaction.type === 'expense') {
-                        // Add the loan payment effect to new account
+                    if (newAccount.type === 'loan' && newAccount.loanDetails) {
+                        // Add the transaction effect to new account loan
                         const currentRemainingBalance = Number(newAccount.loanDetails.remainingBalance) || 0;
-                        const newRemainingBalance = Math.max(0, currentRemainingBalance - amount);
+                        const newRemainingBalance = Math.max(0, currentRemainingBalance - transactionEffect);
 
                         newAccountUpdateData['loanDetails.remainingBalance'] = newRemainingBalance;
                     }
