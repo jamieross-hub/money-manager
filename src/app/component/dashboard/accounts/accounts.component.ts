@@ -257,7 +257,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
               maskedId: account.accountId.slice(-4),
               formattedName: this.toTitleCase(account.name),
               formattedInstitution: this.toTitleCase(account.institution || account.type),
-              formattedBalance: this.currencyService.formatAmount(rawBalance),
+              formattedBalance: this.currencyService.formatAmount(rawBalance,{round:true}),
               ...this.getPaymentDueStatus(account)
             };
           });

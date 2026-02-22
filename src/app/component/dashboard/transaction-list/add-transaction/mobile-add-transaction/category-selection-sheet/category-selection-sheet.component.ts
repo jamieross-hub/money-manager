@@ -76,8 +76,11 @@ export class CategorySelectionSheetComponent implements OnInit {
                     }
                 });
 
-                // Show all categories regardless of type
-                let filtered = [...categories];
+                // Show all categories regardless of type, but hide system categories
+                let filtered = categories.filter(c => 
+                    !c.isSystem && 
+                    !(c.name.toLowerCase() === 'loan payment' && c.type === TransactionType.INCOME)
+                );
 
                 if (search) {
                     filtered = filtered.filter(c => c.name.toLowerCase().includes(search));

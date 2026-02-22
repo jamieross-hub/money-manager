@@ -13,6 +13,7 @@ export interface Category {
   isSubCategory?: boolean;
   subCategories?: Array<string>;
   group?: string;
+  isSystem?: boolean;
 }
 
 export interface Budget {

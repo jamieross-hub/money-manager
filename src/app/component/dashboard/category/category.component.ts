@@ -204,6 +204,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
         // 2. Filter & Sort
         const filtered = processedCategories.filter(category => {
+          if (category.isSystem || (category.name.toLowerCase() === 'loan payment' && category.type === TransactionType.INCOME)) return false;
           const matchesSearch = !searchText || category.name.toLowerCase().includes(searchText.toLowerCase());
           const matchesType = filterType === 'all' || category.type.toLowerCase() === filterType;
           const matchesGroup = !selectedGroup || category.group === selectedGroup;

@@ -159,9 +159,15 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     ]).pipe(
       takeUntil(this._onDestroy),
       map(([categories, search]) => {
-        if (!search) return categories;
+        // Filter out system categories and the specific 'Loan Payment' income category
+        let filtered = categories.filter((c: Category) => 
+          !c.isSystem && 
+          !(c.name.toLowerCase() === 'loan payment' && c.type === TransactionType.INCOME)
+        );
+
+        if (!search) return filtered;
         const searchLower = search.toLowerCase();
-        return categories.filter((c: Category) => c.name.toLowerCase().includes(searchLower));
+        return filtered.filter((c: Category) => c.name.toLowerCase().includes(searchLower));
       })
     ).subscribe((filtered: Category[]) => this.filteredCategories.next(filtered));
 

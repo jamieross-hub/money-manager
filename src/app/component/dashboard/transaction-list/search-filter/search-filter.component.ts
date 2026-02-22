@@ -192,10 +192,12 @@ export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {
   private loadCategoriesFromStore() {
     this.subscription.add(
       this.store.select(CategoriesSelectors.selectAllCategories).subscribe((categories: Category[]) => {
-        this.categories = categories.map(category => ({
-          id: category.id || '',
-          name: category.name
-        })).sort((a, b) => a.name.localeCompare(b.name));
+        this.categories = categories
+          .filter(category => !category.isSystem)
+          .map(category => ({
+            id: category.id || '',
+            name: category.name
+          })).sort((a, b) => a.name.localeCompare(b.name));
         this.cdr.markForCheck();
       })
     );

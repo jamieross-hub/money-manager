@@ -16,7 +16,7 @@ import { AccountsService } from 'src/app/util/service/db/accounts.service';
 import { TransactionType, RecurringInterval, TransactionStatus, PaymentMethod } from 'src/app/util/config/enums';
 import { Transaction } from 'src/app/util/models/transaction.model';
 import { Observable, of, Subject, takeUntil } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, map } from 'rxjs/operators';
 import dayjs from 'dayjs';
 import { CommonModule } from '@angular/common';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -482,7 +482,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
           const today = dayjs().startOf('day');
           let pastMonths = 0;
           let paymentDate = startDayjs.startOf('day');
-          while (!paymentDate.isAfter(today)) {
+          while (paymentDate.isBefore(today, 'day')) {
             pastMonths++;
             paymentDate = paymentDate.add(1, 'month');
           }
@@ -534,12 +534,38 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
   private findOrCreateLoanPaymentCategory(userId: string): Observable<string> {
     return this.categoryService.getCategories(userId).pipe(
       switchMap(categories => {
-        const existing = categories.find(c =>
-          c.name.toLowerCase().includes('loan') && c.type === TransactionType.INCOME
+        // Try to find by flag first
+        let existing = categories.find(c => c.isSystem && c.type === TransactionType.INCOME);
+        
+        if (existing?.id) return of(existing.id);
+
+        // Fallback: search by name and type for backward compatibility
+        const legacy = categories.find(c => 
+          c.name.toLowerCase() === 'loan payment' && 
+          c.type === TransactionType.INCOME
         );
-        return existing?.id
-          ? of(existing.id)
-          : this.categoryService.createCategory(userId, 'Loan Payment', TransactionType.INCOME, 'account_balance', '#ef4444');
+
+        if (legacy) {
+          // Migrate legacy category by setting isSystem to true
+          return this.categoryService.updateCategory(
+            userId, 
+            legacy.id!, 
+            legacy.name, 
+            legacy.type, 
+            legacy.icon, 
+            legacy.color, 
+            legacy.budget, 
+            legacy.parentCategoryId, 
+            legacy.isSubCategory, 
+            legacy.group, 
+            true // isSystem
+          ).pipe(
+            map(() => legacy.id!)
+          );
+        }
+
+        // Neither found, create new
+        return this.categoryService.createCategory(userId, 'Loan Payment', TransactionType.INCOME, 'account_balance', '#ef4444', undefined, true);
       })
     );
   }

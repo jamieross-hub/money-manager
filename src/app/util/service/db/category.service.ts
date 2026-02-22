@@ -95,7 +95,8 @@ export class CategoryService {
                         parentCategoryId: data?.parentCategoryId || null,
                         isSubCategory: data?.isSubCategory || false,
                         subCategories: data?.subCategories || [],
-                        group: data?.group
+                        group: data?.group,
+                        isSystem: data?.isSystem || false
                     };
                     categories.push(category);
                 });
@@ -116,7 +117,7 @@ export class CategoryService {
         );
     }
 
-    createCategory(userId: string, name: string, type: TransactionType, icon: string, color: string, group?: string): Observable<string> {
+    createCategory(userId: string, name: string, type: TransactionType, icon: string, color: string, group?: string, isSystem: boolean = false): Observable<string> {
         const categoryId = this.generateCategoryId();
         const categoryData: Category = {
             id: categoryId,
@@ -125,6 +126,7 @@ export class CategoryService {
             icon,
             color,
             group: group || undefined,
+            isSystem,
             createdAt: Date.now() as any
         };
 
@@ -159,6 +161,7 @@ export class CategoryService {
                 icon,
                 color,
                 group: group || null,
+                isSystem,
                 createdAt: Date.now()
             }).catch(error => {
                 console.error(`Error creating category for ${userId} in Firestore:`, error);
@@ -168,7 +171,7 @@ export class CategoryService {
     }
 
     /** Update a category */
-    updateCategory(userId: string, categoryId: string, name: string, type: TransactionType, icon: string, color: string, budgetData?: any, parentCategoryId?: string | null, isSubCategory?: boolean, group?: string): Observable<void> {
+    updateCategory(userId: string, categoryId: string, name: string, type: TransactionType, icon: string, color: string, budgetData?: any, parentCategoryId?: string | null, isSubCategory?: boolean, group?: string, isSystem?: boolean): Observable<void> {
         const currentCategory = this.categories[categoryId];
         const updatedCategory: Category = {
             ...currentCategory,
@@ -180,7 +183,8 @@ export class CategoryService {
             group: group !== undefined ? group : currentCategory?.group,
             budget: budgetData !== undefined ? budgetData : currentCategory?.budget,
             parentCategoryId: parentCategoryId !== undefined ? (parentCategoryId === null ? undefined : parentCategoryId) : currentCategory?.parentCategoryId,
-            isSubCategory: isSubCategory !== undefined ? isSubCategory : currentCategory?.isSubCategory
+            isSubCategory: isSubCategory !== undefined ? isSubCategory : currentCategory?.isSubCategory,
+            isSystem: isSystem !== undefined ? isSystem : currentCategory?.isSystem
         };
 
         if (this.isGuest()) {
@@ -248,7 +252,8 @@ export class CategoryService {
                         type,
                         icon,
                         color,
-                        group: group !== undefined ? group : (currentCategory?.group || null)
+                        group: group !== undefined ? group : (currentCategory?.group || null),
+                        isSystem: isSystem !== undefined ? isSystem : (currentCategory?.isSystem || false)
                     };
 
                     if (budgetData !== undefined) updateData.budget = budgetData;
