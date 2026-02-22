@@ -196,7 +196,6 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
       billingCycleStart:       [1, [Validators.required, Validators.min(1), Validators.max(31)]],
       creditLimit:             [0, [Validators.min(0)]],
       minimumPayment:          [0, [Validators.min(0)]],
-      creditCardShowReminder:  [true],
     });
   }
 
@@ -235,7 +234,6 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
         billingCycleStart:      account.creditCardDetails.billingCycleStart,
         creditLimit:            account.creditCardDetails.creditLimit,
         minimumPayment:         account.creditCardDetails.minimumPayment,
-        creditCardShowReminder: account.creditCardDetails.showReminder,
       }),
     });
   }
@@ -424,7 +422,12 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
   // ─── Submit ───────────────────────────────────────────────────────────────
 
   async onSubmit(): Promise<void> {
-    if (!this.accountForm.valid || this.submitting()) return;
+    if (this.accountForm.invalid) {
+      this.accountForm.markAllAsTouched();
+      this.notificationService.error('Please fix the errors in the form before saving');
+      return;
+    }
+    if (this.submitting()) return;
     this.submitting.set(true);
 
     try {
@@ -463,7 +466,6 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
           billingCycleStart: Number(formData.billingCycleStart) || 1,
           creditLimit:       Number(formData.creditLimit) || 0,
           minimumPayment:    Number(formData.minimumPayment) || 0,
-          showReminder:      formData.creditCardShowReminder,
           nextDueDate:       this.buildNextCreditCardDueDate(Number(formData.dueDate) || 15),
         };
       }

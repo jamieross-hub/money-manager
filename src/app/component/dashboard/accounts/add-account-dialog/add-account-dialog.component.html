@@ -2,7 +2,6 @@
 <app-common-header
 	[title]="(dialogData?.accountId ? 'Edit' : 'Add') + ' Account'"
 	[showAddButton]="true"
-	[addButtonDisabled]="accountForm.invalid"
 	[isSubmitting]="submitting()"
 	addButtonTooltip="Save Account"
 	(addButtonClick)="onSubmit()"
@@ -99,6 +98,12 @@
 						<mat-form-field appearance="fill" class="w-full">
 							<mat-label>Monthly EMI</mat-label>
 							<input matInput type="number" formControlName="customMonthlyPayment" placeholder="0.00" (blur)="recalculateRemainingBalance()" required>
+							@if(accountForm.get('customMonthlyPayment')?.hasError('required') && accountForm.get('customMonthlyPayment')?.touched) {
+								<mat-error>Monthly payment is required</mat-error>
+							}
+							@if(accountForm.get('customMonthlyPayment')?.hasError('min')) {
+								<mat-error>Must be greater than 0</mat-error>
+							}
 						</mat-form-field>
 
 						<mat-form-field appearance="fill" class="w-full">
@@ -124,77 +129,77 @@
 			</div>
 
 			<!-- Loan Analysis Preview -->
-			<div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
-				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4 border-b border-gray-50 dark:border-gray-700/50 pb-2">
-					Loan Analysis Preview
-				</label>
-				<div class="grid grid-cols-2 gap-y-6 gap-x-12">
-					<div class="border-b border-gray-100 dark:border-gray-800 pb-2 flex flex-col">
-						<p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1">Total Principal</p>
-						<p class="text-sm font-bold text-gray-900 dark:text-gray-100">
+			<div class="bg-gray-50 dark:bg-gray-800/40 rounded-2xl p-6 border border-gray-100 dark:border-gray-700/50">
+				
+				<div class="grid grid-cols-2 gap-x-8 gap-y-6">
+					<div class="space-y-1">
+						<p class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Principal</p>
+						<p class="text-base font-bold text-gray-900 dark:text-gray-100">
 							{{ (formSnapshot()?.loanAmount || 0) | currency }}
 						</p>
 					</div>
 
-					<div class="border-b border-gray-100 dark:border-gray-800 pb-2 flex flex-col">
-						<p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1">Monthly EMI</p>
-						<p class="text-sm font-bold text-gray-900 dark:text-gray-100">
+					<div class="space-y-1">
+						<p class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Monthly EMI</p>
+						<p class="text-base font-bold text-gray-900 dark:text-gray-100">
 							{{ loanMonthlyPayment() | currency }}
 						</p>
 					</div>
 
-					<div class="border-b border-gray-100 dark:border-gray-800 pb-2 flex flex-col">
-						<p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1">Interest Rate</p>
-						<p class="text-sm font-bold text-gray-900 dark:text-gray-100">
-							{{ formSnapshot()?.interestRate || 0 | number:'1.1-2' }}%
+					<div class="space-y-1">
+						<p class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Interest Rate</p>
+						<p class="text-base font-bold text-gray-900 dark:text-gray-100">
+							{{ (formSnapshot()?.interestRate || 0) | number:'1.1-2' }}%
 						</p>
 					</div>
 
-					<div class="border-b border-gray-100 dark:border-gray-800 pb-2 flex flex-col">
-						<p class="text-[9px] font-black text-teal-500 uppercase tracking-[0.15em] mb-1">Est. Total Interest</p>
-						<p class="text-sm font-bold text-teal-600 dark:text-teal-400">
+					<div class="space-y-1">
+						<p class="text-[10px] font-semibold text-teal-600 dark:text-teal-400 uppercase tracking-wider">Est. Total Interest</p>
+						<p class="text-base font-bold text-teal-600 dark:text-teal-400">
 							{{ loanTotalInterest() | currency }}
 						</p>
 					</div>
 
-					<div class="border-b border-gray-100 dark:border-gray-800 pb-2 flex flex-col">
-						<p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1">Total Repayment</p>
-						<p class="text-sm font-bold text-gray-900 dark:text-gray-100">
+					<div class="space-y-1">
+						<p class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Repayment</p>
+						<p class="text-base font-bold text-gray-900 dark:text-gray-100">
 							{{ loanTotalRepayment() | currency }}
 						</p>
 					</div>
 
-					<div class="border-b border-gray-100 dark:border-gray-800 pb-2 flex flex-col">
-						<p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1">Months Left</p>
-						<p class="text-sm font-black text-primary-600 dark:text-indigo-400">
-							{{ loanMonthsRemaining() }} <span class="text-[8px] uppercase tracking-wider ml-0.5">Months</span>
+					<div class="space-y-1">
+						<p class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Months Remaining</p>
+						<p class="text-base font-bold text-blue-600 dark:text-blue-400">
+							{{ loanMonthsRemaining() }} <span class="text-xs font-medium ml-0.5">Months</span>
 						</p>
 					</div>
 
-					<div class="border-b border-gray-100 dark:border-gray-800 pb-2 flex flex-col">
-						<p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1">Loan Start</p>
-						<p class="text-sm font-medium text-gray-600 dark:text-gray-400">
+					<div class="space-y-1">
+						<p class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Start Date</p>
+						<p class="text-sm font-medium text-gray-700 dark:text-gray-300">
 							{{ formSnapshot()?.startDate | date:'mediumDate' }}
 						</p>
 					</div>
 
-					<div class="border-b border-gray-100 dark:border-gray-800 pb-2 flex flex-col">
-						<p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1">Loan End</p>
-						<p class="text-sm font-medium text-gray-600 dark:text-gray-400">
+					<div class="space-y-1">
+						<p class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">End Date</p>
+						<p class="text-sm font-medium text-gray-700 dark:text-gray-300">
 							{{ formSnapshot()?.endDate | date:'mediumDate' }}
 						</p>
 					</div>
 				</div>
 
-				<div class="mt-4 pt-3 space-y-4 border-t border-gray-50 dark:border-gray-700/30">
-					<div class="flex items-center gap-2 justify-center">
-						<mat-icon class="text-[10px] w-auto h-auto text-gray-300">info_outline</mat-icon>
-						<p class="text-[9px] text-gray-400 italic">Calculation assumes fixed EMI payments from start date to present.</p>
+				<div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700/50 space-y-4">
+					<div class="flex items-start gap-2 bg-blue-50/50 dark:bg-blue-900/10 p-3 rounded-lg">
+						<mat-icon class="text-primary-500 text-sm mt-0.5">info</mat-icon>
+						<p class="text-[10px] leading-relaxed text-primary-500  italic font-medium">
+							Calculations assume fixed EMI payments from start date onwards based on standard amortization.
+						</p>
 					</div>
 
 					<button type="submit" [disabled]="accountForm.invalid || submitting()"
-						class="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold text-sm shadow-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-						<mat-icon class="text-lg">check_circle</mat-icon>
+						class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold text-sm shadow-md shadow-blue-500/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+						<!-- <mat-icon class="text-xl">task_alt</mat-icon> -->
 						{{ (dialogData?.accountId ? 'Update' : 'Save') + ' Loan Account' }}
 					</button>
 				</div>
@@ -205,7 +210,7 @@
 		<!-- Credit Card Fields -->
 		@if(isCreditAccount()) {
 		<div class="space-y-4">
-			<div class="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800/30 rounded-xl p-4 flex items-center gap-3">
+			<!-- <div class="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800/30 rounded-xl p-4 flex items-center gap-3">
 				<div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
 					<mat-icon>credit_card</mat-icon>
 				</div>
@@ -213,27 +218,33 @@
 					<p class="text-xs text-blue-700/60 font-semibold uppercase tracking-wider">Credit Card</p>
 					<p class="text-sm font-bold text-blue-900 dark:text-blue-100">Card Configuration</p>
 				</div>
-			</div>
+			</div> -->
 
 			<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 				<div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 space-y-4">
-					<h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Billing Cycle</h4>
+					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Billing Cycle</label>
 					<div class="grid grid-cols-2 gap-3">
 						<div>
 							<label class="block text-xs font-medium text-gray-500 mb-1">Due Date (Day)</label>
 							<input type="number" formControlName="dueDate" placeholder="15" min="1" max="31"
 								class="w-full py-2 px-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-transparent text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
+							@if(accountForm.get('dueDate')?.invalid && accountForm.get('dueDate')?.touched) {
+								<p class="text-red-500 text-[10px] mt-1">Must be 1-31</p>
+							}
 						</div>
 						<div>
 							<label class="block text-xs font-medium text-gray-500 mb-1">Start Day</label>
 							<input type="number" formControlName="billingCycleStart" placeholder="1" min="1" max="31"
 								class="w-full py-2 px-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-transparent text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
+							@if(accountForm.get('billingCycleStart')?.invalid && accountForm.get('billingCycleStart')?.touched) {
+								<p class="text-red-500 text-[10px] mt-1">Must be 1-31</p>
+							}
 						</div>
 					</div>
 				</div>
 
 				<div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 space-y-4">
-					<h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Limits &amp; Payments</h4>
+					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Limits &amp; Payments</label>
 					<div class="grid grid-cols-2 gap-3">
 						<div>
 							<label class="block text-xs font-medium text-gray-500 mb-1">Credit Limit</label>
@@ -249,15 +260,7 @@
 				</div>
 			</div>
 
-			<div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
-				<div class="flex items-center justify-between">
-					<div class="flex items-center gap-3">
-						<mat-icon class="text-blue-500 text-sm">notifications_active</mat-icon>
-						<span class="text-xs font-medium text-gray-700 dark:text-gray-200">Payment Reminders</span>
-					</div>
-					<mat-slide-toggle formControlName="creditCardShowReminder" color="primary" class="scale-75"></mat-slide-toggle>
-				</div>
-			</div>
+
 		</div>
 		}
 

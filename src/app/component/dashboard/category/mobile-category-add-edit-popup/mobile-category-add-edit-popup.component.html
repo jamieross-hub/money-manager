@@ -1,7 +1,6 @@
 <app-common-header [title]="dialogData?.category?.id ? 'Edit' : 'Add' + ' Category'" (addButtonClick)="onSubmit()"
 	(closeButtonClick)="onCancel()" [isSubmitting]="isSubmitting()" [showCloseButton]="true" [showAddButton]="true"
 	[addButtonTooltip]="isSubmitting() ? 'Saving...' : 'Save Category'"
-	[addButtonDisabled]="categoryForm.invalid || isSubmitting()"
 	[closeButtonTooltip]="isSubmitting() ? 'Saving...' : 'Close'"></app-common-header>
 
 <!-- Mobile Form Content -->

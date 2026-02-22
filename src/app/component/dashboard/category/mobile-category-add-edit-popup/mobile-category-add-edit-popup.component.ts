@@ -195,47 +195,52 @@ export class MobileCategoryAddEditPopupComponent implements OnInit {
   }
 
   async onSubmit(): Promise<void> {
-    if (this.categoryForm.valid && !this.isSubmitting() && !this.isCategoryPresent()) {
-      this.isSubmitting.set(true);
+    if (this.categoryForm.invalid) {
+      this.categoryForm.markAllAsTouched();
+      this.notificationService.error('Please fix the errors in the form before saving');
+      return;
+    }
 
-      try {
-        const formValue = this.categoryForm.value;
+    if (this.isSubmitting() || this.isCategoryPresent()) return;
+    this.isSubmitting.set(true);
 
-        if (this.dialogData?.category?.id) {
-          await this.store.dispatch(
-            updateCategory({
-              userId: this.userId(),
-              categoryId: this.dialogData.category.id,
-              name: formValue.name.trim(),
-              categoryType: formValue.type,
-              icon: formValue.icon,
-              color: formValue.color,
-              group: formValue.group?.trim() || '',
-            })
-          );
-          this.notificationService.success('Category updated successfully');
-        } else {
-          await this.store.dispatch(
-            createCategory({
-              userId: this.userId(),
-              name: formValue.name.trim(),
-              categoryType: formValue.type,
-              icon: formValue.icon,
-              color: formValue.color,
-              group: formValue.group?.trim() || undefined,
-            })
-          );
-          this.notificationService.success('Category added successfully');
-          this.hapticFeedback.successVibration();
-        }
+    try {
+      const formValue = this.categoryForm.value;
 
-        this.dialogRef.close(true);
-      } catch (error) {
-        this.notificationService.error('Failed to save category');
-        console.error('Error saving category:', error);
-      } finally {
-        this.isSubmitting.set(false);
+      if (this.dialogData?.category?.id) {
+        await this.store.dispatch(
+          updateCategory({
+            userId: this.userId(),
+            categoryId: this.dialogData.category.id,
+            name: formValue.name.trim(),
+            categoryType: formValue.type,
+            icon: formValue.icon,
+            color: formValue.color,
+            group: formValue.group?.trim() || '',
+          })
+        );
+        this.notificationService.success('Category updated successfully');
+      } else {
+        await this.store.dispatch(
+          createCategory({
+            userId: this.userId(),
+            name: formValue.name.trim(),
+            categoryType: formValue.type,
+            icon: formValue.icon,
+            color: formValue.color,
+            group: formValue.group?.trim() || undefined,
+          })
+        );
+        this.notificationService.success('Category added successfully');
+        this.hapticFeedback.successVibration();
       }
+
+      this.dialogRef.close(true);
+    } catch (error) {
+      this.notificationService.error('Failed to save category');
+      console.error('Error saving category:', error);
+    } finally {
+      this.isSubmitting.set(false);
     }
   }
 
