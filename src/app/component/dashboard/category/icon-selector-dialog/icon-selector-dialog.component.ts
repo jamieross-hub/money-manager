@@ -1,5 +1,4 @@
-import { CommonModule } from '@angular/common';
-import { Component, Inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Inject, ChangeDetectionStrategy, signal, computed } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetModule, MatBottomSheetRef } from '@angular/material/bottom-sheet';
@@ -25,6 +24,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { CATEGORY_ICONS, CategoryIcon } from 'src/app/util/config/config';
 import { IconModule } from 'src/app/util/icon.module';
+import { CommonModule } from '@angular/common';
 
 export interface IconSelectorDialogData {
   currentIcon: string;
@@ -66,47 +66,44 @@ export interface IconSelectorDialogData {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class IconSelectorDialogComponent implements OnInit {
-  public availableIcons: CategoryIcon[] = CATEGORY_ICONS;
-  public selectedIcon: string;
-  public searchTerm: string = '';
-  public filteredIcons: CategoryIcon[] = [];
+export class IconSelectorDialogComponent {
+  public availableIcons = signal<CategoryIcon[]>(CATEGORY_ICONS);
+  public selectedIcon = signal<string>('category');
+  public searchTerm = signal<string>('');
+  
+  public filteredIcons = computed(() => {
+    const term = this.searchTerm().toLowerCase().trim();
+    const icons = this.availableIcons();
+    
+    if (!term) {
+      return icons;
+    }
+    
+    return icons.filter(item =>
+      item.name.toLowerCase().includes(term) ||
+      item.icon.toLowerCase().includes(term)
+    );
+  });
 
   constructor(
     public bottomSheetRef: MatBottomSheetRef<IconSelectorDialogComponent>,
     @Inject(MAT_BOTTOM_SHEET_DATA) public data: IconSelectorDialogData
   ) {
-    this.selectedIcon = data.currentIcon || 'category';
-    this.filteredIcons = [...this.availableIcons];
-  }
-
-  ngOnInit(): void {
-    if (this.data.availableIcons) {
-      this.availableIcons = this.data.availableIcons;
-      this.filteredIcons = [...this.availableIcons];
+    if (data.availableIcons) {
+      this.availableIcons.set(data.availableIcons);
+    }
+    if (data.currentIcon) {
+      this.selectedIcon.set(data.currentIcon);
     }
   }
 
   public selectIcon(icon: string): void {
-    this.selectedIcon = icon;
+    this.selectedIcon.set(icon);
     this.bottomSheetRef.dismiss(icon);
   }
 
-  public onSearchChange(): void {
-    if (!this.searchTerm.trim()) {
-      this.filteredIcons = [...this.availableIcons];
-    } else {
-      const term = this.searchTerm.toLowerCase();
-      this.filteredIcons = this.availableIcons.filter(item =>
-        item.name.toLowerCase().includes(term) ||
-        item.icon.toLowerCase().includes(term)
-      );
-    }
-  }
-
   public clearSearch(): void {
-    this.searchTerm = '';
-    this.filteredIcons = [...this.availableIcons];
+    this.searchTerm.set('');
   }
 
   public onCancel(): void {
@@ -117,3 +114,4 @@ export class IconSelectorDialogComponent implements OnInit {
     return item.icon;
   }
 }
+

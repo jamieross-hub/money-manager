@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit, ChangeDetectionStrategy, signal, computed, Signal } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { FormBuilder, FormControl, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -23,7 +23,7 @@ import { createCategory, updateCategory } from 'src/app/store/categories/categor
 import { SsrService } from 'src/app/util/service/ssr.service';
 import { Category } from 'src/app/util/models';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
-import { Subject, takeUntil, Observable, of } from 'rxjs';
+import { takeUntil, Observable, of } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { CATEGORY_ICONS, CATEGORY_COLORS, CategoryIcon } from 'src/app/util/config/config';
@@ -60,6 +60,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-mobile-category-add-edit-popup',
@@ -109,20 +110,27 @@ import { MatTooltipModule } from '@angular/material/tooltip';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
+export class MobileCategoryAddEditPopupComponent implements OnInit {
   categoryForm: FormGroup;
-  public isSubmitting: boolean = false;
-  public userId: string = '';
-  public allCategories: Category[] = [];
-  destroy$: Subject<void>;
-  public filteredGroups$!: Observable<string[]>;
-  public existingGroups: string[] = [];
-  public availableIcons = CATEGORY_ICONS;
+  public isSubmitting = signal<boolean>(false);
+  public userId = signal<string>('');
+  
+  public allCategories = toSignal(this.store.select(selectAllCategories), { initialValue: [] as Category[] });
+  public existingGroups = computed(() => [...new Set(this.allCategories().map(c => c.group).filter(g => !!g))] as string[]);
+  
+  public availableIcons = signal(CATEGORY_ICONS);
   public iconFilterCtrl = new FormControl('');
-  public filteredIcons$!: Observable<CategoryIcon[]>;
-  public availableColors = CATEGORY_COLORS;
+  public filteredIcons!: Signal<CategoryIcon[]>;
+
+  public availableColors = signal(CATEGORY_COLORS);
   public colorFilterCtrl = new FormControl('');
-  public filteredColors$!: Observable<{ label: string; value: string }[]>;
+  public filteredColors!: Signal<{ label: string; value: string }[]>;
+
+  public filteredGroups!: Signal<string[]>;
+
+  public colorValue!: Signal<string>;
+  public iconValue!: Signal<string>;
+
 
 
 
@@ -147,40 +155,28 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
       type: ['expense', Validators.required],
       icon: ['category', Validators.required],
       color: ['#10B981', Validators.required],
-      group: [''], // Add group control
+      group: [''], 
     });
 
-    //destroy subscription on component destroy
-    this.destroy$ = new Subject<void>();
-    this.store.select(selectAllCategories).pipe(takeUntil(this.destroy$)).subscribe((categories) => {
-      this.allCategories = categories;
-      this.existingGroups = [...new Set(categories.map(c => c.group).filter(g => !!g))] as string[];
-    });
+    const iconSearchValue = toSignal(this.iconFilterCtrl.valueChanges.pipe(startWith('')), { initialValue: '' });
+    this.filteredIcons = computed(() => this._filterIcons(iconSearchValue() || ''));
+
+    const colorSearchValue = toSignal(this.colorFilterCtrl.valueChanges.pipe(startWith('')), { initialValue: '' });
+    this.filteredColors = computed(() => this._filterColors(colorSearchValue() || ''));
+
+    const groupSearchValue = toSignal(this.categoryForm.controls['group'].valueChanges.pipe(startWith('')), { initialValue: '' });
+    this.filteredGroups = computed(() => this._filterGroups(groupSearchValue() || ''));
+
+    this.colorValue = toSignal(this.categoryForm.controls['color'].valueChanges.pipe(startWith(this.categoryForm.controls['color'].value)), { initialValue: this.categoryForm.controls['color'].value });
+    this.iconValue = toSignal(this.categoryForm.controls['icon'].valueChanges.pipe(startWith(this.categoryForm.controls['icon'].value)), { initialValue: this.categoryForm.controls['icon'].value });
   }
 
+
+
   ngOnInit(): void {
-    this.userId = this.userService.getCurrentUserId() || '';
-
-    // Setup group autocomplete
-    this.filteredGroups$ = this.categoryForm.get('group')!.valueChanges.pipe(
-      startWith(''),
-      map(value => this._filterGroups(value || ''))
-    );
-
-    // Setup icon autocomplete
-    this.filteredIcons$ = this.iconFilterCtrl.valueChanges.pipe(
-      startWith(''),
-      map(value => this._filterIcons(value || ''))
-    );
-
-    // Setup color autocomplete
-    this.filteredColors$ = this.colorFilterCtrl.valueChanges.pipe(
-      startWith(''),
-      map(value => this._filterColors(value || ''))
-    );
+    this.userId.set(this.userService.getCurrentUserId() || '');
 
     if (this.ssrService.isClientSide()) {
-      // Handle browser back button
       window.addEventListener('popstate', (event) => {
         this.dialogRef.close();
         event.preventDefault();
@@ -188,7 +184,6 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
     }
 
     if (this.dialogData) {
-      // Edit mode - populate form with existing data
       this.categoryForm.patchValue({
         name: this.dialogData.category?.name || '',
         type: this.dialogData.category?.type || 'expense',
@@ -196,25 +191,20 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
         color: (this.dialogData.category?.color || '#10B981').toUpperCase(),
         group: this.dialogData.category?.group || '',
       });
-
-
     }
   }
 
   async onSubmit(): Promise<void> {
-
-
-    if (this.categoryForm.valid && !this.isSubmitting && !this.isCategoryPresent()) {
-      this.isSubmitting = true;
+    if (this.categoryForm.valid && !this.isSubmitting() && !this.isCategoryPresent()) {
+      this.isSubmitting.set(true);
 
       try {
         const formValue = this.categoryForm.value;
 
         if (this.dialogData?.category?.id) {
-          // Update existing category
           await this.store.dispatch(
             updateCategory({
-              userId: this.userId,
+              userId: this.userId(),
               categoryId: this.dialogData.category.id,
               name: formValue.name.trim(),
               categoryType: formValue.type,
@@ -225,10 +215,9 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
           );
           this.notificationService.success('Category updated successfully');
         } else {
-          // Create new category
           await this.store.dispatch(
             createCategory({
-              userId: this.userId,
+              userId: this.userId(),
               name: formValue.name.trim(),
               categoryType: formValue.type,
               icon: formValue.icon,
@@ -245,7 +234,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
         this.notificationService.error('Failed to save category');
         console.error('Error saving category:', error);
       } finally {
-        this.isSubmitting = false;
+        this.isSubmitting.set(false);
       }
     }
   }
@@ -305,12 +294,12 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
 
   private _filterGroups(value: string): string[] {
     const filterValue = value.toLowerCase();
-    return this.existingGroups.filter(group => group.toLowerCase().includes(filterValue));
+    return this.existingGroups().filter((group: string) => group.toLowerCase().includes(filterValue));
   }
 
   private _filterIcons(value: string): CategoryIcon[] {
     const filterValue = value.toLowerCase();
-    return this.availableIcons.filter(item =>
+    return this.availableIcons().filter((item: CategoryIcon) =>
       item.name.toLowerCase().includes(filterValue) ||
       item.icon.toLowerCase().includes(filterValue)
     );
@@ -318,35 +307,30 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
 
   private _filterColors(value: string): { label: string; value: string }[] {
     const filterValue = value.toLowerCase();
-    return this.availableColors.filter(color => color.label.toLowerCase().includes(filterValue));
+    return this.availableColors().filter((color: { label: string; value: string }) => color.label.toLowerCase().includes(filterValue));
   }
 
   getColorLabel(value: string): string {
     if (!value) return '';
-    const color = this.availableColors.find(c => c.value.toUpperCase() === value.toUpperCase());
+    const color = this.availableColors().find(c => c.value.toUpperCase() === value.toUpperCase());
     return color ? color.label : value;
   }
 
   getIconName(value: string): string {
     if (!value) return 'Category';
-    const found = this.availableIcons.find(item => item.icon === value);
+    const found = this.availableIcons().find((item: CategoryIcon) => item.icon === value);
     return found ? found.name : value.replace(/_/g, ' ');
   }
 
   isCategoryPresent(): boolean {
-    //check if category is present in allCategories and in edit mode check if category is present in allCategories and is not the same category
-    let existingCategory = this.allCategories.find((category: Category) => category.name.trim().toLowerCase() === this.categoryForm.get('name')?.value.trim().toLowerCase());
+    let existingCategory = this.allCategories().find((category: Category) => category.name.trim().toLowerCase() === this.categoryForm.get('name')?.value.trim().toLowerCase());
     if (this.dialogData?.category?.id) {
-      existingCategory = this.allCategories.find((category: Category) => category.name.trim().toLowerCase() === this.categoryForm.get('name')?.value.trim().toLowerCase() && category.id !== this.dialogData?.category?.id);
+      existingCategory = this.allCategories().find((category: Category) => category.name.trim().toLowerCase() === this.categoryForm.get('name')?.value.trim().toLowerCase() && category.id !== this.dialogData?.category?.id);
     }
     if (existingCategory) {
       this.notificationService.error('Category already exists');
     }
-    return existingCategory ? true : false;
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    return !!existingCategory;
   }
 }
+

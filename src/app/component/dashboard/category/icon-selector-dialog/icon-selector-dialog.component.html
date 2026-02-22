@@ -21,10 +21,10 @@
       <div class="relative flex items-center group">
         <mat-icon
           class="absolute left-4 text-gray-400 group-focus-within:text-primary transition-colors duration-200">search</mat-icon>
-        <input type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()" placeholder="Search from 100+ icons..."
+        <input type="text" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" placeholder="Search from 100+ icons..."
           class="w-full bg-gray-50 dark:bg-gray-700/50 border-2 border-transparent focus:border-primary/20 focus:bg-white dark:focus:bg-gray-700 rounded-2xl py-3.5 pl-12 pr-12 text-sm outline-none transition-all duration-200 dark:text-gray-100 placeholder:text-gray-400"
           autocomplete="off" spellcheck="false" />
-        <button *ngIf="searchTerm" mat-icon-button (click)="clearSearch()"
+        <button *ngIf="searchTerm()" mat-icon-button (click)="clearSearch()"
           class="absolute right-2 text-gray-400 hover:text-gray-600" type="button" aria-label="Clear search">
           <mat-icon class="text-lg">cancel</mat-icon>
         </button>
@@ -34,7 +34,7 @@
 
   <!-- Icons Grid Container -->
   <div class="overflow-y-auto px-5 pb-12 flex-1 pt-2">
-    <div *ngIf="filteredIcons && filteredIcons.length === 0"
+    <div *ngIf="filteredIcons() && filteredIcons().length === 0"
       class="flex flex-col items-center justify-center py-16 text-gray-400">
       <mat-icon class="text-6xl opacity-20 mb-4">search_off</mat-icon>
       <p class="text-base font-medium">No matching icons found</p>
@@ -43,11 +43,11 @@
       </button>
     </div>
 
-    <div *ngIf="filteredIcons && filteredIcons.length > 0" class="icons-grid-custom">
-      <button *ngFor="let item of filteredIcons; trackBy: trackByIcon" type="button" (click)="selectIcon(item.icon)"
+    <div *ngIf="filteredIcons() && filteredIcons().length > 0" class="icons-grid-custom">
+      <button *ngFor="let item of filteredIcons(); trackBy: trackByIcon" type="button" (click)="selectIcon(item.icon)"
         class="icon-option-custom flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200"
-        [class.selected-icon]="selectedIcon === item.icon" [attr.aria-label]="'Select ' + item.name + ' icon'"
-        [attr.aria-selected]="selectedIcon === item.icon">
+        [class.selected-icon]="selectedIcon() === item.icon" [attr.aria-label]="'Select ' + item.name + ' icon'"
+        [attr.aria-selected]="selectedIcon() === item.icon">
         <mat-icon class="text-3xl mb-1.5 text-primary">{{ item.icon }}</mat-icon>
         <span class="text-[9px] font-bold uppercase tracking-widest text-gray-400 text-center truncate w-full px-1">{{
           item.name }}</span>
