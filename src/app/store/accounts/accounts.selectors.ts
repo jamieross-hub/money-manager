@@ -25,32 +25,31 @@ export const selectAllAccounts = createSelector(
   selectAllAccountsRaw,
   TransactionsSelectors.selectAllTransactions,
   (accounts, allTransactions) => {
+    // Optimization: Group transaction impacts by accountId first to avoid O(N*M) complexity
+    const loanImpacts = new Map<string, number>();
+    
+    allTransactions.forEach(t => {
+      if (t.isPending || t.status === 'pending' || !t.accountId) return;
+      
+      const current = loanImpacts.get(t.accountId) || 0;
+      const amount = Number(t.amount) || 0;
+      const impact = t.type === TransactionType.INCOME ? amount : -amount;
+      loanImpacts.set(t.accountId, current + impact);
+    });
+
     return accounts.map(account => {
       if (account.type !== AccountType.LOAN || !account.loanDetails) {
         return account;
       }
 
-      // Calculate balance strictly from transactions for loan accounts
-      // to avoid issues with manual overwrites/mismatches.
       const loanAmount = account.loanDetails.loanAmount || 0;
-      
-      const accountTransactions = allTransactions.filter(t => 
-        t.accountId === account.accountId && 
-        !t.isPending && 
-        t.status !== 'pending'
-      );
-
-      const netImpact = accountTransactions.reduce((sum, t) => {
-        const amount = Number(t.amount) || 0;
-        return sum + (t.type === TransactionType.INCOME ? amount : -amount);
-      }, 0);
-
+      const netImpact = loanImpacts.get(account.accountId) || 0;
       const derivedBalance = -loanAmount + netImpact;
       const remainingBalance = Math.abs(derivedBalance);
 
       return {
         ...account,
-        balance: derivedBalance, // Use the derived balance for display
+        balance: derivedBalance,
         loanDetails: {
           ...account.loanDetails,
           remainingBalance,
