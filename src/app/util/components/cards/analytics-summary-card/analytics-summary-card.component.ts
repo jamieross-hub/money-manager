@@ -265,11 +265,8 @@ export class AnalyticsSummaryCardComponent implements OnInit, OnDestroy {
         return accounts
           .filter(account => account.isActive !== false)
           .map(account => {
-            // Handle loan accounts specially - use negative remaining balance
-            let balance = account.balance;
-            if (account.type === 'loan' && account.loanDetails) {
-              balance = -(account.loanDetails.remainingBalance || 0);
-            }
+            // Handle all accounts consistently using the standard balance property
+            const balance = Number(account.balance) || 0;
 
             return {
               account: account.name,

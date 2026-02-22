@@ -35,13 +35,8 @@ export class AccountSummaryCardComponent {
    */
   public readonly positiveAccounts = computed(() => 
     this.accounts().filter(account => {
-      if (account.type === AccountType.LOAN && account.loanDetails) {
-        return -(account.loanDetails.remainingBalance ?? 0) > 0;
-      }
-      if (account.type === AccountType.CREDIT) {
-        return account.balance > 0;
-      }
-      return account.balance >= 0;
+      // For both credit and loan, debt is negative. Overpayment/equity is positive.
+      return (Number(account.balance) || 0) > 0;
     })
   );
 
@@ -50,13 +45,7 @@ export class AccountSummaryCardComponent {
    */
   public readonly negativeAccounts = computed(() => 
     this.accounts().filter(account => {
-      if (account.type === AccountType.LOAN && account.loanDetails) {
-        return -(account.loanDetails.remainingBalance ?? 0) <= 0;
-      }
-      if (account.type === AccountType.CREDIT) {
-        return account.balance <= 0;
-      }
-      return account.balance < 0;
+      return (Number(account.balance) || 0) < 0;
     })
   );
 
@@ -64,25 +53,14 @@ export class AccountSummaryCardComponent {
    * Total positive balance
    */
   public readonly totalPositiveBalance = computed(() => 
-    this.positiveAccounts().reduce((total, account) => {
-      if (account.type === AccountType.LOAN && account.loanDetails) {
-        return total + (-(account.loanDetails.remainingBalance ?? 0));
-      }
-      return total + account.balance;
-    }, 0)
+    this.positiveAccounts().reduce((total, account) => total + (Number(account.balance) || 0), 0)
   );
 
   /**
    * Total negative balance
    */
   public readonly totalNegativeBalance = computed(() => 
-    this.negativeAccounts().reduce((total, account) => {
-      if (account.type === AccountType.LOAN) {
-        const loanDetails = account.loanDetails as LoanDetails;
-        return total - (loanDetails.remainingBalance ?? 0);
-      }
-      return total + account.balance;
-    }, 0)
+    this.negativeAccounts().reduce((total, account) => total + (Number(account.balance) || 0), 0)
   );
 }
  

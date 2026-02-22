@@ -146,6 +146,10 @@ export const accountsReducer = createReducer(
     let balanceChange = 0;
 
     const getEffect = (t: any) => {
+      // ONLY COMPLETED transactions should affect the current balance.
+      // Ignore future/scheduled/pending transactions.
+      if (t.isPending || t.status === 'pending') return 0;
+      
       const amount = Number(t.amount) || 0;
       return t.type === 'income' ? amount : -amount;
     };
@@ -191,19 +195,22 @@ export const accountsReducer = createReducer(
   on(AccountsActions.updateAccountBalanceForTransactions, (state, { transactions }) => {
     const updatedEntities = { ...state.entities };
     
-    transactions.forEach(t => {
+    transactions.forEach((t: any) => {
       const account = updatedEntities[t.accountId];
       if (account) {
-        const amount = Number(t.amount) || 0;
-        const balanceChange = t.type === 'income' ? amount : -amount;
-        
-        let updatedAccount = {
-          ...account,
-          balance: (Number(account.balance) || 0) + balanceChange,
-          updatedAt: new Date()
-        };
-        
-        updatedEntities[t.accountId] = updatedAccount;
+        // ONLY COMPLETED transactions should affect the current balance.
+        if (!t.isPending && t.status !== 'pending') {
+          const amount = Number(t.amount) || 0;
+          const balanceChange = t.type === 'income' ? amount : -amount;
+          
+          let updatedAccount = {
+            ...account,
+            balance: (Number(account.balance) || 0) + balanceChange,
+            updatedAt: new Date()
+          };
+          
+          updatedEntities[t.accountId] = updatedAccount;
+        }
       }
     });
 

@@ -225,19 +225,12 @@ export class KeyMetricsSummaryCardComponent implements OnInit, OnDestroy {
         const savingsChangePercentage = previousNetSavings !== 0 ? (savingsChange / Math.abs(previousNetSavings)) * 100 : 0;
 
         // Calculate total account balance
-        const totalBalance = accounts.reduce((sum, account) => {
-          if (account.type === AccountType.LOAN) {
-            const loanDetails = account.loanDetails as any;
-            return sum - (loanDetails?.remainingBalance || 0);
-          }
-          return sum + account.balance;
-        }, 0);
+        const totalBalance = accounts.reduce((sum, account) => sum + (Number(account.balance) || 0), 0);
 
-        // Calculate total loan amount
+        // Calculate total loan amount (outstanding debt)
         const totalLoanAmount = accounts.reduce((sum, account) => {
           if (account.type === AccountType.LOAN) {
-            const loanDetails = account.loanDetails as any;
-            return sum + (loanDetails?.remainingBalance || 0);
+            return sum + Math.abs(Number(account.balance) || 0);
           }
           return sum;
         }, 0);

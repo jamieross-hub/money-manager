@@ -21,13 +21,13 @@
       <div class="progress-section">
         <div class="progress-info">
           <div class="progress-bar-container">
-            <div class="progress-bar" [style.width.%]="paidPercentage()"></div>
+            <div class="progress-bar" [style.width.%]="summary().paidPercentage"></div>
           </div>
-          <span class="months-left">{{ remainingMonths() }} months left</span>
+          <span class="months-left">{{ summary().maxRemainingMonths }} months left</span>
         </div>
         <div class="paid-info">
           <p class="paid-label">Paid so far</p>
-          <p class="paid-value">{{ totalPaid() | currency:{compact:true} }}</p>
+          <p class="paid-value">{{ summary().totalPaid | currency:{compact:true} }}</p>
         </div>
       </div>
     </div>
@@ -51,7 +51,7 @@
     <!-- Loan Tabs (only when >1) -->
     <div class="loan-tabs" *ngIf="loans().length > 1">
       <button
-        *ngFor="let item of loanItems(); let i = index"
+        *ngFor="let item of summary().items; let i = index"
         class="loan-tab"
         [ngClass]="{ active: selectedLoanIndex() === i }"
         (click)="selectLoan(i)">
@@ -61,7 +61,7 @@
 
     <!-- Per-Loan Cards -->
     <div class="loan-cards-grid">
-      <ng-container *ngFor="let item of loanItems(); let i = index">
+      <ng-container *ngFor="let item of summary().items; let i = index">
         <div
           class="loan-card"
           [ngClass]="{
@@ -106,12 +106,12 @@
             </div>
             <div class="loan-amount-divider"></div>
             <div class="loan-amount-item">
-              <p class="loan-amount-value">{{ item.paid | currency:{compact:true ,round:true} }}</p>
+              <p class="loan-amount-value">{{ item.paid | currency:{compact:true} }}</p>
               <p class="loan-amount-label">Paid</p>
             </div>
             <div class="loan-amount-divider"></div>
             <div class="loan-amount-item">
-              <p class="loan-amount-value">{{ item.monthly | currency:{compact:true ,round:true} }}</p>
+              <p class="loan-amount-value">{{ item.monthly | currency:{compact:true } }}</p>
               <p class="loan-amount-label">Monthly</p>
             </div>
           </div>

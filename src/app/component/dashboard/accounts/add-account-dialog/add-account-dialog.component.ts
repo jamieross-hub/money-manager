@@ -9,13 +9,12 @@ import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.serv
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { ValidationService } from 'src/app/util/service/validation.service';
 import { Account } from 'src/app/util/models/account.model';
-import { AccountType } from 'src/app/util/config/enums';
+import { AccountType, TransactionType, RecurringInterval, TransactionStatus, PaymentMethod } from 'src/app/util/config/enums';
 import { TransactionsService } from 'src/app/util/service/db/transactions.service';
 import { CategoryService } from 'src/app/util/service/db/category.service';
 import { AccountsService } from 'src/app/util/service/db/accounts.service';
-import { TransactionType, RecurringInterval, TransactionStatus, PaymentMethod } from 'src/app/util/config/enums';
 import { Transaction } from 'src/app/util/models/transaction.model';
-import { Observable, of, Subject, takeUntil } from 'rxjs';
+import { Observable, of, Subject, takeUntil, firstValueFrom, forkJoin } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 import dayjs from 'dayjs';
 import { CommonModule } from '@angular/common';
@@ -83,10 +82,25 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
     return Math.max(1, Math.round(dayjs(endDate).diff(dayjs(startDate), 'month', true)));
   });
 
+  readonly monthsElapsed = computed(() => {
+    const { startDate } = this.formSnapshot() ?? {};
+    if (!startDate) return 0;
+    const start = dayjs(startDate).startOf('day');
+    const today = dayjs().startOf('day');
+    if (today.isBefore(start)) return 0;
+    
+    let count = 0;
+    let paymentDate = start;
+    // Count every monthly payment date that has already passed (including today)
+    while (paymentDate.isBefore(today) || paymentDate.isSame(today, 'day')) {
+      count++;
+      paymentDate = paymentDate.add(1, 'month');
+    }
+    return count;
+  });
+
   readonly loanMonthsRemaining = computed<number>(() => {
-    const endDate = this.formSnapshot()?.endDate;
-    if (!endDate) return 0;
-    return Math.max(0, Math.ceil(dayjs(endDate).diff(dayjs(), 'month', true)));
+    return Math.max(0, this.loanDurationMonths() - this.monthsElapsed());
   });
 
   readonly loanMonthlyPayment = computed<number>(() => this.formSnapshot()?.customMonthlyPayment || 0);
@@ -403,8 +417,8 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const monthsElapsed    = Math.max(0, Math.floor(dayjs().diff(dayjs(startDate), 'month', true)));
-    const remainingBalance = Math.round(Math.max(0, loanAmount - monthsElapsed * monthlyPayment) * 100) / 100;
+    const elapsed = this.monthsElapsed();
+    const remainingBalance = Math.round(Math.max(0, loanAmount - elapsed * monthlyPayment) * 100) / 100;
     this.accountForm.patchValue({ remainingBalance, balance: -remainingBalance }, { emitEvent: false });
   }
 
@@ -452,83 +466,20 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
     this.submitting.set(true);
 
     try {
-      const formData = this.accountForm.value;
-      const isLoan   = this.isLoanAccount();
-      const isCredit = this.isCreditAccount();
-      const uid      = this.currentUserId();
+      const uid = this.currentUserId();
+      const id = this.dialogData?.accountId;
+      const accountData = this.prepareAccountData(id);
 
-      const accountData: any = {
-        name:        formData.name.trim(),
-        type:        formData.type,
-        balance:     isCredit ? -(Math.abs(Number(formData.balance) || 0)) : (Number(formData.balance) || 0),
-        description: formData.description || '',
-      };
-
-      if (isLoan) {
-        accountData.loanDetails = {
-          lenderName:          formData.lenderName.trim(),
-          loanAmount:          Number(formData.loanAmount) || 0,
-          interestRate:        Number(formData.interestRate) || 0,
-          startDate:           formData.startDate,
-          durationMonths:      this.loanDurationMonths(),
-          repaymentFrequency:  formData.repaymentFrequency,
-          status:              formData.status,
-          remainingBalance:    Number(formData.remainingBalance) || 0,
-          nextDueDate:         formData.nextDueDate,
-          endDate:             formData.endDate,
-          showReminder:        formData.showReminder,
-          monthlyPayment:      formData.customMonthlyPayment,
-        };
-      }
-
-      if (isCredit) {
-        accountData.creditCardDetails = {
-          dueDate:           Number(formData.dueDate) || 15,
-          billingCycleStart: Number(formData.billingCycleStart) || 1,
-          creditLimit:       Number(formData.creditLimit) || 0,
-          minimumPayment:    Number(formData.minimumPayment) || 0,
-          nextDueDate:       this.buildNextCreditCardDueDate(Number(formData.dueDate) || 15),
-        };
-      }
-
-      if (this.dialogData?.accountId) {
-        await this.accountsService.updateAccount(uid, this.dialogData.accountId, accountData).toPromise();
+      if (id) {
+        await firstValueFrom(this.accountsService.updateAccount(uid, id, accountData));
         this.notificationService.success('Account updated successfully');
       } else {
-        const newAccountId = await this.accountsService.createAccount(uid, accountData).toPromise();
-
-        if (isLoan && newAccountId) {
-          // Count how many payment dates have already occurred by iterating
-          // month by month on the start day. e.g. start=Nov 7 → counts Nov 7,
-          // Dec 7, Jan 7, Feb 7 (all ≤ today Feb 21) = 4, NOT 3 from Math.floor.
-          const startDayjs = dayjs(formData.startDate);
-          const today = dayjs().startOf('day');
-          let pastMonths = 0;
-          let paymentDate = startDayjs.startOf('day');
-          while (paymentDate.isBefore(today, 'day')) {
-            pastMonths++;
-            paymentDate = paymentDate.add(1, 'month');
-          }
-
-          if (pastMonths > 0) {
-            // Backfill one COMPLETED transaction per month that has already passed
-            this.backfillPastLoanPayments(accountData, newAccountId, pastMonths);
-          }
-
-          if (formData.createRecurringTransaction) {
-            this.scheduleLoanPaymentRecurringTransaction(accountData, newAccountId);
-            this.notificationService.success(
-              pastMonths > 0
-                ? `Loan account created! ${pastMonths} past payment(s) recorded and recurring payments scheduled.`
-                : 'Loan account created! A recurring transaction for payments has been set up.'
-            );
-          } else {
-            this.notificationService.success('Loan account created successfully!');
-          }
+        const newAccountId = await firstValueFrom(this.accountsService.createAccount(uid, accountData));
+        if (newAccountId) {
+          await this.handlePostCreationLogic(accountData, newAccountId);
         } else {
           this.notificationService.success('Account added successfully');
         }
-
         this.hapticFeedback.successVibration();
       }
 
@@ -538,6 +489,86 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
       console.error('Error saving account:', error);
     } finally {
       this.submitting.set(false);
+    }
+  }
+
+  private prepareAccountData(existingId?: string): any {
+    const formData = this.accountForm.value;
+    const isLoan = this.isLoanAccount();
+    const isCredit = this.isCreditAccount();
+
+    const accountData: any = {
+      name: formData.name.trim(),
+      type: formData.type,
+      balance: isLoan 
+        ? (existingId ? this.dialogData?.balance : -(Math.abs(Number(formData.loanAmount) || 0)))
+        : (isCredit ? -(Math.abs(Number(formData.balance) || 0)) : (Number(formData.balance) || 0)),
+      description: formData.description || '',
+    };
+
+    if (isLoan) {
+      accountData.loanDetails = {
+        lenderName: formData.lenderName.trim(),
+        loanAmount: Number(formData.loanAmount) || 0,
+        interestRate: Number(formData.interestRate) || 0,
+        startDate: formData.startDate,
+        durationMonths: this.loanDurationMonths(),
+        repaymentFrequency: formData.repaymentFrequency,
+        status: formData.status,
+        remainingBalance: Number(formData.remainingBalance) || 0,
+        nextDueDate: formData.nextDueDate,
+        endDate: formData.endDate,
+        showReminder: formData.showReminder,
+        monthlyPayment: formData.customMonthlyPayment,
+      };
+    }
+
+    if (isCredit) {
+      accountData.creditCardDetails = {
+        dueDate: Number(formData.dueDate) || 15,
+        billingCycleStart: Number(formData.billingCycleStart) || 1,
+        creditLimit: Number(formData.creditLimit) || 0,
+        minimumPayment: Number(formData.minimumPayment) || 0,
+        nextDueDate: this.buildNextCreditCardDueDate(Number(formData.dueDate) || 15),
+      };
+    }
+
+    return accountData;
+  }
+
+  private async handlePostCreationLogic(accountData: any, newAccountId: string): Promise<void> {
+    const isLoan = this.isLoanAccount();
+    const formData = this.accountForm.value;
+
+    if (isLoan) {
+      const pastMonths = this.monthsElapsed();
+      const tasks: Observable<any>[] = [];
+
+      if (pastMonths > 0) {
+        tasks.push(this.backfillPastLoanPayments(accountData, newAccountId, pastMonths));
+      }
+
+      if (formData.createRecurringTransaction) {
+        tasks.push(this.scheduleLoanPaymentRecurringTransaction(accountData, newAccountId));
+      }
+
+      if (tasks.length > 0) {
+        try {
+          await firstValueFrom(forkJoin(tasks));
+          this.notificationService.success(
+            pastMonths > 0
+              ? `Loan account created with ${pastMonths} past payment(s) recorded!`
+              : 'Loan account created with recurring payments scheduled.'
+          );
+        } catch (err) {
+          console.error('Post-creation error:', err);
+          this.notificationService.warning('Loan created but some payment history or schedules could not be set up.');
+        }
+      } else {
+        this.notificationService.success('Loan account created successfully!');
+      }
+    } else {
+      this.notificationService.success('Account added successfully');
     }
   }
 
@@ -598,82 +629,62 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
    * since the loan start date. This backfills the payment history so the
    * account's transaction list reflects reality when the loan is entered late.
    */
-  private backfillPastLoanPayments(accountData: any, accountId: string, monthsElapsed: number): void {
+  private backfillPastLoanPayments(accountData: any, accountId: string, monthsElapsed: number): Observable<any> {
     const { loanDetails } = accountData;
     const uid = this.currentUserId();
     const emi = this.loanMonthlyPayment();
     const startDate = dayjs(loanDetails.startDate);
-    // Payment day is always the same day-of-month as the loan start date.
-    // e.g. start = 07 Dec 2025 → every payment falls on the 7th of its month.
     const paymentDay = startDate.date();
 
-    this.findOrCreateLoanPaymentCategory(uid).pipe(
+    return this.findOrCreateLoanPaymentCategory(uid).pipe(
       switchMap(categoryId => {
         if (!categoryId) throw new Error('Failed to find/create loan payment category');
 
-        // Build one transaction per elapsed month
         const pastPayments = Array.from({ length: monthsElapsed }, (_, i) => {
-          // Payment date = same day-of-month, in month (startMonth + i)
           const paymentDate = startDate.add(i, 'month').date(paymentDay).toDate();
 
           const tx: Omit<Transaction, 'id'> = {
-            userId:            uid,
+            userId: uid,
             accountId,
             categoryId,
-            category:          'Loan Payment',
-            payee:             loanDetails.lenderName,
-            amount:            emi,
-            type:              TransactionType.INCOME,
-            date:              paymentDate,
-            notes:             `EMI payment for ${loanDetails.lenderName} loan (month ${i + 1})`,
-            status:            TransactionStatus.COMPLETED,
-            paymentMethod:     PaymentMethod.BANK_TRANSFER,
-            isRecurring:       true,
+            category: 'Loan Payment',
+            payee: loanDetails.lenderName,
+            amount: emi,
+            type: TransactionType.INCOME,
+            date: paymentDate,
+            notes: `EMI payment for ${loanDetails.lenderName} loan (month ${i + 1})`,
+            status: TransactionStatus.COMPLETED,
+            paymentMethod: PaymentMethod.BANK_TRANSFER,
+            isRecurring: true,
             recurringInterval: loanDetails.repaymentFrequency === 'weekly' ? RecurringInterval.WEEKLY : RecurringInterval.MONTHLY,
-            createdAt:         new Date(),
-            updatedAt:         new Date(),
-            createdBy:         uid,
-            updatedBy:         uid,
-            syncStatus:        'synced' as any,
-            isPending:         false,
-            lastSyncedAt:      new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            createdBy: uid,
+            updatedBy: uid,
+            syncStatus: 'synced' as any,
+            isPending: false,
+            lastSyncedAt: new Date(),
           };
           return this.transactionsService.createTransaction(uid, tx);
         });
 
-        // Fire them in parallel
-        return pastPayments.length > 0
-          ? new Observable(observer => {
-              Promise.all(pastPayments.map(obs => obs.toPromise()))
-                .then(() => { observer.next(); observer.complete(); })
-                .catch(err => observer.error(err));
-            })
-          : of(null);
+        return pastPayments.length > 0 ? forkJoin(pastPayments) : of(null);
       })
-    ).subscribe({
-      error: err => {
-        console.error('Failed to backfill past loan payments:', err);
-        this.notificationService.warning('Loan created but some past payments could not be recorded');
-      }
-    });
+    );
   }
 
-  private scheduleLoanPaymentRecurringTransaction(accountData: any, accountId: string): void {
+  private scheduleLoanPaymentRecurringTransaction(accountData: any, accountId: string): Observable<any> {
     const { loanDetails } = accountData;
     const uid = this.currentUserId();
 
-    this.findOrCreateLoanPaymentCategory(uid).pipe(
+    return this.findOrCreateLoanPaymentCategory(uid).pipe(
       switchMap(categoryId => {
         if (!categoryId) throw new Error('Failed to find/create loan payment category');
 
-        const recurringEndDate = new Date(loanDetails.startDate);
-        recurringEndDate.setMonth(recurringEndDate.getMonth() + loanDetails.durationMonths);
-
-        // Derive nextDueDate from the startDate's day-of-month.
-        // e.g. start = 07/12/2025 → recurring fires on the 7th of each month.
+        const recurringEndDate = dayjs(loanDetails.startDate).add(loanDetails.durationMonths, 'month').toDate();
         const startDay = dayjs(loanDetails.startDate).date();
         const today = dayjs();
-        // Try this month's occurrence first; if it has already passed, use next month
+        
         let nextDueDate = today.date(startDay).startOf('day');
         if (nextDueDate.isBefore(today, 'day')) {
           nextDueDate = nextDueDate.add(1, 'month');
@@ -681,37 +692,32 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
         const nextDueDateAsDate = nextDueDate.toDate();
 
         const transaction: Omit<Transaction, 'id'> = {
-          userId:              uid,
+          userId: uid,
           accountId,
           categoryId,
-          category:            'Loan Payment',
-          payee:               loanDetails.lenderName,
-          amount:              this.loanMonthlyPayment(),
-          type:                TransactionType.INCOME,
-          date:                nextDueDateAsDate,          // first future payment, not today
-          notes:               `Monthly payment for ${loanDetails.lenderName} loan`,
-          status:              TransactionStatus.PENDING, // upcoming — not yet debited
-          paymentMethod:       PaymentMethod.BANK_TRANSFER,
-          isRecurring:         true,
-          recurringInterval:   loanDetails.repaymentFrequency === 'weekly' ? RecurringInterval.WEEKLY : RecurringInterval.MONTHLY,
+          category: 'Loan Payment',
+          payee: loanDetails.lenderName,
+          amount: this.loanMonthlyPayment(),
+          type: TransactionType.INCOME,
+          date: nextDueDateAsDate,
+          notes: `Monthly payment for ${loanDetails.lenderName} loan`,
+          status: TransactionStatus.PENDING,
+          paymentMethod: PaymentMethod.BANK_TRANSFER,
+          isRecurring: true,
+          recurringInterval: loanDetails.repaymentFrequency === 'weekly' ? RecurringInterval.WEEKLY : RecurringInterval.MONTHLY,
           recurringEndDate,
-          nextOccurrence:      nextDueDateAsDate,
-          createdAt:           new Date(),
-          updatedAt:           new Date(),
-          createdBy:           uid,
-          updatedBy:           uid,
-          syncStatus:          'synced' as any,
-          isPending:           true,
-          lastSyncedAt:        new Date(),
+          nextOccurrence: nextDueDateAsDate,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          createdBy: uid,
+          updatedBy: uid,
+          syncStatus: 'synced' as any,
+          isPending: true,
+          lastSyncedAt: new Date(),
         };
 
         return this.transactionsService.createTransaction(uid, transaction);
       })
-    ).subscribe({
-      error: err => {
-        console.error('Failed to schedule loan payment recurring transaction:', err);
-        this.notificationService.warning('Account created but failed to set up recurring transaction');
-      }
-    });
+    );
   }
 }

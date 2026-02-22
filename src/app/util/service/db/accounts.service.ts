@@ -246,13 +246,17 @@ export class AccountsService {
             let loanRemainingBalanceChange = 0;
 
             const getEffect = (t: Transaction) => {
-                const amount = Number(t.amount) || 0;
-                return t.type === 'income' ? amount : -amount;
-            };
-            const getLoanEffect = (t: Transaction) => {
-                const amount = Number(t.amount) || 0;
-                return t.type === 'expense' ? -amount : 0;
-            };
+            // ONLY COMPLETED transactions should affect the current balance.
+            if ((t as any).isPending || t.status === 'pending') return 0;
+            const amount = Number(t.amount) || 0;
+            return t.type === 'income' ? amount : -amount;
+        };
+        const getLoanEffect = (t: Transaction) => {
+            // ONLY COMPLETED transactions should affect the remaining balance.
+            if ((t as any).isPending || t.status === 'pending') return 0;
+            const amount = Number(t.amount) || 0;
+            return t.type === 'expense' ? -amount : 0;
+        };
 
             if (transactionType === 'create' && newTransaction) {
                 balanceChange = getEffect(newTransaction);
@@ -301,13 +305,17 @@ export class AccountsService {
                     let loanRemainingBalanceChange = 0;
 
                     const getEffect = (t: Transaction) => {
-                        const amount = Number(t.amount) || 0;
-                        return t.type === 'income' ? amount : -amount;
-                    };
-                    const getLoanEffect = (t: Transaction) => {
-                        const amount = Number(t.amount) || 0;
-                        return t.type === 'expense' ? -amount : 0;
-                    };
+                    // ONLY COMPLETED transactions should affect the current balance.
+                    if ((t as any).isPending || t.status === 'pending') return 0;
+                    const amount = Number(t.amount) || 0;
+                    return t.type === 'income' ? amount : -amount;
+                };
+                const getLoanEffect = (t: Transaction) => {
+                    // ONLY COMPLETED transactions should affect the remaining balance.
+                    if ((t as any).isPending || t.status === 'pending') return 0;
+                    const amount = Number(t.amount) || 0;
+                    return t.type === 'expense' ? -amount : 0;
+                };
 
                     if (transactionType === 'create' && newTransaction) {
                         balanceChange = getEffect(newTransaction);
@@ -352,9 +360,11 @@ export class AccountsService {
             accounts = this.localStorageUtility.getItem<Account[]>(cacheKey) || [];
         }
         
-        transactions.forEach(t => {
-            const index = accounts.findIndex(a => (a as any).accountId === t.accountId);
-            if (index !== -1) {
+        transactions.forEach((t: any) => {
+        const index = accounts.findIndex(a => (a as any).accountId === t.accountId);
+        if (index !== -1) {
+            // ONLY COMPLETED transactions should affect the current balance.
+            if (!t.isPending && t.status !== 'pending') {
                 const account = accounts[index];
                 const amount = Number(t.amount) || 0;
                 const balanceChange = t.type === 'income' ? amount : -amount;
@@ -362,7 +372,8 @@ export class AccountsService {
                 account.updatedAt = new Date() as any;
                 this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...account } as any }));
             }
-        });
+        }
+    });
 
         if (isGuest) {
             this.localStorageUtility.saveEntities('accounts', accounts);
@@ -384,8 +395,11 @@ export class AccountsService {
                     const accountLoanChanges = new Map<string, number>();
 
                     // Calculate balance changes for each account
-                    transactions.forEach(transaction => {
-                        const currentChange = accountBalanceChanges.get(transaction.accountId) || 0;
+                transactions.forEach((transaction: any) => {
+                    // ONLY COMPLETED transactions should affect the current balance.
+                    if (transaction.isPending || transaction.status === 'pending') return;
+
+                    const currentChange = accountBalanceChanges.get(transaction.accountId) || 0;
                         const amount = Number(transaction.amount) || 0;
                         const transactionChange = transaction.type === 'income' ? amount : -amount;
                         accountBalanceChanges.set(transaction.accountId, currentChange + transactionChange);
