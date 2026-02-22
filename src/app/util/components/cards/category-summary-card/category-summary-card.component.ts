@@ -16,7 +16,7 @@ import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 
 dayjs.extend(isBetween);
 
@@ -50,6 +50,7 @@ export class CategorySummaryCardComponent {
     public readonly appViewService = inject(AppViewService);
     private readonly dateService = inject(DateService);
     public readonly breakpointService = inject(BreakpointService);
+    public readonly router = inject(Router);
 
     private readonly categories = toSignal(this.store.select(CategoriesSelectors.selectAllCategories), { initialValue: [] });
     private readonly transactions = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions), { initialValue: [] });

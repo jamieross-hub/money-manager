@@ -101,12 +101,14 @@
     </div>
 
     <!-- View All Button -->
-    <div class="card-divider my-3 dark:border-slate-800 border-neutral-100 border-t"></div>
-    <div class="flex justify-center mt-2">
-        <button mat-stroked-button color="primary" class="w-full !rounded-xl dark:!text-blue-400 dark:!border-slate-700"
-            routerLink="/dashboard/category">
-            <mat-icon class="mr-1">visibility</mat-icon>
-            View All Categories
-        </button>
-    </div>
+    <ng-container *ngIf="router.url !== '/dashboard/category'">
+        <div class="card-divider my-3 dark:border-slate-800 border-neutral-100 border-t"></div>
+        <div class="flex justify-center mt-2">
+            <button mat-stroked-button color="primary" class="w-full !rounded-xl dark:!text-blue-400 dark:!border-slate-700"
+                routerLink="/dashboard/category">
+                <mat-icon class="mr-1">visibility</mat-icon>
+                View All Categories
+            </button>
+        </div>
+    </ng-container>
 </mat-card>

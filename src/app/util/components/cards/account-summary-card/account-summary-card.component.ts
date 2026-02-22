@@ -10,7 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 
 @Component({
@@ -24,6 +24,7 @@ import { MatButtonModule } from '@angular/material/button';
 export class AccountSummaryCardComponent {
   private readonly store = inject(Store<AppState>);
   public readonly breakpointService = inject(BreakpointService);
+  public readonly router = inject(Router);
 
   // Signals from store
   public readonly accounts = toSignal(this.store.select(AccountsSelectors.selectAllAccounts), { initialValue: [] });
