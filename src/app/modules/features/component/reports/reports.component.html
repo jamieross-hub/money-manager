@@ -98,11 +98,10 @@
                                                         <mat-icon class="!text-base text-primary-500">speed</mat-icon>
                                                     </div>
                                                     <span
-                                                        class="text-xs text-neutral-400 font-medium leading-tight relative top-1">Average
-                                                        Monthly Spending</span>
+                                                        class="text-xs text-neutral-400 font-medium leading-tight relative top-1">{{ spendingLabel }}</span>
                                                 </div>
                                                 <div class="text-xl font-bold text-neutral-500">
-                                                    {{ avgMonthlySpending | currency:{round:true} }}
+                                                    {{ (currentPeriodSummary?.avgMonthlySpending ?? 0) | currency:{round:true} }}
                                                 </div>
                                             </div>
 
@@ -129,7 +128,7 @@
                                                             highestSpendingCategory.categoryIcon }}</mat-icon>
                                                     </span>
                                                     <div class="text-base font-bold text-neutral-500 truncate mt-0">
-                                                        {{ highestSpendingCategory.categoryName }}
+                                                        {{ currentPeriodSummary?.topCategory?.categoryName ?? '—' }}
                                                     </div>
                                                 </div>
                                                 <ng-template #noCategory>
@@ -138,9 +137,9 @@
                                                         —
                                                     </div>
                                                 </ng-template>
-                                                <div class="text-xs text-neutral-400 mt-0.5">
-                                                    {{ highestSpendingCategory ? (highestSpendingCategory.percentage |
-                                                    number:'1.0-0') + '% of spend' : '' }}
+                                                <div class="text-xs text-neutral-400 mt-0.5" *ngIf="currentPeriodSummary?.topCategory">
+                                                    {{ (currentPeriodSummary?.topCategory?.percentage |
+                                                    number:'1.0-0') + '% of spend' }}
                                                 </div>
                                             </div>
                                         </div>
@@ -164,9 +163,9 @@
                                                         Rate</span>
                                                 </div>
                                                 <div class="text-xl font-bold"
-                                                    [class.text-success-500]="overallSavingsRate >= 0"
-                                                    [class.text-error-500]="overallSavingsRate < 0">
-                                                    {{ overallSavingsRate | number:'1.1-1' }}%
+                                                    [class.text-success-500]="(currentPeriodSummary?.savingsRate ?? 0) >= 0"
+                                                    [class.text-error-500]="(currentPeriodSummary?.savingsRate ?? 0) < 0">
+                                                    {{ (currentPeriodSummary?.savingsRate ?? 0) | number:'1.1-1' }}%
                                                 </div>
                                                 <div class="text-xs text-neutral-400 mt-0.5">of income saved</div>
                                             </div>

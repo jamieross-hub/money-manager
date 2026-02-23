@@ -171,6 +171,15 @@ export class ReportsComponent implements OnInit, OnDestroy {
     highestSpendingCategory: CategoryBreakdownItem | null = null;
     overallSavingsRate = 0;
 
+    get spendingLabel(): string {
+        switch (this.selectedPeriod) {
+            case 'weekly': return 'Weekly Spending';
+            case 'monthly': return 'Monthly Spending';
+            case 'yearly': return 'Avg Monthly Spending';
+            default: return 'Total Spending';
+        }
+    }
+
     // Pre-computed trend data (for template binding with OnPush)
     savingsTrend: MonthlySummary[] = [];
     savingsTrendMax = 1;
