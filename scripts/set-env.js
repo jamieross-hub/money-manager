@@ -52,6 +52,7 @@ const prodEnvConfigFile = `export const environment = {
     measurementId: "${process.env.FIREBASE_MEASUREMENT_ID || ''}"
   },
   vapidKey: "${process.env.VAPID_KEY || ''}",
+  openAiApiKey: '${process.env.OPENAI_API_KEY || ''}',
   SLACK_WEBHOOK_URL: '${process.env.SLACK_WEBHOOK_URL || ''}',
   googleClientId: '${process.env.GOOGLE_CLIENT_ID || ''}',
   contactSpreadsheetId: '${process.env.CONTACT_SPREADSHEET_ID || ''}'
