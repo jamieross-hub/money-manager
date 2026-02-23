@@ -986,3 +986,14 @@ table {
     color: var(--neutral-500);
   }
 }
+
+.upcoming-transaction {
+  opacity: 0.6;
+  filter: grayscale(0.2);
+  transition: all 0.3s ease;
+
+  &:hover {
+    opacity: 0.8;
+    filter: grayscale(0);
+  }
+}

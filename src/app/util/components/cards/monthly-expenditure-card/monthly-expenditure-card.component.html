@@ -15,8 +15,18 @@
                 </div>
             </div>
         </div>
-        <div class="action-section">
-            <div class="toggle-group">
+        <!-- <div class="action-section">
+            <div class="toggle-group !relative !top-0 !right-0 mb-2">
+                <button mat-icon-button [class.active]="viewMode === 'category'" (click)="toggleViewMode('category')"
+                    matTooltip="By Category">
+                    <mat-icon>category</mat-icon>
+                </button>
+                <button mat-icon-button [class.active]="viewMode === 'trend'" (click)="toggleViewMode('trend')"
+                    matTooltip="By Trend">
+                    <mat-icon>show_chart</mat-icon>
+                </button>
+            </div>
+            <div class="toggle-group !relative !top-0 !right-0">
                 <button mat-icon-button [class.active]="chartType === 'line'" (click)="toggleChartType('line')"
                     matTooltip="Line Chart">
                     <mat-icon>show_chart</mat-icon>
@@ -26,13 +36,31 @@
                     <mat-icon>bar_chart</mat-icon>
                 </button>
             </div>
-        </div>
+        </div> -->
     </div>
 
     <mat-card-content class="!p-0">
-        <!-- Chart removed -->
-        <div class="p-6 text-center text-gray-500 italic">
-            Chart visualization has been disabled to improve performance.
+        <!-- CSS Based Bar Chart -->
+        <div class="chart-container-inner" *ngIf="chartData.length > 0">
+            <div *ngFor="let item of chartData; let i = index" 
+                 class="bar-wrapper"
+                 [class.monthly-bar]="currentView === 'MONTHLY' && viewMode === 'trend'"
+                 [matTooltip]="(viewMode === 'category' ? item.period : item.period) + ': ' + (item.value | currency)"
+                 matTooltipPosition="above">
+                <div class="bar-tooltip">{{ item.value | currency }}</div>
+                <div class="bar" 
+                     [style.height.%]="maxChartValue > 0 ? (item.value / maxChartValue * 100) : 0"
+                     [style.background-color]="viewMode === 'category' ? item.color : null">
+                </div>
+                <!-- <span class="bar-label" [class.category-label]="viewMode === 'category'">
+                    <mat-icon *ngIf="viewMode === 'category'" class="text-[10px] mr-0.5">{{ item.icon }}</mat-icon>
+                    {{ item.period }}
+                </span> -->
+            </div>
+        </div>
+
+        <div *ngIf="chartData.length === 0" class="p-6 text-center text-gray-500 italic">
+            No data available for the selected period.
         </div>
         <p class="chart-footer text-center mt-2">{{ chartFooter }}</p>
     </mat-card-content>

@@ -107,6 +107,9 @@
             <span class="text-xs font-medium text-gray-800 dark:text-slate-200">
               {{getCategoryName(element.categoryId)}}
             </span>
+            <mat-icon *ngIf="element.isRecurring" 
+              class="text-[10px] md:text-xs text-primary-500 ml-1" 
+              matTooltip="Recurring Transaction">repeat</mat-icon>
           </div>
         </td>
       </ng-container>
@@ -216,7 +219,9 @@
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns" class="h-12 md:h-16 sticky top-0 z-10"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-        class="hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors cursor-pointer" (click)="onRowClick(row)">
+        class="hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors cursor-pointer" 
+        [class.upcoming-transaction]="isUpcoming(row)"
+        (click)="onRowClick(row)">
       </tr>
     </table>
   </div>
@@ -227,6 +232,7 @@
       @for (element of dataSource.data; track element?.id) {
       <div
         class="list-item list-item-bg border dark:border-slate-800 rounded-lg p-4 hover-effect transition-colors dark:bg-slate-900 dark:hover:bg-slate-800 cursor-pointer"
+        [class.upcoming-transaction]="isUpcoming(element)"
         (click)="onRowClick(element)">
         <div class="flex items-center justify-between">
           <!-- Left Section -->
@@ -247,8 +253,11 @@
 
             <!-- Transaction Details -->
             <div class="flex-1 min-w-0">
-              <h4 class="font-medium text-gray-900 dark:text-slate-100 text-sm truncate">
+              <h4 class="font-medium text-gray-900 dark:text-slate-100 text-sm truncate flex items-center">
                 {{getCategoryName(element?.categoryId)}}
+                <mat-icon *ngIf="element.isRecurring" 
+                  class="text-[10px] text-blue-500 ml-1" 
+                  matTooltip="Recurring Transaction">repeat</mat-icon>
               </h4>
               <div class="flex items-center space-x-4 mt-1 text-xs text-gray-500 dark:text-slate-500">
                 <span>{{ getDateDisplay(element.date) }}</span>
@@ -330,7 +339,9 @@
   <div *ngIf="!isListView" class="sm:hidden flex-1 overflow-auto max-h-full mobile-card-view">
     <div class="p-4 space-y-3">
       @for (element of dataSource.data; track element.id) {
-      <div class="transaction-card dark:bg-slate-900 dark:border-slate-800 dark:border" (click)="onRowClick(element)">
+      <div class="transaction-card dark:bg-slate-900 dark:border-slate-800 dark:border" 
+        [class.upcoming-transaction]="isUpcoming(element)"
+        (click)="onRowClick(element)">
         <!-- Header Row -->
         <div class="card-header">
           <div class="left-section">
@@ -339,7 +350,11 @@
                 }}</mat-icon>
             </div>
             <div class="transaction-info">
-              <div class="payee-name dark:text-slate-100">{{getCategoryName(element.categoryId)}}</div>
+              <div class="payee-name dark:text-slate-100 flex items-center">
+                {{getCategoryName(element.categoryId)}}
+                <mat-icon *ngIf="element.isRecurring" 
+                  class="text-[10px] text-blue-500 ml-1">repeat</mat-icon>
+              </div>
             </div>
           </div>
           <div class="right-section">
@@ -380,6 +395,7 @@
       @for (element of dataSource.data; track element.id) {
       <div
         class="list-item list-item-bg border dark:border-slate-800 rounded-lg p-3 hover-effect transition-colors dark:bg-slate-900 cursor-pointer"
+        [class.upcoming-transaction]="isUpcoming(element)"
         (click)="onRowClick(element)">
         <div class="flex items-center space-x-3">
           <!-- Category Icon -->
@@ -405,6 +421,8 @@
                 <span
                   class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200">
                   {{getCategoryName(element.categoryId)}}
+                  <mat-icon *ngIf="element.isRecurring" 
+                    class="text-[10px] text-blue-500 ml-1">repeat</mat-icon>
                 </span>
               </div>
               <div class="flex space-x-1">

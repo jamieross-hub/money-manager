@@ -1,15 +1,18 @@
-import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, NgZone, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, NgZone, AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Store } from '@ngrx/store';
-import { Subscription, combineLatest } from 'rxjs';
+import { Subscription, combineLatest, take } from 'rxjs';
 import { AppState } from '../../../../store/app.state';
 import * as TransactionsSelectors from '../../../../store/transactions/transactions.selectors';
+import * as CategoriesSelectors from '../../../../store/categories/categories.selectors';
 import { Transaction } from '../../../models/transaction.model';
+import { Category } from '../../../models/category.model';
 import { FilterService } from '../../../service/filter.service';
+import { TransactionType } from '../../../../util/config/enums';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import localeData from 'dayjs/plugin/localeData';
@@ -35,9 +38,13 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
     // private xAxis: am5xy.CategoryAxis<any> | undefined;
 
 
-    chartType: 'line' | 'bar' = 'line';
+    chartType: 'line' | 'bar' = 'bar';
+    viewMode: 'trend' | 'category' = 'category';
     totalIncome = 0;
     totalExpenses = 0;
+
+    chartData: any[] = [];
+    maxChartValue: number = 0;
 
     selectedYear = dayjs().year();
     selectedMonth = dayjs().month();
@@ -53,7 +60,8 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
         private filterService: FilterService,
         @Inject(PLATFORM_ID) private platformId: Object,
         private zone: NgZone,
-        private appViewService: AppViewService
+        private appViewService: AppViewService,
+        private cdr: ChangeDetectorRef
     ) { }
 
     ngOnInit(): void {
@@ -137,28 +145,80 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
 
     private subscribeToData() {
         this.subscription.add(
-            this.store.select(TransactionsSelectors.selectAllTransactions).subscribe(transactions => {
-                const dailyData = this.processTransactions(transactions);
-                this.updateChart(dailyData);
+            combineLatest([
+                this.store.select(TransactionsSelectors.selectAllTransactions),
+                this.store.select(CategoriesSelectors.selectAllCategories)
+            ]).subscribe(([transactions, categories]) => {
+                const data = this.processTransactions(transactions, categories);
+                this.updateChart(data);
             })
         );
     }
 
     private updateData() {
-        // Manual trigger for data update when filters change
-        this.store.select(TransactionsSelectors.selectAllTransactions).subscribe(transactions => {
-            const dailyData = this.processTransactions(transactions);
-            this.updateChart(dailyData);
-        }).unsubscribe();
+        this.subscription.add(
+            combineLatest([
+                this.store.select(TransactionsSelectors.selectAllTransactions),
+                this.store.select(CategoriesSelectors.selectAllCategories)
+            ]).pipe(take(1)).subscribe(([transactions, categories]: [Transaction[], Category[]]) => {
+                const data = this.processTransactions(transactions, categories);
+                this.updateChart(data);
+            })
+        );
     }
 
-    private processTransactions(transactions: Transaction[]) {
+    private processTransactions(transactions: Transaction[], categories: Category[]) {
+        if (this.viewMode === 'category') {
+            return this.processCategoryTransactions(transactions, categories);
+        }
+
         if (this.currentView === 'WEEKLY') {
             return this.processWeeklyTransactions(transactions);
         } else if (this.currentView === 'YEARLY') {
             return this.processYearlyTransactions(transactions);
         } else {
             return this.processMonthlyTransactions(transactions);
+        }
+    }
+
+    private processCategoryTransactions(transactions: Transaction[], categories: Category[]) {
+        const { start, end } = this.getCurrentPeriodRange();
+        this.resetTotals();
+
+        const categoryTotals: Record<string, number> = {};
+
+        transactions.forEach(t => {
+            const txDate = dayjs(this.convertToDate(t.date));
+            if (txDate.isBetween(start, end, 'day', '[]')) {
+                const catId: string = t.categoryId;
+                if (t.type === 'expense' && catId) {
+                    categoryTotals[catId] = (categoryTotals[catId] || 0) + t.amount;
+                    this.totalExpenses += t.amount;
+                } else if (t.type === 'income') {
+                    this.totalIncome += t.amount;
+                }
+            }
+        });
+
+        return categories
+            .map(c => ({
+                period: c.name,
+                value: c.id ? categoryTotals[c.id] || 0 : 0,
+                color: c.color,
+                icon: c.icon
+            }))
+            .filter(item => item.value > 0)
+            .sort((a, b) => b.value - a.value);
+    }
+
+    private getCurrentPeriodRange() {
+        if (this.currentView === 'WEEKLY') {
+            return { start: dayjs().startOf('week'), end: dayjs().endOf('week') };
+        } else if (this.currentView === 'YEARLY') {
+            const targetYear = this.selectedYear || dayjs().year();
+            return { start: dayjs().year(targetYear).startOf('year'), end: dayjs().year(targetYear).endOf('year') };
+        } else {
+            return { start: dayjs().startOf('month'), end: dayjs().endOf('month') };
         }
     }
 
@@ -272,15 +332,20 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
     }
 
     private updateChart(data: any[]) {
-        // Chart actions removed
+        this.chartData = data;
+        this.maxChartValue = Math.max(...data.map(d => d.value), 0);
+        this.cdr.markForCheck();
+    }
+
+    toggleViewMode(mode: 'trend' | 'category') {
+        if (this.viewMode === mode) return;
+        this.viewMode = mode;
+        this.updateData();
     }
 
     toggleChartType(type: 'line' | 'bar') {
         if (this.chartType === type) return;
         this.chartType = type;
-
-        this.browserOnly(() => {
-            // Chart toggle removed
-        });
+        this.cdr.markForCheck();
     }
 }

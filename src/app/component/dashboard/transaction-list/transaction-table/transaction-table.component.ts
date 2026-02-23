@@ -597,4 +597,10 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
     // Fallback
     return new Date(date).getTime();
   }
+
+  isUpcoming(transaction: Transaction): boolean {
+    const date = this.dateService.toDate(transaction.date);
+    if (!date) return false;
+    return date.getTime() > Date.now();
+  }
 }
