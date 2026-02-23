@@ -1,67 +1,106 @@
-import { Injectable } from '@angular/core';
-import { Observable, from, throwError } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { GoogleGenAI } from '@google/genai';
 import { GeminiMessage } from './models/gemini.types';
+
+/** Shape of the request body sent to the backend. */
+interface BackendChatRequest {
+  messages: GeminiMessage[];
+  model: string;
+  maxOutputTokens?: number;
+  temperature?: number;
+}
+
+/** Shape of the response returned by the backend. */
+interface BackendChatResponse {
+  text: string;
+  model?: string;
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class GeminiService {
+  private readonly http = inject(HttpClient);
+
+  /**
+   * Base URL of your backend API.
+   * Override via setBackendUrl() or update the default here.
+   */
+  private backendUrl: string = '/api/ai/gemini/chat';
+
+  // Kept for backward compatibility — callers can still pass an API key,
+  // but in the new flow the key is managed server-side.
   private apiKey: string = '';
-  private genAI: GoogleGenAI | null = null;
 
-  constructor() { }
+  // ─── Configuration ───────────────────────────────────────────────────────
 
-  setApiKey(apiKey: string): void {
-    this.apiKey = apiKey;
-    this.genAI = new GoogleGenAI({ apiKey, apiVersion: 'v1' });
-  }
-
-  isApiKeySet(): boolean {
-    return !!this.apiKey;
+  /** Optionally override the backend endpoint. */
+  setBackendUrl(url: string): void {
+    this.backendUrl = url;
   }
 
   /**
-   * Main method to send chat messages to Gemini using the official Unified SDK.
-   * @param messages Array of message objects
-   * @param apiKey Optional API key. If not provided, uses the stored key.
-   * @param modelName Model to use (default: gemini-2.0-flash)
+   * Kept for backward compatibility.
+   * The API key is no longer used client-side; it is managed by the backend.
    */
-  chat(messages: GeminiMessage[], apiKey?: string, modelName: string = 'gemini-2.0-flash'): Observable<string> {
-    const key = apiKey || this.apiKey;
-    if (!key) {
-      return throwError(() => new Error('Gemini API Key is required'));
-    }
+  setApiKey(apiKey: string): void {
+    this.apiKey = apiKey;
+  }
 
-    // Initialize SDK if not already done or if key changed
-    if (!this.genAI || (apiKey && apiKey !== this.apiKey)) {
-      this.genAI = new GoogleGenAI({ apiKey: key, apiVersion: 'v1' });
-    }
+  isApiKeySet(): boolean {
+    // Always considered "set" since the key lives on the backend.
+    // Kept for interface compatibility.
+    return true;
+  }
 
-    return from(this.genAI.models.generateContent({
+  // ─── Core Methods ────────────────────────────────────────────────────────
+
+  /**
+   * Send chat messages to Gemini via the backend API.
+   *
+   * @param messages  Conversation history in Gemini format.
+   * @param _apiKey   Ignored — kept for API compatibility.
+   * @param modelName Gemini model name (default: gemini-2.0-flash).
+   */
+  chat(
+    messages: GeminiMessage[],
+    _apiKey?: string,
+    modelName: string = 'gemini-2.0-flash'
+  ): Observable<string> {
+    const body: BackendChatRequest = {
+      messages,
       model: modelName,
-      contents: messages.map(m => ({
-        role: m.role,
-        parts: m.parts
-      })),
-      config: {
-        maxOutputTokens: 1000,
-        temperature: 0.7,
-      }
-    })).pipe(
-      map(response => response.text || ''),
-      catchError(error => {
-        console.error('Gemini SDK Error:', error);
-        return throwError(() => new Error(error?.message || 'Failed to get response from Gemini. Please try again.'));
+      maxOutputTokens: 1000,
+      temperature: 0.7,
+    };
+
+    return this.http.post<BackendChatResponse>(this.backendUrl, body).pipe(
+      map(response => response.text ?? ''),
+      catchError((error: HttpErrorResponse) => {
+        const message =
+          error.error?.message ||
+          error.message ||
+          'Failed to get response from Gemini. Please try again.';
+        console.error('GeminiService backend error:', error);
+        return throwError(() => new Error(message));
       })
     );
   }
 
   /**
-   * Alias for chat, simplified for general usage.
+   * Simplified alias for chat().
    */
-  sendMessage(messages: GeminiMessage[], model: string = 'gemini-2.0-flash'): Observable<string> {
-    return this.chat(messages, this.apiKey, model);
+  sendMessage(
+    messages: GeminiMessage[],
+    model: string = 'gemini-2.0-flash'
+  ): Observable<string> {
+    return this.chat(messages, undefined, model);
   }
 }
