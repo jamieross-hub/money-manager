@@ -44,7 +44,9 @@ export const selectAllAccounts = createSelector(
 
       const loanAmount = account.loanDetails.loanAmount || 0;
       const netImpact = loanImpacts.get(account.accountId) || 0;
-      const derivedBalance = loanAmount + netImpact;
+      // Loan amount is money owed (liability) so it starts as negative.
+      // Payments are expenses → netImpact is negative → they reduce the debt (bring it toward 0).
+      const derivedBalance = -loanAmount - netImpact;
       const remainingBalance = Math.abs(derivedBalance);
 
       return {

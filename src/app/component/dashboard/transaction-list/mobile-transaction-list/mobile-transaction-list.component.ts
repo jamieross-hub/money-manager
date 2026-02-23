@@ -144,6 +144,8 @@ export class MobileTransactionListComponent
   groupedTransactions = computed(() => {
     const transactions = this.filteredTransactions();
     const range = this.selectedRange();
+    const sort = this.selectedSort();
+    const isDateSort = sort === 'date-desc' || sort === 'date-asc';
     const groups: { date: string; dateHeader: string; transactions: any[]; isUpcomingGroup?: boolean }[] = [];
     const dateHeaderCache = new Map<string, string>();
     const today = dayjs().startOf('day');
@@ -203,7 +205,8 @@ export class MobileTransactionListComponent
             header = 'Overdue Recurring';
           } else if (range === 'this-year' || range === null) {
             header = dateObj.format('MMMM YYYY');
-          } else {
+          } else if (isDateSort) {
+            // Relative labels only when sorted by date
             if (dateObj.isSame(today, 'day')) {
               header = 'Today';
             } else if (dateObj.isSame(yesterday, 'day')) {
@@ -211,6 +214,9 @@ export class MobileTransactionListComponent
             } else {
               header = dateObj.format('dddd, DD MMM YYYY');
             }
+          } else {
+            // Non-date sorts: always show explicit date
+            header = dateObj.format('DD MMM YYYY');
           }
           dateHeaderCache.set(dateKey, header);
         }
@@ -220,12 +226,18 @@ export class MobileTransactionListComponent
       group.transactions.push(txView);
     });
 
-    // Re-order: Overdue first
-    return groups.sort((a, b) => {
-      if (a.dateHeader === 'Overdue Recurring') return -1;
-      if (b.dateHeader === 'Overdue Recurring') return 1;
-      return b.date.localeCompare(a.date);
-    });
+    // Re-order groups by date only when sorting by date; otherwise preserve insertion order (= sort order)
+    if (isDateSort) {
+      return groups.sort((a, b) => {
+        if (a.dateHeader === 'Overdue Recurring') return -1;
+        if (b.dateHeader === 'Overdue Recurring') return 1;
+        return sort === 'date-asc'
+          ? a.date.localeCompare(b.date)
+          : b.date.localeCompare(a.date);
+      });
+    }
+
+    return groups;
   });
 
   // Cached view properties (Computed)
@@ -457,20 +469,16 @@ export class MobileTransactionListComponent
       }
     );
 
-    // Sort transactions
-    const sortedData = this.filterService.sortTransactions(filteredData, this.selectedSort());
-
     // Merge in due recurring transactions if not in 'upcoming' view specifically
     // but only if we are in 'Today', 'This Week' or 'This Month' or 'All'
-    let finalData = sortedData;
+    let mergedData = filteredData;
     if (this.selectedRange() !== 'upcoming') {
-      const today = dayjs().startOf('day').toDate();
       const endOfCheck = dayjs().add(3, 'day').endOf('day').toDate();
       const recurring = this.allTransactions().filter(t => t.isRecurring);
       const dueSoon = this.generateUpcomingTransactions(recurring, dayjs().subtract(1, 'year').toDate(), endOfCheck);
-      
-      // Filter out pure pending templates exclusively if their virtual duplicate is already in filteredDueSoon
-      const actualData = sortedData.filter(t => {
+
+      // Filter out pure pending templates exclusively if their virtual duplicate is already in dueSoon
+      const actualData = filteredData.filter(t => {
         if (t.isPending && t.isRecurring && !t.id?.startsWith('upcoming-')) {
           const hasDuplicate = dueSoon.some(v => v.id?.startsWith(`upcoming-${t.id}-`) && dayjs(this.dateService.toDate(v.date)).isSame(this.dateService.toDate(t.date), 'day'));
           return !hasDuplicate;
@@ -478,15 +486,18 @@ export class MobileTransactionListComponent
         return true;
       });
 
-      // Merge: avoid duplicates (though upcoming-ids should be unique)
+      // Merge: avoid duplicates (upcoming-ids should be unique)
       const existingIds = new Set(actualData.map(t => t.id));
       const filteredDueSoon = dueSoon.filter(t => !existingIds.has(t.id));
-      
-      finalData = [...filteredDueSoon, ...actualData];
+
+      mergedData = [...filteredDueSoon, ...actualData];
     } else {
-      // In upcoming view, if sortedData naturally contains pure templates, remove them
-      finalData = sortedData.filter(t => !(t.isPending && t.isRecurring && !t.id?.startsWith('upcoming-')));
+      // In upcoming view, remove raw pending templates (replaced by virtual upcoming-* items)
+      mergedData = filteredData.filter(t => !(t.isPending && t.isRecurring && !t.id?.startsWith('upcoming-')));
     }
+
+    // Sort after merging so the selected sort applies to ALL transactions (including virtual upcoming ones)
+    const finalData = this.filterService.sortTransactions(mergedData, this.selectedSort());
 
     this.filteredTransactions.set(finalData);
     this.cdr.markForCheck();
