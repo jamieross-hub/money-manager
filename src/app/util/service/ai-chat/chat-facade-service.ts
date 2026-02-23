@@ -74,7 +74,7 @@ export class ChatFacadeService implements OnDestroy {
             distinctUntilChanged(),
             filter(hasLoans => hasLoans)
         ).subscribe(() => {
-            this.pushBot(ResponseBuilder.create().uiElement(INTENTS.LOAN_SUMMARY_CARD).build(), true); // 'true' argument as per user original
+            this.pushBot(ResponseBuilder.create().uiElement(INTENTS.LOAN_SUMMARY_CARD).build(), true, 0); // Skip delay for initial load
         });
 
         this.registerHandlers();
@@ -124,13 +124,13 @@ export class ChatFacadeService implements OnDestroy {
     private initWelcomeMessage() {
         if (this.breakpointService.device.isMobile || this.breakpointService.device.isLaptop) {
 
-            this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build());
+            this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build(), false, 0);
 
 
         } else {
-            this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build());
-            // this.pushBot(ResponseBuilder.create().uiElement(INTENTS.RECENT_ACTIVITY_CARD).build());
-            this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.GREETING).build());
+            this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build(), false, 0);
+            // this.pushBot(ResponseBuilder.create().uiElement(INTENTS.RECENT_ACTIVITY_CARD).build(), false, 0);
+            this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.GREETING).build(), false, 0);
         }
     }
 
@@ -294,7 +294,12 @@ export class ChatFacadeService implements OnDestroy {
         }
     }
 
-    private pushBot(message: Message, pushAtTop: boolean = false) {
+    private pushBot(message: Message, pushAtTop: boolean = false, delay: number = 600) {
+        if (delay > 0) {
+            this.isTyping = true;
+            this.scrollToBottom();
+        }
+
         setTimeout(() => {
             if (pushAtTop) {
                 this.messages.unshift(message);
@@ -313,7 +318,7 @@ export class ChatFacadeService implements OnDestroy {
 
             this.isTyping = false;
             this.scrollToBottom();
-        }, 600);
+        }, delay);
     }
 
     private scrollToBottom() {
