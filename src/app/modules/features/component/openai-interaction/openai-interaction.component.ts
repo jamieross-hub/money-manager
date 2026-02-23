@@ -8,6 +8,7 @@ import { AppState } from 'src/app/store/app.state';
 import { updatePreferences } from 'src/app/store/profile/profile.actions';
 import { User } from '../../../../util/models';
 import { GeminiService } from '../../../../util/service/ai-chat/gemini.service';
+import { environment } from '@env/environment';
 
 @Component({
   selector: 'app-openai-interaction',
@@ -62,7 +63,7 @@ export class OpenaiInteractionComponent implements OnInit {
       
       // Load OpenAI Key
       if (currentUser?.preferences?.openaiApiKey) {
-        this.openai.apiKey = currentUser.preferences.openaiApiKey;
+        this.openai.apiKey = currentUser.preferences.openaiApiKey || environment.openAiApiKey;
         this.openai.isConnected = true;
         this.openaiService.setApiKey(this.openai.apiKey);
         if (this.selectedProvider === 'openai') {

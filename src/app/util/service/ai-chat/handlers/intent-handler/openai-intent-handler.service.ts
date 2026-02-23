@@ -95,7 +95,7 @@ export class OpenAiIntentHandler implements IntentHandler {
     transcribeAudio(audioBlob: Blob): Observable<string> {
         return from(this.userService.getCurrentUser()).pipe(
             switchMap(user => {
-                const apiKey = user?.preferences?.openaiApiKey;
+                const apiKey = user?.preferences?.openaiApiKey || environment.openAiApiKey;
                 if (!apiKey) return throwError(() => new Error('OpenAI API Key not found'));
 
                 // System message prompt to guide usage of domain-specific terms
@@ -111,7 +111,7 @@ export class OpenAiIntentHandler implements IntentHandler {
     generateSpeech(text: string): Observable<Blob> {
         return from(this.userService.getCurrentUser()).pipe(
             switchMap(user => {
-                const apiKey = user?.preferences?.openaiApiKey;
+                const apiKey = user?.preferences?.openaiApiKey  || environment.openAiApiKey;
                 if (!apiKey) return throwError(() => new Error('OpenAI API Key not found'));
 
                 return this.openAiClient.speak(text, apiKey);

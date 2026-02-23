@@ -240,10 +240,10 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
   async onMicClick() {
     // Check for API key first
     const user = await this.userService.getCurrentUser();
-    if (!user?.preferences?.openaiApiKey) {
-      this.notificationService.error('OpenAI API key not found. Please connect your API key in Settings > OpenAI Integration.');
-      return;
-    }
+    // if (!user?.preferences?.openaiApiKey ) {
+    //   this.notificationService.error('OpenAI API key not found. Please connect your API key in Settings > OpenAI Integration.');
+    //   return;
+    // }
 
     this.isRecording = true;
     this.voiceBlob = null;
