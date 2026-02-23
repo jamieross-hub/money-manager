@@ -74,6 +74,16 @@
 .chat-bubble-bot {
   background-color: var(--surface-200) !important;
   color: var(--primary-900) !important;
+  // margin-bottom: 1rem;
+}
+
+// Only the last chat element (or typing loader) should have the bottom margin
+.flex.fade-in:last-child {
+  .chat-bubble-bot, 
+  [class*="app-"], // for UI cards
+  app-chat-category-dropdown {
+    margin-bottom: 1rem;
+  }
 }
 
 .input-bar-container {

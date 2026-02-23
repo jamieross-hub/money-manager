@@ -295,26 +295,25 @@ export class ChatFacadeService implements OnDestroy {
     }
 
     private pushBot(message: Message, pushAtTop: boolean = false) {
-        if (pushAtTop) {
-            this.messages.unshift(message);
-        } else {
-            this.messages.push(message);
-        }
-
-        // Limit message history to prevent memory leaks
-        if (this.messages.length > 50) {
-            this.messages = this.messages.slice(0, 50); // Keep oldest or newest? Typically newest.
-            // Wait, unshift adds to beginning, push adds to end.
-            // If pushAtTop is true, we are adding to the beginning (Oldest? No, newest usually on top if reverse order).
-            // Let's assume standard chat where bottom is newest.
-            // If we want to keep 50 messages, and we push to end, we should remove from start.
-            if (!pushAtTop && this.messages.length > 50) {
-                this.messages.shift();
+        setTimeout(() => {
+            if (pushAtTop) {
+                this.messages.unshift(message);
+            } else {
+                this.messages.push(message);
             }
-        }
 
-        this.isTyping = false;
-        this.scrollToBottom();
+            // Limit message history to prevent memory leaks
+            if (this.messages.length > 50) {
+                if (!pushAtTop) {
+                    this.messages.shift();
+                } else {
+                    this.messages.pop(); // If unshifting to top, remove from bottom
+                }
+            }
+
+            this.isTyping = false;
+            this.scrollToBottom();
+        }, 600);
     }
 
     private scrollToBottom() {
