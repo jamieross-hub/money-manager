@@ -716,11 +716,11 @@ export class ReportsComponent implements OnInit, OnDestroy {
     }
 
     formatCurrency(amount: number): string {
-        return this.currencyService.formatAmount(amount, { compact: true, round: true });
+        return this.currencyService.formatAmount(amount, { compact: true });
     }
 
     formatCompact(amount: number): string {
-        return this.currencyService.formatAmount(amount, { compact: true, round: true });
+        return this.currencyService.formatAmount(amount, { compact: true });
     }
 
     abs(n: number): number {

@@ -469,11 +469,23 @@ export class MobileTransactionListComponent
       const recurring = this.allTransactions().filter(t => t.isRecurring);
       const dueSoon = this.generateUpcomingTransactions(recurring, dayjs().subtract(1, 'year').toDate(), endOfCheck);
       
+      // Filter out pure pending templates exclusively if their virtual duplicate is already in filteredDueSoon
+      const actualData = sortedData.filter(t => {
+        if (t.isPending && t.isRecurring && !t.id?.startsWith('upcoming-')) {
+          const hasDuplicate = dueSoon.some(v => v.id?.startsWith(`upcoming-${t.id}-`) && dayjs(this.dateService.toDate(v.date)).isSame(this.dateService.toDate(t.date), 'day'));
+          return !hasDuplicate;
+        }
+        return true;
+      });
+
       // Merge: avoid duplicates (though upcoming-ids should be unique)
-      const existingIds = new Set(sortedData.map(t => t.id));
+      const existingIds = new Set(actualData.map(t => t.id));
       const filteredDueSoon = dueSoon.filter(t => !existingIds.has(t.id));
       
-      finalData = [...filteredDueSoon, ...sortedData];
+      finalData = [...filteredDueSoon, ...actualData];
+    } else {
+      // In upcoming view, if sortedData naturally contains pure templates, remove them
+      finalData = sortedData.filter(t => !(t.isPending && t.isRecurring && !t.id?.startsWith('upcoming-')));
     }
 
     this.filteredTransactions.set(finalData);
@@ -604,6 +616,10 @@ export class MobileTransactionListComponent
           // Check if a real transaction already exists for this period to avoid duplicates
           const exists = allTxs.some(t => {
             if (t.id?.startsWith('upcoming-')) return false;
+
+            // Template transaction itself pending execution shouldn't count as existing fulfilled transaction
+            if (t.id === rt.id && t.isPending) return false;
+
             if (t.categoryId !== baseTransaction.categoryId) return false;
             if (t.amount !== baseTransaction.amount) return false;
             if (t.accountId !== baseTransaction.accountId) return false;

@@ -139,7 +139,7 @@ export class CurrencyService {
     const formatOptions: Intl.NumberFormatOptions = {
       style: 'currency',
       currency: currency,
-      minimumFractionDigits: effectiveDecimalPlaces,
+      minimumFractionDigits: 0,
       maximumFractionDigits: effectiveDecimalPlaces,
       signDisplay: signDisplay,
       notation: compact ? 'compact' : notation
