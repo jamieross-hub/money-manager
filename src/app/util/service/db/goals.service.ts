@@ -65,12 +65,19 @@ export class GoalsService {
     pullFromFirestore(userId: string): Observable<void> {
         if (userId === 'offline-guest') return of(undefined);
 
+        // Ensure we have an active auth user before attempting pull
+        const currentUser = this.auth.currentUser;
+        if (!currentUser || currentUser.uid !== userId) {
+            console.warn(`[GoalsService] Pull skipped: Auth user mismatch or not logged in (UID: ${currentUser?.uid}, expected: ${userId})`);
+            return of(undefined);
+        }
+
         const goalsRef = collection(this.firestore, `users/${userId}/goals`);
 
         console.log(`[GoalsService] Pulling goals for user: ${userId}`);
 
         return from(getDocs(goalsRef)).pipe(
-            timeout(10000),
+            timeout(15000),
             tap((querySnapshot: any) => {
                 const goals: Goal[] = [];
                 querySnapshot.forEach((docSnap: any) => {
@@ -87,7 +94,11 @@ export class GoalsService {
             }),
             map(() => undefined),
             catchError(error => {
-                console.error('[GoalsService] Pull failed:', error);
+                if (error.code === 'permission-denied') {
+                    console.error(`[GoalsService] Permission Denied for user ${userId}. Check Firestore rules.`);
+                } else {
+                    console.error('[GoalsService] Pull failed:', error);
+                }
                 return of(undefined);
             })
         );

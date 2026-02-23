@@ -96,12 +96,19 @@ export class AccountsService {
     pullFromFirestore(userId: string): Observable<void> {
         if (this.isGuest()) return of(undefined);
 
+        // Ensure we have an active auth user before attempting pull
+        const currentUser = this.auth.currentUser;
+        if (!currentUser || currentUser.uid !== userId) {
+            console.warn(`[AccountsService] Pull skipped: Auth user mismatch or not logged in (UID: ${currentUser?.uid}, expected: ${userId})`);
+            return of(undefined);
+        }
+
         const accountsRef = collection(this.firestore, `users/${userId}/accounts`);
 
         console.log(`[AccountsService] Pulling accounts for user: ${userId}`);
 
         return from(getDocs(accountsRef)).pipe(
-            timeout(10000),
+            timeout(15000),
             tap((querySnapshot: any) => {
                 const accounts: Account[] = [];
                 querySnapshot.forEach((docSnap: any) => {
@@ -118,7 +125,11 @@ export class AccountsService {
             }),
             map(() => undefined),
             catchError(error => {
-                console.error('[AccountsService] Pull failed:', error);
+                if (error.code === 'permission-denied') {
+                    console.error(`[AccountsService] Permission Denied for user ${userId}. Check Firestore rules.`);
+                } else {
+                    console.error('[AccountsService] Pull failed:', error);
+                }
                 return of(undefined);
             })
         );

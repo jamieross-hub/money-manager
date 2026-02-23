@@ -68,6 +68,27 @@ export class PeriodicSyncService implements OnDestroy {
 
     console.log('🔄 Starting Periodic Sync Service (Interval: 5m)');
 
+    // Listen for user login to trigger immediate sync - Move this to separate init or check if already subscribed
+    // However, since startSync is called multiple times, we need to be careful.
+    // Let's use a one-time init for these observers.
+    this.initializeObservers();
+
+    // Set up periodic interval
+    this.syncSubscription = interval(this.SYNC_INTERVAL).pipe(
+      filter(() => document.visibilityState === 'visible'), // Only sync if app is visible
+      switchMap(() => this.syncAll()),
+      catchError(error => {
+        console.error('❌ Periodic sync failed:', error);
+        return of(null);
+      })
+    ).subscribe();
+  }
+
+  private observersInitialized = false;
+  private initializeObservers(): void {
+    if (this.observersInitialized) return;
+    this.observersInitialized = true;
+
     // Listen for user login to trigger immediate sync
     this.userService.userAuth$.pipe(
       takeUntil(this.destroy$),
@@ -99,16 +120,6 @@ export class PeriodicSyncService implements OnDestroy {
           console.log('✨ App resumed: Restarting Periodic Sync');
           this.startSync();
         }
-      })
-    ).subscribe();
-
-    // Set up periodic interval
-    this.syncSubscription = interval(this.SYNC_INTERVAL).pipe(
-      filter(() => document.visibilityState === 'visible'), // Only sync if app is visible
-      switchMap(() => this.syncAll()),
-      catchError(error => {
-        console.error('❌ Periodic sync failed:', error);
-        return of(null);
       })
     ).subscribe();
   }

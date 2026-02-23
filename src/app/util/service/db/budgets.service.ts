@@ -171,11 +171,18 @@ export class BudgetsService {
   pullFromFirestore(userId: string): Observable<void> {
     if (this.isGuest(userId)) return of(undefined);
 
+    // Ensure we have an active auth user before attempting pull
+    const currentUser = this.auth.currentUser;
+    if (!currentUser || currentUser.uid !== userId) {
+      console.warn(`[BudgetsService] Pull skipped: Auth user mismatch or not logged in (UID: ${currentUser?.uid}, expected: ${userId})`);
+      return of(undefined);
+    }
+
     const budgetsRef = collection(this.firestore, `users/${userId}/${this.COLLECTION_NAME}`);
     console.log(`[BudgetsService] Pulling budgets for user: ${userId}`);
 
     return from(getDocs(budgetsRef)).pipe(
-      timeout(10000),
+      timeout(15000), // Slightly increased timeout
       tap((querySnapshot) => {
         const budgets: Budget[] = [];
         querySnapshot.forEach(docSnap => budgets.push(docSnap.data() as Budget));
@@ -190,7 +197,11 @@ export class BudgetsService {
       }),
       map(() => undefined),
       catchError(error => {
-        console.error('[BudgetsService] Pull failed:', error);
+        if (error.code === 'permission-denied') {
+          console.error(`[BudgetsService] Permission Denied for user ${userId}. Ensure Firestore rules allow access to users/${userId}/${this.COLLECTION_NAME}`);
+        } else {
+          console.error('[BudgetsService] Pull failed:', error);
+        }
         return of(undefined);
       })
     );

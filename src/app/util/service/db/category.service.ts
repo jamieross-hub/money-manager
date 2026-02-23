@@ -25,6 +25,7 @@ export class CategoryService {
     private categories: { [key: string]: Category } = {};
     constructor(
         private firestore: Firestore,
+        private auth: Auth,
         private store: Store<AppState>,
         private dialog: MatDialog,
         private notificationService: NotificationService,
@@ -75,12 +76,19 @@ export class CategoryService {
     pullFromFirestore(userId: string): Observable<void> {
         if (this.isGuest()) return of(undefined);
 
+        // Ensure we have an active auth user before attempting pull
+        const currentUser = this.auth.currentUser;
+        if (!currentUser || currentUser.uid !== userId) {
+            console.warn(`[CategoryService] Pull skipped: Auth user mismatch or not logged in (UID: ${currentUser?.uid}, expected: ${userId})`);
+            return of(undefined);
+        }
+
         const categoriesRef = this.getUserCategoriesCollection(userId);
 
         console.log(`[CategoryService] Pulling categories for user: ${userId}`);
 
         return from(getDocs(categoriesRef)).pipe(
-            timeout(10000),
+            timeout(15000),
             tap((querySnapshot: any) => {
                 const categories: Category[] = [];
                 querySnapshot.forEach((docSnap: any) => {
@@ -112,7 +120,11 @@ export class CategoryService {
             }),
             map(() => undefined),
             catchError(error => {
-                console.error('[CategoryService] Pull failed:', error);
+                if (error.code === 'permission-denied') {
+                    console.error(`[CategoryService] Permission Denied for user ${userId}. Check Firestore rules.`);
+                } else {
+                    console.error('[CategoryService] Pull failed:', error);
+                }
                 return of(undefined);
             })
         );

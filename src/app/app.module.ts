@@ -26,7 +26,7 @@ export function initializeLocalStorage(localStorageService: LocalIndexDBStorageS
 import { environment } from '@env/environment';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideAuth, getAuth, indexedDBLocalPersistence } from '@angular/fire/auth';
-import { provideFirestore, getFirestore, enableIndexedDbPersistence } from '@angular/fire/firestore';
+import { provideFirestore, getFirestore, enableMultiTabIndexedDbPersistence } from '@angular/fire/firestore';
 import { provideMessaging, getMessaging } from '@angular/fire/messaging';
 import { provideAnalytics, getAnalytics, UserTrackingService, ScreenTrackingService } from '@angular/fire/analytics';
 
@@ -140,11 +140,11 @@ import { PinLockComponent } from './util/components/pin-lock/pin-lock.component'
     provideFirestore(() => {
       const firestore = getFirestore();
 
-      enableIndexedDbPersistence(firestore).then(() => {
-        console.log("✅ Firestore offline persistence enabled");
+      enableMultiTabIndexedDbPersistence(firestore).then(() => {
+        console.log("✅ Firestore multi-tab persistence enabled");
       }).catch((err) => {
         if (err.code === 'failed-precondition') {
-          console.warn("⚠️ Multiple tabs detected. Persistence disabled to avoid conflicts.");
+          console.warn("⚠️ Multiple tabs detected. Persistence handled by multi-tab mode.");
         } else if (err.code === 'unimplemented') {
           console.warn("⚠️ IndexedDB persistence not supported. Falling back to cache.");
         }

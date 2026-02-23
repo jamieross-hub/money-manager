@@ -348,6 +348,13 @@ export class TransactionsService extends BaseService {
     pullFromFirestore(userId: string): Observable<void> {
         if (this.isGuest()) return of(undefined);
 
+        // Ensure we have an active auth user before attempting pull
+        const currentUser = this.auth.currentUser;
+        if (!currentUser || currentUser.uid !== userId) {
+            console.warn(`[TransactionsService] Pull skipped: Auth user mismatch or not logged in (UID: ${currentUser?.uid}, expected: ${userId})`);
+            return of(undefined);
+        }
+
         const transactionsRef = query(
             collection(this.firestore, `users/${userId}/transactions`),
             orderBy('date', 'desc')
@@ -356,7 +363,7 @@ export class TransactionsService extends BaseService {
         console.log(`[TransactionsService] Pulling transactions for user: ${userId}`);
 
         return from(getDocs(transactionsRef)).pipe(
-            timeout(10000), // Timeout after 10s
+            timeout(20000), // Timeout after 20s for larger datasets
             tap((querySnapshot: any) => {
                 const transactions: Transaction[] = [];
                 querySnapshot.forEach((docSnap: any) => {
@@ -378,6 +385,8 @@ export class TransactionsService extends BaseService {
             catchError(error => {
                 if (error.name === 'TimeoutError') {
                     console.warn('[TransactionsService] Pull timed out, using local data');
+                } else if (error.code === 'permission-denied') {
+                    console.error(`[TransactionsService] Permission Denied for user ${userId}. Check Firestore rules.`);
                 } else {
                     console.error('[TransactionsService] Pull failed:', error);
                 }
