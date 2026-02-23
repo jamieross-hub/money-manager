@@ -370,6 +370,10 @@ export class MobileTransactionListComponent
         });
 
         this.allTransactions.set(sorted);
+        // Refresh upcoming transactions if we are in upcoming range
+        if (this.selectedRange() === 'upcoming') {
+          this.onDateRangeChange('upcoming');
+        }
         this.updateAvailableCategories();
         this.filterTransactions();
       })
@@ -593,18 +597,37 @@ export class MobileTransactionListComponent
       if (!nextDate) return;
 
       const baseTransaction = { ...rt };
+      const allTxs = this.allTransactions();
 
       while (nextDate <= endDate) {
         if (nextDate >= startDate) {
-          const occurrence: Transaction = {
-            ...baseTransaction,
-            id: `upcoming-${baseTransaction.id}-${nextDate.getTime()}`,
-            date: new Date(nextDate),
-            status: SyncStatus.PENDING as any,
-            syncStatus: SyncStatus.PENDING,
-            isPending: true
-          };
-          upcoming.push(occurrence);
+          // Check if a real transaction already exists for this period to avoid duplicates
+          const exists = allTxs.some(t => {
+            if (t.id?.startsWith('upcoming-')) return false;
+            if (t.categoryId !== baseTransaction.categoryId) return false;
+            if (t.amount !== baseTransaction.amount) return false;
+            if (t.accountId !== baseTransaction.accountId) return false;
+            if (t.type !== baseTransaction.type) return false;
+            
+            const txDate = this.dateService.toDate(t.date);
+            if (!(txDate instanceof Date)) return false;
+            // Use non-null assertion or local constant as nextDate is narrowed above
+            return this.isSamePeriod(txDate, nextDate!, rt.recurringInterval!);
+          });
+
+          if (!exists) {
+            const occurrence: Transaction = {
+              ...baseTransaction,
+              id: `upcoming-${baseTransaction.id}-${nextDate.getTime()}`,
+              date: new Date(nextDate),
+              status: SyncStatus.PENDING as any,
+              syncStatus: SyncStatus.PENDING,
+              isPending: true
+            };
+            upcoming.push(occurrence);
+            // Only show one upcoming occurrence per recurring transaction
+            break;
+          }
         }
         nextDate = this.calculateNextDate(nextDate, rt.recurringInterval!);
       }
@@ -632,6 +655,24 @@ export class MobileTransactionListComponent
     return nextDate;
   }
 
+  private isSamePeriod(date1: Date, date2: Date, interval: RecurringInterval): boolean {
+    const d1 = dayjs(date1).startOf('day');
+    const d2 = dayjs(date2).startOf('day');
+
+    switch (interval) {
+      case RecurringInterval.DAILY:
+        return d1.isSame(d2, 'day');
+      case RecurringInterval.WEEKLY:
+        return d1.isSame(d2, 'week');
+      case RecurringInterval.MONTHLY:
+        return d1.isSame(d2, 'month');
+      case RecurringInterval.YEARLY:
+        return d1.isSame(d2, 'year');
+      default:
+        return false;
+    }
+  }
+
   private getDueStatus(date: Date): string {
     const today = dayjs().startOf('day');
     const targetDate = dayjs(date).startOf('day');
@@ -648,13 +689,19 @@ export class MobileTransactionListComponent
     const userId = this.userService.getCurrentUserId();
     if (!userId || userId === 'offline-guest') return;
 
-    // The 'tx' is a virtual transaction (upcoming-X), we need to find the original
-    const originalId = tx.id?.split('-')[1];
+    // The 'tx' is a virtual transaction (upcoming-X-timestamp)
+    // Robust parsing for originalId which might contain dashes
+    const parts = tx.id?.split('-');
+    if (!parts || parts.length < 3) return;
+    const originalId = parts.slice(1, -1).join('-');
     const originalTx = this.allTransactions().find(t => t.id === originalId);
 
     if (originalTx) {
+      const confirmedDate = this.dateService.toDate(tx.date);
+      if (!confirmedDate) return;
+
       this.subscription.add(
-        this.transactionsService.processRecurringTransaction(userId, originalTx).subscribe(() => {
+        this.transactionsService.processRecurringTransaction(userId, originalTx, confirmedDate).subscribe(() => {
           // Success handled by store update
         })
       );
@@ -665,12 +712,17 @@ export class MobileTransactionListComponent
     const userId = this.userService.getCurrentUserId();
     if (!userId || userId === 'offline-guest') return;
 
-    const originalId = tx.id?.split('-')[1];
+    const parts = tx.id?.split('-');
+    if (!parts || parts.length < 3) return;
+    const originalId = parts.slice(1, -1).join('-');
     const originalTx = this.allTransactions().find(t => t.id === originalId);
 
     if (originalTx) {
+       const skippedDate = this.dateService.toDate(tx.date);
+       if (!skippedDate) return;
+
        this.subscription.add(
-        this.transactionsService.skipRecurringTransaction(userId, originalTx).subscribe(() => {
+        this.transactionsService.skipRecurringTransaction(userId, originalTx, skippedDate).subscribe(() => {
           // Success handled by store update
         })
       );

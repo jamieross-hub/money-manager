@@ -233,9 +233,9 @@
 							<div class="recurring-badge">
 								<mat-icon class="recurring-icon-small">repeat</mat-icon>
 								<span>{{ tx.recurringInterval | titlecase }}</span>
-								@if(tx._isUpcoming) {
+								<!-- @if(tx._isUpcoming) {
 									<span class="due-status" [class.overdue]="tx._isOverdue">{{ tx._dueStatus }}</span>
-								}
+								} -->
 							</div>
 							}
 							<!-- <div class="transaction-category text-base">
@@ -278,14 +278,14 @@
 					<!-- Upcoming Action Buttons -->
 					<div *ngIf="tx._isUpcoming" class="transaction-actions upcoming-actions">
 						<div class="actions-container">
-							<span class="action-label" *ngIf="!selectedTx?.id === tx.id">Pending review</span>
-							<button mat-flat-button color="primary" class="confirm-btn" (click)="onConfirmRecurring(tx); $event.stopPropagation()">
+							@if(tx._isUpcoming) {
+								<span class="due-status" [class.overdue]="tx._isOverdue">{{ tx._dueStatus }}</span>
+							}
+							<button mat-flat-button color="primary" class="confirm-btn-compact !text-white" (click)="onConfirmRecurring(tx); $event.stopPropagation()" matTooltip="Confirm">
 								<mat-icon>check</mat-icon>
-								<span>Confirm</span>
 							</button>
-							<button mat-stroked-button color="warn" class="reject-btn" (click)="onRejectRecurring(tx); $event.stopPropagation()">
+							<button mat-stroked-button color="warn" class="reject-btn-compact" (click)="onRejectRecurring(tx); $event.stopPropagation()" matTooltip="Reject">
 								<mat-icon>close</mat-icon>
-								<span>Reject</span>
 							</button>
 						</div>
 					</div>

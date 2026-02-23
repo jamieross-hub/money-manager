@@ -522,14 +522,17 @@ export class TransactionsService extends BaseService {
     /**
      * Process a recurring transaction and update its next occurrence
      */
-    processRecurringTransaction(userId: string, transaction: Transaction): Observable<void> {
+    processRecurringTransaction(userId: string, transaction: Transaction, confirmedDate?: Date): Observable<void> {
         return new Observable<void>(observer => {
             const processAsync = async () => {
                 try {
+                    // Use the confirmed date (e.g. from the virtual occurrence) or today
+                    const creationDate = confirmedDate || new Date();
+
                     // Create a new transaction for the current occurrence
                     const newTransaction: Omit<Transaction, 'id'> = {
                         ...transaction,
-                        date: new Date(),
+                        date: creationDate,
                         nextOccurrence: null, // Remove recurring info for the new transaction
                         isRecurring: false,
                         recurringInterval: null,
@@ -548,16 +551,16 @@ export class TransactionsService extends BaseService {
 
                     // Update the original recurring transaction with next occurrence
                     if (transaction.recurringInterval) {
-                        // Use today's date as the base for calculating next occurrence
-                        const today = new Date();
+                        // Use the confirmed date as the base for calculating next occurrence
+                        // If confirming today for tomorrow, we want to advance FROM tomorrow
                         const nextOccurrence = this.calculateNextOccurrence(
                             transaction.recurringInterval,
-                            today
+                            creationDate
                         );
 
                         console.log(`Processing recurring transaction ${transaction.id} (${transaction.category}):`, {
                             interval: transaction.recurringInterval,
-                            today: today,
+                            creationDate: creationDate,
                             calculatedNextOccurrence: nextOccurrence
                         });
 
@@ -598,14 +601,14 @@ export class TransactionsService extends BaseService {
     /**
      * Skip a recurring transaction occurrence without creating a new record
      */
-    skipRecurringTransaction(userId: string, transaction: Transaction): Observable<void> {
+    skipRecurringTransaction(userId: string, transaction: Transaction, skippedDate?: Date): Observable<void> {
         return new Observable<void>(observer => {
             const skipAsync = async () => {
                 try {
                     if (transaction.recurringInterval) {
-                        const baseDate = transaction.nextOccurrence 
+                        const baseDate = skippedDate || (transaction.nextOccurrence 
                             ? (transaction.nextOccurrence instanceof Date ? transaction.nextOccurrence : this.dateService.toDate(transaction.nextOccurrence))
-                            : new Date();
+                            : new Date());
                         
                         const nextOccurrence = this.calculateNextOccurrence(
                             transaction.recurringInterval,

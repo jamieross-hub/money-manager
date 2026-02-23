@@ -566,6 +566,26 @@
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
+
+  &.upcoming {
+    opacity: 0.7;
+    background: var(--surface-100);
+    border-style: dashed;
+    border-color: var(--neutral-300);
+
+    .icon-container {
+      filter: grayscale(0.8);
+      opacity: 0.8;
+    }
+
+    .amount-value {
+      opacity: 0.7;
+    }
+
+    .transaction-title, .transaction-category {
+      color: var(--neutral-500) !important;
+    }
+  }
 }
 
 .transaction-main {
@@ -741,35 +761,60 @@
 }
 
 .upcoming-actions {
-    background: var(--surface-50) !important;
-    border-top: 1px dashed var(--neutral-200) !important;
-    padding: 10px 12px;
+    background: var(--surface-50);
+    border-top: 1px dashed var(--neutral-200);
+    padding: 6px 12px;
 
     .actions-container {
         display: flex;
         justify-content: flex-end;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
     }
 
-    .action-label {
-        font-size: 12px;
-        color: var(--neutral-500);
+    .due-status {
         margin-right: auto;
-        font-weight: 500;
+        margin-left: 0;
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+        line-height: 1.4;
+        
+        &.overdue {
+            background: var(--error-50);
+            color: var(--error-600);
+        }
+
+        :host-context(.dark-theme) & {
+            background: rgba(mat.get-theme-color(dark.$dark-theme, primary, 40), 0.15);
+            color: mat.get-theme-color(dark.$dark-theme, primary, 80);
+
+            &.overdue {
+                background: rgba(mat.get-theme-color(dark.$dark-theme, error, 40), 0.2);
+                color: mat.get-theme-color(dark.$dark-theme, error, 80);
+            }
+        }
     }
 
-    .confirm-btn, .reject-btn {
+    .confirm-btn-compact, .reject-btn-compact {
+        min-width: 36px !important;
+        width: 36px;
         height: 36px;
-        font-size: 13px;
-        padding: 0 12px;
+        padding: 0 !important;
         border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
         mat-icon {
-            font-size: 18px;
-            width: 18px;
-            height: 18px;
-            margin-right: 4px;
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     }
 }

@@ -142,9 +142,11 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     if (index === 3) {
       this.filterService.setIsRecurring(true);
       this.isRecurringTab.set(true);
+      this.router.navigate([], { queryParams: { tab: 'recurring' }, queryParamsHandling: 'merge' });
     } else {
       this.filterService.setIsRecurring(null);
       this.isRecurringTab.set(false);
+      this.router.navigate([], { queryParams: { tab: null }, queryParamsHandling: 'merge' });
     }
   }
 
