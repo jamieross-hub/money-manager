@@ -103,7 +103,12 @@ export class LoanSummaryCardComponent {
       const duration = Number(details.durationMonths) || 0;
       const endDate = start.add(duration, 'month');
       
-      const elapsed = Math.max(0, now.diff(start, 'month'));
+      let elapsed = 0;
+      let paymentDate = start;
+      while (paymentDate.isBefore(now)) {
+        elapsed++;
+        paymentDate = paymentDate.add(1, 'month');
+      }
       const moLeft = Math.max(0, duration - elapsed);
 
       // Aggregates
