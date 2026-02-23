@@ -30,14 +30,14 @@
 					'NAVIGATION.EXPENSE' | translate }}</span>
 			</button>
 
-			<!-- Add Transaction -->
-			<button (click)="addTransaction()" class="group flex flex-col items-center gap-2 lg:gap-1">
+			<!-- Add (Dynamic) -->
+			<button (click)="onAddFabClick()" class="group flex flex-col items-center gap-2 lg:gap-1">
 				<div
-					class="add-button-box w-12 h-12 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center shadow-md hover:scale-105 hover:shadow-lg transition-all duration-200 dark:shadow-none dark:bg-slate-700">
-					<mat-icon class="text-white text-lg lg:text-base relative bottom-1">add_circle</mat-icon>
+					class="add-button-box w-12 h-12 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center shadow-md hover:scale-105 hover:shadow-lg transition-all duration-200 dark:shadow-none"
+					[ngClass]="getAddConfig().bgClass">
+					<mat-icon class="text-white text-lg lg:text-base relative bottom-1">{{ getAddConfig().icon }}</mat-icon>
 				</div>
-				<span class="text-xs lg:text-[10px] font-medium add-label dark:text-slate-300">{{ 'COMMON.ADD' |
-					translate }}</span>
+				<span class="text-xs lg:text-[10px] font-medium add-label dark:text-slate-300">{{ getAddConfig().label }}</span>
 			</button>
 
 			<!-- Reports -->

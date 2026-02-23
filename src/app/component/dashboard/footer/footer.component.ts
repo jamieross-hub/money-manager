@@ -6,11 +6,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { RouterModule } from '@angular/router';
 import { Router, NavigationEnd } from '@angular/router';
 import { CommonSyncService, NetworkStatus } from '../../../util/service/common-sync.service';
-import { Subject } from 'rxjs'; // Removed Subscription import as using Subject/takeUntil
+import { Subject } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { HapticFeedbackService } from '../../../util/service/haptic-feedback.service';
 import { filter, takeUntil } from 'rxjs/operators';
 import { MobileAddTransactionComponent } from '../transaction-list/add-transaction/mobile-add-transaction/mobile-add-transaction.component';
+import { AddAccountDialogComponent } from '../accounts/add-account-dialog/add-account-dialog.component';
+import { MobileCategoryAddEditPopupComponent } from '../category/mobile-category-add-edit-popup/mobile-category-add-edit-popup.component';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 
 @Component({
@@ -105,7 +107,60 @@ export class FooterComponent implements OnInit, OnDestroy {
     return moreRoutes.includes(this.router.url);
   }
 
-  // Toolbar Action Methods
+  // ─── Dynamic Add Button ────────────────────────────────────────────────────
+
+  /** Returns an object describing what the centre Add FAB should do on the current page. */
+  getAddConfig(): { icon: string; label: string; bgClass: string; action: () => void } {
+    const url = this.router.url;
+
+    if (url.includes('/dashboard/accounts')) {
+      return {
+        icon: 'account_balance',
+        label: 'Account',
+        bgClass: 'add-btn-green',
+        action: () => this.addAccount()
+      };
+    }
+
+    if (url.includes('/dashboard/category')) {
+      return {
+        icon: 'category',
+        label: 'Category',
+        bgClass: 'add-btn-purple',
+        action: () => this.addCategory()
+      };
+    }
+
+    // Default: add transaction
+    return {
+      icon: 'add_circle',
+      label: 'Add',
+      bgClass: '',
+      action: () => this.addTransaction()
+    };
+  }
+
+  onAddFabClick() {
+    this.hapticFeedback.buttonClick();
+    this.getAddConfig().action();
+  }
+
+  private addAccount() {
+    this._dialog.open(AddAccountDialogComponent, {
+      data: null,
+      disableClose: true,
+      panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
+    });
+  }
+
+  private addCategory() {
+    this._dialog.open(MobileCategoryAddEditPopupComponent, {
+      data: null,
+      disableClose: true,
+      panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
+    });
+  }
+
   addTransaction() {
     this.hapticFeedback.buttonClick();
     this._dialog.open(MobileAddTransactionComponent, {

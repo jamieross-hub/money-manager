@@ -55,6 +55,15 @@ footer {
   color: var(--neutral-700);
 }
 
+// Dynamic FAB colours per page
+.add-btn-green {
+  background-color: var(--primary-600);
+}
+
+.add-btn-purple {
+  background-color: var(--primary-600);
+}
+
 // Desktop Footer Styles
 .hidden.md\:flex {
 	backdrop-filter: blur(10px);
