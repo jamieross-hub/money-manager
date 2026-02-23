@@ -596,6 +596,50 @@ export class TransactionsService extends BaseService {
     }
 
     /**
+     * Skip a recurring transaction occurrence without creating a new record
+     */
+    skipRecurringTransaction(userId: string, transaction: Transaction): Observable<void> {
+        return new Observable<void>(observer => {
+            const skipAsync = async () => {
+                try {
+                    if (transaction.recurringInterval) {
+                        const baseDate = transaction.nextOccurrence 
+                            ? (transaction.nextOccurrence instanceof Date ? transaction.nextOccurrence : this.dateService.toDate(transaction.nextOccurrence))
+                            : new Date();
+                        
+                        const nextOccurrence = this.calculateNextOccurrence(
+                            transaction.recurringInterval,
+                            baseDate || new Date()
+                        );
+
+                        const updatedRecurringTransaction: Partial<Transaction> = {
+                            nextOccurrence: nextOccurrence,
+                            updatedAt: new Date(),
+                            updatedBy: userId
+                        };
+
+                        // Check if we've reached the end date
+                        if (transaction.recurringEndDate && nextOccurrence > transaction.recurringEndDate) {
+                            updatedRecurringTransaction.isRecurring = false;
+                            updatedRecurringTransaction.recurringInterval = undefined;
+                            updatedRecurringTransaction.recurringEndDate = undefined;
+                        }
+
+                        await this.updateTransaction(userId, transaction.id!, updatedRecurringTransaction).toPromise();
+                        console.log(`Successfully skipped recurring transaction ${transaction.id}, next occurrence: ${nextOccurrence}`);
+                    }
+                    observer.next();
+                    observer.complete();
+                } catch (error) {
+                    console.error('Failed to skip recurring transaction:', error);
+                    observer.error(error);
+                }
+            };
+            skipAsync();
+        });
+    }
+
+    /**
      * Check if a transaction for the current period already exists
      */
     private checkExistingTransactionInPeriod(allTransactions: Transaction[], recurringTransaction: Transaction, today: Date): boolean {

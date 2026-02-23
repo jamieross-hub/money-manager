@@ -1,7 +1,7 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { TransactionsState } from './transactions.state';
 import { Timestamp } from '@angular/fire/firestore';
-import { TransactionType } from '../../util/config/enums';
+import { TransactionType, TransactionStatus } from '../../util/config/enums';
 
 export const selectTransactionsState = createFeatureSelector<TransactionsState>('transactions');
 
@@ -143,7 +143,23 @@ export const selectNetBalanceByMonth = (month: number, year: number) => createSe
   (income, expenses) => income - expenses
 );
 
-// Latest transaction with proper sorting
+// Latest completed transaction
+export const selectLatestCompletedTransaction = createSelector(
+  selectAllTransactions,
+  (transactions) => {
+    if (!transactions.length) return null;
+    
+    return transactions
+      .filter(t => t.date && t.status === TransactionStatus.COMPLETED)
+      .sort((a, b) => {
+        const dateA = convertToDate(a.date!);
+        const dateB = convertToDate(b.date!);
+        return dateB.getTime() - dateA.getTime(); // Latest first
+      })[0] || null;
+  }
+);
+
+// Latest transaction with proper sorting (any status)
 export const selectLatestTransaction = createSelector(
   selectAllTransactions,
   (transactions) => {

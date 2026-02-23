@@ -36,9 +36,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatBottomSheetModule } from '@angular/material/bottom-sheet';
 
-// Utility Components
 import { ConfirmDialogComponent } from '../../util/components/confirm-dialog/confirm-dialog.component';
-import { RecurringTransactionConfirmationDialogComponent } from '../../util/components/recurring-transaction-confirmation-dialog/recurring-transaction-confirmation-dialog.component';
 import { CommonHeaderComponent } from '../../util/components/dialog/common-header/common-header.component';
 import { CommonBodyContentComponent } from 'src/app/util/components/dialog/common-body-content/common-body-content.component';
 import { CategorySplitDialogComponent } from '../../util/components/category-split-dialog/category-split-dialog.component';
@@ -60,7 +58,6 @@ import { UpcomingTransactionsCardComponent } from 'src/app/util/components/cards
 
 @NgModule({
   declarations: [
-    RecurringTransactionConfirmationDialogComponent,
   ],
   imports: [
     CommonModule,
@@ -159,7 +156,6 @@ import { UpcomingTransactionsCardComponent } from 'src/app/util/components/cards
     MatBottomSheetModule,
 
     // Components
-    RecurringTransactionConfirmationDialogComponent,
     CommonHeaderComponent,
     CommonBodyContentComponent,
     ConfirmDialogComponent,

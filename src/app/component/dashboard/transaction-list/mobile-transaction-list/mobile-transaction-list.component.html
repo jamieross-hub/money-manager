@@ -199,7 +199,10 @@
 					{{ group.dateHeader }}
 				</div>
 				@for (tx of group.transactions; track tx.id) {
-				<div class="transaction-card" [class.selected]="selectedTx?.id === tx.id" (click)="onLongPress(tx)">
+				<div class="transaction-card" 
+					[class.selected]="selectedTx?.id === tx.id" 
+					[class.upcoming]="tx._isUpcoming"
+					(click)="onLongPress(tx)">
 					<!-- Main Transaction Content -->
 					<div class="transaction-main">
 						<!-- Icon Section -->
@@ -230,6 +233,9 @@
 							<div class="recurring-badge">
 								<mat-icon class="recurring-icon-small">repeat</mat-icon>
 								<span>{{ tx.recurringInterval | titlecase }}</span>
+								@if(tx._isUpcoming) {
+									<span class="due-status" [class.overdue]="tx._isOverdue">{{ tx._dueStatus }}</span>
+								}
 							</div>
 							}
 							<!-- <div class="transaction-category text-base">
@@ -256,7 +262,7 @@
 					</div>
 
 					<!-- Action Buttons (shown when selected) -->
-					<div *ngIf="selectedTx?.id === tx.id" class="transaction-actions">
+					<div *ngIf="selectedTx?.id === tx.id && !tx._isUpcoming" class="transaction-actions">
 						<div class="actions-container">
 							<button mat-icon-button class="action-button edit-btn" (click)="onEditTransaction(tx)"
 								matTooltip="Edit transaction">
@@ -265,6 +271,21 @@
 							<button mat-icon-button class="action-button delete-btn" (click)="onDeleteTransaction(tx)"
 								matTooltip="Delete transaction">
 								<mat-icon>delete</mat-icon>
+							</button>
+						</div>
+					</div>
+
+					<!-- Upcoming Action Buttons -->
+					<div *ngIf="tx._isUpcoming" class="transaction-actions upcoming-actions">
+						<div class="actions-container">
+							<span class="action-label" *ngIf="!selectedTx?.id === tx.id">Pending review</span>
+							<button mat-flat-button color="primary" class="confirm-btn" (click)="onConfirmRecurring(tx); $event.stopPropagation()">
+								<mat-icon>check</mat-icon>
+								<span>Confirm</span>
+							</button>
+							<button mat-stroked-button color="warn" class="reject-btn" (click)="onRejectRecurring(tx); $event.stopPropagation()">
+								<mat-icon>close</mat-icon>
+								<span>Reject</span>
 							</button>
 						</div>
 					</div>

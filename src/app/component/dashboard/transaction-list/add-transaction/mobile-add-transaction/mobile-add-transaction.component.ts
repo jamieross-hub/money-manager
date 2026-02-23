@@ -1,4 +1,4 @@
-import { Component, Inject, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Inject, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy, ChangeDetectionStrategy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef, MatDialog } from '@angular/material/dialog';
@@ -32,14 +32,14 @@ import * as TransactionsActions from '../../../../../store/transactions/transact
 import { loadAccounts } from 'src/app/store/accounts/accounts.actions';
 import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
-import { RecurringInterval, SyncStatus, TransactionStatus, TransactionType, PaymentMethod } from 'src/app/util/config/enums';
+import { RecurringInterval, SyncStatus, TransactionStatus, TransactionType, PaymentMethod, AccountType } from 'src/app/util/config/enums';
 import { Category } from 'src/app/util/models';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { SplitwiseGroup } from 'src/app/util/models/splitwise.model';
 import { selectGroups } from 'src/app/modules/splitwise/store/splitwise.selectors';
 import { loadGroups } from 'src/app/modules/splitwise/store/splitwise.actions';
 import { filter, map, Observable, take, combineLatest } from 'rxjs';
-import { selectLatestTransaction } from 'src/app/store/transactions/transactions.selectors';
+import { selectLatestCompletedTransaction } from 'src/app/store/transactions/transactions.selectors';
 import { Transaction, CategorySplit } from 'src/app/util/models/transaction.model';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { CategorySplitDialogComponent } from 'src/app/util/components/category-split-dialog/category-split-dialog.component';
@@ -93,10 +93,10 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   public categoryList$: Observable<Category[]>;
   public accountList$: Observable<any[]>;
   public userId: any;
-  public isSubmitting = false;
+  public isSubmitting = signal(false);
   public isMobile: boolean = false;
-  public currentCategoryIcon: string = '';
-  public currentCategoryColor: string = '';
+  public currentCategoryIcon = signal('');
+  public currentCategoryColor = signal('');
   public paymentMethods = [
     { value: PaymentMethod.CREDIT_CARD, label: 'Credit Card', icon: 'credit_card' },
     { value: PaymentMethod.DEBIT_CARD, label: 'Debit Card', icon: 'credit_card' },
@@ -104,15 +104,15 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     { value: PaymentMethod.CASH, label: 'Cash', icon: 'money' },
     { value: PaymentMethod.DIGITAL_WALLET, label: 'Digital Wallet', icon: 'account_balance_wallet' },
   ];
-  public editMode: boolean = false;
-  public viewMode: boolean = false;
+  public editMode = signal(false);
+  public viewMode = signal(false);
   public TransactionType = TransactionType;
   public groups$: Observable<SplitwiseGroup[]>;
   public recurringMinDate: string;
   public recurringMaxDate: string;
   public categorySplits: CategorySplit[] = [];
-  public isCategorySplit: boolean = false;
-  public formattedAmount: string = '';
+  public isCategorySplit = signal(false);
+  public formattedAmount = signal('');
 
   // ngx-mat-select-search properties
   public categoryFilterCtrl: FormControl = new FormControl();
@@ -250,27 +250,26 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     this.transactionForm.get('amount')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(value => {
       if (value !== null && value !== undefined && value !== '') {
         const numericValue = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
-        if (!isNaN(numericValue) && this.formattedAmount !== this.formatCurrency(numericValue)) {
-          this.formattedAmount = this.formatCurrency(numericValue);
+        if (!isNaN(numericValue) && this.formattedAmount() !== this.formatCurrency(numericValue)) {
+          this.formattedAmount.set(this.formatCurrency(numericValue));
         }
       } else {
-        this.formattedAmount = '';
+        this.formattedAmount.set('');
       }
     });
 
     // Check if we're in view mode
     if (this.dialogData?.mode === 'view' && this.dialogData?.transaction) {
-      this.viewMode = true;
-      this.editMode = false;
+      this.viewMode.set(true);
+      this.editMode.set(false);
       this.patchTransactionForm(this.dialogData.transaction);
       // Disable all form controls in view mode
       this.transactionForm.disable();
     } else if (this.dialogData?.id) {
-      this.editMode = true;
+      this.editMode.set(true);
       this.patchTransactionForm(this.dialogData);
     } else {
       this.transactionForm.patchValue({
-
         amount: '',
         date: dayjs().format('YYYY-MM-DD'),
         description: '',
@@ -283,8 +282,47 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         taxes: [],
         paymentMethod: '',
       });
-      this.getRecentTransaction();
-      this.autoSelectSingleAccount();
+
+      combineLatest([
+        this.store.select(selectLatestCompletedTransaction).pipe(take(1)),
+        this.accountList$.pipe(take(1))
+      ]).pipe(takeUntil(this._onDestroy)).subscribe(([transaction, accounts]) => {
+        if (!accounts || accounts.length === 0) return;
+
+        let defaultAccountId = '';
+
+        // Priority 1: Last used account (if valid and exists in current accounts)
+        if (transaction?.accountId && accounts.some(a => a.accountId === transaction.accountId)) {
+          defaultAccountId = transaction.accountId;
+        }
+
+        // Priority 2: BANK type account
+        if (!defaultAccountId) {
+          const bankAccount = accounts.find(a => a.type === AccountType.BANK);
+          if (bankAccount) {
+            defaultAccountId = bankAccount.accountId;
+          }
+        }
+
+        // Priority 3: Single available account
+        if (!defaultAccountId && accounts.length === 1) {
+          defaultAccountId = accounts[0].accountId;
+        }
+
+        // Apply defaults from transaction and accounts
+        this.transactionForm.patchValue({
+          categoryName: transaction?.category || '',
+          categoryType: transaction?.type || '',
+          categoryId: transaction?.categoryId || '',
+          accountId: defaultAccountId,
+          isSplitTransaction: transaction?.isSplitTransaction || false,
+          splitGroupId: transaction?.splitGroupId || '',
+        });
+
+        if (transaction?.categoryId) {
+          this.onCategoryChange(transaction.categoryId);
+        }
+      });
     }
   }
 
@@ -318,37 +356,13 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   onAmountBlur(): void {
     const amount = this.transactionForm.get('amount')?.value;
     if (amount !== null && amount !== undefined && amount !== '') {
-      this.formattedAmount = this.formatCurrency(parseFloat(amount));
+      this.formattedAmount.set(this.formatCurrency(parseFloat(amount)));
     }
-  }
-
-  private autoSelectSingleAccount(): void {
-    this.accountList$.pipe(take(1)).subscribe(accounts => {
-      if (accounts && accounts.length === 1) {
-        this.transactionForm.get('accountId')?.setValue(accounts[0].accountId);
-      }
-    });
-  }
-
-  private getRecentTransaction(): void {
-    this.store.select(selectLatestTransaction).pipe(take(1)).subscribe((transaction: Transaction | null) => {
-      if (transaction) {
-        this.transactionForm.patchValue({
-          categoryName: transaction.category,
-          categoryType: transaction.type,
-          categoryId: transaction.categoryId,
-
-          accountId: transaction.accountId,
-          isSplitTransaction: transaction.isSplitTransaction,
-          splitGroupId: transaction.splitGroupId,
-        });
-      }
-    });
   }
 
   ngAfterViewInit(): void {
     // Focus on amount field after view is initialized (only if not in view mode)
-    if (!this.viewMode) {
+    if (!this.viewMode()) {
       setTimeout(() => {
         if (this.amountInput) {
           this.amountInput.nativeElement.focus();
@@ -359,7 +373,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
   async onSubmit(): Promise<void> {
     // Don't submit if in view mode
-    if (this.viewMode) {
+    if (this.viewMode()) {
       return;
     }
 
@@ -371,8 +385,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       return;
     }
 
-    if (this.transactionForm.valid && !this.isSubmitting) {
-      this.isSubmitting = true;
+    if (this.transactionForm.valid && !this.isSubmitting()) {
+      this.isSubmitting.set(true);
 
       try {
         this.loaderService.show();
@@ -419,7 +433,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           isSplitTransaction: formData.isSplitTransaction || false,
           splitGroupId: formData.splitGroupId || '',
           // Category split fields
-          isCategorySplit: this.isCategorySplit,
+          isCategorySplit: this.isCategorySplit(),
           categorySplits: this.categorySplits,
           totalSplitAmount: this.categorySplits.reduce((sum, split) => sum + split.amount, 0),
           updatedBy: this.userId,
@@ -467,7 +481,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         console.error('Error saving transaction:', error);
         this.notificationService.error('Failed to save transaction');
       } finally {
-        this.isSubmitting = false;
+        this.isSubmitting.set(false);
         this.loaderService.hide();
       }
     } else {
@@ -486,8 +500,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   }
 
   enableEditing(): void {
-    this.viewMode = false;
-    this.editMode = true;
+    this.viewMode.set(false);
+    this.editMode.set(true);
     this.transactionForm.enable();
     this.hapticFeedback.lightVibration();
   }
@@ -546,21 +560,20 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       filter((category): category is Category => !!category)
     ).subscribe((category: Category) => {
 
-      this.currentCategoryIcon = category.icon;
-      this.currentCategoryColor = category.color;
+      this.currentCategoryIcon.set(category.icon);
+      this.currentCategoryColor.set(category.color);
 
       this.transactionForm.patchValue({
         categoryId: category.id,
         categoryName: category.name,
         categoryType: category.type,
-
       });
 
     });
   }
 
   openCategorySheet(): void {
-    if (this.viewMode) return;
+    if (this.viewMode()) return;
 
     // Determine default transaction type. If not set, maybe Expense or based on logic?
     // Using current form value or defaulting to Expense
@@ -662,7 +675,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     dialogRef.afterClosed().subscribe((result: CategorySplit[] | undefined) => {
       if (result) {
         this.categorySplits = result;
-        this.isCategorySplit = true;
+        this.isCategorySplit.set(true);
         this.transactionForm.patchValue({ isCategorySplit: true });
         this.notificationService.success('Category splits configured successfully');
       }
@@ -671,7 +684,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
   clearCategorySplits(): void {
     this.categorySplits = [];
-    this.isCategorySplit = false;
+    this.isCategorySplit.set(false);
     this.transactionForm.patchValue({ isCategorySplit: false });
   }
 

@@ -54,6 +54,8 @@ import { ThemeSwitchingService } from 'src/app/util/service/theme-switching.serv
 import { AppViewService } from 'src/app/util/service/app-view.service';
 import { UserService } from 'src/app/util/service/db/user.service';
 
+import { TransactionsService } from 'src/app/util/service/db/transactions.service';
+
 dayjs.extend(weekOfYear);
 
 interface SortOption {
@@ -142,12 +144,15 @@ export class MobileTransactionListComponent
   groupedTransactions = computed(() => {
     const transactions = this.filteredTransactions();
     const range = this.selectedRange();
-    const groups: { date: string; dateHeader: string; transactions: any[] }[] = [];
+    const groups: { date: string; dateHeader: string; transactions: any[]; isUpcomingGroup?: boolean }[] = [];
     const dateHeaderCache = new Map<string, string>();
     const today = dayjs().startOf('day');
     const yesterday = dayjs().subtract(1, 'day').startOf('day');
 
-    transactions.forEach(tx => {
+    // Separate upcoming/due transactions to show them first if needed or within groups
+    const sortedTransactions = [...transactions];
+    
+    sortedTransactions.forEach(tx => {
       const txDate = this.dateService.toDate(tx.date);
       const dateObj = dayjs(txDate);
       
@@ -184,14 +189,19 @@ export class MobileTransactionListComponent
         _isIncome: tx.type === 'income',
         _categoryBgColor: (category?.color || '#46777f') + '20',
         _updatedDisplay: tx.updatedAt ? dayjs(this.dateService.toDate(tx.updatedAt)).format('DD MMM YYYY, hh:mm a') : 
-                        (tx.createdAt ? dayjs(this.dateService.toDate(tx.createdAt)).format('DD MMM YYYY, hh:mm a') : 'N/A')
+                        (tx.createdAt ? dayjs(this.dateService.toDate(tx.createdAt)).format('DD MMM YYYY, hh:mm a') : 'N/A'),
+        _isUpcoming: !!tx.isPending && (tx.id?.startsWith('upcoming-') || false),
+        _dueStatus: tx.date ? this.getDueStatus(this.dateService.toDate(tx.date)!) : '',
+        _isOverdue: tx.date ? dayjs(this.dateService.toDate(tx.date)).isBefore(today, 'day') : false
       };
 
       let group = groups.find(g => g.date === dateKey);
       if (!group) {
         let header = dateHeaderCache.get(dateKey);
         if (!header) {
-          if (range === 'this-year' || range === null) {
+          if (txView._isUpcoming && txView._isOverdue) {
+            header = 'Overdue Recurring';
+          } else if (range === 'this-year' || range === null) {
             header = dateObj.format('MMMM YYYY');
           } else {
             if (dateObj.isSame(today, 'day')) {
@@ -204,12 +214,18 @@ export class MobileTransactionListComponent
           }
           dateHeaderCache.set(dateKey, header);
         }
-        group = { date: dateKey, dateHeader: header, transactions: [] };
+        group = { date: dateKey, dateHeader: header, transactions: [], isUpcomingGroup: txView._isUpcoming };
         groups.push(group);
       }
       group.transactions.push(txView);
     });
-    return groups;
+
+    // Re-order: Overdue first
+    return groups.sort((a, b) => {
+      if (a.dateHeader === 'Overdue Recurring') return -1;
+      if (b.dateHeader === 'Overdue Recurring') return 1;
+      return b.date.localeCompare(a.date);
+    });
   });
 
   // Cached view properties (Computed)
@@ -297,6 +313,7 @@ export class MobileTransactionListComponent
     private readonly themeService: ThemeSwitchingService,
     private readonly appViewService: AppViewService,
     public readonly userService: UserService,
+    private readonly transactionsService: TransactionsService,
     private readonly cdr: ChangeDetectorRef
   ) {
     // Watch for Input changes and hook into filterService
@@ -439,7 +456,23 @@ export class MobileTransactionListComponent
     // Sort transactions
     const sortedData = this.filterService.sortTransactions(filteredData, this.selectedSort());
 
-    this.filteredTransactions.set(sortedData);
+    // Merge in due recurring transactions if not in 'upcoming' view specifically
+    // but only if we are in 'Today', 'This Week' or 'This Month' or 'All'
+    let finalData = sortedData;
+    if (this.selectedRange() !== 'upcoming') {
+      const today = dayjs().startOf('day').toDate();
+      const endOfCheck = dayjs().add(3, 'day').endOf('day').toDate();
+      const recurring = this.allTransactions().filter(t => t.isRecurring);
+      const dueSoon = this.generateUpcomingTransactions(recurring, dayjs().subtract(1, 'year').toDate(), endOfCheck);
+      
+      // Merge: avoid duplicates (though upcoming-ids should be unique)
+      const existingIds = new Set(sortedData.map(t => t.id));
+      const filteredDueSoon = dueSoon.filter(t => !existingIds.has(t.id));
+      
+      finalData = [...filteredDueSoon, ...sortedData];
+    }
+
+    this.filteredTransactions.set(finalData);
     this.cdr.markForCheck();
 
     if (this.showChart) {
@@ -597,6 +630,51 @@ export class MobileTransactionListComponent
         break;
     }
     return nextDate;
+  }
+
+  private getDueStatus(date: Date): string {
+    const today = dayjs().startOf('day');
+    const targetDate = dayjs(date).startOf('day');
+    const diffDays = targetDate.diff(today, 'day');
+
+    if (diffDays < 0) return 'Overdue';
+    if (diffDays === 0) return 'Due today';
+    if (diffDays === 1) return 'Due tomorrow';
+    if (diffDays <= 7) return `Due in ${diffDays} days`;
+    return '';
+  }
+
+  onConfirmRecurring(tx: Transaction) {
+    const userId = this.userService.getCurrentUserId();
+    if (!userId || userId === 'offline-guest') return;
+
+    // The 'tx' is a virtual transaction (upcoming-X), we need to find the original
+    const originalId = tx.id?.split('-')[1];
+    const originalTx = this.allTransactions().find(t => t.id === originalId);
+
+    if (originalTx) {
+      this.subscription.add(
+        this.transactionsService.processRecurringTransaction(userId, originalTx).subscribe(() => {
+          // Success handled by store update
+        })
+      );
+    }
+  }
+
+  onRejectRecurring(tx: Transaction) {
+    const userId = this.userService.getCurrentUserId();
+    if (!userId || userId === 'offline-guest') return;
+
+    const originalId = tx.id?.split('-')[1];
+    const originalTx = this.allTransactions().find(t => t.id === originalId);
+
+    if (originalTx) {
+       this.subscription.add(
+        this.transactionsService.skipRecurringTransaction(userId, originalTx).subscribe(() => {
+          // Success handled by store update
+        })
+      );
+    }
   }
 
   isCurrentMonth(): boolean {
