@@ -83,8 +83,12 @@ export class FooterComponent implements OnInit, OnDestroy {
     return this.router.url === '/dashboard/reports';
   }
 
+  isSummaryActive(): boolean {
+    return this.router.url === '/dashboard/summary';
+  }
+
   isCategoryActive(): boolean {
-    return this.router.url === '/dashboard/category' || this.router.url === '/dashboard/summary';
+    return this.router.url === '/dashboard/category';
   }
 
   isAccountsActive(): boolean {
