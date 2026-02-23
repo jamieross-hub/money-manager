@@ -589,14 +589,14 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
     return this.categoryService.getCategories(userId).pipe(
       switchMap(categories => {
         // Try to find by flag first
-        let existing = categories.find(c => c.isSystem && c.type === TransactionType.INCOME);
+        let existing = categories.find(c => c.isSystem && c.type === TransactionType.EXPENSE && c.name?.toLowerCase() === 'loan payment');
         
         if (existing?.id) return of(existing.id);
 
         // Fallback: search by name and type for backward compatibility
         const legacy = categories.find(c => 
           c.name.toLowerCase() === 'loan payment' && 
-          c.type === TransactionType.INCOME
+          c.type === TransactionType.EXPENSE
         );
 
         if (legacy) {
@@ -619,7 +619,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
         }
 
         // Neither found, create new
-        return this.categoryService.createCategory(userId, 'Loan Payment', TransactionType.INCOME, 'account_balance', '#ef4444', undefined, true);
+        return this.categoryService.createCategory(userId, 'Loan Payment', TransactionType.EXPENSE, 'account_balance', '#ef4444', undefined, true);
       })
     );
   }
@@ -650,7 +650,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
             category: 'Loan Payment',
             payee: loanDetails.lenderName,
             amount: emi,
-            type: TransactionType.INCOME,
+            type: TransactionType.EXPENSE,
             date: paymentDate,
             notes: `EMI payment for ${loanDetails.lenderName} loan (month ${i + 1})`,
             status: TransactionStatus.COMPLETED,
@@ -698,7 +698,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
           category: 'Loan Payment',
           payee: loanDetails.lenderName,
           amount: this.loanMonthlyPayment(),
-          type: TransactionType.INCOME,
+          type: TransactionType.EXPENSE,
           date: nextDueDateAsDate,
           notes: `Monthly payment for ${loanDetails.lenderName} loan`,
           status: TransactionStatus.PENDING,

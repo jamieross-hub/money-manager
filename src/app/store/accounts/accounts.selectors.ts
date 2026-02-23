@@ -44,7 +44,7 @@ export const selectAllAccounts = createSelector(
 
       const loanAmount = account.loanDetails.loanAmount || 0;
       const netImpact = loanImpacts.get(account.accountId) || 0;
-      const derivedBalance = -loanAmount + netImpact;
+      const derivedBalance = loanAmount + netImpact;
       const remainingBalance = Math.abs(derivedBalance);
 
       return {

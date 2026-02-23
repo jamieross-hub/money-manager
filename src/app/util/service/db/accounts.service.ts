@@ -270,6 +270,9 @@ export class AccountsService {
             }
 
             account.balance = (Number(account.balance) || 0) + balanceChange;
+            if (account.type === 'loan' && account.loanDetails) {
+                account.loanDetails.remainingBalance = (Number(account.loanDetails.remainingBalance) || 0) + loanRemainingBalanceChange;
+            }
             account.updatedAt = new Date() as any;
             optimisticBalance = account.balance;
             
@@ -334,6 +337,10 @@ export class AccountsService {
                         updatedAt: new Date() as any
                     };
 
+                    if (account.type === 'loan' && account.loanDetails) {
+                        updateData['loanDetails.remainingBalance'] = (Number(account.loanDetails.remainingBalance) || 0) + loanRemainingBalanceChange;
+                    }
+
 
                     await updateDoc(accountRef, updateData);
                 } catch (error) {
@@ -369,6 +376,9 @@ export class AccountsService {
                 const amount = Number(t.amount) || 0;
                 const balanceChange = t.type === 'income' ? amount : -amount;
                 account.balance = (Number(account.balance) || 0) + balanceChange;
+                if (account.type === 'loan' && account.loanDetails && t.type === 'expense') {
+                    account.loanDetails.remainingBalance = (Number(account.loanDetails.remainingBalance) || 0) - amount;
+                }
                 account.updatedAt = new Date() as any;
                 this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...account } as any }));
             }
@@ -424,6 +434,11 @@ export class AccountsService {
                                 updatedAt: new Date() as any
                             };
 
+                            const loanChange = accountLoanChanges.get(accountId) || 0;
+                            if (account.type === 'loan' && account.loanDetails && loanChange !== 0) {
+                                updateData['loanDetails.remainingBalance'] = (Number(account.loanDetails.remainingBalance) || 0) - loanChange;
+                            }
+
 
                             batch.update(accountRef, updateData);
                         }
@@ -468,6 +483,15 @@ export class AccountsService {
 
             oldAccount.balance = (Number(oldAccount.balance) || 0) - transactionEffect;
             newAccount.balance = (Number(newAccount.balance) || 0) + transactionEffect;
+
+            if (transaction.type === 'expense') {
+                if (oldAccount.type === 'loan' && oldAccount.loanDetails) {
+                    oldAccount.loanDetails.remainingBalance = (Number(oldAccount.loanDetails.remainingBalance) || 0) + amount;
+                }
+                if (newAccount.type === 'loan' && newAccount.loanDetails) {
+                    newAccount.loanDetails.remainingBalance = (Number(newAccount.loanDetails.remainingBalance) || 0) - amount;
+                }
+            }
 
             oldAccount.updatedAt = new Date() as any;
             newAccount.updatedAt = new Date() as any;
@@ -518,13 +542,20 @@ export class AccountsService {
                         updatedAt: new Date() as any
                     };
 
-
                     // Prepare update data for new account
                     const newAccountUpdateData: any = {
                         balance: (Number(newAccount.balance) || 0) + transactionEffect,
                         updatedAt: new Date() as any
                     };
 
+                    if (transaction.type === 'expense') {
+                        if (oldAccount.type === 'loan' && oldAccount.loanDetails) {
+                            oldAccountUpdateData['loanDetails.remainingBalance'] = (Number(oldAccount.loanDetails.remainingBalance) || 0) + amount;
+                        }
+                        if (newAccount.type === 'loan' && newAccount.loanDetails) {
+                            newAccountUpdateData['loanDetails.remainingBalance'] = (Number(newAccount.loanDetails.remainingBalance) || 0) - amount;
+                        }
+                    }
 
                     // Update both accounts
                     batch.update(oldAccountRef, oldAccountUpdateData);
