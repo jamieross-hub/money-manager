@@ -41,6 +41,7 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
   searchControl = new FormControl('');
   statusFilter = new FormControl('all');
   roleFilter = new FormControl('all');
+  sortOrder = new FormControl('newest');
 
   // Filter options
   statusOptions = [
@@ -54,6 +55,11 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
     { value: 'all', label: 'All Roles' },
     { value: 'user', label: 'User' },
     { value: 'admin', label: 'Admin' }
+  ];
+
+  sortOptions = [
+    { value: 'newest', label: 'Newest First' },
+    { value: 'oldest', label: 'Oldest First' }
   ];
 
   // Pagination
@@ -113,6 +119,10 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
     this.roleFilter.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.applyFilters());
+
+    this.sortOrder.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.applyFilters());
   }
 
   private async loadUsers(): Promise<void> {
@@ -159,8 +169,13 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Sort by creation date (newest first)
-    filtered.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    // Sort by creation date
+    const sort = this.sortOrder.value;
+    filtered.sort((a, b) => {
+      const dateA = a.createdAt.getTime();
+      const dateB = b.createdAt.getTime();
+      return sort === 'oldest' ? dateA - dateB : dateB - dateA;
+    });
 
     this.filteredUsers = filtered;
     this.totalItems = filtered.length;
@@ -279,6 +294,7 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
     this.searchControl.setValue('');
     this.statusFilter.setValue('all');
     this.roleFilter.setValue('all');
+    this.sortOrder.setValue('newest');
   }
 
   public exportUsers(): void {
