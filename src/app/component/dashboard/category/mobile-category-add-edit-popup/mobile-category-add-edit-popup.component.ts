@@ -1,7 +1,7 @@
 import { Component, Inject, OnDestroy, OnInit, ChangeDetectionStrategy, signal, computed, Signal } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
-import { FormBuilder, FormControl, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators, ReactiveFormsModule, FormsModule, AbstractControl } from '@angular/forms';
 import {
   MAT_DIALOG_DATA,
   MatDialog,
@@ -151,7 +151,15 @@ export class MobileCategoryAddEditPopupComponent implements OnInit {
     private userService: UserService
   ) {
     this.categoryForm = this.fb.group({
-      name: ['', this.validationService.getCategoryNameValidators()],
+      name: ['', [
+        ...this.validationService.getCategoryNameValidators(),
+        (control: AbstractControl) => {
+          if (control.value?.trim().toLowerCase() === 'loan payment') {
+            return { reserved: true };
+          }
+          return null;
+        }
+      ]],
       type: ['expense', Validators.required],
       icon: ['category', Validators.required],
       color: ['#10B981', Validators.required],
@@ -254,7 +262,10 @@ export class MobileCategoryAddEditPopupComponent implements OnInit {
 
   getNameError(): string {
     const control = this.categoryForm.get('name');
-    return control ? this.validationService.getAccountNameError(control) : '';
+    if (control?.hasError('reserved')) {
+      return "'Loan Payment' is a reserved name for Loan Account category";
+    }
+    return control ? this.validationService.getCategoryNameError(control) : '';
   }
 
   getTypeError(): string {
