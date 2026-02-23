@@ -18,133 +18,161 @@ import { ContactFormComponent } from './component/landing/contact-form/contact-f
 import { SyncToCloudComponent } from './component/sync-to-cloud/sync-to-cloud.component';
 
 export const routes: Routes = [
-  { path: 'shell', component: AppShellComponent },
-  { path: 'feedback', component: ContactFormComponent },
-  { path: 'landing', component: LandingComponent },
-  { path: 'privacy-policy', component: PrivacyPolicyComponent },
-  { path: 'terms-conditions', component: TermsConditionsComponent },
-  { path: 'offline', component: OfflinePageComponent },
-  { path: 'data-deletion', component: DataDeletionComponent },
-  { path: 'sign-in', component: SignInComponent },
-  { path: 'sign-up', component: SignInComponent },
-  { path: 'register', component: RegistrationComponent },
+  { path: 'shell', component: AppShellComponent, title: 'App Shell' },
+  { path: 'feedback', component: ContactFormComponent, title: 'Feedback' },
+  { path: 'landing', component: LandingComponent, title: 'Welcome' },
+  { path: 'privacy-policy', component: PrivacyPolicyComponent, title: 'Privacy Policy' },
+  { path: 'terms-conditions', component: TermsConditionsComponent, title: 'Terms & Conditions' },
+  { path: 'offline', component: OfflinePageComponent, title: 'Offline' },
+  { path: 'data-deletion', component: DataDeletionComponent, title: 'Data Deletion' },
+  { path: 'sign-in', component: SignInComponent, title: 'Sign In' },
+  { path: 'sign-up', component: SignInComponent, title: 'Sign Up' },
+  { path: 'register', component: RegistrationComponent, title: 'Register' },
 
   {
     path: 'dashboard',
     component: DashboardComponent,
+    title: 'Dashboard',
     canActivate: [AuthGuard],
     data: {
       requireEmailVerification: true,
-      requireActiveSession: true
+      requireActiveSession: true,
+      title: 'Dashboard'
     },
 
     children: [
-      { path: '', component: HomeComponent },
-      { path: 'sync-to-cloud', component: SyncToCloudComponent },
-      { path: 'home', component: HomeComponent },
+      { path: '', component: HomeComponent, title: 'Home' },
+      { path: 'sync-to-cloud', component: SyncToCloudComponent, title: 'Sync to Cloud' },
+      { path: 'home', component: HomeComponent, title: 'Home' },
       {
         path: 'accounts',
         loadComponent: () => import('./component/dashboard/accounts/accounts.component').then(m => m.AccountsComponent),
+        title: 'Accounts',
         data: {
           roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
+          requireEmailVerification: true,
+          title: 'Accounts'
         }
       },
       {
         path: 'summary',
         loadComponent: () => import('./component/dashboard/summary/summary.component').then(m => m.SummaryComponent),
+        title: 'Summary',
         data: {
           roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
+          requireEmailVerification: true,
+          title: 'Summary'
         }
       },
       {
         path: 'category',
         loadComponent: () => import('./component/dashboard/category/category.component').then(m => m.CategoryComponent),
+        title: 'Categories',
         data: {
           roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
+          requireEmailVerification: true,
+          title: 'Categories'
         }
       },
       {
         path: 'transactions',
         loadComponent: () => import('./component/dashboard/transaction-list/transaction-list.component').then(m => m.TransactionListComponent),
+        title: 'Transactions',
         data: {
           roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
+          requireEmailVerification: true,
+          title: 'Transactions'
         }
       },
       {
         path: 'subscription',
         loadComponent: () => import('./component/dashboard/subscription/subscription.component').then(m => m.SubscriptionComponent),
+        title: 'Subscriptions',
         data: {
           roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
+          requireEmailVerification: true,
+          title: 'Subscriptions'
         }
       },
       {
         path: 'goals',
         loadComponent: () => import('./component/dashboard/goals/goals.component').then(m => m.GoalsComponent),
+        title: 'Goals',
         data: {
           roles: ['premium', 'admin'],
-          requireEmailVerification: true
+          requireEmailVerification: true,
+          title: 'Goals'
         }
       },
       {
         path: 'splitwise',
         loadChildren: () => import('./modules/splitwise/splitwise.module').then(m => m.SplitwiseModule),
+        title: 'Splitwise',
         data: {
           roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
+          requireEmailVerification: true,
+          title: 'Splitwise'
         }
       },
       {
         path: 'family',
         loadChildren: () => import('./modules/family/family.module').then(m => m.FamilyModule),
+        title: 'Family',
         data: {
           roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
+          requireEmailVerification: true,
+          title: 'Family'
         }
       },
       {
         path: 'notes',
         loadComponent: () => import('./component/dashboard/notes/notes.component').then(m => m.NotesComponent),
+        title: 'Notes',
         data: {
           roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
+          requireEmailVerification: true,
+          title: 'Notes'
         }
       },
       {
         path: 'import',
         loadComponent: () => import('./component/dashboard/transaction-list/add-transaction/import-transactions.component')
           .then(m => m.ImportTransactionsComponent),
+        title: 'Import Transactions',
         data: {
           roles: ['premium', 'admin'],
-          requireEmailVerification: true
+          requireEmailVerification: true,
+          title: 'Import Transactions'
         }
       },
       {
         path: 'profile',
         loadComponent: () => import('./component/dashboard/profile/profile.component').then(m => m.ProfileComponent),
+        title: 'Profile',
         data: {
           roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
+          requireEmailVerification: true,
+          title: 'Profile'
         }
       },
       {
         path: 'notifications',
         component: NotificationSettingsComponent,
+        title: 'Notifications',
         data: {
           roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
+          requireEmailVerification: true,
+          title: 'Notifications'
         }
       },
       {
         path: 'feedback',
         component: FeedbackComponent,
+        title: 'Feedback',
         data: {
           roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true
+          requireEmailVerification: true,
+          title: 'Feedback'
         }
       },
       {
@@ -158,11 +186,13 @@ export const routes: Routes = [
   {
     path: 'admin',
     loadChildren: () => import('./modules/admin/admin.module').then(m => m.AdminModule),
+    title: 'Administration',
     canActivate: [AuthGuard, AdminGuard],
     data: {
       requireEmailVerification: true,
       requireActiveSession: true,
-      roles: ['admin']
+      roles: ['admin'],
+      title: 'Administration'
     }
   },
 

@@ -4,17 +4,18 @@ import { Location } from '@angular/common';
 import { LoaderService } from './util/service/loader.service';
 import { PwaNavigationService, NavigationState } from './util/service/pwa-navigation.service';
 import { CommonSyncService } from './util/service/common-sync.service';
-import { Subject, takeUntil } from 'rxjs';
+import { filter, Subject, takeUntil } from 'rxjs';
 import { APP_CONFIG } from './util/config/config';
 import { SsrService } from './util/service/ssr.service';
 import { FirebaseMessagingService } from './util/service/firebase-messaging.service';
 import { LanguageService } from './util/service/language.service';
 import { LocalIndexDBStorageService } from './util/service/indexdb-storage.service';
 import { LocalStorageKey } from './util/models/local-storage.model';
-import { UserTrackingService, ScreenTrackingService } from '@angular/fire/analytics';
+import { UserTrackingService, ScreenTrackingService, Analytics, logEvent } from '@angular/fire/analytics';
 import { UserService } from './util/service/db/user.service';
 import { SecurityService } from './util/service/security.service';
 import { PeriodicSyncService } from './util/service/periodic-sync.service';
+import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 
 @Component({
   selector: 'app-root',
@@ -43,7 +44,10 @@ export class AppComponent implements OnInit, OnDestroy {
     private screenTrackingService: ScreenTrackingService,
     private userService: UserService,
     private securityService: SecurityService,
-    private periodicSyncService: PeriodicSyncService
+    private periodicSyncService: PeriodicSyncService,
+    private router: Router,
+    private route: ActivatedRoute,
+    private analytics: Analytics
   ) {
     this.navigationState = {
       canGoBack: false,
@@ -53,12 +57,30 @@ export class AppComponent implements OnInit, OnDestroy {
       isStandalone: false,
       isMobile: false
     };
+
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe((event) => {
+        const pageTitle = this.getDeepestTitle(this.route) || document.title || 'Unknown';
+
+        logEvent(this.analytics, 'page_view', {
+          page_path: event.urlAfterRedirects,
+          page_location: window.location.href,
+          page_title: pageTitle,
+          screen_name: pageTitle
+        });
+      });
   }
 
 
 
-
-
+ private getDeepestTitle(route: ActivatedRoute): string | null {
+    let current = route;
+    while (current.firstChild) {
+      current = current.firstChild;
+    }
+    return current.snapshot.data?.['title'] || null;
+  }
 
 
   ngOnInit() {
