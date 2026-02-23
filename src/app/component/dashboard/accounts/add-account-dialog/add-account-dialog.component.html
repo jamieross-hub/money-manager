@@ -63,7 +63,7 @@
 				<!-- Lender & Principal -->
 				<div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Lender, Principal &amp; Duration</label>
-					<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+					<div class="grid grid-cols-1 sm:grid-cols-2  gap-4">
 						<mat-form-field appearance="fill" class="w-full">
 							<mat-label>Loan Name (Lender)</mat-label>
 							<input matInput formControlName="lenderName" placeholder="e.g. HDFC Home Loan" required>
@@ -94,7 +94,7 @@
 				<!-- Repayment & Schedule -->
 				<div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Repayment &amp; Schedule</label>
-					<div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 						<mat-form-field appearance="fill" class="w-full">
 							<mat-label>Monthly EMI</mat-label>
 							<input matInput type="number" formControlName="customMonthlyPayment" placeholder="0.00" (blur)="recalculateRemainingBalance()" required>
@@ -197,8 +197,8 @@
 						</p>
 					</div>
 
-					<button type="submit" [disabled]="accountForm.invalid || submitting()"
-						class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold text-sm shadow-md shadow-blue-500/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+					<button type="submit" mat-flat-button color="primary" [disabled]="accountForm.invalid || submitting()"
+						class="w-full bg-primary-500 !text-white flex items-center justify-center gap-2">
 						<!-- <mat-icon class="text-xl">task_alt</mat-icon> -->
 						{{ (dialogData?.accountId ? 'Update' : 'Save') + ' Loan Account' }}
 					</button>
