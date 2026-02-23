@@ -62,8 +62,9 @@ export class OpenaiInteractionComponent implements OnInit {
       const currentUser = await this.userService.getCurrentUser();
       
       // Load OpenAI Key
-      if (currentUser?.preferences?.openaiApiKey) {
-        this.openai.apiKey = currentUser.preferences.openaiApiKey || environment.openAiApiKey;
+      const openaiKey = this.openaiService.getApiKey(currentUser);
+      if (openaiKey) {
+        this.openai.apiKey = openaiKey;
         this.openai.isConnected = true;
         this.openaiService.setApiKey(this.openai.apiKey);
         if (this.selectedProvider === 'openai') {

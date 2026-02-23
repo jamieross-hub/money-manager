@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { User } from '../../models';
+import { environment } from 'src/environments/environment';
 // If openai.types.ts exists and we want to use it, we could import it.
 // However, to be safe and self-contained as per the current file structure:
 export interface OpenAIMessage {
@@ -57,6 +59,24 @@ export class OpenaiService {
 
   isApiKeySet(): boolean {
     return !!this.apiKey;
+  }
+
+  /**
+   * Centralized method to retrieve the OpenAI API key.
+   * Priority: User Preferences > Environment Key (only for regular users)
+   */
+  getApiKey(user: User | null): string | undefined {
+    // 1. Check user preferences
+    if (user?.preferences?.openaiApiKey) {
+      return user.preferences.openaiApiKey;
+    }
+
+    // 2. Return environment key ONLY if NOT an offline guest
+    if (user && user.uid !== 'offline-guest') {
+      return environment.openAiApiKey;
+    }
+
+    return undefined;
   }
 
   /**

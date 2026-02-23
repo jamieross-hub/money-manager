@@ -25,6 +25,7 @@ import { ReportIntentHandler } from './handlers/intent-handler/report-intent-han
 import { TransactionIntentHandler } from './handlers/intent-handler/transaction-intent-handler.service';
 import { QueryIntentHandler } from './handlers/intent-handler/query-intent-handler.service';
 import { OpenAiIntentHandler } from './handlers/intent-handler/openai-intent-handler.service';
+import { OpenaiService } from './openai.service';
 import { LoanSummaryIntentHandler } from './handlers/intent-handler/loan-summary-intent-handler.service';
 import { MonthlyExpenditureIntentHandler } from './handlers/intent-handler/monthly-expenditure-intent-handler.service';
 import { BudgetCardIntentHandler } from './handlers/intent-handler/budget-card-intent-handler.service';
@@ -65,7 +66,8 @@ export class ChatFacadeService implements OnDestroy {
         private budgetCardHandler: BudgetCardIntentHandler,
         private loanReportHandler: LoanReportIntentHandler,
         private geminiHandler: GeminiIntentHandler,
-        private userService: UserService
+        private userService: UserService,
+        private openaiService: OpenaiService
     ) {
         this.store.select(selectAllAccounts).pipe(
             takeUntil(this.destroy$),
@@ -230,7 +232,7 @@ export class ChatFacadeService implements OnDestroy {
         } else {
             // Fallback logic: check for Gemini key first, then OpenAI
             const user = this.userService.userAuth$.value;
-            if (user?.preferences?.geminiApiKey && !user?.preferences?.openaiApiKey) {
+            if (user?.preferences?.geminiApiKey && !this.openaiService.getApiKey(user)) {
                 const result = this.geminiHandler.handle(context);
                 this.processHandlerResult(result);
             } else {

@@ -9,7 +9,6 @@ import { UserService } from 'src/app/util/service/db/user.service';
 import { OpenAIMessage } from '../../models/openai.types';
 import { OpenaiService } from '../../openai.service';
 import { SYSTEM_PROMPTS } from '../../prompts/system.prompts';
-import { environment } from '@env/environment';
 
 /**
  * Consolidated handler for OpenAI-powered responses.
@@ -26,7 +25,7 @@ export class OpenAiIntentHandler implements IntentHandler {
     handle(context: IntentContext): HandlerResult {
         return from(this.userService.getCurrentUser()).pipe(
             switchMap(user => {
-                const apiKey = user?.preferences?.openaiApiKey || environment.openAiApiKey;
+                const apiKey = this.openAiClient.getApiKey(user);
 
                 if (!apiKey) {
                     console.error('OpenAI API key not set in user preferences');
@@ -95,7 +94,7 @@ export class OpenAiIntentHandler implements IntentHandler {
     transcribeAudio(audioBlob: Blob): Observable<string> {
         return from(this.userService.getCurrentUser()).pipe(
             switchMap(user => {
-                const apiKey = user?.preferences?.openaiApiKey || environment.openAiApiKey;
+                const apiKey = this.openAiClient.getApiKey(user);
                 if (!apiKey) return throwError(() => new Error('OpenAI API Key not found'));
 
                 // System message prompt to guide usage of domain-specific terms
@@ -111,7 +110,7 @@ export class OpenAiIntentHandler implements IntentHandler {
     generateSpeech(text: string): Observable<Blob> {
         return from(this.userService.getCurrentUser()).pipe(
             switchMap(user => {
-                const apiKey = user?.preferences?.openaiApiKey  || environment.openAiApiKey;
+                const apiKey = this.openAiClient.getApiKey(user);
                 if (!apiKey) return throwError(() => new Error('OpenAI API Key not found'));
 
                 return this.openAiClient.speak(text, apiKey);
