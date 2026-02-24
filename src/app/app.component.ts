@@ -16,6 +16,11 @@ import { UserService } from './util/service/db/user.service';
 import { SecurityService } from './util/service/security.service';
 import { PeriodicSyncService } from './util/service/periodic-sync.service';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
+import { SwUpdate } from '@angular/service-worker';
+import { MatDialog } from '@angular/material/dialog';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
+import { OverlayContainer } from '@angular/cdk/overlay';
+
 
 @Component({
   selector: 'app-root',
@@ -47,7 +52,11 @@ export class AppComponent implements OnInit, OnDestroy {
     private periodicSyncService: PeriodicSyncService,
     private router: Router,
     private route: ActivatedRoute,
-    private analytics: Analytics
+    private analytics: Analytics,
+    private swUpdate: SwUpdate,
+    private dialog: MatDialog,
+    private bottomSheet: MatBottomSheet,
+    private overlayContainer: OverlayContainer
   ) {
     this.navigationState = {
       canGoBack: false,
@@ -115,6 +124,24 @@ export class AppComponent implements OnInit, OnDestroy {
       .subscribe(isOnline => {
         this.isOnline = isOnline;
       });
+
+    // PWA Version Updates
+    if (this.swUpdate.isEnabled) {
+      this.swUpdate.versionUpdates
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          // Close any open overlays
+          this.dialog.closeAll();
+          this.bottomSheet.dismiss();
+
+          // Extra safety: clear overlay container
+          const container = this.overlayContainer.getContainerElement();
+          container.innerHTML = '';
+
+          // Reload app
+          window.location.reload();
+        });
+    }
   }
 
   private setupEventListeners(): void {
