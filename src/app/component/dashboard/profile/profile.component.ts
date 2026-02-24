@@ -104,6 +104,7 @@ export class ProfileComponent {
   readonly isEditing = signal(false);
   readonly userProfile = signal<User | null>(null);
   readonly familyGroup = signal<Family | null>(null);
+  readonly familyMembers = signal<any[]>([]);
   readonly currentTheme = signal<ThemeType>('light-theme');
   readonly showPinSetup = signal(false);
   readonly newPinControl = new FormControl('', [Validators.required, Validators.pattern(/^\d{4}$/)]);
@@ -132,6 +133,8 @@ export class ProfileComponent {
     }
     return 'User';
   });
+  
+  readonly memberCount = computed(() => this.familyMembers().length);
 
   // ─── Reactive Form ────────────────────────────────────────────────
   readonly profileForm: FormGroup;
@@ -253,6 +256,11 @@ export class ProfileComponent {
   private loadFamily(): void {
     this.familyService.getMyFamily().then(family => {
       this.familyGroup.set(family);
+      if (family?.id) {
+        this.familyService.getMembers(family.id).subscribe(members => {
+          this.familyMembers.set(members);
+        });
+      }
     }).catch(() => this.familyGroup.set(null));
   }
 

@@ -341,7 +341,7 @@
 									<div class="flex items-start justify-between mb-3">
 										<div>
 											<p class="text-base font-bold text-gray-800 dark:text-gray-100">{{ family.name }}</p>
-											<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ family.currency }} wallet</p>
+											<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ memberCount() }} Member(s) Connected</p>
 										</div>
 										<span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200 font-medium">
 											Active
@@ -351,7 +351,7 @@
 									<!-- Invite Code -->
 									<div class="flex items-center justify-between bg-white dark:bg-gray-700 rounded-lg px-3 py-2 mb-3">
 										<div>
-											<p class="text-xs text-gray-400 mb-0.5">Invite Code</p>
+											<p class="text-xs text-gray-400 mb-0.5">Family Code</p>
 											<p class="text-sm font-black tracking-widest text-primary-700 dark:text-primary-300">{{ family.inviteCode }}</p>
 										</div>
 										<button mat-icon-button class="!w-8 !h-8" (click)="copyFamilyCode(family.inviteCode)" type="button">
