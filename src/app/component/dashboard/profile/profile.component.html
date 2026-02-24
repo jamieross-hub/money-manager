@@ -9,22 +9,26 @@
 		class="profile-header bg-white dark:bg-gray-800 rounded-2xl shadow-sm border !border-surface-500 p-6 mb-6 relative">
 
 		<!-- Theme Toggle Badge (Corner) -->
-		<div class=" top-4 right-4 flex items-center justify-between px-3 py-1 bg-gray-50 dark:bg-gray-900 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm w-auto z-10"
+		<div *ngIf="familyGroup()" class="family-mode-badge top-4 right-4 flex items-center justify-between px-4 py-1.5 rounded-full border shadow-lg w-auto z-10 transition-all duration-500"
 			[ngClass]="{
 				'absolute': !breakpointService.device.isMobile,
-				'fixed': breakpointService.device.isMobile
+				'fixed': breakpointService.device.isMobile,
+				'family-active': isFamilyMode(),
+				'personal-active': !isFamilyMode()
 			}">
-			<div class="flex items-center gap-1.5 mr-2">
-				<mat-icon class="!w-4 !h-4 !text-[16px]" [class.text-yellow-500]="currentTheme() === 'light-theme'"
-					[class.text-blue-300]="currentTheme() === 'dark-theme'">
-					{{ currentTheme() === 'dark-theme' ? 'dark_mode' : 'light_mode' }}
-				</mat-icon>
-				<span class="text-xs font-medium text-gray-700 dark:text-gray-200 hidden sm:inline">
-					{{ currentTheme() === 'dark-theme' ? 'Dark' : 'Light' }}
+			<div class="flex items-center gap-2 mr-3">
+				<div class="mode-icon-container flex items-center justify-center">
+					<mat-icon class="mode-icon !w-5 !h-5 !text-[20px] transition-all duration-300"
+						[class.rotate-12]="isFamilyMode()">
+						{{ isFamilyMode() ? 'family_restroom' : 'person' }}
+					</mat-icon>
+				</div>
+				<span class="mode-text text-[11px] font-bold tracking-tight uppercase hidden sm:inline transition-all duration-300">
+					{{ isFamilyMode() ? 'Family' : 'Personal' }}
 				</span>
 			</div>
-			<div class="scale-75 origin-right translate-y-[2px]">
-				<app-theme-toggle [hideIcons]="true"></app-theme-toggle>
+			<div class="scale-90 origin-right translate-y-[1px]">
+				<mat-slide-toggle color="primary" class="family-toggle" [checked]="isFamilyMode()" (change)="toggleFamilyMode($event.checked)"></mat-slide-toggle>
 			</div>
 		</div>
 
@@ -284,34 +288,58 @@
 								<button mat-stroked-button color="primary" type="button" size="small"
 									*ngIf="isEditing()" (click)="showPinSetup.set(!showPinSetup())"
 									class="!text-xs !h-8 !px-3">
-									<mat-icon class="!text-sm !w-4 !h-4">{{ showPinSetup() ? 'close' : 'lock' }}</mat-icon>
+									<mat-icon class="!text-sm !w-4 !h-4">{{ showPinSetup() ? 'close' : 'lock'
+										}}</mat-icon>
 									{{ (userProfile()?.preferences?.pinHash ? 'Change PIN' : 'Set PIN') }}
 								</button>
 							</div>
-							
-							<mat-slide-toggle formControlName="pinEnabled"
-								color="primary">
+
+							<mat-slide-toggle formControlName="pinEnabled" color="primary">
 								<span class="toggle-label text-xs">Enable PIN lock on startup</span>
 							</mat-slide-toggle>
 							<p class="preference-description">Require a 4-digit PIN to open the app</p>
 
 							<!-- PIN Setup Inline -->
-							<div *ngIf="showPinSetup() && isEditing()" class="mt-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2">
+							<div *ngIf="showPinSetup() && isEditing()"
+								class="mt-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2">
 								<p class="text-xs font-medium mb-3">Enter New 4-Digit PIN</p>
 								<div class="flex flex-col gap-3">
 									<mat-form-field appearance="fill" class="!mb-0">
 										<mat-label>New PIN</mat-label>
-										<input matInput type="password" maxlength="4" placeholder="••••" 
-											   [formControl]="newPinControl"
-											   (keypress)="onlyNumbers($event)">
+										<input matInput type="password" maxlength="4" placeholder="••••"
+											[formControl]="newPinControl" (keypress)="onlyNumbers($event)">
 										<mat-hint>Choose a 4-digit numeric PIN</mat-hint>
 									</mat-form-field>
-									
-									<button mat-flat-button color="primary" 
-											[disabled]="newPinControl.invalid"
-											(click)="updatePin()">
+
+									<button mat-flat-button color="primary" [disabled]="newPinControl.invalid"
+										(click)="updatePin()">
 										Confirm New PIN
 									</button>
+								</div>
+							</div>
+						</div>
+
+						<!-- Theme Toggle Section -->
+						<div class="preference-item border-t border-gray-100 pt-4 mt-2 ">
+							<div class="flex items-center justify-between">
+								<div>
+									<span class="toggle-label !font-medium text-secondary-600">App Theme</span>
+									<p class="preference-description">Switch between light and dark mode</p>
+								</div>
+								<div class="flex items-center gap-3">
+									<div class="flex items-center gap-1.5">
+										<mat-icon class="!w-4 !h-4 !text-[16px]"
+											[class.text-yellow-500]="currentTheme() === 'light-theme'"
+											[class.text-blue-300]="currentTheme() === 'dark-theme'">
+											{{ currentTheme() === 'dark-theme' ? 'dark_mode' : 'light_mode' }}
+										</mat-icon>
+										<span class="text-xs font-medium text-gray-700 dark:text-gray-200">
+											{{ currentTheme() === 'dark-theme' ? 'Dark' : 'Light' }}
+										</span>
+									</div>
+									<div class="scale-90 origin-right">
+										<app-theme-toggle [hideIcons]="true"></app-theme-toggle>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -337,24 +365,32 @@
 						<ng-container *ngIf="familyGroup() as family; else noFamily">
 							<div class="col-span-full">
 								<!-- Family card -->
-								<div class="p-4 bg-gradient-to-br from-primary-50 to-blue-50 dark:from-gray-800 dark:to-gray-800 rounded-xl border border-primary-100 dark:border-gray-700">
+								<div
+									class="p-4 bg-gradient-to-br from-primary-50 to-blue-50 dark:from-gray-800 dark:to-gray-800 rounded-xl border border-primary-100 dark:border-gray-700">
 									<div class="flex items-start justify-between mb-3">
 										<div>
-											<p class="text-base font-bold text-gray-800 dark:text-gray-100">{{ family.name }}</p>
-											<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ memberCount() }} Member(s) Connected</p>
+											<p class="text-base font-bold text-gray-800 dark:text-gray-100">{{
+												family.name }}</p>
+											<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ memberCount()
+												}} Member(s) Connected</p>
 										</div>
-										<span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200 font-medium">
+										<span
+											class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200 font-medium">
 											Active
 										</span>
 									</div>
 
 									<!-- Invite Code -->
-									<div class="flex items-center justify-between bg-white dark:bg-gray-700 rounded-lg px-3 py-2 mb-3">
+									<div
+										class="flex items-center justify-between bg-white dark:bg-gray-700 rounded-lg px-3 py-2 mb-3">
 										<div>
 											<p class="text-xs text-gray-400 mb-0.5">Family Code</p>
-											<p class="text-sm font-black tracking-widest text-primary-700 dark:text-primary-300">{{ family.inviteCode }}</p>
+											<p
+												class="text-sm font-black tracking-widest text-primary-700 dark:text-primary-300">
+												{{ family.inviteCode }}</p>
 										</div>
-										<button mat-icon-button class="!w-8 !h-8" (click)="copyFamilyCode(family.inviteCode)" type="button">
+										<button mat-icon-button class="!w-8 !h-8"
+											(click)="copyFamilyCode(family.inviteCode)" type="button">
 											<mat-icon class="!text-base text-gray-400">content_copy</mat-icon>
 										</button>
 									</div>
@@ -371,18 +407,23 @@
 
 						<!-- No family connected -->
 						<ng-template #noFamily>
-							<div class="col-span-full flex flex-col items-center justify-center p-8 bg-gray-50 dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 text-center">
-								<mat-icon class="!text-4xl text-gray-300 dark:text-gray-600 mb-3">family_restroom</mat-icon>
-								<h3 class="text-base font-semibold text-gray-700 dark:text-gray-200 mb-1">No Family Wallet Yet</h3>
+							<div
+								class="col-span-full flex flex-col items-center justify-center p-8 bg-gray-50 dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 text-center">
+								<mat-icon
+									class="!text-4xl text-gray-300 dark:text-gray-600 mb-3">family_restroom</mat-icon>
+								<h3 class="text-base font-semibold text-gray-700 dark:text-gray-200 mb-1">No Family
+									Wallet Yet</h3>
 								<p class="text-xs text-gray-400 dark:text-gray-500 mb-5 max-w-xs">
 									Create a shared wallet for your family or join one using an invite code.
 								</p>
 								<div class="flex flex-col sm:flex-row gap-2 w-full max-w-xs">
-									<button mat-flat-button color="primary" type="button" class="flex-1" (click)="createFamilyGroup()" [disabled]="isLoading()">
+									<button mat-flat-button color="primary" type="button" class="flex-1"
+										(click)="createFamilyGroup()" [disabled]="isLoading()">
 										<mat-icon class="mr-1">add_home</mat-icon>
 										Create Family
 									</button>
-									<button mat-stroked-button type="button" class="flex-1" (click)="joinFamilyGroup()" [disabled]="isLoading()">
+									<button mat-stroked-button type="button" class="flex-1" (click)="joinFamilyGroup()"
+										[disabled]="isLoading()">
 										<mat-icon class="mr-1">group_add</mat-icon>
 										Join with Code
 									</button>

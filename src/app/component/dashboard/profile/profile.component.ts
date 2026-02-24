@@ -107,6 +107,7 @@ export class ProfileComponent {
   readonly familyMembers = signal<any[]>([]);
   readonly currentTheme = signal<ThemeType>('light-theme');
   readonly showPinSetup = signal(false);
+  readonly isFamilyMode = signal(false);
   readonly newPinControl = new FormControl('', [Validators.required, Validators.pattern(/^\d{4}$/)]);
 
 
@@ -204,7 +205,9 @@ export class ProfileComponent {
       takeUntilDestroyed()
     ).subscribe(profile => {
       if (profile) {
-        this.userProfile.set(this.mapUserToProfile(profile));
+        const mappedProfile = this.mapUserToProfile(profile);
+        this.userProfile.set(mappedProfile);
+        this.isFamilyMode.set(mappedProfile.preferences?.isFamilyMode || false);
         this.populateForm();
       }
     });
@@ -357,6 +360,7 @@ export class ProfileComponent {
         appView: user.preferences?.appView || 'MONTHLY',
         pinEnabled: user.preferences?.pinEnabled || false,
         pinHash: user.preferences?.pinHash || '',
+        isFamilyMode: user.preferences?.isFamilyMode || false,
       },
       role: user.role,
 
@@ -701,5 +705,49 @@ export class ProfileComponent {
 
   isGuestMode(): boolean {
     return this.userService.isGuestUser();
+  }
+
+  async toggleFamilyMode(enabled: boolean): Promise<void> {
+    const profile = this.userProfile();
+    if (!profile) return;
+
+    this.isFamilyMode.set(enabled);
+
+    const updatedProfile: User = {
+      ...profile,
+      preferences: {
+        ...profile.preferences,
+        defaultCurrency: profile.preferences?.defaultCurrency || 'USD',
+        timezone: profile.preferences?.timezone || 'UTC',
+        notifications: profile.preferences?.notifications ?? true,
+        emailUpdates: profile.preferences?.emailUpdates ?? true,
+        budgetAlerts: profile.preferences?.budgetAlerts ?? true,
+        isFamilyMode: enabled
+      }
+    };
+
+    // Update local state immediately
+    this.userProfile.set(updatedProfile);
+
+    // Persist changes
+    try {
+      if (this.userService.isGuestUser()) {
+        this.userService.storageService.setItem(`user-data-${updatedProfile.uid}`, updatedProfile);
+        this.userService.userAuth$.next(updatedProfile);
+        this.notificationService.success(`Family mode ${enabled ? 'enabled' : 'disabled'}`);
+      } else {
+        this.store.dispatch(ProfileActions.updateProfile({
+          userId: profile.uid,
+          profile: updatedProfile
+        }));
+        this.notificationService.success(`Family mode ${enabled ? 'enabled' : 'disabled'}`);
+      }
+    } catch (error) {
+      console.error('Error toggling family mode:', error);
+      this.notificationService.error('Failed to update family mode');
+      // Rollback on error
+      this.isFamilyMode.set(!enabled);
+      this.userProfile.set(profile);
+    }
   }
 }

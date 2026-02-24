@@ -50,6 +50,7 @@ export interface UserPreferences {
 	theme?: string;
 	pinEnabled?: boolean;
 	pinHash?: string;
+	isFamilyMode?: boolean;
 }
 
 
