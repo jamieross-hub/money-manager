@@ -9,7 +9,7 @@
 		class="profile-header bg-white dark:bg-gray-800 rounded-2xl  border !border-surface-500 p-6 mb-6 relative">
 
 		<!-- Theme Toggle Badge (Corner) -->
-		<div *ngIf="userProfile()?.preferences?.familyId || familyGroup()" class="family-mode-badge top-4 right-4 flex items-center justify-between px-4 py-1.5 rounded-full border bg-surface-500 w-auto z-10 transition-all duration-300"
+		<div *ngIf="!isGuestMode() && (userProfile()?.preferences?.familyId || familyGroup())" class="family-mode-badge top-4 right-4 flex items-center justify-between px-4 py-1.5 rounded-full border bg-surface-500 w-auto z-10 transition-all duration-300"
 			[ngClass]="{
 				'absolute': !breakpointService.device.isMobile,
 				'fixed': breakpointService.device.isMobile,
@@ -349,7 +349,7 @@
 
 				<!-- Family Group Section -->
 				@defer {
-				<mat-expansion-panel [expanded]="breakpointService.device.isMobile ? false : true"
+				<mat-expansion-panel *ngIf="!isGuestMode()" [expanded]="breakpointService.device.isMobile ? false : true"
 					class="form-section-panel mt-6">
 					<mat-expansion-panel-header>
 						<mat-panel-title class="flex items-center gap-2">
