@@ -124,22 +124,22 @@ export class AppComponent implements OnInit, OnDestroy {
       });
 
     // PWA Version Updates
-    if (this.swUpdate.isEnabled) {
-      this.swUpdate.versionUpdates
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(() => {
-          // Close any open overlays
-          this.dialog.closeAll();
-          this.bottomSheet.dismiss();
+    // if (this.swUpdate.isEnabled) {
+    //   this.swUpdate.versionUpdates
+    //     .pipe(takeUntil(this.destroy$))
+    //     .subscribe(() => {
+    //       // Close any open overlays
+    //       this.dialog.closeAll();
+    //       this.bottomSheet.dismiss();
 
-          // Extra safety: clear overlay container
-          const container = this.overlayContainer.getContainerElement();
-          container.innerHTML = '';
+    //       // Extra safety: clear overlay container
+    //       const container = this.overlayContainer.getContainerElement();
+    //       container.innerHTML = '';
 
-          // Reload app
-          window.location.reload();
-        });
-    }
+    //       // Reload app
+    //       window.location.reload();
+    //     });
+    // }
   }
 
   private setupEventListeners(): void {
