@@ -43,6 +43,10 @@ export class TransactionsFacadeService {
         return this.activeService.pullFromFirestore(userId);
     }
 
+    listenToTransactions(userId: string): Observable<void> {
+        return this.activeService.listenToTransactions(userId);
+    }
+
     getTransaction(userId: string, transactionId: string): Observable<Transaction | undefined> {
         return this.activeService.getTransaction(userId, transactionId);
     }

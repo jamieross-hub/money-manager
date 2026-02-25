@@ -87,6 +87,7 @@ export interface CacheItem<T = any> {
 export class CommonSyncService implements OnDestroy {
   private readonly destroy$ = new Subject<void>();
   private syncSubscription: Subscription | null = null;
+  private transactionSubscription: Subscription | null = null;
   private readonly SYNC_INTERVAL = 5 * 60 * 1000; // 5 minutes
   private observersInitialized = false;
   private readonly DEFAULT_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
@@ -292,12 +293,31 @@ export class CommonSyncService implements OnDestroy {
     if (this.observersInitialized) return;
     this.observersInitialized = true;
 
-    // Listen for user login to trigger immediate sync
+    // Listen for user login and mode changes
     this.userService.userAuth$.pipe(
       takeUntil(this.destroy$),
       filter((user): user is any => !!user && user.uid !== 'offline-guest'),
-      distinctUntilChanged((prev, curr) => prev?.uid === curr?.uid),
-      switchMap(() => this.syncAll())
+      distinctUntilChanged((prev, curr) => 
+        prev?.uid === curr?.uid && 
+        prev?.preferences?.isFamilyMode === curr?.preferences?.isFamilyMode &&
+        prev?.preferences?.familyId === curr?.preferences?.familyId
+      ),
+      tap(user => console.log(`🔄 Sync context changed for user: ${user.uid}, Mode: ${user.preferences?.isFamilyMode ? 'Family' : 'Personal'}`)),
+      switchMap(user => {
+        // 1. Initial full sync
+        const initialSync$ = this.syncAll();
+        
+        // 2. Start real-time transaction listener
+        const transactionsService = this.injector.get(TransactionsFacadeService);
+        const realTimeSync$ = transactionsService.listenToTransactions(user.uid).pipe(
+          catchError(error => {
+            console.error('❌ Real-time transaction listener failed:', error);
+            return of(null);
+          })
+        );
+
+        return merge(initialSync$, realTimeSync$);
+      })
     ).subscribe();
 
     // Listen for Background Sync API trigger

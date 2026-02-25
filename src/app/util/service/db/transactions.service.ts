@@ -410,6 +410,59 @@ export class TransactionsService extends BaseService {
     }
 
     /**
+     * Set up a real-time listener for transactions
+     */
+    listenToTransactions(userId: string): Observable<void> {
+        if (this.isGuest()) return of(undefined);
+
+        const currentUser = this.auth.currentUser;
+        if (!currentUser || currentUser.uid !== userId) {
+            console.warn(`[TransactionsService] Listener skipped: Auth mismatch (UID: ${currentUser?.uid}, expected: ${userId})`);
+            return of(undefined);
+        }
+
+        const transactionsRef = query(
+            collection(this.firestore, this.getTransactionsPath(userId)),
+            orderBy('date', 'desc')
+        );
+
+        console.log(`[TransactionsService] Starting real-time listener for user: ${userId}`);
+
+        return new Observable<void>(observer => {
+            const unsubscribe = onSnapshot(transactionsRef, 
+                (querySnapshot) => {
+                    const transactions: Transaction[] = [];
+                    querySnapshot.forEach((docSnap) => {
+                        transactions.push({ id: docSnap.id, ...docSnap.data() } as Transaction);
+                    });
+
+                    console.log(`[TransactionsService] Real-time update: ${transactions.length} transactions`);
+
+                    // 1. Update cache
+                    this.cacheTransactions(userId, transactions);
+                    
+                    // 2. Update subject
+                    this.transactionsSubject.next(transactions);
+                    
+                    // 3. Update NgRx state
+                    this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions }));
+
+                    observer.next();
+                },
+                (error) => {
+                    console.error('[TransactionsService] Real-time listener failed:', error);
+                    observer.error(error);
+                }
+            );
+
+            return () => {
+                console.log(`[TransactionsService] Stopping real-time listener for user: ${userId}`);
+                unsubscribe();
+            };
+        });
+    }
+
+    /**
      * Get a specific transaction
      */
     getTransaction(userId: string, transactionId: string): Observable<Transaction | undefined> {
