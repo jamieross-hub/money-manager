@@ -535,3 +535,7 @@ app-chat {
 //   height: 100vh;
 //   display: block;
 // }
+/* View Transitions API - Simple Cross-fade */
+::view-transition-group(root) {
+  animation-duration: 0.2s;
+}

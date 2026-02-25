@@ -1,7 +1,7 @@
 import { NgModule, isDevMode, APP_INITIALIZER } from '@angular/core';
 import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
 
-import { AppRoutingModule } from './app-routing.module';
+import { AppRoutingModule, routes } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -55,7 +55,7 @@ import { AppStoreModule } from './store';
 
 // Security
 import { securityInterceptor } from './util/interceptors/security.interceptor';
-import { RouterModule } from '@angular/router';
+import { RouterModule, provideRouter, withViewTransitions, withHashLocation, withPreloading, PreloadAllModules } from '@angular/router';
 import { CurrencyPipe } from './util/pipes';
 import { OfflineIndicatorComponent } from './util/components/offline-indicator/offline-indicator.component';
 import { PwaInstallPromptComponent } from './util/components/pwa-install-prompt/pwa-install-prompt.component';
@@ -79,7 +79,7 @@ import { CategoryFacadeService, PERSONAL_CATEGORY_SERVICE } from './util/service
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule,
+    // Removal of AppRoutingModule from imports
     BrowserAnimationsModule,
 
     // Utility
@@ -118,6 +118,13 @@ import { CategoryFacadeService, PERSONAL_CATEGORY_SERVICE } from './util/service
   ],
   providers: [
     provideAnimationsAsync(),
+    provideRouter(routes, 
+      withViewTransitions({
+        skipInitialTransition: true
+      }),
+      withHashLocation(),
+      withPreloading(PreloadAllModules)
+    ),
     provideNativeDateAdapter(),
     provideHttpClient(withInterceptors([securityInterceptor])),
     provideClientHydration(),
