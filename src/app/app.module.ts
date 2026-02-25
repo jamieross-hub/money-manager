@@ -28,7 +28,7 @@ import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideAuth, getAuth, indexedDBLocalPersistence } from '@angular/fire/auth';
 import { provideFirestore, getFirestore, enableMultiTabIndexedDbPersistence } from '@angular/fire/firestore';
 import { provideMessaging, getMessaging } from '@angular/fire/messaging';
-import { provideAnalytics, getAnalytics, UserTrackingService, ScreenTrackingService } from '@angular/fire/analytics';
+import { provideAnalytics, getAnalytics, UserTrackingService, ScreenTrackingService, setAnalyticsCollectionEnabled } from '@angular/fire/analytics';
 
 
 // Service Worker
@@ -132,7 +132,13 @@ import { CategoryFacadeService, PERSONAL_CATEGORY_SERVICE } from './util/service
 
     // Firebase Initialization
     provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
-    provideAnalytics(() => getAnalytics()),
+    provideAnalytics(() => {
+      const analytics = getAnalytics();
+      if (isDevMode()) {
+        setAnalyticsCollectionEnabled(analytics, false);
+      }
+      return analytics;
+    }),
     UserTrackingService,
     ScreenTrackingService,
 

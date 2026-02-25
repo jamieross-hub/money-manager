@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, isDevMode } from '@angular/core';
 import { ThemeSwitchingService } from './util/service/theme-switching.service';
 import { Location } from '@angular/common';
 import { LoaderService } from './util/service/loader.service';
@@ -70,12 +70,14 @@ export class AppComponent implements OnInit, OnDestroy {
       .subscribe((event) => {
         const pageTitle = this.getDeepestTitle(this.route) || document.title || 'Unknown';
 
-        logEvent(this.analytics, 'page_view', {
-          page_path: event.urlAfterRedirects,
-          page_location: window.location.href,
-          page_title: pageTitle,
-          screen_name: pageTitle
-        });
+        if (!isDevMode()) {
+          logEvent(this.analytics, 'page_view', {
+            page_path: event.urlAfterRedirects,
+            page_location: window.location.href,
+            page_title: pageTitle,
+            screen_name: pageTitle
+          });
+        }
       });
   }
 
