@@ -270,7 +270,7 @@
                                                     </span>
                                                 </div>
                                                 <mat-progress-bar mode="determinate" color="primary"
-                                                    [value]="getIncomeExpenseRatio(currentPeriodSummary.income, currentPeriodSummary.expense).incomeWidth"
+                                                    [value]="(currentPeriodSummary.income | math:'ratio':currentPeriodSummary.expense).value1Width"
                                                     class="income-bar !rounded-full !h-3">
                                                 </mat-progress-bar>
                                             </div>
@@ -284,7 +284,7 @@
                                                     </span>
                                                 </div>
                                                 <mat-progress-bar mode="determinate" color="warn"
-                                                    [value]="getIncomeExpenseRatio(currentPeriodSummary.income, currentPeriodSummary.expense).expenseWidth"
+                                                    [value]="(currentPeriodSummary.income | math:'ratio':currentPeriodSummary.expense).value2Width"
                                                     class="expense-bar !rounded-full !h-3">
                                                 </mat-progress-bar>
                                             </div>
@@ -306,7 +306,7 @@
                                                     [class.text-success-600]="currentPeriodSummary.savings >= 0"
                                                     [class.text-error-600]="currentPeriodSummary.savings < 0">
                                                     {{ currentPeriodSummary.savings >= 0 ? '+' : '-' }}{{
-                                                    formatCurrency(abs(currentPeriodSummary.savings)) }}
+                                                    (currentPeriodSummary.savings | abs) | currency:{round:true} }}
                                                     <span class="text-xs font-normal ml-1">
                                                         ({{ currentPeriodSummary.savingsRate | number:'1.1-1' }}%)
                                                     </span>
@@ -404,7 +404,7 @@
 
                                                     <!-- Progress Bar -->
                                                     <mat-progress-bar mode="determinate"
-                                                        [value]="getBarWidth(cat.amount, getMaxCategoryAmount(currentPeriodSummary!.categoryBreakdown))"
+                                                        [value]="cat.amount | math:'percentWidth':(currentPeriodSummary?.categoryBreakdown?.[0]?.amount || 1)"
                                                         color="primary"
                                                         class="category-bar !rounded-full !h-1.5 w-full">
                                                     </mat-progress-bar>
@@ -455,7 +455,7 @@
                                                 <th mat-header-cell *matHeaderCellDef class="!text-right">Income</th>
                                                 <td mat-cell *matCellDef="let m"
                                                     class="!text-right text-success-500 font-medium !text-xs sm:!text-sm">
-                                                    {{ formatCompact(m.income) }}
+                                                    {{ m.income | currency:{round:true, compact:true} }}
                                                 </td>
                                             </ng-container>
 
@@ -464,7 +464,7 @@
                                                 <th mat-header-cell *matHeaderCellDef class="!text-right">Expense</th>
                                                 <td mat-cell *matCellDef="let m"
                                                     class="!text-right text-error-500 font-medium !text-xs sm:!text-sm">
-                                                    {{ formatCompact(m.expense) }}
+                                                    {{ m.expense | currency:{round:true, compact:true} }}
                                                 </td>
                                             </ng-container>
 
@@ -475,7 +475,7 @@
                                                     class="!text-right font-semibold !text-xs sm:!text-sm"
                                                     [class.text-success-500]="m.savings >= 0"
                                                     [class.text-error-500]="m.savings < 0">
-                                                    {{ m.savings >= 0 ? '+' : '-' }}{{ formatCompact(abs(m.savings)) }}
+                                                    {{ m.savings >= 0 ? '+' : '-' }}{{ (m.savings | abs) | currency:{round:true, compact:true} }}
                                                 </td>
                                             </ng-container>
 
@@ -546,8 +546,8 @@
                                 <mat-card class="!rounded-xl">
                                     <mat-card-content class="pt-4">
                                         <p class="text-lg font-semibold text-neutral-500 mb-4 flex items-center gap-2">
-                                            <mat-icon [class]="getTrendColor(nextMonthPrediction.trend)">
-                                                {{ getTrendIcon(nextMonthPrediction.trend) }}
+                                            <mat-icon [class]="nextMonthPrediction.trend | trend:'color'">
+                                                {{ nextMonthPrediction.trend | trend:'icon' }}
                                             </mat-icon>
                                             Spending Trend
                                         </p>
@@ -556,8 +556,8 @@
                                             [class.bg-success-50]="nextMonthPrediction.trend === 'decreasing'"
                                             [class.bg-primary-50]="nextMonthPrediction.trend === 'stable'">
                                             <mat-icon class="!text-3xl"
-                                                [class]="getTrendColor(nextMonthPrediction.trend)">
-                                                {{ getTrendIcon(nextMonthPrediction.trend) }}
+                                                [class]="nextMonthPrediction.trend | trend:'color'">
+                                                {{ nextMonthPrediction.trend | trend:'icon' }}
                                             </mat-icon>
                                             <div>
                                                 <div class="font-semibold text-neutral-800">
@@ -587,7 +587,7 @@
                                                 </p>
                                                 <mat-chip-set>
                                                     <mat-chip [highlighted]="true"
-                                                        [color]="nextMonthPrediction.confidence === 'high' ? 'primary' : nextMonthPrediction.confidence === 'medium' ? 'accent' : 'warn'"
+                                                        [color]="nextMonthPrediction.confidence | trend:'confidenceColor'"
                                                         class="!text-xs">
                                                         {{ nextMonthPrediction.confidence }}
                                                     </mat-chip>
@@ -597,14 +597,14 @@
                                                 <div class="flex items-center justify-between py-2 px-3">
                                                     <span class="text-sm text-neutral-500">Expected Expense</span>
                                                     <span class="font-semibold text-error-500">
-                                                        {{ formatCurrency(nextMonthPrediction.predictedExpense) }}
+                                                        {{ nextMonthPrediction.predictedExpense | currency:{round:true} }}
                                                     </span>
                                                 </div>
                                                 <mat-divider></mat-divider>
                                                 <div class="flex items-center justify-between py-2 px-3">
                                                     <span class="text-sm text-neutral-500">Expected Income</span>
                                                     <span class="font-semibold text-success-500">
-                                                        {{ formatCurrency(nextMonthPrediction.predictedIncome) }}
+                                                        {{ nextMonthPrediction.predictedIncome | currency:{round:true} }}
                                                     </span>
                                                 </div>
                                                 <mat-divider></mat-divider>
@@ -622,7 +622,7 @@
                                                     [class.text-success-600]="nextMonthPrediction.predictedSavings >= 0"
                                                     [class.text-error-600]="nextMonthPrediction.predictedSavings < 0">
                                                     {{ nextMonthPrediction.predictedSavings >= 0 ? '+' : '-' }}{{
-                                                    formatCurrency(abs(nextMonthPrediction.predictedSavings)) }}
+                                                    (nextMonthPrediction.predictedSavings | abs) | currency:{round:true} }}
                                                 </span>
                                             </div>
                                         </mat-card-content>
@@ -639,7 +639,7 @@
                                                 </p>
                                                 <mat-chip-set>
                                                     <mat-chip [highlighted]="true"
-                                                        [color]="next3MonthsPrediction.confidence === 'high' ? 'primary' : next3MonthsPrediction.confidence === 'medium' ? 'accent' : 'warn'"
+                                                        [color]="next3MonthsPrediction.confidence | trend:'confidenceColor'"
                                                         class="!text-xs">
                                                         {{ next3MonthsPrediction.confidence }}
                                                     </mat-chip>
@@ -649,14 +649,14 @@
                                                 <div class="flex items-center justify-between py-2 px-3">
                                                     <span class="text-sm text-neutral-500">Expected Expense</span>
                                                     <span class="font-semibold text-error-500">
-                                                        {{ formatCurrency(next3MonthsPrediction.predictedExpense) }}
+                                                        {{ next3MonthsPrediction.predictedExpense | currency:{round:true} }}
                                                     </span>
                                                 </div>
                                                 <mat-divider></mat-divider>
                                                 <div class="flex items-center justify-between py-2 px-3">
                                                     <span class="text-sm text-neutral-500">Expected Income</span>
                                                     <span class="font-semibold text-success-500">
-                                                        {{ formatCurrency(next3MonthsPrediction.predictedIncome) }}
+                                                        {{ next3MonthsPrediction.predictedIncome | currency:{round:true} }}
                                                     </span>
                                                 </div>
                                                 <mat-divider></mat-divider>
@@ -674,7 +674,7 @@
                                                     [class.text-success-600]="next3MonthsPrediction.predictedSavings >= 0"
                                                     [class.text-error-600]="next3MonthsPrediction.predictedSavings < 0">
                                                     {{ next3MonthsPrediction.predictedSavings >= 0 ? '+' : '-' }}{{
-                                                    formatCurrency(abs(next3MonthsPrediction.predictedSavings)) }}
+                                                    (next3MonthsPrediction.predictedSavings | abs) | currency:{round:true} }}
                                                 </span>
                                             </div>
                                         </mat-card-content>
@@ -691,7 +691,7 @@
                                                 </p>
                                                 <mat-chip-set>
                                                     <mat-chip [highlighted]="true"
-                                                        [color]="yearEndPrediction.confidence === 'high' ? 'primary' : yearEndPrediction.confidence === 'medium' ? 'accent' : 'warn'"
+                                                        [color]="yearEndPrediction.confidence | trend:'confidenceColor'"
                                                         class="!text-xs">
                                                         {{ yearEndPrediction.confidence }}
                                                     </mat-chip>
@@ -701,14 +701,14 @@
                                                 <div class="flex items-center justify-between py-2 px-3">
                                                     <span class="text-sm text-neutral-500">Projected Expense</span>
                                                     <span class="font-semibold text-error-500">
-                                                        {{ formatCurrency(yearEndPrediction.predictedExpense) }}
+                                                        {{ yearEndPrediction.predictedExpense | currency:{round:true} }}
                                                     </span>
                                                 </div>
                                                 <mat-divider></mat-divider>
                                                 <div class="flex items-center justify-between py-2 px-3">
                                                     <span class="text-sm text-neutral-500">Projected Income</span>
                                                     <span class="font-semibold text-success-500">
-                                                        {{ formatCurrency(yearEndPrediction.predictedIncome) }}
+                                                        {{ yearEndPrediction.predictedIncome | currency:{round:true} }}
                                                     </span>
                                                 </div>
                                                 <mat-divider></mat-divider>
@@ -726,7 +726,7 @@
                                                     [class.text-success-600]="yearEndPrediction.predictedSavings >= 0"
                                                     [class.text-error-600]="yearEndPrediction.predictedSavings < 0">
                                                     {{ yearEndPrediction.predictedSavings >= 0 ? '+' : '-' }}{{
-                                                    formatCurrency(abs(yearEndPrediction.predictedSavings)) }}
+                                                    (yearEndPrediction.predictedSavings | abs) | currency:{round:true} }}
                                                 </span>
                                             </div>
                                         </mat-card-content>
@@ -776,7 +776,7 @@
                                                     </div>
                                                 </div>
                                                 <span class="text-sm font-bold text-warning-600">
-                                                    {{ formatCurrency(cat.amount) }}
+                                                    {{ cat.amount | currency:{round:true} }}
                                                 </span>
                                             </div>
                                         </mat-list-item>

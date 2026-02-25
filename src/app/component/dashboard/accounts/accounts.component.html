@@ -175,7 +175,7 @@
 							*ngIf="expandedAccount?.accountId === accountVM.account.accountId && breakpointService.device.isMobile">
 							<div class="account-expanded-panel dark:bg-slate-900/40 dark:border-slate-800">
 								<!-- Statistics Grid -->
-								<div class="stats-compact-grid" *ngIf="getAccountStats(accountVM.account) as stats">
+								<div class="stats-compact-grid" *ngIf="(accountVM.account | accountStats:transactions) as stats">
 									<div class="stat-mini-item">
 										<mat-icon class="stat-mini-icon">trending_up</mat-icon>
 										<span class="stat-mini-label">In</span>

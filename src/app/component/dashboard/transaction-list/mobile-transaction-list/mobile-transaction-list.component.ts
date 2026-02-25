@@ -26,6 +26,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDividerModule } from '@angular/material/divider';
 import { TranslateModule } from '@ngx-translate/core';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
+import { IncludesPipe } from 'src/app/util/pipes/includes.pipe';
+
 
 import { MatDialog } from '@angular/material/dialog';
 import { Transaction } from '../../../../util/models/transaction.model';
@@ -81,6 +83,7 @@ interface SortOption {
     MatInputModule,
     TranslateModule,
     CurrencyPipe,
+    IncludesPipe,
     FormsModule,
     MatDividerModule
   ],
@@ -890,10 +893,6 @@ export class MobileTransactionListComponent
     return dayjs().year();
   }
 
-  isCategorySelected(categoryId: string): boolean {
-    const selected = this.selectedCategory();
-    return selected.includes(categoryId);
-  }
 
   openCustomDateRangeDialog() {
     this.dialog.open(CustomDateRangeDialogComponent, {

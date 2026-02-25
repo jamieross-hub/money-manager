@@ -32,6 +32,9 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import { AccountSummaryCardComponent } from 'src/app/util/components/cards/account-summary-card/account-summary-card.component';
 import { RouterModule } from '@angular/router';
+import { AbsPipe } from 'src/app/util/pipes/abs.pipe';
+import { MathPipe } from 'src/app/util/pipes/math.pipe';
+import { TrendPipe } from 'src/app/util/pipes/trend.pipe';
 
 // ── Types ──
 
@@ -104,7 +107,10 @@ export interface Prediction {
         CategorySummaryCardComponent,
         CurrencyPipe,
         AccountSummaryCardComponent,
-        RouterModule
+        RouterModule,
+        AbsPipe,
+        MathPipe,
+        TrendPipe
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -279,7 +285,6 @@ export class ReportsComponent implements OnInit, OnDestroy {
         this.computeKeyMetrics();
         this.computePeriodSummary();
         this.computePredictions();
-        this.computeTrendData();
     }
 
     private extractAvailableYears(): void {
@@ -724,77 +729,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
         this.computePeriodSummary();
     }
 
-    formatCurrency(amount: number): string {
-        return this.currencyService.formatAmount(amount, { compact: true });
-    }
-
-    formatCompact(amount: number): string {
-        return this.currencyService.formatAmount(amount, { compact: true });
-    }
-
-    abs(n: number): number {
-        return Math.abs(n);
-    }
-
-    // Get max amount from a category breakdown to compute bar widths
-    getMaxCategoryAmount(breakdown: CategoryBreakdownItem[]): number {
-        if (!breakdown || breakdown.length === 0) return 1;
-        return breakdown[0].amount || 1;
-    }
-
-    // Get the bar width as percentage
-    getBarWidth(amount: number, max: number): number {
-        return max > 0 ? (amount / max) * 100 : 0;
-    }
-
-    // Income vs Expense bar ratio
-    getIncomeExpenseRatio(income: number, expense: number): { incomeWidth: number; expenseWidth: number } {
-        const max = Math.max(income, expense, 1);
-        return {
-            incomeWidth: (income / max) * 100,
-            expenseWidth: (expense / max) * 100
-        };
-    }
-
-    // Pre-compute trend data (called once in computeAll)
-    private computeTrendData(): void {
-        this.savingsTrend = [...this.monthlySummaries].reverse().slice(-12);
-        if (this.savingsTrend.length === 0) {
-            this.savingsTrendMax = 1;
-        } else {
-            const maxVal = Math.max(...this.savingsTrend.map(m => Math.max(m.income, m.expense)));
-            this.savingsTrendMax = maxVal || 1;
-        }
-    }
-
-    // Get bar height as percentage for trend chart
-    getTrendBarHeight(value: number): number {
-        return this.savingsTrendMax > 0 ? (value / this.savingsTrendMax) * 100 : 0;
-    }
-
-    getConfidenceColor(confidence: 'low' | 'medium' | 'high'): string {
-        switch (confidence) {
-            case 'high': return 'text-success-500';
-            case 'medium': return 'text-warning-500';
-            case 'low': return 'text-error-500';
-        }
-    }
-
-    getTrendIcon(trend: 'increasing' | 'decreasing' | 'stable'): string {
-        switch (trend) {
-            case 'increasing': return 'trending_up';
-            case 'decreasing': return 'trending_down';
-            case 'stable': return 'trending_flat';
-        }
-    }
-
-    getTrendColor(trend: 'increasing' | 'decreasing' | 'stable'): string {
-        switch (trend) {
-            case 'increasing': return 'text-error-500';
-            case 'decreasing': return 'text-success-500';
-            case 'stable': return 'text-primary-500';
-        }
-    }
+    // Removed helper methods as they are now handled by pure pipes in the template
 
     // ── Touch scroll helpers ──
     private touchStartX = 0;

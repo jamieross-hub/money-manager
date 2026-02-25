@@ -70,25 +70,25 @@
 			<!-- Category Menu -->
 			<button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="categoryMenu"
 				matTooltip="{{ currentCategoryLabel() }}" aria-label="Filter by category"
-				[ngClass]="{'active': !selectedCategory().includes('all')}">
+				[ngClass]="{'active': !(selectedCategory() | includes:'all')}">
 				<mat-icon>category</mat-icon>
 				<span class="filter-btn-text">{{ currentCategoryLabel() }}</span>
 			</button>
 
 			<mat-menu #categoryMenu="matMenu" class="filter-menu">
-				<button mat-menu-item [class.active-menu-item]="selectedCategory().includes('all')"
+				<button mat-menu-item [class.active-menu-item]="(selectedCategory() | includes:'all')"
 					(click)="onCategoryChange('all'); $event.stopPropagation()">
 					<mat-icon>list</mat-icon>
 					<span>All Categories</span>
-					<mat-icon *ngIf="selectedCategory().includes('all')" class="check-icon">check</mat-icon>
+					<mat-icon *ngIf="(selectedCategory() | includes:'all')" class="check-icon">check</mat-icon>
 				</button>
 				<mat-divider></mat-divider>
 				@for (category of getCategoriesList(); track category.id) {
-				<button mat-menu-item [class.active-menu-item]="isCategorySelected(category.id)"
+				<button mat-menu-item [class.active-menu-item]="(selectedCategory() | includes:category.id)"
 					(click)="onCategoryChange(category.id); $event.stopPropagation()">
 					<mat-icon>{{ category.icon }}</mat-icon>
 					<span>{{ category.name }}</span>
-					@if (isCategorySelected(category.id)) {
+					@if (selectedCategory() | includes:category.id) {
 					<mat-icon class="check-icon">check</mat-icon>
 					}
 				</button>
