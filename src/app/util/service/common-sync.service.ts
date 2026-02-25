@@ -1,6 +1,6 @@
 import { Injectable, Inject, PLATFORM_ID, OnDestroy, Injector } from '@angular/core';
 import { BehaviorSubject, Observable, fromEvent, merge, interval, Subscription, from, of, forkJoin, Subject } from 'rxjs';
-import { map, startWith, switchMap, catchError, tap, take, filter, distinctUntilChanged, takeUntil, timeout } from 'rxjs/operators';
+import { map, startWith, switchMap, catchError, tap, take, filter, distinctUntilChanged, takeUntil, timeout, delay } from 'rxjs/operators';
 import { Firestore, collection, doc, writeBatch } from '@angular/fire/firestore';
 import { Auth, getAuth } from '@angular/fire/auth';
 import { SwUpdate } from '@angular/service-worker';
@@ -304,15 +304,27 @@ export class CommonSyncService implements OnDestroy {
       ),
       tap(user => console.log(`🔄 Sync context changed for user: ${user.uid}, Mode: ${user.preferences?.isFamilyMode ? 'Family' : 'Personal'}`)),
       switchMap(user => {
-        // 1. Initial full sync
+        // 1. Initial full sync (already has internal network check)
         const initialSync$ = this.syncAll();
         
-        // 2. Start real-time transaction listener
+        // 2. Start real-time transaction listener reactively based on network
+        // We add a delay to ensure app startup always starts with IndexedDB
         const transactionsService = this.injector.get(TransactionsFacadeService);
-        const realTimeSync$ = transactionsService.listenToTransactions(user.uid).pipe(
-          catchError(error => {
-            console.error('❌ Real-time transaction listener failed:', error);
-            return of(null);
+        const realTimeSync$ = this.isOnline$.pipe(
+          delay(10000), // Delay to ensure startup completes with local data
+          switchMap(online => {
+            if (online) {
+              console.log('🌐 Online: Enabling real-time transaction listener');
+              return transactionsService.listenToTransactions(user.uid).pipe(
+                catchError(error => {
+                  console.error('❌ Real-time transaction listener failed:', error);
+                  return of(null);
+                })
+              );
+            } else {
+              console.log('📴 Offline: Real-time sync disabled (using IndexedDB)');
+              return of(null);
+            }
           })
         );
 
