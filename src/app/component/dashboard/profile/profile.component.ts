@@ -5,7 +5,7 @@ import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { Router } from '@angular/router';
 import { TranslationService, Language } from 'src/app/util/service/translation.service';
-import { User } from 'src/app/util/models';
+import { User, UserPreferences } from 'src/app/util/models';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { ValidationService } from 'src/app/util/service/validation.service';
 import { MatDialog } from '@angular/material/dialog';
@@ -41,6 +41,7 @@ import { FamilyService } from 'src/app/modules/family/services/family.service';
 import { Family } from 'src/app/util/models/family.model';
 import { FamilyCreateDialogComponent } from 'src/app/modules/family/dialogs/family-create-dialog/family-create-dialog.component';
 import { FamilyJoinDialogComponent } from 'src/app/modules/family/dialogs/family-join-dialog/family-join-dialog.component';
+import { MatBottomSheet, MatBottomSheetModule } from '@angular/material/bottom-sheet';
 
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -83,7 +84,8 @@ import { CommonSyncService } from 'src/app/util/service/common-sync.service';
     TranslateModule,
     QuickActionsFabComponent,
     MatExpansionModule,
-    ThemeToggleComponent
+    ThemeToggleComponent,
+    MatBottomSheetModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -95,6 +97,7 @@ export class ProfileComponent {
   private readonly notificationService = inject(NotificationService);
   private readonly validationService = inject(ValidationService);
   private readonly dialog = inject(MatDialog);
+  private readonly bottomSheet = inject(MatBottomSheet);
   private readonly dateService = inject(DateService);
   private readonly store = inject(Store<AppState>);
   readonly breakpointService = inject(BreakpointService);
@@ -146,6 +149,12 @@ export class ProfileComponent {
   });
   
   readonly memberCount = computed(() => this.familyMembers().length);
+
+  readonly isAdmin = computed(() => {
+    const family = this.familyGroup();
+    const user = this.userProfile();
+    return family && user && family.ownerUserId === user.uid;
+  });
 
   // ─── Reactive Form ────────────────────────────────────────────────
   readonly profileForm: FormGroup;
@@ -290,12 +299,11 @@ export class ProfileComponent {
   }
 
   createFamilyGroup(): void {
-    const dialogRef = this.dialog.open(FamilyCreateDialogComponent, {
-      disableClose: true,
-      panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
+    const bottomSheetRef = this.bottomSheet.open(FamilyCreateDialogComponent, {
+      panelClass: 'auto-height-sheet'
     });
 
-    dialogRef.afterClosed().subscribe(async (result) => {
+    bottomSheetRef.afterDismissed().subscribe(async (result) => {
       if (result) {
         try {
           this.isLoading.set(true);
@@ -312,12 +320,11 @@ export class ProfileComponent {
   }
 
   joinFamilyGroup(): void {
-    const dialogRef = this.dialog.open(FamilyJoinDialogComponent, {
-      disableClose: true,
-      panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
+    const bottomSheetRef = this.bottomSheet.open(FamilyJoinDialogComponent, {
+      panelClass: 'auto-height-sheet'
     });
 
-    dialogRef.afterClosed().subscribe(async (code: string) => {
+    bottomSheetRef.afterDismissed().subscribe(async (code: string) => {
       if (code) {
         try {
           this.isLoading.set(true);
@@ -326,6 +333,45 @@ export class ProfileComponent {
           this.notificationService.success(`Joined "${family.name}" family!`);
         } catch (error: any) {
           this.notificationService.error(error?.message || ERROR_MESSAGES.NETWORK.SERVER_ERROR);
+        } finally {
+          this.isLoading.set(false);
+        }
+      }
+    });
+  }
+
+  async deleteFamilyGroup(): Promise<void> {
+    const family = this.familyGroup();
+    if (!family || !family.id) return;
+
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Family Wallet',
+        message: 'Are you sure you want to delete this family wallet? All shared transactions and data will be hidden and other members will be disconnected. This action cannot be undone.',
+        confirmText: 'Delete Family',
+        cancelText: 'Cancel',
+        confirmColor: 'warn',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe(async (result) => {
+      if (result) {
+        try {
+          this.isLoading.set(true);
+          await this.familyService.deleteFamily(family.id!);
+          
+          await this.applyPreferenceChanges({
+            familyId: null,
+            isFamilyMode: false
+          });
+
+          this.familyGroup.set(null);
+          this.familyMembers.set([]);
+          this.notificationService.success('Family wallet deleted successfully.');
+        } catch (error: any) {
+          console.error('Error deleting family:', error);
+          this.notificationService.error(error?.message || 'Failed to delete family wallet');
         } finally {
           this.isLoading.set(false);
         }
@@ -700,29 +746,17 @@ export class ProfileComponent {
     const newPin = this.newPinControl.value;
     if (newPin && /^\d{4}$/.test(newPin)) {
       const pinHash = await this.securityService.hashPin(newPin);
-      const profile = this.userProfile();
-      if (profile) {
-        // Update current profile signal and form
-        const updatedProfile: User = {
-          ...profile,
-          preferences: {
-            ...profile.preferences,
-            defaultCurrency: profile.preferences?.defaultCurrency || 'USD',
-            timezone: profile.preferences?.timezone || 'UTC',
-            notifications: profile.preferences?.notifications ?? true,
-            emailUpdates: profile.preferences?.emailUpdates ?? true,
-            budgetAlerts: profile.preferences?.budgetAlerts ?? true,
-            pinHash: pinHash,
-            pinEnabled: true
-          }
-        };
-        this.userProfile.set(updatedProfile);
-        this.profileForm.get('preferences.pinEnabled')?.setValue(true);
-        this.profileForm.get('preferences.pinEnabled')?.enable();
-        this.newPinControl.reset();
-        this.showPinSetup.set(false);
-        this.notificationService.success('PIN updated successfully. Remember to save your changes.');
-      }
+      
+      await this.applyPreferenceChanges({
+        pinHash: pinHash,
+        pinEnabled: true
+      });
+
+      this.profileForm.get('preferences.pinEnabled')?.setValue(true);
+      this.profileForm.get('preferences.pinEnabled')?.enable();
+      this.newPinControl.reset();
+      this.showPinSetup.set(false);
+      this.notificationService.success('PIN updated successfully. Remember to save your changes.');
     }
   }
 
@@ -734,43 +768,17 @@ export class ProfileComponent {
     const profile = this.userProfile();
     if (!profile) return;
 
-    this.isFamilyMode.set(enabled);
     this.ignoreLoader = true;
-
     const familyId = profile.preferences?.familyId || this.familyGroup()?.id;
-
-    // Update local state immediately for snappy UI
-    const updatedProfile: User = {
-      ...profile,
-      preferences: {
-        defaultCurrency: profile.preferences?.defaultCurrency || 'USD',
-        timezone: profile.preferences?.timezone || 'UTC',
-        notifications: profile.preferences?.notifications ?? true,
-        emailUpdates: profile.preferences?.emailUpdates ?? true,
-        budgetAlerts: profile.preferences?.budgetAlerts ?? true,
-        ...profile.preferences,
-        isFamilyMode: enabled,
-        familyId: familyId || null
-      }
-    };
-    this.userProfile.set(updatedProfile);
 
     // Persist changes
     try {
-      if (this.userService.isGuestUser()) {
-        this.userService.storageService.setItem(`user-data-${updatedProfile.uid}`, updatedProfile);
-        this.userService.userAuth$.next(updatedProfile);
-        this.notificationService.success(`Family mode ${enabled ? 'enabled' : 'disabled'}`);
-      } else {
-        this.store.dispatch(ProfileActions.updatePreferences({
-          userId: profile.uid,
-          preferences: {
-            isFamilyMode: enabled,
-            familyId: familyId || null
-          }
-        }));
-        this.notificationService.success(`Family mode ${enabled ? 'enabled' : 'disabled'}`);
-      }
+      await this.applyPreferenceChanges({
+        isFamilyMode: enabled,
+        familyId: familyId || null
+      });
+
+      this.notificationService.success(`Family mode ${enabled ? 'enabled' : 'disabled'}`);
 
       // Clear all stores for personal/family switch to avoid data mixing
       this.store.dispatch(TransactionsActions.clearTransactions());
@@ -787,6 +795,8 @@ export class ProfileComponent {
         delay(100) // Small delay to allow any other secondary updates to settle
       ).subscribe(() => {
         this.syncService.syncAll().subscribe();
+        //refresh page
+        window.location.reload();
       });
 
     } catch (error) {
@@ -795,7 +805,54 @@ export class ProfileComponent {
       // Rollback on error
       this.ignoreLoader = false;
       this.isFamilyMode.set(!enabled);
-      this.userProfile.set(profile);
+      if (profile) {
+        this.userProfile.set(profile);
+      }
+    }
+  }
+
+  /**
+   * Common function to apply preference changes both locally and remotely
+   */
+  private async applyPreferenceChanges(changes: Partial<UserPreferences>): Promise<void> {
+    const profile = this.userProfile();
+    if (!profile) return;
+
+    // 1. Prepare updated preferences with required fields fallback
+    const currentPrefs = profile.preferences || {} as UserPreferences;
+    const updatedPrefs: UserPreferences = {
+      ...currentPrefs,
+      ...changes,
+      defaultCurrency: changes.defaultCurrency ?? currentPrefs.defaultCurrency ?? 'INR',
+      timezone: changes.timezone ?? currentPrefs.timezone ?? 'UTC',
+      notifications: changes.notifications ?? currentPrefs.notifications ?? true,
+      emailUpdates: changes.emailUpdates ?? currentPrefs.emailUpdates ?? true,
+      budgetAlerts: changes.budgetAlerts ?? currentPrefs.budgetAlerts ?? true,
+    };
+
+    // 2. Prepare updated user object
+    const updatedUser: User = {
+      ...profile,
+      preferences: updatedPrefs,
+      updatedAt: new Date()
+    };
+
+    // 3. Update local state
+    this.userProfile.set(updatedUser);
+    
+    if (changes.isFamilyMode !== undefined) {
+      this.isFamilyMode.set(changes.isFamilyMode);
+    }
+
+    // 4. Persist changes
+    if (this.userService.isGuestUser()) {
+      this.userService.storageService.setItem(`user-data-${updatedUser.uid}`, updatedUser);
+      this.userService.userAuth$.next(updatedUser);
+    } else {
+      this.store.dispatch(ProfileActions.updatePreferences({
+        userId: profile.uid,
+        preferences: changes
+      }));
     }
   }
 

@@ -403,11 +403,18 @@
 										</div>
 
 										<!-- CTA -->
-										<button mat-flat-button color="primary" type="button" class="w-full !rounded-lg"
-											(click)="viewFamilyGroup(family.id!)">
-											<mat-icon class="mr-1">open_in_new</mat-icon>
-											Open Family Wallet
-										</button>
+										<div class="flex gap-2">
+											<button mat-flat-button color="primary" type="button" class="flex-1 !rounded-lg"
+												(click)="viewFamilyGroup(family.id!)">
+												<mat-icon class="mr-1">open_in_new</mat-icon>
+												Open Family Wallet
+											</button>
+											<button *ngIf="isAdmin()" mat-icon-button color="warn" type="button"
+												class="!p-0 !rounded-lg border-red-200 text-red-500 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/30"
+												(click)="deleteFamilyGroup()" matTooltip="Delete Family">
+												<mat-icon>delete_outline</mat-icon>
+											</button>
+										</div>
 									</div>
 								</div>
 							</ng-container>
@@ -415,23 +422,26 @@
 							<!-- No family connected -->
 							<ng-template #noFamily>
 								<div
-									class="col-span-full flex flex-col items-center justify-center p-8 bg-gray-50 dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 text-center">
-									<mat-icon
-										class="!text-4xl text-gray-300 dark:text-gray-600 mb-3">family_restroom</mat-icon>
-									<h3 class="text-base font-semibold text-gray-700 dark:text-gray-200 mb-1">No Family
-										Wallet Yet</h3>
-									<p class="text-xs text-gray-400 dark:text-gray-500 mb-5 max-w-xs">
-										Create a shared wallet for your family or join one using an invite code.
+									class="col-span-full flex flex-col items-center justify-center p-0 no-family-card rounded-2xl text-center">
+									<div class="gradient-icon-box mb-3">
+										<div class="icon-bg-glow"></div>
+										<mat-icon>family_restroom</mat-icon>
+									</div>
+									
+									<!-- <p class="text-xl premium-title mb-2">No Family Wallet Yet</p> -->
+									<p class="text-sm text-gray-400 dark:text-gray-500 mb-8 max-w-xs leading-relaxed">
+										Create a shared wallet for your family or join one using an invite code to start tracking together.
 									</p>
-									<div class="flex flex-col sm:flex-row gap-2 w-full max-w-xs">
-										<button mat-flat-button color="primary" type="button" class="flex-1"
+
+									<div class="empty-cta-container mb-2">
+										<button mat-flat-button color="primary" type="button" class="flex-1 premium-btn !h-12 !rounded-xl text-white"
 											(click)="createFamilyGroup()" [disabled]="isLoading()">
-											<mat-icon class="mr-1">add_home</mat-icon>
+											<mat-icon class="mr-2">add_home</mat-icon>
 											Create Family
 										</button>
-										<button mat-stroked-button type="button" class="flex-1" (click)="joinFamilyGroup()"
+										<button mat-stroked-button type="button" class="flex-1 premium-btn !h-12 !rounded-xl" (click)="joinFamilyGroup()"
 											[disabled]="isLoading()">
-											<mat-icon class="mr-1">group_add</mat-icon>
+											<mat-icon class="mr-2">group_add</mat-icon>
 											Join with Code
 										</button>
 									</div>

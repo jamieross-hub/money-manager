@@ -1,6 +1,7 @@
 import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MatBottomSheetRef, MatBottomSheetModule } from '@angular/material/bottom-sheet';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -11,13 +12,14 @@ import { CommonModule } from '@angular/common';
   selector: 'app-family-join-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ReactiveFormsModule, MatDialogModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule],
+  imports: [CommonModule, ReactiveFormsModule, MatDialogModule, MatBottomSheetModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule],
   templateUrl: './family-join-dialog.component.html',
   styleUrls: ['./family-join-dialog.component.scss']
 })
 export class FamilyJoinDialogComponent {
   private fb = inject(FormBuilder);
-  private dialogRef = inject(MatDialogRef<FamilyJoinDialogComponent>);
+  private dialogRef = inject(MatDialogRef<FamilyJoinDialogComponent>, { optional: true });
+  private bottomSheetRef = inject(MatBottomSheetRef<FamilyJoinDialogComponent>, { optional: true });
 
   form = this.fb.group({
     inviteCode: ['', [Validators.required, Validators.pattern(/^FAM-[A-Z0-9]{4}$/)]],
@@ -30,11 +32,20 @@ export class FamilyJoinDialogComponent {
 
   submit() {
     if (this.form.valid) {
-      this.dialogRef.close(this.form.value.inviteCode);
+      const code = this.form.value.inviteCode;
+      if (this.bottomSheetRef) {
+        this.bottomSheetRef.dismiss(code);
+      } else {
+        this.dialogRef?.close(code);
+      }
     }
   }
 
   close() {
-    this.dialogRef.close();
+    if (this.bottomSheetRef) {
+      this.bottomSheetRef.dismiss();
+    } else {
+      this.dialogRef?.close();
+    }
   }
 }

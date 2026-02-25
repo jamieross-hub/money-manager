@@ -260,6 +260,51 @@ export class FamilyService {
     return { id: snap.id, ...snap.data() as Omit<Family, 'id'> };
   }
 
+  async deleteFamily(familyId: string): Promise<void> {
+    const user = this.currentUser;
+    if (!user) throw new Error('User not authenticated');
+
+    const family = await this.getFamily(familyId);
+    if (!family) throw new Error('Family not found');
+
+    if (family.ownerUserId !== user.uid) {
+      throw new Error('Only the family owner can delete the family.');
+    }
+
+    // 1. Mark family as inactive
+    await updateDoc(this.getFamilyDoc(familyId), {
+      isActive: false,
+      updatedAt: new Date()
+    });
+
+    // 2. Update all members' preferences to remove familyId
+    const membersSnap = await getDocs(this.getMembersCol(familyId));
+    const batch = writeBatch(this.firestore);
+
+    for (const memberDoc of membersSnap.docs) {
+      const memberData = memberDoc.data() as FamilyMember;
+      const userRef = doc(this.firestore, 'users', memberData.userId);
+      
+      // Update member's isActive in family subcollection (optional but good for history)
+      batch.update(memberDoc.ref, { isActive: false });
+
+      // We can't easily update other users' documents here without higher permissions
+      // or a cloud function. However, the UI should handle the case where the family is inactive.
+      // For the current user, we can dispatch the update.
+    }
+
+    await batch.commit();
+
+    // 3. Update current user's preferences via store
+    this.store.dispatch(ProfileActions.updatePreferences({
+      userId: user.uid,
+      preferences: {
+        familyId: null,
+        isFamilyMode: false
+      }
+    }));
+  }
+
   private async getMembershipRecord(familyId: string, userId: string): Promise<FamilyMember | null> {
     const snap = await getDoc(this.getMemberDoc(familyId, userId));
     if (!snap.exists()) return null;

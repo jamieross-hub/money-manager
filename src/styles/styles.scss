@@ -520,7 +520,14 @@ app-chat {
 
 .mat-bottom-sheet-container{
   min-height: 80vh;
+
+
 }
+
+.auto-height-sheet {
+    max-height: 60dvh !important;
+    max-height: 60vh !important;
+  }
 
 // .mat-mdc-tab-header{
 //   z-index: 99 !important;
