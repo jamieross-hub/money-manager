@@ -105,7 +105,7 @@ export class FamilyTransactionsComponent implements OnInit {
     });
     ref.afterClosed().subscribe(r => {
       if (r?.isEditing && r?.request) {
-        this.store.dispatch(FamilyActions.updateTransaction({ txId: r.txId, request: r.request }));
+        this.store.dispatch(FamilyActions.updateTransaction({ familyId: fam.id, txId: r.txId, request: r.request }));
       }
     });
   }
@@ -115,7 +115,7 @@ export class FamilyTransactionsComponent implements OnInit {
       data: { title: 'Delete Transaction', message: `Delete this ${tx.category} entry of ${tx.amount}?`, confirmText: 'Delete', confirmColor: 'warn' }
     });
     ref.afterClosed().subscribe(ok => {
-      if (ok) this.store.dispatch(FamilyActions.deleteTransaction({ txId: tx.id! }));
+      if (ok) this.store.dispatch(FamilyActions.deleteTransaction({ familyId: this.family()?.id, txId: tx.id! }));
     });
   }
 

@@ -1,6 +1,6 @@
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { BehaviorSubject, Observable, fromEvent, merge } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
+import { Injectable, Inject, PLATFORM_ID, OnDestroy, Injector } from '@angular/core';
+import { BehaviorSubject, Observable, fromEvent, merge, interval, Subscription, from, of, forkJoin, Subject } from 'rxjs';
+import { map, startWith, switchMap, catchError, tap, take, filter, distinctUntilChanged, takeUntil, timeout } from 'rxjs/operators';
 import { Firestore, collection, doc, writeBatch } from '@angular/fire/firestore';
 import { Auth, getAuth } from '@angular/fire/auth';
 import { SwUpdate } from '@angular/service-worker';
@@ -13,6 +13,22 @@ import { Transaction } from '../models/transaction.model';
 import { APP_CONFIG } from '../config/config';
 import { LocalIndexDBStorageService } from './indexdb-storage.service';
 import { LocalStorageKey, LocalStorageKeyHelper } from '../models/local-storage.model';
+import { TransactionsFacadeService } from './db/transactions-facade.service';
+import { AccountsFacadeService } from './db/accounts-facade.service';
+import { CategoryFacadeService } from './db/category-facade.service';
+import { TransactionsService } from './db/transactions.service';
+import { AccountsService } from './db/accounts.service';
+import { CategoryService } from './db/category.service';
+import { BudgetsService } from './db/budgets.service';
+import { GoalsService } from './db/goals.service';
+import { UserService } from './db/user.service';
+import { PwaSwService } from './pwa-sw.service';
+import { SplitwiseService } from '../../modules/splitwise/services/splitwise.service';
+import { GoogleSheetsService } from './google-sheets.service';
+import { SubscriptionService } from './subscription.service';
+import { FeedbackService } from './feedback.service';
+import { ContactService } from './db/contact.service';
+import { NotificationService } from './notification.service';
 
 export interface NetworkStatus {
   online: boolean;
@@ -68,7 +84,11 @@ export interface CacheItem<T = any> {
 @Injectable({
   providedIn: 'root'
 })
-export class CommonSyncService {
+export class CommonSyncService implements OnDestroy {
+  private readonly destroy$ = new Subject<void>();
+  private syncSubscription: Subscription | null = null;
+  private readonly SYNC_INTERVAL = 5 * 60 * 1000; // 5 minutes
+  private observersInitialized = false;
   private readonly DEFAULT_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
   private readonly DEFAULT_MAX_SIZE = 50 * 1024 * 1024; // 50MB
   private readonly HIGH_PRIORITY_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -102,6 +122,10 @@ export class CommonSyncService {
     private swUpdate: SwUpdate,
     private store: Store<AppState>,
     private storageService: LocalIndexDBStorageService,
+    private userService: UserService,
+    private pwaSwService: PwaSwService,
+    private notificationService: NotificationService,
+    private injector: Injector,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     if (!isPlatformServer(this.platformId)) {
@@ -226,7 +250,168 @@ export class CommonSyncService {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   }
 
-  // ==================== SYNC OPERATIONS ====================
+  /**
+   * Request a background sync from the Service Worker
+   */
+  requestBackgroundSync(): void {
+    if ('serviceWorker' in navigator && 'SyncManager' in window) {
+      navigator.serviceWorker.ready.then((swRegistration: any) => {
+        return swRegistration.sync.register('sync-all-data');
+      }).then(() => {
+        console.log('✅ Background sync "sync-all-data" registered');
+      }).catch((err) => {
+        console.warn('⚠️ Background sync registration failed:', err);
+      });
+    }
+  }
+
+  /**
+   * Start the periodic sync process
+   */
+  startSync(): void {
+    if (this.syncSubscription) {
+      return;
+    }
+
+    console.log('🔄 Starting Sync Service (Interval: 5m)');
+
+    this.initializeObservers();
+
+    // Set up periodic interval
+    this.syncSubscription = interval(this.SYNC_INTERVAL).pipe(
+      filter(() => document.visibilityState === 'visible'), // Only sync if app is visible
+      switchMap(() => this.syncAll()),
+      catchError(error => {
+        console.error('❌ Periodic sync failed:', error);
+        return of(null);
+      })
+    ).subscribe();
+  }
+
+  private initializeObservers(): void {
+    if (this.observersInitialized) return;
+    this.observersInitialized = true;
+
+    // Listen for user login to trigger immediate sync
+    this.userService.userAuth$.pipe(
+      takeUntil(this.destroy$),
+      filter((user): user is any => !!user && user.uid !== 'offline-guest'),
+      distinctUntilChanged((prev, curr) => prev?.uid === curr?.uid),
+      switchMap(() => this.syncAll())
+    ).subscribe();
+
+    // Listen for Background Sync API trigger
+    this.pwaSwService.backgroundSync$.pipe(
+      takeUntil(this.destroy$),
+      filter(triggered => triggered),
+      switchMap(() => {
+        console.log('🔄 Triggering sync due to Background Sync SW Event');
+        return this.syncAll();
+      })
+    ).subscribe();
+
+    // Passive State Handling: Pause sync when app is in background
+    fromEvent(document, 'visibilitychange').pipe(
+      takeUntil(this.destroy$),
+      map(() => document.visibilityState),
+      distinctUntilChanged(),
+      tap(state => {
+        if (state === 'hidden') {
+          console.log('💤 App went to passive state: Pausing Sync');
+          this.stopSync();
+        } else {
+          console.log('✨ App resumed: Restarting Sync');
+          this.startSync();
+        }
+      })
+    ).subscribe();
+  }
+
+  /**
+   * Stop the periodic sync process
+   */
+  stopSync(): void {
+    if (this.syncSubscription) {
+      this.syncSubscription.unsubscribe();
+      this.syncSubscription = null;
+    }
+  }
+
+  /**
+   * Perform a full sync (Push pending changes + Pull from Firestore)
+   */
+  syncAll() {
+    const userId = this.userService.getCurrentUserId();
+
+    // 1. Handle Guest Mode
+    if (userId === 'offline-guest') {
+      console.log('🔄 Sync skipped: Guest Mode (Local Only)');
+      return of(null);
+    }
+
+    if (!userId) {
+      return of(null);
+    }
+
+    // 2. Handle Network Offline
+    if (!this.isCurrentlyOnline()) {
+      console.log('🔄 Sync skipped: Device is Offline');
+      return of(null);
+    }
+
+    console.log('🔄 Performing full sync...');
+
+    // Resolve services lazily to avoid circular dependencies
+    // Using Facades ensures we pull from the correct source (Personal vs Family)
+    const transactionsService = this.injector.get(TransactionsFacadeService);
+    const accountsService = this.injector.get(AccountsFacadeService);
+    const categoryService = this.injector.get(CategoryFacadeService);
+    const budgetsService = this.injector.get(BudgetsService);
+    const goalsService = this.injector.get(GoalsService);
+    const splitwiseService = this.injector.get(SplitwiseService);
+    const googleSheetsService = this.injector.get(GoogleSheetsService);
+    const subscriptionService = this.injector.get(SubscriptionService);
+    const feedbackService = this.injector.get(FeedbackService);
+    const contactService = this.injector.get(ContactService);
+
+    // 1. Push pending changes first
+    return from(this.manualSync()).pipe(
+      timeout(10000), // Timeout after 10s if push hangs
+      // 2. Pull changes from all collections
+      switchMap(() => {
+        return forkJoin([
+          transactionsService.pullFromFirestore(userId),
+          accountsService.pullFromFirestore(userId),
+          categoryService.pullFromFirestore(userId),
+          budgetsService.pullFromFirestore(userId),
+          goalsService.pullFromFirestore(userId),
+          splitwiseService.pullGroupsFromFirestore(userId),
+          splitwiseService.pullInvitationsFromFirestore(userId),
+          googleSheetsService.pullFromFirestore(userId),
+          subscriptionService.pullFromFirestore(userId),
+          feedbackService.pullFromFirestore(),
+          contactService.pullFromFirestore()
+        ]).pipe(
+          timeout(30000) // Timeout after 30s if pull hangs
+        );
+      }),
+      tap(() => {
+        console.log('✅ Sync completed successfully');
+      }),
+      catchError(error => {
+        if (error.name === 'TimeoutError') {
+          console.warn('⚠️ Sync timed out: Continuing in offline mode');
+        } else if (error.code === 'unavailable' || error.message?.includes('network')) {
+          console.warn('⚠️ Firestore unavailable: Continuing in offline mode');
+        } else {
+          console.error('❌ Sync failed:', error);
+        }
+        return of(null);
+      })
+    );
+  }
+
+  // ==================== CACHE OPERATIONS ====================
 
   /**
    * Get sync status observable
@@ -1193,4 +1378,10 @@ export class CommonSyncService {
       });
     }
   }
-} 
+
+  ngOnDestroy(): void {
+    this.stopSync();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+}

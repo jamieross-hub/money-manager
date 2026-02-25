@@ -8,13 +8,15 @@ import {
   getDoc,
   getDocs,
   addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   query,
   where,
   orderBy,
   Timestamp,
-  onSnapshot
+  onSnapshot,
+  writeBatch
 } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import {
@@ -28,19 +30,48 @@ import {
   UpdateFamilyTransactionRequest
 } from 'src/app/util/models/family.model';
 import { NotificationService } from 'src/app/util/service/notification.service';
+import { TransactionType, AccountType } from 'src/app/util/config/enums';
+import { defaultCategoriesForNewUser } from 'src/app/util/config/config';
+import { Category, Account, User } from 'src/app/util/models';
+import { Store } from '@ngrx/store';
+import { AppState } from 'src/app/store/app.state';
+import * as ProfileActions from 'src/app/store/profile/profile.actions';
+import { UserService } from 'src/app/util/service/db/user.service';
 
 @Injectable({ providedIn: 'root' })
 export class FamilyService {
 
   private readonly FAMILIES_COL = 'family-groups';
-  private readonly MEMBERS_COL = 'family-members';
-  private readonly TRANSACTIONS_COL = 'family-transactions';
 
   constructor(
     private firestore: Firestore,
     private auth: Auth,
     private notificationService: NotificationService,
+    private store: Store<AppState>,
+    private userService: UserService
   ) {}
+
+  // ─── Path Helpers ────────────────────────────────────────────────────────
+
+  private getFamilyDoc(familyId: string) {
+    return doc(this.firestore, this.FAMILIES_COL, familyId);
+  }
+
+  private getMembersCol(familyId: string) {
+    return collection(this.firestore, `${this.FAMILIES_COL}/${familyId}/members`);
+  }
+
+  private getMemberDoc(familyId: string, userId: string) {
+    return doc(this.firestore, `${this.FAMILIES_COL}/${familyId}/members/${userId}`);
+  }
+
+  private getTransactionsCol(familyId: string) {
+    return collection(this.firestore, `${this.FAMILIES_COL}/${familyId}/transactions`);
+  }
+
+  private getTransactionDoc(familyId: string, txId: string) {
+    return doc(this.firestore, `${this.FAMILIES_COL}/${familyId}/transactions/${txId}`);
+  }
 
   // ─── Utility ─────────────────────────────────────────────────────────────
 
@@ -63,8 +94,12 @@ export class FamilyService {
     const user = this.currentUser;
     if (!user) throw new Error('User not authenticated');
 
+    const familyRef = doc(collection(this.firestore, this.FAMILIES_COL));
+    const familyId = familyRef.id;
+
     const inviteCode = this.generateInviteCode();
-    const familyData: Omit<Family, 'id'> = {
+    const familyData: Family = {
+      id: familyId,
       name: request.name,
       ownerUserId: user.uid,
       inviteCode,
@@ -74,11 +109,11 @@ export class FamilyService {
       isActive: true,
     };
 
-    const ref = await addDoc(collection(this.firestore, this.FAMILIES_COL), familyData);
+    await setDoc(familyRef, familyData);
 
-    // Add creator as admin member
-    await addDoc(collection(this.firestore, this.MEMBERS_COL), {
-      familyId: ref.id,
+    // 2. Add creator as admin member
+    await setDoc(this.getMemberDoc(familyId, user.uid), {
+      familyId: familyId,
       userId: user.uid,
       email: user.email || '',
       displayName: user.displayName || user.email?.split('@')[0] || 'Owner',
@@ -88,7 +123,64 @@ export class FamilyService {
       isActive: true,
     } as Omit<FamilyMember, 'id'>);
 
-    return { id: ref.id, ...familyData };
+    // 3. Initialize defaults (categories/accounts)
+    await this.initializeFamilyDefaults(familyId, user.uid);
+
+    // 4. Finally, update user's preferences with familyId
+    // This completes the "Group Created" state transition for the user
+    try {
+      this.store.dispatch(ProfileActions.updatePreferences({
+        userId: user.uid,
+        preferences: {
+          familyId: familyId,
+          isFamilyMode: true
+        }
+      }));
+    } catch (e) {
+      console.warn('Could not update user preferences with familyId:', e);
+      // We don't throw here as the family is already created, but the user might need to toggle it manually
+    }
+
+    return familyData;
+  }
+
+  private async initializeFamilyDefaults(familyId: string, userId: string): Promise<void> {
+    const batch = writeBatch(this.firestore);
+
+    // 1. Create Default Account
+    const accountId = 'acc_fam_' + Date.now();
+    const accountData: Account = {
+      accountId,
+      userId: familyId, // Shared family account
+      name: 'Family Savings',
+      type: AccountType.BANK,
+      balance: 0,
+      description: 'Default family savings account',
+      institution: 'Family Bank',
+      currency: 'INR',
+      createdAt: new Date() as any,
+      isActive: true
+    };
+    const accountRef = doc(this.firestore, `family-groups/${familyId}/accounts/${accountId}`);
+    batch.set(accountRef, accountData);
+
+    // 2. Create Default Categories
+    const categoriesToCreate = defaultCategoriesForNewUser.slice(0, 8); // Just a subset for family
+    for (const cat of categoriesToCreate) {
+      const catId = 'cat_fam_' + Math.random().toString(36).substr(2, 9);
+      const catData: Category = {
+        id: catId,
+        name: cat.name,
+        type: cat.type,
+        icon: cat.icon,
+        color: cat.color,
+        createdAt: Date.now() as any
+      };
+      const catRef = doc(this.firestore, `family-groups/${familyId}/categories/${catId}`);
+      batch.set(catRef, catData);
+    }
+
+    await batch.commit();
   }
 
   async joinByCode(inviteCode: string): Promise<Family> {
@@ -107,16 +199,18 @@ export class FamilyService {
     const familyDoc = snap.docs[0];
     const family: Family = { id: familyDoc.id, ...familyDoc.data() as Omit<Family, 'id'> };
 
-    // Check if already a member
-    const existing = await this.getMembershipRecord(family.id!, user.uid);
+    // Check if already a member using doc ID
+    const existingSnap = await getDoc(this.getMemberDoc(family.id!, user.uid));
+    const existing = existingSnap.exists() ? { id: existingSnap.id, ...existingSnap.data() as Omit<FamilyMember, 'id'> } : null;
+    
     if (existing) {
       if (existing.isActive) {
         throw new Error('You are already a member of this family.');
       }
       // Reactivate membership
-      await updateDoc(doc(this.firestore, this.MEMBERS_COL, existing.id!), { isActive: true, joinedAt: new Date() });
+      await updateDoc(this.getMemberDoc(family.id!, user.uid), { isActive: true, joinedAt: new Date() });
     } else {
-      await addDoc(collection(this.firestore, this.MEMBERS_COL), {
+      await setDoc(this.getMemberDoc(family.id!, user.uid), {
         familyId: family.id!,
         userId: user.uid,
         email: user.email || '',
@@ -128,6 +222,19 @@ export class FamilyService {
       } as Omit<FamilyMember, 'id'>);
     }
 
+    // Update user's preferences with familyId
+    try {
+      this.store.dispatch(ProfileActions.updatePreferences({
+        userId: user.uid,
+        preferences: {
+          familyId: family.id,
+          isFamilyMode: true
+        }
+      }));
+    } catch (e) {
+      console.warn('Could not update user preferences with familyId:', e);
+    }
+
     return family;
   }
 
@@ -135,45 +242,34 @@ export class FamilyService {
     const user = this.currentUser;
     if (!user) return null;
 
-    const membersRef = collection(this.firestore, this.MEMBERS_COL);
-    const q = query(membersRef, where('userId', '==', user.uid), where('isActive', '==', true));
-    const snap = await getDocs(q);
+    // Use preferences if available for faster lookup
+    const userSnap = await getDoc(doc(this.firestore, 'users', user.uid));
+    const familyId = userSnap.exists() ? (userSnap.data() as any)?.preferences?.familyId : null;
 
-    if (snap.empty) return null;
+    if (familyId) {
+      const family = await this.getFamily(familyId);
+      if (family?.isActive) return family;
+    }
 
-    const memberData = snap.docs[0].data() as FamilyMember;
-    const familySnap = await getDoc(doc(this.firestore, this.FAMILIES_COL, memberData.familyId));
-
-    if (!familySnap.exists()) return null;
-    const family = { id: familySnap.id, ...familySnap.data() as Omit<Family, 'id'> };
-    return family.isActive ? family : null;
+    return null;
   }
 
   async getFamily(familyId: string): Promise<Family | null> {
-    const snap = await getDoc(doc(this.firestore, this.FAMILIES_COL, familyId));
+    const snap = await getDoc(this.getFamilyDoc(familyId));
     if (!snap.exists()) return null;
     return { id: snap.id, ...snap.data() as Omit<Family, 'id'> };
   }
 
   private async getMembershipRecord(familyId: string, userId: string): Promise<FamilyMember | null> {
-    const q = query(
-      collection(this.firestore, this.MEMBERS_COL),
-      where('familyId', '==', familyId),
-      where('userId', '==', userId)
-    );
-    const snap = await getDocs(q);
-    if (snap.empty) return null;
-    return { id: snap.docs[0].id, ...snap.docs[0].data() as Omit<FamilyMember, 'id'> };
+    const snap = await getDoc(this.getMemberDoc(familyId, userId));
+    if (!snap.exists()) return null;
+    return { id: snap.id, ...snap.data() as Omit<FamilyMember, 'id'> };
   }
 
   // ─── Members ──────────────────────────────────────────────────────────────
 
   getMembers(familyId: string): Observable<FamilyMember[]> {
-    const q = query(
-      collection(this.firestore, this.MEMBERS_COL),
-      where('familyId', '==', familyId),
-      where('isActive', '==', true)
-    );
+    const q = query(this.getMembersCol(familyId), where('isActive', '==', true));
     return from(getDocs(q)).pipe(
       map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() } as FamilyMember))),
       catchError(() => of([]))
@@ -181,31 +277,26 @@ export class FamilyService {
   }
 
   async removeMember(familyId: string, memberId: string): Promise<void> {
-    await updateDoc(doc(this.firestore, this.MEMBERS_COL, memberId), { isActive: false });
+    // memberId here should be the userId since we use it as doc ID
+    await updateDoc(this.getMemberDoc(familyId, memberId), { isActive: false });
     this.notificationService.success('Member removed successfully');
   }
 
   async leaveFamily(familyId: string): Promise<void> {
     const user = this.currentUser;
     if (!user) return;
-    const record = await this.getMembershipRecord(familyId, user.uid);
-    if (record?.id) {
-      await updateDoc(doc(this.firestore, this.MEMBERS_COL, record.id), { isActive: false });
-    }
+    await updateDoc(this.getMemberDoc(familyId, user.uid), { isActive: false });
   }
 
-  async updateMemberRole(memberId: string, role: 'admin' | 'member'): Promise<void> {
-    await updateDoc(doc(this.firestore, this.MEMBERS_COL, memberId), { role });
+  async updateMemberRole(familyId: string, memberId: string, role: 'admin' | 'member'): Promise<void> {
+    await updateDoc(this.getMemberDoc(familyId, memberId), { role });
     this.notificationService.success('Role updated');
   }
 
   // ─── Transactions ─────────────────────────────────────────────────────────
 
   getTransactions(familyId: string): Observable<FamilyTransaction[]> {
-    const q = query(
-      collection(this.firestore, this.TRANSACTIONS_COL),
-      where('familyId', '==', familyId)
-    );
+    const q = query(this.getTransactionsCol(familyId), orderBy('date', 'desc'));
     return from(getDocs(q)).pipe(
       map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() } as FamilyTransaction))),
       catchError(() => of([]))
@@ -230,11 +321,11 @@ export class FamilyService {
       updatedAt: new Date(),
     };
 
-    const ref = await addDoc(collection(this.firestore, this.TRANSACTIONS_COL), txData);
+    const ref = await addDoc(this.getTransactionsCol(request.familyId), txData);
     return { id: ref.id, ...txData };
   }
 
-  async updateTransaction(txId: string, request: UpdateFamilyTransactionRequest): Promise<void> {
+  async updateTransaction(familyId: string, txId: string, request: UpdateFamilyTransactionRequest): Promise<void> {
     const updateData: any = { updatedAt: new Date() };
     if (request.amount !== undefined) updateData.amount = request.amount;
     if (request.type) updateData.type = request.type;
@@ -242,11 +333,11 @@ export class FamilyService {
     if (request.date) updateData.date = request.date;
     if (request.note !== undefined) updateData.note = request.note;
 
-    await updateDoc(doc(this.firestore, this.TRANSACTIONS_COL, txId), updateData);
+    await updateDoc(this.getTransactionDoc(familyId, txId), updateData);
   }
 
-  async deleteTransaction(txId: string): Promise<void> {
-    await deleteDoc(doc(this.firestore, this.TRANSACTIONS_COL, txId));
+  async deleteTransaction(familyId: string, txId: string): Promise<void> {
+    await deleteDoc(this.getTransactionDoc(familyId, txId));
   }
 
   // ─── Stats ────────────────────────────────────────────────────────────────

@@ -103,5 +103,8 @@ export const goalsReducer = createReducer(
     ...state,
     loading: false,
     error
-  }))
+  })),
+
+  // Clear State
+  on(GoalsActions.clearGoals, () => initialState)
 ); 

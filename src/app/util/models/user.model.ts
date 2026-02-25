@@ -46,7 +46,7 @@ export interface UserPreferences {
 	geminiApiKey?: string;
 	categoryListViewMode?: boolean;
 	appView?: 'WEEKLY' | 'MONTHLY' | 'YEARLY';
-	familyGroupId?: string;
+	familyId?: string | null;
 	theme?: string;
 	pinEnabled?: boolean;
 	pinHash?: string;

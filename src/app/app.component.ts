@@ -14,7 +14,6 @@ import { LocalStorageKey } from './util/models/local-storage.model';
 import { UserTrackingService, ScreenTrackingService, Analytics, logEvent } from '@angular/fire/analytics';
 import { UserService } from './util/service/db/user.service';
 import { SecurityService } from './util/service/security.service';
-import { PeriodicSyncService } from './util/service/periodic-sync.service';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { SwUpdate } from '@angular/service-worker';
 import { MatDialog } from '@angular/material/dialog';
@@ -49,7 +48,6 @@ export class AppComponent implements OnInit, OnDestroy {
     private screenTrackingService: ScreenTrackingService,
     private userService: UserService,
     private securityService: SecurityService,
-    private periodicSyncService: PeriodicSyncService,
     private router: Router,
     private route: ActivatedRoute,
     private analytics: Analytics,
@@ -100,7 +98,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.initializePwaFeatures();
     this.setupEventListeners();
     this.firebaseMessagingService.listenForMessages();
-    this.periodicSyncService.startSync();
+    this.commonSyncService.startSync();
   }
 
 
@@ -197,7 +195,7 @@ export class AppComponent implements OnInit, OnDestroy {
     // Check if we need to refresh data
     if (this.isOnline) {
       // Refresh data
-      this.periodicSyncService.syncAll().subscribe();
+      this.commonSyncService.syncAll().subscribe();
     }
   }
 
@@ -218,7 +216,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private refreshDataIfNeeded(): void {
     if (this.isOnline) {
-      this.periodicSyncService.syncAll().subscribe();
+      this.commonSyncService.syncAll().subscribe();
     }
   }
 

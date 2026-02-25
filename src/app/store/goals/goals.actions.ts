@@ -79,4 +79,7 @@ export const updateCurrentAmountSuccess = createAction(
 export const updateCurrentAmountFailure = createAction(
   '[Goals] Update Current Amount Failure',
   props<{ error: any }>()
-); 
+);
+
+// Clear State
+export const clearGoals = createAction('[Goals] Clear Goals');

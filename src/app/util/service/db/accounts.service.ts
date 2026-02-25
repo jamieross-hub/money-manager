@@ -20,9 +20,23 @@ export class AccountsService {
         private firestore: Firestore,
         private auth: Auth,
         private localStorageUtility: LocalIndexDBStorageService,
-        private userService: UserService,
-        private store: Store<AppState>
+        protected userService: UserService,
+        protected store: Store<AppState>
     ) { }
+
+    /**
+     * Get the accounts collection path
+     */
+    protected getAccountsPath(userId: string): string {
+        return `users/${userId}/accounts`;
+    }
+
+    /**
+     * Get a specific account document path
+     */
+    protected getAccountPath(userId: string, accountId: string): string {
+        return `${this.getAccountsPath(userId)}/${accountId}`;
+    }
 
     private isGuest(): boolean {
         return this.userService.getCurrentUserId() === 'offline-guest';
@@ -47,7 +61,7 @@ export class AccountsService {
         }
 
         return new Observable<string>(observer => {
-            const accountRef = doc(this.firestore, `users/${userId}/accounts/${accountId}`);
+            const accountRef = doc(this.firestore, this.getAccountPath(userId, accountId));
             
             // 1. Dispatch store updates immediately (Optimistic)
             this.store.dispatch(AccountsActions.createAccountSuccess({ account }));
@@ -103,7 +117,7 @@ export class AccountsService {
             return of(undefined);
         }
 
-        const accountsRef = collection(this.firestore, `users/${userId}/accounts`);
+        const accountsRef = collection(this.firestore, this.getAccountsPath(userId));
 
         console.log(`[AccountsService] Pulling accounts for user: ${userId}`);
 
@@ -143,7 +157,7 @@ export class AccountsService {
         }
 
         return new Observable<Account | undefined>(observer => {
-            const accountRef = doc(this.firestore, `users/${userId}/accounts/${accountId}`);
+            const accountRef = doc(this.firestore, this.getAccountPath(userId, accountId));
             getDoc(accountRef).then(accountSnap => {
                 if (accountSnap.exists()) {
                     observer.next(accountSnap.data() as Account);
@@ -177,7 +191,7 @@ export class AccountsService {
         }
 
         return new Observable<void>(observer => {
-            const accountRef = doc(this.firestore, `users/${userId}/accounts/${accountId}`);
+            const accountRef = doc(this.firestore, this.getAccountPath(userId, accountId));
             const updateData = {
                 ...sanitizedData,
                 updatedAt: new Date() as any // Firebase Timestamp
@@ -209,7 +223,7 @@ export class AccountsService {
         }
 
         return new Observable<void>(observer => {
-            const accountRef = doc(this.firestore, `users/${userId}/accounts/${accountId}`);
+            const accountRef = doc(this.firestore, this.getAccountPath(userId, accountId));
 
             // 1. Dispatch store updates immediately (Optimistic)
             this.store.dispatch(AccountsActions.deleteAccountSuccess({ accountId }));
@@ -307,7 +321,7 @@ export class AccountsService {
             // 3. Background DB Update
             const updateBalanceAsync = async () => {
                 try {
-                    const accountRef = doc(this.firestore, `users/${userId}/accounts/${accountId}`);
+                    const accountRef = doc(this.firestore, this.getAccountPath(userId, accountId));
                     const accountSnap = await getDoc(accountRef);
 
                     if (!accountSnap.exists()) {
@@ -434,7 +448,7 @@ export class AccountsService {
 
                     // Update each account's balance
                     for (const [accountId, balanceChange] of accountBalanceChanges) {
-                        const accountRef = doc(this.firestore, `users/${userId}/accounts/${accountId}`);
+                        const accountRef = doc(this.firestore, this.getAccountPath(userId, accountId));
                         const accountSnap = await getDoc(accountRef);
 
                         if (accountSnap.exists()) {
@@ -528,8 +542,8 @@ export class AccountsService {
                     const batch = writeBatch(this.firestore);
 
                     // Get both accounts
-                    const oldAccountRef = doc(this.firestore, `users/${userId}/accounts/${oldAccountId}`);
-                    const newAccountRef = doc(this.firestore, `users/${userId}/accounts/${newAccountId}`);
+                    const oldAccountRef = doc(this.firestore, this.getAccountPath(userId, oldAccountId));
+                    const newAccountRef = doc(this.firestore, this.getAccountPath(userId, newAccountId));
 
                     const [oldAccountSnap, newAccountSnap] = await Promise.all([
                         getDoc(oldAccountRef),

@@ -79,4 +79,7 @@ export const updateSpentSuccess = createAction(
 export const updateSpentFailure = createAction(
   '[Budgets] Update Spent Failure',
   props<{ error: any }>()
-); 
+);
+
+// Clear State
+export const clearBudgets = createAction('[Budgets] Clear Budgets');

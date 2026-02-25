@@ -135,7 +135,7 @@ export class MobileAccountsListComponent implements OnInit, OnDestroy {
 			return 0;
 		}
 
-		const { interestRate, remainingBalance } = account.loanDetails;
+		const { interestRate, remainingBalance = 0 } = account.loanDetails;
 		// Monthly interest = (Annual Rate / 12) * Remaining Balance
 		return (interestRate / 12 / 100) * remainingBalance;
 	}

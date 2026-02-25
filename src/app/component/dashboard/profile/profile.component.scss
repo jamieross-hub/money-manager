@@ -633,15 +633,12 @@ button {
 
 
 
-.family-mode-badge {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(8px);
+.family-mode-badge {  
   -webkit-backdrop-filter: blur(8px);
+  background-color: var(--surface-200);
   
   &.personal-active {
-    background: rgba(249, 250, 251, 0.8);
     border-color: rgba(229, 231, 235, 1);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     
     .mode-icon {
       color: var(--neutral-500);
@@ -649,7 +646,6 @@ button {
   }
   
   &.family-active {
-     background: rgba(249, 250, 251, 0.8);
  
     .mode-icon {
       animation: bounce-gentle 2s ease-in-out infinite;
@@ -668,10 +664,7 @@ button {
     transition: transform 0.3s ease;
   }
 
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1);
-  }
+  
 }
 
 @keyframes bounce-gentle {
@@ -695,16 +688,4 @@ button {
   }
 }
 
-.dark {
-  .family-mode-badge {
-    &.personal-active {
-      background: rgba(17, 24, 39, 0.8);
-      border-color: rgba(55, 65, 81, 1);
-    }
-    
-    &.family-active {
-      background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(147, 51, 234, 0.2));
-      border-color: rgba(147, 51, 234, 0.4);
-    }
-  }
-}
+

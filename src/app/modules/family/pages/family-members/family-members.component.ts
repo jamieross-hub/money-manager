@@ -78,16 +78,22 @@ export class FamilyMembersComponent implements OnInit {
       data: { title: 'Remove Member', message: `Remove ${member.displayName} from the family?`, confirmText: 'Remove', confirmColor: 'warn' }
     });
     ref.afterClosed().subscribe(ok => {
-      if (ok) this.store.dispatch(FamilyActions.removeMember({ familyId: this.family()?.id, memberId: member.id! }));
+      if (ok && this.family()?.id) {
+        this.store.dispatch(FamilyActions.removeMember({ familyId: this.family().id, memberId: member.userId }));
+      }
     });
   }
 
   toggleRole(member: FamilyMember) {
-    // Simple optimistic toggle
+    const fam = this.family();
+    if (!fam?.id || !member.userId) return;
+    
     const newRole = member.role === 'admin' ? 'member' : 'admin';
-    // Direct service call (not through store for simplicity)
-    import('../../services/family.service').then(({ FamilyService }) => {});
-    this.notificationService.success(`Role updated to ${newRole}`);
+    this.store.dispatch(FamilyActions.updateMemberRole({ 
+      familyId: fam.id, 
+      memberId: member.userId, 
+      role: newRole 
+    }));
   }
 
   copyCode() {

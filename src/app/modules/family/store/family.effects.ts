@@ -74,7 +74,6 @@ export class FamilyEffects {
       )
     )
   );
-
   removeMember$ = createEffect(() =>
     this.actions$.pipe(
       ofType(FamilyActions.removeMember),
@@ -83,6 +82,21 @@ export class FamilyEffects {
           map(() => FamilyActions.removeMemberSuccess({ memberId })),
           catchError(err => {
             this.notificationService.error('Failed to remove member');
+            return of(FamilyActions.clearError());
+          })
+        )
+      )
+    )
+  );
+
+  updateMemberRole$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(FamilyActions.updateMemberRole),
+      mergeMap(({ familyId, memberId, role }) =>
+        from(this.familyService.updateMemberRole(familyId, memberId, role)).pipe(
+          map(() => FamilyActions.updateMemberRoleSuccess({ memberId, role })),
+          catchError(err => {
+            this.notificationService.error('Failed to update member role');
             return of(FamilyActions.clearError());
           })
         )
@@ -123,8 +137,8 @@ export class FamilyEffects {
   updateTransaction$ = createEffect(() =>
     this.actions$.pipe(
       ofType(FamilyActions.updateTransaction),
-      mergeMap(({ txId, request }) =>
-        from(this.familyService.updateTransaction(txId, request)).pipe(
+      mergeMap(({ familyId, txId, request }) =>
+        from(this.familyService.updateTransaction(familyId, txId, request)).pipe(
           map(() => {
             this.notificationService.success('Transaction updated');
             return FamilyActions.updateTransactionSuccess({ txId, request });
@@ -141,8 +155,8 @@ export class FamilyEffects {
   deleteTransaction$ = createEffect(() =>
     this.actions$.pipe(
       ofType(FamilyActions.deleteTransaction),
-      mergeMap(({ txId }) =>
-        from(this.familyService.deleteTransaction(txId)).pipe(
+      mergeMap(({ familyId, txId }) =>
+        from(this.familyService.deleteTransaction(familyId, txId)).pipe(
           map(() => {
             this.notificationService.success('Transaction deleted');
             return FamilyActions.deleteTransactionSuccess({ txId });

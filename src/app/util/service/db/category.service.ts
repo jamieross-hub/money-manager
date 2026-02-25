@@ -26,12 +26,12 @@ export class CategoryService {
     constructor(
         private firestore: Firestore,
         private auth: Auth,
-        private store: Store<AppState>,
+        protected store: Store<AppState>,
         private dialog: MatDialog,
         private notificationService: NotificationService,
         private hapticFeedback: HapticFeedbackService,
         private localStorageUtility: LocalIndexDBStorageService,
-        private userService: UserService
+        protected userService: UserService
     ) {
         this.store.select(CategoriesSelectors.selectAllCategories).subscribe(categories => {
             categories.forEach((category: Category) => {
@@ -42,12 +42,26 @@ export class CategoryService {
         });
     }
 
+    /**
+     * Get the categories collection path
+     */
+    protected getCategoriesPath(userId: string): string {
+        return `users/${userId}/categories`;
+    }
+
+    /**
+     * Get a specific category document path
+     */
+    protected getCategoryPath(userId: string, categoryId: string): string {
+        return `${this.getCategoriesPath(userId)}/${categoryId}`;
+    }
+
     private isGuest(): boolean {
         return this.userService.getCurrentUserId() === 'offline-guest';
     }
 
     private getUserCategoriesCollection(userId: string) {
-        return collection(this.firestore, `users/${userId}/categories`);
+        return collection(this.firestore, this.getCategoriesPath(userId));
     }
 
     /** Get all categories (Local-Only) */
@@ -153,7 +167,7 @@ export class CategoryService {
         }
 
         return new Observable<string>(observer => {
-            const categoryRef = doc(this.firestore, `users/${userId}/categories/${categoryId}`);
+            const categoryRef = doc(this.firestore, this.getCategoryPath(userId, categoryId));
             
             // 1. Dispatch store updates immediately (Optimistic)
             this.store.dispatch(CategoriesActions.createCategorySuccess({
@@ -245,7 +259,7 @@ export class CategoryService {
         }
 
         return new Observable<void>(observer => {
-            const categoryRef = doc(this.firestore, `users/${userId}/categories/${categoryId}`);
+            const categoryRef = doc(this.firestore, this.getCategoryPath(userId, categoryId));
             
             // 1. Dispatch store updates immediately (Optimistic)
             this.store.dispatch(CategoriesActions.updateCategorySuccess({ category: updatedCategory }));
@@ -277,7 +291,7 @@ export class CategoryService {
                             updateData.isSubCategory = false;
 
                             if (currentCategory?.parentCategoryId) {
-                                const oldParentRef = doc(this.firestore, `users/${userId}/categories/${currentCategory.parentCategoryId}`);
+                                const oldParentRef = doc(this.firestore, this.getCategoryPath(userId, currentCategory.parentCategoryId));
                                 const parentDoc = await getDoc(oldParentRef);
                                 if (parentDoc.exists()) {
                                     const parentData = parentDoc.data() as Category;
@@ -295,7 +309,7 @@ export class CategoryService {
                             updateData.isSubCategory = true;
 
                             if (currentCategory?.parentCategoryId && currentCategory.parentCategoryId !== parentCategoryId) {
-                                const oldParentRef = doc(this.firestore, `users/${userId}/categories/${currentCategory.parentCategoryId}`);
+                                const oldParentRef = doc(this.firestore, this.getCategoryPath(userId, currentCategory.parentCategoryId));
                                 const parentDoc = await getDoc(oldParentRef);
                                 if (parentDoc.exists()) {
                                     const parentData = parentDoc.data() as Category;
@@ -307,7 +321,7 @@ export class CategoryService {
                                 }
                             }
 
-                            const newParentRef = doc(this.firestore, `users/${userId}/categories/${parentCategoryId}`);
+                            const newParentRef = doc(this.firestore, this.getCategoryPath(userId, parentCategoryId));
                             const parentDoc = await getDoc(newParentRef);
                             if (parentDoc.exists()) {
                                 const parentData = parentDoc.data() as Category;
@@ -398,7 +412,7 @@ export class CategoryService {
             // 4. Perform Firestore operation in background
             const deleteFirestore = async () => {
                 try {
-                    const categoryRef = doc(this.firestore, `users/${userId}/categories/${categoryId}`);
+                    const categoryRef = doc(this.firestore, this.getCategoryPath(userId, categoryId));
                     // Fetch data to be sure (since background)
                     const categoryDoc = await getDoc(categoryRef);
                     if (!categoryDoc.exists()) return;
@@ -406,7 +420,7 @@ export class CategoryService {
                     const data = categoryDoc.data() as Category;
 
                     if (data.isSubCategory && data.parentCategoryId) {
-                        const parentRef = doc(this.firestore, `users/${userId}/categories/${data.parentCategoryId}`);
+                        const parentRef = doc(this.firestore, this.getCategoryPath(userId, data.parentCategoryId));
                         const parentDoc = await getDoc(parentRef);
                         if (parentDoc.exists()) {
                             const parentData = parentDoc.data() as Category;
@@ -416,7 +430,7 @@ export class CategoryService {
                         await deleteDoc(categoryRef);
                     } else if (data.subCategories && data.subCategories.length > 0) {
                         const deletePromises = data.subCategories.map(subId =>
-                            deleteDoc(doc(this.firestore, `users/${userId}/categories/${subId}`))
+                            deleteDoc(doc(this.firestore, this.getCategoryPath(userId, subId)))
                         );
                         await Promise.all(deletePromises);
                         await deleteDoc(categoryRef);
@@ -446,7 +460,7 @@ export class CategoryService {
     /** Remove a category from its parent (convert to main category) */
     removeFromParentCategory(userId: string, categoryId: string): Observable<void> {
         return new Observable<void>(observer => {
-            const categoryRef = doc(this.firestore, `users/${userId}/categories/${categoryId}`);
+            const categoryRef = doc(this.firestore, this.getCategoryPath(userId, categoryId));
 
             getDoc(categoryRef).then((categoryDoc) => {
                 if (categoryDoc.exists()) {
@@ -457,7 +471,7 @@ export class CategoryService {
                         const parentCategory = this.categories[currentCategory.parentCategoryId];
                         if (parentCategory && parentCategory.subCategories) {
                             const updatedSubCategories = parentCategory.subCategories.filter(id => id !== categoryId);
-                            updateDoc(doc(this.firestore, `users/${userId}/categories/${currentCategory.parentCategoryId}`), {
+                            updateDoc(doc(this.firestore, this.getCategoryPath(userId, currentCategory.parentCategoryId)), {
                                 subCategories: updatedSubCategories
                             }).then(() => {
                                 // Update the category to remove parent reference

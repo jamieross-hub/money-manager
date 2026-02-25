@@ -103,5 +103,8 @@ export const budgetsReducer = createReducer(
     ...state,
     loading: false,
     error
-  }))
+  })),
+
+  // Clear State
+  on(BudgetsActions.clearBudgets, () => initialState)
 ); 

@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
+import { Action } from '@ngrx/store';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of, from } from 'rxjs';
-import { map, mergeMap, catchError } from 'rxjs/operators';
+import { map, mergeMap, catchError, concatMap } from 'rxjs/operators';
 import { UserService } from '../../util/service/db/user.service';
 import * as ProfileActions from './profile.actions';
 
@@ -24,7 +25,7 @@ export class ProfileEffects {
 
   updateProfile$ = createEffect(() => this.actions$.pipe(
     ofType(ProfileActions.updateProfile),
-    mergeMap(({ userId, profile }) => from(this.userService.createOrUpdateUser(profile as any))
+    concatMap(({ userId, profile }) => from(this.userService.createOrUpdateUser(profile as any))
       .pipe(
         map(() => ProfileActions.updateProfileSuccess({ profile: profile as any })),
         catchError(error => of(ProfileActions.updateProfileFailure({ error })))
@@ -51,7 +52,7 @@ export class ProfileEffects {
 
   updatePreferences$ = createEffect(() => this.actions$.pipe(
     ofType(ProfileActions.updatePreferences),
-    mergeMap(({ userId, preferences }) => {
+    concatMap(({ userId, preferences }) => {
       // Get current user and update preferences
       return from(this.userService.getCurrentUser()).pipe(
         mergeMap(currentUser => {

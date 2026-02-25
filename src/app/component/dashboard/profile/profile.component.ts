@@ -15,8 +15,14 @@ import { Store } from '@ngrx/store';
 import { AppState } from '../../../store/app.state';
 import * as ProfileActions from '../../../store/profile/profile.actions';
 import * as ProfileSelectors from '../../../store/profile/profile.selectors';
+import * as TransactionsActions from '../../../store/transactions/transactions.actions';
+import * as AccountsActions from '../../../store/accounts/accounts.actions';
+import * as CategoriesActions from '../../../store/categories/categories.actions';
+import * as BudgetsActions from '../../../store/budgets/budgets.actions';
+import * as GoalsActions from '../../../store/goals/goals.actions';
 import { DateService } from 'src/app/util/service/date.service';
 import { SecurityService } from 'src/app/util/service/security.service';
+import { filter, take, delay } from 'rxjs';
 import {
   APP_CONFIG,
   ERROR_MESSAGES,
@@ -55,6 +61,7 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { ThemeToggleComponent } from 'src/app/util/components/theme-toggle/theme-toggle.component';
 import { SsrService } from 'src/app/util/service/ssr.service';
 
+import { CommonSyncService } from 'src/app/util/service/common-sync.service';
 @Component({
   selector: 'app-profile',
   templateUrl: './profile.component.html',
@@ -98,13 +105,16 @@ export class ProfileComponent {
   readonly themeSwitchingService = inject(ThemeSwitchingService);
   private readonly securityService = inject(SecurityService);
   private readonly ssrService = inject(SsrService);
+  private readonly syncService = inject(CommonSyncService);
 
   // ─── Signals (State) ───────────────────────────────────────────────
+  private ignoreLoader = false;
   readonly isLoading = signal(false);
   readonly isEditing = signal(false);
   readonly userProfile = signal<User | null>(null);
   readonly familyGroup = signal<Family | null>(null);
   readonly familyMembers = signal<any[]>([]);
+  readonly isFamilyLoading = signal(false);
   readonly currentTheme = signal<ThemeType>('light-theme');
   readonly showPinSetup = signal(false);
   readonly isFamilyMode = signal(false);
@@ -216,7 +226,12 @@ export class ProfileComponent {
     this.store.select(ProfileSelectors.selectProfileLoading).pipe(
       takeUntilDestroyed()
     ).subscribe(loading => {
-      this.isLoading.set(loading);
+      if (!this.ignoreLoader) {
+        this.isLoading.set(loading);
+      }
+      if (!loading) {
+        this.ignoreLoader = false;
+      }
     });
 
     // React to store error changes
@@ -257,14 +272,21 @@ export class ProfileComponent {
   // ─── Family Group ──────────────────────────────────────────────────
 
   private loadFamily(): void {
+    this.isFamilyLoading.set(true);
     this.familyService.getMyFamily().then(family => {
       this.familyGroup.set(family);
       if (family?.id) {
         this.familyService.getMembers(family.id).subscribe(members => {
           this.familyMembers.set(members);
+          this.isFamilyLoading.set(false);
         });
+      } else {
+        this.isFamilyLoading.set(false);
       }
-    }).catch(() => this.familyGroup.set(null));
+    }).catch(() => {
+      this.familyGroup.set(null);
+      this.isFamilyLoading.set(false);
+    });
   }
 
   createFamilyGroup(): void {
@@ -361,6 +383,7 @@ export class ProfileComponent {
         pinEnabled: user.preferences?.pinEnabled || false,
         pinHash: user.preferences?.pinHash || '',
         isFamilyMode: user.preferences?.isFamilyMode || false,
+        familyId: user.preferences?.familyId,
       },
       role: user.role,
 
@@ -712,21 +735,24 @@ export class ProfileComponent {
     if (!profile) return;
 
     this.isFamilyMode.set(enabled);
+    this.ignoreLoader = true;
 
+    const familyId = profile.preferences?.familyId || this.familyGroup()?.id;
+
+    // Update local state immediately for snappy UI
     const updatedProfile: User = {
       ...profile,
       preferences: {
-        ...profile.preferences,
         defaultCurrency: profile.preferences?.defaultCurrency || 'USD',
         timezone: profile.preferences?.timezone || 'UTC',
         notifications: profile.preferences?.notifications ?? true,
         emailUpdates: profile.preferences?.emailUpdates ?? true,
         budgetAlerts: profile.preferences?.budgetAlerts ?? true,
-        isFamilyMode: enabled
+        ...profile.preferences,
+        isFamilyMode: enabled,
+        familyId: familyId || null
       }
     };
-
-    // Update local state immediately
     this.userProfile.set(updatedProfile);
 
     // Persist changes
@@ -736,18 +762,41 @@ export class ProfileComponent {
         this.userService.userAuth$.next(updatedProfile);
         this.notificationService.success(`Family mode ${enabled ? 'enabled' : 'disabled'}`);
       } else {
-        this.store.dispatch(ProfileActions.updateProfile({
+        this.store.dispatch(ProfileActions.updatePreferences({
           userId: profile.uid,
-          profile: updatedProfile
+          preferences: {
+            isFamilyMode: enabled,
+            familyId: familyId || null
+          }
         }));
         this.notificationService.success(`Family mode ${enabled ? 'enabled' : 'disabled'}`);
       }
+
+      // Clear all stores for personal/family switch to avoid data mixing
+      this.store.dispatch(TransactionsActions.clearTransactions());
+      this.store.dispatch(AccountsActions.clearAccounts());
+      this.store.dispatch(CategoriesActions.clearCategories());
+      this.store.dispatch(BudgetsActions.clearBudgets());
+      this.store.dispatch(GoalsActions.clearGoals());
+
+      // Wait for UserService to pick up the new mode before syncing
+      // This ensures the sync pulls from the correct collection path
+      this.userService.userAuth$.pipe(
+        filter(u => u?.preferences?.isFamilyMode === enabled),
+        take(1),
+        delay(100) // Small delay to allow any other secondary updates to settle
+      ).subscribe(() => {
+        this.syncService.syncAll().subscribe();
+      });
+
     } catch (error) {
       console.error('Error toggling family mode:', error);
       this.notificationService.error('Failed to update family mode');
       // Rollback on error
+      this.ignoreLoader = false;
       this.isFamilyMode.set(!enabled);
       this.userProfile.set(profile);
     }
   }
+
 }

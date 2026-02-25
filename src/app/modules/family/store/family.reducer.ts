@@ -27,6 +27,10 @@ export const familyReducer = createReducer(
     ...state,
     members: state.members.filter(m => m.id !== memberId)
   })),
+  on(FamilyActions.updateMemberRoleSuccess, (state, { memberId, role }) => ({
+    ...state,
+    members: state.members.map(m => m.userId === memberId ? { ...m, role } : m)
+  })),
 
   // Transactions
   on(FamilyActions.loadTransactions, state => ({ ...state, loading: true })),

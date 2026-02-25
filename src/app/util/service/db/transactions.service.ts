@@ -34,18 +34,32 @@ export class TransactionsService extends BaseService {
         auth: Auth,
         currencyService: CurrencyService,
         private dateService: DateService,
-        private store: Store<AppState>,
+        protected store: Store<AppState>,
         private accountsService: AccountsService,
         private splitwiseService: SplitwiseService,
         private commonSyncService: CommonSyncService,
         private localStorageUtility: LocalIndexDBStorageService,
-        private userService: UserService
+        protected userService: UserService
     ) {
         super(firestore, auth, currencyService);
     }
 
     private isGuest(): boolean {
         return this.userService.getCurrentUserId() === 'offline-guest';
+    }
+
+    /**
+     * Get the transactions collection path
+     */
+    protected getTransactionsPath(userId: string): string {
+        return `users/${userId}/transactions`;
+    }
+
+    /**
+     * Get a specific transaction document path
+     */
+    protected getTransactionPath(userId: string, transactionId: string): string {
+        return `${this.getTransactionsPath(userId)}/${transactionId}`;
     }
 
     /**
@@ -106,7 +120,7 @@ export class TransactionsService extends BaseService {
                     // 4. Perform Firestore operation in background
                     if (this.commonSyncService.isCurrentlyOnline()) {
                         try {
-                            const transactionRef = doc(this.firestore, `users/${userId}/transactions/${transactionId}`);
+                            const transactionRef = doc(this.firestore, this.getTransactionPath(userId, transactionId));
                             
                             const firestoreTask = setDoc(transactionRef, transactionData);
 
@@ -230,7 +244,7 @@ export class TransactionsService extends BaseService {
                     // 4. Background update
                     if (this.commonSyncService.isCurrentlyOnline()) {
                         try {
-                            const transactionRef = doc(this.firestore, `users/${userId}/transactions/${transactionId}`);
+                            const transactionRef = doc(this.firestore, this.getTransactionPath(userId, transactionId));
                             await updateDoc(transactionRef, updateData);
                         } catch (error) {
                             console.warn('⚠️ Failed to update transaction online, moving to sync queue:', error);
@@ -306,7 +320,7 @@ export class TransactionsService extends BaseService {
             observer.complete();
 
             // 4. Background operation
-            const transactionRef = doc(this.firestore, `users/${userId}/transactions/${transactionId}`);
+            const transactionRef = doc(this.firestore, this.getTransactionPath(userId, transactionId));
 
             if (this.commonSyncService.isCurrentlyOnline()) {
                 deleteDoc(transactionRef).catch(error => {
@@ -356,7 +370,7 @@ export class TransactionsService extends BaseService {
         }
 
         const transactionsRef = query(
-            collection(this.firestore, `users/${userId}/transactions`),
+            collection(this.firestore, this.getTransactionsPath(userId)),
             orderBy('date', 'desc')
         );
 
@@ -407,7 +421,7 @@ export class TransactionsService extends BaseService {
         return new Observable<Transaction | undefined>(observer => {
             const getTransactionAsync = async () => {
                 try {
-                    const transactionRef = doc(this.firestore, `users/${userId}/transactions/${transactionId}`);
+                    const transactionRef = doc(this.firestore, this.getTransactionPath(userId, transactionId));
                     const transactionDoc = await getDoc(transactionRef);
 
                     if (transactionDoc.exists()) {

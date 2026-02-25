@@ -61,6 +61,15 @@ import { OfflineIndicatorComponent } from './util/components/offline-indicator/o
 import { PwaInstallPromptComponent } from './util/components/pwa-install-prompt/pwa-install-prompt.component';
 import { LoaderComponent } from './util/components/loader/loader.component';
 import { PinLockComponent } from './util/components/pin-lock/pin-lock.component';
+import { TransactionsService } from './util/service/db/transactions.service';
+import { FamilyTransactionsService } from './util/service/db/family-transactions.service';
+import { TransactionsFacadeService, PERSONAL_TRANSACTIONS_SERVICE } from './util/service/db/transactions-facade.service';
+import { AccountsService } from './util/service/db/accounts.service';
+import { FamilyAccountsService } from './util/service/db/family-accounts.service';
+import { AccountsFacadeService, PERSONAL_ACCOUNTS_SERVICE } from './util/service/db/accounts-facade.service';
+import { CategoryService } from './util/service/db/category.service';
+import { FamilyCategoryService } from './util/service/db/family-category.service';
+import { CategoryFacadeService, PERSONAL_CATEGORY_SERVICE } from './util/service/db/category-facade.service';
 
 
 
@@ -168,7 +177,41 @@ import { PinLockComponent } from './util/components/pin-lock/pin-lock.component'
       }
       return null as any; // Return null on server
     }),
+    // Transaction Services
+    FamilyTransactionsService,
+    TransactionsFacadeService,
+    {
+      provide: PERSONAL_TRANSACTIONS_SERVICE,
+      useClass: TransactionsService
+    },
+    {
+      provide: TransactionsService,
+      useExisting: TransactionsFacadeService
+    },
+
+    FamilyAccountsService,
+    AccountsFacadeService,
+    {
+      provide: PERSONAL_ACCOUNTS_SERVICE,
+      useClass: AccountsService
+    },
+    {
+      provide: AccountsService,
+      useExisting: AccountsFacadeService
+    },
+
+    FamilyCategoryService,
+    CategoryFacadeService,
+    {
+      provide: PERSONAL_CATEGORY_SERVICE,
+      useClass: CategoryService
+    },
+    {
+      provide: CategoryService,
+      useExisting: CategoryFacadeService
+    },
   ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
+
