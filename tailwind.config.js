@@ -5,9 +5,13 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        'sans': ['Inter', 'system-ui', 'sans-serif'],
+        'sans': ['Inter', 'system-ui', 'sans-serif', {
+          fontFeatureSettings: '"tnum" on, "cv05" on, "cv08" on', // cv05: slashed zero, cv08: lowercase L with curve, tnum: tabular numbers
+        }],
         'heading': ['Poppins', 'system-ui', 'sans-serif'],
-        'mono': ['JetBrains Mono', 'monospace'],
+        'mono': ['JetBrains Mono', 'monospace', {
+          fontFeatureSettings: '"tnum" on, "zero" on',
+        }],
         'display': ['Poppins', 'system-ui', 'sans-serif'],
       },
       colors:{

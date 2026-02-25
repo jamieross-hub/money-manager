@@ -109,6 +109,9 @@
 		font-weight: 600;
 		color: #111827;
 		margin: 0;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.dark & .group-name {
@@ -119,6 +122,10 @@
 		font-size: 0.75rem;
 		color: #6b7280;
 		opacity: 0.8;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		flex-shrink: 1;
 	}
 
 	.dark & .group-description {

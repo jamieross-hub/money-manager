@@ -12,40 +12,41 @@
 
 /* Professional Font System */
 @layer base {
+  /* Global Typography Smoothing */
+  html, body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
   /* Typography hierarchy */
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Poppins', system-ui, sans-serif;
+    @apply font-heading text-neutral-900 dark:text-primary-100;
     font-weight: 600;
     letter-spacing: -0.025em;
-
-    .dark-theme & {
-      color: var(--primary-100);
-    }
   }
   
   /* Financial data styling */
   .financial-data {
-    font-family: 'JetBrains Mono', monospace;
+    @apply font-mono;
     font-weight: 500;
-    letter-spacing: 0.025em;
+    letter-spacing: 0.01em;
   }
   
   /* Professional text styling */
   .text-professional {
-    font-family: 'Inter', system-ui, sans-serif;
+    @apply font-sans;
     font-weight: 400;
     line-height: 1.6;
   }
   
   .text-professional-medium {
-    font-family: 'Inter', system-ui, sans-serif;
-    font-weight: 500;
+    @apply font-sans font-medium;
     line-height: 1.6;
   }
   
   .text-professional-semibold {
-    font-family: 'Inter', system-ui, sans-serif;
-    font-weight: 600;
+    @apply font-sans font-semibold;
     line-height: 1.5;
   }
 }
@@ -143,15 +144,11 @@ html {
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 14px; /* Base mobile font size */
+  @apply font-sans;
+  font-size: 16px; /* Optimized base font size */
   height: 100vh;
   width: 100vw;
-  overflow: hidden; /* Hidden on desktop */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  overscroll-behavior: none;
+  overflow: hidden;
   box-sizing: border-box;
   
   &.light-theme {

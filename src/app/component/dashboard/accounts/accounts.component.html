@@ -38,7 +38,7 @@
 					</div>
 					<div class="card-info">
 						<span class="label dark:text-slate-400">Banks</span>
-						<span class="value dark:text-white">{{ bankBalance$ | async | currency }}</span>
+						<span class="value dark:text-white financial-data">{{ bankBalance$ | async | currency }}</span>
 					</div>
 				</mat-card-content>
 			</mat-card>
@@ -51,7 +51,7 @@
 					</div>
 					<div class="card-info">
 						<span class="label dark:text-slate-400">Cash</span>
-						<span class="value dark:text-white">{{ cashBalance$ | async | currency }}</span>
+						<span class="value dark:text-white financial-data">{{ cashBalance$ | async | currency }}</span>
 					</div>
 				</mat-card-content>
 			</mat-card>
@@ -64,7 +64,7 @@
 					</div>
 					<div class="card-info">
 						<span class="label dark:text-slate-400">Credit</span>
-						<span class="value dark:text-white">{{ creditBalance$ | async | currency }}</span>
+						<span class="value dark:text-white financial-data">{{ creditBalance$ | async | currency }}</span>
 					</div>
 				</mat-card-content>
 			</mat-card>
@@ -77,7 +77,7 @@
 					</div>
 					<div class="card-info">
 						<span class="label dark:text-slate-400">Investments</span>
-						<span class="value dark:text-white">{{ investmentBalance$ | async | currency }}</span>
+						<span class="value dark:text-white financial-data">{{ investmentBalance$ | async | currency }}</span>
 					</div>
 				</mat-card-content>
 			</mat-card>
@@ -91,11 +91,11 @@
 			<div class="account-group-container" [class.is-expanded]="!groupData.isCollapsed">
 				<div class="group-header" (click)="toggleGroupCollapse(groupData.id)">
 					<div class="group-info">
-						<p class="group-name dark:text-slate-200">{{ groupData.name }}</p>
-						<span class="count dark:bg-slate-800 dark:text-slate-400">{{ groupData.count }}</span>
+						<p class="group-name dark:text-slate-200 font-heading">{{ groupData.name }}</p>
+						<span class="count dark:bg-slate-800 dark:text-slate-400 financial-data">{{ groupData.count }}</span>
 					</div>
 					<div class="group-right">
-						<span class="group-balance dark:text-slate-200" [class.negative]="groupData.totalBalance < 0">
+						<span class="group-balance dark:text-slate-200 financial-data" [class.negative]="groupData.totalBalance < 0">
 							{{ groupData.formattedTotalBalance }}
 						</span>
 						<mat-icon class="expansion-arrow">{{ groupData.isCollapsed ? 'expand_more' : 'expand_less'
@@ -141,16 +141,15 @@
 								<div class="card-details">
 									<div class="balance-row">
 										<span class="label dark:text-slate-500">Balance</span>
-										<span class="amount dark:text-slate-100"
+										<span class="amount dark:text-slate-100 financial-data"
 											[class.negative]="accountVM.isLoan || accountVM.account.balance < 0">
 											{{ accountVM.formattedBalance }}
 										</span>
 									</div>
-									<div class="meta-row" *ngIf="accountVM.isLoan || accountVM.isCreditCard">
+									<!-- <div class="meta-row" *ngIf="accountVM.isLoan || accountVM.isCreditCard">
 										<span class="account-number dark:bg-slate-800 dark:text-slate-400">****{{
 											accountVM.maskedId }}</span>
-
-										<!-- Payment Due Indicator -->
+\
 										@if (accountVM.isPaymentDue) {
 										<div class="payment-due-badge"
 											[class.overdue]="accountVM.paymentDueStatus === 'overdue'"
@@ -166,7 +165,7 @@
 											</span>
 										</div>
 										}
-									</div>
+									</div> -->
 								</div>
 							</mat-card-content>
 						</mat-card>
