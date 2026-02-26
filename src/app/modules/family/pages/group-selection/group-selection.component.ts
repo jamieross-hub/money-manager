@@ -30,6 +30,8 @@ import { Auth } from '@angular/fire/auth';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import * as FamilyActions from '../../store/family.actions';
+import { selectUserFamilies, selectUserFamiliesLoading, selectFamilyError } from '../../store/family.selectors';
+import { QuickActionsFabComponent, QuickAction, QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 
 // ─── View Model ──────────────────────────────────────────────────────────────
 
@@ -98,6 +100,7 @@ type LoadState = 'loading' | 'loaded' | 'empty' | 'error';
     MatDialogModule,
     MatListModule,
     MatTooltipModule,
+    QuickActionsFabComponent,
   ],
   templateUrl: './group-selection.component.html',
   styleUrls: ['./group-selection.component.scss'],
@@ -112,12 +115,83 @@ export class GroupSelectionComponent implements OnInit {
 
   // ─── State ─────────────────────────────────────────────────────────────────
 
-  loadState = signal<LoadState>('loading');
-  groups = signal<UserGroup[]>([]);
-  errorMessage = signal<string>('');
+  rawFamilies = this.store.selectSignal(selectUserFamilies);
+  userFamiliesLoading = this.store.selectSignal(selectUserFamiliesLoading);
+  familyError = this.store.selectSignal(selectFamilyError);
+
+  pinnedFamilyIds = signal<Set<string>>(new Set());
   confirmPending = signal<{ action: 'leave' | 'delete'; group: UserGroup } | null>(null);
 
   readonly activeGroupId = this.familyService.activeFamilyId;
+
+  groups = computed<UserGroup[]>(() => {
+    const families = this.rawFamilies() || [];
+    const pinnedIds = this.pinnedFamilyIds();
+    const activeId = this.activeGroupId();
+
+    return families.map(f => ({
+      id: f.id!,
+      name: f.name,
+      type: inferGroupType(f.name),
+      memberCount: f.memberIds?.length ?? 1,
+      // Role: admin if ownerUserId matches current user, otherwise member
+      role: f.ownerUserId === this.currentUserId ? 'admin' : 'member',
+      currency: f.currency,
+      inviteCode: f.inviteCode,
+      ownerUserId: f.ownerUserId,
+      pinned: pinnedIds.has(f.id!),
+      isActive: f.id === activeId,
+      lastActivityAt: f.updatedAt
+        ? ((f.updatedAt as any)?.seconds
+          ? new Date((f.updatedAt as any).seconds * 1000)
+          : new Date(f.updatedAt as any))
+        : undefined,
+    }));
+  });
+
+  loadState = computed<LoadState>(() => {
+    if (this.userFamiliesLoading()) return 'loading';
+    if (this.familyError()) return 'error';
+    return this.groups().length === 0 ? 'empty' : 'loaded';
+  });
+
+  errorMessage = computed(() => this.familyError() ?? 'Failed to load groups. Please try again.');
+
+  // ─── Fab Config ─────────────────────────────────────────────────────────────
+
+  fabConfig: QuickActionsFabConfig = {
+    mainButtonIcon: 'groups',
+    mainButtonColor: 'accent',
+    mainButtonTooltip: 'Group Actions',
+    showLabels: true,
+    animations: true,
+    autoHide: false,
+    theme: 'auto',
+    actions: [
+      {
+        id: 'add-group',
+        label: 'Add Group',
+        icon: 'add_circle',
+        color: 'primary',
+        tooltip: 'Create group'
+      },
+      {
+        id: 'join-group',
+        label: 'Join Group',
+        icon: 'link',
+        color: 'accent',
+        tooltip: 'Join group'
+      }
+    ]
+  };
+
+  handleQuickAction(action: QuickAction): void {
+    if (action.id === 'add-group') {
+      this.openCreateDialog();
+    } else if (action.id === 'join-group') {
+      this.openJoinDialog();
+    }
+  }
 
   // ─── Derived ───────────────────────────────────────────────────────────────
 
@@ -136,6 +210,11 @@ export class GroupSelectionComponent implements OnInit {
       .slice(0, 6);
   });
 
+  otherGroups = computed(() => {
+    const active = this.activeGroupId();
+    return this.groups().filter(g => g.id !== active);
+  });
+
   // ─── Helpers (exposed to template) ─────────────────────────────────────────
 
   groupTypeIcon = GROUP_TYPE_ICON;
@@ -146,7 +225,8 @@ export class GroupSelectionComponent implements OnInit {
   // ─── Lifecycle ─────────────────────────────────────────────────────────────
 
   async ngOnInit(): Promise<void> {
-    await this.loadGroups();
+    this.pinnedFamilyIds.set(this.getPinnedIds());
+    this.loadGroups();
   }
 
   private getPinnedIds(): Set<string> {
@@ -164,38 +244,8 @@ export class GroupSelectionComponent implements OnInit {
     } catch { /* ignore */ }
   }
 
-  async loadGroups(): Promise<void> {
-    this.loadState.set('loading');
-    try {
-      const families: Family[] = await this.familyService.getMyFamilies();
-      const pinnedIds = this.getPinnedIds();
-      const activeId = this.activeGroupId();
-
-      const mapped: UserGroup[] = families.map(f => ({
-        id: f.id!,
-        name: f.name,
-        type: inferGroupType(f.name),
-        memberCount: f.memberIds?.length ?? 1,
-        // Role: admin if ownerUserId matches current user, otherwise member
-        role: f.ownerUserId === this.currentUserId ? 'admin' : 'member',
-        currency: f.currency,
-        inviteCode: f.inviteCode,
-        ownerUserId: f.ownerUserId,
-        pinned: pinnedIds.has(f.id!),
-        isActive: f.id === activeId,
-        lastActivityAt: f.updatedAt
-          ? ((f.updatedAt as any)?.seconds
-            ? new Date((f.updatedAt as any).seconds * 1000)
-            : new Date(f.updatedAt as any))
-          : undefined,
-      }));
-
-      this.groups.set(mapped);
-      this.loadState.set(mapped.length === 0 ? 'empty' : 'loaded');
-    } catch (err: any) {
-      this.errorMessage.set(err?.message ?? 'Failed to load groups. Please try again.');
-      this.loadState.set('error');
-    }
+  loadGroups(): void {
+    this.store.dispatch(FamilyActions.loadUserFamilies());
   }
 
   // ─── Group Actions ─────────────────────────────────────────────────────────
@@ -208,17 +258,14 @@ export class GroupSelectionComponent implements OnInit {
   }
 
   pinGroup(group: UserGroup): void {
-    const pinnedIds = this.getPinnedIds();
+    const pinnedIds = new Set(this.pinnedFamilyIds());
     if (group.pinned) {
       pinnedIds.delete(group.id);
     } else {
       pinnedIds.add(group.id);
     }
     this.savePinnedIds(pinnedIds);
-
-    this.groups.update(gs =>
-      gs.map(g => g.id === group.id ? { ...g, pinned: !g.pinned } : g)
-    );
+    this.pinnedFamilyIds.set(pinnedIds);
   }
 
   requestLeave(group: UserGroup): void {
@@ -253,7 +300,7 @@ export class GroupSelectionComponent implements OnInit {
           this.familyService.setActiveFamily(null);
         }
       }
-      await this.loadGroups();
+      this.loadGroups();
     } catch (err: any) {
       this.snackBar.open(err?.message ?? 'Action failed. Please try again.', 'Dismiss', { duration: 4000 });
     }
@@ -266,7 +313,7 @@ export class GroupSelectionComponent implements OnInit {
     ref.afterClosed().subscribe(async result => {
       if (result) {
         this.store.dispatch(FamilyActions.createFamily({ request: result }));
-        await this.loadGroups();
+        this.loadGroups();
       }
     });
   }

@@ -13,6 +13,11 @@ export const loadMyFamily = createAction('[Family] Load My Family');
 export const loadMyFamilySuccess = createAction('[Family] Load My Family Success', props<{ family: Family | null }>());
 export const loadMyFamilyFailure = createAction('[Family] Load My Family Failure', props<{ error: string }>());
 
+// ─── Load User Families ────────────────────────────────────────────────────
+export const loadUserFamilies = createAction('[Family] Load User Families');
+export const loadUserFamiliesSuccess = createAction('[Family] Load User Families Success', props<{ families: Family[] }>());
+export const loadUserFamiliesFailure = createAction('[Family] Load User Families Failure', props<{ error: string }>());
+
 // ─── Create Family ─────────────────────────────────────────────────────────
 export const createFamily = createAction('[Family] Create Family', props<{ request: CreateFamilyRequest }>());
 export const createFamilySuccess = createAction('[Family] Create Family Success', props<{ family: Family }>());
