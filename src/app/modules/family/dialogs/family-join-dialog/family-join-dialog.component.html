@@ -4,8 +4,8 @@
       <mat-icon class="text-green-600 dark:text-green-300">group_add</mat-icon>
     </div>
     <div>
-      <p class="text-lg font-bold text-gray-900 dark:text-white m-0">Join Family Wallet</p>
-      <p class="text-xs text-gray-500 dark:text-gray-400 m-0">Enter the invite code from your family</p>
+      <p class="text-lg font-bold text-gray-900 dark:text-white m-0">Join Group</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 m-0">Enter the invite code from your group</p>
     </div>
   </div>
 
@@ -17,7 +17,7 @@
         maxlength="8"
         class="uppercase tracking-widest text-lg font-bold text-center"
         (input)="onCodeInput($event)" />
-      <mat-hint>Ask your family admin for the 8-character invite code</mat-hint>
+      <mat-hint>Ask your group admin for the 8-character invite code</mat-hint>
       <mat-error *ngIf="form.get('inviteCode')?.hasError('required')">Code is required</mat-error>
       <mat-error *ngIf="form.get('inviteCode')?.hasError('pattern')">Enter a valid code like FAM-XXXX</mat-error>
     </mat-form-field>
@@ -25,7 +25,7 @@
     <div class="flex gap-3 mt-2">
       <button mat-stroked-button type="button" class="flex-1" (click)="close()">Cancel</button>
       <button mat-flat-button color="primary" type="button" class="flex-1" [disabled]="form.invalid" (click)="submit()">
-        <mat-icon class="!text-base mr-1">login</mat-icon>
+        <mat-icon class="!text-base mr-1 mb-2">login</mat-icon>
         Join
       </button>
     </div>

@@ -73,12 +73,11 @@ export class FamilyModeToggleComponent implements OnInit {
     if (!profile) return;
 
     this.ignoreLoader = true;
-    const familyId = profile.preferences?.familyId || this.familyGroup()?.id;
+    const familyId = this.familyService.activeFamilyId();
 
     try {
       await this.applyPreferenceChanges({
         isFamilyMode: enabled,
-        familyId: familyId || null
       });
 
       this.notificationService.success(`Family mode ${enabled ? 'enabled' : 'disabled'}`);

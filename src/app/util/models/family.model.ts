@@ -11,6 +11,7 @@ export interface Family {
   createdAt: Date | Timestamp;
   updatedAt: Date | Timestamp;
   isActive: boolean;
+  memberIds?: string[]; // Array of user IDs for efficient membership querying
 }
 
 // ─── Family Member ─────────────────────────────────────────────────────────

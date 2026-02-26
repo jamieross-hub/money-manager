@@ -1,10 +1,11 @@
-import { Injectable, Inject, PLATFORM_ID, OnDestroy, Injector } from '@angular/core';
-import { BehaviorSubject, Observable, fromEvent, merge, interval, Subscription, from, of, forkJoin, Subject } from 'rxjs';
-import { map, startWith, switchMap, catchError, tap, take, filter, distinctUntilChanged, takeUntil, timeout, delay } from 'rxjs/operators';
+import { Injectable, Inject, PLATFORM_ID, Injector, signal, OnDestroy } from '@angular/core';
+import { BehaviorSubject, Observable, fromEvent, interval, from, of, Subject, combineLatest, merge, forkJoin, Subscription } from 'rxjs';
+import { map, switchMap, catchError, tap, take, filter, distinctUntilChanged, takeUntil, delay, startWith, timeout } from 'rxjs/operators';
 import { Firestore, collection, doc, writeBatch } from '@angular/fire/firestore';
 import { Auth, getAuth } from '@angular/fire/auth';
 import { SwUpdate } from '@angular/service-worker';
 import { isPlatformServer } from '@angular/common';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { ValidationService } from './validation.service';
 import { Store } from '@ngrx/store';
 import { AppState } from '../../store/app.state';
@@ -22,6 +23,7 @@ import { CategoryService } from './db/category.service';
 import { BudgetsService } from './db/budgets.service';
 import { GoalsService } from './db/goals.service';
 import { UserService } from './db/user.service';
+import { FamilyService } from '../../modules/family/services/family.service';
 import { PwaSwService } from './pwa-sw.service';
 import { SplitwiseService } from '../../modules/splitwise/services/splitwise.service';
 import { GoogleSheetsService } from './google-sheets.service';
@@ -107,6 +109,8 @@ export class CommonSyncService implements OnDestroy {
     failedItems: 0,
     invalidItems: 0
   });
+  
+  private activeFamilyId$ = toObservable(this.familyService.activeFamilyId);
 
   public networkStatus$: Observable<NetworkStatus> = this.networkStatusSubject.asObservable();
   public isOnline$: Observable<boolean> = this.networkStatus$.pipe(
@@ -127,6 +131,7 @@ export class CommonSyncService implements OnDestroy {
     private pwaSwService: PwaSwService,
     private notificationService: NotificationService,
     private injector: Injector,
+    private familyService: FamilyService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     if (!isPlatformServer(this.platformId)) {
@@ -294,16 +299,19 @@ export class CommonSyncService implements OnDestroy {
     this.observersInitialized = true;
 
     // Listen for user login and mode changes
-    this.userService.userAuth$.pipe(
+    combineLatest([
+      this.userService.userAuth$,
+      this.activeFamilyId$
+    ]).pipe(
       takeUntil(this.destroy$),
-      filter((user): user is any => !!user && user.uid !== 'offline-guest'),
+      filter((result): result is [any, string | null] => !!result[0] && result[0].uid !== 'offline-guest'),
       distinctUntilChanged((prev, curr) => 
-        prev?.uid === curr?.uid && 
-        prev?.preferences?.isFamilyMode === curr?.preferences?.isFamilyMode &&
-        prev?.preferences?.familyId === curr?.preferences?.familyId
+        prev[0]?.uid === curr[0]?.uid && 
+        prev[0]?.preferences?.isFamilyMode === curr[0]?.preferences?.isFamilyMode &&
+        prev[1] === curr[1]
       ),
-      tap(user => console.log(`🔄 Sync context changed for user: ${user.uid}, Mode: ${user.preferences?.isFamilyMode ? 'Family' : 'Personal'}`)),
-      switchMap(user => {
+      tap(([user, familyId]) => console.log(`🔄 Sync context changed for user: ${user.uid}, Mode: ${user.preferences?.isFamilyMode ? 'Family' : 'Personal'}, FamilyId: ${familyId}`)),
+      switchMap(([user, familyId]) => {
         // 1. Initial full sync (already has internal network check)
         const initialSync$ = this.syncAll();
         

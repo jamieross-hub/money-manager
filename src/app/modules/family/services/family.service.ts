@@ -1,9 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { Observable, from, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import {
   Firestore,
   collection,
+  collectionGroup,
   doc,
   getDoc,
   getDocs,
@@ -16,7 +17,9 @@ import {
   orderBy,
   Timestamp,
   onSnapshot,
-  writeBatch
+  writeBatch,
+  arrayUnion,
+  arrayRemove
 } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import {
@@ -29,6 +32,8 @@ import {
   AddFamilyTransactionRequest,
   UpdateFamilyTransactionRequest
 } from 'src/app/util/models/family.model';
+
+const ACTIVE_FAMILY_ID_KEY = 'active_family_id';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { TransactionType, AccountType } from 'src/app/util/config/enums';
 import { defaultCategoriesForNewUser } from 'src/app/util/config/config';
@@ -49,7 +54,21 @@ export class FamilyService {
     private notificationService: NotificationService,
     private store: Store<AppState>,
     private userService: UserService
-  ) {}
+  ) {
+    this.initializeActiveFamilyIdListener();
+  }
+
+  readonly activeFamilyId = signal<string | null>(this.getInitialActiveFamilyId());
+
+  private initializeActiveFamilyIdListener(): void {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', (event) => {
+        if (event.key === ACTIVE_FAMILY_ID_KEY) {
+          this.activeFamilyId.set(event.newValue);
+        }
+      });
+    }
+  }
 
   // ─── Path Helpers ────────────────────────────────────────────────────────
 
@@ -107,6 +126,7 @@ export class FamilyService {
       createdAt: new Date(),
       updatedAt: new Date(),
       isActive: true,
+      memberIds: [user.uid]
     };
 
     await setDoc(familyRef, familyData);
@@ -209,6 +229,7 @@ export class FamilyService {
       }
       // Reactivate membership
       await updateDoc(this.getMemberDoc(family.id!, user.uid), { isActive: true, joinedAt: new Date() });
+      await updateDoc(this.getFamilyDoc(family.id!), { memberIds: arrayUnion(user.uid) });
     } else {
       await setDoc(this.getMemberDoc(family.id!, user.uid), {
         familyId: family.id!,
@@ -220,6 +241,7 @@ export class FamilyService {
         joinedAt: new Date(),
         isActive: true,
       } as Omit<FamilyMember, 'id'>);
+      await updateDoc(this.getFamilyDoc(family.id!), { memberIds: arrayUnion(user.uid) });
     }
 
     // Update user's preferences with familyId
@@ -238,13 +260,54 @@ export class FamilyService {
     return family;
   }
 
+  async getMyFamilies(): Promise<Family[]> {
+    const user = this.currentUser;
+    if (!user) return [];
+
+    try {
+      // Query all family groups where this user is a member
+      const q = query(
+        collection(this.firestore, this.FAMILIES_COL),
+        where('memberIds', 'array-contains', user.uid),
+        where('isActive', '==', true)
+      );
+      
+      const snap = await getDocs(q);
+      if (snap.empty) return [];
+
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() as Omit<Family, 'id'> }));
+    } catch (error) {
+      console.error('Error fetching my families:', error);
+      return [];
+    }
+  }
+
+  private getInitialActiveFamilyId(): string | null {
+    try {
+      return localStorage.getItem(ACTIVE_FAMILY_ID_KEY);
+    } catch {
+      return null;
+    }
+  }
+
+  setActiveFamily(id: string | null): void {
+    this.activeFamilyId.set(id);
+    try {
+      if (id) {
+        localStorage.setItem(ACTIVE_FAMILY_ID_KEY, id);
+      } else {
+        localStorage.removeItem(ACTIVE_FAMILY_ID_KEY);
+      }
+    } catch (e) {
+      console.error('Error persisting active family id:', e);
+    }
+  }
+
   async getMyFamily(): Promise<Family | null> {
     const user = this.currentUser;
     if (!user) return null;
 
-    // Use preferences if available for faster lookup
-    const userSnap = await getDoc(doc(this.firestore, 'users', user.uid));
-    const familyId = userSnap.exists() ? (userSnap.data() as any)?.preferences?.familyId : null;
+    const familyId = this.activeFamilyId();
 
     if (familyId) {
       const family = await this.getFamily(familyId);
@@ -316,7 +379,7 @@ export class FamilyService {
   getMembers(familyId: string): Observable<FamilyMember[]> {
     const q = query(this.getMembersCol(familyId), where('isActive', '==', true));
     return from(getDocs(q)).pipe(
-      map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() } as FamilyMember))),
+      map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() as any } as FamilyMember))),
       catchError(() => of([]))
     );
   }
@@ -324,6 +387,7 @@ export class FamilyService {
   async removeMember(familyId: string, memberId: string): Promise<void> {
     // memberId here should be the userId since we use it as doc ID
     await updateDoc(this.getMemberDoc(familyId, memberId), { isActive: false });
+    await updateDoc(this.getFamilyDoc(familyId), { memberIds: arrayRemove(memberId) });
     this.notificationService.success('Member removed successfully');
   }
 
@@ -331,6 +395,7 @@ export class FamilyService {
     const user = this.currentUser;
     if (!user) return;
     await updateDoc(this.getMemberDoc(familyId, user.uid), { isActive: false });
+    await updateDoc(this.getFamilyDoc(familyId), { memberIds: arrayRemove(user.uid) });
   }
 
   async updateMemberRole(familyId: string, memberId: string, role: 'admin' | 'member'): Promise<void> {
@@ -343,7 +408,7 @@ export class FamilyService {
   getTransactions(familyId: string): Observable<FamilyTransaction[]> {
     const q = query(this.getTransactionsCol(familyId), orderBy('date', 'desc'));
     return from(getDocs(q)).pipe(
-      map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() } as FamilyTransaction))),
+      map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() as any } as FamilyTransaction))),
       catchError(() => of([]))
     );
   }

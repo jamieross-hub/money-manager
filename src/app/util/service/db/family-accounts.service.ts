@@ -4,6 +4,7 @@ import { Firestore } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { UserService } from './user.service';
+import { FamilyService } from 'src/app/modules/family/services/family.service';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 
@@ -16,7 +17,8 @@ export class FamilyAccountsService extends AccountsService {
         auth: Auth,
         localStorageUtility: LocalIndexDBStorageService,
         userService: UserService,
-        store: Store<AppState>
+        store: Store<AppState>,
+        private familyService: FamilyService
     ) {
         super(firestore, auth, localStorageUtility, userService, store);
     }
@@ -25,8 +27,7 @@ export class FamilyAccountsService extends AccountsService {
      * Override to use family group accounts path
      */
     protected override getAccountsPath(userId: string): string {
-        const profile = this.userService.userAuth$.value;
-        const familyId = profile?.preferences?.familyId;
+        const familyId = this.familyService.activeFamilyId();
         
         if (!familyId) {
             console.warn('[FamilyAccountsService] No familyId found, falling back to personal accounts');

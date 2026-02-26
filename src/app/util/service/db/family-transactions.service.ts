@@ -11,6 +11,7 @@ import { SplitwiseService } from 'src/app/modules/splitwise/services/splitwise.s
 import { CommonSyncService } from '../common-sync.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { UserService } from './user.service';
+import { FamilyService } from 'src/app/modules/family/services/family.service';
 
 @Injectable({
     providedIn: 'root'
@@ -26,7 +27,8 @@ export class FamilyTransactionsService extends TransactionsService {
         splitwiseService: SplitwiseService,
         commonSyncService: CommonSyncService,
         localStorageUtility: LocalIndexDBStorageService,
-        userService: UserService
+        userService: UserService,
+        private familyService: FamilyService
     ) {
         super(
             firestore,
@@ -43,8 +45,7 @@ export class FamilyTransactionsService extends TransactionsService {
     }
 
     protected override getTransactionsPath(userId: string): string {
-        const profile = (this as any).userService.userAuth$.value;
-        const familyId = profile?.preferences?.familyId;
+        const familyId = this.familyService.activeFamilyId();
         
         if (!familyId) {
             console.warn('[FamilyTransactionsService] No familyId found, falling back to personal transactions');

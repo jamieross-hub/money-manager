@@ -9,6 +9,7 @@ import { NotificationService } from '../notification.service';
 import { HapticFeedbackService } from '../haptic-feedback.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { UserService } from './user.service';
+import { FamilyService } from 'src/app/modules/family/services/family.service';
 
 @Injectable({
     providedIn: 'root'
@@ -22,7 +23,8 @@ export class FamilyCategoryService extends CategoryService {
         notificationService: NotificationService,
         hapticFeedback: HapticFeedbackService,
         localStorageUtility: LocalIndexDBStorageService,
-        userService: UserService
+        userService: UserService,
+        private familyService: FamilyService
     ) {
         super(firestore, auth, store, dialog, notificationService, hapticFeedback, localStorageUtility, userService);
     }
@@ -31,8 +33,7 @@ export class FamilyCategoryService extends CategoryService {
      * Override to use family group categories path
      */
     protected override getCategoriesPath(userId: string): string {
-        const profile = this.userService.userAuth$.value;
-        const familyId = profile?.preferences?.familyId;
+        const familyId = this.familyService.activeFamilyId();
         
         if (!familyId) {
             console.warn('[FamilyCategoryService] No familyId found, falling back to personal categories');

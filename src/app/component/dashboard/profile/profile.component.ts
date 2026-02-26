@@ -17,6 +17,11 @@ import { SecurityService } from 'src/app/util/service/security.service';
 import { AppState } from '../../../store/app.state';
 import * as ProfileActions from '../../../store/profile/profile.actions';
 import * as ProfileSelectors from '../../../store/profile/profile.selectors';
+import * as TransactionsActions from '../../../store/transactions/transactions.actions';
+import * as AccountsActions from '../../../store/accounts/accounts.actions';
+import * as CategoriesActions from '../../../store/categories/categories.actions';
+import * as BudgetsActions from '../../../store/budgets/budgets.actions';
+import * as GoalsActions from '../../../store/goals/goals.actions';
 import { filter, take, delay } from 'rxjs';
 import {
   APP_CONFIG,
@@ -105,14 +110,16 @@ export class ProfileComponent {
   readonly themeSwitchingService = inject(ThemeSwitchingService);
   private readonly securityService = inject(SecurityService);
   private readonly ssrService = inject(SsrService);
+  private readonly syncService = inject(CommonSyncService);
 
   // ─── Signals (State) ───────────────────────────────────────────────
   private ignoreLoader = false;
   readonly isLoading = signal(false);
   readonly isEditing = signal(false);
-  readonly userProfile = signal<User | null>(null);
-  readonly familyGroup = signal<Family | null>(null);
-  readonly familyMembers = signal<any[]>([]);
+   readonly userProfile = signal<User | null>(null);
+   readonly familyGroups = signal<Family[]>([]);
+   readonly activeFamilyId = this.familyService.activeFamilyId;
+   readonly familyMembers = signal<any[]>([]);
   readonly isFamilyLoading = signal(false);
   readonly currentTheme = signal<ThemeType>('light-theme');
   readonly showPinSetup = signal(false);
@@ -147,9 +154,10 @@ export class ProfileComponent {
   readonly memberCount = computed(() => this.familyMembers().length);
 
   readonly isAdmin = computed(() => {
-    const family = this.familyGroup();
+    const activeId = this.activeFamilyId();
+    const activeFamily = this.familyGroups().find(f => f.id === activeId);
     const user = this.userProfile();
-    return family && user && family.ownerUserId === user.uid;
+    return activeFamily && user && activeFamily.ownerUserId === user.uid;
   });
 
   // ─── Reactive Form ────────────────────────────────────────────────
@@ -258,7 +266,7 @@ export class ProfileComponent {
           this.userProfile.set(this.mapUserToProfile(user));
           this.populateForm();
         }
-        this.loadFamily();
+        this.loadFamilies();
       }
     });
 
@@ -275,13 +283,14 @@ export class ProfileComponent {
 
 
   // ─── Family Group ──────────────────────────────────────────────────
-
-  private loadFamily(): void {
+ 
+  private loadFamilies(): void {
     this.isFamilyLoading.set(true);
-    this.familyService.getMyFamily().then(family => {
-      this.familyGroup.set(family);
-      if (family?.id) {
-        this.familyService.getMembers(family.id).subscribe(members => {
+    this.familyService.getMyFamilies().then(families => {
+      this.familyGroups.set(families);
+      const activeId = this.activeFamilyId();
+      if (activeId) {
+        this.familyService.getMembers(activeId).subscribe(members => {
           this.familyMembers.set(members);
           this.isFamilyLoading.set(false);
         });
@@ -289,9 +298,43 @@ export class ProfileComponent {
         this.isFamilyLoading.set(false);
       }
     }).catch(() => {
-      this.familyGroup.set(null);
+      this.familyGroups.set([]);
       this.isFamilyLoading.set(false);
     });
+  }
+   async switchActiveFamily(familyId: string): Promise<void> {
+     const profile = this.userProfile();
+     if (!profile || this.activeFamilyId() === familyId) return;
+ 
+     this.isLoading.set(true);
+     try {
+       this.familyService.setActiveFamily(familyId);
+       
+       await this.applyPreferenceChanges({
+         isFamilyMode: true
+       });
+ 
+      this.notificationService.success('Switched active family');
+ 
+      // Clear stores and sync
+      this.store.dispatch(TransactionsActions.clearTransactions());
+      this.store.dispatch(AccountsActions.clearAccounts());
+      this.store.dispatch(CategoriesActions.clearCategories());
+      this.store.dispatch(BudgetsActions.clearBudgets());
+      this.store.dispatch(GoalsActions.clearGoals());
+       this.userService.userAuth$.pipe(
+         filter(u => !!u),
+         take(1),
+         delay(100)
+       ).subscribe(() => {
+        this.syncService.syncAll().subscribe();
+        window.location.reload();
+      });
+    } catch (error) {
+      console.error('Error switching family:', error);
+      this.notificationService.error('Failed to switch family');
+      this.isLoading.set(false);
+    }
   }
 
   createFamilyGroup(): void {
@@ -303,9 +346,9 @@ export class ProfileComponent {
       if (result) {
         try {
           this.isLoading.set(true);
-          const family = await this.familyService.createFamily(result);
-          this.familyGroup.set(family);
-          this.notificationService.success('Family created! Share the invite code with family members.');
+           const family = await this.familyService.createFamily(result);
+           this.loadFamilies();
+           this.notificationService.success('Family created! Share the invite code with family members.');
         } catch (error: any) {
           this.notificationService.error(error?.message || ERROR_MESSAGES.NETWORK.SERVER_ERROR);
         } finally {
@@ -324,9 +367,9 @@ export class ProfileComponent {
       if (code) {
         try {
           this.isLoading.set(true);
-          const family = await this.familyService.joinByCode(code);
-          this.familyGroup.set(family);
-          this.notificationService.success(`Joined "${family.name}" family!`);
+           const family = await this.familyService.joinByCode(code);
+           this.loadFamilies();
+           this.notificationService.success(`Joined "${family.name}" family!`);
         } catch (error: any) {
           this.notificationService.error(error?.message || ERROR_MESSAGES.NETWORK.SERVER_ERROR);
         } finally {
@@ -336,9 +379,8 @@ export class ProfileComponent {
     });
   }
 
-  async deleteFamilyGroup(): Promise<void> {
-    const family = this.familyGroup();
-    if (!family || !family.id) return;
+  async deleteFamilyGroup(family: Family): Promise<void> {
+     if (!family || !family.id) return;
 
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
@@ -356,15 +398,16 @@ export class ProfileComponent {
         try {
           this.isLoading.set(true);
           await this.familyService.deleteFamily(family.id!);
-          
-          await this.applyPreferenceChanges({
-            familyId: null,
-            isFamilyMode: false
-          });
-
-          this.familyGroup.set(null);
-          this.familyMembers.set([]);
-          this.notificationService.success('Family wallet deleted successfully.');
+                    this.familyService.setActiveFamily(null);
+           await this.applyPreferenceChanges({
+             isFamilyMode: false
+           });
+ 
+           this.loadFamilies();
+           if (this.activeFamilyId() === family.id) {
+             this.familyMembers.set([]);
+           }
+           this.notificationService.success('Family wallet deleted successfully.');
         } catch (error: any) {
           console.error('Error deleting family:', error);
           this.notificationService.error(error?.message || 'Failed to delete family wallet');
@@ -425,7 +468,6 @@ export class ProfileComponent {
         pinEnabled: user.preferences?.pinEnabled || false,
         pinHash: user.preferences?.pinHash || '',
         isFamilyMode: user.preferences?.isFamilyMode || false,
-        familyId: user.preferences?.familyId,
       },
       role: user.role,
 
@@ -771,10 +813,10 @@ export class ProfileComponent {
 
     // 1. Prepare updated preferences with required fields fallback
     const currentPrefs = profile.preferences || {} as UserPreferences;
-    const updatedPrefs: UserPreferences = {
-      ...currentPrefs,
-      ...changes,
-      defaultCurrency: changes.defaultCurrency ?? currentPrefs.defaultCurrency ?? 'INR',
+       const updatedPrefs: UserPreferences = {
+         ...currentPrefs,
+         ...changes,
+         defaultCurrency: changes.defaultCurrency ?? currentPrefs.defaultCurrency ?? 'INR',
       timezone: changes.timezone ?? currentPrefs.timezone ?? 'UTC',
       notifications: changes.notifications ?? currentPrefs.notifications ?? true,
       emailUpdates: changes.emailUpdates ?? currentPrefs.emailUpdates ?? true,

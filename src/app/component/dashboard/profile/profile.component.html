@@ -335,7 +335,7 @@
 						<mat-panel-title class="flex items-center gap-2">
 							<mat-icon class="section-icon">family_restroom</mat-icon>
 							<p class="text-sm font-medium text-gray-700 !mb-0 dark:text-gray-200">
-								Family Wallet
+								Family Group
 							</p>
 						</mat-panel-title>
 					</mat-expansion-panel-header>
@@ -347,31 +347,39 @@
 							<p class="text-xs text-gray-400 mt-3">Fetching family data...</p>
 						</div>
 
-						<!-- Connected Family -->
+						<!-- Connected Families -->
 						<ng-container *ngIf="!isFamilyLoading()">
-							<ng-container *ngIf="familyGroup() as family; else noFamily">
-								<div class="col-span-full">
+							<div class="col-span-full space-y-4" *ngIf="familyGroups().length > 0; else noFamily">
+								@for (family of familyGroups(); track family.id) {
 									<!-- Family card -->
 									<div
-										class="p-4 bg-gradient-to-br from-primary-50 to-blue-50 dark:from-gray-800 dark:to-gray-800 rounded-xl border border-primary-100 dark:border-gray-700">
+										class="p-4 bg-gradient-to-br from-primary-50 to-blue-50 dark:from-gray-800 dark:to-gray-800 rounded-xl border border-primary-100 dark:border-gray-700 transition-all duration-300"
+										[ngClass]="{'ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-gray-900': activeFamilyId() === family.id}">
 										<div class="flex items-start justify-between mb-3">
 											<div>
 												<p class="text-base font-bold text-gray-800 dark:text-gray-100">{{
 													family.name }}</p>
-												<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ memberCount()
+												<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5" *ngIf="activeFamilyId() === family.id">{{ memberCount()
 													}} Member(s) Connected</p>
+												<p class="text-xs text-gray-400 mt-0.5" *ngIf="activeFamilyId() !== family.id">Click to activate this group</p>
 											</div>
-											<span
-												class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200 font-medium">
-												Active
-											</span>
+											<div class="flex flex-col items-end gap-2">
+												<span *ngIf="activeFamilyId() === family.id"
+													class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200 font-medium">
+													Active
+												</span>
+												<span *ngIf="family.ownerUserId === userProfile()?.uid"
+													class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-bold">
+													Owner
+												</span>
+											</div>
 										</div>
 
-										<!-- Invite Code -->
-										<div
+										<!-- Invite Code (Only for active or owner) -->
+										<div *ngIf="activeFamilyId() === family.id || family.ownerUserId === userProfile()?.uid"
 											class="flex items-center justify-between bg-white dark:bg-gray-700 rounded-lg px-3 py-2 mb-3">
 											<div>
-												<p class="text-xs text-gray-400 mb-0.5">Family Code</p>
+												<p class="text-xs text-gray-400 mb-0.5">Group Code</p>
 												<p
 													class="text-sm font-black tracking-widest text-primary-700 dark:text-primary-300">
 													{{ family.inviteCode }}</p>
@@ -384,20 +392,43 @@
 
 										<!-- CTA -->
 										<div class="flex gap-2">
-											<button mat-flat-button color="primary" type="button" class="flex-1 !rounded-lg"
-												(click)="viewFamilyGroup(family.id!)">
-												<mat-icon class="mr-1">open_in_new</mat-icon>
-												Open Family Wallet
-											</button>
-											<button *ngIf="isAdmin()" mat-icon-button color="warn" type="button"
+											@if (activeFamilyId() === family.id) {
+												<button mat-flat-button color="primary" type="button" class="flex-1 !rounded-lg"
+													(click)="viewFamilyGroup(family.id!)">
+													<mat-icon class="mr-1">open_in_new</mat-icon>
+													Open Wallet
+												</button>
+											} @else {
+												<button mat-stroked-button color="primary" type="button" class="flex-1 !rounded-lg bg-white dark:bg-transparent"
+													(click)="switchActiveFamily(family.id!)">
+													<mat-icon class="mr-1">swap_horiz</mat-icon>
+													Switch to Group
+												</button>
+											}
+											
+											<button *ngIf="family.ownerUserId === userProfile()?.uid" mat-icon-button color="warn" type="button"
 												class="!p-0 !rounded-lg border-red-200 text-red-500 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/30"
-												(click)="deleteFamilyGroup()" matTooltip="Delete Family">
+												(click)="deleteFamilyGroup(family)" matTooltip="Delete Group">
 												<mat-icon>delete_outline</mat-icon>
 											</button>
 										</div>
 									</div>
+								}
+
+								<!-- Always show Create/Join buttons at the bottom -->
+								<div class="flex flex-col sm:flex-row gap-3 pt-2">
+									<button mat-stroked-button color="primary" type="button" class="flex-1 !h-10 !rounded-xl"
+										(click)="createFamilyGroup()" [disabled]="isLoading()">
+										<mat-icon class="mr-2">add_home</mat-icon>
+										New Group
+									</button>
+									<button mat-stroked-button type="button" class="flex-1 !h-10 !rounded-xl" (click)="joinFamilyGroup()"
+										[disabled]="isLoading()">
+										<mat-icon class="mr-2">group_add</mat-icon>
+										Join Another
+									</button>
 								</div>
-							</ng-container>
+							</div>
 
 							<!-- No family connected -->
 							<ng-template #noFamily>
@@ -408,7 +439,6 @@
 										<mat-icon>family_restroom</mat-icon>
 									</div>
 									
-									<!-- <p class="text-xl premium-title mb-2">No Family Wallet Yet</p> -->
 									<p class="text-sm text-gray-400 dark:text-gray-500 mb-8 max-w-xs leading-relaxed">
 										Create a shared wallet for your family or join one using an invite code to start tracking together.
 									</p>
@@ -417,12 +447,12 @@
 										<button mat-flat-button color="primary" type="button" class="flex-1 premium-btn !h-12 !rounded-xl text-white"
 											(click)="createFamilyGroup()" [disabled]="isLoading()">
 											<mat-icon class="mr-2">add_home</mat-icon>
-											Create Family
+											Create Group
 										</button>
 										<button mat-stroked-button type="button" class="flex-1 premium-btn !h-12 !rounded-xl" (click)="joinFamilyGroup()"
 											[disabled]="isLoading()">
 											<mat-icon class="mr-2">group_add</mat-icon>
-											Join with Code
+											Join Group
 										</button>
 									</div>
 								</div>
