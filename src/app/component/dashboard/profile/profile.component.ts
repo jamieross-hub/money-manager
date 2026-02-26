@@ -313,7 +313,8 @@ export class ProfileComponent {
        this.familyService.setActiveFamily(familyId);
        
        await this.applyPreferenceChanges({
-         isFamilyMode: true
+         isFamilyMode: true,
+         activeFamilyId: familyId
        });
  
       this.notificationService.success('Switched active family');
@@ -417,7 +418,8 @@ export class ProfileComponent {
           await this.familyService.deleteFamily(family.id!);
                     this.familyService.setActiveFamily(null);
            await this.applyPreferenceChanges({
-             isFamilyMode: false
+             isFamilyMode: false,
+             activeFamilyId: null
            });
  
            this.loadFamilies();
@@ -485,6 +487,7 @@ export class ProfileComponent {
         pinEnabled: user.preferences?.pinEnabled || false,
         pinHash: user.preferences?.pinHash || '',
         isFamilyMode: user.preferences?.isFamilyMode || false,
+        activeFamilyId: user.preferences?.activeFamilyId,
       },
       role: user.role,
 

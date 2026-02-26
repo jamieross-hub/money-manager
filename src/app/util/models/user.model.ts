@@ -50,6 +50,7 @@ export interface UserPreferences {
 	pinEnabled?: boolean;
 	pinHash?: string;
 	isFamilyMode?: boolean;
+	activeFamilyId?: string | null;
 }
 
 

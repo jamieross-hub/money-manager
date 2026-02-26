@@ -69,6 +69,7 @@ export class UserComponent {
   
   public isFamilyMode = false;
   public familyMembers: any[] = [];
+  public currentUserId: string | null = null;
 
   constructor(
     private userService: UserService,
@@ -105,11 +106,21 @@ export class UserComponent {
       }
       
       this.isFamilyMode = user?.preferences?.isFamilyMode || false;
+      this.currentUserId = this.userService.getCurrentUserId();
+      
       if (this.isFamilyMode) {
         const activeFamilyId = this.familyService.activeFamilyId();
         if (activeFamilyId) {
           this.familyService.getMembers(activeFamilyId).subscribe((members: FamilyMember[]) => {
-            this.familyMembers = members.filter((m: FamilyMember) => m.isActive);
+            this.familyMembers = members
+              .filter((m: FamilyMember) => m.isActive)
+              .sort((a, b) => {
+                // Keep current user separate or ensure they are at the end of the list
+                // so they appear on top in the DOM order
+                if (a.userId === this.currentUserId) return 1;
+                if (b.userId === this.currentUserId) return -1;
+                return 0;
+              });
           });
         }
       } else {

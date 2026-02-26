@@ -38,13 +38,13 @@ export class FamilyModeToggleComponent implements OnInit {
   private readonly syncService = inject(CommonSyncService);
   private readonly notificationService = inject(NotificationService);
   readonly breakpointService = inject(BreakpointService);
-  
+
   // Signal Inputs
   readonly isFlat = input(false);
 
   // Read-only signals from store/services
   readonly userProfile = toSignal(this.store.select(ProfileSelectors.selectProfile));
-  
+
   // Computed signals
   readonly isFamilyMode = computed(() => this.userProfile()?.preferences?.isFamilyMode || false);
   readonly isGuestMode = computed(() => this.userService.isGuestUser());
@@ -71,7 +71,7 @@ export class FamilyModeToggleComponent implements OnInit {
     if (!profile) return;
 
     this.ignoreLoader = true;
-    
+
     try {
       await this.applyPreferenceChanges({
         isFamilyMode: enabled,
@@ -86,17 +86,13 @@ export class FamilyModeToggleComponent implements OnInit {
       this.store.dispatch(BudgetsActions.clearBudgets());
       this.store.dispatch(GoalsActions.clearGoals());
 
-      // Wait for Store to update before syncing (if not guest)
-      if (!this.userService.isGuestUser()) {
-        this.actions$.pipe(
-          ofType(ProfileActions.updatePreferencesSuccess),
-          filter(action => action.profile.preferences?.isFamilyMode === enabled),
-          take(1),
-          delay(100)
-        ).subscribe(() => {
-          this.syncService.syncAll().subscribe();
-        });
-      }
+      this.actions$.pipe(
+        ofType(ProfileActions.updatePreferencesSuccess),
+        filter(action => action.profile.preferences?.isFamilyMode === enabled),
+        take(1),
+      ).subscribe(() => {
+        window.location.reload();
+      });
     } catch (error) {
       console.error('Error toggling family mode:', error);
       this.notificationService.error('Failed to toggle family mode');
@@ -124,14 +120,12 @@ export class FamilyModeToggleComponent implements OnInit {
       updatedAt: new Date()
     };
 
-    if (!this.userService.isGuestUser()) {
-      this.store.dispatch(ProfileActions.updatePreferences({
-        userId: profile.uid,
-        preferences: {
-          ...changes,
-          isFamilyMode: changes.isFamilyMode // Explicitly ensure we only update family mode here if that's the intent, but the changes object currently only has isFamilyMode
-        }
-      }));
-    }
+    this.store.dispatch(ProfileActions.updatePreferences({
+      userId: profile.uid,
+      preferences: {
+        ...changes,
+        isFamilyMode: changes.isFamilyMode
+      }
+    }));
   }
 }

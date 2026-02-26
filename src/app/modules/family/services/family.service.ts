@@ -41,7 +41,9 @@ import { Category, Account, User } from 'src/app/util/models';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import * as ProfileActions from 'src/app/store/profile/profile.actions';
+import * as fromProfile from 'src/app/store/profile/profile.selectors';
 import { UserService } from 'src/app/util/service/db/user.service';
+import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 
 @Injectable({ providedIn: 'root' })
 export class FamilyService {
@@ -53,22 +55,34 @@ export class FamilyService {
     private auth: Auth,
     private notificationService: NotificationService,
     private store: Store<AppState>,
-    private userService: UserService
+    private userService: UserService,
+    private storageService: LocalIndexDBStorageService
   ) {
-    this.initializeActiveFamilyIdListener();
+    this.syncActiveFamilyWithProfile();
+  }
+
+  private syncActiveFamilyWithProfile(): void {
+    // Sync the signal with store preferences when they change
+    this.store.select(fromProfile.selectUserPreferences).subscribe(prefs => {
+      if (prefs && prefs.activeFamilyId !== undefined) {
+        if (prefs.activeFamilyId !== this.activeFamilyId()) {
+          this.activeFamilyId.set(prefs.activeFamilyId);
+          // Also sync to persistent storage for immediate availability on next boot
+          try {
+            if (prefs.activeFamilyId) {
+              this.storageService.setItem(ACTIVE_FAMILY_ID_KEY, prefs.activeFamilyId);
+            } else {
+              this.storageService.removeItem(ACTIVE_FAMILY_ID_KEY);
+            }
+          } catch (e) {
+            console.error('Error persisting active family id to storage:', e);
+          }
+        }
+      }
+    });
   }
 
   readonly activeFamilyId = signal<string | null>(this.getInitialActiveFamilyId());
-
-  private initializeActiveFamilyIdListener(): void {
-    if (typeof window !== 'undefined') {
-      window.addEventListener('storage', (event) => {
-        if (event.key === ACTIVE_FAMILY_ID_KEY) {
-          this.activeFamilyId.set(event.newValue);
-        }
-      });
-    }
-  }
 
   // ─── Path Helpers ────────────────────────────────────────────────────────
 
@@ -152,12 +166,12 @@ export class FamilyService {
       this.store.dispatch(ProfileActions.updatePreferences({
         userId: user.uid,
         preferences: {
-          familyId: familyId,
+          activeFamilyId: familyId,
           isFamilyMode: true
         }
       }));
     } catch (e) {
-      console.warn('Could not update user preferences with familyId:', e);
+      console.warn('Could not update user preferences with activeFamilyId:', e);
       // We don't throw here as the family is already created, but the user might need to toggle it manually
     }
 
@@ -249,12 +263,12 @@ export class FamilyService {
       this.store.dispatch(ProfileActions.updatePreferences({
         userId: user.uid,
         preferences: {
-          familyId: family.id,
+          activeFamilyId: family.id,
           isFamilyMode: true
         }
       }));
     } catch (e) {
-      console.warn('Could not update user preferences with familyId:', e);
+      console.warn('Could not update user preferences with activeFamilyId:', e);
     }
 
     return family;
@@ -284,7 +298,7 @@ export class FamilyService {
 
   private getInitialActiveFamilyId(): string | null {
     try {
-      return localStorage.getItem(ACTIVE_FAMILY_ID_KEY);
+      return this.storageService.getItem(ACTIVE_FAMILY_ID_KEY);
     } catch {
       return null;
     }
@@ -294,9 +308,18 @@ export class FamilyService {
     this.activeFamilyId.set(id);
     try {
       if (id) {
-        localStorage.setItem(ACTIVE_FAMILY_ID_KEY, id);
+        this.storageService.setItem(ACTIVE_FAMILY_ID_KEY, id);
       } else {
-        localStorage.removeItem(ACTIVE_FAMILY_ID_KEY);
+        this.storageService.removeItem(ACTIVE_FAMILY_ID_KEY);
+      }
+
+      // Also sync to user preferences
+      const userId = this.userService.getCurrentUserId();
+      if (userId && userId !== 'offline-guest') {
+        this.store.dispatch(ProfileActions.updatePreferences({
+          userId,
+          preferences: { activeFamilyId: id }
+        }));
       }
     } catch (e) {
       console.error('Error persisting active family id:', e);
@@ -362,7 +385,7 @@ export class FamilyService {
     this.store.dispatch(ProfileActions.updatePreferences({
       userId: user.uid,
       preferences: {
-        familyId: null,
+        activeFamilyId: null,
         isFamilyMode: false
       }
     }));

@@ -5,20 +5,21 @@
 		type="button">
 		
 		<!-- Avatar Stack for Family Mode -->
-		<div *ngIf="isFamilyMode" class="avatar-stack flex items-center -space-x-4 mx-1">
+		<div *ngIf="isFamilyMode && familyMembers.length > 0" class="avatar-stack flex items-center -space-x-4 mx-1">
 			<img *ngFor="let member of familyMembers.slice(0, 3)" 
 				class="flex-shrink-0 object-cover rounded-full w-8 h-8 border-2 border-white dark:border-slate-900 shadow-sm"
 				[src]="member.photoURL || 'assets/images/profile.png'" 
 				[alt]="member.displayName"
-				[matTooltip]="member.displayName" />
+				[matTooltip]="member.displayName"
+				[style.z-index]="member.userId === currentUserId ? '20' : 'auto'" />
 			<div *ngIf="familyMembers.length > 3" 
 				class="flex items-center justify-center w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 bg-gray-100 dark:bg-slate-800 text-[10px] font-bold z-10">
 				+{{familyMembers.length - 3}}
 			</div>
 		</div>
 
-		<!-- Single Avatar for Personal Mode -->
-		<img *ngIf="!isFamilyMode" 
+		<!-- Single Avatar for Personal Mode or Family Mode with no group selected -->
+		<img *ngIf="!isFamilyMode || familyMembers.length === 0" 
 			class="flex-shrink-0 object-cover mx-1 rounded-full w-9 h-9 border-2 border-gray-200 dark:border-slate-800"
 			[src]="profileImage" (error)="onImageError()" alt="avatar" />
 
