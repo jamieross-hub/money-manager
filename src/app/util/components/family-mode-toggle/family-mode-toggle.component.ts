@@ -1,8 +1,10 @@
-import { Component, OnInit, ChangeDetectionStrategy, signal, inject, effect, Input } from '@angular/core';
+import { Actions, ofType } from '@ngrx/effects';
+import { Component, OnInit, ChangeDetectionStrategy, signal, inject, Input, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { Store } from '@ngrx/store';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { AppState } from '../../../store/app.state';
 import * as ProfileSelectors from '../../../store/profile/profile.selectors';
 import * as ProfileActions from '../../../store/profile/profile.actions';
@@ -30,30 +32,30 @@ import { filter, take, delay } from 'rxjs';
 })
 export class FamilyModeToggleComponent implements OnInit {
   private readonly store = inject(Store<AppState>);
+  private readonly actions$ = inject(Actions);
   private readonly userService = inject(UserService);
   private readonly familyService = inject(FamilyService);
   private readonly syncService = inject(CommonSyncService);
   private readonly notificationService = inject(NotificationService);
   readonly breakpointService = inject(BreakpointService);
-  @Input() isFlat: boolean = false;
+  
+  // Signal Inputs
+  readonly isFlat = input(false);
 
-  readonly userProfile = signal<User | null>(null);
+  // Read-only signals from store/services
+  readonly userProfile = toSignal(this.store.select(ProfileSelectors.selectProfile));
+  
+  // Computed signals
+  readonly isFamilyMode = computed(() => this.userProfile()?.preferences?.isFamilyMode || false);
+  readonly isGuestMode = computed(() => this.userService.isGuestUser());
+
   readonly familyGroup = signal<Family | null>(null);
-  readonly isFamilyMode = signal(false);
   private ignoreLoader = false;
 
-  constructor() {
-    // React to store profile changes
-    this.store.select(ProfileSelectors.selectProfile).subscribe(profile => {
-      if (profile) {
-        this.userProfile.set(profile);
-        this.isFamilyMode.set(profile.preferences?.isFamilyMode || false);
-      }
-    });
-  }
-
   ngOnInit() {
-    this.loadFamily();
+    if (!this.userService.isGuestUser()) {
+      this.loadFamily();
+    }
   }
 
   private loadFamily(): void {
@@ -64,17 +66,12 @@ export class FamilyModeToggleComponent implements OnInit {
     });
   }
 
-  isGuestMode(): boolean {
-    return this.userService.isGuestUser();
-  }
-
   async toggleFamilyMode(enabled: boolean): Promise<void> {
     const profile = this.userProfile();
     if (!profile) return;
 
     this.ignoreLoader = true;
-    const familyId = this.familyService.activeFamilyId();
-
+    
     try {
       await this.applyPreferenceChanges({
         isFamilyMode: enabled,
@@ -89,15 +86,17 @@ export class FamilyModeToggleComponent implements OnInit {
       this.store.dispatch(BudgetsActions.clearBudgets());
       this.store.dispatch(GoalsActions.clearGoals());
 
-      // Wait for UserService to pick up the new mode before syncing
-      this.userService.userAuth$.pipe(
-        filter(u => u?.preferences?.isFamilyMode === enabled),
-        take(1),
-        delay(100)
-      ).subscribe(() => {
-        this.syncService.syncAll().subscribe();
-        window.location.reload();
-      });
+      // Wait for Store to update before syncing (if not guest)
+      if (!this.userService.isGuestUser()) {
+        this.actions$.pipe(
+          ofType(ProfileActions.updatePreferencesSuccess),
+          filter(action => action.profile.preferences?.isFamilyMode === enabled),
+          take(1),
+          delay(100)
+        ).subscribe(() => {
+          this.syncService.syncAll().subscribe();
+        });
+      }
     } catch (error) {
       console.error('Error toggling family mode:', error);
       this.notificationService.error('Failed to toggle family mode');
@@ -125,19 +124,13 @@ export class FamilyModeToggleComponent implements OnInit {
       updatedAt: new Date()
     };
 
-    this.userProfile.set(updatedUser);
-    
-    if (changes.isFamilyMode !== undefined) {
-      this.isFamilyMode.set(changes.isFamilyMode);
-    }
-
-    if (this.userService.isGuestUser()) {
-      this.userService.storageService.setItem(`user-data-${updatedUser.uid}`, updatedUser);
-      this.userService.userAuth$.next(updatedUser);
-    } else {
+    if (!this.userService.isGuestUser()) {
       this.store.dispatch(ProfileActions.updatePreferences({
         userId: profile.uid,
-        preferences: changes
+        preferences: {
+          ...changes,
+          isFamilyMode: changes.isFamilyMode // Explicitly ensure we only update family mode here if that's the intent, but the changes object currently only has isFamilyMode
+        }
       }));
     }
   }

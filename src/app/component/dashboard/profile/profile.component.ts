@@ -1,5 +1,7 @@
 import { Component, ChangeDetectionStrategy, signal, computed, inject, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Action } from '@ngrx/store';
+import { Actions, ofType } from '@ngrx/effects';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
@@ -322,14 +324,29 @@ export class ProfileComponent {
       this.store.dispatch(CategoriesActions.clearCategories());
       this.store.dispatch(BudgetsActions.clearBudgets());
       this.store.dispatch(GoalsActions.clearGoals());
-       this.userService.userAuth$.pipe(
-         filter(u => !!u),
-         take(1),
-         delay(100)
-       ).subscribe(() => {
-        this.syncService.syncAll().subscribe();
-        window.location.reload();
-      });
+      // Wait for Store to update before syncing (if not guest)
+      if (!this.userService.isGuestUser()) {
+        const actions$ = inject(Actions);
+        actions$.pipe(
+          ofType(ProfileActions.updatePreferencesSuccess),
+          filter(action => !!action.profile),
+          take(1),
+          delay(100)
+        ).subscribe(() => {
+          this.syncService.syncAll().subscribe();
+          this.isLoading.set(false);
+        });
+      } else {
+        // For guest mode, updates are immediate
+        this.userService.userAuth$.pipe(
+          filter(u => !!u),
+          take(1),
+          delay(100)
+        ).subscribe(() => {
+          this.syncService.syncAll().subscribe();
+          this.isLoading.set(false);
+        });
+      }
     } catch (error) {
       console.error('Error switching family:', error);
       this.notificationService.error('Failed to switch family');

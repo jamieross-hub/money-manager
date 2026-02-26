@@ -1,24 +1,25 @@
-<div *ngIf="!isGuestMode() && familyGroup()" 
-    class="family-mode-toggle-container flex items-center justify-between transition-all duration-300"
-    [ngClass]="{
-        'is-badge absolute top-4 right-4 px-4 py-1.5 rounded-full border bg-surface-500 w-auto z-10': !isFlat && !breakpointService.device.isMobile,
-        'is-badge fixed top-4 right-4 px-4 py-1.5 rounded-full border bg-surface-500 w-auto z-10': !isFlat && breakpointService.device.isMobile,
-        'is-flat w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-slate-800 text-sm text-gray-600 dark:text-gray-300 capitalize': isFlat,
-        'family-active': isFamilyMode(),
-        'personal-active': !isFamilyMode()
-    }">
-    <div class="flex items-center flex-1">
-        <mat-icon class="mode-icon !w-4 !h-4 !text-[18px] transition-all duration-300"
-                  [class.mr-3]="isFlat" [class.mr-2]="!isFlat">
-            {{ isFamilyMode() ? 'family_restroom' : 'person' }}
-        </mat-icon>
-        <span class="text-left font-semibold"
-              [class.flex-1]="isFlat"
-              [class.hidden]="!isFlat" [class.sm:inline]="!isFlat">
-            {{ isFamilyMode() ? 'Family' : 'Personal' }} Mode
-        </span>
+@if (!isGuestMode()) {
+    <div class="family-mode-toggle-container flex items-center justify-between transition-all duration-300"
+        [ngClass]="{
+            'is-badge absolute top-4 right-4 px-4 py-1.5 rounded-full border bg-surface-500 w-auto z-10': !isFlat() && !breakpointService.device.isMobile,
+            'is-badge fixed top-4 right-4 px-4 py-1.5 rounded-full border bg-surface-500 w-auto z-10': !isFlat() && breakpointService.device.isMobile,
+            'is-flat w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-slate-800 text-sm text-gray-600 dark:text-gray-300 capitalize': isFlat(),
+            'family-active': isFamilyMode(),
+            'personal-active': !isFamilyMode()
+        }">
+        <div class="flex items-center flex-1">
+            <mat-icon class="mode-icon !w-4 !h-4 !text-[18px] transition-all duration-300"
+                    [class.mr-3]="isFlat()" [class.mr-2]="!isFlat()">
+                {{ isFamilyMode() ? 'family_restroom' : 'person' }}
+            </mat-icon>
+            <span class="text-left font-semibold"
+                [class.flex-1]="isFlat()"
+                [class.hidden]="!isFlat()" [class.sm:inline]="!isFlat()">
+                {{ isFamilyMode() ? 'Family' : 'Personal' }} Mode
+            </span>
+        </div>
+        <div class="scale-90 origin-right translate-y-[1px]">
+            <mat-slide-toggle color="primary" class="family-toggle" [checked]="isFamilyMode()" (change)="toggleFamilyMode($event.checked)"></mat-slide-toggle>
+        </div>
     </div>
-    <div class="scale-90 origin-right translate-y-[1px]">
-        <mat-slide-toggle color="primary" class="family-toggle" [checked]="isFamilyMode()" (change)="toggleFamilyMode($event.checked)"></mat-slide-toggle>
-    </div>
-</div>
+}
