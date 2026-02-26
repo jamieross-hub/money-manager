@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,6 +14,11 @@ import { MobileAddTransactionComponent } from '../transaction-list/add-transacti
 import { AddAccountDialogComponent } from '../accounts/add-account-dialog/add-account-dialog.component';
 import { MobileCategoryAddEditPopupComponent } from '../category/mobile-category-add-edit-popup/mobile-category-add-edit-popup.component';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
+import { Store } from '@ngrx/store';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { AppState } from 'src/app/store/app.state';
+import * as fromProfile from 'src/app/store/profile/profile.selectors';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-footer',
@@ -30,6 +35,20 @@ export class FooterComponent implements OnInit, OnDestroy {
   // Local state for network status to support OnPush
   private networkStatus: NetworkStatus = { online: false };
   private destroy$ = new Subject<void>();
+
+  private store = inject(Store<AppState>);
+
+  /** Reactively mirrors user preferences → isFamilyMode from the NgRx store. */
+  readonly isFamilyMode = toSignal(
+    this.store.select(fromProfile.selectUserPreferences).pipe(
+      map(prefs => prefs?.isFamilyMode ?? false)
+    ),
+    { initialValue: false }
+  );
+
+  isFamilyActive(): boolean {
+    return this.router.url.startsWith('/dashboard/family');
+  }
 
   constructor(
     private commonSyncService: CommonSyncService,
