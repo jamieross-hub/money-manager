@@ -23,6 +23,8 @@ import { LocalStorageKey } from 'src/app/util/models/local-storage.model';
 
 import { ThemeToggleComponent } from 'src/app/util/components/theme-toggle/theme-toggle.component';
 import { FamilyModeToggleComponent } from 'src/app/util/components/family-mode-toggle/family-mode-toggle.component';
+import { FamilyService } from 'src/app/modules/family/services/family.service';
+import { FamilyMember } from 'src/app/util/models/family.model';
 
 
 @Component({
@@ -64,6 +66,9 @@ export class UserComponent {
       photoURL: '',
       firstName: '',
     };
+  
+  public isFamilyMode = false;
+  public familyMembers: any[] = [];
 
   constructor(
     private userService: UserService,
@@ -73,7 +78,8 @@ export class UserComponent {
     private splitwiseService: SplitwiseService,
     private themeSwitchingService: ThemeSwitchingService,
     private localStorageService: LocalIndexDBStorageService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private familyService: FamilyService
   ) {
     this.breakpointObserver.observe(Breakpoints.Handset).subscribe((result) => {
       this.isMobile = result.matches;
@@ -96,6 +102,18 @@ export class UserComponent {
           photoURL: user?.photoURL,
           firstName: user?.firstName,
         };
+      }
+      
+      this.isFamilyMode = user?.preferences?.isFamilyMode || false;
+      if (this.isFamilyMode) {
+        const activeFamilyId = this.familyService.activeFamilyId();
+        if (activeFamilyId) {
+          this.familyService.getMembers(activeFamilyId).subscribe((members: FamilyMember[]) => {
+            this.familyMembers = members.filter((m: FamilyMember) => m.isActive);
+          });
+        }
+      } else {
+        this.familyMembers = [];
       }
     });
 

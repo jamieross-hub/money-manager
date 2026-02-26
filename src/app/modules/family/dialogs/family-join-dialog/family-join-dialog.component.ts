@@ -22,17 +22,17 @@ export class FamilyJoinDialogComponent {
   private bottomSheetRef = inject(MatBottomSheetRef<FamilyJoinDialogComponent>, { optional: true });
 
   form = this.fb.group({
-    inviteCode: ['', [Validators.required, Validators.pattern(/^FAM-[A-Z0-9]{4}$/)]],
+    inviteCode: ['', [Validators.required, Validators.pattern(/^[A-Z0-9]{4}$/)]],
   });
 
   onCodeInput(event: any) {
-    const val: string = event.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
-    this.form.get('inviteCode')?.setValue(val, { emitEvent: false });
+    const val: string = event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    this.form.get('inviteCode')?.setValue(val.slice(0, 4), { emitEvent: false });
   }
 
   submit() {
     if (this.form.valid) {
-      const code = this.form.value.inviteCode;
+      const code = 'FAM-' + this.form.value.inviteCode;
       if (this.bottomSheetRef) {
         this.bottomSheetRef.dismiss(code);
       } else {

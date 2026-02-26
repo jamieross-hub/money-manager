@@ -10,16 +10,19 @@
   </div>
 
   <form [formGroup]="form" class="flex flex-col gap-4">
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="fill" class="w-full">
       <mat-label>Invite Code</mat-label>
-      <input matInput formControlName="inviteCode"
-        placeholder="FAM-XXXX"
-        maxlength="8"
-        class="uppercase tracking-widest text-lg font-bold text-center"
-        (input)="onCodeInput($event)" />
-      <mat-hint>Ask your group admin for the 8-character invite code</mat-hint>
+      <div class="flex items-center justify-center w-full">
+       
+        <input matInput formControlName="inviteCode"
+          placeholder="XXXX"
+          maxlength="4"
+          class="uppercase tracking-[0.3em] text-xl font-bold !text-center"
+          (input)="onCodeInput($event)" />
+      </div>
+      <mat-hint align="end">Enter the 4 characters after FAM-</mat-hint>
       <mat-error *ngIf="form.get('inviteCode')?.hasError('required')">Code is required</mat-error>
-      <mat-error *ngIf="form.get('inviteCode')?.hasError('pattern')">Enter a valid code like FAM-XXXX</mat-error>
+      <mat-error *ngIf="form.get('inviteCode')?.hasError('pattern')">Invalid format. Use 4 characters (e.g. AB12)</mat-error>
     </mat-form-field>
 
     <div class="flex gap-3 mt-2">
