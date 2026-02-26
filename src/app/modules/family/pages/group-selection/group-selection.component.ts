@@ -46,7 +46,6 @@ export interface UserGroup {
   balance?: number;
   monthlySpend?: number;
   lastActivityAt?: Date;
-  pinned: boolean;
   isActive: boolean;
   currency: string;
   inviteCode: string;
@@ -77,7 +76,6 @@ const GROUP_TYPE_LABEL: Record<GroupType, string> = {
   other: 'Group',
 };
 
-const PINNED_KEY = 'pinned_family_ids';
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -119,14 +117,12 @@ export class GroupSelectionComponent implements OnInit {
   userFamiliesLoading = this.store.selectSignal(selectUserFamiliesLoading);
   familyError = this.store.selectSignal(selectFamilyError);
 
-  pinnedFamilyIds = signal<Set<string>>(new Set());
   confirmPending = signal<{ action: 'leave' | 'delete'; group: UserGroup } | null>(null);
 
   readonly activeGroupId = this.familyService.activeFamilyId;
 
   groups = computed<UserGroup[]>(() => {
     const families = this.rawFamilies() || [];
-    const pinnedIds = this.pinnedFamilyIds();
     const activeId = this.activeGroupId();
 
     return families.map(f => ({
@@ -139,7 +135,6 @@ export class GroupSelectionComponent implements OnInit {
       currency: f.currency,
       inviteCode: f.inviteCode,
       ownerUserId: f.ownerUserId,
-      pinned: pinnedIds.has(f.id!),
       isActive: f.id === activeId,
       lastActivityAt: f.updatedAt
         ? ((f.updatedAt as any)?.seconds
@@ -170,7 +165,7 @@ export class GroupSelectionComponent implements OnInit {
     actions: [
       {
         id: 'add-group',
-        label: 'Add Group',
+        label: 'Create Group',
         icon: 'add_circle',
         color: 'primary',
         tooltip: 'Create group'
@@ -199,10 +194,6 @@ export class GroupSelectionComponent implements OnInit {
     this.groups().find(g => g.id === this.activeGroupId()) ?? null
   );
 
-  pinnedGroups = computed(() =>
-    this.groups().filter(g => g.pinned && g.id !== this.activeGroupId())
-  );
-
   quickSwitchGroups = computed(() => {
     const active = this.activeGroupId();
     return this.groups()
@@ -225,23 +216,7 @@ export class GroupSelectionComponent implements OnInit {
   // ─── Lifecycle ─────────────────────────────────────────────────────────────
 
   async ngOnInit(): Promise<void> {
-    this.pinnedFamilyIds.set(this.getPinnedIds());
     this.loadGroups();
-  }
-
-  private getPinnedIds(): Set<string> {
-    try {
-      const raw = localStorage.getItem(PINNED_KEY);
-      return raw ? new Set(JSON.parse(raw)) : new Set();
-    } catch {
-      return new Set();
-    }
-  }
-
-  private savePinnedIds(ids: Set<string>): void {
-    try {
-      localStorage.setItem(PINNED_KEY, JSON.stringify(Array.from(ids)));
-    } catch { /* ignore */ }
   }
 
   loadGroups(): void {
@@ -254,18 +229,12 @@ export class GroupSelectionComponent implements OnInit {
     this.familyService.setActiveFamily(group.id);
     // Reload family in NgRx store so dashboard picks it up immediately
     this.store.dispatch(FamilyActions.loadMyFamily());
-    this.router.navigate(['/dashboard/family/dashboard']);
+    // this.router.navigate(['/dashboard/family/dashboard']);
   }
 
-  pinGroup(group: UserGroup): void {
-    const pinnedIds = new Set(this.pinnedFamilyIds());
-    if (group.pinned) {
-      pinnedIds.delete(group.id);
-    } else {
-      pinnedIds.add(group.id);
-    }
-    this.savePinnedIds(pinnedIds);
-    this.pinnedFamilyIds.set(pinnedIds);
+  openGroup(group: UserGroup){
+    // this.familyService.setActiveFamily(group.id);
+    this.router.navigate(['/dashboard/family/dashboard', group.id]);
   }
 
   requestLeave(group: UserGroup): void {

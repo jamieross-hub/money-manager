@@ -184,6 +184,9 @@
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
+  position: absolute;
+  top: 16px;
+  right: 16px;
 
   &--admin {
     background-color: var(--primary-200);
@@ -191,7 +194,7 @@
   }
 
   &--member {
-    background-color: var(--surface-300);
+    background-color: var(--surface-200);
     color: var(--neutral-500);
   }
 }
@@ -224,7 +227,7 @@
 
   &__body {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 12px;
     padding-left: 8px;
   }
@@ -320,57 +323,46 @@
 // ─── All Groups List ──────────────────────────────────────────────────────
 
 .gs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gs-list-card {
   background-color: var(--surface-50);
   border-radius: 16px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
-}
-
-.gs-list-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
+  padding: 16px;
   position: relative;
+  overflow: hidden;
   cursor: pointer;
-  transition: background-color 0.15s ease;
-  border-bottom: 1px solid var(--surface-300);
-
-  &:last-child {
-    border-bottom: none;
-  }
+  transition: box-shadow 0.2s ease;
 
   &:hover {
-    background-color: var(--surface-200);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   }
 
-  &--active {
-    background-color: var(--surface-200);
-  }
-
-  &__indicator {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background-color: var(--primary-500);
-  }
-
-  &__name {
-    font-weight: 500;
-    font-size: 0.875rem;
-    color: var(--neutral-900);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__actions {
+  &__body {
     display: flex;
     align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
+    gap: 12px;
+    padding-left: 8px;
+  }
+
+  &__footer {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--surface-300);
+    padding-left: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__activity {
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 }
 

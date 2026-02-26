@@ -1,0 +1,24 @@
+.mode-toggle {
+  width: 100%;
+
+  .mat-button-toggle {
+    flex: 1;
+    height: auto;
+
+    .mat-button-toggle-button {
+      height: auto;
+      padding: 10px 8px;
+    }
+  }
+
+  &.mat-button-toggle-group {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+  }
+
+  .mat-button-toggle-checked {
+    background-color: var(--mat-primary-100, #e8f0fe);
+    color: var(--mat-primary-700, #1557b0);
+  }
+}

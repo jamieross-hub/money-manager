@@ -137,6 +137,8 @@ export class FamilyService {
       ownerUserId: user.uid,
       inviteCode,
       currency: request.currency || 'INR',
+      mode: request.mode ?? 'common',
+      icon: request.icon,
       createdAt: new Date(),
       updatedAt: new Date(),
       isActive: true,

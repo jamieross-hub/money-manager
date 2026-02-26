@@ -57,7 +57,7 @@
         <section class="gs-section">
           <p class="gs-section-label">Your Active Group</p>
           <div class="gs-active-card"
-               matRipple (click)="selectGroup(active)">
+               matRipple (click)="openGroup(active)">
 
             <!-- Accent bar -->
             <div class="gs-active-card__accent"></div>
@@ -71,23 +71,27 @@
 
               <!-- Info -->
               <div class="gs-info">
+                <div class="gs-info__name-row">
+                  <span class="gs-info__name">{{ active.name }}</span>
+                </div>
                 <div class="gs-info__meta">
-                  <mat-icon class="gs-meta-icon">
-                    {{ groupTypeIcon[active.type] }}
-                  </mat-icon>
-                  <span class="gs-meta-text">{{ groupTypeLabel[active.type] }}</span>
+                  <span class="gs-meta-text gs-meta-text--with-icon">
+                    <mat-icon class="gs-meta-icon">{{ groupTypeIcon[active.type] }}</mat-icon>
+                    {{ groupTypeLabel[active.type] }}
+                  </span>
                   <span class="gs-dot">·</span>
                   <span class="gs-meta-text">{{ active.memberCount }} member{{ active.memberCount !== 1 ? 's' : '' }}</span>
                 </div>
               </div>
 
-              <!-- Role badge -->
-              <span class="gs-role-badge"
-                    [class.gs-role-badge--admin]="active.role === 'admin'"
-                    [class.gs-role-badge--member]="active.role === 'member'">
-                {{ active.role }}
-              </span>
             </div>
+
+            <!-- Role badge -->
+            <span class="gs-role-badge"
+                  [class.gs-role-badge--admin]="active.role === 'admin'"
+                  [class.gs-role-badge--member]="active.role === 'member'">
+              {{ active.role }}
+            </span>
 
             <!-- Divider + stat row -->
             <div class="gs-active-card__footer">
@@ -98,7 +102,7 @@
                 </span>
               </div>
               <button mat-button color="primary" class="gs-open-btn"
-                      (click)="$event.stopPropagation(); selectGroup(active)">
+                      (click)="$event.stopPropagation(); openGroup(active)">
                 Open
                 <mat-icon class="gs-open-btn__icon">arrow_forward</mat-icon>
               </button>
@@ -109,76 +113,78 @@
 
 
       <!-- ── ALL GROUPS LIST ─────────────────────────────────── -->
-      <section class="gs-section">
+      <section class="gs-section mt-2">
         <p class="gs-section-label">Other Groups</p>
         <div class="gs-list">
 
           @for (group of otherGroups(); track group.id; let last = $last) {
-            <div class="gs-list-row" matRipple (click)="selectGroup(group)">
+            <div class="gs-list-card" matRipple (click)="openGroup(group)">
 
-              <!-- Avatar -->
-              <div class="gs-avatar gs-avatar--md"
-                   [style.background]="avatarColor(group.id)">
-                {{ avatarInitials(group.name) }}
-              </div>
-
-              <!-- Content -->
-              <div class="gs-info">
-                <div class="gs-info__name-row">
-                  <span class="gs-list-row__name">{{ group.name }}</span>
-                  @if (group.pinned) {
-                    <mat-icon class="gs-pin-icon">push_pin</mat-icon>
-                  }
+              <div class="gs-list-card__body">
+                <!-- Avatar -->
+                <div class="gs-avatar gs-avatar--md"
+                     [style.background]="avatarColor(group.id)">
+                  {{ avatarInitials(group.name) }}
                 </div>
-                <div class="gs-info__meta">
-                  <span class="gs-meta-text gs-meta-text--with-icon">
-                    <mat-icon class="gs-meta-icon">{{ groupTypeIcon[group.type] }}</mat-icon>
-                    {{ groupTypeLabel[group.type] }}
-                  </span>
-                  <span class="gs-dot">·</span>
-                  <span class="gs-meta-text">
-                    {{ group.memberCount }} member{{ group.memberCount !== 1 ? 's' : '' }}
-                  </span>
-                  @if (group.lastActivityAt) {
+
+                <!-- Info -->
+                <div class="gs-info">
+                  <div class="gs-info__name-row">
+                    <span class="gs-info__name">{{ group.name }}</span>
+                  </div>
+                  <div class="gs-info__meta">
+                    <span class="gs-meta-text gs-meta-text--with-icon">
+                      <mat-icon class="gs-meta-icon">{{ groupTypeIcon[group.type] }}</mat-icon>
+                      {{ groupTypeLabel[group.type] }}
+                    </span>
                     <span class="gs-dot">·</span>
-                    <span class="gs-meta-text">{{ formatRelative(group.lastActivityAt) }}</span>
-                  }
+                    <span class="gs-meta-text">
+                      {{ group.memberCount }} member{{ group.memberCount !== 1 ? 's' : '' }}
+                    </span>
+                  </div>
                 </div>
+
               </div>
 
-              <!-- Role badge + menu -->
-              <div class="gs-list-row__actions">
-                <span class="gs-role-badge"
-                      [class.gs-role-badge--admin]="group.role === 'admin'"
-                      [class.gs-role-badge--member]="group.role === 'member'">
-                  {{ group.role }}
-                </span>
+              <!-- Role badge -->
+              <span class="gs-role-badge"
+                    [class.gs-role-badge--admin]="group.role === 'admin'"
+                    [class.gs-role-badge--member]="group.role === 'member'">
+                {{ group.role }}
+              </span>
 
-                <button mat-icon-button class="gs-menu-btn"
-                        [matMenuTriggerFor]="groupMenu"
-                        (click)="$event.stopPropagation()">
-                  <mat-icon>more_vert</mat-icon>
+              <!-- Footer with actions -->
+              <div class="gs-list-card__footer">
+                
+                <button mat-stroked-button 
+                        color="primary"
+                        (click)="$event.stopPropagation(); selectGroup(group)">
+                  <mat-icon>check_circle</mat-icon>
+                  Select
                 </button>
+                
+                <div class="gs-list-card__actions" style="display: flex; gap: 4px;">
 
-                <mat-menu #groupMenu="matMenu">
-                  <button mat-menu-item (click)="pinGroup(group)">
-                    <mat-icon>push_pin</mat-icon>
-                    {{ group.pinned ? 'Unpin' : 'Pin' }}
-                  </button>
                   @if (group.role !== 'admin') {
-                    <button mat-menu-item class="gs-menu-item--danger" (click)="requestLeave(group)">
-                      <mat-icon class="gs-menu-item--danger">exit_to_app</mat-icon>
-                      Leave Group
+                    <button mat-button
+                            matTooltip="Leave Group"
+                            color="warn" 
+                            (click)="$event.stopPropagation(); requestLeave(group)">
+                      <mat-icon>exit_to_app</mat-icon>
+                      Leave
                     </button>
                   }
+                  
                   @if (group.role === 'admin') {
-                    <mat-divider></mat-divider>
-                    <button mat-menu-item class="gs-menu-item--danger" (click)="requestDelete(group)">
-                      <mat-icon class="gs-menu-item--danger">delete_forever</mat-icon>
-                      Delete Group
+                    <button mat-button
+                            matTooltip="Delete Group"
+                            color="warn" 
+                            (click)="$event.stopPropagation(); requestDelete(group)">
+                      <mat-icon>delete_forever</mat-icon>
+                      Delete
                     </button>
                   }
-                </mat-menu>
+                </div>
               </div>
             </div>
           }

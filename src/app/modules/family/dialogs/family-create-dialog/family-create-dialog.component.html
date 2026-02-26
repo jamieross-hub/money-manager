@@ -1,7 +1,8 @@
 <div class="p-6 min-w-[320px]">
+  <!-- Header -->
   <div class="flex items-center gap-3 mb-6">
     <div class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
-      <mat-icon class="text-primary-600 dark:text-primary-300">family_restroom</mat-icon>
+      <mat-icon class="text-primary-600 dark:text-primary-300">group_add</mat-icon>
     </div>
     <div>
       <p class="text-lg font-bold text-gray-900 dark:text-white m-0">Create Group</p>
@@ -9,14 +10,73 @@
     </div>
   </div>
 
-  <form [formGroup]="form" class="flex flex-col gap-4">
-    <mat-form-field appearance="fill">
+  <form [formGroup]="form" class="flex flex-col gap-5">
+
+    <!-- Group Icon -->
+    <div class="flex items-start gap-3">
+      <!-- Preview bubble -->
+      <div class="w-14 h-14 rounded-2xl bg-primary-50 dark:bg-primary-900/40 border-2 border-primary-300 dark:border-primary-600 flex items-center justify-center overflow-hidden shrink-0">
+        <img *ngIf="isImageIcon" [src]="selectedIcon()" alt="group icon" class="w-full h-full object-cover" />
+        <mat-icon *ngIf="!isImageIcon" class=" text-primary-500">{{ selectedIcon() }}</mat-icon>
+      </div>
+
+      <!-- Dropdown + upload -->
+      <div class="flex-1 flex flex-col gap-1 ">
+        <mat-form-field appearance="fill" class="w-full">
+          <mat-label>Group Icon</mat-label>
+          <mat-select [value]="selectedIcon()" (selectionChange)="selectIcon($event.value)">
+            <mat-option *ngFor="let opt of iconOptions" [value]="opt.icon">
+              <div class="flex items-center gap-2">
+                <mat-icon class="text-primary-500">{{ opt.icon }}</mat-icon>
+                <span>{{ opt.label }}</span>
+              </div>
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <label class="inline-flex items-center gap-1 text-xs font-medium text-primary-600 dark:text-primary-400 cursor-pointer hover:underline">
+          <mat-icon class="!text-sm">upload</mat-icon>
+          Upload image
+          <input type="file" accept="image/*" class="hidden" (change)="onFileSelected($event)" />
+        </label>
+      </div>
+    </div>
+
+    <!-- Group Name -->
+    <mat-form-field appearance="fill" class="w-full">
       <mat-label>Group Name</mat-label>
       <input matInput formControlName="name" placeholder="e.g. The Family" />
       <mat-error *ngIf="form.get('name')?.hasError('required')">Group name is required</mat-error>
+      <mat-error *ngIf="form.get('name')?.hasError('minlength')">At least 2 characters</mat-error>
     </mat-form-field>
 
-    <mat-form-field appearance="fill">
+    <!-- Mode -->
+    <div>
+      <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Expense Mode</p>
+      <mat-button-toggle-group formControlName="mode" class="w-full mode-toggle">
+        <mat-button-toggle value="common" class="flex-1">
+          <div class="flex items-center gap-1.5 px-1">
+            <mat-icon class="!text-base">people</mat-icon>
+            <div class="text-left">
+              <p class="text-xs font-semibold m-0">Common</p>
+              <p class="text-[10px] text-gray-500 dark:text-gray-400 m-0">Shared pool</p>
+            </div>
+          </div>
+        </mat-button-toggle>
+        <mat-button-toggle value="split" class="flex-1">
+          <div class="flex items-center gap-1.5 px-1">
+            <mat-icon class="!text-base">call_split</mat-icon>
+            <div class="text-left">
+              <p class="text-xs font-semibold m-0">Split</p>
+              <p class="text-[10px] text-gray-500 dark:text-gray-400 m-0">Track individually</p>
+            </div>
+          </div>
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    <!-- Currency -->
+    <mat-form-field appearance="fill" class="w-full">
       <mat-label>Currency</mat-label>
       <mat-select formControlName="currency">
         <mat-option value="INR">₹ INR – Indian Rupee</mat-option>
@@ -27,12 +87,14 @@
       </mat-select>
     </mat-form-field>
 
-    <div class="flex gap-3 mt-2">
+    <!-- Actions -->
+    <div class="flex gap-3 mt-1">
       <button mat-stroked-button type="button" class="flex-1" (click)="close()">Cancel</button>
       <button mat-flat-button color="primary" type="button" class="flex-1" [disabled]="form.invalid" (click)="submit()">
         <mat-icon class="!text-base mr-1 mb-2">add</mat-icon>
         Create
       </button>
     </div>
+
   </form>
 </div>

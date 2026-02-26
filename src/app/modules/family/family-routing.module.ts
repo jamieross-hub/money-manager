@@ -8,6 +8,7 @@ import { FamilyReportsComponent } from './pages/family-reports/family-reports.co
 const routes: Routes = [
   { path: '', component: GroupSelectionComponent },
   { path: 'dashboard', component: FamilyDashboardComponent },
+  { path: 'dashboard/:id', component: FamilyDashboardComponent },
   { path: 'members', component: FamilyMembersComponent },
   { path: 'reports', component: FamilyReportsComponent },
 ];

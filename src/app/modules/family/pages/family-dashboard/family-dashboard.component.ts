@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, effect, DestroyRef } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
@@ -45,6 +45,7 @@ export class FamilyDashboardComponent implements OnInit {
   private auth = inject(Auth);
   private familyService = inject(FamilyService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   readonly breakpointService = inject(BreakpointService);
   private destroyRef = inject(DestroyRef);
 
@@ -82,7 +83,13 @@ export class FamilyDashboardComponent implements OnInit {
   private memberColors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
 
   ngOnInit() {
-    this.store.dispatch(FamilyActions.loadMyFamily());
+    this.route.paramMap.subscribe(params => {
+      const id = params.get('id');
+      // if (id) {
+      //   this.familyService.setActiveFamily(id);
+      // }
+      this.store.dispatch(FamilyActions.loadMyFamily());
+    });
   }
 
   createFamily() {

@@ -8,6 +8,8 @@ export interface Family {
   ownerUserId: string;
   inviteCode: string; // e.g. FAM-8K2Q
   currency: string;
+  mode?: 'common' | 'split';
+  icon?: string; // emoji character or Data URL
   createdAt: Date | Timestamp;
   updatedAt: Date | Timestamp;
   isActive: boolean;
@@ -71,9 +73,13 @@ export interface FamilyStats {
 
 // ─── Requests ──────────────────────────────────────────────────────────────
 
+export type FamilyMode = 'common' | 'split';
+
 export interface CreateFamilyRequest {
   name: string;
   currency: string;
+  mode: FamilyMode;
+  icon?: string; // emoji or Data URL from uploaded image
 }
 
 export interface AddFamilyTransactionRequest {
