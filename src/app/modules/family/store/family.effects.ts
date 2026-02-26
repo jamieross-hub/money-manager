@@ -26,6 +26,18 @@ export class FamilyEffects {
       )
     )
   );
+  
+  loadFamily$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(FamilyActions.loadFamily),
+      switchMap(({ familyId }) =>
+        from(this.familyService.getFamily(familyId)).pipe(
+          map(family => FamilyActions.loadMyFamilySuccess({ family })),
+          catchError(err => of(FamilyActions.loadMyFamilyFailure({ error: err.message })))
+        )
+      )
+    )
+  );
 
   loadUserFamilies$ = createEffect(() =>
     this.actions$.pipe(

@@ -7,6 +7,7 @@ export const familyReducer = createReducer(
 
   // Load my family
   on(FamilyActions.loadMyFamily, state => ({ ...state, loading: true, error: null })),
+  on(FamilyActions.loadFamily, state => ({ ...state, loading: true, error: null })),
   on(FamilyActions.loadMyFamilySuccess, (state, { family }) => ({ ...state, loading: false, family })),
   on(FamilyActions.loadMyFamilyFailure, (state, { error }) => ({ ...state, loading: false, error })),
 

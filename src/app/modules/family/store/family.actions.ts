@@ -10,6 +10,7 @@ import {
 
 // ─── Load My Family ────────────────────────────────────────────────────────
 export const loadMyFamily = createAction('[Family] Load My Family');
+export const loadFamily = createAction('[Family] Load Family', props<{ familyId: string }>());
 export const loadMyFamilySuccess = createAction('[Family] Load My Family Success', props<{ family: Family | null }>());
 export const loadMyFamilyFailure = createAction('[Family] Load My Family Failure', props<{ error: string }>());
 

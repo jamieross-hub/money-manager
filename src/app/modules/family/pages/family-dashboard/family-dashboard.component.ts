@@ -85,10 +85,11 @@ export class FamilyDashboardComponent implements OnInit {
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
-      // if (id) {
-      //   this.familyService.setActiveFamily(id);
-      // }
-      this.store.dispatch(FamilyActions.loadMyFamily());
+      if (id) {
+        this.store.dispatch(FamilyActions.loadFamily({ familyId: id }));
+      } else {
+        this.store.dispatch(FamilyActions.loadMyFamily());
+      }
     });
   }
 

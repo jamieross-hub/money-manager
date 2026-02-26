@@ -286,7 +286,7 @@ export class SignInComponent implements OnInit, OnDestroy {
         await this.loadUserData(user.user.uid);
       }
 
-      this.router.navigate(['/dashboard']);
+      this.navigateAfterSignIn();
 
     } catch (error: any) {
       this.handleSignInError(error, email);
@@ -294,6 +294,7 @@ export class SignInComponent implements OnInit, OnDestroy {
       this.isLoading = false;
     }
   }
+
 
   /**
    * Enhanced sign-up with security validation
@@ -409,7 +410,7 @@ export class SignInComponent implements OnInit, OnDestroy {
       // Load user data
       await this.loadUserData();
 
-      this.router.navigate(['/dashboard']);
+      this.navigateAfterSignIn();
 
     } catch (error: any) {
       this.handleGoogleSignInError(error);
@@ -431,7 +432,7 @@ export class SignInComponent implements OnInit, OnDestroy {
       await this.loadUserData(guestUid);
 
       this.notificationService.success('Logged in as Guest (Offline Mode)');
-      this.router.navigate(['/dashboard']);
+      this.navigateAfterSignIn();
     } catch (error) {
       console.error('Guest mode error:', error);
       this.notificationService.error('Failed to enable guest mode');
@@ -462,6 +463,17 @@ export class SignInComponent implements OnInit, OnDestroy {
       ]);
     } catch (error) {
       console.error('Error loading user data:', error);
+    }
+  }
+
+  /**
+   * Centralized navigation after successful sign-in
+   */
+  private navigateAfterSignIn(): void {
+    if (this.userService.userAuth$.value?.preferences?.isFamilyMode) {
+      this.router.navigate(['/dashboard/family']);
+    } else {
+      this.router.navigate(['/dashboard']);
     }
   }
 
