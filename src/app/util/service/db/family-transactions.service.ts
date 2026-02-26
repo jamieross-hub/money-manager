@@ -7,7 +7,7 @@ import { DateService } from '../date.service';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import { AccountsService } from './accounts.service';
-import { SplitwiseService } from 'src/app/modules/splitwise/services/splitwise.service';
+
 import { CommonSyncService } from '../common-sync.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { UserService } from './user.service';
@@ -24,7 +24,6 @@ export class FamilyTransactionsService extends TransactionsService {
         dateService: DateService,
         store: Store<AppState>,
         accountsService: AccountsService,
-        splitwiseService: SplitwiseService,
         commonSyncService: CommonSyncService,
         localStorageUtility: LocalIndexDBStorageService,
         userService: UserService,
@@ -37,7 +36,6 @@ export class FamilyTransactionsService extends TransactionsService {
             dateService,
             store,
             accountsService,
-            splitwiseService,
             commonSyncService,
             localStorageUtility,
             userService

@@ -38,16 +38,24 @@
         <div>
           <p class="text-xl font-bold text-gray-900 dark:text-white">{{ fam.name }}</p>
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-            {{ members().length }} members · {{ fam.currency }}
+            {{ members().length }} members
           </p>
         </div>
-        <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2">
           <button mat-icon-button [routerLink]="['/dashboard/family/members']" matTooltip="Manage members">
             <mat-icon>group</mat-icon>
           </button>
           <button mat-icon-button [routerLink]="['/dashboard/family/reports']" matTooltip="Reports">
             <mat-icon>bar_chart</mat-icon>
           </button>
+          <!-- Settle Up button shown only for split-mode groups -->
+          <a *ngIf="fam.mode === 'split'"
+             [routerLink]="['/dashboard/family/settle']"
+             class="settle-up-btn"
+             matRipple>
+            <mat-icon class="!text-base !w-4 !h-4">handshake</mat-icon>
+            Settle Up
+          </a>
         </div>
       </div>
 

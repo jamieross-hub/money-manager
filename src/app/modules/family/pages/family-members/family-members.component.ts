@@ -110,7 +110,7 @@ export class FamilyMembersComponent implements OnInit {
     const fam = this.family();
     if (!fam) return;
     const ref = this.dialog.open(FamilyAddTransactionDialogComponent, {
-      data: { familyId: fam.id, currency: fam.currency },
+      data: { familyId: fam.id },
       panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : '',
     });
     ref.afterClosed().subscribe(result => {

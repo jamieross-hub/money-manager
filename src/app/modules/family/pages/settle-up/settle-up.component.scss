@@ -1,0 +1,180 @@
+:host {
+  display: block;
+}
+
+/* ── Header gradient ─────────────────────────── */
+.settle-header {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #4338ca 100%);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+  }
+}
+
+/* ── Pills in header ─────────────────────────── */
+.balance-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  backdrop-filter: blur(4px);
+}
+
+/* ── Section labels ──────────────────────────── */
+.section-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  margin-bottom: 10px;
+}
+
+/* ── Card list ───────────────────────────────── */
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Balance card ────────────────────────────── */
+.balance-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1.5px solid transparent;
+  background: white;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  cursor: default;
+  transition: box-shadow 0.15s;
+
+  &:active {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+  }
+}
+
+.owe-card {
+  border-color: #fca5a5;
+  background: linear-gradient(to right, #fff5f5, #ffffff);
+}
+
+.receive-card {
+  border-color: #6ee7b7;
+  background: linear-gradient(to right, #f0fdf4, #ffffff);
+}
+
+.balance-card-neutral {
+  background: white;
+  border-color: #e2e8f0;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .balance-card {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  .owe-card {
+    border-color: #dc2626;
+    background: linear-gradient(to right, #1c0a0a, #1e293b);
+  }
+
+  .receive-card {
+    border-color: #059669;
+    background: linear-gradient(to right, #052e16, #1e293b);
+  }
+
+  .balance-card-neutral {
+    background: #1e293b;
+  }
+}
+
+/* ── Avatar stack ────────────────────────────── */
+.avatar-stack {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 2px solid white;
+}
+
+.avatar-sm {
+  width: 28px;
+  height: 28px;
+  font-size: 11px;
+}
+
+.avatar-arrow {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+/* ── Settle button ───────────────────────────── */
+.settle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+  flex-shrink: 0;
+  white-space: nowrap;
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+.settle-btn-pay {
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 2px 8px rgba(239,68,68,0.3);
+}
+
+.settle-btn-receive {
+  background: #10b981;
+  color: white;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.3);
+}

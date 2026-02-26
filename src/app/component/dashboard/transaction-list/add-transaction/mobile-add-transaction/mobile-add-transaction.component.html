@@ -147,6 +147,175 @@
 			</div>
 		</div>
 
+		@if(isSplitGroupMode()) {
+		<!-- Family Split Details Card -->
+		<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+
+			<!-- Card Header -->
+			<div class="flex items-center gap-2 px-4 py-3 bg-purple-50 dark:bg-purple-900/30 border-b border-purple-100 dark:border-purple-800/40">
+				<div class="w-7 h-7 rounded-full bg-purple-100 dark:bg-purple-800 flex items-center justify-center">
+					<mat-icon style="font-size:16px;width:16px;height:16px;color:#9333ea">group</mat-icon>
+				</div>
+				<span class="text-sm font-semibold text-purple-800 dark:text-purple-200 tracking-wide">Family Split</span>
+			</div>
+
+			<div class="p-4 space-y-5">
+
+				<!-- ── Paid By ── -->
+				<div>
+					<p class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Paid By</p>
+					<div class="flex flex-col gap-2">
+						@for (member of familyMembers(); track member.userId) {
+							<button type="button"
+								(click)="!viewMode() && transactionForm.patchValue({ paidByUserId: member.userId })"
+								[disabled]="viewMode()"
+								class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl border transition-all duration-150 text-left"
+								[class.border-purple-500]="transactionForm.get('paidByUserId')?.value === member.userId"
+								[class.bg-purple-50]="transactionForm.get('paidByUserId')?.value === member.userId"
+								[class.border-gray-200]="transactionForm.get('paidByUserId')?.value !== member.userId"
+								[class.dark:border-gray-700]="transactionForm.get('paidByUserId')?.value !== member.userId"
+							>
+								<!-- Avatar -->
+								<div class="relative shrink-0">
+									@if(member.photoURL) {
+										<img [src]="member.photoURL" alt="" class="w-9 h-9 rounded-full object-cover ring-2"
+											[class.ring-purple-400]="transactionForm.get('paidByUserId')?.value === member.userId"
+											[class.ring-gray-200]="transactionForm.get('paidByUserId')?.value !== member.userId" />
+									} @else {
+										<div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ring-2"
+											[class.bg-purple-500]="transactionForm.get('paidByUserId')?.value === member.userId"
+											[class.text-white]="transactionForm.get('paidByUserId')?.value === member.userId"
+											[class.ring-purple-400]="transactionForm.get('paidByUserId')?.value === member.userId"
+											[class.bg-gray-100]="transactionForm.get('paidByUserId')?.value !== member.userId"
+											[class.dark:bg-gray-700]="transactionForm.get('paidByUserId')?.value !== member.userId"
+											[class.text-gray-600]="transactionForm.get('paidByUserId')?.value !== member.userId"
+											[class.dark:text-gray-300]="transactionForm.get('paidByUserId')?.value !== member.userId"
+											[class.ring-gray-200]="transactionForm.get('paidByUserId')?.value !== member.userId"
+										>
+											{{ member.displayName.charAt(0).toUpperCase() }}
+										</div>
+									}
+								</div>
+
+								<!-- Name -->
+								<div class="flex-1 min-w-0">
+									<p class="text-sm font-medium truncate"
+										[class.text-purple-800]="transactionForm.get('paidByUserId')?.value === member.userId"
+										[class.dark:text-purple-200]="transactionForm.get('paidByUserId')?.value === member.userId"
+										[class.text-gray-800]="transactionForm.get('paidByUserId')?.value !== member.userId"
+										[class.dark:text-gray-200]="transactionForm.get('paidByUserId')?.value !== member.userId"
+									>
+										{{ member.displayName }}
+										@if(member.userId === userId) {
+											<span class="ml-1 text-xs font-normal opacity-60">You</span>
+										}
+									</p>
+								</div>
+
+								<!-- Selected indicator -->
+								@if(transactionForm.get('paidByUserId')?.value === member.userId) {
+									<mat-icon style="font-size:20px;width:20px;height:20px;color:#9333ea">check_circle</mat-icon>
+								} @else {
+									<mat-icon style="font-size:20px;width:20px;height:20px" class="text-gray-300 dark:text-gray-600">radio_button_unchecked</mat-icon>
+								}
+							</button>
+						}
+					</div>
+				</div>
+
+				<!-- Divider -->
+				<div class="border-t border-gray-100 dark:border-gray-700"></div>
+
+				<!-- ── Split Between ── -->
+				<div>
+					<div class="flex items-center justify-between mb-2">
+						<p class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Split Between</p>
+						@if((transactionForm.get('splitBetween')?.value?.length || 0) > 0) {
+							<span class="text-xs font-medium text-purple-600 dark:text-purple-400">
+								{{ transactionForm.get('splitBetween')?.value?.length }} selected
+							</span>
+						}
+					</div>
+
+					<div class="flex flex-col gap-2">
+						@for (member of familyMembers(); track member.userId) {
+							<button type="button"
+								(click)="!viewMode() && toggleSplitBetweenMember(member.userId)"
+								[disabled]="viewMode()"
+								class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl border transition-all duration-150 text-left"
+								[class.border-purple-500]="isMemberSelected(member.userId)"
+								[class.bg-purple-50]="isMemberSelected(member.userId)"
+								[class.border-gray-200]="!isMemberSelected(member.userId)"
+								[class.dark:border-gray-700]="!isMemberSelected(member.userId)"
+							>
+								<!-- Avatar -->
+								<div class="relative shrink-0">
+									@if(member.photoURL) {
+										<img [src]="member.photoURL" alt="" class="w-9 h-9 rounded-full object-cover ring-2"
+											[class.ring-purple-400]="isMemberSelected(member.userId)"
+											[class.ring-gray-200]="!isMemberSelected(member.userId)" />
+									} @else {
+										<div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ring-2"
+											[class.bg-purple-500]="isMemberSelected(member.userId)"
+											[class.text-white]="isMemberSelected(member.userId)"
+											[class.ring-purple-400]="isMemberSelected(member.userId)"
+											[class.bg-gray-100]="!isMemberSelected(member.userId)"
+											[class.dark:bg-gray-700]="!isMemberSelected(member.userId)"
+											[class.text-gray-600]="!isMemberSelected(member.userId)"
+											[class.dark:text-gray-300]="!isMemberSelected(member.userId)"
+											[class.ring-gray-200]="!isMemberSelected(member.userId)"
+										>
+											{{ member.displayName.charAt(0).toUpperCase() }}
+										</div>
+									}
+								</div>
+
+								<!-- Name + share -->
+								<div class="flex-1 min-w-0">
+									<p class="text-sm font-medium truncate"
+										[class.text-purple-800]="isMemberSelected(member.userId)"
+										[class.dark:text-purple-200]="isMemberSelected(member.userId)"
+										[class.text-gray-800]="!isMemberSelected(member.userId)"
+										[class.dark:text-gray-200]="!isMemberSelected(member.userId)"
+									>
+										{{ member.displayName }}
+										@if(member.userId === userId) {
+											<span class="ml-1 text-xs font-normal opacity-60">You</span>
+										}
+									</p>
+									@if(isMemberSelected(member.userId) && (transactionForm.get('amount')?.value || 0) > 0) {
+										<p class="text-xs text-purple-600 dark:text-purple-400 font-medium mt-0.5">
+											₹{{ ((transactionForm.get('amount')?.value || 0) / (transactionForm.get('splitBetween')?.value?.length || 1)).toFixed(2) }} each
+										</p>
+									}
+								</div>
+
+								<!-- Tick -->
+								@if(isMemberSelected(member.userId)) {
+									<mat-icon style="font-size:20px;width:20px;height:20px;color:#9333ea">check_circle</mat-icon>
+								} @else {
+									<mat-icon style="font-size:20px;width:20px;height:20px" class="text-gray-300 dark:text-gray-600">add_circle_outline</mat-icon>
+								}
+							</button>
+						}
+					</div>
+
+					<!-- Summary footer -->
+					@if((transactionForm.get('splitBetween')?.value?.length || 0) > 0 && (transactionForm.get('amount')?.value || 0) > 0) {
+						<div class="mt-3 flex items-center justify-between rounded-xl bg-purple-600 px-4 py-2.5 text-white">
+							<span class="text-xs font-medium opacity-90">Each person pays</span>
+							<span class="text-base font-bold">
+								₹{{ ((transactionForm.get('amount')?.value || 0) / (transactionForm.get('splitBetween')?.value?.length || 1)).toFixed(2) }}
+							</span>
+						</div>
+					}
+				</div>
+
+			</div>
+		</div>
+		} <!-- end @if(isSplitGroupMode()) -->
+
+
 		<!-- Account and Payment Method Grid -->
 		<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 			<!-- Account Field -->
@@ -222,84 +391,9 @@
 				[class.bg-gray-100]="viewMode()"></textarea>
 		</div>
 
-		<!-- Split Transaction Section -->
-		<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm" *ngIf="!isGuestUser">
-			<div class="flex items-center justify-between mb-4">
-				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-					Split with Group
-				</label>
 
-				<mat-slide-toggle formControlName="isSplitTransaction" (change)="toggleSplitTransaction()"
-					[disabled]="viewMode()"></mat-slide-toggle>
-				<!-- <button 
-				type="button"
-				(click)="toggleSplitTransaction()"
-				class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200"
-				[class]="isSplitTransaction ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'"
-			>
-				<mat-icon class="text-sm">{{ isSplitTransaction ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
-				{{ isSplitTransaction ? 'Split Enabled' : 'Split Disabled' }}
-			</button> -->
-			</div>
 
-			<!-- Split Transaction Options -->
-			@if(transactionForm.get('isSplitTransaction')?.value ) {
-			<div class="space-y-4">
-				<!-- Group Selection -->
-				<div>
-					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-						Select Group *
-					</label>
-					<mat-form-field appearance="fill" class="w-full">
-						<mat-label>Choose a group to split with</mat-label>
-						<mat-select formControlName="splitGroupId" [disabled]="viewMode()">
-							@for (group of groups$ | async; track group.id) {
-							<mat-option [value]="group.id">
-								<div class="flex items-center justify-between w-full">
-									<span>{{ group.name }}</span>
-									<span class="text-xs text-gray-500">{{ group.members.length }} members</span>
-								</div>
-							</mat-option>
-							}
-						</mat-select>
-						<!-- @if(groups.length === 0) {
-							<mat-hint class="text-orange-600">
-								No groups available. 
-								<button 
-									type="button"
-									(click)="openSplitwise()"
-									class="text-blue-600 hover:text-blue-800 underline"
-								>
-									Create a group
-								</button>
-							</mat-hint>
-						} -->
-						@if(transactionForm.get('splitGroupId')?.hasError('required') &&
-						transactionForm.get('splitGroupId')?.touched) {
-						<mat-error>Please select a group for split transaction</mat-error>
-						}
-					</mat-form-field>
-				</div>
-
-				<!-- Split Info -->
-				<!-- @if(transactionForm.get('splitGroupId')?.value) {
-					<div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-						<div class="flex items-center gap-2 mb-2">
-							<mat-icon class="text-sm text-blue-600 dark:text-blue-400">info</mat-icon>
-							<span class="text-sm font-medium text-blue-800 dark:text-blue-200">Split Details</span>
-						</div>
-						<div class="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-							<p>• Amount will be split equally among {{ selectedGroup.members.length }} members</p>
-							<p>• Each member will owe ₹{{ ((transactionForm.get('amount')?.value || 0) / selectedGroup.members.length).toFixed(2) }}</p>
-							<p>• You will be marked as the payer</p>
-							<p>• A regular transaction will also be created in your account</p>
-						</div>
-					</div>
-				} -->
-			</div>
-			}
-		</div>
-
+		@if(!isFamilyMode()) {
 		<!-- Category Split Section -->
 		<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
 			<div class="flex items-center justify-between mb-4">
@@ -348,7 +442,9 @@
 			</div>
 			}
 		</div>
+		} <!-- end @if(!isFamilyMode()) for Category Split -->
 
+		@if(!isFamilyMode()) {
 		<!-- Recurring Transaction Section -->
 		<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
 			<div class="flex items-center justify-between mb-4">
@@ -419,7 +515,9 @@
 			</div>
 			}
 		</div>
+		} <!-- end @if(!isFamilyMode()) for Recurring Transaction -->
 
+		@if(!isFamilyMode()) {
 		<!-- Tax Fields -->
 		<mat-expansion-panel class="bg-white dark:bg-gray-800 shadow-sm border-0">
 			<mat-expansion-panel-header class="px-4 py-3">
@@ -518,6 +616,8 @@
 				}
 			</div>
 		</mat-expansion-panel>
+		} <!-- end @if(!isFamilyMode()) for Tax Fields -->
+
 
 		<!-- Bottom Spacing for Mobile -->
 		<div class="h-20"></div>

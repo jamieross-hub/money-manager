@@ -32,10 +32,9 @@ const INCOME_CATEGORIES = [
 export class FamilyAddTransactionDialogComponent {
   private fb = inject(FormBuilder);
   private dialogRef = inject(MatDialogRef<FamilyAddTransactionDialogComponent>);
-  private data = inject(MAT_DIALOG_DATA, { optional: true }) as { familyId: string; currency: string; transaction?: any } | null;
+  private data = inject(MAT_DIALOG_DATA, { optional: true }) as { familyId: string; transaction?: any } | null;
 
   isEditing = !!this.data?.transaction;
-  currency = this.data?.currency || 'INR';
 
   typeControl = this.fb.control<FamilyTransactionType>(
     this.data?.transaction?.type || 'expense',

@@ -7,7 +7,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { CommonModule } from '@angular/common';
 import { CreateFamilyRequest } from 'src/app/util/models/family.model';
@@ -39,7 +38,6 @@ export const GROUP_ICON_OPTIONS: { icon: string; label: string }[] = [
     MatInputModule,
     MatSelectModule,
     MatIconModule,
-    MatButtonToggleModule,
     MatTooltipModule,
   ],
   templateUrl: './family-create-dialog.component.html',
@@ -57,7 +55,6 @@ export class FamilyCreateDialogComponent {
 
   form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
-    currency: ['INR', Validators.required],
     mode: ['common', Validators.required],
   });
 
@@ -82,7 +79,7 @@ export class FamilyCreateDialogComponent {
   submit() {
     if (this.form.valid) {
       const data: CreateFamilyRequest = {
-        ...(this.form.value as { name: string; currency: string; mode: 'common' | 'split' }),
+        ...(this.form.value as { name: string; mode: 'common' | 'split' }),
         icon: this.selectedIcon(),
       };
       if (this.bottomSheetRef) {

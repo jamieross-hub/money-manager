@@ -12,7 +12,7 @@ import { NotificationService } from 'src/app/util/service/notification.service';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { User } from 'src/app/util/models/user.model';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { SplitwiseService } from 'src/app/modules/splitwise/services/splitwise.service';
+
 import { ThemeSwitchingService } from 'src/app/util/service/theme-switching.service';
 import { ThemeType } from 'src/app/util/models/theme.model';
 import { take } from 'rxjs';
@@ -76,7 +76,6 @@ export class UserComponent {
     private notificationService: NotificationService,
     private router: Router,
     private breakpointObserver: BreakpointObserver,
-    private splitwiseService: SplitwiseService,
     private themeSwitchingService: ThemeSwitchingService,
     private localStorageService: LocalIndexDBStorageService,
     private dialog: MatDialog,
@@ -339,7 +338,13 @@ export class UserComponent {
   }
 
   shareApp() {
-    this.splitwiseService.sharePWA();
+    if (navigator.share) {
+      navigator.share({
+        title: 'Money Manager',
+        text: 'Track your finances with Money Manager!',
+        url: window.location.origin
+      }).catch(() => {});
+    }
     this.close();
   }
 

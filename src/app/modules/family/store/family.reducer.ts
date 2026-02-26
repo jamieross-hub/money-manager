@@ -58,4 +58,13 @@ export const familyReducer = createReducer(
 
   // Clear error
   on(FamilyActions.clearError, state => ({ ...state, error: null })),
+
+  // Settlements
+  on(FamilyActions.loadSettlements, state => ({ ...state, settlementsLoading: true })),
+  on(FamilyActions.loadSettlementsSuccess, (state, { settlements }) => ({ ...state, settlementsLoading: false, settlements })),
+  on(FamilyActions.loadSettlementsFailure, (state, { error }) => ({ ...state, settlementsLoading: false, error })),
+  on(FamilyActions.addSettlementSuccess, (state, { settlement }) => ({
+    ...state,
+    settlements: [settlement, ...state.settlements],
+  })),
 );

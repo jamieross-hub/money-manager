@@ -7,7 +7,7 @@ export interface Family {
   name: string;
   ownerUserId: string;
   inviteCode: string; // e.g. FAM-8K2Q
-  currency: string;
+  // currency: string;
   mode?: 'common' | 'split';
   icon?: string; // emoji character or Data URL
   createdAt: Date | Timestamp;
@@ -36,6 +36,27 @@ export interface FamilyMember {
 
 export type FamilyTransactionType = 'income' | 'expense';
 
+/** Represents a single member's share in a split transaction */
+export interface SplitBetweenMember {
+  userId: string;
+  displayName: string;
+  photoURL?: string;
+  /** Percentage (0-100) of the transaction this member owes */
+  percentage: number;
+  /** Computed amount this member owes */
+  amount: number;
+}
+
+/** Extra data stored on a transaction when the group mode is 'split' */
+export interface SplitTransactionData {
+  /** The userId of the member who paid the bill */
+  paidByUserId: string;
+  paidByDisplayName: string;
+  paidByPhotoURL?: string;
+  /** Members sharing the expense */
+  splitBetween: SplitBetweenMember[];
+}
+
 export interface FamilyTransaction {
   id?: string;
   familyId: string;
@@ -49,6 +70,8 @@ export interface FamilyTransaction {
   note?: string;
   createdAt: Date | Timestamp;
   updatedAt: Date | Timestamp;
+  /** Present only when the group mode is 'split' */
+  splitData?: SplitTransactionData;
 }
 
 // ─── Computed Stats ────────────────────────────────────────────────────────
@@ -77,7 +100,7 @@ export type FamilyMode = 'common' | 'split';
 
 export interface CreateFamilyRequest {
   name: string;
-  currency: string;
+  // currency: string;
   mode: FamilyMode;
   icon?: string; // emoji or Data URL from uploaded image
 }
@@ -97,4 +120,54 @@ export interface UpdateFamilyTransactionRequest {
   category?: string;
   date?: Date;
   note?: string;
+}
+
+// ─── Settlements ────────────────────────────────────────────────────────────
+
+export type SettlementMethod = 'cash' | 'upi' | 'bank_transfer';
+
+/** A payment made to settle a debt between two family members. */
+export interface Settlement {
+  id?: string;
+  familyId: string;
+  /** userId of the person who PAID (cleared their debt) */
+  fromUserId: string;
+  fromDisplayName: string;
+  fromPhotoURL?: string;
+  /** userId of the person who RECEIVED the money */
+  toUserId: string;
+  toDisplayName: string;
+  toPhotoURL?: string;
+  amount: number;
+  method: SettlementMethod;
+  note?: string;
+  settledAt: Date | Timestamp;
+  createdAt: Date | Timestamp;
+}
+
+export interface AddSettlementRequest {
+  familyId: string;
+  fromUserId: string;
+  fromDisplayName: string;
+  fromPhotoURL?: string;
+  toUserId: string;
+  toDisplayName: string;
+  toPhotoURL?: string;
+  amount: number;
+  method: SettlementMethod;
+  note?: string;
+}
+
+/**
+ * Computed balance after netting split-expense shares against settlements.
+ * Positive `amount` means `fromUserId` owes `toUserId` that amount.
+ */
+export interface BalanceEntry {
+  fromUserId: string;
+  fromDisplayName: string;
+  fromPhotoURL?: string;
+  toUserId: string;
+  toDisplayName: string;
+  toPhotoURL?: string;
+  amount: number; // always > 0 after netting
 }

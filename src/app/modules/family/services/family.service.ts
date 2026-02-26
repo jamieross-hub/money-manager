@@ -30,7 +30,10 @@ import {
   FamilyMemberStats,
   CreateFamilyRequest,
   AddFamilyTransactionRequest,
-  UpdateFamilyTransactionRequest
+  UpdateFamilyTransactionRequest,
+  Settlement,
+  AddSettlementRequest,
+  BalanceEntry,
 } from 'src/app/util/models/family.model';
 
 const ACTIVE_FAMILY_ID_KEY = 'active_family_id';
@@ -106,6 +109,10 @@ export class FamilyService {
     return doc(this.firestore, `${this.FAMILIES_COL}/${familyId}/transactions/${txId}`);
   }
 
+  private getSettlementsCol(familyId: string) {
+    return collection(this.firestore, `${this.FAMILIES_COL}/${familyId}/settlements`);
+  }
+
   // ─── Utility ─────────────────────────────────────────────────────────────
 
   private generateInviteCode(): string {
@@ -136,7 +143,6 @@ export class FamilyService {
       name: request.name,
       ownerUserId: user.uid,
       inviteCode,
-      currency: request.currency || 'INR',
       mode: request.mode ?? 'common',
       icon: request.icon,
       createdAt: new Date(),
@@ -526,5 +532,107 @@ export class FamilyService {
 
   canEditTransaction(tx: FamilyTransaction, currentUserId: string, isAdmin: boolean): boolean {
     return isAdmin || tx.userId === currentUserId;
+  }
+
+  // ─── Settlements ────────────────────────────────────────────────────────────────────
+
+  getSettlements(familyId: string): Observable<Settlement[]> {
+    const q = query(this.getSettlementsCol(familyId), orderBy('settledAt', 'desc'));
+    return from(getDocs(q)).pipe(
+      map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() as any } as Settlement))),
+      catchError(() => of([]))
+    );
+  }
+
+  async addSettlement(request: AddSettlementRequest): Promise<Settlement> {
+    const user = this.currentUser;
+    if (!user) throw new Error('User not authenticated');
+
+    const now = new Date();
+    const data: Omit<Settlement, 'id'> = {
+      familyId: request.familyId,
+      fromUserId: request.fromUserId,
+      fromDisplayName: request.fromDisplayName,
+      fromPhotoURL: request.fromPhotoURL || '',
+      toUserId: request.toUserId,
+      toDisplayName: request.toDisplayName,
+      toPhotoURL: request.toPhotoURL || '',
+      amount: request.amount,
+      method: request.method,
+      note: request.note || '',
+      settledAt: now,
+      createdAt: now,
+    };
+
+    const ref = await addDoc(this.getSettlementsCol(request.familyId), data);
+    return { id: ref.id, ...data };
+  }
+
+  /**
+   * Compute net balances from split-expense shares minus recorded settlements.
+   * Returns entries where `amount > 0` (from owes to).
+   */
+  computeBalances(
+    transactions: FamilyTransaction[],
+    members: FamilyMember[],
+    settlements: Settlement[]
+  ): BalanceEntry[] {
+    // Step 1: accumulate raw owed amounts between pairs.
+    // key = `${debtorId}::${creditorId}` → amount owed
+    const pairMap = new Map<string, number>();
+
+    const adjust = (debtorId: string, creditorId: string, delta: number) => {
+      if (debtorId === creditorId) return;
+      const key = `${debtorId}::${creditorId}`;
+      pairMap.set(key, (pairMap.get(key) ?? 0) + delta);
+    };
+
+    // Split expense shares → debtor owes payer
+    for (const tx of transactions) {
+      if (tx.type !== 'expense' || !tx.splitData) continue;
+      const { paidByUserId, splitBetween } = tx.splitData;
+      for (const share of splitBetween) {
+        if (share.userId !== paidByUserId) {
+          adjust(share.userId, paidByUserId, share.amount);
+        }
+      }
+    }
+
+    // Settlements → reduce debt (from paid to)
+    for (const s of settlements) {
+      adjust(s.fromUserId, s.toUserId, -s.amount);
+    }
+
+    // Step 2: collapse symmetric pairs and keep only positives
+    const seen = new Set<string>();
+    const memberMap = new Map(members.map(m => [m.userId, m]));
+    const result: BalanceEntry[] = [];
+
+    for (const [key, amount] of pairMap.entries()) {
+      if (seen.has(key)) continue;
+      const [debtorId, creditorId] = key.split('::');
+      const reverseKey = `${creditorId}::${debtorId}`;
+      seen.add(key);
+      seen.add(reverseKey);
+
+      const net = amount - (pairMap.get(reverseKey) ?? 0);
+      if (Math.abs(net) < 0.01) continue;
+
+      const [fromId, toId] = net > 0 ? [debtorId, creditorId] : [creditorId, debtorId];
+      const fromMember = memberMap.get(fromId);
+      const toMember = memberMap.get(toId);
+
+      result.push({
+        fromUserId: fromId,
+        fromDisplayName: fromMember?.displayName ?? fromId,
+        fromPhotoURL: fromMember?.photoURL,
+        toUserId: toId,
+        toDisplayName: toMember?.displayName ?? toId,
+        toPhotoURL: toMember?.photoURL,
+        amount: Math.abs(net),
+      });
+    }
+
+    return result.sort((a, b) => b.amount - a.amount);
   }
 }

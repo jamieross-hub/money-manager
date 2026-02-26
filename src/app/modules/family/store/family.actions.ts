@@ -6,6 +6,8 @@ import {
   CreateFamilyRequest,
   AddFamilyTransactionRequest,
   UpdateFamilyTransactionRequest,
+  Settlement,
+  AddSettlementRequest,
 } from 'src/app/util/models/family.model';
 
 // ─── Load My Family ────────────────────────────────────────────────────────
@@ -49,3 +51,11 @@ export const deleteTransactionSuccess = createAction('[Family] Delete Transactio
 
 // ─── Error ─────────────────────────────────────────────────────────────────
 export const clearError = createAction('[Family] Clear Error');
+
+// ─── Settlements ───────────────────────────────────────────────────────────
+export const loadSettlements = createAction('[Family] Load Settlements', props<{ familyId: string }>());
+export const loadSettlementsSuccess = createAction('[Family] Load Settlements Success', props<{ settlements: Settlement[] }>());
+export const loadSettlementsFailure = createAction('[Family] Load Settlements Failure', props<{ error: string }>());
+export const addSettlement = createAction('[Family] Add Settlement', props<{ request: AddSettlementRequest }>());
+export const addSettlementSuccess = createAction('[Family] Add Settlement Success', props<{ settlement: Settlement }>());
+export const addSettlementFailure = createAction('[Family] Add Settlement Failure', props<{ error: string }>());

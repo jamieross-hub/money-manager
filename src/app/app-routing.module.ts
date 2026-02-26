@@ -105,16 +105,6 @@ export const routes: Routes = [
         }
       },
       {
-        path: 'splitwise',
-        loadChildren: () => import('./modules/splitwise/splitwise.module').then(m => m.SplitwiseModule),
-        title: 'Splitwise',
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true,
-          title: 'Splitwise'
-        }
-      },
-      {
         path: 'family',
         loadChildren: () => import('./modules/family/family.module').then(m => m.FamilyModule),
         title: 'Family',

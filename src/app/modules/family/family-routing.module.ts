@@ -4,6 +4,7 @@ import { GroupSelectionComponent } from './pages/group-selection/group-selection
 import { FamilyDashboardComponent } from './pages/family-dashboard/family-dashboard.component';
 import { FamilyMembersComponent } from './pages/family-members/family-members.component';
 import { FamilyReportsComponent } from './pages/family-reports/family-reports.component';
+import { SettleUpComponent } from './pages/settle-up/settle-up.component';
 
 const routes: Routes = [
   { path: '', component: GroupSelectionComponent },
@@ -11,6 +12,7 @@ const routes: Routes = [
   { path: 'dashboard/:id', component: FamilyDashboardComponent },
   { path: 'members', component: FamilyMembersComponent },
   { path: 'reports', component: FamilyReportsComponent },
+  { path: 'settle', component: SettleUpComponent },
 ];
 
 @NgModule({
@@ -18,3 +20,4 @@ const routes: Routes = [
   exports: [RouterModule]
 })
 export class FamilyRoutingModule {}
+

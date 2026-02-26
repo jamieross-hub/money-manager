@@ -1,0 +1,104 @@
+<!-- Settle Dialog -->
+<div class="settle-dialog-container">
+
+  <!-- Header -->
+  <div class="dialog-header">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center">
+        <mat-icon class="text-indigo-600 !text-xl">swap_horiz</mat-icon>
+      </div>
+      <div>
+        <h2 class="text-base font-bold text-neutral-800">Record Settlement</h2>
+        <p class="text-xs text-neutral-400">Mark a payment as settled</p>
+      </div>
+    </div>
+    <button mat-icon-button (click)="cancel()" class="!text-neutral-400">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Payer → Payee row (non-editable) -->
+  <div class="transfer-row">
+    <div class="member-chip">
+      <div class="chip-avatar" [style.background]="avatarColor(balance.fromUserId)">
+        {{ avatar(balance.fromDisplayName) }}
+      </div>
+      <span class="chip-name">{{ balance.fromDisplayName }}</span>
+      <span class="chip-role pays">Pays</span>
+    </div>
+
+    <div class="transfer-arrow">
+      <mat-icon class="text-neutral-400 !text-xl">arrow_forward</mat-icon>
+    </div>
+
+    <div class="member-chip">
+      <div class="chip-avatar" [style.background]="avatarColor(balance.toUserId)">
+        {{ avatar(balance.toDisplayName) }}
+      </div>
+      <span class="chip-name">{{ balance.toDisplayName }}</span>
+      <span class="chip-role receives">Receives</span>
+    </div>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="save()" class="dialog-body">
+
+    <!-- Amount -->
+    <div class="field-group">
+      <label class="field-label">Amount (₹)</label>
+      <div class="amount-wrapper">
+        <span class="amount-currency">₹</span>
+        <input
+          type="number"
+          formControlName="amount"
+          class="amount-input"
+          min="0.01"
+          step="1"
+          placeholder="0"
+        />
+      </div>
+      <p class="field-hint">Suggested: ₹{{ data.suggestedAmount | number:'1.0-2' }}</p>
+    </div>
+
+    <!-- Payment Method -->
+    <div class="field-group">
+      <label class="field-label">Payment Method</label>
+      <div class="method-grid">
+        <button
+          type="button"
+          *ngFor="let m of methods"
+          class="method-btn"
+          [class.method-btn-active]="form.value.method === m.value"
+          (click)="selectMethod(m.value)"
+          matRipple>
+          <mat-icon class="!text-xl mb-1">{{ m.icon }}</mat-icon>
+          <span class="text-xs font-semibold">{{ m.label }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Note (optional) -->
+    <div class="field-group">
+      <label class="field-label">Note <span class="text-neutral-400 font-normal">(optional)</span></label>
+      <input
+        type="text"
+        formControlName="note"
+        class="note-input"
+        placeholder="e.g. Restaurant bill, petrol..."
+        maxlength="120"
+      />
+    </div>
+
+    <!-- Actions -->
+    <div class="dialog-actions">
+      <button type="button" class="btn-cancel" (click)="cancel()">Cancel</button>
+      <button
+        type="submit"
+        class="btn-save"
+        [disabled]="form.invalid">
+        <mat-icon class="!text-base mr-1">check_circle</mat-icon>
+        Save Settlement
+      </button>
+    </div>
+  </form>
+
+</div>

@@ -193,4 +193,34 @@ export class FamilyEffects {
       )
     )
   );
+
+  loadSettlements$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(FamilyActions.loadSettlements),
+      switchMap(({ familyId }) =>
+        this.familyService.getSettlements(familyId).pipe(
+          map(settlements => FamilyActions.loadSettlementsSuccess({ settlements })),
+          catchError(err => of(FamilyActions.loadSettlementsFailure({ error: err.message })))
+        )
+      )
+    )
+  );
+
+  addSettlement$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(FamilyActions.addSettlement),
+      mergeMap(({ request }) =>
+        from(this.familyService.addSettlement(request)).pipe(
+          map(settlement => {
+            this.notificationService.success('Settlement recorded ✔️');
+            return FamilyActions.addSettlementSuccess({ settlement });
+          }),
+          catchError(err => {
+            this.notificationService.error('Failed to record settlement');
+            return of(FamilyActions.addSettlementFailure({ error: err.message }));
+          })
+        )
+      )
+    )
+  );
 }

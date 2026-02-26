@@ -1,24 +1,75 @@
-.mode-toggle {
-  width: 100%;
+.mode-card {
+  position: relative;
+  padding: 16px;
+  border-radius: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.05);
+  background: white;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  overflow: hidden;
 
-  .mat-button-toggle {
-    flex: 1;
-    height: auto;
+  .dark & {
+    background: #1f2937;
+    border-color: rgba(255, 255, 255, 0.05);
+  }
 
-    .mat-button-toggle-button {
-      height: auto;
-      padding: 10px 8px;
+  &:hover {
+    border-color: var(--mat-primary-200, #c2d7ff);
+    background: rgba(var(--mat-primary-rgb, 66, 133, 244), 0.02);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .mode-icon-wrapper {
+    width: 46px;
+    height: 46px;
+    border-radius: 10px;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4b5563;
+    transition: all 0.2s;
+
+    .dark & {
+      background: #374151;
+      color: #9ca3af;
     }
   }
 
-  &.mat-button-toggle-group {
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid rgba(0, 0, 0, 0.12);
+  .active-indicator {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.2s;
+    color: var(--mat-primary-500, #4285f4);
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
   }
 
-  .mat-button-toggle-checked {
-    background-color: var(--mat-primary-100, #e8f0fe);
-    color: var(--mat-primary-700, #1557b0);
+  &.active {
+    border-color: var(--mat-primary-500, #4285f4);
+    background: rgba(var(--mat-primary-rgb, 66, 133, 244), 0.05);
+    box-shadow: 0 4px 20px rgba(var(--mat-primary-rgb, 66, 133, 244), 0.1);
+
+    .mode-icon-wrapper {
+      background: var(--mat-primary-500, #4285f4);
+      color: white;
+    }
+
+    .active-indicator {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    p.text-sm {
+      color: var(--mat-primary-600, #1a73e8);
+    }
   }
 }

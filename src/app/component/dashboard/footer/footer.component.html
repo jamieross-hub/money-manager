@@ -55,18 +55,37 @@
 				<span class="text-xs lg:text-[10px] font-medium add-label dark:text-slate-300">{{ getAddConfig().label }}</span>
 			</button>
 
-			<!-- Summary -->
-			<button (click)="navigateTo('/dashboard/summary')" class="group flex flex-col items-center gap-2 lg:gap-1" *ngIf="breakpointService.device.isMobile">
-				<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
-					[ngClass]="isSummaryActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'"
-					(click)="navigateTo('/dashboard/summary')">
-					<mat-icon class="text-lg lg:text-base relative bottom-1"
-						[ngClass]="isSummaryActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">assessment</mat-icon>
-				</div>
-				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
-					[ngClass]="isSummaryActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
-					'NAVIGATION.SUMMARY' | translate }}</span>
-			</button>
+			<!-- Summary / Settlement (contextual: swap when family mode is on) -->
+			@if(isFamilyMode()) {
+				<!-- Settlement nav item – visible on mobile only -->
+				<button (click)="navigateTo('/dashboard/family/settle')"
+						class="group flex flex-col items-center gap-2 lg:gap-1"
+						*ngIf="breakpointService.device.isMobile">
+					<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
+						[ngClass]="isSettleActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
+						<mat-icon class="text-lg lg:text-base relative bottom-1"
+							[ngClass]="isSettleActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">handshake</mat-icon>
+					</div>
+					<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
+						[ngClass]="isSettleActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">Settle</span>
+				</button>
+			} @else {
+				<!-- Original Summary nav item -->
+				<button (click)="navigateTo('/dashboard/summary')"
+						class="group flex flex-col items-center gap-2 lg:gap-1"
+						*ngIf="breakpointService.device.isMobile">
+					<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
+						[ngClass]="isSummaryActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'"
+						(click)="navigateTo('/dashboard/summary')">
+						<mat-icon class="text-lg lg:text-base relative bottom-1"
+							[ngClass]="isSummaryActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">assessment</mat-icon>
+					</div>
+					<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
+						[ngClass]="isSummaryActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
+						'NAVIGATION.SUMMARY' | translate }}</span>
+				</button>
+			}
+
 
 			<!-- Category -->
 			<button (click)="navigateTo('/dashboard/category')" class="group flex flex-col items-center gap-2 lg:gap-1" *ngIf="!breakpointService.device.isMobile">

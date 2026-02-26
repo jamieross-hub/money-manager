@@ -25,7 +25,6 @@ import { GoalsService } from './db/goals.service';
 import { UserService } from './db/user.service';
 import { FamilyService } from '../../modules/family/services/family.service';
 import { PwaSwService } from './pwa-sw.service';
-import { SplitwiseService } from '../../modules/splitwise/services/splitwise.service';
 import { GoogleSheetsService } from './google-sheets.service';
 import { SubscriptionService } from './subscription.service';
 import { FeedbackService } from './feedback.service';
@@ -408,7 +407,6 @@ export class CommonSyncService implements OnDestroy {
     const categoryService = this.injector.get(CategoryFacadeService);
     const budgetsService = this.injector.get(BudgetsService);
     const goalsService = this.injector.get(GoalsService);
-    const splitwiseService = this.injector.get(SplitwiseService);
     const googleSheetsService = this.injector.get(GoogleSheetsService);
     const subscriptionService = this.injector.get(SubscriptionService);
     const feedbackService = this.injector.get(FeedbackService);
@@ -425,8 +423,6 @@ export class CommonSyncService implements OnDestroy {
           categoryService.pullFromFirestore(userId),
           budgetsService.pullFromFirestore(userId),
           goalsService.pullFromFirestore(userId),
-          splitwiseService.pullGroupsFromFirestore(userId),
-          splitwiseService.pullInvitationsFromFirestore(userId),
           googleSheetsService.pullFromFirestore(userId),
           subscriptionService.pullFromFirestore(userId),
           feedbackService.pullFromFirestore(),

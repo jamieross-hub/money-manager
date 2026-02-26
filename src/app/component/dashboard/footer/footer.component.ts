@@ -47,7 +47,7 @@ export class FooterComponent implements OnInit, OnDestroy {
   );
 
   isFamilyActive(): boolean {
-    return this.router.url.startsWith('/dashboard/family');
+    return this.router.url === '/dashboard/family';
   }
 
   constructor(
@@ -104,6 +104,10 @@ export class FooterComponent implements OnInit, OnDestroy {
 
   isSummaryActive(): boolean {
     return this.router.url === '/dashboard/summary';
+  }
+
+  isSettleActive(): boolean {
+    return this.router.url === '/dashboard/family/settle';
   }
 
   isCategoryActive(): boolean {

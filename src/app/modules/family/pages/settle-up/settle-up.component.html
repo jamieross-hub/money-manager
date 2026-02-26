@@ -1,0 +1,175 @@
+<div class="min-h-screen bg-surface-100 dark:bg-gray-900 pb-24">
+
+  <!-- ═══════════ HEADER ═══════════ -->
+  <div class="settle-header px-4 pt-5 pb-5">
+    <div class="flex items-center justify-between mb-1">
+      <div>
+        <h1 class="text-2xl font-black text-white tracking-tight">Settle Up</h1>
+        <p class="text-indigo-200 text-sm mt-0.5">{{ family()?.name }}</p>
+      </div>
+      <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+        <mat-icon class="text-white !text-xl">handshake</mat-icon>
+      </div>
+    </div>
+
+    <!-- My balance summary pills -->
+    <div class="flex gap-2 mt-4 flex-wrap" *ngIf="!loading()">
+      <div class="balance-pill bg-red-500/90"
+           *ngIf="totalOwedByMe() > 0">
+        <mat-icon class="!text-sm !w-4 !h-4">arrow_upward</mat-icon>
+        <span>You owe ₹{{ totalOwedByMe() | number:'1.0-0' }}</span>
+      </div>
+      <div class="balance-pill bg-emerald-500/90"
+           *ngIf="totalOwedToMe() > 0">
+        <mat-icon class="!text-sm !w-4 !h-4">arrow_downward</mat-icon>
+        <span>₹{{ totalOwedToMe() | number:'1.0-0' }} owed to you</span>
+      </div>
+      <div class="balance-pill bg-white/20"
+           *ngIf="totalOwedByMe() === 0 && totalOwedToMe() === 0 && !settlementsLoading()">
+        <mat-icon class="!text-sm !w-4 !h-4">check_circle</mat-icon>
+        <span>All settled up!</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ LOADING ═══════════ -->
+  <div *ngIf="loading()" class="flex justify-center py-16">
+    <mat-spinner diameter="36"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading()" class="px-4 space-y-6 mt-4">
+
+    <!-- ═══════════ MY BALANCES ═══════════ -->
+    <section *ngIf="myBalances().length > 0">
+      <h2 class="section-label">Your Balances</h2>
+      <div class="card-list">
+        <div *ngFor="let b of myBalances(); trackBy: trackByEntry"
+             class="balance-card"
+             [class.owe-card]="iOwe(b)"
+             [class.receive-card]="owedToMe(b)"
+             matRipple>
+
+          <!-- Avatars -->
+          <div class="avatar-stack">
+            <div class="avatar" [style.background]="avatarColor(b.fromUserId)">
+              {{ avatar(b.fromDisplayName) }}
+            </div>
+            <div class="avatar-arrow">
+              <mat-icon class="!text-sm">arrow_forward</mat-icon>
+            </div>
+            <div class="avatar" [style.background]="avatarColor(b.toUserId)">
+              {{ avatar(b.toDisplayName) }}
+            </div>
+          </div>
+
+          <!-- Label -->
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-neutral-800 dark:text-white leading-tight">
+              <ng-container *ngIf="iOwe(b)">
+                You owe <span class="text-red-500">{{ b.toDisplayName }}</span>
+              </ng-container>
+              <ng-container *ngIf="owedToMe(b)">
+                <span class="text-emerald-500">{{ b.fromDisplayName }}</span> owes you
+              </ng-container>
+            </p>
+            <p class="text-xl font-black mt-0.5"
+               [class.text-red-500]="iOwe(b)"
+               [class.text-emerald-500]="owedToMe(b)">
+              ₹{{ b.amount | number:'1.0-0' }}
+            </p>
+          </div>
+
+          <!-- Settle button -->
+          <button class="settle-btn"
+                  [class.settle-btn-pay]="iOwe(b)"
+                  [class.settle-btn-receive]="owedToMe(b)"
+                  (click)="openSettleDialog(b)">
+            <mat-icon class="!text-base !w-4 !h-4 mr-1">swap_horiz</mat-icon>
+            Settle
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ OTHER BALANCES ═══════════ -->
+    <section *ngIf="otherBalances().length > 0">
+      <h2 class="section-label">Other Balances</h2>
+      <div class="card-list">
+        <div *ngFor="let b of otherBalances(); trackBy: trackByEntry"
+             class="balance-card balance-card-neutral">
+
+          <!-- Avatars -->
+          <div class="avatar-stack">
+            <div class="avatar avatar-sm" [style.background]="avatarColor(b.fromUserId)">
+              {{ avatar(b.fromDisplayName) }}
+            </div>
+            <mat-icon class="!text-xs text-neutral-400 mx-0.5">arrow_forward</mat-icon>
+            <div class="avatar avatar-sm" [style.background]="avatarColor(b.toUserId)">
+              {{ avatar(b.toDisplayName) }}
+            </div>
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <p class="text-sm text-neutral-600 dark:text-neutral-300">
+              {{ b.fromDisplayName }}
+              <mat-icon class="!text-xs align-middle">arrow_forward</mat-icon>
+              {{ b.toDisplayName }}
+            </p>
+          </div>
+
+          <span class="text-base font-bold text-neutral-700 dark:text-neutral-200">
+            ₹{{ b.amount | number:'1.0-0' }}
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ ALL CLEAR ═══════════ -->
+    <div *ngIf="balances().length === 0 && !loading()"
+         class="flex flex-col items-center justify-center py-16 text-center">
+      <div class="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-4">
+        <mat-icon class="!text-4xl text-emerald-500">check_circle</mat-icon>
+      </div>
+      <p class="text-xl font-bold text-neutral-700 dark:text-white mb-1">All Settled Up! 🎉</p>
+      <p class="text-sm text-neutral-400">No outstanding balances in this group.</p>
+    </div>
+
+    <!-- ═══════════ SETTLEMENT HISTORY ═══════════ -->
+    <section *ngIf="settlements().length > 0">
+      <h2 class="section-label">Settlement History</h2>
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-neutral-100 dark:border-gray-700 overflow-hidden">
+        <div *ngFor="let s of settlements(); trackBy: trackBySettlement; let last = last"
+             class="flex items-center gap-3 px-4 py-3"
+             [class.border-b]="!last"
+             [class.border-neutral-100]="!last"
+             [class.dark:border-gray-700]="!last">
+
+          <!-- Method icon -->
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-indigo-50 dark:bg-indigo-900/30">
+            <mat-icon class="!text-lg text-indigo-500">{{ methodIcon(s.method) }}</mat-icon>
+          </div>
+
+          <!-- Details -->
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-neutral-800 dark:text-white leading-tight truncate">
+              {{ s.fromDisplayName }}
+              <mat-icon class="!text-xs align-middle text-neutral-400">arrow_forward</mat-icon>
+              {{ s.toDisplayName }}
+            </p>
+            <p class="text-xs text-neutral-400 mt-0.5">
+              {{ methodLabel(s.method) }}
+              <span *ngIf="s.note" class="ml-1">· {{ s.note }}</span>
+              · {{ formatDate(s.settledAt) }}
+            </p>
+          </div>
+
+          <!-- Amount -->
+          <span class="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+            ₹{{ s.amount | number:'1.0-0' }}
+          </span>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>

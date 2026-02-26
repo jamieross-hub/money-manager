@@ -1,4 +1,5 @@
-import { Component, Inject, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, Inject, inject, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef, MatDialog } from '@angular/material/dialog';
@@ -28,6 +29,7 @@ import { LoaderService } from 'src/app/util/service/loader.service';
 import { DateService } from 'src/app/util/service/date.service';
 import { AppState } from 'src/app/store/app.state';
 import { Store } from '@ngrx/store';
+import * as fromProfile from 'src/app/store/profile/profile.selectors';
 import * as TransactionsActions from '../../../../../store/transactions/transactions.actions';
 import { loadAccounts } from 'src/app/store/accounts/accounts.actions';
 import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
@@ -35,9 +37,7 @@ import { selectAllCategories } from 'src/app/store/categories/categories.selecto
 import { RecurringInterval, SyncStatus, TransactionStatus, TransactionType, PaymentMethod, AccountType } from 'src/app/util/config/enums';
 import { Category } from 'src/app/util/models';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { SplitwiseGroup } from 'src/app/util/models/splitwise.model';
-import { selectGroups } from 'src/app/modules/splitwise/store/splitwise.selectors';
-import { loadGroups } from 'src/app/modules/splitwise/store/splitwise.actions';
+
 import { filter, map, Observable, take, combineLatest } from 'rxjs';
 import { selectLatestCompletedTransaction } from 'src/app/store/transactions/transactions.selectors';
 import { Transaction, CategorySplit } from 'src/app/util/models/transaction.model';
@@ -52,6 +52,8 @@ import { UserService } from 'src/app/util/service/db/user.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonHeaderComponent } from 'src/app/util/components/dialog/common-header/common-header.component';
 import { CommonBodyContentComponent } from 'src/app/util/components/dialog/common-body-content/common-body-content.component';
+import { FamilyService } from 'src/app/modules/family/services/family.service';
+import { FamilyMember, SplitBetweenMember } from 'src/app/util/models/family.model';
 
 dayjs.extend(isSameOrBefore);
 
@@ -107,11 +109,31 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   public editMode = signal(false);
   public viewMode = signal(false);
   public TransactionType = TransactionType;
-  public groups$: Observable<SplitwiseGroup[]>;
+
   public recurringMinDate: string;
   public recurringMaxDate: string;
   public categorySplits: CategorySplit[] = [];
   public isCategorySplit = signal(false);
+  private readonly _store = inject(Store<AppState>);
+  private readonly familyService = inject(FamilyService);
+  public isFamilyMode = toSignal(
+    this._store.select(fromProfile.selectUserPreferences).pipe(
+      map(prefs => prefs?.isFamilyMode ?? false)
+    ),
+    { initialValue: false }
+  );
+
+  // ─── Family / Split Mode ───────────────────────────────────────────────────
+  /** All members of the active family group. Loaded after ngOnInit. */
+  public familyMembers = signal<FamilyMember[]>([]);
+  /** The mode of the active family group ('common' | 'split' | null) */
+  public activeGroupMode = signal<'common' | 'split' | null>(null);
+  /** True only when family mode is on AND the active group is in split mode */
+  public isSplitGroupMode = computed(
+    () => this.isFamilyMode() && this.activeGroupMode() === 'split'
+  );
+  // ─────────────────────────────────────────────────────────────────────────
+
   public formattedAmount = signal('');
 
   // ngx-mat-select-search properties
@@ -145,10 +167,6 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     this.recurringMinDate = dayjs().add(1, 'day').format('YYYY-MM-DD');
     this.recurringMaxDate = dayjs().add(1, 'year').format('YYYY-MM-DD');
 
-    if (!this.isGuestUser) {
-      this.store.dispatch(loadGroups());// Load groups
-    }
-    this.groups$ = this.store.select(selectGroups);
     this.categoryList$ = this.store.select(selectAllCategories);
     this.accountList$ = this.store.select(selectAllAccounts);
 
@@ -199,6 +217,9 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       splitAmount: [0],
       // Category split fields
       isCategorySplit: [false],
+      // Family split fields (only active when group mode = 'split')
+      paidByUserId: [''],
+      splitBetween: [[] as string[]], // array of selected member userIds
     });
 
     this.isMobile = this.breakpointObserver.isMatched('(max-width: 640px)');
@@ -207,8 +228,78 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   ngOnInit(): void {
     this.userId = this.userService.getCurrentUserId();
     this.initializeFormData();
+    this.loadFamilyGroupInfo();
 
     window.addEventListener('popstate', this.popstateListener);
+  }
+
+  /** Loads the active family group's mode and member list */
+  private loadFamilyGroupInfo(): void {
+    const familyId = this.familyService.activeFamilyId();
+    if (!familyId) return;
+
+    // Fetch group metadata to determine mode
+    this.familyService.getFamily(familyId).then(family => {
+      if (family) {
+        this.activeGroupMode.set(family.mode ?? null);
+      }
+    });
+
+    // Fetch members
+    this.familyService.getMembers(familyId)
+      .pipe(takeUntil(this._onDestroy))
+      .subscribe(members => {
+        this.familyMembers.set(members);
+        // Default "Paid By" to current user
+        if (members.length && !this.transactionForm.get('paidByUserId')?.value) {
+          this.transactionForm.patchValue({ paidByUserId: this.userId });
+        }
+      });
+  }
+
+  /** Returns true if the given member userId is in the current splitBetween selection */
+  isMemberSelected(userId: string): boolean {
+    const selected: string[] = this.transactionForm.get('splitBetween')?.value || [];
+    return selected.includes(userId);
+  }
+
+  /** Toggles a member in/out of the splitBetween list */
+  toggleSplitBetweenMember(userId: string): void {
+    const control = this.transactionForm.get('splitBetween');
+    const current: string[] = [...(control?.value || [])];
+    const idx = current.indexOf(userId);
+    if (idx === -1) {
+      current.push(userId);
+    } else {
+      current.splice(idx, 1);
+    }
+    control?.setValue(current);
+  }
+
+  /** Builds the splitData payload from form values */
+  private buildSplitData() {
+    const paidByUserId: string = this.transactionForm.get('paidByUserId')?.value || '';
+    const splitBetweenIds: string[] = this.transactionForm.get('splitBetween')?.value || [];
+    const members = this.familyMembers();
+    const paidByMember = members.find(m => m.userId === paidByUserId);
+    const splitBetween: SplitBetweenMember[] = splitBetweenIds.map(uid => {
+      const m = members.find(mem => mem.userId === uid);
+      const percentage = splitBetweenIds.length > 0 ? 100 / splitBetweenIds.length : 0;
+      const amount = parseFloat(this.transactionForm.get('amount')?.value || 0) * percentage / 100;
+      return {
+        userId: uid,
+        displayName: m?.displayName || uid,
+        photoURL: m?.photoURL,
+        percentage: parseFloat(percentage.toFixed(2)),
+        amount: parseFloat(amount.toFixed(2)),
+      };
+    });
+    return {
+      paidByUserId,
+      paidByDisplayName: paidByMember?.displayName || '',
+      paidByPhotoURL: paidByMember?.photoURL,
+      splitBetween,
+    };
   }
 
 
@@ -436,6 +527,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           isCategorySplit: this.isCategorySplit(),
           categorySplits: this.categorySplits,
           totalSplitAmount: this.categorySplits.reduce((sum, split) => sum + split.amount, 0),
+          // Family split data (applies when group mode = 'split')
+          splitData: this.isSplitGroupMode() ? this.buildSplitData() : null,
           updatedBy: this.userId,
           updatedAt: new Date(),
         };
@@ -470,11 +563,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           this.hapticFeedback.successVibration();
         }
 
-        if (formData.isSplitTransaction) {
-          this.router.navigate(['/dashboard/splitwise/group', formData.splitGroupId]);
-        } else {
-          this.router.navigate(['/dashboard/transactions']);
-        }
+        this.router.navigate(['/dashboard/transactions']);
 
         this.dialogRef.close(true);
       } catch (error) {
@@ -652,14 +741,6 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     splitGroupIdControl?.updateValueAndValidity();
   }
 
-
-  /**
-   * Open Splitwise component for split transactions
-   */
-  openSplitwise(): void {
-    // Navigate to Splitwise component
-    this.router.navigate(['/dashboard/splitwise']);
-  }
 
   openCategorySplitDialog(): void {
     const dialogRef = this.dialog.open(CategorySplitDialogComponent, {

@@ -25,6 +25,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { FamilyService } from '../../services/family.service';
 import { FamilyCreateDialogComponent } from '../../dialogs/family-create-dialog/family-create-dialog.component';
 import { FamilyJoinDialogComponent } from '../../dialogs/family-join-dialog/family-join-dialog.component';
+import { ConfirmDialogComponent, ConfirmDialogData } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
 import { Family, FamilyMemberRole } from 'src/app/util/models/family.model';
 import { Auth } from '@angular/fire/auth';
 import { Store } from '@ngrx/store';
@@ -41,13 +42,13 @@ export interface UserGroup {
   id: string;
   name: string;
   type: GroupType;
+  mode: 'common' | 'split';
   memberCount: number;
   role: FamilyMemberRole;
   balance?: number;
   monthlySpend?: number;
   lastActivityAt?: Date;
   isActive: boolean;
-  currency: string;
   inviteCode: string;
   ownerUserId: string;
 }
@@ -76,6 +77,16 @@ const GROUP_TYPE_LABEL: Record<GroupType, string> = {
   other: 'Group',
 };
 
+const GROUP_MODE_ICON: Record<'common' | 'split', string> = {
+  common: 'account_balance_wallet',
+  split: 'call_split',
+};
+
+const GROUP_MODE_LABEL: Record<'common' | 'split', string> = {
+  common: 'Common',
+  split: 'Split',
+};
+
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -99,6 +110,7 @@ type LoadState = 'loading' | 'loaded' | 'empty' | 'error';
     MatListModule,
     MatTooltipModule,
     QuickActionsFabComponent,
+    ConfirmDialogComponent,
   ],
   templateUrl: './group-selection.component.html',
   styleUrls: ['./group-selection.component.scss'],
@@ -117,8 +129,6 @@ export class GroupSelectionComponent implements OnInit {
   userFamiliesLoading = this.store.selectSignal(selectUserFamiliesLoading);
   familyError = this.store.selectSignal(selectFamilyError);
 
-  confirmPending = signal<{ action: 'leave' | 'delete'; group: UserGroup } | null>(null);
-
   readonly activeGroupId = this.familyService.activeFamilyId;
 
   groups = computed<UserGroup[]>(() => {
@@ -129,10 +139,10 @@ export class GroupSelectionComponent implements OnInit {
       id: f.id!,
       name: f.name,
       type: inferGroupType(f.name),
+      mode: f.mode ?? 'common',
       memberCount: f.memberIds?.length ?? 1,
       // Role: admin if ownerUserId matches current user, otherwise member
       role: f.ownerUserId === this.currentUserId ? 'admin' : 'member',
-      currency: f.currency,
       inviteCode: f.inviteCode,
       ownerUserId: f.ownerUserId,
       isActive: f.id === activeId,
@@ -210,6 +220,8 @@ export class GroupSelectionComponent implements OnInit {
 
   groupTypeIcon = GROUP_TYPE_ICON;
   groupTypeLabel = GROUP_TYPE_LABEL;
+  groupModeIcon = GROUP_MODE_ICON;
+  groupModeLabel = GROUP_MODE_LABEL;
 
   currentUserId = this.auth.currentUser?.uid ?? '';
 
@@ -226,53 +238,77 @@ export class GroupSelectionComponent implements OnInit {
   // ─── Group Actions ─────────────────────────────────────────────────────────
 
   selectGroup(group: UserGroup): void {
-    this.familyService.setActiveFamily(group.id);
-    // Reload family in NgRx store so dashboard picks it up immediately
-    this.store.dispatch(FamilyActions.loadMyFamily());
-    // this.router.navigate(['/dashboard/family/dashboard']);
+    const data: ConfirmDialogData = {
+      title: 'Switch Group',
+      message: `Are you sure you want to switch to "${group.name}"?`,
+      confirmText: 'Switch',
+      cancelText: 'Cancel',
+      type: 'warning'
+    };
+
+    const ref = this.dialog.open(ConfirmDialogComponent, { width: '400px', data });
+    ref.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.familyService.setActiveFamily(group.id);
+        this.store.dispatch(FamilyActions.loadMyFamily());
+      }
+    });
   }
 
   openGroup(group: UserGroup){
-    // this.familyService.setActiveFamily(group.id);
     this.router.navigate(['/dashboard/family/dashboard', group.id]);
   }
 
   requestLeave(group: UserGroup): void {
-    this.confirmPending.set({ action: 'leave', group });
+    const data: ConfirmDialogData = {
+      title: 'Leave Group',
+      message: `Are you sure you want to leave "${group.name}"?`,
+      confirmText: 'Leave',
+      cancelText: 'Cancel',
+      type: 'warning'
+    };
+
+    const ref = this.dialog.open(ConfirmDialogComponent, { width: '400px', data });
+    ref.afterClosed().subscribe(async confirmed => {
+      if (confirmed) {
+        try {
+          await this.familyService.leaveFamily(group.id);
+          this.snackBar.open(`Left "${group.name}"`, 'OK', { duration: 3000 });
+          if (this.activeGroupId() === group.id) {
+            this.familyService.setActiveFamily(null);
+          }
+          this.loadGroups();
+        } catch (err: any) {
+          this.snackBar.open(err?.message ?? 'Action failed. Please try again.', 'Dismiss', { duration: 4000 });
+        }
+      }
+    });
   }
 
   requestDelete(group: UserGroup): void {
-    this.confirmPending.set({ action: 'delete', group });
-  }
+    const data: ConfirmDialogData = {
+      title: 'Delete Group',
+      message: `Are you sure you want to permanently delete "${group.name}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'delete'
+    };
 
-  cancelConfirm(): void {
-    this.confirmPending.set(null);
-  }
-
-  async executeConfirm(): Promise<void> {
-    const pending = this.confirmPending();
-    if (!pending) return;
-    this.confirmPending.set(null);
-
-    try {
-      if (pending.action === 'leave') {
-        await this.familyService.leaveFamily(pending.group.id);
-        this.snackBar.open(`Left "${pending.group.name}"`, 'OK', { duration: 3000 });
-        // If leaving the active group, clear it
-        if (this.activeGroupId() === pending.group.id) {
-          this.familyService.setActiveFamily(null);
-        }
-      } else {
-        await this.familyService.deleteFamily(pending.group.id);
-        this.snackBar.open(`Deleted "${pending.group.name}"`, 'OK', { duration: 3000 });
-        if (this.activeGroupId() === pending.group.id) {
-          this.familyService.setActiveFamily(null);
+    const ref = this.dialog.open(ConfirmDialogComponent, { width: '400px', data });
+    ref.afterClosed().subscribe(async confirmed => {
+      if (confirmed) {
+        try {
+          await this.familyService.deleteFamily(group.id);
+          this.snackBar.open(`Deleted "${group.name}"`, 'OK', { duration: 3000 });
+          if (this.activeGroupId() === group.id) {
+            this.familyService.setActiveFamily(null);
+          }
+          this.loadGroups();
+        } catch (err: any) {
+          this.snackBar.open(err?.message ?? 'Action failed. Please try again.', 'Dismiss', { duration: 4000 });
         }
       }
-      this.loadGroups();
-    } catch (err: any) {
-      this.snackBar.open(err?.message ?? 'Action failed. Please try again.', 'Dismiss', { duration: 4000 });
-    }
+    });
   }
 
   // ─── Dialogs ───────────────────────────────────────────────────────────────

@@ -76,8 +76,8 @@
                 </div>
                 <div class="gs-info__meta">
                   <span class="gs-meta-text gs-meta-text--with-icon">
-                    <mat-icon class="gs-meta-icon">{{ groupTypeIcon[active.type] }}</mat-icon>
-                    {{ groupTypeLabel[active.type] }}
+                    <mat-icon class="gs-meta-icon">{{ groupModeIcon[active.mode] }}</mat-icon>
+                    {{ groupModeLabel[active.mode] }}
                   </span>
                   <span class="gs-dot">·</span>
                   <span class="gs-meta-text">{{ active.memberCount }} member{{ active.memberCount !== 1 ? 's' : '' }}</span>
@@ -134,8 +134,8 @@
                   </div>
                   <div class="gs-info__meta">
                     <span class="gs-meta-text gs-meta-text--with-icon">
-                      <mat-icon class="gs-meta-icon">{{ groupTypeIcon[group.type] }}</mat-icon>
-                      {{ groupTypeLabel[group.type] }}
+                      <mat-icon class="gs-meta-icon">{{ groupModeIcon[group.mode] }}</mat-icon>
+                      {{ groupModeLabel[group.mode] }}
                     </span>
                     <span class="gs-dot">·</span>
                     <span class="gs-meta-text">
@@ -216,47 +216,4 @@
 
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     CONFIRMATION DIALOG (inline overlay)
-══════════════════════════════════════════════════════════ -->
-@if (confirmPending(); as pending) {
-  <div class="gs-overlay"
-       (click)="cancelConfirm()">
-    <div class="gs-confirm-card"
-         (click)="$event.stopPropagation()">
 
-      <div class="gs-confirm-header">
-        <div class="gs-confirm-icon"
-             [class.gs-confirm-icon--delete]="pending.action === 'delete'"
-             [class.gs-confirm-icon--leave]="pending.action === 'leave'">
-          <mat-icon>
-            {{ pending.action === 'delete' ? 'delete_forever' : 'exit_to_app' }}
-          </mat-icon>
-        </div>
-        <div>
-          <p class="gs-confirm-title">
-            {{ pending.action === 'delete' ? 'Delete Group?' : 'Leave Group?' }}
-          </p>
-          <p class="gs-confirm-subtitle">"{{ pending.group.name }}"</p>
-        </div>
-      </div>
-
-      <p class="gs-confirm-body">
-        @if (pending.action === 'delete') {
-          This will permanently delete the group and all its data. This action cannot be undone.
-        } @else {
-          You will lose access to this group's transactions and data.
-        }
-      </p>
-
-      <div class="gs-confirm-actions">
-        <button mat-stroked-button class="gs-btn-full" (click)="cancelConfirm()">Cancel</button>
-        <button mat-flat-button class="gs-btn-full"
-                [color]="pending.action === 'delete' ? 'warn' : 'primary'"
-                (click)="executeConfirm()">
-          {{ pending.action === 'delete' ? 'Delete' : 'Leave' }}
-        </button>
-      </div>
-    </div>
-  </div>
-}

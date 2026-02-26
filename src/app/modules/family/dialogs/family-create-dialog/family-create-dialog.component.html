@@ -34,11 +34,11 @@
           </mat-select>
         </mat-form-field>
 
-        <label class="inline-flex items-center gap-1 text-xs font-medium text-primary-600 dark:text-primary-400 cursor-pointer hover:underline">
+        <!-- <label class="inline-flex items-center gap-1 text-xs font-medium text-primary-600 dark:text-primary-400 cursor-pointer hover:underline">
           <mat-icon class="!text-sm">upload</mat-icon>
           Upload image
           <input type="file" accept="image/*" class="hidden" (change)="onFileSelected($event)" />
-        </label>
+        </label> -->
       </div>
     </div>
 
@@ -53,39 +53,38 @@
     <!-- Mode -->
     <div>
       <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Expense Mode</p>
-      <mat-button-toggle-group formControlName="mode" class="w-full mode-toggle">
-        <mat-button-toggle value="common" class="flex-1">
-          <div class="flex items-center gap-1.5 px-1">
-            <mat-icon class="!text-base">people</mat-icon>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="mode-card" [class.active]="form.get('mode')?.value === 'common'" (click)="form.get('mode')?.setValue('common')">
+          <div class="flex items-center gap-3">
+            <div class="mode-icon-wrapper">
+              <mat-icon class="!text-lg">people</mat-icon>
+            </div>
             <div class="text-left">
-              <p class="text-xs font-semibold m-0">Common</p>
-              <p class="text-[10px] text-gray-500 dark:text-gray-400 m-0">Shared pool</p>
+              <p class="text-sm font-bold m-0 leading-tight">Common</p>
+              <p class="text-[10px] text-gray-500 dark:text-gray-400 m-0 mt-0.5">Shared pool</p>
             </div>
           </div>
-        </mat-button-toggle>
-        <mat-button-toggle value="split" class="flex-1">
-          <div class="flex items-center gap-1.5 px-1">
-            <mat-icon class="!text-base">call_split</mat-icon>
-            <div class="text-left">
-              <p class="text-xs font-semibold m-0">Split</p>
-              <p class="text-[10px] text-gray-500 dark:text-gray-400 m-0">Track individually</p>
-            </div>
+          <div class="active-indicator">
+            <mat-icon>check_circle</mat-icon>
           </div>
-        </mat-button-toggle>
-      </mat-button-toggle-group>
-    </div>
+        </div>
 
-    <!-- Currency -->
-    <mat-form-field appearance="fill" class="w-full">
-      <mat-label>Currency</mat-label>
-      <mat-select formControlName="currency">
-        <mat-option value="INR">₹ INR – Indian Rupee</mat-option>
-        <mat-option value="USD">$ USD – US Dollar</mat-option>
-        <mat-option value="EUR">€ EUR – Euro</mat-option>
-        <mat-option value="GBP">£ GBP – British Pound</mat-option>
-        <mat-option value="AED">AED – UAE Dirham</mat-option>
-      </mat-select>
-    </mat-form-field>
+        <div class="mode-card" [class.active]="form.get('mode')?.value === 'split'" (click)="form.get('mode')?.setValue('split')">
+          <div class="flex items-center gap-3">
+            <div class="mode-icon-wrapper">
+              <mat-icon class="!text-lg">call_split</mat-icon>
+            </div>
+            <div class="text-left">
+              <p class="text-sm font-bold m-0 leading-tight">Split</p>
+              <p class="text-[10px] text-gray-500 dark:text-gray-400 m-0 mt-0.5">Track individually</p>
+            </div>
+          </div>
+          <div class="active-indicator">
+            <mat-icon>check_circle</mat-icon>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Actions -->
     <div class="flex gap-3 mt-1">

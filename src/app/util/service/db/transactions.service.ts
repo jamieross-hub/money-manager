@@ -14,8 +14,7 @@ import * as TransactionsActions from '../../../store/transactions/transactions.a
 import { AccountsService } from './accounts.service';
 import * as AccountsActions from '../../../store/accounts/accounts.actions';
 import * as TransactionsSelectors from '../../../store/transactions/transactions.selectors';
-import { CreateSplitTransactionRequest } from '../../models/splitwise.model';
-import { SplitwiseService } from 'src/app/modules/splitwise/services/splitwise.service';
+
 import { CommonSyncService, SyncItem } from '../common-sync.service';
 import { BaseService } from '../base.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
@@ -36,7 +35,6 @@ export class TransactionsService extends BaseService {
         private dateService: DateService,
         protected store: Store<AppState>,
         private accountsService: AccountsService,
-        private splitwiseService: SplitwiseService,
         private commonSyncService: CommonSyncService,
         private localStorageUtility: LocalIndexDBStorageService,
         protected userService: UserService
@@ -124,9 +122,7 @@ export class TransactionsService extends BaseService {
                             
                             const firestoreTask = setDoc(transactionRef, transactionData);
 
-                            if (transaction.isSplitTransaction && transaction.splitGroupId) {
-                                await this.createSplitTransaction(transaction.splitGroupId, transaction, transactionRef.id, userId);
-                            }
+
 
                             await firestoreTask;
                         } catch (error) {
@@ -299,12 +295,7 @@ export class TransactionsService extends BaseService {
                         oldTransaction: transactionToDelete
                     }));
 
-                    // Handle split transaction deletion if needed
-                    if (transactionToDelete.isSplitTransaction) {
-                        this.splitwiseService.deleteSplitTransaction(transactionToDelete.id!, userId).catch(error => {
-                            console.error('Failed to delete split transaction:', error);
-                        });
-                    }
+
                 }
             };
 
@@ -839,23 +830,7 @@ export class TransactionsService extends BaseService {
         return nextDate;
     }
 
-    /**
-     * Create split transaction
-     */
-    private async createSplitTransaction(selectedGroupId: string, formData: any, originalTransactionId: string, userId: string): Promise<void> {
-        try {
-            const splitTransactionData: CreateSplitTransactionRequest = {
-                groupId: selectedGroupId,
-                originalTransactionId: originalTransactionId,
-                amount: formData.amount,
-                splits: formData.splits || []
-            };
 
-            await this.splitwiseService.createSplitTransaction(splitTransactionData, userId).toPromise();
-        } catch (error) {
-            console.error('Failed to create split transaction:', error);
-        }
-    }
 
     /**
      * Add transaction to sync queue

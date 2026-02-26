@@ -329,7 +329,7 @@
 							</div>
 
 							<!-- Sync Status -->
-							<div class="detail-row" *ngIf="!isGuest()">
+							<!-- <div class="detail-row" *ngIf="!isGuest()">
 								<div class="detail-label">
 									<mat-icon class="detail-icon" [style.color]="tx._syncStatusColor">{{
 										tx._syncStatusIcon }}</mat-icon>
@@ -339,7 +339,7 @@
 									<span class="sync-status" [style.color]="tx._syncStatusColor">{{
 										tx._syncStatusInfo }}</span>
 								</div>
-							</div>
+							</div> -->
 
 							<!-- Created Date -->
 							<div class="detail-row">
@@ -426,9 +426,68 @@
 								</div>
 							</div>
 						</div>
+
+				<!-- Family Split Details -->
+				@if(tx['splitData']) {
+					<div style="border:1px solid #e9d5ff;border-radius:10px;overflow:hidden;margin-top:2px">
+						<!-- Header -->
+						<div style="background:#f5f3ff;padding:6px 12px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #e9d5ff">
+							<mat-icon style="font-size:14px;width:14px;height:14px;color:#9333ea">group_work</mat-icon>
+							<span style="font-size:11px;font-weight:600;color:#7c3aed;letter-spacing:0.05em;text-transform:uppercase">Family Split</span>
+						</div>
+
+						<div style="padding:10px 12px;display:flex;flex-direction:column;gap:10px">
+
+							<!-- Paid By row -->
+							<div style="display:flex;align-items:center;gap:10px">
+								<div style="width:32px;height:32px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+									<mat-icon style="font-size:16px;width:16px;height:16px;color:#9333ea">person</mat-icon>
+								</div>
+								<div style="flex:1;min-width:0">
+									<p style="font-size:10px;color:#9ca3af;margin:0;line-height:1.2">Paid by</p>
+									<p style="font-size:13px;font-weight:600;color:#374151;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+										{{ tx['splitData'].paidByDisplayName }}
+									</p>
+								</div>
+								<div style="background:#9333ea;color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;flex-shrink:0">
+									Paid
+								</div>
+							</div>
+
+							<!-- Split Between -->
+							<div *ngIf="tx['splitData'].splitBetween?.length">
+								<p style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 6px 0">Split Between</p>
+								<div style="display:flex;flex-direction:column;gap:6px">
+									@for (member of tx['splitData'].splitBetween; track member.userId) {
+										<div style="display:flex;align-items:center;gap:8px">
+											<!-- Avatar initial -->
+											<div style="width:26px;height:26px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:#7c3aed">
+												{{ member.displayName.charAt(0).toUpperCase() }}
+											</div>
+											<!-- Name -->
+											<span style="flex:1;font-size:12px;font-weight:500;color:#374151;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+												{{ member.displayName }}
+											</span>
+											<!-- Amount chip -->
+											<span style="font-size:11px;font-weight:600;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:999px;padding:2px 8px;flex-shrink:0">
+												₹{{ member.amount.toFixed(2) }}
+											</span>
+											<!-- Percentage -->
+											<span style="font-size:10px;color:#9ca3af;flex-shrink:0;width:36px;text-align:right">
+												{{ member.percentage.toFixed(0) }}%
+											</span>
+										</div>
+									}
+								</div>
+							</div>
+
+						</div>
 					</div>
+				}
+				</div>
 				</div>
 				}
+
 			</div>
 			}
 		</div>
