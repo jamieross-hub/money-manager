@@ -12,16 +12,11 @@ import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
 import dayjs from 'dayjs';
 import { Store } from '@ngrx/store';
+import { DateService } from 'src/app/util/service/date.service';
+import { SecurityService } from 'src/app/util/service/security.service';
 import { AppState } from '../../../store/app.state';
 import * as ProfileActions from '../../../store/profile/profile.actions';
 import * as ProfileSelectors from '../../../store/profile/profile.selectors';
-import * as TransactionsActions from '../../../store/transactions/transactions.actions';
-import * as AccountsActions from '../../../store/accounts/accounts.actions';
-import * as CategoriesActions from '../../../store/categories/categories.actions';
-import * as BudgetsActions from '../../../store/budgets/budgets.actions';
-import * as GoalsActions from '../../../store/goals/goals.actions';
-import { DateService } from 'src/app/util/service/date.service';
-import { SecurityService } from 'src/app/util/service/security.service';
 import { filter, take, delay } from 'rxjs';
 import {
   APP_CONFIG,
@@ -63,6 +58,7 @@ import { ThemeToggleComponent } from 'src/app/util/components/theme-toggle/theme
 import { SsrService } from 'src/app/util/service/ssr.service';
 
 import { CommonSyncService } from 'src/app/util/service/common-sync.service';
+import { FamilyModeToggleComponent } from 'src/app/util/components/family-mode-toggle/family-mode-toggle.component';
 @Component({
   selector: 'app-profile',
   templateUrl: './profile.component.html',
@@ -85,6 +81,7 @@ import { CommonSyncService } from 'src/app/util/service/common-sync.service';
     QuickActionsFabComponent,
     MatExpansionModule,
     ThemeToggleComponent,
+    FamilyModeToggleComponent,
     MatBottomSheetModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -108,7 +105,6 @@ export class ProfileComponent {
   readonly themeSwitchingService = inject(ThemeSwitchingService);
   private readonly securityService = inject(SecurityService);
   private readonly ssrService = inject(SsrService);
-  private readonly syncService = inject(CommonSyncService);
 
   // ─── Signals (State) ───────────────────────────────────────────────
   private ignoreLoader = false;
@@ -764,52 +760,7 @@ export class ProfileComponent {
     return this.userService.isGuestUser();
   }
 
-  async toggleFamilyMode(enabled: boolean): Promise<void> {
-    const profile = this.userProfile();
-    if (!profile) return;
 
-    this.ignoreLoader = true;
-    const familyId = profile.preferences?.familyId || this.familyGroup()?.id;
-
-    // Persist changes
-    try {
-      await this.applyPreferenceChanges({
-        isFamilyMode: enabled,
-        familyId: familyId || null
-      });
-
-      this.notificationService.success(`Family mode ${enabled ? 'enabled' : 'disabled'}`);
-
-      // Clear all stores for personal/family switch to avoid data mixing
-      this.store.dispatch(TransactionsActions.clearTransactions());
-      this.store.dispatch(AccountsActions.clearAccounts());
-      this.store.dispatch(CategoriesActions.clearCategories());
-      this.store.dispatch(BudgetsActions.clearBudgets());
-      this.store.dispatch(GoalsActions.clearGoals());
-
-      // Wait for UserService to pick up the new mode before syncing
-      // This ensures the sync pulls from the correct collection path
-      this.userService.userAuth$.pipe(
-        filter(u => u?.preferences?.isFamilyMode === enabled),
-        take(1),
-        delay(100) // Small delay to allow any other secondary updates to settle
-      ).subscribe(() => {
-        this.syncService.syncAll().subscribe();
-        //refresh page
-        window.location.reload();
-      });
-
-    } catch (error) {
-      console.error('Error toggling family mode:', error);
-      this.notificationService.error('Failed to update family mode');
-      // Rollback on error
-      this.ignoreLoader = false;
-      this.isFamilyMode.set(!enabled);
-      if (profile) {
-        this.userProfile.set(profile);
-      }
-    }
-  }
 
   /**
    * Common function to apply preference changes both locally and remotely

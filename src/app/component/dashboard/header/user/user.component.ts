@@ -22,6 +22,7 @@ import { LocalStorageKey } from 'src/app/util/models/local-storage.model';
 
 
 import { ThemeToggleComponent } from 'src/app/util/components/theme-toggle/theme-toggle.component';
+import { FamilyModeToggleComponent } from 'src/app/util/components/family-mode-toggle/family-mode-toggle.component';
 
 
 @Component({
@@ -29,7 +30,7 @@ import { ThemeToggleComponent } from 'src/app/util/components/theme-toggle/theme
   templateUrl: './user.component.html',
   styleUrl: './user.component.scss',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatTooltipModule, RouterModule, TranslateModule, ClickOutsideDirective, MatDialogModule, ThemeToggleComponent],
+  imports: [CommonModule, MatIconModule, MatTooltipModule, RouterModule, TranslateModule, ClickOutsideDirective, MatDialogModule, ThemeToggleComponent, FamilyModeToggleComponent],
   animations: [
     trigger('slideDown', [
       state('void', style({

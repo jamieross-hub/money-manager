@@ -9,28 +9,8 @@
 		class="profile-header bg-white dark:bg-gray-800 rounded-2xl  border !border-surface-500 p-6 mb-6 relative">
 
 		<!-- Theme Toggle Badge (Corner) -->
-		<div *ngIf="!isGuestMode() && (userProfile()?.preferences?.familyId || familyGroup())" class="family-mode-badge top-4 right-4 flex items-center justify-between px-4 py-1.5 rounded-full border bg-surface-500 w-auto z-10 transition-all duration-300"
-			[ngClass]="{
-				'absolute': !breakpointService.device.isMobile,
-				'fixed': breakpointService.device.isMobile,
-				'family-active': isFamilyMode(),
-				'personal-active': !isFamilyMode()
-			}">
-			<div class="flex items-center gap-2 mr-3">
-				<div class="mode-icon-container flex items-center justify-center">
-					<mat-icon class="mode-icon !w-5 !h-5 !text-[20px] transition-all duration-300"
-						[class.rotate-12]="isFamilyMode()">
-						{{ isFamilyMode() ? 'family_restroom' : 'person' }}
-					</mat-icon>
-				</div>
-				<span class="mode-text text-[11px] font-bold tracking-tight uppercase hidden sm:inline transition-all duration-300">
-					{{ isFamilyMode() ? 'Family' : 'Personal' }}
-				</span>
-			</div>
-			<div class="scale-90 origin-right translate-y-[1px]">
-				<mat-slide-toggle color="primary" class="family-toggle" [checked]="isFamilyMode()" (change)="toggleFamilyMode($event.checked)"></mat-slide-toggle>
-			</div>
-		</div>
+		<!-- Family Mode Toggle Badge (Corner) -->
+		<app-family-mode-toggle></app-family-mode-toggle>
 
 		<div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pt-0 sm:pt-0 mt-0">
 			<!-- Left side: Avatar and Info -->

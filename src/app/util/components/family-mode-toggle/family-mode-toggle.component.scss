@@ -1,0 +1,62 @@
+.family-mode-toggle-container {
+  padding: 2px 15px;
+  &.is-badge {
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    background-color: var(--surface-200);
+    
+    &.personal-active {
+      border-color: rgba(229, 231, 235, 1);
+      
+      .mode-icon {
+        color: var(--neutral-500);
+      }
+    }
+    
+    &.family-active {
+      .mode-icon {
+        animation: bounce-gentle 2s ease-in-out infinite;
+      }
+      
+      .mode-text {
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 700;
+        color: var(--primary-500);
+      }
+    }
+
+    .mode-icon {
+      transition: transform 0.3s ease;
+    }
+  }
+
+  &.is-flat {
+    cursor: pointer;
+    
+    &.family-active {
+      span {
+        color: var(--primary-500);
+      }
+    }
+  }
+}
+
+
+
+:host ::ng-deep {
+  .mat-slide-toggle.family-toggle {
+    .mat-slide-toggle-bar {
+      background-color: rgba(229, 231, 235, 0.5);
+    }
+    &.mat-checked {
+      .mat-slide-toggle-thumb {
+        background-color: #a855f7;
+      }
+      .mat-slide-toggle-bar {
+        background-color: rgba(168, 85, 247, 0.3);
+      }
+    }
+  }
+}
