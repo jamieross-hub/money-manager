@@ -134,7 +134,8 @@ export class UserComponent {
       } else {
         this.familyMembers.set([]);
       }
-    });
+    }, { allowSignalWrites: true });
+
   }
 
   // ── Template helpers ───────────────────────────────────────────────────────
