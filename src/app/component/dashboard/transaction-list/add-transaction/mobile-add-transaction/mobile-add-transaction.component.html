@@ -163,34 +163,68 @@
 
 				<!-- ── Paid By ── -->
 				<div>
-					<p class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Paid By</p>
+					<div class="flex items-center justify-between mb-2">
+						<p class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Paid By</p>
+						<button type="button" *ngIf="transactionForm.get('amount')?.value > 0" (click)="openMultiplePaidBySheet()" class="text-xs text-purple-600 dark:text-purple-400 font-medium flex items-center gap-1 hover:underline">
+							<span>Multiple people</span>
+						</button>
+					</div>
 					<div class="flex flex-col gap-2">
+						<!-- Custom "Multiple People" Virtual Member -->
+						@if(transactionForm.get('paidByUserId')?.value === 'multiple') {
+							<button type="button"
+								(click)="!viewMode() && openMultiplePaidBySheet()"
+								[disabled]="viewMode()"
+								class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl border transition-all duration-150 text-left border-purple-500 bg-purple-50"
+							>
+								<!-- Avatar -->
+								<div class="relative shrink-0">
+									<div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ring-2 bg-purple-500 text-white ring-purple-400">
+										M
+									</div>
+								</div>
+
+								<!-- Name -->
+								<div class="flex-1 min-w-0">
+									<p class="text-sm font-medium truncate text-purple-800 dark:text-purple-200">
+										Multiple People
+									</p>
+									<p class="text-xs text-purple-600 dark:text-purple-400 font-medium mt-0.5">
+										{{ transactionForm.get('paidBy')?.value?.length || 0 }} people varying amounts
+									</p>
+								</div>
+
+								<!-- Selected indicator -->
+								<mat-icon style="font-size:20px;width:20px;height:20px;color:#9333ea">check_circle</mat-icon>
+							</button>
+						}
+
 						@for (member of familyMembers(); track member.userId) {
 							<button type="button"
-								(click)="!viewMode() && transactionForm.patchValue({ paidByUserId: member.userId })"
+								(click)="!viewMode() && transactionForm.patchValue({ paidByUserId: member.userId, paidBy: [] })"
 								[disabled]="viewMode()"
 								class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl border transition-all duration-150 text-left"
-								[class.border-purple-500]="transactionForm.get('paidByUserId')?.value === member.userId"
-								[class.bg-purple-50]="transactionForm.get('paidByUserId')?.value === member.userId"
-								[class.border-gray-200]="transactionForm.get('paidByUserId')?.value !== member.userId"
-								[class.dark:border-gray-700]="transactionForm.get('paidByUserId')?.value !== member.userId"
+								[class.border-purple-500]="isMemberPaidBy(member.userId)"
+								[class.bg-purple-50]="isMemberPaidBy(member.userId)"
+								[class.border-gray-200]="!isMemberPaidBy(member.userId)"
+								[class.dark:border-gray-700]="!isMemberPaidBy(member.userId)"
 							>
 								<!-- Avatar -->
 								<div class="relative shrink-0">
 									@if(member.photoURL) {
 										<img [src]="member.photoURL" alt="" class="w-9 h-9 rounded-full object-cover ring-2"
-											[class.ring-purple-400]="transactionForm.get('paidByUserId')?.value === member.userId"
-											[class.ring-gray-200]="transactionForm.get('paidByUserId')?.value !== member.userId" />
+											[class.ring-purple-400]="isMemberPaidBy(member.userId)"
+											[class.ring-gray-200]="!isMemberPaidBy(member.userId)" />
 									} @else {
 										<div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ring-2"
-											[class.bg-purple-500]="transactionForm.get('paidByUserId')?.value === member.userId"
-											[class.text-white]="transactionForm.get('paidByUserId')?.value === member.userId"
-											[class.ring-purple-400]="transactionForm.get('paidByUserId')?.value === member.userId"
-											[class.bg-gray-100]="transactionForm.get('paidByUserId')?.value !== member.userId"
-											[class.dark:bg-gray-700]="transactionForm.get('paidByUserId')?.value !== member.userId"
-											[class.text-gray-600]="transactionForm.get('paidByUserId')?.value !== member.userId"
-											[class.dark:text-gray-300]="transactionForm.get('paidByUserId')?.value !== member.userId"
-											[class.ring-gray-200]="transactionForm.get('paidByUserId')?.value !== member.userId"
+											[class.bg-purple-500]="isMemberPaidBy(member.userId)"
+											[class.text-white]="isMemberPaidBy(member.userId)"
+											[class.ring-purple-400]="isMemberPaidBy(member.userId)"
+											[class.bg-gray-100]="!isMemberPaidBy(member.userId)"
+											[class.dark:bg-gray-700]="!isMemberPaidBy(member.userId)"
+											[class.text-gray-600]="!isMemberPaidBy(member.userId)"
+											[class.dark:text-gray-300]="!isMemberPaidBy(member.userId)"
+											[class.ring-gray-200]="!isMemberPaidBy(member.userId)"
 										>
 											{{ member.displayName.charAt(0).toUpperCase() }}
 										</div>
@@ -200,10 +234,10 @@
 								<!-- Name -->
 								<div class="flex-1 min-w-0">
 									<p class="text-sm font-medium truncate"
-										[class.text-purple-800]="transactionForm.get('paidByUserId')?.value === member.userId"
-										[class.dark:text-purple-200]="transactionForm.get('paidByUserId')?.value === member.userId"
-										[class.text-gray-800]="transactionForm.get('paidByUserId')?.value !== member.userId"
-										[class.dark:text-gray-200]="transactionForm.get('paidByUserId')?.value !== member.userId"
+										[class.text-purple-800]="isMemberPaidBy(member.userId)"
+										[class.dark:text-purple-200]="isMemberPaidBy(member.userId)"
+										[class.text-gray-800]="!isMemberPaidBy(member.userId)"
+										[class.dark:text-gray-200]="!isMemberPaidBy(member.userId)"
 									>
 										{{ member.displayName }}
 										@if(member.userId === userId) {
@@ -213,7 +247,7 @@
 								</div>
 
 								<!-- Selected indicator -->
-								@if(transactionForm.get('paidByUserId')?.value === member.userId) {
+								@if(isMemberPaidBy(member.userId)) {
 									<mat-icon style="font-size:20px;width:20px;height:20px;color:#9333ea">check_circle</mat-icon>
 								} @else {
 									<mat-icon style="font-size:20px;width:20px;height:20px" class="text-gray-300 dark:text-gray-600">radio_button_unchecked</mat-icon>
@@ -230,73 +264,52 @@
 				<div>
 					<div class="flex items-center justify-between mb-2">
 						<p class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Split Between</p>
-						@if((transactionForm.get('splitBetween')?.value?.length || 0) > 0) {
-							<span class="text-xs font-medium text-purple-600 dark:text-purple-400">
-								{{ transactionForm.get('splitBetween')?.value?.length }} selected
+						
+						<!-- Split Config Trigger -->
+						<button type="button" 
+								(click)="openSplitConfigSheet()"
+								[disabled]="viewMode() || !transactionForm.get('amount')?.value"
+								class="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 active:bg-purple-200 dark:bg-purple-900/30 dark:hover:bg-purple-800/40 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-purple-100 dark:border-purple-800/50">
+							<mat-icon class="!text-[14px] !w-[14px] !h-[14px] text-purple-600 dark:text-purple-400">tune</mat-icon>
+							<span class="text-xs font-bold text-purple-700 dark:text-purple-300">
+								@if(splitConfigMode() === 'equally') { Exactly Equal }
+								@if(splitConfigMode() === 'unequally') { Exact Amounts }
+								@if(splitConfigMode() === 'percentage') { Percentages }
 							</span>
-						}
+						</button>
 					</div>
 
-					<div class="flex flex-col gap-2">
-						@for (member of familyMembers(); track member.userId) {
-							<button type="button"
-								(click)="!viewMode() && toggleSplitBetweenMember(member.userId)"
-								[disabled]="viewMode()"
-								class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl border transition-all duration-150 text-left"
-								[class.border-purple-500]="isMemberSelected(member.userId)"
-								[class.bg-purple-50]="isMemberSelected(member.userId)"
-								[class.border-gray-200]="!isMemberSelected(member.userId)"
-								[class.dark:border-gray-700]="!isMemberSelected(member.userId)"
-							>
-								<!-- Avatar -->
-								<div class="relative shrink-0">
-									@if(member.photoURL) {
-										<img [src]="member.photoURL" alt="" class="w-9 h-9 rounded-full object-cover ring-2"
-											[class.ring-purple-400]="isMemberSelected(member.userId)"
-											[class.ring-gray-200]="!isMemberSelected(member.userId)" />
-									} @else {
-										<div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ring-2"
-											[class.bg-purple-500]="isMemberSelected(member.userId)"
-											[class.text-white]="isMemberSelected(member.userId)"
-											[class.ring-purple-400]="isMemberSelected(member.userId)"
-											[class.bg-gray-100]="!isMemberSelected(member.userId)"
-											[class.dark:bg-gray-700]="!isMemberSelected(member.userId)"
-											[class.text-gray-600]="!isMemberSelected(member.userId)"
-											[class.dark:text-gray-300]="!isMemberSelected(member.userId)"
-											[class.ring-gray-200]="!isMemberSelected(member.userId)"
-										>
-											{{ member.displayName.charAt(0).toUpperCase() }}
+					<!-- Summary Card style for Split Members list -->
+					<div class="flex flex-col gap-2 mt-3">
+						@if(transactionForm.get('splitBetween')?.value?.length) {
+							<div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700 p-3 flex flex-col gap-2.5">
+								<p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-0">Contributing Members</p>
+								@for (member of transactionForm.get('splitBetween')?.value; track member.userId) {
+									<div class="flex items-center justify-between">
+										<div class="flex items-center gap-2">
+											<div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm shrink-0"
+												 [style.backgroundColor]="'#8b5cf6'">
+												@if(member.photoURL) {
+													<img [src]="member.photoURL" class="w-full h-full rounded-full object-cover" />
+												} @else {
+													{{ member.displayName.charAt(0).toUpperCase() }}
+												}
+											</div>
+											<span class="text-xs font-medium text-gray-700 dark:text-gray-300 line-clamp-1">{{ member.displayName }}</span>
 										</div>
-									}
-								</div>
-
-								<!-- Name + share -->
-								<div class="flex-1 min-w-0">
-									<p class="text-sm font-medium truncate"
-										[class.text-purple-800]="isMemberSelected(member.userId)"
-										[class.dark:text-purple-200]="isMemberSelected(member.userId)"
-										[class.text-gray-800]="!isMemberSelected(member.userId)"
-										[class.dark:text-gray-200]="!isMemberSelected(member.userId)"
-									>
-										{{ member.displayName }}
-										@if(member.userId === userId) {
-											<span class="ml-1 text-xs font-normal opacity-60">You</span>
-										}
-									</p>
-									@if(isMemberSelected(member.userId) && (transactionForm.get('amount')?.value || 0) > 0) {
-										<p class="text-xs text-purple-600 dark:text-purple-400 font-medium mt-0.5">
-											₹{{ ((transactionForm.get('amount')?.value || 0) / (transactionForm.get('splitBetween')?.value?.length || 1)).toFixed(2) }} each
-										</p>
-									}
-								</div>
-
-								<!-- Tick -->
-								@if(isMemberSelected(member.userId)) {
-									<mat-icon style="font-size:20px;width:20px;height:20px;color:#9333ea">check_circle</mat-icon>
-								} @else {
-									<mat-icon style="font-size:20px;width:20px;height:20px" class="text-gray-300 dark:text-gray-600">add_circle_outline</mat-icon>
+										<div class="flex items-center gap-2">
+											@if(splitConfigMode() === 'percentage') {
+												<span class="text-[10px] font-semibold text-gray-400 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">{{ member.percentage | number:'1.0-1' }}%</span>
+											}
+											<span class="text-xs font-bold text-gray-900 dark:text-white">{{ currency() || '₹' }}{{ member.amount | number:'1.2-2' }}</span>
+										</div>
+									</div>
 								}
-							</button>
+							</div>
+						} @else {
+							<div class="text-center py-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+								<p class="text-xs text-gray-400 dark:text-gray-500 m-0">No one selected for splitting. Tap options to configure.</p>
+							</div>
 						}
 					</div>
 

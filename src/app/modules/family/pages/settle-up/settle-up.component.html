@@ -45,44 +45,44 @@
       <div class="card-list">
         <div *ngFor="let b of myBalances(); trackBy: trackByEntry"
              class="balance-card"
-             [class.owe-card]="iOwe(b)"
-             [class.receive-card]="owedToMe(b)"
+             [class.owe-card]="b | iOwe : currentUserId"
+             [class.receive-card]="b | owedToMe : currentUserId"
              matRipple>
 
           <!-- Avatars -->
           <div class="avatar-stack">
-            <div class="avatar" [style.background]="avatarColor(b.fromUserId)">
-              {{ avatar(b.fromDisplayName) }}
+            <div class="avatar" [style.background]="b.fromUserId | settleAvatarColor">
+              {{ b.fromDisplayName | settleAvatar }}
             </div>
             <div class="avatar-arrow">
               <mat-icon class="!text-sm">arrow_forward</mat-icon>
             </div>
-            <div class="avatar" [style.background]="avatarColor(b.toUserId)">
-              {{ avatar(b.toDisplayName) }}
+            <div class="avatar" [style.background]="b.toUserId | settleAvatarColor">
+              {{ b.toDisplayName | settleAvatar }}
             </div>
           </div>
 
           <!-- Label -->
           <div class="flex-1 min-w-0">
             <p class="text-sm font-semibold text-neutral-800 dark:text-white leading-tight">
-              <ng-container *ngIf="iOwe(b)">
+              <ng-container *ngIf="b | iOwe : currentUserId">
                 You owe <span class="text-red-500">{{ b.toDisplayName }}</span>
               </ng-container>
-              <ng-container *ngIf="owedToMe(b)">
+              <ng-container *ngIf="b | owedToMe : currentUserId">
                 <span class="text-emerald-500">{{ b.fromDisplayName }}</span> owes you
               </ng-container>
             </p>
             <p class="text-xl font-black mt-0.5"
-               [class.text-red-500]="iOwe(b)"
-               [class.text-emerald-500]="owedToMe(b)">
+               [class.text-red-500]="b | iOwe : currentUserId"
+               [class.text-emerald-500]="b | owedToMe : currentUserId">
               ₹{{ b.amount | number:'1.0-0' }}
             </p>
           </div>
 
           <!-- Settle button -->
           <button class="settle-btn"
-                  [class.settle-btn-pay]="iOwe(b)"
-                  [class.settle-btn-receive]="owedToMe(b)"
+                  [class.settle-btn-pay]="b | iOwe : currentUserId"
+                  [class.settle-btn-receive]="b | owedToMe : currentUserId"
                   (click)="openSettleDialog(b)">
             <mat-icon class="!text-base !w-4 !h-4 mr-1">swap_horiz</mat-icon>
             Settle
@@ -100,12 +100,12 @@
 
           <!-- Avatars -->
           <div class="avatar-stack">
-            <div class="avatar avatar-sm" [style.background]="avatarColor(b.fromUserId)">
-              {{ avatar(b.fromDisplayName) }}
+            <div class="avatar avatar-sm" [style.background]="b.fromUserId | settleAvatarColor">
+              {{ b.fromDisplayName | settleAvatar }}
             </div>
             <mat-icon class="!text-xs text-neutral-400 mx-0.5">arrow_forward</mat-icon>
-            <div class="avatar avatar-sm" [style.background]="avatarColor(b.toUserId)">
-              {{ avatar(b.toDisplayName) }}
+            <div class="avatar avatar-sm" [style.background]="b.toUserId | settleAvatarColor">
+              {{ b.toDisplayName | settleAvatar }}
             </div>
           </div>
 
@@ -146,7 +146,7 @@
 
           <!-- Method icon -->
           <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-indigo-50 dark:bg-indigo-900/30">
-            <mat-icon class="!text-lg text-indigo-500">{{ methodIcon(s.method) }}</mat-icon>
+            <mat-icon class="!text-lg text-indigo-500">{{ s.method | methodIcon }}</mat-icon>
           </div>
 
           <!-- Details -->
@@ -157,9 +157,9 @@
               {{ s.toDisplayName }}
             </p>
             <p class="text-xs text-neutral-400 mt-0.5">
-              {{ methodLabel(s.method) }}
+              {{ s.method | methodLabel }}
               <span *ngIf="s.note" class="ml-1">· {{ s.note }}</span>
-              · {{ formatDate(s.settledAt) }}
+              · {{ s.settledAt | settleDate }}
             </p>
           </div>
 

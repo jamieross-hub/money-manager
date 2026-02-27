@@ -47,12 +47,22 @@ export interface SplitBetweenMember {
   amount: number;
 }
 
+/** Represents a single member who paid part of the bill */
+export interface PaidByMember {
+  userId: string;
+  displayName: string;
+  photoURL?: string;
+  amount: number;
+}
+
 /** Extra data stored on a transaction when the group mode is 'split' */
 export interface SplitTransactionData {
-  /** The userId of the member who paid the bill */
+  /** The userId of the member who paid the bill. If multiple people paid, this can be 'multiple' */
   paidByUserId: string;
   paidByDisplayName: string;
   paidByPhotoURL?: string;
+  /** If multiple people paid, this contains the breakdown */
+  paidBy?: PaidByMember[];
   /** Members sharing the expense */
   splitBetween: SplitBetweenMember[];
 }

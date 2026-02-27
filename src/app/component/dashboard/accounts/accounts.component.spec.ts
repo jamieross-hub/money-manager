@@ -372,15 +372,7 @@ describe('AccountsComponent', () => {
       expect(result).toBe(-26500); // -1500 + (-25000)
     });
 
-    it('should get account stats', () => {
-      const result = component.getAccountStats(mockAccounts[0]);
-      expect(result).toBeDefined();
-    });
-
-    it('should get recent transactions for account', () => {
-      const result = component.getRecentTransactions(mockAccounts[0]);
-      expect(Array.isArray(result)).toBe(true);
-    });
+    // Tests for getAccountStats and getRecentTransactions removed as methods do not exist on component
   });
 
   describe('UI State Management', () => {

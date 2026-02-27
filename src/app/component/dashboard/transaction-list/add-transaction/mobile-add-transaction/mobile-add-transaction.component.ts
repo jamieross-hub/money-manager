@@ -21,6 +21,7 @@ import { Router } from '@angular/router';
 import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { ValidationService } from 'src/app/util/service/validation.service';
+import { IncludesPipe } from 'src/app/util/pipes/includes.pipe';
 import { AddAccountDialogComponent } from 'src/app/component/dashboard/accounts/add-account-dialog/add-account-dialog.component';
 import { MobileCategoryAddEditPopupComponent } from 'src/app/component/dashboard/category/mobile-category-add-edit-popup/mobile-category-add-edit-popup.component';
 import dayjs from 'dayjs';
@@ -53,7 +54,9 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonHeaderComponent } from 'src/app/util/components/dialog/common-header/common-header.component';
 import { CommonBodyContentComponent } from 'src/app/util/components/dialog/common-body-content/common-body-content.component';
 import { FamilyService } from 'src/app/modules/family/services/family.service';
-import { FamilyMember, SplitBetweenMember } from 'src/app/util/models/family.model';
+import { FamilyMember, SplitBetweenMember, PaidByMember } from 'src/app/util/models/family.model';
+import { MultiplePaidBySheetComponent } from './multiple-paid-by-sheet/multiple-paid-by-sheet.component';
+import { SplitConfigSheetComponent, SplitConfigSheetData, SplitMode } from './split-config-sheet/split-config-sheet.component';
 
 dayjs.extend(isSameOrBefore);
 
@@ -81,6 +84,7 @@ dayjs.extend(isSameOrBefore);
     MatBottomSheetModule,
     TranslateModule,
     CurrencyPipe,
+    IncludesPipe,
     CategorySelectionSheetComponent,
     MatExpansionModule,
     CommonHeaderComponent,
@@ -132,6 +136,9 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   public isSplitGroupMode = computed(
     () => this.isFamilyMode() && this.activeGroupMode() === 'split'
   );
+
+  splitConfigMode = signal<SplitMode>('equally');
+  public currency = toSignal(this._store.select(fromProfile.selectUserCurrency));
   // ─────────────────────────────────────────────────────────────────────────
 
   public formattedAmount = signal('');
@@ -219,6 +226,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       isCategorySplit: [false],
       // Family split fields (only active when group mode = 'split')
       paidByUserId: [''],
+      paidBy: [[] as PaidByMember[]],
       splitBetween: [[] as string[]], // array of selected member userIds
     });
 
@@ -257,12 +265,6 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       });
   }
 
-  /** Returns true if the given member userId is in the current splitBetween selection */
-  isMemberSelected(userId: string): boolean {
-    const selected: string[] = this.transactionForm.get('splitBetween')?.value || [];
-    return selected.includes(userId);
-  }
-
   /** Toggles a member in/out of the splitBetween list */
   toggleSplitBetweenMember(userId: string): void {
     const control = this.transactionForm.get('splitBetween');
@@ -276,30 +278,56 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     control?.setValue(current);
   }
 
+  /** Checks if a member is currently selected as paying (either singly or as part of multiple) */
+  isMemberPaidBy(userId: string): boolean {
+    const paidByUserId = this.transactionForm.get('paidByUserId')?.value;
+    if (paidByUserId === 'multiple') {
+      const paidBy = this.transactionForm.get('paidBy')?.value || [];
+      return paidBy.some((p: any) => p.userId === userId);
+    }
+    return paidByUserId === userId;
+  }
+
   /** Builds the splitData payload from form values */
   private buildSplitData() {
     const paidByUserId: string = this.transactionForm.get('paidByUserId')?.value || '';
-    const splitBetweenIds: string[] = this.transactionForm.get('splitBetween')?.value || [];
+    const paidBy: PaidByMember[] = this.transactionForm.get('paidBy')?.value || [];
+    let splitBetween: SplitBetweenMember[] = this.transactionForm.get('splitBetween')?.value || [];
     const members = this.familyMembers();
     const paidByMember = members.find(m => m.userId === paidByUserId);
-    const splitBetween: SplitBetweenMember[] = splitBetweenIds.map(uid => {
-      const m = members.find(mem => mem.userId === uid);
-      const percentage = splitBetweenIds.length > 0 ? 100 / splitBetweenIds.length : 0;
-      const amount = parseFloat(this.transactionForm.get('amount')?.value || 0) * percentage / 100;
-      return {
-        userId: uid,
-        displayName: m?.displayName || uid,
-        photoURL: m?.photoURL,
-        percentage: parseFloat(percentage.toFixed(2)),
-        amount: parseFloat(amount.toFixed(2)),
-      };
-    });
-    return {
+
+    // If it's a simple selection (just user IDs stored as strings - backward compatibility or edge case)
+    // convert it to SplitBetweenMember objects
+    if (splitBetween.length > 0 && typeof splitBetween[0] === 'string') {
+      const amount = parseFloat(this.transactionForm.get('amount')?.value || 0);
+      const splitBetweenIds = splitBetween as unknown as string[];
+      splitBetween = splitBetweenIds.map(uid => {
+        const m = members.find(mem => mem.userId === uid);
+        const percentage = splitBetweenIds.length > 0 ? 100 / splitBetweenIds.length : 0;
+        const shareAmount = amount * percentage / 100;
+        return {
+          userId: uid,
+          displayName: m?.displayName || uid,
+          photoURL: m?.photoURL || '',
+          percentage: parseFloat(percentage.toFixed(2)),
+          amount: parseFloat(shareAmount.toFixed(2)),
+        };
+      });
+    }
+
+    const data: any = {
       paidByUserId,
-      paidByDisplayName: paidByMember?.displayName || '',
-      paidByPhotoURL: paidByMember?.photoURL,
-      splitBetween,
+      paidByDisplayName: paidByUserId === 'multiple' ? 'Multiple People' : (paidByMember?.displayName || ''),
+      splitBetween
     };
+
+    if (paidByUserId === 'multiple') {
+      data.paidBy = paidBy;
+    } else {
+      data.paidByPhotoURL = paidByMember?.photoURL || '';
+    }
+
+    return data;
   }
 
 
@@ -327,7 +355,16 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       recurringEndDate: transaction.recurringEndDate ?
         dayjs(this.dateService.toDate(transaction.recurringEndDate)).format('YYYY-MM-DD') :
         dayjs().add(1, 'year').format('YYYY-MM-DD'),
-    });
+       paidByUserId: transaction.splitData?.paidByUserId || '',
+       paidBy: transaction.splitData?.paidBy || [],
+       splitBetween: transaction.splitData?.splitBetween || [],
+     });
+
+    if (transaction.isCategorySplit) {
+      this.transactionForm.patchValue({ isCategorySplit: true });
+      this.isCategorySplit.set(true);
+      this.categorySplits = transaction.categorySplits || [];
+    }
 
     this.transactionForm.get('isSplitTransaction')?.setValue(transaction.isSplitTransaction || false);
     this.transactionForm.get('splitGroupId')?.setValue(transaction.splitGroupId || '');
@@ -680,6 +717,84 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       if (category) {
         this.onCategoryChange(category.id);
       }
+    });
+  }
+
+  openMultiplePaidBySheet(): void {
+    if (this.viewMode()) return;
+
+    const amountStr = this.transactionForm.get('amount')?.value;
+    const totalAmount = amountStr ? parseFloat(amountStr) : 0;
+
+    if (totalAmount <= 0) {
+      this.notificationService.error('Please enter transaction amount first');
+      return;
+    }
+
+    const sheetRef = this.bottomSheet.open(MultiplePaidBySheetComponent, {
+      data: {
+        members: this.familyMembers(),
+        totalAmount: totalAmount,
+        initialPaidBy: this.transactionForm.get('paidBy')?.value || [],
+        currencySymbol: '₹'
+      },
+      panelClass: 'bg-transparent'
+    });
+
+    sheetRef.afterDismissed().subscribe((result: PaidByMember[] | undefined) => {
+      if (result) {
+        if (result.length === 0) {
+          // Fallback to current user if they saved an empty list somehow
+          if (this.familyMembers().length > 0) {
+             this.transactionForm.patchValue({ paidByUserId: this.userId, paidBy: [] });
+          }
+        } else if (result.length === 1) {
+          // Just one person paid
+          this.transactionForm.patchValue({ paidByUserId: result[0].userId, paidBy: [] });
+        } else {
+          // Multiple paid
+          this.transactionForm.patchValue({ paidByUserId: 'multiple', paidBy: result });
+        }
+      }
+    });
+  }
+
+  // ============== SPLIT CONFIGURATION BOTTOM SHEET ==============
+  openSplitConfigSheet() {
+    if (this.viewMode()) return;
+
+    const amountStr = this.transactionForm.get('amount')?.value;
+    const totalAmount = amountStr ? parseFloat(amountStr) : 0;
+
+    if (totalAmount <= 0) {
+      this.notificationService.error('Please enter transaction amount first');
+      return;
+    }
+
+    const currentSplits = this.transactionForm.get('splitBetween')?.value || [];
+    
+    // Provide members, the amount, currency, and current selection
+    const data: SplitConfigSheetData = {
+      members: this.familyMembers(),
+      totalAmount: totalAmount,
+      currencySymbol: this.currency() || '₹',
+      initialMode: this.splitConfigMode(),
+      initialSplits: currentSplits
+    };
+
+    const bottomSheetRef = this.bottomSheet.open(SplitConfigSheetComponent, {
+       data: data,
+       panelClass: 'bg-transparent'
+    });
+
+    bottomSheetRef.afterDismissed().pipe(
+       takeUntil(this._onDestroy)
+    ).subscribe((result?: { mode: SplitMode, splits: SplitBetweenMember[] }) => {
+       if (result) {
+          this.splitConfigMode.set(result.mode);
+          this.transactionForm.patchValue({ splitBetween: result.splits });
+          this.transactionForm.get('splitBetween')?.markAsDirty();
+       }
     });
   }
 

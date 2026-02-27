@@ -590,11 +590,50 @@ export class FamilyService {
     // Split expense shares → debtor owes payer
     for (const tx of transactions) {
       if (tx.type !== 'expense' || !tx.splitData) continue;
-      const { paidByUserId, splitBetween } = tx.splitData;
-      for (const share of splitBetween) {
-        if (share.userId !== paidByUserId) {
-          adjust(share.userId, paidByUserId, share.amount);
-        }
+      const { paidByUserId, splitBetween, paidBy } = tx.splitData;
+
+      if (paidByUserId === 'multiple' && paidBy?.length) {
+         const netMap = new Map<string, number>();
+
+         // Add all amounts paid
+         for (const payer of paidBy) {
+             netMap.set(payer.userId, payer.amount);
+         }
+
+         // Subtract all amounts owed
+         for (const share of splitBetween) {
+             netMap.set(share.userId, (netMap.get(share.userId) || 0) - share.amount);
+         }
+
+         const creditors: {id: string, amt: number}[] = [];
+         const debtors: {id: string, amt: number}[] = [];
+
+         for (const [uid, amt] of netMap.entries()) {
+             if (amt > 0.01) creditors.push({ id: uid, amt });
+             else if (amt < -0.01) debtors.push({ id: uid, amt: Math.abs(amt) });
+         }
+
+         // Match debtors to creditors
+         let cIdx = 0;
+         for (const debtor of debtors) {
+             let debt = debtor.amt;
+             while (debt > 0.01 && cIdx < creditors.length) {
+                 const creditor = creditors[cIdx];
+                 const settleAmt = Math.min(debt, creditor.amt);
+                 adjust(debtor.id, creditor.id, settleAmt);
+                 debt -= settleAmt;
+                 creditor.amt -= settleAmt;
+                 if (creditor.amt < 0.01) {
+                     cIdx++;
+                 }
+             }
+         }
+      } else {
+         for (const share of splitBetween) {
+           if (share.userId !== paidByUserId) {
+             adjust(share.userId, paidByUserId, share.amount);
+           }
+         }
       }
     }
 

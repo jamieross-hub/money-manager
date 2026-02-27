@@ -13,6 +13,11 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatRippleModule } from '@angular/material/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { toSignal } from '@angular/core/rxjs-interop';
+import {
+  SettleAvatarPipe, SettleAvatarColorPipe,
+  MethodIconPipe, MethodLabelPipe,
+  SettleDatePipe, IOWEPipe, OwedToMePipe
+} from './settle-up.pipes';
 
 import { AppState } from 'src/app/store/app.state';
 import * as FamilyActions from '../../store/family.actions';
@@ -34,6 +39,9 @@ import { SettleDialogComponent, SettleDialogData } from './settle-dialog/settle-
     MatProgressSpinnerModule, MatChipsModule,
     MatDividerModule, MatDialogModule,
     MatRippleModule, MatBadgeModule,
+    SettleAvatarPipe, SettleAvatarColorPipe,
+    MethodIconPipe, MethodLabelPipe,
+    SettleDatePipe, IOWEPipe, OwedToMePipe,
   ],
   templateUrl: './settle-up.component.html',
   styleUrls: ['./settle-up.component.scss'],
@@ -124,41 +132,6 @@ export class SettleUpComponent implements OnInit {
         this.store.dispatch(FamilyActions.addSettlement({ request: req }));
       }
     });
-  }
-
-  /** User is the one who OWES (from) */
-  iOwe(balance: BalanceEntry): boolean {
-    return balance.fromUserId === this.currentUserId;
-  }
-
-  /** User is the one who is OWED (to) */
-  owedToMe(balance: BalanceEntry): boolean {
-    return balance.toUserId === this.currentUserId;
-  }
-
-  formatDate(date: any): string {
-    if (!date) return '';
-    const d = date?.seconds ? new Date(date.seconds * 1000) : new Date(date);
-    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-  }
-
-  methodLabel(method: string): string {
-    return { cash: 'Cash', upi: 'UPI', bank_transfer: 'Bank Transfer' }[method] ?? method;
-  }
-
-  methodIcon(method: string): string {
-    return { cash: 'payments', upi: 'phone_iphone', bank_transfer: 'account_balance' }[method] ?? 'swap_horiz';
-  }
-
-  avatar(name: string): string {
-    return (name || '?').charAt(0).toUpperCase();
-  }
-
-  private memberColors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
-  avatarColor(userId: string): string {
-    let hash = 0;
-    for (const c of userId) hash = (hash * 31 + c.charCodeAt(0)) & 0xffff;
-    return this.memberColors[hash % this.memberColors.length];
   }
 
   trackByEntry(_: number, b: BalanceEntry) {

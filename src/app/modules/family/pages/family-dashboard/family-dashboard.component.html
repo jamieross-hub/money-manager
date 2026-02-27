@@ -115,48 +115,7 @@
       </div>
     </div>
 
-    <!-- Recent Transactions -->
-    <div class="px-4 mt-5">
-      <div class="flex items-center justify-between mb-3">
-        <p class="text-sm font-semibold text-gray-700 dark:text-gray-200">Recent Transactions</p>
-        <button mat-button class="!text-xs" [routerLink]="['/dashboard/family/txns']">View All</button>
-      </div>
-
-      <div *ngIf="!recentTxns().length"
-        class="text-center py-10 bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
-        <mat-icon class="text-gray-300 dark:text-gray-600 !text-4xl mb-2">receipt_long</mat-icon>
-        <p class="text-sm text-gray-400">No transactions yet. Add the first one!</p>
-      </div>
-
-      <div class="space-y-2">
-        <div *ngFor="let tx of recentTxns()"
-          class="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-xl px-4 py-3 shadow-sm border border-gray-100 dark:border-gray-700">
-          <!-- Type icon -->
-          <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-            [class.bg-red-50]="tx.type === 'expense'"
-            [class.dark:bg-red-900]="tx.type === 'expense'"
-            [class.bg-green-50]="tx.type === 'income'"
-            [class.dark:bg-green-900]="tx.type === 'income'">
-            <mat-icon class="!text-base"
-              [class.text-red-500]="tx.type === 'expense'"
-              [class.text-green-500]="tx.type === 'income'">
-              {{ tx.type === 'expense' ? 'arrow_downward' : 'arrow_upward' }}
-            </mat-icon>
-          </div>
-          <!-- Info -->
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{{ tx.category }}</p>
-            <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ tx.userDisplayName }} · {{ formatDate(tx.date) }}</p>
-          </div>
-          <!-- Amount -->
-          <p class="text-sm font-bold"
-            [class.text-red-600]="tx.type === 'expense'"
-            [class.text-green-600]="tx.type === 'income'">
-            {{ tx.type === 'expense' ? '-' : '+' }}{{ tx.amount | number:'1.0-0' }}
-          </p>
-        </div>
-      </div>
-    </div>
+  
 
   </ng-container>
 

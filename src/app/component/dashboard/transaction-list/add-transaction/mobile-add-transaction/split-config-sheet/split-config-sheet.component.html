@@ -1,0 +1,159 @@
+<div class="flex flex-col h-full max-h-[90vh] bg-white dark:bg-gray-900 rounded-t-[24px] font-[Inter,-apple-system,sans-serif]">
+  <!-- Header matching Settle Dialog -->
+  <div class="flex items-center justify-between px-5 pt-4 pb-3 border-b border-slate-100 dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900 z-10 rounded-t-[24px]">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center">
+        <mat-icon class="text-purple-600 dark:text-purple-400 !text-xl">pie_chart</mat-icon>
+      </div>
+      <div>
+        <p class="text-base font-bold text-slate-800 dark:text-gray-100 m-0">Split Options</p>
+        <p class="text-xs text-slate-400 dark:text-slate-500 m-0">Customize how the bill is divided</p>
+      </div>
+    </div>
+    <button mat-icon-button (click)="onCancel()" class="!text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="p-5 overflow-y-auto flex flex-col gap-4">
+    
+    <!-- Method Grid (Tabs) -->
+    <div class="grid grid-cols-3 gap-2">
+      <button type="button" 
+              *ngFor="let m of modes"
+              class="flex flex-col items-center py-2.5 px-1.5 rounded-xl border-[2px] transition-all bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:border-purple-200 dark:hover:border-purple-800"
+              [class.border-purple-500]="currentMode() === m.value"
+              [class.dark:border-purple-500]="currentMode() === m.value"
+              [class.bg-purple-50]="currentMode() === m.value"
+              [class.dark:bg-purple-900]="currentMode() === m.value"
+              [class.text-purple-600]="currentMode() === m.value"
+              [class.dark:text-purple-300]="currentMode() === m.value"
+              [class.shadow-[0_2px_8px_rgba(147,51,234,0.15)]]="currentMode() === m.value"
+              [class.border-slate-200]="currentMode() !== m.value"
+              [class.dark:border-slate-700]="currentMode() !== m.value"
+              (click)="setMode(m.value)"
+              matRipple>
+        <mat-icon class="!text-xl mb-1">{{ m.icon }}</mat-icon>
+        <span class="text-[11px] font-bold leading-none text-center">{{ m.label }}</span>
+      </button>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 mt-2">
+      <div class="flex flex-col">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Total Bill</span>
+        <span class="text-xl font-bold text-slate-900 dark:text-white">
+          {{ currencySymbol() }}{{ totalAmount() | number:'1.2-2' }}
+        </span>
+      </div>
+      <div class="h-8 w-[2px] bg-slate-200 dark:bg-slate-700 mx-2"></div>
+      <div class="flex flex-col text-right">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Remaining</span>
+        <span class="text-xl font-bold" 
+              [class.text-slate-900]="remainingAmount() === 0" 
+              [class.dark:text-white]="remainingAmount() === 0" 
+              [class.text-amber-500]="remainingAmount() > 0" 
+              [class.text-red-500]="remainingAmount() < 0">
+          
+          @if(currentMode() === 'percentage') {
+              {{ (100 - getTotalPercentage()) | number:'1.0-1' }}%
+          } @else {
+              {{ currencySymbol() }}{{ (remainingAmount() > 0 ? remainingAmount() : 0) | number:'1.2-2' }}
+          }
+        </span>
+      </div>
+    </div>
+    
+    <!-- Member List -->
+    <div class="flex flex-col gap-1.5 mt-2">
+      @for (member of members(); track member.userId) {
+        <div class="flex items-center gap-3 px-1 py-1 shrink-0 cursor-pointer" (click)="currentMode() === 'equally' ? toggleIncluded(member.userId) : null">
+          
+          <!-- Avatar Custom Chip Style -->
+          <div class="w-11 h-11 shrink-0 rounded-full flex items-center justify-center text-base font-bold text-white border-[3px] border-white dark:border-gray-900 shadow-[0_2px_8px_rgba(0,0,0,0.12)] transition-all"
+               [style.backgroundColor]="avatarColor(member.userId)"
+               [class.opacity-40]="currentMode() === 'equally' && !member.included">
+            @if(member.photoURL) {
+              <img [src]="member.photoURL" alt="" class="w-full h-full rounded-full object-cover" />
+            } @else {
+              {{ member.displayName.charAt(0).toUpperCase() }}
+            }
+          </div>
+
+          <!-- Name -->
+          <div class="flex-1 min-w-0 flex flex-col justify-center">
+            <p class="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate transition-all"
+               [class.opacity-40]="currentMode() === 'equally' && !member.included">
+              {{ member.displayName }}
+            </p>
+            @if(currentMode() === 'equally' && member.included) {
+               <p class="text-xs font-bold text-purple-600 dark:text-purple-400 m-0">
+                  {{ currencySymbol() }}{{ getEqualAmount() | number:'1.2-2' }}
+               </p>
+            }
+          </div>
+
+          <!-- Input Fields based on Mode -->
+          @if(currentMode() === 'equally') {
+             <div class="shrink-0 flex items-center justify-center w-6 h-6 rounded-full border-[2px] transition-all mr-2"
+                  [class.border-purple-500]="member.included"
+                  [class.bg-purple-500]="member.included"
+                  [class.border-slate-300]="!member.included"
+                  [class.dark:border-slate-600]="!member.included">
+                @if(member.included) {
+                   <mat-icon class="!text-[16px] text-white flex items-center justify-center h-full w-full">check</mat-icon>
+                }
+             </div>
+          } @else if(currentMode() === 'unequally') {
+             <div class="flex items-center border-[2px] border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 transition-colors focus-within:border-purple-500 focus-within:bg-white dark:focus-within:bg-gray-900 w-32 overflow-hidden shrink-0" (click)="$event.stopPropagation()">
+                <span class="pl-3 pr-1 text-base font-bold text-slate-500 dark:text-slate-400">{{ currencySymbol() }}</span>
+                <input type="number" 
+                       [(ngModel)]="member.amount" 
+                       (ngModelChange)="onAmountChange()"
+                       placeholder="0" 
+                       class="flex-1 w-full bg-transparent border-none outline-none text-lg font-bold text-slate-800 dark:text-white py-2.5 pr-3 pl-1 text-right appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
+             </div>
+          } @else if(currentMode() === 'percentage') {
+             <div class="flex items-center border-[2px] border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 transition-colors focus-within:border-purple-500 focus-within:bg-white dark:focus-within:bg-gray-900 w-24 overflow-hidden shrink-0" (click)="$event.stopPropagation()">
+                <input type="number" 
+                       [(ngModel)]="member.percentage" 
+                       (ngModelChange)="onAmountChange()"
+                       placeholder="0" 
+                       class="flex-1 w-full bg-transparent border-none outline-none text-lg font-bold text-slate-800 dark:text-white py-2.5 pr-1 pl-3 text-right appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
+                <span class="pr-3 pl-1 text-base font-bold text-slate-500 dark:text-slate-400">%</span>
+             </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Error state info -->
+    @if(!isValid() && currentMode() !== 'equally') {
+      <div class="mt-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 text-xs font-medium flex items-start gap-2 border border-amber-100 dark:border-amber-800/30">
+        <mat-icon class="!text-base mt-0.5 shrink-0">info</mat-icon>
+        <p class="leading-relaxed m-0 mt-0.5" *ngIf="currentMode() === 'unequally'">
+          Total split amount must exactly equal {{ currencySymbol() }}{{ totalAmount() | number:'1.2-2' }}.
+        </p>
+        <p class="leading-relaxed m-0 mt-0.5" *ngIf="currentMode() === 'percentage'">
+          Total percentages must exactly equal 100%. Currently it's {{ getTotalPercentage() | number:'1.0-1' }}%.
+        </p>
+      </div>
+    }
+
+    <!-- Dialog Actions -->
+    <div class="flex gap-2.5 mt-2 mb-2">
+      <button type="button" 
+              class="flex-1 py-3 border-[2px] border-slate-200 dark:border-slate-700 rounded-xl bg-transparent text-slate-500 dark:text-slate-400 font-semibold text-sm hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" 
+              (click)="onCancel()">
+        Cancel
+      </button>
+      <button type="button"
+              class="flex-[2] py-3 rounded-xl border-none bg-gradient-to-br from-purple-500 to-purple-600 text-white font-bold text-sm shadow-[0_4px_14px_rgba(147,51,234,0.35)] hover:shadow-[0_6px_20px_rgba(147,51,234,0.45)] hover:-translate-y-[1px] disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed transition-all flex items-center justify-center gap-1.5" 
+              (click)="onSave()" 
+              [disabled]="!isValid()">
+        <mat-icon class="!text-base">check_circle</mat-icon>
+        Apply Split
+      </button>
+    </div>
+  </div>
+</div>
