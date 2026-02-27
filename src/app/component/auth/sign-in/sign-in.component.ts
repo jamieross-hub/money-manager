@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
@@ -84,37 +84,62 @@ import { PreLoginHeaderComponent } from '../../landing/pre-login-header/pre-logi
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SignInComponent implements OnInit, OnDestroy {
-  public isSignInPage = true;
-  public isLoading = false;
-  public isAccountLocked = false;
-  public lockoutTimeRemaining = 0;
-  public loginAttempts = 0;
-  public maxLoginAttempts = 5;
-  public showPassword = false;
-  public showConfirmPassword = false;
-  public passwordStrength = 0;
-  public securityLevel = 'moderate';
-  public showSecurityNotice = false;
+  public readonly isSignInPage = signal(true);
+  public readonly isLoading = signal(false);
+  public readonly isAccountLocked = signal(false);
+  public readonly lockoutTimeRemaining = signal(0);
+  public readonly loginAttempts = signal(0);
+  public readonly maxLoginAttempts = signal(5);
+  public readonly showPassword = signal(false);
+  public readonly showConfirmPassword = signal(false);
+  public readonly passwordStrength = signal(0);
+  public readonly securityLevel = signal('moderate');
+  public readonly showSecurityNotice = signal(false);
 
   signInForm!: FormGroup;
-  private destroy$ = new Subject<void>();
-  private loginAttemptCount = 0;
-  private lastLoginAttempt = 0;
-  private rateLimitWindow = 60000; // 1 minute
-  private maxAttemptsPerWindow = 3;
+  private readonly destroy$ = new Subject<void>();
+  private readonly loginAttemptCount = signal(0);
+  private readonly lastLoginAttempt = signal(0);
+  private readonly rateLimitWindow = 60000; // 1 minute
+  private readonly maxAttemptsPerWindow = 3;
 
-  constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private route: ActivatedRoute,
-    private userService: UserService,
-    private notificationService: NotificationService,
-    private securityService: SecurityService,
-    private validationService: ValidationService,
-    private store: Store<AppState>,
-    public breakpointService: BreakpointService,
-    private cdr: ChangeDetectorRef
-  ) {
+  private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly userService = inject(UserService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly securityService = inject(SecurityService);
+  private readonly validationService = inject(ValidationService);
+  private readonly store = inject(Store<AppState>);
+  public readonly breakpointService = inject(BreakpointService);
+
+  public readonly lockoutTimeRemainingMinutes = computed(() =>
+    Math.ceil(this.lockoutTimeRemaining() / 60000)
+  );
+
+  public readonly passwordStrengthText = computed(() => {
+    switch (this.passwordStrength()) {
+      case 0: return 'Very Weak';
+      case 1: return 'Weak';
+      case 2: return 'Fair';
+      case 3: return 'Good';
+      case 4: return 'Strong';
+      default: return 'Very Weak';
+    }
+  });
+
+  public readonly passwordStrengthColor = computed(() => {
+    switch (this.passwordStrength()) {
+      case 0: return 'text-red-500';
+      case 1: return 'text-orange-500';
+      case 2: return 'text-yellow-500';
+      case 3: return 'text-blue-500';
+      case 4: return 'text-green-500';
+      default: return 'text-red-500';
+    }
+  });
+
+  constructor() {
     this.initializeForm();
     this._setIsSignInPage(this.router.url.includes('/sign-in'));
     this.checkQueryParams();
@@ -133,7 +158,7 @@ export class SignInComponent implements OnInit, OnDestroy {
 
     // Show security notice after main form is loaded for better LCP
     setTimeout(() => {
-      this.showSecurityNotice = true;
+      this.showSecurityNotice.set(true);
     }, 100);
   }
 
@@ -170,8 +195,7 @@ export class SignInComponent implements OnInit, OnDestroy {
         distinctUntilChanged()
       )
       .subscribe(password => {
-        this.passwordStrength = this.calculatePasswordStrength(password);
-        this.cdr.markForCheck();
+        this.passwordStrength.set(this.calculatePasswordStrength(password));
       });
 
     // Monitor email for suspicious patterns
@@ -209,11 +233,11 @@ export class SignInComponent implements OnInit, OnDestroy {
   private checkSecurityStatus(): void {
     const securityStatus = this.userService.getSecurityStatus();
     if (securityStatus) {
-      this.isAccountLocked = securityStatus.isLocked;
-      this.loginAttempts = securityStatus.loginAttempts;
-      this.maxLoginAttempts = securityStatus.remainingAttempts + securityStatus.loginAttempts;
+      this.isAccountLocked.set(securityStatus.isLocked);
+      this.loginAttempts.set(securityStatus.loginAttempts);
+      this.maxLoginAttempts.set(securityStatus.remainingAttempts + securityStatus.loginAttempts);
 
-      if (this.isAccountLocked) {
+      if (this.isAccountLocked()) {
         this.calculateLockoutTime();
       }
     }
@@ -246,8 +270,8 @@ export class SignInComponent implements OnInit, OnDestroy {
     }
 
     // Check if account is locked
-    if (this.isAccountLocked) {
-      this.notificationService.error(`Account is temporarily locked. Please try again in ${Math.ceil(this.lockoutTimeRemaining / 60000)} minutes.`);
+    if (this.isAccountLocked()) {
+      this.notificationService.error(`Account is temporarily locked. Please try again in ${this.lockoutTimeRemainingMinutes()} minutes.`);
       return;
     }
 
@@ -262,9 +286,9 @@ export class SignInComponent implements OnInit, OnDestroy {
     );
 
     try {
-      this.isLoading = true;
-      this.loginAttemptCount++;
-      this.lastLoginAttempt = Date.now();
+      this.isLoading.set(true);
+      this.loginAttemptCount.update(c => c + 1);
+      this.lastLoginAttempt.set(Date.now());
 
       const user = await this.userService.signIn(email, password);
 
@@ -291,7 +315,7 @@ export class SignInComponent implements OnInit, OnDestroy {
     } catch (error: any) {
       this.handleSignInError(error, email);
     } finally {
-      this.isLoading = false;
+      this.isLoading.set(false);
     }
   }
 
@@ -307,7 +331,7 @@ export class SignInComponent implements OnInit, OnDestroy {
     }
 
     // Check password strength
-    if (this.passwordStrength < 3) {
+    if (this.passwordStrength() < 3) {
       this.notificationService.error('Password is too weak. Please choose a stronger password.');
       return;
     }
@@ -335,7 +359,7 @@ export class SignInComponent implements OnInit, OnDestroy {
     );
 
     try {
-      this.isLoading = true;
+      this.isLoading.set(true);
 
       await this.userService.signUp(email, password, name);
 
@@ -356,7 +380,7 @@ export class SignInComponent implements OnInit, OnDestroy {
     } catch (error: any) {
       this.handleSignUpError(error, email);
     } finally {
-      this.isLoading = false;
+      this.isLoading.set(false);
     }
   }
 
@@ -371,7 +395,7 @@ export class SignInComponent implements OnInit, OnDestroy {
     }
 
     try {
-      this.isLoading = true;
+      this.isLoading.set(true);
 
       // Force sign out first to clear any stale state
       try {
@@ -380,8 +404,6 @@ export class SignInComponent implements OnInit, OnDestroy {
         // Ignore error if already signed out
         console.log('Pre-sign-in logout skipped or failed', e);
       }
-
-      this.isLoading = true;
 
       // Log Google sign-in attempt
       this.securityService.logSecurityEvent(
@@ -415,7 +437,7 @@ export class SignInComponent implements OnInit, OnDestroy {
     } catch (error: any) {
       this.handleGoogleSignInError(error);
     } finally {
-      this.isLoading = false;
+      this.isLoading.set(false);
     }
   }
 
@@ -423,7 +445,7 @@ export class SignInComponent implements OnInit, OnDestroy {
    * Continue as guest (Offline Mode)
    */
   public async continueAsGuest(): Promise<void> {
-    this.isLoading = true;
+    this.isLoading.set(true);
     try {
       await this.userService.enableGuestMode();
 
@@ -437,7 +459,7 @@ export class SignInComponent implements OnInit, OnDestroy {
       console.error('Guest mode error:', error);
       this.notificationService.error('Failed to enable guest mode');
     } finally {
-      this.isLoading = false;
+      this.isLoading.set(false);
     }
   }
 
@@ -504,7 +526,7 @@ export class SignInComponent implements OnInit, OnDestroy {
         break;
       case 'auth/too-many-requests':
         this.notificationService.error('Too many failed attempts. Please try again later.');
-        this.isAccountLocked = true;
+        this.isAccountLocked.set(true);
         break;
       case 'auth/user-disabled':
         this.notificationService.error('This account has been disabled. Please contact support.');
@@ -571,7 +593,8 @@ export class SignInComponent implements OnInit, OnDestroy {
 
     // Handle specific error cases
     if (error.code === 'auth/popup-closed-by-user') {
-      this.notificationService.error('Sign-in was cancelled. Please try again.');
+      // Don't show error for explicit cancellation
+      console.log('Sign-in was cancelled by user');
     } else if (error.code === 'auth/popup-blocked') {
       this.notificationService.error('Popup was blocked. Please allow popups for this site and try again.');
     } else if (error.code === 'auth/cancelled-popup-request') {
@@ -610,14 +633,14 @@ export class SignInComponent implements OnInit, OnDestroy {
    */
   private isRateLimited(): boolean {
     const now = Date.now();
-    const timeSinceLastAttempt = now - this.lastLoginAttempt;
+    const timeSinceLastAttempt = now - this.lastLoginAttempt();
 
-    if (timeSinceLastAttempt < this.rateLimitWindow && this.loginAttemptCount >= this.maxAttemptsPerWindow) {
+    if (timeSinceLastAttempt < this.rateLimitWindow && this.loginAttemptCount() >= this.maxAttemptsPerWindow) {
       return true;
     }
 
     if (timeSinceLastAttempt >= this.rateLimitWindow) {
-      this.loginAttemptCount = 0;
+      this.loginAttemptCount.set(0);
     }
 
     return false;
@@ -630,7 +653,7 @@ export class SignInComponent implements OnInit, OnDestroy {
     const securityStatus = this.userService.getSecurityStatus();
     if (securityStatus && securityStatus.lockoutTime) {
       const now = Date.now();
-      this.lockoutTimeRemaining = Math.max(0, securityStatus.lockoutTime - now);
+      this.lockoutTimeRemaining.set(Math.max(0, securityStatus.lockoutTime - now));
     }
   }
 
@@ -737,59 +760,42 @@ export class SignInComponent implements OnInit, OnDestroy {
    * Toggle password visibility
    */
   public togglePasswordVisibility(): void {
-    this.showPassword = !this.showPassword;
+    this.showPassword.update(v => !v);
   }
 
-  /**
-   * Toggle confirm password visibility
-   */
   public toggleConfirmPasswordVisibility(): void {
-    this.showConfirmPassword = !this.showConfirmPassword;
+    this.showConfirmPassword.update(v => !v);
   }
 
   /**
    * Get password strength text
    */
   public getPasswordStrengthText(): string {
-    switch (this.passwordStrength) {
-      case 0: return 'Very Weak';
-      case 1: return 'Weak';
-      case 2: return 'Fair';
-      case 3: return 'Good';
-      case 4: return 'Strong';
-      default: return 'Very Weak';
-    }
+    return this.passwordStrengthText();
   }
 
   /**
    * Get password strength color
    */
   public getPasswordStrengthColor(): string {
-    switch (this.passwordStrength) {
-      case 0: return 'text-red-500';
-      case 1: return 'text-orange-500';
-      case 2: return 'text-yellow-500';
-      case 3: return 'text-blue-500';
-      case 4: return 'text-green-500';
-      default: return 'text-red-500';
-    }
+    return this.passwordStrengthColor();
   }
 
   /**
    * Get lockout time remaining in minutes
    */
   public getLockoutTimeRemaining(): number {
-    return Math.ceil(this.lockoutTimeRemaining / 60000);
+    return this.lockoutTimeRemainingMinutes();
   }
 
   public gotoPage(): void {
-    this._setIsSignInPage(!this.isSignInPage);
+    this._setIsSignInPage(!this.isSignInPage());
   }
 
   private _setIsSignInPage(flag: boolean): void {
-    this.isSignInPage = flag;
+    this.isSignInPage.set(flag);
 
-    if (!this.isSignInPage) {
+    if (!this.isSignInPage()) {
       this.signInForm.addControl('confirmPassword', this.fb.control('', [Validators.required]));
       this.signInForm.addControl('name', this.fb.control('', [Validators.required, Validators.minLength(2)]));
     } else {
