@@ -34,7 +34,7 @@ import {
 } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, throwError, timer, firstValueFrom, of, from } from 'rxjs';
-import { catchError, retry, timeout, map, switchMap } from 'rxjs/operators';
+import { catchError, retry, timeout, map, switchMap, tap } from 'rxjs/operators';
 import { authState } from '@angular/fire/auth';
 
 import { defaultBankAccounts } from 'src/app/component/auth/registration/registration.component';
@@ -1166,6 +1166,58 @@ export class UserService {
       // Try one last time to return whatever is in cache
       return this.storageService.getItem<User>(`user-data-${currentUser.uid}`);
     }
+  }
+
+  /**
+   * Pull user data from Firestore and update local cache and store.
+   * Consistent with the pull pattern used in other services.
+   */
+  public pullFromFirestore(userId: string): Observable<void> {
+    if (this.isGuestUser()) return of(undefined);
+
+    const currentUser = this.auth.currentUser;
+    if (!currentUser || currentUser.uid !== userId) {
+      console.warn(`[UserService] Pull skipped: Auth user mismatch or not logged in (UID: ${currentUser?.uid}, expected: ${userId})`);
+      return of(undefined);
+    }
+
+    console.log(`[UserService] Pulling user profile for: ${userId}`);
+
+    const userRef = doc(this.firestore, `users/${userId}`);
+    
+    return from(getDoc(userRef)).pipe(
+      timeout(10000),
+      tap((userSnap: any) => {
+        if (userSnap.exists()) {
+          const userData = userSnap.data() as User;
+          
+          // Sync vital display info from Auth object if missing in Firestore
+          if (!userData.photoURL && currentUser.photoURL) userData.photoURL = currentUser.photoURL;
+          if (!userData.displayName && currentUser.displayName) userData.displayName = currentUser.displayName;
+
+          // Update cache
+          this.storageService.setItem(`user-data-${userId}`, userData);
+          
+          // Update NgRx store
+          this.store.dispatch(ProfileActions.setProfile({ profile: userData }));
+          
+          if (userData?.preferences?.language) {
+            this.translationService.setLanguage(userData.preferences.language as Language);
+          }
+
+          console.log(`[UserService] User profile pulled and synced to store for: ${userId}`);
+        }
+      }),
+      map(() => undefined),
+      catchError(error => {
+        if (error.name === 'TimeoutError') {
+          console.warn('[UserService] Pull timed out, using local data');
+        } else {
+          console.error('[UserService] Pull failed:', error);
+        }
+        return of(undefined);
+      })
+    );
   }
 
   /**
