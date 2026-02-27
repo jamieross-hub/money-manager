@@ -88,7 +88,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadAppData() {
-    const userId = this.userService.userAuth$.value?.uid;
+    const userId = this.userService.getCurrentUserId();
     if (userId) {
       this.store.dispatch(loadProfile({ userId }));
       this.store.dispatch(loadAccounts({ userId }));

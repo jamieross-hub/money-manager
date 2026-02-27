@@ -4,7 +4,22 @@ import * as ProfileActions from './profile.actions';
 
 export const profileReducer = createReducer(
   initialState,
-  
+
+  // Set profile directly (from auth state / guest mode)
+  on(ProfileActions.setProfile, (state, { profile }) => ({
+    ...state,
+    profile,
+    loading: false,
+    error: null
+  })),
+
+  // Clear profile (logout)
+  on(ProfileActions.clearProfile, (state) => ({
+    ...state,
+    profile: null,
+    loading: false,
+    error: null
+  })),
   // Load profile
   on(ProfileActions.loadProfile, (state) => ({
     ...state,

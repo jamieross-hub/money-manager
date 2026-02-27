@@ -19,7 +19,7 @@ export class CategoryFacadeService {
     ) {}
 
     private get activeService(): CategoryService {
-        const profile = this.userService.userAuth$.value;
+        const profile = this.userService.getCurrentUserSnapshot();
         const isFamilyMode = profile?.preferences?.isFamilyMode || false;
         return isFamilyMode ? this.familyService : this.personalService;
     }

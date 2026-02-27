@@ -1,9 +1,8 @@
 import {
   Component, inject, OnInit, ChangeDetectionStrategy,
-  signal, computed, effect, DestroyRef
+  computed, effect, DestroyRef
 } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Auth } from '@angular/fire/auth';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,6 +17,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { AppState } from 'src/app/store/app.state';
 import * as FamilyActions from '../../store/family.actions';
 import * as FamilySelectors from '../../store/family.selectors';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import { FamilyService } from '../../services/family.service';
 import {
   FamilyMember, FamilyTransaction, Settlement, BalanceEntry, AddSettlementRequest
@@ -40,7 +40,6 @@ import { SettleDialogComponent, SettleDialogData } from './settle-dialog/settle-
 })
 export class SettleUpComponent implements OnInit {
   private store = inject(Store<AppState>);
-  private auth = inject(Auth);
   private familyService = inject(FamilyService);
   private dialog = inject(MatDialog);
   private destroyRef = inject(DestroyRef);
@@ -52,7 +51,9 @@ export class SettleUpComponent implements OnInit {
   loading = toSignal(this.store.select(FamilySelectors.selectFamilyLoading), { initialValue: true });
   settlementsLoading = toSignal(this.store.select(FamilySelectors.selectSettlementsLoading), { initialValue: false });
 
-  readonly currentUserId = this.auth.currentUser?.uid ?? '';
+  /** Current user's UID from AppState.profile */
+  private readonly profile = this.store.selectSignal(ProfileSelectors.selectProfile);
+  get currentUserId(): string { return this.profile()?.uid ?? ''; }
 
   /** All outstanding balances (from owes to) */
   balances = computed<BalanceEntry[]>(() =>
@@ -64,30 +65,26 @@ export class SettleUpComponent implements OnInit {
   );
 
   /** Balances involving the current user (highlighted) */
-  myBalances = computed<BalanceEntry[]>(() =>
-    this.balances().filter(
-      b => b.fromUserId === this.currentUserId || b.toUserId === this.currentUserId
-    )
-  );
+  myBalances = computed<BalanceEntry[]>(() => {
+    const uid = this.currentUserId;
+    return this.balances().filter(b => b.fromUserId === uid || b.toUserId === uid);
+  });
 
   /** Other balances (not involving current user) */
-  otherBalances = computed<BalanceEntry[]>(() =>
-    this.balances().filter(
-      b => b.fromUserId !== this.currentUserId && b.toUserId !== this.currentUserId
-    )
-  );
+  otherBalances = computed<BalanceEntry[]>(() => {
+    const uid = this.currentUserId;
+    return this.balances().filter(b => b.fromUserId !== uid && b.toUserId !== uid);
+  });
 
-  totalOwedByMe = computed<number>(() =>
-    this.myBalances()
-      .filter(b => b.fromUserId === this.currentUserId)
-      .reduce((s, b) => s + b.amount, 0)
-  );
+  totalOwedByMe = computed<number>(() => {
+    const uid = this.currentUserId;
+    return this.myBalances().filter(b => b.fromUserId === uid).reduce((s, b) => s + b.amount, 0);
+  });
 
-  totalOwedToMe = computed<number>(() =>
-    this.myBalances()
-      .filter(b => b.toUserId === this.currentUserId)
-      .reduce((s, b) => s + b.amount, 0)
-  );
+  totalOwedToMe = computed<number>(() => {
+    const uid = this.currentUserId;
+    return this.myBalances().filter(b => b.toUserId === uid).reduce((s, b) => s + b.amount, 0);
+  });
 
   constructor() {
     // When family loads, fetch members, transactions, and settlements

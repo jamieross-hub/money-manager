@@ -268,7 +268,7 @@ export class SecurityService {
    * Update security status
    */
   private updateSecurityStatus(): void {
-    const currentUser = this.userService.userAuth$.value;
+    const currentUser = this.userService.getCurrentUserSnapshot();
     const userSecurityStatus = this.userService.getSecurityStatus();
     
     const status: SecurityStatus = {
@@ -325,7 +325,7 @@ export class SecurityService {
    * Perform periodic security checks
    */
   private performSecurityChecks(): void {
-    const currentUser = this.userService.userAuth$.value;
+    const currentUser = this.userService.getCurrentUserSnapshot();
     if (!currentUser) return;
     
     // Check for session timeout
@@ -349,7 +349,7 @@ export class SecurityService {
    */
   private detectSuspiciousActivityPatterns(): void {
     const recentEvents = this.getRecentSecurityEvents();
-    const currentUser = this.userService.userAuth$.value;
+    const currentUser = this.userService.getCurrentUserSnapshot();
     
     if (!currentUser) return;
     

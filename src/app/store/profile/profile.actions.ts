@@ -1,5 +1,14 @@
 import { createAction, props } from '@ngrx/store';
 import { User } from '../../util/models';
+// Set profile directly (used by UserService after auth state change)
+
+export const setProfile = createAction(
+  '[Profile] Set Profile',
+  props<{ profile: User | null }>()
+);
+
+// Clear profile (logout)
+export const clearProfile = createAction('[Profile] Clear Profile');
 
 // Load profile
 export const loadProfile = createAction(

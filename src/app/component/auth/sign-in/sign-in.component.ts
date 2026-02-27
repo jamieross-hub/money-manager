@@ -446,7 +446,7 @@ export class SignInComponent implements OnInit, OnDestroy {
    */
   private async loadUserData(specificUserId?: string): Promise<void> {
     try {
-      const uid = specificUserId || this.userService.userAuth$.value?.uid;
+      const uid = specificUserId || this.userService.getCurrentUserId();
 
       if (!uid) {
         console.warn('No user ID available for loading data');
@@ -470,7 +470,7 @@ export class SignInComponent implements OnInit, OnDestroy {
    * Centralized navigation after successful sign-in
    */
   private navigateAfterSignIn(): void {
-    if (this.userService.userAuth$.value?.preferences?.isFamilyMode) {
+    if (this.userService.getCurrentUserSnapshot()?.preferences?.isFamilyMode) {
       this.router.navigate(['/dashboard/family']);
     } else {
       this.router.navigate(['/dashboard']);

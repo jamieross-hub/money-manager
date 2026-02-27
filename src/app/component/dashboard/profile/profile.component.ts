@@ -164,7 +164,6 @@ export class ProfileComponent {
 
   // ─── Reactive Form ────────────────────────────────────────────────
   readonly profileForm: FormGroup;
-  readonly currentUser: any;
 
   // ─── Static Config ────────────────────────────────────────────────
   readonly currencies = Object.values(CurrencyCode);
@@ -192,7 +191,6 @@ export class ProfileComponent {
   ];
 
   constructor() {
-    this.currentUser = this.auth.currentUser;
     this.ensureCurrentTimezoneInList();
 
     // Initialize form
@@ -219,8 +217,10 @@ export class ProfileComponent {
     });
 
 
-    // Dispatch profile load
-    const uid = this.userService.isGuestUser() ? 'offline-guest' : this.currentUser?.uid;
+    // Dispatch profile load — uid sourced from store (or guest fallback)
+    const uid = this.userService.isGuestUser()
+      ? 'offline-guest'
+      : (this.store.selectSignal(ProfileSelectors.selectProfile)()?.uid ?? null);
     if (uid) {
       this.store.dispatch(ProfileActions.loadProfile({ userId: uid }));
     }
@@ -338,8 +338,8 @@ export class ProfileComponent {
           this.isLoading.set(false);
         });
       } else {
-        // For guest mode, updates are immediate
-        this.userService.userAuth$.pipe(
+        // For guest mode, updates are immediate — store already updated
+        this.store.select(ProfileSelectors.selectProfile).pipe(
           filter(u => !!u),
           take(1),
           delay(100)
@@ -582,7 +582,7 @@ export class ProfileComponent {
 
         if (this.userService.isGuestUser()) {
           this.userService.storageService.setItem(`user-data-${updatedUser.uid}`, updatedUser);
-          this.userService.userAuth$.next(updatedUser);
+          this.store.dispatch(ProfileActions.setProfile({ profile: updatedUser }));
           this.userProfile.set(updatedUser);
           this.notificationService.success('Profile updated successfully.');
         } else {
@@ -703,7 +703,8 @@ export class ProfileComponent {
       if (result) {
         try {
           this.isLoading.set(true);
-          await this.currentUser.delete();
+          // Use Auth directly for the Firebase account deletion call
+          await this.auth.currentUser?.delete();
           this.notificationService.success('Account deleted successfully');
           this.router.navigate(['/sign-in']);
         } catch (error) {
@@ -860,7 +861,7 @@ export class ProfileComponent {
     // 4. Persist changes
     if (this.userService.isGuestUser()) {
       this.userService.storageService.setItem(`user-data-${updatedUser.uid}`, updatedUser);
-      this.userService.userAuth$.next(updatedUser);
+      this.store.dispatch(ProfileActions.setProfile({ profile: updatedUser }));
     } else {
       this.store.dispatch(ProfileActions.updatePreferences({
         userId: profile.uid,

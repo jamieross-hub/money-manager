@@ -38,7 +38,7 @@ export class ThemeToggleComponent implements OnInit {
     this._themeSwitchingService.setTheme(newTheme);
 
     // Save choice to User Profile if logged in or guest
-    const currentUser = this.userService.userAuth$.value;
+    const currentUser = this.userService.getCurrentUserSnapshot();
     if (currentUser) {
       const updatedPreferences = {
         ...currentUser.preferences,

@@ -10,11 +10,11 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Auth } from '@angular/fire/auth';
 
 import { AppState } from 'src/app/store/app.state';
 import * as FamilyActions from '../../store/family.actions';
 import * as FamilySelectors from '../../store/family.selectors';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import { FamilyAddTransactionDialogComponent } from '../../dialogs/family-add-transaction-dialog/family-add-transaction-dialog.component';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { FamilyMember } from 'src/app/util/models/family.model';
@@ -45,7 +45,6 @@ import { CommonBodyContentComponent } from 'src/app/util/components/dialog/commo
 export class FamilyMembersComponent implements OnInit {
   private store = inject(Store<AppState>);
   private dialog = inject(MatDialog);
-  private auth = inject(Auth);
   private notificationService = inject(NotificationService);
   private location = inject(Location);
   readonly breakpointService = inject(BreakpointService);
@@ -54,7 +53,9 @@ export class FamilyMembersComponent implements OnInit {
   members = signal<FamilyMember[]>([]);
   loading = signal(true);
 
-  currentUserId = this.auth.currentUser?.uid;
+  /** Current user UID from AppState.profile */
+  private readonly profile = this.store.selectSignal(ProfileSelectors.selectProfile);
+  get currentUserId(): string | undefined { return this.profile()?.uid ?? undefined; }
   isAdmin = signal(false);
   private destroyRef = inject(DestroyRef);
 

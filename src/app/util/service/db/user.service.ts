@@ -33,8 +33,9 @@ import {
   deleteDoc
 } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, throwError, timer, firstValueFrom } from 'rxjs';
-import { catchError, retry, timeout, map } from 'rxjs/operators';
+import { BehaviorSubject, Observable, throwError, timer, firstValueFrom, of, from } from 'rxjs';
+import { catchError, retry, timeout, map, switchMap } from 'rxjs/operators';
+import { authState } from '@angular/fire/auth';
 
 import { defaultBankAccounts } from 'src/app/component/auth/registration/registration.component';
 import { NotificationService } from '../notification.service';
@@ -46,6 +47,8 @@ import {
 import { Timestamp } from '@angular/fire/firestore';
 import { AppState } from 'src/app/store/app.state';
 import { Store } from '@ngrx/store';
+import { selectProfile } from 'src/app/store/profile/profile.selectors';
+import * as ProfileActions from 'src/app/store/profile/profile.actions';
 import { createAccount } from 'src/app/store/accounts/accounts.actions';
 import { createCategory } from 'src/app/store/categories/categories.actions';
 import { AccountType } from '../../config/enums';
@@ -95,7 +98,16 @@ interface RateLimitEntry {
   providedIn: 'root',
 })
 export class UserService {
-  public readonly userAuth$ = new BehaviorSubject<User | null>(null);
+  /** Re-exported store slice — single source of truth for user profile. */
+  public readonly userAuth$: Observable<User | null>;
+
+  /**
+   * Synchronous snapshot of the current user — kept in sync whenever we
+   * dispatch setProfile / clearProfile so synchronous consumers such as
+   * getCurrentUserId() and isGuestUser() keep working without async.
+   */
+  private _currentUser: User | null = null;
+
   public readonly googleAccessToken$ = new BehaviorSubject<string | null>(null);
   public isAdmin: boolean = false;
 
@@ -114,8 +126,14 @@ export class UserService {
     public readonly storageService: LocalIndexDBStorageService,
     private readonly translationService: TranslationService
   ) {
+    // Expose the NgRx profile slice as userAuth$ so existing subscribers keep working.
+    this.userAuth$ = this.store.select(selectProfile);
+    // Keep _currentUser snapshot in sync for synchronous consumers.
+    this.userAuth$.subscribe(u => (this._currentUser = u));
+
     this.initializeAuthState();
     this.startSecurityMonitoring();
+    this.startTokenRefresh();
   }
 
   /**
@@ -148,7 +166,9 @@ export class UserService {
           if (!userData.displayName && user.displayName) userData.displayName = user.displayName;
         }
 
-        this.userAuth$.next(userData);
+        // 🔑 Single source of truth: push into NgRx store.
+        this.store.dispatch(ProfileActions.setProfile({ profile: userData }));
+
         if (userData?.preferences?.language) {
           this.translationService.setLanguage(userData.preferences.language as Language);
         }
@@ -162,7 +182,7 @@ export class UserService {
         // Check for suspicious activity
         this.detectSuspiciousActivity(user);
       } else {
-        this.userAuth$.next(null);
+        this.store.dispatch(ProfileActions.clearProfile());
         this.logAuditEvent('USER_LOGOUT', undefined, { timestamp: new Date().toISOString() });
       }
     });
@@ -196,7 +216,7 @@ export class UserService {
     }
 
     this.storageService.setItem(LocalStorageKey.GUEST_MODE, 'true');
-    this.userAuth$.next(guestUser);
+    this.store.dispatch(ProfileActions.setProfile({ profile: guestUser }));
 
     // Sync language for guest
     if (guestUser.preferences?.language) {
@@ -246,24 +266,35 @@ export class UserService {
     if (this.isGuestUser()) {
       this.storageService.removeItem(LocalStorageKey.GUEST_MODE);
       this.storageService.removeItem('guest-data-initialized');
-      this.userAuth$.next(null);
+      this.store.dispatch(ProfileActions.clearProfile());
     } else {
       await this.auth.signOut();
     }
   }
 
   /**
-   * Get current user ID (Firebase or Guest)
+   * Get current user ID (Firebase or Guest).
+   * Reads from the synchronous _currentUser snapshot (backed by NgRx store).
    */
   public getCurrentUserId(): string | null {
-    return this.userAuth$.value?.uid || null;
+    return this._currentUser?.uid || null;
   }
 
   /**
-   * Check if current user is guest
+   * Check if current user is guest.
+   * Reads from the synchronous _currentUser snapshot.
    */
   public isGuestUser(): boolean {
-    return this.userAuth$.value?.uid === 'offline-guest';
+    return this._currentUser?.uid === 'offline-guest';
+  }
+
+  /**
+   * Synchronous snapshot of the current User object.
+   * Use this wherever you need the full User (e.g. to read preferences)
+   * without subscribing to an Observable.
+   */
+  public getCurrentUserSnapshot(): User | null {
+    return this._currentUser;
   }
 
   /**
@@ -316,6 +347,43 @@ export class UserService {
       userAgent,
       location: window.location.href
     });
+  }
+
+  /**
+   * Proactively refresh the Firebase ID token every 55 minutes so it never
+   * expires mid-session.  If the refresh fails the user is signed out and
+   * redirected to the login page for a smooth UX.
+   */
+  private startTokenRefresh(): void {
+    authState(this.auth)
+      .pipe(
+        switchMap(user => {
+          if (!user) return of(null);
+          return from(user.getIdToken(true));
+        })
+      )
+      .subscribe({
+        next: token => token && console.log('🔄 Token refreshed successfully'),
+        error: err => {
+          console.error('Token refresh failed, signing out:', err);
+          this.auth.signOut();
+          this.router.navigate(['/sign-in']);
+        }
+      });
+
+    // Re-run the refresh every 55 minutes (tokens expire after 60 min)
+    setInterval(() => {
+      const currentUser = this.auth.currentUser;
+      if (currentUser) {
+        currentUser.getIdToken(true)
+          .then(() => console.log('🔄 Periodic token refresh done'))
+          .catch(err => {
+            console.error('Periodic token refresh failed, signing out:', err);
+            this.auth.signOut();
+            this.router.navigate(['/sign-in']);
+          });
+      }
+    }, 55 * 60 * 1000); // 55 minutes
   }
 
   /**
@@ -1022,7 +1090,7 @@ export class UserService {
     try {
       if (this.isGuestUser()) {
         this.storageService.setItem(`user-data-${user.uid}`, user);
-        this.userAuth$.next(user);
+        this.store.dispatch(ProfileActions.setProfile({ profile: user }));
         return;
       }
       const userRef = doc(this.firestore, `users/${user.uid}`);
@@ -1032,7 +1100,7 @@ export class UserService {
       }, { merge: true });
 
       this.storageService.setItem(`user-data-${user.uid}`, user);
-      this.userAuth$.next(user);
+      this.store.dispatch(ProfileActions.setProfile({ profile: user }));
 
       this.logAuditEvent('USER_UPDATED', user.uid, {
         timestamp: new Date().toISOString()
@@ -1051,7 +1119,7 @@ export class UserService {
    */
   async getCurrentUser(): Promise<User | null> {
     if (this.isGuestUser()) {
-      return this.userAuth$.value;
+      return this._currentUser;
     }
     const currentUser = this.auth.currentUser;
     if (!currentUser) return null;
@@ -1101,10 +1169,11 @@ export class UserService {
   }
 
   /**
-   * Check if user is authenticated (for offline scenarios)
+   * Check if user is authenticated (for offline scenarios).
+   * Reads from the synchronous _currentUser snapshot.
    */
   public isAuthenticated(): boolean {
-    return this.userAuth$.value !== null;
+    return this._currentUser !== null;
   }
 
   /**
@@ -1212,7 +1281,7 @@ export class UserService {
    * Get security status for current user
    */
   public getSecurityStatus(): any {
-    const currentUser = this.userAuth$.value;
+    const currentUser = this._currentUser;
     if (!currentUser) return null;
 
     const email = currentUser.email;
@@ -1240,7 +1309,7 @@ export class UserService {
    */
   public forceLogout(reason: string): void {
     console.warn('Force logout triggered:', reason);
-    this.logAuditEvent('FORCE_LOGOUT', this.userAuth$.value?.uid, { reason });
+    this.logAuditEvent('FORCE_LOGOUT', this._currentUser?.uid, { reason });
     this.signOut();
   }
 

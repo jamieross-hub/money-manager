@@ -18,7 +18,7 @@ export class TransactionsFacadeService {
     ) {}
 
     private get activeService(): TransactionsService {
-        const profile = this.userService.userAuth$.value;
+        const profile = this.userService.getCurrentUserSnapshot();
         const isFamilyMode = profile?.preferences?.isFamilyMode || false;
         return isFamilyMode ? this.familyService : this.personalService;
     }

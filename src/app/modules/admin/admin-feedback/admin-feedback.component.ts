@@ -4,11 +4,13 @@ import { MatDialog } from '@angular/material/dialog';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Subject, Observable, firstValueFrom } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { Auth } from '@angular/fire/auth';
+import { Store } from '@ngrx/store';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { FeedbackService, FeedbackData } from 'src/app/util/service/feedback.service';
 import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
 import { SsrService } from 'src/app/util/service/ssr.service';
+import { AppState } from 'src/app/store/app.state';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 
 export interface FeedbackFilter {
   status: string;
@@ -77,7 +79,7 @@ export class AdminFeedbackComponent implements OnInit, OnDestroy {
 
   constructor(
     private breakpointObserver: BreakpointObserver,
-    private auth: Auth,
+    private store: Store<AppState>,
     private feedbackService: FeedbackService,
     private dialog: MatDialog,
     private notificationService: NotificationService,
@@ -104,7 +106,8 @@ export class AdminFeedbackComponent implements OnInit, OnDestroy {
   }
 
   private async initializeComponent(): Promise<void> {
-    this.currentUser = await this.auth.currentUser;
+    /** Read current user from NgRx AppState.profile */
+    this.currentUser = this.store.selectSignal(ProfileSelectors.selectProfile)();
     await this.loadFeedback();
   }
 

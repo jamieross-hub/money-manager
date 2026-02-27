@@ -86,14 +86,14 @@ function addSecurityHeaders(request: HttpRequest<unknown>): HttpRequest<unknown>
  * Add authentication token to requests
  */
 function addAuthToken(request: HttpRequest<unknown>, userService: UserService): HttpRequest<unknown> {
-  const currentUser = userService.userAuth$.value;
+  const uid = userService.getCurrentUserId();
 
-  if (currentUser && currentUser.uid) {
+  if (uid) {
     // For Firebase Auth, we would typically get the ID token
     // This is a placeholder for the actual implementation
     return request.clone({
       setHeaders: {
-        'Authorization': `Bearer ${currentUser.uid}` // Placeholder
+        'Authorization': `Bearer ${uid}` // Placeholder
       }
     });
   }

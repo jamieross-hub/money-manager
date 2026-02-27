@@ -1,10 +1,10 @@
-import { Component, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Subject, Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { Auth } from '@angular/fire/auth';
+import { Store } from '@ngrx/store';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { FeedbackService } from 'src/app/util/service/feedback.service';
@@ -28,6 +28,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { AppState } from 'src/app/store/app.state';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 
 @Component({
   selector: 'app-feedback',
@@ -47,10 +49,19 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FeedbackComponent implements OnInit, OnDestroy {
+  private fb = inject(FormBuilder);
+  private dialog = inject(MatDialog);
+  private breakpointObserver = inject(BreakpointObserver);
+  private store = inject(Store<AppState>);
+  private notificationService = inject(NotificationService);
+  private hapticFeedback = inject(HapticFeedbackService);
+  private feedbackService = inject(FeedbackService);
+
   feedbackForm: FormGroup;
   isMobile: boolean = false;
   isSubmitting: boolean = false;
-  currentUser: any = null;
+  /** Snapshot of profile from the store (for pre-filling the form) */
+  currentUser: { displayName?: string | null; email?: string | null; uid?: string } | null = null;
   private destroy$ = new Subject<void>();
   appName = APP_CONFIG.APP_NAME;
 
@@ -73,15 +84,7 @@ export class FeedbackComponent implements OnInit, OnDestroy {
   // Rating options
   ratingOptions = [1, 2, 3, 4, 5];
 
-  constructor(
-    private fb: FormBuilder,
-    private dialog: MatDialog,
-    private breakpointObserver: BreakpointObserver,
-    private auth: Auth,
-    private notificationService: NotificationService,
-    private hapticFeedback: HapticFeedbackService,
-    private feedbackService: FeedbackService
-  ) {
+  constructor() {
     this.feedbackForm = this.createForm();
 
     // Observe breakpoints for mobile detection
@@ -101,13 +104,14 @@ export class FeedbackComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private async initializeUser(): Promise<void> {
-    this.currentUser = await this.auth.currentUser;
-    if (this.currentUser) {
-      // Pre-fill user information if available
+  private initializeUser(): void {
+    /** Read profile snapshot synchronously from NgRx store */
+    const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
+    if (profile) {
+      this.currentUser = { displayName: profile.displayName, email: profile.email, uid: profile.uid };
       this.feedbackForm.patchValue({
-        name: this.currentUser.displayName || '',
-        email: this.currentUser.email || ''
+        name: profile.displayName || '',
+        email: profile.email || ''
       });
     }
   }

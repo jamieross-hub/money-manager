@@ -69,7 +69,7 @@ export class PinLockComponent implements OnInit, OnDestroy {
   }
 
   private async verifyEnteredPin(): Promise<void> {
-    const user = this.userService.userAuth$.value;
+    const user = this.userService.getCurrentUserSnapshot();
     if (user?.preferences?.pinHash) {
       const success = await this.securityService.verifyPin(this.enteredPin, user.preferences.pinHash);
       if (!success) {

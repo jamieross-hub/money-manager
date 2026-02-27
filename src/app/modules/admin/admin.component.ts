@@ -3,12 +3,15 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Subject, firstValueFrom } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Auth } from '@angular/fire/auth';
+import { Store } from '@ngrx/store';
 import { Router } from '@angular/router';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { FeedbackService } from 'src/app/util/service/feedback.service';
 import { AdminSidebarService, AdminSidebarState } from './admin-sidebar.service';
 import { AdminSidebarSection, AdminSidebarNavItem } from './admin-sidebar.config';
+import { AppState } from 'src/app/store/app.state';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 
 @Component({
   selector: 'app-admin',
@@ -42,6 +45,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   constructor(
     private breakpointObserver: BreakpointObserver,
     private auth: Auth,
+    private store: Store<AppState>,
     private router: Router,
     private userService: UserService,
     private feedbackService: FeedbackService,
@@ -70,7 +74,8 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   private async initializeAdmin(): Promise<void> {
     try {
-      this.currentUser = await this.auth.currentUser;
+      /** Read current user from NgRx AppState.profile */
+      this.currentUser = this.store.selectSignal(ProfileSelectors.selectProfile)();
 
       if (!this.currentUser) {
         this.notificationService.error('Authentication required');

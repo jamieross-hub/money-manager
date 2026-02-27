@@ -231,7 +231,7 @@ export class ChatFacadeService implements OnDestroy {
             this.processHandlerResult(result);
         } else {
             // Fallback logic: check for Gemini key first, then OpenAI
-            const user = this.userService.userAuth$.value;
+            const user = this.userService.getCurrentUserSnapshot();
             if (user?.preferences?.geminiApiKey && !this.openaiService.getApiKey(user)) {
                 const result = this.geminiHandler.handle(context);
                 this.processHandlerResult(result);
