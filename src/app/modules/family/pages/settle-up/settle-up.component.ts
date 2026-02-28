@@ -219,7 +219,9 @@ export class SettleUpComponent implements OnInit {
             createdBy: userId,
             updatedBy: userId,
             settlementId: settlement.id,
-            settlementFamilyId: famId
+            settlementFamilyId: famId,
+            settlementFromUserId: req.fromUserId,
+            settlementToUserId: req.toUserId
           };
 
           this.store.dispatch(TransactionsActions.createTransaction({ userId, transaction: transferTx }));

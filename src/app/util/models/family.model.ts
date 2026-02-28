@@ -82,6 +82,12 @@ export interface FamilyTransaction {
   updatedAt: Date | Timestamp;
   /** Present only when the group mode is 'split' */
   splitData?: SplitTransactionData;
+
+  // Settlement link fields
+  settlementId?: string;
+  settlementFamilyId?: string;
+  settlementFromUserId?: string;
+  settlementToUserId?: string;
 }
 
 // ─── Computed Stats ────────────────────────────────────────────────────────
@@ -122,6 +128,12 @@ export interface AddFamilyTransactionRequest {
   category: string;
   date: Date;
   note?: string;
+
+  // Settlement link fields
+  settlementId?: string;
+  settlementFamilyId?: string;
+  settlementFromUserId?: string;
+  settlementToUserId?: string;
 }
 
 export interface UpdateFamilyTransactionRequest {

@@ -146,16 +146,13 @@ export class DateService {
     if (!formDate) return new Date();
     
     const [year, month, day] = formDate.split('-').map(Number);
-    const date = new Date();
-    date.setFullYear(year);
-    date.setMonth(month - 1);
-    date.setDate(day);
+    const now = new Date();
     
-    if (!preserveTime) {
-      date.setHours(0, 0, 0, 0);
+    if (preserveTime) {
+      return new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
     }
     
-    return date;
+    return new Date(year, month - 1, day, 0, 0, 0, 0);
   }
 
   /**

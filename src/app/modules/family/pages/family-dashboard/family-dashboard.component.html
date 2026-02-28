@@ -98,7 +98,7 @@
           </div>
           <p class="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2 z-10">Income</p>
           <p class="text-[17px] font-bold text-gray-900 dark:text-white truncate z-10">
-            {{ stats()?.totalIncome | number:'1.0-0' }}
+            {{ stats()?.totalIncome | currency }}
           </p>
         </div>
         
@@ -109,7 +109,7 @@
           </div>
           <p class="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2 z-10">Expenses</p>
           <p class="text-[17px] font-bold text-gray-900 dark:text-white truncate z-10">
-            {{ stats()?.totalExpense | number:'1.0-0' }}
+            {{ stats()?.totalExpense | currency }}
           </p>
         </div>
         
@@ -122,7 +122,7 @@
           <p class="text-[17px] font-bold truncate z-10"
              [class.text-green-400]="(stats()?.netBalance || 0) >= 0"
              [class.text-red-400]="(stats()?.netBalance || 0) < 0">
-            {{ stats()?.netBalance | number:'1.0-0' }}
+            {{ stats()?.netBalance | currency }}
           </p>
         </div>
       </div>
@@ -136,7 +136,7 @@
           </div>
           <p class="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2 z-10">Total Group Expense</p>
           <p class="text-[18px] font-bold text-gray-900 dark:text-white truncate z-10">
-             ₹{{ stats()?.totalExpense | number:'1.0-0' }}
+             {{ stats()?.totalExpense | currency }}
           </p>
         </div>
         
@@ -147,7 +147,7 @@
           </div>
           <p class="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2 z-10">Your Expense</p>
           <p class="text-[18px] font-bold text-gray-900 dark:text-white truncate z-10">
-             ₹{{ currentUserExpense() | number:'1.0-0' }}
+             {{ currentUserExpense() | currency }}
           </p>
         </div>
       </div>
@@ -182,7 +182,7 @@
                 <div class="w-5 h-5 rounded-full bg-green-50 dark:bg-green-400/10 flex items-center justify-center text-green-600 dark:text-green-400">
                   <mat-icon class="!text-[10px] !w-2.5 !h-2.5">arrow_upward</mat-icon>
                 </div>
-                <span class="text-[13px] font-bold text-gray-900 dark:text-white">{{ m.totalIncome | number:'1.0-0' }}</span>
+                <span class="text-[13px] font-bold text-gray-900 dark:text-white">{{ m.totalIncome | currency }}</span>
               </div>
             </ng-container>
             
@@ -190,7 +190,7 @@
               <div class="w-5 h-5 rounded-full bg-red-50 dark:bg-red-400/10 flex items-center justify-center text-red-500 dark:text-red-400">
                 <mat-icon class="!text-[10px] !w-2.5 !h-2.5">arrow_downward</mat-icon>
               </div>
-              <span class="text-[13px] font-bold text-gray-900 dark:text-white">{{ m.totalExpense | number:'1.0-0' }}</span>
+              <span class="text-[13px] font-bold text-gray-900 dark:text-white">{{ m.totalExpense | currency }}</span>
             </div>
           </div>
         </div>
@@ -223,7 +223,7 @@
             <span class="text-[14px] font-bold" 
                   [class.text-green-600]="tx.type === 'income'" [class.dark:text-green-400]="tx.type === 'income'"
                   [class.text-gray-900]="tx.type !== 'income'" [class.dark:text-white]="tx.type !== 'income'">
-              ₹{{ tx.amount | number:'1.0-0' }}
+              {{ tx.amount | currency }}
             </span>
             <span class="text-[11px] font-medium text-gray-400 mt-0.5">{{ formatDate(tx.date) }}</span>
           </div>

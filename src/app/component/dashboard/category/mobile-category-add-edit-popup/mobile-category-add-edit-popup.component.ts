@@ -61,6 +61,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { APP_CONFIG } from 'src/app/util/config/config';
 
 @Component({
   selector: 'app-mobile-category-add-edit-popup',
@@ -154,7 +155,9 @@ export class MobileCategoryAddEditPopupComponent implements OnInit {
       name: ['', [
         ...this.validationService.getCategoryNameValidators(),
         (control: AbstractControl) => {
-          if (control.value?.trim().toLowerCase() === 'loan payment') {
+          const val = control.value?.trim().toLowerCase();
+          const reservedNames = APP_CONFIG.VALIDATION.RESERVED_CATEGORY_NAMES;
+          if (val && val in reservedNames) {
             return { reserved: true };
           }
           return null;
@@ -263,7 +266,13 @@ export class MobileCategoryAddEditPopupComponent implements OnInit {
   getNameError(): string {
     const control = this.categoryForm.get('name');
     if (control?.hasError('reserved')) {
-      return "'Loan Payment' is a reserved name for Loan Account category";
+      const val = control.value?.trim().toLowerCase();
+      const reservedNames = APP_CONFIG.VALIDATION.RESERVED_CATEGORY_NAMES;
+      const originalName = control.value?.trim();
+      
+      if (val && val in reservedNames) {
+        return `'${originalName}' ${reservedNames[val as keyof typeof reservedNames]}`;
+      }
     }
     return control ? this.validationService.getCategoryNameError(control) : '';
   }

@@ -322,6 +322,12 @@ export class MobileTransactionListComponent
     { initialValue: false }
   );
 
+  /** Current active family */
+  activeFamily = this.store.selectSignal(FamilySelectors.selectFamily);
+
+  /** True when the current family is in 'split' mode */
+  isSplitMode = computed(() => this.activeFamily()?.mode === 'split');
+
   /** Current user's UID */
   private readonly currentUserProfile = this.store.selectSignal(ProfileSelectors.selectProfile);
   get currentUserId(): string { return this.currentUserProfile()?.uid ?? ''; }
@@ -333,17 +339,40 @@ export class MobileTransactionListComponent
   );
 
   /**
-   * Returns true if the current user can edit/delete the given transaction.
-   * - In personal mode: always allowed.
-   * - In family mode: only the creator of the transaction OR an admin can edit/delete.
+   * Returns true if the current user can edit the given transaction.
+   * - Transactions linked to a settlement CANNOT be edited (to prevent data inconsistency).
    */
-  canEditDelete(tx: Transaction): boolean {
+  canEdit(tx: Transaction): boolean {
+    if (tx.settlementId) return false;
+    return this.canPerformAction(tx);
+  }
+
+  /**
+   * Returns true if the current user can delete the given transaction.
+   * - Settlement transactions can be deleted by: creator, sender, or receiver.
+   */
+  canDelete(tx: Transaction): boolean {
+    if (tx.settlementId) {
+      const uid = this.currentUserId;
+      if (!uid) return false;
+      // Creator, Sender, or Receiver can delete
+      if (tx.createdBy === uid || tx.userId === uid || tx.settlementFromUserId === uid || tx.settlementToUserId === uid) {
+        return true;
+      }
+      // Family Admin can also delete
+      const me = this.familyMembers().find(m => m.userId === uid);
+      return me?.role === 'admin';
+    }
+    return this.canPerformAction(tx);
+  }
+
+  private canPerformAction(tx: Transaction): boolean {
     if (!this.isFamilyMode()) return true;
     const uid = this.currentUserId;
     if (!uid) return false;
-    // Creator can always edit/delete their own transaction
+    // Creator can always edit/delete
     if (tx.createdBy === uid || tx.userId === uid) return true;
-    // Admins can edit/delete any transaction
+    // Admin can edit/delete
     const me = this.familyMembers().find(m => m.userId === uid);
     return me?.role === 'admin';
   }

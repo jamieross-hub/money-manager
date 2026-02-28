@@ -277,16 +277,42 @@
 						<div class="transaction-icon">
 							<div class="icon-container" [style.background-color]="tx._categoryBgColor"
 								[style.color]="tx._categoryColor">
-								<mat-icon [style.color]="tx._categoryColor">
-									{{ tx._categoryIcon }}
-								</mat-icon>
-								@if(tx.isSplitTransaction) {
-								<mat-icon class="split-transaction">bookmark</mat-icon>
+								
+								@if(isFamilyMode() && isSplitMode() && tx['splitData']) {
+									<div class="member-pic-stack">
+										@if(tx['splitData'].paidBy?.length > 1) {
+											@for (payer of tx['splitData'].paidBy.slice(0, 3); track payer.userId; let i = $index) {
+												<div class="member-pic-wrapper stacked">
+													<img *ngIf="payer.photoURL; else noPicPayer" [src]="payer.photoURL" alt="Payer">
+													<ng-template #noPicPayer>
+														<div class="initials-avatar stacked-text">
+															{{ payer.displayName ? payer.displayName.charAt(0).toUpperCase() : '?' }}
+														</div>
+													</ng-template>
+												</div>
+											}
+										} @else {
+											<div class="member-pic-wrapper">
+												<img *ngIf="tx['splitData'].paidByPhotoURL; else noPicPayerSingle" [src]="tx['splitData'].paidByPhotoURL" alt="Payer">
+												<ng-template #noPicPayerSingle>
+													<div class="initials-avatar">
+														{{ tx['splitData'].paidByDisplayName ? tx['splitData'].paidByDisplayName.charAt(0).toUpperCase() : '?' }}
+													</div>
+												</ng-template>
+											</div>
+										}
+									</div>
+								} @else {
+									<mat-icon [style.color]="tx._categoryColor">
+										{{ tx._categoryIcon }}
+									</mat-icon>
+									@if(tx.isSplitTransaction) {
+									<mat-icon class="split-transaction">bookmark</mat-icon>
+									}
+									@if(tx.isCategorySplit) {
+									<mat-icon class="category-split-transaction">category</mat-icon>
+									}
 								}
-								@if(tx.isCategorySplit) {
-								<mat-icon class="category-split-transaction">category</mat-icon>
-								}
-
 							</div>
 						</div>
 
@@ -331,19 +357,17 @@
 
 					<!-- Action Buttons (shown when selected) -->
 					<div *ngIf="selectedTx?.id === tx.id && !tx._isUpcoming" class="transaction-actions">
-						<div class="actions-container">
-							@if(canEditDelete(tx)) {
-								<button mat-icon-button class="action-button edit-btn" (click)="onEditTransaction(tx)"
-									matTooltip="Edit transaction">
-									<mat-icon>edit</mat-icon>
-								</button>
-								<button mat-icon-button class="action-button delete-btn" (click)="onDeleteTransaction(tx)"
-									matTooltip="Delete transaction">
-									<mat-icon>delete</mat-icon>
-								</button>
-							} @else {
-								<span class="text-[11px] text-gray-400 dark:text-gray-500 italic px-2">View only</span>
-							}
+						<div class="actions-container flex items-center space-x-2">
+							<button *ngIf="canEdit(tx)" mat-icon-button class="action-button edit-btn" (click)="onEditTransaction(tx)"
+								matTooltip="Edit transaction">
+								<mat-icon>edit</mat-icon>
+							</button>
+							<button *ngIf="canDelete(tx)" mat-icon-button class="action-button delete-btn" (click)="onDeleteTransaction(tx)"
+								matTooltip="Delete transaction">
+								<mat-icon>delete</mat-icon>
+							</button>
+							<span *ngIf="!canEdit(tx) && !canDelete(tx)" class="text-[11px] text-gray-400 dark:text-gray-500 italic px-2">View only</span>
+							<span *ngIf="!canEdit(tx) && canDelete(tx) && tx.settlementId" class="text-[10px] text-gray-400 dark:text-gray-500 italic px-1">Uneditable settlement</span>
 						</div>
 					</div>
 

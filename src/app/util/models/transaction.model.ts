@@ -81,6 +81,10 @@ export interface Transaction extends Auditable, RecurrenceInfo {
   // Settlement link (set when this transaction was auto-created from a settlement)
   settlementId?: string;
   settlementFamilyId?: string;
+  /** userId of the person who PAID in the settlement link */
+  settlementFromUserId?: string;
+  /** userId of the person who RECEIVED in the settlement link */
+  settlementToUserId?: string;
 }
 
 /**
@@ -104,6 +108,12 @@ export interface TransactionBaseRequest {
   taxAmount?: number;
   taxPercentage?: number;
   taxes?: TaxComponent[];
+
+  // Settlement link fields
+  settlementId?: string;
+  settlementFamilyId?: string;
+  settlementFromUserId?: string;
+  settlementToUserId?: string;
 }
 
 /**

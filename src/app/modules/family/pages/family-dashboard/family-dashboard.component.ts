@@ -23,6 +23,7 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { QuickActionsFabComponent, QuickActionsFabConfig, QuickAction } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
+import { CurrencyPipe } from 'src/app/util/pipes';
 @Component({
   selector: 'app-family-dashboard',
   standalone: true,
@@ -36,7 +37,8 @@ import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/c
     MatTooltipModule, 
     MatRippleModule,
     QuickActionsFabComponent,
-    MatDialogModule
+    MatDialogModule,
+    CurrencyPipe
   ],
   templateUrl: './family-dashboard.component.html',
   styleUrls: ['./family-dashboard.component.scss']

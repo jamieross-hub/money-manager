@@ -58,7 +58,11 @@ export const APP_CONFIG = {
     MIN_AMOUNT: 0.01,
     MAX_AMOUNT: 999999999.99,
     MIN_ACCOUNT_BALANCE: -999999999.99,
-    MAX_ACCOUNT_BALANCE: 999999999.99
+    MAX_ACCOUNT_BALANCE: 999999999.99,
+    RESERVED_CATEGORY_NAMES: {
+      'loan payment': 'is a reserved name for Loan Account category',
+      'settlement': 'is a reserved name for Family Group settlements'
+    }
   },
 
   // Regional configuration (Currency and Language)

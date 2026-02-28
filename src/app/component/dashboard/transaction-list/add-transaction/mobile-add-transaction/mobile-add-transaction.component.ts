@@ -458,26 +458,33 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
         // Apply defaults from transaction and accounts
         this.transactionForm.patchValue({
-          categoryName: transaction?.category || '',
-          categoryType: transaction?.type || '',
-          categoryId: transaction?.categoryId || '',
           accountId: defaultAccountId,
           isSplitTransaction: transaction?.isSplitTransaction || false,
           splitGroupId: transaction?.splitGroupId || '',
         });
 
-        if (transaction?.categoryId) {
-          this.onCategoryChange(transaction.categoryId);
-        } else {
-          // If no previous transaction (first time), select the first available category
-          this.categoryList$.pipe(take(1)).subscribe(categories => {
-            const nonSystemCategories = categories.filter(c => !c.isSystem);
+        // Determine the default category (excluding system categories)
+        this.categoryList$.pipe(take(1)).subscribe(categories => {
+          const nonSystemCategories = categories.filter(c => !c.isSystem);
+          
+          let categoryIdToSet = '';
+          if (transaction?.categoryId) {
+            const isSystem = categories.find(c => c.id === transaction.categoryId)?.isSystem;
+            if (!isSystem) {
+              categoryIdToSet = transaction.categoryId;
+            }
+          }
+
+          if (categoryIdToSet) {
+            this.onCategoryChange(categoryIdToSet);
+          } else {
+            // If no valid previous category, select the first non-system category (preferably Expense)
             const defaultCat = nonSystemCategories.find(c => c.type === TransactionType.EXPENSE) || nonSystemCategories[0];
             if (defaultCat?.id) {
               this.onCategoryChange(defaultCat.id);
             }
-          });
-        }
+          }
+        });
       });
     }
   }

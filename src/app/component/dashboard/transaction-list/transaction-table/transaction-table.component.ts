@@ -32,6 +32,11 @@ import { MobileAddTransactionComponent } from '../add-transaction/mobile-add-tra
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { ParentCategorySelectorDialogComponent } from '../../category/parent-category-selector-dialog/parent-category-selector-dialog.component';
 import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
+import { toSignal } from '@angular/core/rxjs-interop';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
+import * as FamilySelectors from 'src/app/modules/family/store/family.selectors';
+import { FamilyMember } from 'src/app/util/models/family.model';
+import { computed } from '@angular/core';
 
 @Component({
   selector: 'transaction-table',
@@ -98,6 +103,11 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   // Store observables
   transactions$: Observable<Transaction[]> = this.store.select(selectAllTransactions);
   allTransactions: Transaction[] = [];
+
+  private profile = toSignal(this.store.select(ProfileSelectors.selectProfile));
+  currentUserId = computed(() => this.profile()?.uid);
+  isFamilyMode = toSignal(this.store.select(ProfileSelectors.selectIsFamilyMode), { initialValue: false });
+  familyMembers = toSignal(this.store.select(FamilySelectors.selectFamilyMembers), { initialValue: [] as FamilyMember[] });
 
   constructor(
     private auth: Auth,
@@ -602,5 +612,44 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
     const date = this.dateService.toDate(transaction.date);
     if (!date) return false;
     return date.getTime() > Date.now();
+  }
+
+  /**
+   * Returns true if the current user can edit the given transaction.
+   * - Transactions linked to a settlement CANNOT be edited.
+   */
+  canEdit(tx: Transaction): boolean {
+    if (tx.settlementId) return false;
+    return this.canPerformAction(tx);
+  }
+
+  /**
+   * Returns true if the current user can delete the given transaction.
+   * - Settlement transactions can be deleted by: creator, sender, or receiver.
+   */
+  canDelete(tx: Transaction): boolean {
+    if (tx.settlementId) {
+      const uid = this.currentUserId();
+      if (!uid) return false;
+      // Creator, Sender, or Receiver can delete
+      if (tx.createdBy === uid || tx.userId === uid || tx.settlementFromUserId === uid || tx.settlementToUserId === uid) {
+        return true;
+      }
+      // Family Admin can also delete
+      const me = this.familyMembers().find(m => m.userId === uid);
+      return me?.role === 'admin';
+    }
+    return this.canPerformAction(tx);
+  }
+
+  private canPerformAction(tx: Transaction): boolean {
+    if (!this.isFamilyMode()) return true;
+    const uid = this.currentUserId();
+    if (!uid) return false;
+    // Creator can always edit/delete
+    if (tx.createdBy === uid || tx.userId === uid) return true;
+    // Admin can edit/delete
+    const me = this.familyMembers().find(m => m.userId === uid);
+    return me?.role === 'admin';
   }
 }

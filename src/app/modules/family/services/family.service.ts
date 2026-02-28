@@ -389,14 +389,16 @@ export class FamilyService {
 
     await batch.commit();
 
-    // 3. Update current user's preferences via store
-    this.store.dispatch(ProfileActions.updatePreferences({
-      userId: user.uid,
-      preferences: {
-        activeFamilyId: null,
-        isFamilyMode: false
-      }
-    }));
+    // 3. Update current user's preferences via store ONLY IF the deleted family was active
+    if (this.activeFamilyId() === familyId) {
+      this.store.dispatch(ProfileActions.updatePreferences({
+        userId: user.uid,
+        preferences: {
+          activeFamilyId: null,
+          isFamilyMode: false
+        }
+      }));
+    }
   }
 
   private async getMembershipRecord(familyId: string, userId: string): Promise<FamilyMember | null> {
@@ -460,6 +462,10 @@ export class FamilyService {
       note: request.note || '',
       createdAt: new Date(),
       updatedAt: new Date(),
+      settlementId: request.settlementId,
+      settlementFamilyId: request.settlementFamilyId,
+      settlementFromUserId: request.settlementFromUserId,
+      settlementToUserId: request.settlementToUserId
     };
 
     const ref = await addDoc(this.getTransactionsCol(request.familyId), txData);
@@ -501,32 +507,63 @@ export class FamilyService {
       });
     });
 
+    let transactionCount = 0;
     // Accumulate
     transactions.forEach(tx => {
+      // Skip settlements for expense/income stats as they are internal transfers
+      if (tx.category === 'Settlement') return;
+
+      transactionCount++;
       if (tx.type === 'income') {
         totalIncome += tx.amount;
       } else {
         totalExpense += tx.amount;
       }
 
-      const memberStats = memberMap.get(tx.userId);
-      if (memberStats) {
-        if (tx.type === 'income') {
-          memberStats.totalIncome += tx.amount;
-        } else {
-          memberStats.totalExpense += tx.amount;
+      if (tx.splitData?.splitBetween && tx.splitData.splitBetween.length > 0) {
+        // In split mode, attribute share based on splitData
+        tx.splitData.splitBetween.forEach(share => {
+          const mStats = memberMap.get(share.userId);
+          if (mStats) {
+            if (tx.type === 'income') {
+              mStats.totalIncome += share.amount;
+            } else {
+              mStats.totalExpense += share.amount;
+            }
+          }
+        });
+        
+        // Count the transaction for whoever recorded it
+        const recorderStats = memberMap.get(tx.userId);
+        if (recorderStats) {
+          recorderStats.transactionCount++;
         }
-        memberStats.netBalance = memberStats.totalIncome - memberStats.totalExpense;
-        memberStats.transactionCount++;
+      } else {
+        // Simple mode: attribute to the recording user
+        const memberStats = memberMap.get(tx.userId);
+        if (memberStats) {
+          if (tx.type === 'income') {
+            memberStats.totalIncome += tx.amount;
+          } else {
+            memberStats.totalExpense += tx.amount;
+          }
+          memberStats.transactionCount++;
+        }
       }
     });
+
+    // Finalize net balances and member breakdown
+    const memberBreakdown = Array.from(memberMap.values()).map(m => ({
+      ...m,
+      netBalance: m.totalIncome - m.totalExpense
+    }));
 
     return {
       totalIncome,
       totalExpense,
       netBalance: totalIncome - totalExpense,
-      transactionCount: transactions.length,
-      memberBreakdown: Array.from(memberMap.values()),
+      transactionCount,
+      memberBreakdown,
     };
   }
 

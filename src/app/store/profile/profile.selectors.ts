@@ -23,6 +23,11 @@ export const selectUserPreferences = createSelector(
   (profile) => profile?.preferences
 );
 
+export const selectIsFamilyMode = createSelector(
+  selectUserPreferences,
+  (preferences) => !!preferences?.isFamilyMode
+);
+
 export const selectUserCurrency = createSelector(
   selectUserPreferences,
   (preferences) => preferences?.defaultCurrency
