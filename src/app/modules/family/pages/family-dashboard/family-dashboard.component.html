@@ -202,18 +202,47 @@
           class="bg-white dark:bg-gray-800 rounded-2xl p-3.5 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
           
           <div class="flex items-center gap-3">
-            <!-- User Avatar -->
-            <div class="w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 overflow-hidden"
-              [style.background]="memberColor(tx.payerId)">
-              <img *ngIf="tx.payerPhoto" [src]="tx.payerPhoto" alt="avatar" class="w-full h-full object-cover" />
-              <span *ngIf="!tx.payerPhoto" class="text-white">{{ tx.payerName ? tx.payerName.charAt(0).toUpperCase() : '?' }}</span>
-            </div>
+            <!-- User Avatars -->
+            <ng-container *ngIf="tx.category === 'Settlement'; else singleAvatar">
+              <div class="flex items-center -space-x-1">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 overflow-hidden relative z-10"
+                  [style.background]="memberColor(tx.payerId)"
+                  [matTooltip]="tx.payerName">
+                  <img *ngIf="tx.payerPhoto" [src]="tx.payerPhoto" alt="from" class="w-full h-full object-cover" />
+                  <span *ngIf="!tx.payerPhoto" class="text-white">{{ tx.payerName ? tx.payerName.charAt(0).toUpperCase() : '?' }}</span>
+                </div>
+                <div class="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 z-20 overflow-hidden">
+                  <mat-icon class="!text-[14px] !w-3.5 !h-3.5 text-gray-500">arrow_forward</mat-icon>
+                </div>
+                <div class="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 overflow-hidden relative z-10"
+                  [style.background]="memberColor(tx.recipientId)"
+                  [matTooltip]="tx.recipientName">
+                  <img *ngIf="tx.recipientPhoto" [src]="tx.recipientPhoto" alt="to" class="w-full h-full object-cover" />
+                  <span *ngIf="!tx.recipientPhoto" class="text-white">{{ tx.recipientName ? tx.recipientName.charAt(0).toUpperCase() : '?' }}</span>
+                </div>
+              </div>
+            </ng-container>
+
+            <ng-template #singleAvatar>
+              <div class="w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 overflow-hidden"
+                [style.background]="memberColor(tx.payerId)">
+                <img *ngIf="tx.payerPhoto" [src]="tx.payerPhoto" alt="avatar" class="w-full h-full object-cover" />
+                <span *ngIf="!tx.payerPhoto" class="text-white">{{ tx.payerName ? tx.payerName.charAt(0).toUpperCase() : '?' }}</span>
+              </div>
+            </ng-template>
             
             <!-- Activity Info -->
             <div class="flex flex-col">
               <span class="text-[14px] font-bold text-gray-800 dark:text-gray-200 truncate max-w-[160px]">{{ tx.note || tx.category }}</span>
               <span class="text-[12px] text-gray-500 dark:text-gray-400 truncate max-w-[160px]">
-                <span class="font-medium">{{ tx.payerLabel }}</span> {{ tx.category === 'Settlement' ? 'settled' : 'paid' }}
+                <ng-container *ngIf="tx.category === 'Settlement'">
+                  <span class="font-medium text-primary-600 dark:text-primary-400">
+                    {{ tx.payerLabel }} <mat-icon class="!text-[10px] !w-2.5 !h-2.5 mx-0.5 align-middle">arrow_forward</mat-icon> {{ tx.recipientId === currentUserId ? 'You' : tx.recipientName }}
+                  </span>
+                </ng-container>
+                <ng-container *ngIf="tx.category !== 'Settlement'">
+                  <span class="font-medium">{{ tx.payerLabel }}</span> paid
+                </ng-container>
               </span>
             </div>
           </div>

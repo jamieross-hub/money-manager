@@ -67,6 +67,11 @@ export class FamilyDashboardComponent implements OnInit {
       let payerPhoto = tx.userPhotoURL;
       let payerLabel = payerName;
 
+      // Settlement recipient info
+      let recipientId: string | undefined = undefined;
+      let recipientName: string | undefined = undefined;
+      let recipientPhoto: string | undefined = undefined;
+
       // Handle Settlement transactions
       if (tx.category === 'Settlement' && tx.settlementFromUserId) {
         payerId = tx.settlementFromUserId;
@@ -75,6 +80,16 @@ export class FamilyDashboardComponent implements OnInit {
           payerName = fromMember.displayName;
           payerPhoto = fromMember.photoURL;
         }
+
+        recipientId = tx.settlementToUserId;
+        const toMember = mems.find(m => m.userId === tx.settlementToUserId);
+        if (toMember) {
+          recipientName = toMember.displayName;
+          recipientPhoto = toMember.photoURL;
+        } else {
+          recipientName = 'Unknown';
+        }
+        
         payerLabel = payerId === this.currentUserId ? 'You' : payerName;
       } 
       // Handle Split transactions
@@ -101,7 +116,10 @@ export class FamilyDashboardComponent implements OnInit {
         payerId,
         payerName,
         payerPhoto,
-        payerLabel
+        payerLabel,
+        recipientId,
+        recipientName,
+        recipientPhoto
       };
     });
   });
@@ -139,7 +157,9 @@ export class FamilyDashboardComponent implements OnInit {
     return calculatedStats;
   });
 
-  currentUserId = this.auth.currentUser?.uid;
+  get currentUserId(): string | undefined {
+    return this.auth.currentUser?.uid;
+  }
 
   currentUserExpense = computed(() => {
     const s = this.stats();
@@ -188,7 +208,8 @@ export class FamilyDashboardComponent implements OnInit {
     navigator.clipboard.writeText(code);
   }
 
-  memberColor(userId: string): string {
+  memberColor(userId: string | undefined): string {
+    if (!userId) return '#94a3b8'; // Default slate color
     let hash = 0;
     for (const c of userId) hash = (hash * 31 + c.charCodeAt(0)) & 0xffff;
     return this.memberColors[hash % this.memberColors.length];
