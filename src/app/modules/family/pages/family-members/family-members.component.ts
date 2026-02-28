@@ -15,7 +15,6 @@ import { AppState } from 'src/app/store/app.state';
 import * as FamilyActions from '../../store/family.actions';
 import * as FamilySelectors from '../../store/family.selectors';
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
-import { FamilyAddTransactionDialogComponent } from '../../dialogs/family-add-transaction-dialog/family-add-transaction-dialog.component';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { FamilyMember } from 'src/app/util/models/family.model';
 import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
@@ -107,19 +106,6 @@ export class FamilyMembersComponent implements OnInit {
     this.location.back();
   }
 
-  addTransaction() {
-    const fam = this.family();
-    if (!fam) return;
-    const ref = this.dialog.open(FamilyAddTransactionDialogComponent, {
-      data: { familyId: fam.id },
-      panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : '',
-    });
-    ref.afterClosed().subscribe(result => {
-      if (result?.request) {
-        this.store.dispatch(FamilyActions.addTransaction({ request: result.request }));
-      }
-    });
-  }
 
   memberColor(userId: string): string {
     let hash = 0;

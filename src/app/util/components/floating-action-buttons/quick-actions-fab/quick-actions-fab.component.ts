@@ -141,6 +141,7 @@ export class QuickActionsFabComponent implements OnInit, OnDestroy {
     }
     
     this.actionClick.emit(action);
+    this.isExpanded = false;
   }
 
   onMainButtonClick(): void {

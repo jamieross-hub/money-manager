@@ -7,13 +7,6 @@
     closeButtonTooltip="Go Back">
   </app-common-header>
 
-  <!-- FAB – Add Transaction -->
-  <button *ngIf="family()" mat-fab color="primary"
-    class="!fixed !bottom-6 !right-6 !z-50 !shadow-lg"
-    (click)="addTransaction()"
-    matTooltip="Add Transaction">
-    <mat-icon>add</mat-icon>
-  </button>
 
   <!-- Content -->
   <app-common-body-content class="flex-1 overflow-y-auto">
@@ -61,8 +54,9 @@
             
             <!-- Avatar with ring -->
             <div class="relative flex-shrink-0">
-              <div class="w-14 h-14 rounded-full p-0.5 border-2" [style.border-color]="memberColor(member.userId) + '40'">
-                <div class="w-full h-full rounded-full flex items-center justify-center text-white font-bold text-xl shadow-inner"
+              <div class="w-14 h-14 rounded-full p-0.5 border-2 overflow-hidden" [style.border-color]="memberColor(member.userId) + '40'">
+                <img *ngIf="member.photoURL" [src]="member.photoURL" alt="avatar" class="w-full h-full rounded-full object-cover" />
+                <div *ngIf="!member.photoURL" class="w-full h-full rounded-full flex items-center justify-center text-white font-bold text-xl shadow-inner"
                   [style.background]="memberColor(member.userId)">
                   {{ member.displayName.charAt(0).toUpperCase() }}
                 </div>

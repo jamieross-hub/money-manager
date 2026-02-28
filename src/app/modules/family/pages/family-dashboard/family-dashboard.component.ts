@@ -17,7 +17,6 @@ import * as FamilySelectors from '../../store/family.selectors';
 import { FamilyService } from '../../services/family.service';
 import { FamilyCreateDialogComponent } from '../../dialogs/family-create-dialog/family-create-dialog.component';
 import { FamilyJoinDialogComponent } from '../../dialogs/family-join-dialog/family-join-dialog.component';
-import { FamilyAddTransactionDialogComponent } from '../../dialogs/family-add-transaction-dialog/family-add-transaction-dialog.component';
 import { FamilyTransaction, FamilyStats, Family, FamilyMember } from 'src/app/util/models/family.model';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { QuickActionsFabComponent, QuickActionsFabConfig, QuickAction } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
@@ -71,7 +70,14 @@ export class FamilyDashboardComponent implements OnInit {
     return this.familyService.computeStats(this.transactions(), this.members());
   });
 
-  // No longer needed: recentTxns is now a toSignal
+  currentUserId = this.auth.currentUser?.uid;
+
+  currentUserExpense = computed(() => {
+    const s = this.stats();
+    if (!s || !this.currentUserId) return 0;
+    const memberStat = s.memberBreakdown.find(m => m.userId === this.currentUserId);
+    return memberStat ? memberStat.totalExpense : 0;
+  });
 
   fabConfig = computed<QuickActionsFabConfig>(() => ({
     mainButtonIcon: 'add',
@@ -107,19 +113,7 @@ export class FamilyDashboardComponent implements OnInit {
     });
   }
 
-  addTransaction() {
-    const fam = this.family();
-    if (!fam) return;
-    const ref = this.dialog.open(FamilyAddTransactionDialogComponent, {
-      data: { familyId: fam.id },
-      panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : '',
-    });
-    ref.afterClosed().subscribe(result => {
-      if (result?.request) {
-        this.store.dispatch(FamilyActions.addTransaction({ request: result.request }));
-      }
-    });
-  }
+
 
   copyCode(code: string) {
     navigator.clipboard.writeText(code);
@@ -135,5 +129,9 @@ export class FamilyDashboardComponent implements OnInit {
     if (!date) return '';
     const d = date?.seconds ? new Date(date.seconds * 1000) : new Date(date);
     return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  }
+
+  addTransaction() {
+    // TODO: implement transaction addition logic
   }
 }

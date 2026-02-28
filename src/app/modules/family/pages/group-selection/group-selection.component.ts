@@ -44,6 +44,7 @@ export interface UserGroup {
   name: string;
   type: GroupType;
   mode: 'common' | 'split';
+  icon?: string;
   memberCount: number;
   role: FamilyMemberRole;
   balance?: number;
@@ -158,6 +159,7 @@ export class GroupSelectionComponent implements OnInit {
       name: f.name,
       type: inferGroupType(f.name),
       mode: f.mode ?? 'common',
+      icon: f.icon,
       memberCount: f.memberIds?.length ?? 1,
       // Role: admin if ownerUserId matches current user, otherwise member
       role: f.ownerUserId === this.currentUserId ? 'admin' : 'member',
@@ -386,15 +388,15 @@ export class GroupSelectionComponent implements OnInit {
       .toUpperCase();
   }
 
-  avatarColor(id: string): string {
-    const COLORS = [
-      '#6366f1', '#8b5cf6', '#ec4899', '#f59e0b',
-      '#10b981', '#3b82f6', '#ef4444', '#14b8a6',
-    ];
-    let hash = 0;
-    for (const c of id) hash = (hash * 31 + c.charCodeAt(0)) & 0xffff;
-    return COLORS[hash % COLORS.length];
-  }
+  // avatarColor(id: string): string {
+  //   const COLORS = [
+  //     '#6366f1', '#8b5cf6', '#ec4899', '#f59e0b',
+  //     '#10b981', '#3b82f6', '#ef4444', '#14b8a6',
+  //   ];
+  //   let hash = 0;
+  //   for (const c of id) hash = (hash * 31 + c.charCodeAt(0)) & 0xffff;
+  //   return COLORS[hash % COLORS.length];
+  // }
 
   trackById(_: number, g: UserGroup): string { return g.id; }
 }

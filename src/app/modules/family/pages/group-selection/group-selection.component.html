@@ -71,10 +71,11 @@
             <div class="gs-active-card__accent"></div>
 
             <div class="gs-active-card__body">
-              <!-- Avatar -->
-              <div class="gs-avatar gs-avatar--lg"
-                   [style.background]="avatarColor(active.id)">
-                {{ avatarInitials(active.name) }}
+              <div class="gs-avatar gs-avatar--lg overflow-hidden"
+                   [style.background]="'var(--primary-500)'">
+                <img *ngIf="active.icon && active.icon.startsWith('data:')" [src]="active.icon" class="w-full h-full object-cover" />
+                <mat-icon *ngIf="active.icon && !active.icon.startsWith('data:')" class="text-white text-[24px] w-[24px] h-[24px]">{{ active.icon }}</mat-icon>
+                <ng-container *ngIf="!active.icon">{{ avatarInitials(active.name) }}</ng-container>
               </div>
 
               <!-- Info -->
@@ -130,10 +131,11 @@
             <div class="gs-list-card" matRipple (click)="openGroup(group)">
 
               <div class="gs-list-card__body">
-                <!-- Avatar -->
-                <div class="gs-avatar gs-avatar--md"
-                     [style.background]="avatarColor(group.id)">
-                  {{ avatarInitials(group.name) }}
+                <div class="gs-avatar gs-avatar--md overflow-hidden"
+                     [style.background]="'var(--primary-500)'">
+                  <img *ngIf="group.icon && group.icon.startsWith('data:')" [src]="group.icon" class="w-full h-full object-cover" />
+                  <mat-icon *ngIf="group.icon && !group.icon.startsWith('data:')" class="text-white text-[20px] w-[20px] h-[20px]">{{ group.icon }}</mat-icon>
+                  <ng-container *ngIf="!group.icon">{{ avatarInitials(group.name) }}</ng-container>
                 </div>
 
                 <!-- Info -->

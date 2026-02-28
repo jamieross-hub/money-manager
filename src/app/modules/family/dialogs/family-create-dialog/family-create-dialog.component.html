@@ -14,11 +14,19 @@
 
     <!-- Group Icon -->
     <div class="flex items-start gap-3">
-      <!-- Preview bubble -->
-      <div class="w-14 h-14 rounded-2xl bg-primary-50 dark:bg-primary-900/40 border-2 border-primary-300 dark:border-primary-600 flex items-center justify-center overflow-hidden shrink-0">
+      <!-- Preview bubble (Click to upload) -->
+      <label class="w-14 h-14 rounded-2xl bg-primary-50 dark:bg-primary-900/40 border-2 border-primary-300 dark:border-primary-600 flex items-center justify-center overflow-hidden shrink-0 cursor-pointer hover:opacity-80 transition-opacity relative group">
         <img *ngIf="isImageIcon" [src]="selectedIcon()" alt="group icon" class="w-full h-full object-cover" />
-        <mat-icon *ngIf="!isImageIcon" class=" text-primary-500">{{ selectedIcon() }}</mat-icon>
-      </div>
+        <mat-icon *ngIf="!isImageIcon" class="text-primary-500">{{ selectedIcon() }}</mat-icon>
+        
+        <!-- Upload Overlay on Hover (Optional aesthetic improvement) -->
+        <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <mat-icon class="text-white !text-[20px] w-[20px] h-[20px]">add_a_photo</mat-icon>
+        </div>
+
+        <!-- Hidden Input -->
+        <input type="file" accept="image/*" class="hidden" (change)="onFileSelected($event)" />
+      </label>
 
       <!-- Dropdown + upload -->
       <div class="flex-1 flex flex-col gap-1 ">
@@ -40,11 +48,6 @@
           </mat-select>
         </mat-form-field>
 
-        <!-- <label class="inline-flex items-center gap-1 text-xs font-medium text-primary-600 dark:text-primary-400 cursor-pointer hover:underline">
-          <mat-icon class="!text-sm">upload</mat-icon>
-          Upload image
-          <input type="file" accept="image/*" class="hidden" (change)="onFileSelected($event)" />
-        </label> -->
       </div>
     </div>
 

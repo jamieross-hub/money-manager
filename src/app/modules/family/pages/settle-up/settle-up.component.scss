@@ -1,7 +1,12 @@
 
 /* ── Header ─────────────────────────── */
 .settle-header {
-  background: var(--primary-600);
+   background: repeating-linear-gradient(
+      135deg,
+      var(--primary-800),
+      var(--primary-600) 4px,
+      var(--primary-700) 15px,
+      var(--primary-800) 13px);
   color: white;
   padding: 14px 10px 22px;
   border-bottom-left-radius: 24px;
@@ -36,7 +41,7 @@
   border-radius: 12px;
   font-size: 13px;
   font-weight: 600;
-  background: var(--primary-50);
+  background: var(--primary-500);
   backdrop-filter: blur(8px);
   margin-top: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -245,7 +250,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 16px;
     mat-icon { font-size: 32px; width: 32px; height: 32px; }
   }
 

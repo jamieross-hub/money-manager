@@ -1,4 +1,4 @@
-<div class="family-dashboard min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
+<div class="family-dashboard bg-gray-50 dark:bg-gray-900">
 
   <!-- Loading -->
   <div *ngIf="loading()" class="flex justify-center items-center h-48">
@@ -7,23 +7,22 @@
 
   <!-- ── NO FAMILY: Empty state ────────────────────────────────── -->
   <ng-container *ngIf="!loading() && !family()">
-    <div class="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center">
-      <!-- Illustration -->
-      <div class="w-24 h-24 rounded-full bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center mb-6">
-        <mat-icon class="!text-5xl !w-12 !h-12 text-primary-500">family_restroom</mat-icon>
+    <div class="flex flex-col items-center justify-center min-h-[calc(100vh-140px)] px-6 text-center animate-fade-in">
+      <div class="w-20 h-20 rounded-full bg-primary-50 dark:bg-primary-900/40 flex items-center justify-center mb-5 shadow-sm">
+        <mat-icon class="!text-4xl !w-10 !h-10 text-primary-600 dark:text-primary-400">family_restroom</mat-icon>
       </div>
-      <p class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Family Wallet</p>
-      <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-xs">
-        Track family income and expenses together. Everyone adds their entries, everyone sees the full picture.
+      <p class="text-xl font-bold tracking-tight text-gray-900 dark:text-white mb-3">Family Wallet</p>
+      <p class="text-[15px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8 max-w-sm">
+        Collaborate on finances with your family. Add entries together and get the full picture of your shared expenses.
       </p>
-      <div class="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
-        <button mat-flat-button color="primary" class="flex-1 !h-12 !rounded-xl" (click)="createFamily()">
-          <mat-icon class="mr-2">add_home</mat-icon>
-          Create Family
+      <div class="flex flex-col w-full max-w-xs gap-3">
+        <button mat-flat-button color="primary" class="!h-13 !rounded-xl !text-[15px] font-medium w-full py-1" (click)="createFamily()">
+          <mat-icon class="mr-2">add_circle</mat-icon>
+          Create New Family
         </button>
-        <button mat-stroked-button class="flex-1 !h-12 !rounded-xl" (click)="joinFamily()">
-          <mat-icon class="mr-2">group_add</mat-icon>
-          Join with Code
+        <button mat-stroked-button  (click)="joinFamily()">
+          <mat-icon class="mr-2">login</mat-icon>
+          Join via Code
         </button>
       </div>
     </div>
@@ -31,99 +30,209 @@
 
   <!-- ── HAS FAMILY ─────────────────────────────────────────────── -->
   <ng-container *ngIf="!loading() && family() as fam">
+    
+    <!-- Header Section -->
+    <div class=" shadow-sm rounded-b-3xl px-5 pt-6 pb-6 border-b border-gray-100 dark:border-gray-800/50 mb-6 relative header-section">
+      <div class="flex flex-col items-start justify-between ">
+        <div class="flex items-start gap-4">
+          <!-- Family Avatar -->
+          <div class="w-14 h-14 rounded-2xl overflow-hidden bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/50 dark:to-primary-800/30 flex items-center justify-center shadow-inner border border-primary-100 dark:border-primary-800 shrink-0">
+            <img *ngIf="fam.icon?.startsWith('data:')" [src]="fam.icon" alt="group icon" class="w-full h-full object-cover" />
+            <mat-icon *ngIf="!fam.icon?.startsWith('data:')" class="!text-2xl text-primary-600 dark:text-primary-400">{{ fam.icon || 'roofing' }}</mat-icon>
+          </div>
+          <div>
+            <p class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">{{ fam.name }}</p>
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-1.5">
+              <mat-icon class="!text-[16px] !w-4 !h-4">group</mat-icon>
+              {{ members().length }} member{{ members().length !== 1 ? 's' : '' }}
+            </p>
+          </div>
+        </div>
 
-    <!-- Header -->
-    <div class="bg-white dark:bg-gray-800 shadow-sm px-4 pt-5 pb-4 border-b border-gray-100 dark:border-gray-700">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-xl font-bold text-gray-900 dark:text-white">{{ fam.name }}</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-            {{ members().length }} members
+        <!-- Header Actions -->
+        <div class="flex items-center gap-1">
+          <button mat-icon-button class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors" [routerLink]="['/dashboard/family/members']" matTooltip="Manage members">
+            <mat-icon>manage_accounts</mat-icon>
+          </button>
+          <button mat-icon-button class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors" [routerLink]="['/dashboard/family/reports']" matTooltip="Reports">
+            <mat-icon>insights</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Invite Code & Main Action Strip -->
+      <div class="mt-6 flex items-center justify-between">
+        <div class="inline-flex items-center gap-2 pl-3 pr-2 py-1.5 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-700 group transition-colors hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer" (click)="copyCode(fam.inviteCode)" matRipple>
+          <span class="text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-gray-400">Code</span>
+          <span class="text-[15px] font-bold tracking-widest text-gray-900 dark:text-white">{{ fam.inviteCode }}</span>
+          <div class="w-7 h-7 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm ml-1">
+            <mat-icon class="!text-[16px] !w-4 !h-4 text-gray-400 group-hover:text-primary-500 transition-colors">content_copy</mat-icon>
+          </div>
+        </div>
+
+        <!-- <button *ngIf="fam.mode === 'split'" mat-flat-button color="primary"
+           [routerLink]="['/dashboard/family/settle']"
+           class="!text-[13px] !px-5 !py-2.5 !gap-1.5 shadow-md hover:shadow-lg transition-all"
+           matRipple>
+          <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">handshake</mat-icon>
+          Settle Up
+        </button> -->
+      </div>
+    </div>
+
+    <!-- Financial Overview (Stats) -->
+    <div class="px-1 mb-8">
+      <p class="text-[13px] font-bold tracking-wider uppercase text-gray-500 dark:text-gray-400 mb-3 px-1">Overview</p>
+      
+      <!-- DEFAULT MODE (COMMON) -->
+      <div class="grid grid-cols-3 gap-3" *ngIf="fam.mode !== 'split'">
+        <!-- Income Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-2 shadow-sm border border-gray-100 dark:border-gray-700/60 flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute top-0 right-0 p-2 opacity-[0.15] dark:opacity-20 pointer-events-none">
+            <mat-icon class="!text-[36px] !w-9 !h-9 text-green-500">trending_up</mat-icon>
+          </div>
+          <p class="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2 z-10">Income</p>
+          <p class="text-[17px] font-bold text-gray-900 dark:text-white truncate z-10">
+            {{ stats()?.totalIncome | number:'1.0-0' }}
           </p>
         </div>
-      <div class="flex items-center gap-2">
-          <button mat-icon-button [routerLink]="['/dashboard/family/members']" matTooltip="Manage members">
-            <mat-icon>group</mat-icon>
-          </button>
-          <button mat-icon-button [routerLink]="['/dashboard/family/reports']" matTooltip="Reports">
-            <mat-icon>bar_chart</mat-icon>
-          </button>
-          <!-- Settle Up button shown only for split-mode groups -->
-          <a *ngIf="fam.mode === 'split'"
-             [routerLink]="['/dashboard/family/settle']"
-             class="settle-up-btn"
-             matRipple>
-            <mat-icon class="!text-base !w-4 !h-4">handshake</mat-icon>
-            Settle Up
-          </a>
-        </div>
-      </div>
-
-      <!-- Invite code chip -->
-      <div class="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-primary-50 dark:bg-primary-900/30 rounded-full border border-primary-200 dark:border-primary-700">
-        <mat-icon class="!text-sm !w-4 !h-4 text-primary-600 dark:text-primary-400">share</mat-icon>
-        <span class="text-xs text-gray-500 dark:text-gray-400">Invite Code:</span>
-        <span class="text-sm font-bold tracking-widest text-primary-700 dark:text-primary-300">{{ fam.inviteCode }}</span>
-        <button mat-icon-button  (click)="copyCode(fam.inviteCode)" matTooltip="Copy code">
-          <mat-icon class="!text-sm text-gray-400">content_copy</mat-icon>
-        </button>
-      </div>
-    </div>
-
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-3 gap-3 px-4 mt-4">
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-3 text-center shadow-sm border border-gray-100 dark:border-gray-700">
-        <p class="text-xs text-gray-500 dark:text-gray-400">Income</p>
-        <p class="text-base font-bold text-green-600 dark:text-green-400 mt-1 truncate">
-          {{ stats()?.totalIncome | number:'1.0-0' }}
-        </p>
-      </div>
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-3 text-center shadow-sm border border-gray-100 dark:border-gray-700">
-        <p class="text-xs text-gray-500 dark:text-gray-400">Expenses</p>
-        <p class="text-base font-bold text-red-600 dark:text-red-400 mt-1 truncate">
-          {{ stats()?.totalExpense | number:'1.0-0' }}
-        </p>
-      </div>
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-3 text-center shadow-sm border border-gray-100 dark:border-gray-700">
-        <p class="text-xs text-gray-500 dark:text-gray-400">Balance</p>
-        <p class="text-base font-bold mt-1 truncate"
-           [class.text-green-600]="(stats()?.netBalance || 0) >= 0"
-           [class.dark:text-green-400]="(stats()?.netBalance || 0) >= 0"
-           [class.text-red-600]="(stats()?.netBalance || 0) < 0"
-           [class.dark:text-red-400]="(stats()?.netBalance || 0) < 0">
-          {{ stats()?.netBalance | number:'1.0-0' }}
-        </p>
-      </div>
-    </div>
-
-    <!-- Member Breakdown -->
-    <div class="px-4 mt-4" *ngIf="stats()?.memberBreakdown?.length">
-      <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Member Activity</p>
-      <div class="flex gap-3 overflow-x-auto pb-2">
-        <div *ngFor="let m of stats()!.memberBreakdown"
-          class="flex-shrink-0 bg-white dark:bg-gray-800 rounded-xl px-4 py-3 min-w-[130px] shadow-sm border border-gray-100 dark:border-gray-700">
-          <div class="flex items-center gap-2 mb-2">
-            <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
-              [style.background]="memberColor(m.userId)">
-              {{ m.displayName.charAt(0).toUpperCase() }}
-            </div>
-            <span class="text-xs font-medium text-gray-700 dark:text-gray-200 truncate max-w-[80px]">{{ m.displayName }}</span>
+        
+        <!-- Expenses Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-2 shadow-sm border border-gray-100 dark:border-gray-700/60 flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute top-0 right-0 p-2 opacity-[0.15] dark:opacity-20 pointer-events-none">
+            <mat-icon class="!text-[36px] !w-9 !h-9 text-red-500">trending_down</mat-icon>
           </div>
-          <p class="text-xs text-red-500">↓ {{ m.totalExpense | number:'1.0-0' }}</p>
-          <p class="text-xs text-green-500">↑ {{ m.totalIncome | number:'1.0-0' }}</p>
+          <p class="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2 z-10">Expenses</p>
+          <p class="text-[17px] font-bold text-gray-900 dark:text-white truncate z-10">
+            {{ stats()?.totalExpense | number:'1.0-0' }}
+          </p>
+        </div>
+        
+        <!-- Balance Card -->
+        <div class=" rounded-2xl p-2 shadow-md flex flex-col justify-between border border-gray-700 relative overflow-hidden">
+           <div class="absolute top-0 right-0 p-2 opacity-10 pointer-events-none">
+            <mat-icon class="!text-[36px] !w-9 !h-9 text-white">account_balance_wallet</mat-icon>
+          </div>
+          <p class="text-[12px] font-semibold text-gray-300 dark:text-gray-400 mb-2 z-10">Balance</p>
+          <p class="text-[17px] font-bold truncate z-10"
+             [class.text-green-400]="(stats()?.netBalance || 0) >= 0"
+             [class.text-red-400]="(stats()?.netBalance || 0) < 0">
+            {{ stats()?.netBalance | number:'1.0-0' }}
+          </p>
+        </div>
+      </div>
+      
+      <!-- SPLIT MODE -->
+      <div class="grid grid-cols-2 gap-3" *ngIf="fam.mode === 'split'">
+        <!-- Total Group Expenses -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-gray-700/60 flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute top-0 right-0 p-2 opacity-[0.15] dark:opacity-20 pointer-events-none">
+            <mat-icon class="!text-[36px] !w-9 !h-9 text-red-500">public</mat-icon>
+          </div>
+          <p class="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2 z-10">Total Group Expense</p>
+          <p class="text-[18px] font-bold text-gray-900 dark:text-white truncate z-10">
+             ₹{{ stats()?.totalExpense | number:'1.0-0' }}
+          </p>
+        </div>
+        
+        <!-- Current User's Expenses -->
+        <div class="bg-secondary-500 rounded-2xl p-3 shadow-md flex flex-col justify-between border border-gray-700 relative overflow-hidden">
+          <div class="absolute top-0 right-0 p-2 opacity-10 pointer-events-none">
+            <mat-icon class="!text-[36px] !w-9 !h-9 text-white">person</mat-icon>
+          </div>
+          <p class="text-[12px] font-semibold text-gray-300 dark:text-gray-400 mb-2 z-10">Your Expense</p>
+          <p class="text-[18px] font-bold text-white truncate z-10">
+             ₹{{ currentUserExpense() | number:'1.0-0' }}
+          </p>
+        </div>
+      </div>
+      
+    </div>
+
+    <!-- Member Breakdown / Recent Activity -->
+    <div class="px-5 pb-8">
+      <div class="flex items-center justify-between mb-3 px-1">
+        <p class="text-[13px] font-bold tracking-wider uppercase text-gray-500 dark:text-gray-400">
+          {{ fam.mode === 'split' ? 'Recent Activity' : 'Member Activity' }}
+        </p>
+      </div>
+      
+      <!-- DEFAULT MODE (COMMON): Member Breakdown -->
+      <div class="flex flex-col gap-3 pb-4" *ngIf="fam?.mode !== 'split'">
+        <div *ngFor="let m of stats()!.memberBreakdown"
+          class="bg-white dark:bg-gray-800 rounded-2xl p-3.5 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
+          
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 overflow-hidden"
+              [style.background]="memberColor(m.userId)">
+              <img *ngIf="m.photoURL" [src]="m.photoURL" alt="avatar" class="w-full h-full object-cover" />
+              <span *ngIf="!m.photoURL" class="text-white">{{ m.displayName ? m.displayName.charAt(0).toUpperCase() : '?' }}</span>
+            </div>
+            <span class="text-[15px] font-bold text-gray-800 dark:text-gray-200 truncate max-w-[120px]">{{ m.displayName }}</span>
+          </div>
+          
+          <div class="flex items-center gap-3">
+            <ng-container *ngIf="fam?.mode !== 'split'">
+              <div class="flex items-center gap-1.5">
+                <div class="w-5 h-5 rounded-full bg-green-50 dark:bg-green-400/10 flex items-center justify-center text-green-600 dark:text-green-400">
+                  <mat-icon class="!text-[10px] !w-2.5 !h-2.5">arrow_upward</mat-icon>
+                </div>
+                <span class="text-[13px] font-bold text-gray-900 dark:text-white">{{ m.totalIncome | number:'1.0-0' }}</span>
+              </div>
+            </ng-container>
+            
+            <div class="flex items-center gap-1.5">
+              <div class="w-5 h-5 rounded-full bg-red-50 dark:bg-red-400/10 flex items-center justify-center text-red-500 dark:text-red-400">
+                <mat-icon class="!text-[10px] !w-2.5 !h-2.5">arrow_downward</mat-icon>
+              </div>
+              <span class="text-[13px] font-bold text-gray-900 dark:text-white">{{ m.totalExpense | number:'1.0-0' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SPLIT MODE: Recent Activity -->
+      <div class="flex flex-col gap-3 pb-4" *ngIf="fam.mode === 'split'">
+        <div *ngFor="let tx of recentTxns()"
+          class="bg-white dark:bg-gray-800 rounded-2xl p-3.5 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
+          
+          <div class="flex items-center gap-3">
+            <!-- User Avatar -->
+            <div class="w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 overflow-hidden"
+              [style.background]="memberColor(tx.userId)">
+              <img *ngIf="tx.userPhotoURL" [src]="tx.userPhotoURL" alt="avatar" class="w-full h-full object-cover" />
+              <span *ngIf="!tx.userPhotoURL" class="text-white">{{ tx.userDisplayName ? tx.userDisplayName.charAt(0).toUpperCase() : '?' }}</span>
+            </div>
+            
+            <!-- Activity Info -->
+            <div class="flex flex-col">
+              <span class="text-[14px] font-bold text-gray-800 dark:text-gray-200 truncate max-w-[160px]">{{ tx.note || tx.category }}</span>
+              <span class="text-[12px] text-gray-500 dark:text-gray-400 truncate max-w-[160px]">
+                <span class="font-medium">{{ tx.userDisplayName }}</span> paid
+              </span>
+            </div>
+          </div>
+          
+          <!-- Amount and Date -->
+          <div class="flex flex-col items-end">
+            <span class="text-[14px] font-bold" 
+                  [class.text-green-600]="tx.type === 'income'" [class.dark:text-green-400]="tx.type === 'income'"
+                  [class.text-gray-900]="tx.type !== 'income'" [class.dark:text-white]="tx.type !== 'income'">
+              ₹{{ tx.amount | number:'1.0-0' }}
+            </span>
+            <span class="text-[11px] font-medium text-gray-400 mt-0.5">{{ formatDate(tx.date) }}</span>
+          </div>
+        </div>
+
+        <!-- Empty State for Recent Activity -->
+        <div *ngIf="!recentTxns()?.length" class="text-center py-8 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700/60">
+          <mat-icon class="!text-3xl text-gray-300 dark:text-gray-600 mb-2">receipt_long</mat-icon>
+          <p class="text-[13px] font-medium text-gray-500 dark:text-gray-400">No recent activity yet</p>
         </div>
       </div>
     </div>
-
-  
-
   </ng-container>
 
-  <!-- FAB – Quick Actions -->
-  <app-quick-actions-fab *ngIf="family()"
-    [config]="fabConfig()"
-    (mainButtonClick)="addTransaction()"
-    class="!fixed bottom-6 right-6 z-50">
-  </app-quick-actions-fab>
+ 
 
 </div>

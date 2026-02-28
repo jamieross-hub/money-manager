@@ -4,8 +4,14 @@
   <header class="settle-header">
     <div class="header-content !mb-0">
       <div>
-        <p class="text-2xl font-bold">Settle Up</p>
-        <p class="group-name">{{ family()?.name }}</p>
+        <!-- <p class="text-2xl font-bold m-0">Settle Up</p> -->
+        <div class="flex items-center gap-3 mt-1.5">
+          <div *ngIf="family()?.icon as icon" class="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center bg-white/20 shrink-0">
+            <img *ngIf="icon.startsWith('data:')" [src]="icon" alt="group icon" class="w-full h-full object-cover" />
+            <mat-icon *ngIf="!icon.startsWith('data:')" class="text-white text-[24px] w-[24px] h-[24px]">{{ icon }}</mat-icon>
+          </div>
+          <p class="!text-xl font-bold tracking-tight text-white !m-0">{{ family()?.name }}</p>
+        </div>
       </div>
       <div class="h-10 w-10 flex items-center justify-center bg-white/10 rounded-xl hover:bg-white/20 transition-colors cursor-help" 
            matTooltip="View group settlement rules">
@@ -179,7 +185,7 @@
         <div class="icon-box">
           <mat-icon>check_circle</mat-icon>
         </div>
-        <p class="!text-lg text-primary-500">Everything's Clear</p>
+        <p class="!text-lg text-primary-500 !mb-0">Everything's Clear</p>
         <p>No outstanding balances in this group. You're all square!</p>
       </section>
 
