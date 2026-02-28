@@ -171,13 +171,16 @@ export class FamilyService {
     // 4. Finally, update user's preferences with familyId
     // This completes the "Group Created" state transition for the user
     try {
-      this.store.dispatch(ProfileActions.updatePreferences({
-        userId: user.uid,
-        preferences: {
-          activeFamilyId: familyId,
-          isFamilyMode: true
-        }
-      }));
+      // ONLY switch if no family is currently active
+      if (!this.activeFamilyId()) {
+        this.store.dispatch(ProfileActions.updatePreferences({
+          userId: user.uid,
+          preferences: {
+            activeFamilyId: familyId,
+            isFamilyMode: true
+          }
+        }));
+      }
     } catch (e) {
       console.warn('Could not update user preferences with activeFamilyId:', e);
       // We don't throw here as the family is already created, but the user might need to toggle it manually
@@ -268,13 +271,16 @@ export class FamilyService {
 
     // Update user's preferences with familyId
     try {
-      this.store.dispatch(ProfileActions.updatePreferences({
-        userId: user.uid,
-        preferences: {
-          activeFamilyId: family.id,
-          isFamilyMode: true
-        }
-      }));
+      // ONLY switch if no family is currently active
+      if (!this.activeFamilyId()) {
+        this.store.dispatch(ProfileActions.updatePreferences({
+          userId: user.uid,
+          preferences: {
+            activeFamilyId: family.id,
+            isFamilyMode: true
+          }
+        }));
+      }
     } catch (e) {
       console.warn('Could not update user preferences with activeFamilyId:', e);
     }
