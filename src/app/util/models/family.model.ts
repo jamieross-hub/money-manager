@@ -10,6 +10,7 @@ export interface Family {
   // currency: string;
   mode?: 'common' | 'split';
   icon?: string; // emoji character or Data URL
+  banner?: string; // Data URL or storage URL for header background
   createdAt: Date | Timestamp;
   updatedAt: Date | Timestamp;
   isActive: boolean;

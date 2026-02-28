@@ -16,6 +16,11 @@ export const loadFamily = createAction('[Family] Load Family', props<{ familyId:
 export const loadMyFamilySuccess = createAction('[Family] Load My Family Success', props<{ family: Family | null }>());
 export const loadMyFamilyFailure = createAction('[Family] Load My Family Failure', props<{ error: string }>());
 
+// ─── Update Family Banner ──────────────────────────────────────────────────
+export const updateFamilyBanner = createAction('[Family] Update Family Banner', props<{ familyId: string; banner: string }>());
+export const updateFamilyBannerSuccess = createAction('[Family] Update Family Banner Success', props<{ banner: string }>());
+export const updateFamilyBannerFailure = createAction('[Family] Update Family Banner Failure', props<{ error: string }>());
+
 // ─── Load User Families ────────────────────────────────────────────────────
 export const loadUserFamilies = createAction('[Family] Load User Families');
 export const loadUserFamiliesSuccess = createAction('[Family] Load User Families Success', props<{ families: Family[] }>());

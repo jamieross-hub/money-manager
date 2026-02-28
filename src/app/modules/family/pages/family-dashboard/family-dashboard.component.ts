@@ -287,6 +287,26 @@ export class FamilyDashboardComponent implements OnInit {
     return this.memberColors[hash % this.memberColors.length];
   }
 
+  onBannerSelected(event: any) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 1.5 * 1024 * 1024) { // 1.5MB limit for data URL
+      this.snackBar.open('Image size should be less than 1.5MB', 'Close', { duration: 3000 });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      const famId = this.family()?.id;
+      if (famId) {
+        this.store.dispatch(FamilyActions.updateFamilyBanner({ familyId: famId, banner: base64 }));
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
   formatDate(date: any): string {
     if (!date) return '';
     const d = date?.seconds ? new Date(date.seconds * 1000) : new Date(date);

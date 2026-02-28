@@ -48,53 +48,46 @@
         <p class="section-label">Your Balances</p>
         <div class="card-stack">
           <div *ngFor="let b of myBalances(); trackBy: trackByEntry"
-               class="balance-card !flex-col !items-stretch !gap-3"
+               class="balance-card !flex-row !items-center !gap-3 !p-3 !py-2.5"
                [class.owe]="b | iOwe : currentUserId"
                [class.receive]="b | owedToMe : currentUserId"
                (click)="openSettleDialog(b)"
                matRipple>
 
-            <!-- Top Row: Participants & Action -->
-            <div class="flex items-center justify-between">
-              <!-- Visual Flow -->
-              <div class="avatar-pair shrink-0">
-                <div class="avatar" [style.background]="b.fromUserId | settleAvatarColor">
-                  <img *ngIf="b.fromPhotoURL" [src]="b.fromPhotoURL" alt="avatar" />
-                  <span *ngIf="!b.fromPhotoURL">{{ b.fromDisplayName | settleAvatar }}</span>
-                </div>
-                <div class="connector"><mat-icon>chevron_right</mat-icon></div>
-                <div class="avatar" [style.background]="b.toUserId | settleAvatarColor">
-                  <img *ngIf="b.toPhotoURL" [src]="b.toPhotoURL" alt="avatar" />
-                  <span *ngIf="!b.toPhotoURL">{{ b.toDisplayName | settleAvatar }}</span>
-                </div>
+            <!-- Lead: Visual Pair -->
+            <div class="avatar-pair shrink-0 scale-90 -ml-1">
+              <div class="avatar" [style.background]="b.fromUserId | settleAvatarColor">
+                <img *ngIf="b.fromPhotoURL" [src]="b.fromPhotoURL" alt="avatar" />
+                <span *ngIf="!b.fromPhotoURL">{{ b.fromDisplayName | settleAvatar }}</span>
               </div>
-
-              <!-- Action Button -->
-              <button mat-stroked-button class="flex-none"
-                      [class.pay]="b | iOwe : currentUserId"
-                      [class.get]="b | owedToMe : currentUserId"
-                      (click)="$event.stopPropagation(); openSettleDialog(b)">
-                <mat-icon class="!mr-1">{{ (b | iOwe : currentUserId) ? 'send' : 'login' }}</mat-icon>
-                <span>{{ (b | iOwe : currentUserId) ? 'Pay' : 'Settle' }}</span>
-              </button>
+              <div class="connector"><mat-icon class="!text-[14px]">chevron_right</mat-icon></div>
+              <div class="avatar" [style.background]="b.toUserId | settleAvatarColor">
+                <img *ngIf="b.toPhotoURL" [src]="b.toPhotoURL" alt="avatar" />
+                <span *ngIf="!b.toPhotoURL">{{ b.toDisplayName | settleAvatar }}</span>
+              </div>
             </div>
 
-            <!-- Bottom Row: Contextual Info -->
-            <div class="detail-row">
-              <p class="main-text truncate text-neutral-500 dark:text-neutral-400">
-                <ng-container *ngIf="b | iOwe : currentUserId">
-                  Pay <span class="highlight-red font-bold">{{ b.toDisplayName }}</span>
-                </ng-container>
-                <ng-container *ngIf="b | owedToMe : currentUserId">
-                  <span class="highlight-green font-bold">{{ b.fromDisplayName }}</span> owes
-                </ng-container>
+            <!-- Content: Info -->
+            <div class="flex-1 min-w-0">
+              <p class="text-[13px] font-bold text-neutral-800 dark:text-neutral-100 truncate mb-0.5">
+                <ng-container *ngIf="b | iOwe : currentUserId">To {{ b.toDisplayName }}</ng-container>
+                <ng-container *ngIf="b | owedToMe : currentUserId">From {{ b.fromDisplayName }}</ng-container>
               </p>
-              <p class="amount-text !text-lg mt-1 !mb-0" 
-                 [class.text-red-600]="b | iOwe : currentUserId" 
-                 [class.text-primary-500]="b | owedToMe : currentUserId">
+              <p class="text-[15px] font-black leading-none" 
+                 [class.text-red-500]="b | iOwe : currentUserId" 
+                 [class.text-primary-600]="b | owedToMe : currentUserId">
                 {{ b.amount | currency: 'INR':'symbol':'1.0-0' }}
               </p>
             </div>
+
+            <!-- Trailing: Action -->
+            <button mat-stroked-button class="h-8 !px-3 !text-[12px] font-bold rounded-xl shrink-0 border-opacity-30"
+                    [class.pay]="b | iOwe : currentUserId"
+                    [class.get]="b | owedToMe : currentUserId"
+                    (click)="$event.stopPropagation(); openSettleDialog(b)">
+              <mat-icon class="!text-[14px] !w-3.5 !h-3.5 !mr-1">{{ (b | iOwe : currentUserId) ? 'send' : 'login' }}</mat-icon>
+              <span>{{ (b | iOwe : currentUserId) ? 'Pay' : 'Settle' }}</span>
+            </button>
           </div>
         </div>
       </section>

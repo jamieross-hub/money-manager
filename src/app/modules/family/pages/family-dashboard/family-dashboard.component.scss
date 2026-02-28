@@ -1,8 +1,57 @@
 .header-section {
-    background: repeating-linear-gradient(
-      135deg,
-      var(--primary-300),
-      var(--primary-200) 4px,
-      var(--primary-300) 15px,
-      var(--primary-300) 13px);
+  background: repeating-linear-gradient(
+    135deg,
+    var(--primary-300),
+    var(--primary-200) 4px,
+    var(--primary-300) 15px,
+    var(--primary-300) 13px);
+  background-size: cover;
+  background-position: center;
+
+  &.has-banner {
+    background-size: cover;
+    background-position: center;
+
+    // Ensure content stays on top of banner & overlay
+    > div:not(.absolute) {
+      position: relative;
+      z-index: 10;
+    }
+
+    // Force contrast on text when banner exists
+    .text-gray-900, .text-gray-500, .text-gray-800, p.text-2xl, .text-sm {
+      color: white !important;
+    }
+    
+    .text-primary-600 {
+      color: var(--primary-200) !important;
+    }
+
+    .text-gray-400 {
+      color: rgba(255,255,255, 0.7) !important;
+    }
+
+    .bg-gradient-to-br, .bg-primary-100, .bg-gray-50, .bg-white\/10 {
+        background: rgba(255,255,255, 0.15) !important;
+        backdrop-filter: blur(8px);
+        border-color: rgba(255,255,255,0.2) !important;
+    }
+
+    .shadow-inner {
+      box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    mat-icon {
+      color: white !important;
+    }
+
+    // Buttons in header
+    .mat-icon-button {
+        color: white !important;
+        background: rgba(0,0,0,0.1);
+        &:hover {
+            background: rgba(0,0,0,0.2);
+        }
+    }
+  }
 }

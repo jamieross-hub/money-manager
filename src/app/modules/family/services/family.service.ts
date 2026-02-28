@@ -407,6 +407,17 @@ export class FamilyService {
     }
   }
 
+  async updateFamilyBanner(familyId: string, banner: string): Promise<void> {
+    const user = this.currentUser;
+    if (!user) throw new Error('User not authenticated');
+
+    await updateDoc(this.getFamilyDoc(familyId), {
+      banner,
+      updatedAt: new Date()
+    });
+    this.notificationService.success('Banner updated successfully');
+  }
+
   private async getMembershipRecord(familyId: string, userId: string): Promise<FamilyMember | null> {
     const snap = await getDoc(this.getMemberDoc(familyId, userId));
     if (!snap.exists()) return null;

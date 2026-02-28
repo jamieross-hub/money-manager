@@ -10,6 +10,10 @@ export const familyReducer = createReducer(
   on(FamilyActions.loadFamily, state => ({ ...state, loading: true, error: null })),
   on(FamilyActions.loadMyFamilySuccess, (state, { family }) => ({ ...state, loading: false, family })),
   on(FamilyActions.loadMyFamilyFailure, (state, { error }) => ({ ...state, loading: false, error })),
+  on(FamilyActions.updateFamilyBannerSuccess, (state, { banner }) => ({
+    ...state,
+    family: state.family ? { ...state.family, banner } : null
+  })),
 
   // Load user families
   on(FamilyActions.loadUserFamilies, state => ({ ...state, userFamiliesLoading: true, error: null })),

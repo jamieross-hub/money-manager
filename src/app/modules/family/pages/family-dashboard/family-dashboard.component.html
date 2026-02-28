@@ -32,86 +32,99 @@
   <ng-container *ngIf="family() as fam">
     
     <!-- Header Section -->
-    <div class=" shadow-sm rounded-b-3xl px-5 pt-6 pb-6 border-b border-gray-100 dark:border-gray-800/50 mb-6 relative header-section">
-      <div class="flex flex-col items-start justify-between ">
-        <button mat-icon-button (click)="goBack()" class="mb-2 -ml-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors !z-[999]">
-          <mat-icon>arrow_back</mat-icon>
-        </button>
-        <div class="flex items-start gap-4">
+    <div class="shadow-sm rounded-b-3xl px-5 pt-4 pb-6 border-b border-gray-100 dark:border-gray-800/50 mb-6 relative header-section transition-all duration-300"
+         [style.backgroundImage]="fam.banner ? 'url(' + fam.banner + ')' : ''"
+         [class.has-banner]="!!fam.banner">
+      
+      <!-- Overlay for readability when banner exists -->
+      <div *ngIf="fam.banner" class="absolute inset-0 bg-black/40 dark:bg-black/50 rounded-b-3xl z-0"></div>
+
+      <!-- Header Content Container -->
+      <div class="relative z-10">
+        <!-- Top Nav & Actions -->
+        <div class="flex items-center justify-between mb-4">
+          <button mat-icon-button (click)="goBack()" class="-ml-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+
+          <div class="flex items-center gap-0.5">
+            <button mat-icon-button class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors" 
+                    [routerLink]="['/dashboard/family/members']" matTooltip="Manage members">
+              <mat-icon>manage_accounts</mat-icon>
+            </button>
+            <button mat-icon-button [matMenuTriggerFor]="familyMenu" 
+                    class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                    matTooltip="More options">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-4">
           <!-- Family Avatar -->
-          <div class="w-14 h-14 rounded-2xl overflow-hidden bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/50 dark:to-primary-800/30 flex items-center justify-center shadow-inner border border-primary-100 dark:border-primary-800 shrink-0">
+          <div class="w-16 h-16 mt-[-12px] rounded-2xl overflow-hidden bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/50 dark:to-primary-800/30 flex items-center justify-center shadow-inner border border-primary-100 dark:border-primary-800 shrink-0">
             <img *ngIf="fam.icon?.startsWith('data:')" [src]="fam.icon" alt="group icon" class="w-full h-full object-cover" />
-            <mat-icon *ngIf="!fam.icon?.startsWith('data:')" class="!text-2xl text-primary-600 dark:text-primary-400">{{ fam.icon || 'roofing' }}</mat-icon>
+            <mat-icon *ngIf="!fam.icon?.startsWith('data:')" class="!text-3xl text-primary-600 dark:text-primary-400">{{ fam.icon || 'roofing' }}</mat-icon>
           </div>
           <div>
-            <p class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">{{ fam.name }}</p>
-            <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-1.5">
-              <mat-icon class="!text-[16px] !w-4 !h-4">group</mat-icon>
+            <p class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight mb-1">{{ fam.name }}</p>
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1.5 opacity-90">
+              <mat-icon class="!text-[16px] !w-4 !h-4 opacity-70">group</mat-icon>
               {{ members().length }} member{{ members().length !== 1 ? 's' : '' }}
             </p>
           </div>
         </div>
 
-        <!-- Header Actions: Positioned Top Right -->
-        <div class="absolute top-4 right-3 flex items-center gap-0.5">
-          <button mat-icon-button class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors" 
-                  [routerLink]="['/dashboard/family/members']" matTooltip="Manage members">
-            <mat-icon>manage_accounts</mat-icon>
+        <mat-menu #familyMenu="matMenu" xPosition="before" class="!rounded-2xl !overflow-hidden border border-gray-100 dark:border-gray-800 shadow-xl">
+          <button mat-menu-item (click)="generateReport()">
+            <div class="flex items-center">
+              <mat-icon class="!mr-3 text-primary-500">mail_outline</mat-icon>
+              <div class="flex flex-col">
+                <span class="font-medium">Email PDF Report</span>
+                <span class="text-[10px] text-gray-500 -mt-0.5">Sends summary to your email</span>
+              </div>
+            </div>
           </button>
-          
-          <!-- More Options Menu -->
-          <button mat-icon-button [matMenuTriggerFor]="familyMenu" 
-                  class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-                  matTooltip="More options">
-            <mat-icon>more_vert</mat-icon>
+          <button mat-menu-item [routerLink]="['/dashboard/family/reports']">
+            <div class="flex items-center">
+              <mat-icon class="!mr-3 text-primary-500">insights</mat-icon>
+              <span class="font-medium">View Visual Reports</span>
+            </div>
           </button>
-          
-          <mat-menu #familyMenu="matMenu" xPosition="before" class="!rounded-2xl !overflow-hidden border border-gray-100 dark:border-gray-800 shadow-xl">
-            <button mat-menu-item (click)="generateReport()">
-              <div class="flex items-center">
-                <mat-icon class="!mr-3 text-primary-500">mail_outline</mat-icon>
-                <div class="flex flex-col">
-                  <span class="font-medium">Email PDF Report</span>
-                  <span class="text-[10px] text-gray-500 -mt-0.5">Sends summary to your email</span>
-                </div>
-              </div>
-            </button>
-            <button mat-menu-item [routerLink]="['/dashboard/family/reports']">
-              <div class="flex items-center">
-                <mat-icon class="!mr-3 text-primary-500">insights</mat-icon>
-                <span class="font-medium">View Visual Reports</span>
-              </div>
-            </button>
-            
-            <mat-divider class="!my-1"></mat-divider>
-            
-            <button mat-menu-item (click)="deleteFamily()">
-              <div class="flex items-center text-red-500">
-                <mat-icon class="!mr-3 text-red-500">{{ fam.ownerUserId === currentUserId ? 'delete_outline' : 'logout' }}</mat-icon>
-                <span class="font-medium">{{ fam.ownerUserId === currentUserId ? 'Delete Family' : 'Leave Family' }}</span>
-              </div>
-            </button>
-          </mat-menu>
-        </div>
-      </div>
 
-      <!-- Invite Code & Main Action Strip -->
-      <div class="mt-6 flex items-center justify-between">
-        <div class="inline-flex items-center gap-2 pl-3 pr-2 py-1.5 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-700 group transition-colors hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer" (click)="copyCode(fam.inviteCode)" matRipple>
-          <span class="text-[11px] font-semibold tracking-wider uppercase text-gray-500 dark:text-gray-400">Code</span>
-          <span class="text-[15px] font-bold tracking-widest text-gray-900 dark:text-white">{{ fam.inviteCode }}</span>
-          <div class="w-7 h-7 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm ml-1">
-            <mat-icon class="!text-[16px] !w-4 !h-4 text-gray-400 group-hover:text-primary-500 transition-colors">content_copy</mat-icon>
+          <button mat-menu-item (click)="bannerInput.click()">
+            <div class="flex items-center">
+              <mat-icon class="!mr-3 text-primary-500">image</mat-icon>
+              <div class="flex flex-col">
+                <span class="font-medium">Change Banner</span>
+                <span class="text-[10px] text-gray-500 -mt-0.5">Set a header background</span>
+              </div>
+            </div>
+          </button>
+          <input #bannerInput type="file" accept="image/*" class="hidden" (change)="onBannerSelected($event)">
+          
+          <mat-divider class="!my-1"></mat-divider>
+          
+          <button mat-menu-item (click)="deleteFamily()">
+            <div class="flex items-center text-red-500">
+              <mat-icon class="!mr-3 text-red-500">{{ fam.ownerUserId === currentUserId ? 'delete_outline' : 'logout' }}</mat-icon>
+              <span class="font-medium">{{ fam.ownerUserId === currentUserId ? 'Delete Family' : 'Leave Family' }}</span>
+            </div>
+          </button>
+        </mat-menu>
+
+        <!-- Invite Code & Main Action Strip -->
+        <div class="mt-7 flex items-center justify-between">
+          <div class="inline-flex items-center gap-3 pl-3.5 pr-2 py-2 backdrop-blur-md rounded-2xl border border-gray-200/50 dark:border-gray-700/50 group transition-all hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer shadow-sm hover:shadow-md" (click)="copyCode(fam.inviteCode)" matRipple>
+            <div class="flex flex-col -gap-0.5">
+              <span class="text-[10px] font-bold tracking-widest uppercase text-gray-500 dark:text-gray-400">Invite Code</span>
+              <span class="text-[16px] font-black tracking-[0.2em] text-gray-900 dark:text-white">{{ fam.inviteCode }}</span>
+            </div>
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm ml-1 group-active:scale-95 transition-transform border border-gray-100 dark:border-gray-700">
+              <mat-icon class="!text-[18px] !w-[18px] !h-[18px] text-gray-400 group-hover:text-primary-500 transition-colors">content_copy</mat-icon>
+            </div>
           </div>
         </div>
-
-        <!-- <button *ngIf="fam.mode === 'split'" mat-flat-button color="primary"
-           [routerLink]="['/dashboard/family/settle']"
-           class="!text-[13px] !px-5 !py-2.5 !gap-1.5 shadow-md hover:shadow-lg transition-all"
-           matRipple>
-          <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">handshake</mat-icon>
-          Settle Up
-        </button> -->
       </div>
     </div>
 

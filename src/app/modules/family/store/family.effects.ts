@@ -39,6 +39,18 @@ export class FamilyEffects {
     )
   );
 
+  updateFamilyBanner$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(FamilyActions.updateFamilyBanner),
+      switchMap(({ familyId, banner }) =>
+        from(this.familyService.updateFamilyBanner(familyId, banner)).pipe(
+          map(() => FamilyActions.updateFamilyBannerSuccess({ banner })),
+          catchError(err => of(FamilyActions.updateFamilyBannerFailure({ error: err.message })))
+        )
+      )
+    )
+  );
+
   loadUserFamilies$ = createEffect(() =>
     this.actions$.pipe(
       ofType(FamilyActions.loadUserFamilies),
