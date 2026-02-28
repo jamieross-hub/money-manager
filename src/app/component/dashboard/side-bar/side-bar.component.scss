@@ -1,3 +1,22 @@
+.example-container {
+  background: transparent !important;
+}
+
+// Make the container non-blocking
+mat-drawer-container {
+  pointer-events: none !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1000 !important;
+}
+
+// Re-enable pointers for interactive children
+mat-drawer,
+.drawer-content-trigger,
+::ng-deep .mat-drawer-backdrop.mat-drawer-shown {
+  pointer-events: auto !important;
+}
+
 .full-height {
   @apply h-[100vh];
 }

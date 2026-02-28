@@ -1,11 +1,11 @@
 <div class="family-dashboard bg-gray-50 dark:bg-gray-900">
 
-  <!-- Loading -->
-  <div *ngIf="loading()" class="flex justify-center items-center h-48">
+  <!-- Loading (only show if no family data at all) -->
+  <div *ngIf="loading() && !family()" class="flex justify-center items-center h-48">
     <mat-spinner diameter="40"></mat-spinner>
   </div>
 
-  <!-- ── NO FAMILY: Empty state ────────────────────────────────── -->
+  <!-- ── NO FAMILY: Empty state (only if not loading) ──────────────── -->
   <ng-container *ngIf="!loading() && !family()">
     <div class="flex flex-col items-center justify-center min-h-[calc(100vh-140px)] px-6 text-center animate-fade-in">
       <div class="w-20 h-20 rounded-full bg-primary-50 dark:bg-primary-900/40 flex items-center justify-center mb-5 shadow-sm">
@@ -28,12 +28,15 @@
     </div>
   </ng-container>
 
-  <!-- ── HAS FAMILY ─────────────────────────────────────────────── -->
-  <ng-container *ngIf="!loading() && family() as fam">
+  <!-- ── HAS FAMILY (Show even if loading, as long as we have data) ── -->
+  <ng-container *ngIf="family() as fam">
     
     <!-- Header Section -->
     <div class=" shadow-sm rounded-b-3xl px-5 pt-6 pb-6 border-b border-gray-100 dark:border-gray-800/50 mb-6 relative header-section">
       <div class="flex flex-col items-start justify-between ">
+        <button mat-icon-button (click)="goBack()" class="mb-2 -ml-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors !z-[999]">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
         <div class="flex items-start gap-4">
           <!-- Family Avatar -->
           <div class="w-14 h-14 rounded-2xl overflow-hidden bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/50 dark:to-primary-800/30 flex items-center justify-center shadow-inner border border-primary-100 dark:border-primary-800 shrink-0">

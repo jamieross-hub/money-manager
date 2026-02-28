@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, effect, DestroyRef } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, effect, DestroyRef, Input, Output, EventEmitter, input } from '@angular/core';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -62,8 +62,21 @@ export class FamilyDashboardComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private reportService = inject(ReportService);
   private snackBar = inject(MatSnackBar);
+ 
+  @Input() group: any;
+  @Output() close = new EventEmitter<void>();
+ 
+  family = computed(() => {
+    const fromStore = this.storeFamily();
+    // If we have a group input and it matches the current family in store, or store is empty, 
+    // we can use group data as a skeleton/instant state.
+    if (this.group && (!fromStore || fromStore.id === this.group.id)) {
+      return { ...fromStore, ...this.group } as Family;
+    }
+    return fromStore;
+  });
 
-  family = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null });
+  private storeFamily = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null });
   members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers), { initialValue: [] as FamilyMember[] });
   transactions = toSignal(this.store.select(FamilySelectors.selectFamilyTransactions), { initialValue: [] as FamilyTransaction[] });
   recentTxns = toSignal(this.store.select(FamilySelectors.selectRecentTransactions), { initialValue: [] as FamilyTransaction[] });
@@ -134,15 +147,7 @@ export class FamilyDashboardComponent implements OnInit {
     });
   });
 
-  constructor() {
-    effect(() => {
-      const fam = this.family();
-      if (fam?.id) {
-        this.store.dispatch(FamilyActions.loadMembers({ familyId: fam.id }));
-        this.store.dispatch(FamilyActions.loadTransactions({ familyId: fam.id }));
-      }
-    }, { allowSignalWrites: true });
-  }
+
 
   private storageService = inject(LocalIndexDBStorageService);
 
@@ -188,6 +193,11 @@ export class FamilyDashboardComponent implements OnInit {
   private memberColors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
 
   ngOnInit() {
+    // If shown inline as a passive child (group input provided), we assume the parent dispatches actions
+    if (this.group) {
+      return;
+    }
+
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
@@ -196,6 +206,14 @@ export class FamilyDashboardComponent implements OnInit {
         this.store.dispatch(FamilyActions.loadMyFamily());
       }
     });
+  }
+
+  goBack() {
+    if (this.close.observed) {
+      this.close.emit();
+    } else {
+      this.router.navigate(['/dashboard/family/groups']);
+    }
   }
 
   generateReport() {

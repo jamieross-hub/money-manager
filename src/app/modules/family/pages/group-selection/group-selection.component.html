@@ -1,4 +1,10 @@
-<div class="gs-page">
+<app-family-dashboard *ngIf="showDashboard()" 
+  [group]="selectedGroup()" 
+  (close)="showDashboard.set(false)">
+</app-family-dashboard>
+
+
+<div class="gs-page" *ngIf="!showDashboard()">
 
 
     <app-quick-actions-fab [config]="fabConfig" (actionClick)="handleQuickAction($event)"></app-quick-actions-fab>
@@ -171,11 +177,11 @@
               <!-- Footer with actions -->
               <div class="gs-list-card__footer">
                 
-                <button mat-stroked-button 
+                <button mat-button 
                         color="primary"
-                        (click)="$event.stopPropagation(); selectGroup(group)">
-                  <mat-icon>check_circle</mat-icon>
-                  Select
+                        (click)="$event.stopPropagation(); openGroup(group)">
+                  <mat-icon>open_in_new</mat-icon>
+                  Open
                 </button>
                 
                 <div class="gs-list-card__actions" style="display: flex; gap: 4px;">

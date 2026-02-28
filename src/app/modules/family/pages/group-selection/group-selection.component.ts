@@ -28,9 +28,11 @@ import { FamilyCreateDialogComponent } from '../../dialogs/family-create-dialog/
 import { FamilyJoinDialogComponent } from '../../dialogs/family-join-dialog/family-join-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
 import { Family, FamilyMemberRole } from 'src/app/util/models/family.model';
+import { FamilyDashboardComponent } from '../family-dashboard/family-dashboard.component';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import * as FamilyActions from '../../store/family.actions';
+import * as FamilySelectors from '../../store/family.selectors';
 import { selectUserFamilies, selectUserFamiliesLoading, selectFamilyError } from '../../store/family.selectors';
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import { QuickActionsFabComponent, QuickAction, QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
@@ -113,6 +115,7 @@ type LoadState = 'loading' | 'loaded' | 'empty' | 'error';
     MatTooltipModule,
     QuickActionsFabComponent,
     ConfirmDialogComponent,
+    FamilyDashboardComponent,
   ],
   templateUrl: './group-selection.component.html',
   styleUrls: ['./group-selection.component.scss'],
@@ -123,6 +126,10 @@ export class GroupSelectionComponent implements OnInit {
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private store = inject(Store<AppState>);
+  public showDashboard = signal(false);
+  public selectedGroup = signal<UserGroup | null>(null);
+ 
+  private autoOpened = false;
 
   // ─── State ─────────────────────────────────────────────────────────────────
 
@@ -152,6 +159,14 @@ export class GroupSelectionComponent implements OnInit {
           });
         }
       });
+    }, { allowSignalWrites: true });
+
+    effect(() => {
+      const active = this.activeGroup();
+      if (active && !this.autoOpened) {
+        this.autoOpened = true;
+        this.openGroup(active);
+      }
     }, { allowSignalWrites: true });
   }
 
@@ -290,7 +305,13 @@ export class GroupSelectionComponent implements OnInit {
   }
 
   openGroup(group: UserGroup){
-    this.router.navigate(['/dashboard/family/dashboard', group.id]);
+    this.autoOpened = true;
+    this.familyService.setActiveFamily(group.id);
+    this.store.dispatch(FamilyActions.loadFamily({ familyId: group.id }));
+    this.store.dispatch(FamilyActions.loadMembers({ familyId: group.id }));
+    this.store.dispatch(FamilyActions.loadTransactions({ familyId: group.id }));
+    this.selectedGroup.set(group);
+    this.showDashboard.set(true);
   }
 
   requestLeave(group: UserGroup): void {

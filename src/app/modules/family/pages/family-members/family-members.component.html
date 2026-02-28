@@ -10,12 +10,8 @@
 
   <!-- Content -->
   <app-common-body-content class="flex-1 overflow-y-auto">
-    <!-- Loading -->
-    <div *ngIf="loading()" class="flex justify-center py-12">
-      <mat-spinner diameter="40" strokeWidth="3"></mat-spinner>
-    </div>
+   
 
-    <ng-container *ngIf="!loading()">
       <div class="max-w-screen-md mx-auto px-4 pb-24">
         
         <!-- Member Count and Description -->
@@ -106,6 +102,5 @@
         </div>
 
       </div>
-    </ng-container>
   </app-common-body-content>
 </div>

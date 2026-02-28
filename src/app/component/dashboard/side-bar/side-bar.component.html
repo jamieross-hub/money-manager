@@ -1,6 +1,6 @@
-<mat-drawer-container class="example-container !z-[999] h-screen ">
+<mat-drawer-container class="!fixed inset-0 !z-[999] pointer-events-none bg-transparent overflow-visible">
 	<mat-drawer #drawer [mode]="'over'"
-		class="!fixed bg-white dark:bg-slate-900 shadow-2xl w-72 border-r border-gray-100 dark:border-slate-800 backdrop-blur-sm">
+		class="!fixed bg-white dark:bg-slate-900 shadow-2xl w-72 border-r border-gray-100 dark:border-slate-800 backdrop-blur-sm pointer-events-auto">
 		<div class="h-full flex flex-col overflow-auto">
 			<!-- Header -->
 			<div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-slate-800 ">
@@ -143,8 +143,8 @@
 		</div>
 	</mat-drawer>
 
-	<mat-drawer-content class="!overflow-hidden">
-		<div>
+	<mat-drawer-content class="!overflow-visible">
+		<div class="drawer-content-trigger p-2 w-fit">
 			<button class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
 				(click)="drawer.toggle()" [attr.aria-label]="'NAVIGATION.OPEN_SIDEBAR' | translate"
 				data-testid="sidebar-toggle">

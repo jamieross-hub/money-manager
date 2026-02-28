@@ -8,9 +8,9 @@
     </p>
   </div>
 
-  <div *ngIf="loading()" class="flex justify-center py-16"><mat-spinner diameter="36"></mat-spinner></div>
-
-  <div *ngIf="!loading() && stats()">
+  <div *ngIf="loading() && !stats()" class="flex justify-center py-16"><mat-spinner diameter="36"></mat-spinner></div>
+  
+  <div *ngIf="stats()">
 
     <!-- Overall Summary -->
     <div class="px-4 mt-4 grid grid-cols-2 gap-3">

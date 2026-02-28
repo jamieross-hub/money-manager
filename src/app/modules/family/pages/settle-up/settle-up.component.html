@@ -20,7 +20,7 @@
     </div>
 
     <!-- Summary Pills (Owe/Owed) -->
-    <div class="flex gap-2 flex-wrap" *ngIf="!loading()">
+    <div class="flex gap-2 flex-wrap">
       <div class="balance-pill debt" *ngIf="totalOwedByMe() > 0">
         <mat-icon class="!text-xs h-4 w-4">arrow_outward</mat-icon>
         <span>You owe ₹{{ totalOwedByMe() | number:'1.0-0' }}</span>
@@ -29,7 +29,7 @@
         <mat-icon class="!text-xs h-4 w-4">call_received</mat-icon>
         <span>₹{{ totalOwedToMe() | number:'1.0-0' }} owed to you</span>
       </div>
-      <div class="balance-pill" *ngIf="totalOwedByMe() === 0 && totalOwedToMe() === 0 && !settlementsLoading()">
+      <div class="balance-pill" *ngIf="totalOwedByMe() === 0 && totalOwedToMe() === 0">
         <mat-icon class="!text-xs h-4 w-4">verified</mat-icon>
         <span>All settled up</span>
       </div>
@@ -39,13 +39,9 @@
   <!-- ═══════════ CONTENT ═══════════ -->
   <main class="content-container mt-5">
 
-    <!-- Loading State -->
-    <div *ngIf="loading()" class="flex flex-col items-center justify-center py-24 gap-4">
-      <mat-spinner diameter="32" color="primary"></mat-spinner>
-      <p class="text-sm font-medium text-neutral-400">Updating balances...</p>
-    </div>
+    <!-- Content will show instantly from store -->
 
-    <ng-container *ngIf="!loading()">
+    <ng-container>
 
       <!-- ── Section: Your Balances ── -->
       <section *ngIf="myBalances().length > 0">
