@@ -392,7 +392,7 @@
 								}
 
 								<!-- Always show Create/Join buttons at the bottom -->
-								<div class="flex gap-2  align-center justify-center" *ngIf="familyGroups().length === 0">
+								<div class="flex gap-2  align-center justify-center">
 									<button mat-flat-button color="primary" type="button" class="flex-1 !h-10 !rounded-xl !text-white"
 										(click)="createFamilyGroup()" [disabled]="isLoading()">
 										<mat-icon >add_home</mat-icon>

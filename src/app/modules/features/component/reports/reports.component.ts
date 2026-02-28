@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { Subscription, take } from 'rxjs';
 import { Transaction } from '../../../../util/models/transaction.model';
@@ -35,6 +35,7 @@ import { RouterModule } from '@angular/router';
 import { AbsPipe } from 'src/app/util/pipes/abs.pipe';
 import { MathPipe } from 'src/app/util/pipes/math.pipe';
 import { TrendPipe } from 'src/app/util/pipes/trend.pipe';
+import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 
 // ── Types ──
 
@@ -205,6 +206,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
 
+    private storageService = inject(LocalIndexDBStorageService);
+
     constructor(
         private userService: UserService,
         private store: Store<AppState>,
@@ -280,11 +283,59 @@ export class ReportsComponent implements OnInit, OnDestroy {
     // ══════════════════════════════════════════
 
     private computeAll(): void {
-        this.monthlySummaries = this.buildMonthlySummaries();
-        this.extractAvailableYears();
-        this.computeKeyMetrics();
-        this.computePeriodSummary();
-        this.computePredictions();
+        const userId = this.userService.getCurrentUserId();
+        const cacheKey = `reports_cache_${userId}`;
+
+        // Attempt to load from cache first for instant render
+        if (this.monthlySummaries.length === 0) {
+            const cachedState = this.storageService.getItem<any>(cacheKey);
+            if (cachedState) {
+               this.monthlySummaries = cachedState.monthlySummaries || [];
+               this.availableYears = cachedState.availableYears || [];
+               this.avgMonthlySpending = cachedState.avgMonthlySpending || 0;
+               this.highestSpendingCategory = cachedState.highestSpendingCategory || null;
+               this.overallSavingsRate = cachedState.overallSavingsRate || 0;
+               this.currentPeriodSummary = cachedState.currentPeriodSummary || null;
+               this.previousPeriodSummary = cachedState.previousPeriodSummary || null;
+               this.filteredMonthlySummaries = cachedState.filteredMonthlySummaries || [];
+               this.nextMonthPrediction = cachedState.nextMonthPrediction || null;
+               this.next3MonthsPrediction = cachedState.next3MonthsPrediction || null;
+               this.yearEndPrediction = cachedState.yearEndPrediction || null;
+               this.cdr.markForCheck();
+            }
+        }
+
+        // If no transactions yet, we're done for now
+        if (this.transactions.length === 0) {
+             return;
+        }
+
+        // Run calculation off the main thread to allow the UI to paint the cache
+        setTimeout(() => {
+            this.monthlySummaries = this.buildMonthlySummaries();
+            this.extractAvailableYears();
+            this.computeKeyMetrics();
+            this.computePeriodSummary();
+            this.computePredictions();
+
+            if (userId) {
+                this.storageService.setItem(cacheKey, {
+                    monthlySummaries: this.monthlySummaries,
+                    availableYears: this.availableYears,
+                    avgMonthlySpending: this.avgMonthlySpending,
+                    highestSpendingCategory: this.highestSpendingCategory,
+                    overallSavingsRate: this.overallSavingsRate,
+                    currentPeriodSummary: this.currentPeriodSummary,
+                    previousPeriodSummary: this.previousPeriodSummary,
+                    filteredMonthlySummaries: this.filteredMonthlySummaries,
+                    nextMonthPrediction: this.nextMonthPrediction,
+                    next3MonthsPrediction: this.next3MonthsPrediction,
+                    yearEndPrediction: this.yearEndPrediction
+                });
+            }
+            
+            this.cdr.markForCheck();
+        }, 0);
     }
 
     private extractAvailableYears(): void {

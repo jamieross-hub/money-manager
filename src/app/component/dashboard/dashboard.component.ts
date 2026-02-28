@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { HeaderComponent } from './header/header.component';
 import { FooterComponent } from './footer/footer.component';
 import { Router, NavigationEnd } from '@angular/router';
-import { filter, takeUntil } from 'rxjs/operators';
+import { filter, takeUntil, take } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { AppState } from 'src/app/store/app.state';
@@ -57,6 +57,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe();
     }, 2000);
+
+    // Redirect to family dashboard on app start if family mode is enabled
+    this.userService.userAuth$.pipe(
+      filter((user: any) => !!user),
+      take(1)
+    ).subscribe((user: any) => {
+      if (user?.preferences?.isFamilyMode && (this.router.url === '/dashboard' || this.router.url === '/dashboard/home' || this.router.url === '/')) {
+        this.router.navigate(['/dashboard/family']);
+      }
+    });
   }
 
   ngOnDestroy() {
