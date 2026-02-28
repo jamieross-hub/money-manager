@@ -54,6 +54,39 @@ export class FamilyDashboardComponent implements OnInit {
   recentTxns = toSignal(this.store.select(FamilySelectors.selectRecentTransactions), { initialValue: [] as FamilyTransaction[] });
   loading = toSignal(this.store.select(FamilySelectors.selectFamilyLoading), { initialValue: true });
 
+  recentActivities = computed(() => {
+    return this.recentTxns().map(tx => {
+      let payerId = tx.userId;
+      let payerName = tx.userDisplayName || 'Unknown';
+      let payerPhoto = tx.userPhotoURL;
+      let payerLabel = payerName;
+
+      if (tx.splitData) {
+        if (tx.splitData.paidByUserId === 'multiple') {
+          payerId = 'multiple';
+          payerName = 'Multiple';
+          payerPhoto = undefined;
+          payerLabel = 'Multiple people';
+        } else {
+          payerId = tx.splitData.paidByUserId || tx.userId;
+          payerName = tx.splitData.paidByDisplayName || tx.userDisplayName || 'Unknown';
+          payerPhoto = tx.splitData.paidByPhotoURL || tx.userPhotoURL;
+          payerLabel = payerId === this.currentUserId ? 'You' : payerName;
+        }
+      } else {
+        payerLabel = payerId === this.currentUserId ? 'You' : payerName;
+      }
+
+      return {
+        ...tx,
+        payerId,
+        payerName,
+        payerPhoto,
+        payerLabel
+      };
+    });
+  });
+
   constructor() {
     effect(() => {
       const fam = this.family();

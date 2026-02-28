@@ -172,20 +172,6 @@ export const routes: Routes = [
     ]
   },
 
-  // Admin routes - Lazy loaded
-  {
-    path: 'admin',
-    loadChildren: () => import('./modules/admin/admin.module').then(m => m.AdminModule),
-    title: 'Administration',
-    canActivate: [AuthGuard, AdminGuard],
-    data: {
-      requireEmailVerification: true,
-      requireActiveSession: true,
-      roles: ['admin'],
-      title: 'Administration'
-    }
-  },
-
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' }
 ];
 

@@ -93,7 +93,7 @@
                   <span class="highlight-green font-bold">{{ b.fromDisplayName }}</span> owes
                 </ng-container>
               </p>
-              <p class="amount-text !text-xl mt-1 !mb-0" 
+              <p class="amount-text !text-lg mt-1 !mb-0" 
                  [class.text-red-600]="b | iOwe : currentUserId" 
                  [class.text-primary-500]="b | owedToMe : currentUserId">
                 {{ b.amount | currency: 'INR':'symbol':'1.0-0' }}

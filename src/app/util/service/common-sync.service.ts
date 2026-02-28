@@ -426,6 +426,7 @@ export class CommonSyncService implements OnDestroy {
           googleSheetsService.pullFromFirestore(userId),
           subscriptionService.pullFromFirestore(userId),
           this.userService.pullFromFirestore(userId),
+          this.familyService.pullFromFirestore(userId),
           feedbackService.pullFromFirestore(),
           contactService.pullFromFirestore()
         ]).pipe(

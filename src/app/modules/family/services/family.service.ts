@@ -674,4 +674,17 @@ export class FamilyService {
 
     return result.sort((a, b) => b.amount - a.amount);
   }
+
+  pullFromFirestore(userId: string): Observable<void> {
+    const familyId = this.activeFamilyId();
+    if (familyId) {
+      // Re-trigger family load to refresh data from server
+      this.store.dispatch(ProfileActions.updatePreferences({ userId, preferences: {} })); 
+      // The store effects or components will reload if needed, or we can explicitly reload:
+      this.store.dispatch({ type: '[Family] Load Family', familyId });
+      this.store.dispatch({ type: '[Family] Load Members', familyId });
+      this.store.dispatch({ type: '[Family] Load Transactions', familyId });
+    }
+    return of(void 0);
+  }
 }

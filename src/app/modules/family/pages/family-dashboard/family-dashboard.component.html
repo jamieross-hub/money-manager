@@ -136,12 +136,12 @@
         </div>
         
         <!-- Current User's Expenses -->
-        <div class="bg-secondary-500 rounded-2xl p-3 shadow-md flex flex-col justify-between border border-gray-700 relative overflow-hidden">
-          <div class="absolute top-0 right-0 p-2 opacity-10 pointer-events-none">
-            <mat-icon class="!text-[36px] !w-9 !h-9 text-white">person</mat-icon>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-gray-700/60 flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute top-0 right-0 p-2 opacity-[0.15] dark:opacity-20 pointer-events-none">
+            <mat-icon class="!text-[36px] !w-9 !h-9 text-red-500">person</mat-icon>
           </div>
-          <p class="text-[12px] font-semibold text-gray-300 dark:text-gray-400 mb-2 z-10">Your Expense</p>
-          <p class="text-[18px] font-bold text-white truncate z-10">
+          <p class="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2 z-10">Your Expense</p>
+          <p class="text-[18px] font-bold text-gray-900 dark:text-white truncate z-10">
              ₹{{ currentUserExpense() | number:'1.0-0' }}
           </p>
         </div>
@@ -193,22 +193,22 @@
 
       <!-- SPLIT MODE: Recent Activity -->
       <div class="flex flex-col gap-3 pb-4" *ngIf="fam.mode === 'split'">
-        <div *ngFor="let tx of recentTxns()"
+        <div *ngFor="let tx of recentActivities()"
           class="bg-white dark:bg-gray-800 rounded-2xl p-3.5 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
           
           <div class="flex items-center gap-3">
             <!-- User Avatar -->
             <div class="w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 overflow-hidden"
-              [style.background]="memberColor(tx.userId)">
-              <img *ngIf="tx.userPhotoURL" [src]="tx.userPhotoURL" alt="avatar" class="w-full h-full object-cover" />
-              <span *ngIf="!tx.userPhotoURL" class="text-white">{{ tx.userDisplayName ? tx.userDisplayName.charAt(0).toUpperCase() : '?' }}</span>
+              [style.background]="memberColor(tx.payerId)">
+              <img *ngIf="tx.payerPhoto" [src]="tx.payerPhoto" alt="avatar" class="w-full h-full object-cover" />
+              <span *ngIf="!tx.payerPhoto" class="text-white">{{ tx.payerName ? tx.payerName.charAt(0).toUpperCase() : '?' }}</span>
             </div>
             
             <!-- Activity Info -->
             <div class="flex flex-col">
               <span class="text-[14px] font-bold text-gray-800 dark:text-gray-200 truncate max-w-[160px]">{{ tx.note || tx.category }}</span>
               <span class="text-[12px] text-gray-500 dark:text-gray-400 truncate max-w-[160px]">
-                <span class="font-medium">{{ tx.userDisplayName }}</span> paid
+                <span class="font-medium">{{ tx.payerLabel }}</span> paid
               </span>
             </div>
           </div>
@@ -225,7 +225,7 @@
         </div>
 
         <!-- Empty State for Recent Activity -->
-        <div *ngIf="!recentTxns()?.length" class="text-center py-8 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700/60">
+        <div *ngIf="!recentActivities()?.length" class="text-center py-8 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700/60">
           <mat-icon class="!text-3xl text-gray-300 dark:text-gray-600 mb-2">receipt_long</mat-icon>
           <p class="text-[13px] font-medium text-gray-500 dark:text-gray-400">No recent activity yet</p>
         </div>
