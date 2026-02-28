@@ -1,10 +1,10 @@
 <div class="p-6 min-w-[320px]">
-  <div class="flex items-center gap-3 mb-6">
-    <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+  <div class="flex items-start gap-3 mb-6">
+    <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center !mb-0">
       <mat-icon class="text-green-600 dark:text-green-300">group_add</mat-icon>
     </div>
     <div>
-      <p class="text-lg font-bold text-gray-900 dark:text-white m-0">Join Group</p>
+      <p class="text-lg font-bold text-gray-900 dark:text-white !mb-0">Join Group</p>
       <p class="text-xs text-gray-500 dark:text-gray-400 m-0">Enter the invite code from your group</p>
     </div>
   </div>
@@ -28,7 +28,7 @@
     <div class="flex gap-3 mt-2">
       <button mat-stroked-button type="button" class="flex-1" (click)="close()">Cancel</button>
       <button mat-flat-button color="primary" type="button" class="flex-1" [disabled]="form.invalid" (click)="submit()">
-        <mat-icon class="!text-base mr-1 mb-2">login</mat-icon>
+        <mat-icon class="!text-base !h-[21px] !w-4 mb-2">login</mat-icon>
         Join
       </button>
     </div>

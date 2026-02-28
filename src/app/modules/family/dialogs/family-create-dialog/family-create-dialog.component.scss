@@ -1,7 +1,7 @@
 .mode-card {
   position: relative;
-  padding: 16px;
-  border-radius: 16px;
+  padding: 10px;
+  border-radius: 10px;
   border: 2px solid rgba(0, 0, 0, 0.05);
   background: white;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -21,9 +21,11 @@
   }
 
   .mode-icon-wrapper {
-    width: 46px;
-    height: 46px;
-    border-radius: 10px;
+        width: 26px;
+    padding: 6px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
     background: #f3f4f6;
     display: flex;
     align-items: center;
@@ -44,7 +46,7 @@
     opacity: 0;
     transform: scale(0.5);
     transition: all 0.2s;
-    color: var(--mat-primary-500, #4285f4);
+    color: var(--primary-500);
 
     mat-icon {
       font-size: 18px;
@@ -54,12 +56,12 @@
   }
 
   &.active {
-    border-color: var(--mat-primary-500, #4285f4);
-    background: rgba(var(--mat-primary-rgb, 66, 133, 244), 0.05);
-    box-shadow: 0 4px 20px rgba(var(--mat-primary-rgb, 66, 133, 244), 0.1);
+    border-color: var(--primary-500);
+    background: rgba(var(--primary-rgb), 0.05);
+    box-shadow: 0 4px 20px rgba(var(--primary-rgb), 0.1);
 
     .mode-icon-wrapper {
-      background: var(--mat-primary-500, #4285f4);
+      background: var(--primary-500);
       color: white;
     }
 
@@ -69,7 +71,7 @@
     }
 
     p.text-sm {
-      color: var(--mat-primary-600, #1a73e8);
+      color: var(--primary-600);
     }
   }
 }

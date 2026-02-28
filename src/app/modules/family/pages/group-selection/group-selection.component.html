@@ -46,9 +46,17 @@
     </div>
   }
 
-  <!-- ══════════════════════════════════════════════════════════
-       LOADED STATE
-  ══════════════════════════════════════════════════════════ -->
+ <!-- in header stick two button create and join group -->
+ <!-- <div class="gs-header top-0 z-10 flex gap-2 align-center justify-center px-2">
+  <button mat-flat-button color="primary" class="gs-btn-full text-white" (click)="openCreateDialog()">
+    <mat-icon>add</mat-icon>
+    Create Group
+  </button>
+  <button mat-stroked-button color="primary" class="gs-btn-full" (click)="openJoinDialog()">
+    <mat-icon>link</mat-icon>
+    Join Group
+  </button>
+ </div> -->
 
     <div class="gs-content">
 
@@ -81,6 +89,7 @@
                   </span>
                   <span class="gs-dot">·</span>
                   <span class="gs-meta-text">{{ active.memberCount }} member{{ active.memberCount !== 1 ? 's' : '' }}</span>
+          
                 </div>
               </div>
 
@@ -96,9 +105,9 @@
             <!-- Divider + stat row -->
             <div class="gs-active-card__footer">
               <div class="gs-active-card__activity">
-                <mat-icon class="gs-meta-icon">schedule</mat-icon>
+                <mat-icon class="gs-meta-icon"> money</mat-icon>
                 <span class="gs-meta-text">
-                  {{ active.lastActivityAt ? formatRelative(active.lastActivityAt) : 'No activity yet' }}
+                  {{ formatCurrency(active.totalSpend || 0, 'INR') }}
                 </span>
               </div>
               <button mat-button color="primary" class="gs-open-btn"
@@ -113,7 +122,7 @@
 
 
       <!-- ── ALL GROUPS LIST ─────────────────────────────────── -->
-      <section class="gs-section mt-2">
+      <section class="gs-section mt-2" *ngIf="otherGroups().length > 0">
         <p class="gs-section-label">Other Groups</p>
         <div class="gs-list">
 
@@ -140,6 +149,10 @@
                     <span class="gs-dot">·</span>
                     <span class="gs-meta-text">
                       {{ group.memberCount }} member{{ group.memberCount !== 1 ? 's' : '' }}
+                    </span>
+                    <span class="gs-dot">·</span>
+                    <span class="gs-meta-text">
+                      {{ formatCurrency(group.totalSpend || 0, 'INR') }}
                     </span>
                   </div>
                 </div>

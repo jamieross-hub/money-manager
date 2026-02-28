@@ -1,11 +1,11 @@
 <div class="p-6 min-w-[320px]">
   <!-- Header -->
-  <div class="flex items-center gap-3 mb-6">
+  <div class="flex items-start gap-3 mb-6">
     <div class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
       <mat-icon class="text-primary-600 dark:text-primary-300">group_add</mat-icon>
     </div>
     <div>
-      <p class="text-lg font-bold text-gray-900 dark:text-white m-0">Create Group</p>
+      <p class="text-lg font-bold text-gray-900 dark:text-white !mb-0">Create Group</p>
       <p class="text-xs text-gray-500 dark:text-gray-400 m-0">Start tracking together</p>
     </div>
   </div>
@@ -25,6 +25,12 @@
         <mat-form-field appearance="fill" class="w-full">
           <mat-label>Group Icon</mat-label>
           <mat-select [value]="selectedIcon()" (selectionChange)="selectIcon($event.value)">
+            <mat-select-trigger>
+              <div class="flex items-center gap-2" *ngIf="selectedOption()">
+                <mat-icon class="text-primary-500">{{ selectedOption()?.icon }}</mat-icon>
+                <span>{{ selectedOption()?.label }}</span>
+              </div>
+            </mat-select-trigger>
             <mat-option *ngFor="let opt of iconOptions" [value]="opt.icon">
               <div class="flex items-center gap-2">
                 <mat-icon class="text-primary-500">{{ opt.icon }}</mat-icon>
@@ -53,15 +59,14 @@
     <!-- Mode -->
     <div>
       <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Expense Mode</p>
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-2 gap-2">
         <div class="mode-card" [class.active]="form.get('mode')?.value === 'common'" (click)="form.get('mode')?.setValue('common')">
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2">
             <div class="mode-icon-wrapper">
-              <mat-icon class="!text-lg">people</mat-icon>
+              <mat-icon class="!text-sm">people</mat-icon>
             </div>
             <div class="text-left">
-              <p class="text-sm font-bold m-0 leading-tight">Common</p>
-              <p class="text-[10px] text-gray-500 dark:text-gray-400 m-0 mt-0.5">Shared pool</p>
+              <p class="text-[13px] font-bold m-0 leading-none">Common</p>
             </div>
           </div>
           <div class="active-indicator">
@@ -70,13 +75,12 @@
         </div>
 
         <div class="mode-card" [class.active]="form.get('mode')?.value === 'split'" (click)="form.get('mode')?.setValue('split')">
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2">
             <div class="mode-icon-wrapper">
-              <mat-icon class="!text-lg">call_split</mat-icon>
+              <mat-icon class="!text-sm">call_split</mat-icon>
             </div>
             <div class="text-left">
-              <p class="text-sm font-bold m-0 leading-tight">Split</p>
-              <p class="text-[10px] text-gray-500 dark:text-gray-400 m-0 mt-0.5">Track individually</p>
+              <p class="text-[13px] font-bold m-0 leading-none">Split</p>
             </div>
           </div>
           <div class="active-indicator">

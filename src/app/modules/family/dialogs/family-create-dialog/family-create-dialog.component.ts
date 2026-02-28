@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal, computed } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatBottomSheetRef, MatBottomSheetModule } from '@angular/material/bottom-sheet';
@@ -52,6 +52,7 @@ export class FamilyCreateDialogComponent {
 
   /** Currently selected icon – either an emoji from the preset list or a Data URL from file upload */
   selectedIcon = signal<string>('family_restroom');
+  selectedOption = computed(() => this.iconOptions.find(opt => opt.icon === this.selectedIcon()));
 
   form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],

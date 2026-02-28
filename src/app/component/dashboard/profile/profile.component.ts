@@ -118,10 +118,10 @@ export class ProfileComponent {
   private ignoreLoader = false;
   readonly isLoading = signal(false);
   readonly isEditing = signal(false);
-   readonly userProfile = signal<User | null>(null);
-   readonly familyGroups = signal<Family[]>([]);
-   readonly activeFamilyId = this.familyService.activeFamilyId;
-   readonly familyMembers = signal<any[]>([]);
+  readonly userProfile = signal<User | null>(null);
+  readonly familyGroups = signal<Family[]>([]);
+  readonly activeFamilyId = this.familyService.activeFamilyId;
+  readonly familyMembers = signal<any[]>([]);
   readonly isFamilyLoading = signal(false);
   readonly currentTheme = signal<ThemeType>('light-theme');
   readonly showPinSetup = signal(false);
@@ -152,7 +152,7 @@ export class ProfileComponent {
     }
     return 'User';
   });
-  
+
   readonly memberCount = computed(() => this.familyMembers().length);
 
   readonly isAdmin = computed(() => {
@@ -285,7 +285,7 @@ export class ProfileComponent {
 
 
   // ─── Family Group ──────────────────────────────────────────────────
- 
+
   private loadFamilies(): void {
     this.isFamilyLoading.set(true);
     this.familyService.getMyFamilies().then(families => {
@@ -304,21 +304,21 @@ export class ProfileComponent {
       this.isFamilyLoading.set(false);
     });
   }
-   async switchActiveFamily(familyId: string): Promise<void> {
-     const profile = this.userProfile();
-     if (!profile || this.activeFamilyId() === familyId) return;
- 
-     this.isLoading.set(true);
-     try {
-       this.familyService.setActiveFamily(familyId);
-       
-       await this.applyPreferenceChanges({
-         isFamilyMode: true,
-         activeFamilyId: familyId
-       });
- 
+  async switchActiveFamily(familyId: string): Promise<void> {
+    const profile = this.userProfile();
+    if (!profile || this.activeFamilyId() === familyId) return;
+
+    this.isLoading.set(true);
+    try {
+      this.familyService.setActiveFamily(familyId);
+
+      await this.applyPreferenceChanges({
+        isFamilyMode: true,
+        activeFamilyId: familyId
+      });
+
       this.notificationService.success('Switched active family');
- 
+
       // Clear stores and sync
       this.store.dispatch(TransactionsActions.clearTransactions());
       this.store.dispatch(AccountsActions.clearAccounts());
@@ -356,17 +356,14 @@ export class ProfileComponent {
   }
 
   createFamilyGroup(): void {
-    const bottomSheetRef = this.bottomSheet.open(FamilyCreateDialogComponent, {
-      panelClass: 'auto-height-sheet'
-    });
-
-    bottomSheetRef.afterDismissed().subscribe(async (result) => {
+    const ref = this.dialog.open(FamilyCreateDialogComponent, { disableClose: true });
+    ref.afterClosed().subscribe(async result => {
       if (result) {
         try {
           this.isLoading.set(true);
-           const family = await this.familyService.createFamily(result);
-           this.loadFamilies();
-           this.notificationService.success('Family created! Share the invite code with family members.');
+          const family = await this.familyService.createFamily(result);
+          this.loadFamilies();
+          this.notificationService.success('Family created! Share the invite code with family members.');
         } catch (error: any) {
           this.notificationService.error(error?.message || ERROR_MESSAGES.NETWORK.SERVER_ERROR);
         } finally {
@@ -377,28 +374,31 @@ export class ProfileComponent {
   }
 
   joinFamilyGroup(): void {
-    const bottomSheetRef = this.bottomSheet.open(FamilyJoinDialogComponent, {
-      panelClass: 'auto-height-sheet'
-    });
-
-    bottomSheetRef.afterDismissed().subscribe(async (code: string) => {
+    const ref = this.dialog.open(FamilyJoinDialogComponent, { disableClose: true });
+    ref.afterClosed().subscribe(async code => {
       if (code) {
-        try {
-          this.isLoading.set(true);
-           const family = await this.familyService.joinByCode(code);
-           this.loadFamilies();
-           this.notificationService.success(`Joined "${family.name}" family!`);
-        } catch (error: any) {
-          this.notificationService.error(error?.message || ERROR_MESSAGES.NETWORK.SERVER_ERROR);
-        } finally {
-          this.isLoading.set(false);
+        if (code) {
+          try {
+            this.isLoading.set(true);
+            const family = await this.familyService.joinByCode(code);
+            this.loadFamilies();
+            this.notificationService.success(`Joined "${family.name}" family!`);
+          } catch (error: any) {
+            this.notificationService.error(error?.message || ERROR_MESSAGES.NETWORK.SERVER_ERROR);
+          } finally {
+            this.isLoading.set(false);
+          }
         }
       }
     });
   }
 
+
+
+
+
   async deleteFamilyGroup(family: Family): Promise<void> {
-     if (!family || !family.id) return;
+    if (!family || !family.id) return;
 
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
@@ -416,17 +416,17 @@ export class ProfileComponent {
         try {
           this.isLoading.set(true);
           await this.familyService.deleteFamily(family.id!);
-                    this.familyService.setActiveFamily(null);
-           await this.applyPreferenceChanges({
-             isFamilyMode: false,
-             activeFamilyId: null
-           });
- 
-           this.loadFamilies();
-           if (this.activeFamilyId() === family.id) {
-             this.familyMembers.set([]);
-           }
-           this.notificationService.success('Family wallet deleted successfully.');
+          this.familyService.setActiveFamily(null);
+          await this.applyPreferenceChanges({
+            isFamilyMode: false,
+            activeFamilyId: null
+          });
+
+          this.loadFamilies();
+          if (this.activeFamilyId() === family.id) {
+            this.familyMembers.set([]);
+          }
+          this.notificationService.success('Family wallet deleted successfully.');
         } catch (error: any) {
           console.error('Error deleting family:', error);
           this.notificationService.error(error?.message || 'Failed to delete family wallet');
@@ -805,7 +805,7 @@ export class ProfileComponent {
     const newPin = this.newPinControl.value;
     if (newPin && /^\d{4}$/.test(newPin)) {
       const pinHash = await this.securityService.hashPin(newPin);
-      
+
       await this.applyPreferenceChanges({
         pinHash: pinHash,
         pinEnabled: true
@@ -834,10 +834,10 @@ export class ProfileComponent {
 
     // 1. Prepare updated preferences with required fields fallback
     const currentPrefs = profile.preferences || {} as UserPreferences;
-       const updatedPrefs: UserPreferences = {
-         ...currentPrefs,
-         ...changes,
-         defaultCurrency: changes.defaultCurrency ?? currentPrefs.defaultCurrency ?? 'INR',
+    const updatedPrefs: UserPreferences = {
+      ...currentPrefs,
+      ...changes,
+      defaultCurrency: changes.defaultCurrency ?? currentPrefs.defaultCurrency ?? 'INR',
       timezone: changes.timezone ?? currentPrefs.timezone ?? 'UTC',
       notifications: changes.notifications ?? currentPrefs.notifications ?? true,
       emailUpdates: changes.emailUpdates ?? currentPrefs.emailUpdates ?? true,
@@ -853,7 +853,7 @@ export class ProfileComponent {
 
     // 3. Update local state
     this.userProfile.set(updatedUser);
-    
+
     if (changes.isFamilyMode !== undefined) {
       this.isFamilyMode.set(changes.isFamilyMode);
     }

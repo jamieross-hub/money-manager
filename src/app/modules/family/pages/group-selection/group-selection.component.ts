@@ -4,6 +4,7 @@ import {
   inject,
   signal,
   computed,
+  effect,
   DestroyRef,
   ChangeDetectionStrategy,
 } from '@angular/core';
@@ -46,7 +47,7 @@ export interface UserGroup {
   memberCount: number;
   role: FamilyMemberRole;
   balance?: number;
-  monthlySpend?: number;
+  totalSpend?: number;
   lastActivityAt?: Date;
   isActive: boolean;
   inviteCode: string;
@@ -124,6 +125,24 @@ export class GroupSelectionComponent implements OnInit {
 
   // ─── State ─────────────────────────────────────────────────────────────────
 
+  groupSpends = signal<Record<string, number>>({});
+
+  constructor() {
+    effect(() => {
+      const families = this.rawFamilies() || [];
+      families.forEach(f => {
+        if (f.id && this.groupSpends()[f.id] === undefined) {
+          // Initialize to 0 so we only fetch once per group
+          this.groupSpends.update(spends => ({ ...spends, [f.id as string]: 0 }));
+          this.familyService.getTransactions(f.id).subscribe(txs => {
+            const expense = txs.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            this.groupSpends.update(spends => ({ ...spends, [f.id as string]: expense }));
+          });
+        }
+      });
+    }, { allowSignalWrites: true });
+  }
+
   rawFamilies = this.store.selectSignal(selectUserFamilies);
   userFamiliesLoading = this.store.selectSignal(selectUserFamiliesLoading);
   familyError = this.store.selectSignal(selectFamilyError);
@@ -145,6 +164,7 @@ export class GroupSelectionComponent implements OnInit {
       inviteCode: f.inviteCode,
       ownerUserId: f.ownerUserId,
       isActive: f.id === activeId,
+      totalSpend: this.groupSpends()[f.id!] || 0,
       lastActivityAt: f.updatedAt
         ? ((f.updatedAt as any)?.seconds
           ? new Date((f.updatedAt as any).seconds * 1000)
