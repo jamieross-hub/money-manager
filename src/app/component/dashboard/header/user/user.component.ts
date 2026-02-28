@@ -147,8 +147,9 @@ export class UserComponent {
     return this.userService.getAvatarUrl(member.photoURL);
   }
 
-  onImageError(): void {
-    this.photoURLOverride.set('assets/images/profile.png');
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.src = 'assets/images/profile.png';
   }
 
   // ── UI actions ─────────────────────────────────────────────────────────────
