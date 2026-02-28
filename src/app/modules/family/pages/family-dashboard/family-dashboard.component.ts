@@ -60,13 +60,25 @@ export class FamilyDashboardComponent implements OnInit {
   loading = toSignal(this.store.select(FamilySelectors.selectFamilyLoading), { initialValue: true });
 
   recentActivities = computed(() => {
+    const mems = this.members();
     return this.recentTxns().map(tx => {
       let payerId = tx.userId;
       let payerName = tx.userDisplayName || 'Unknown';
       let payerPhoto = tx.userPhotoURL;
       let payerLabel = payerName;
 
-      if (tx.splitData) {
+      // Handle Settlement transactions
+      if (tx.category === 'Settlement' && tx.settlementFromUserId) {
+        payerId = tx.settlementFromUserId;
+        const fromMember = mems.find(m => m.userId === tx.settlementFromUserId);
+        if (fromMember) {
+          payerName = fromMember.displayName;
+          payerPhoto = fromMember.photoURL;
+        }
+        payerLabel = payerId === this.currentUserId ? 'You' : payerName;
+      } 
+      // Handle Split transactions
+      else if (tx.splitData) {
         if (tx.splitData.paidByUserId === 'multiple') {
           payerId = 'multiple';
           payerName = 'Multiple';
@@ -78,7 +90,9 @@ export class FamilyDashboardComponent implements OnInit {
           payerPhoto = tx.splitData.paidByPhotoURL || tx.userPhotoURL;
           payerLabel = payerId === this.currentUserId ? 'You' : payerName;
         }
-      } else {
+      } 
+      // Handle Simple transactions
+      else {
         payerLabel = payerId === this.currentUserId ? 'You' : payerName;
       }
 

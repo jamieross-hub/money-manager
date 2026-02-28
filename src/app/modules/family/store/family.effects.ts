@@ -87,6 +87,13 @@ export class FamilyEffects {
     )
   );
 
+  refreshUserFamilies$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(FamilyActions.createFamilySuccess, FamilyActions.joinFamilySuccess),
+      map(() => FamilyActions.loadUserFamilies())
+    )
+  );
+
   loadMembers$ = createEffect(() =>
     this.actions$.pipe(
       ofType(FamilyActions.loadMembers),

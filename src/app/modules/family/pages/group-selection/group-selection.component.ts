@@ -352,7 +352,6 @@ export class GroupSelectionComponent implements OnInit {
     ref.afterClosed().subscribe(async result => {
       if (result) {
         this.store.dispatch(FamilyActions.createFamily({ request: result }));
-        this.loadGroups();
       }
     });
   }
@@ -362,7 +361,6 @@ export class GroupSelectionComponent implements OnInit {
     ref.afterClosed().subscribe(async code => {
       if (code) {
         this.store.dispatch(FamilyActions.joinFamily({ inviteCode: code }));
-        await this.loadGroups();
       }
     });
   }
