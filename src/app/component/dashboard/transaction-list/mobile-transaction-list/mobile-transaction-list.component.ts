@@ -220,14 +220,15 @@ export class MobileTransactionListComponent
         _accountType: account?.type || 'Unknown',
         _dateDisplay: dateObj.format('dd MMM '),
         _timeDisplay: dateObj.format('hh:mm a'),
-        _fullDateDisplay: createdDateObj.format('DD MMM YYYY, hh:mm a'), 
+        _fullTransactionDateDisplay: dateObj.format('DD MMM YYYY, hh:mm a'),
         _syncStatusColor: this.getSyncStatusColor(tx),
         _syncStatusIcon: this.getSyncStatusIcon(tx),
         _syncStatusInfo: this.getSyncStatusInfo(tx),
         _recurringInfo: this.getRecurringInfo(tx),
         _isIncome: tx.type === 'income',
         _categoryBgColor: (category?.color || '#46777f') + '20',
-        _updatedDisplay: tx.updatedAt ? dayjs(this.dateService.toDate(tx.updatedAt)).format('DD MMM YYYY, hh:mm a') : 
+        _createdAtDisplay: tx.createdAt ? dayjs(this.dateService.toDate(tx.createdAt)).format('DD MMM YYYY, hh:mm a') : 'N/A',
+        _updatedAtDisplay: tx.updatedAt ? dayjs(this.dateService.toDate(tx.updatedAt)).format('DD MMM YYYY, hh:mm a') : 
                         (tx.createdAt ? dayjs(this.dateService.toDate(tx.createdAt)).format('DD MMM YYYY, hh:mm a') : 'N/A'),
         _isUpcoming: !!tx.isPending && (tx.id?.startsWith('upcoming-') || false),
         _dueStatus: tx.date ? this.getDueStatus(this.dateService.toDate(tx.date)!) : '',

@@ -24,8 +24,7 @@ import { ValidationService } from 'src/app/util/service/validation.service';
 import { IncludesPipe } from 'src/app/util/pipes/includes.pipe';
 import { AddAccountDialogComponent } from 'src/app/component/dashboard/accounts/add-account-dialog/add-account-dialog.component';
 import { MobileCategoryAddEditPopupComponent } from 'src/app/component/dashboard/category/mobile-category-add-edit-popup/mobile-category-add-edit-popup.component';
-import dayjs from 'dayjs';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+
 import { LoaderService } from 'src/app/util/service/loader.service';
 import { DateService } from 'src/app/util/service/date.service';
 import { AppState } from 'src/app/store/app.state';
@@ -58,7 +57,7 @@ import { FamilyMember, SplitBetweenMember, PaidByMember } from 'src/app/util/mod
 import { MultiplePaidBySheetComponent } from './multiple-paid-by-sheet/multiple-paid-by-sheet.component';
 import { SplitConfigSheetComponent, SplitConfigSheetData, SplitMode } from './split-config-sheet/split-config-sheet.component';
 
-dayjs.extend(isSameOrBefore);
+
 
 @Component({
   selector: 'app-mobile-add-transaction',
@@ -174,8 +173,13 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     private bottomSheet: MatBottomSheet
   ) {
     this.isGuestUser = this.userService.isGuestUser();
-    this.recurringMinDate = dayjs().add(1, 'day').format('YYYY-MM-DD');
-    this.recurringMaxDate = dayjs().add(1, 'year').format('YYYY-MM-DD');
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    this.recurringMinDate = this.dateService.toLocalISOString(tomorrow);
+    
+    const nextYear = new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+    this.recurringMaxDate = this.dateService.toLocalISOString(nextYear);
 
     this.categoryList$ = this.store.select(selectAllCategories);
     this.accountList$ = this.store.select(selectAllAccounts);
@@ -202,7 +206,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     this.transactionForm = this.fb.group({
 
       amount: ['', this.validationService.getTransactionAmountValidators()],
-      date: [dayjs().format('YYYY-MM-DD'), Validators.required],
+      date: [this.dateService.toLocalISOString(new Date()), Validators.required],
       description: [''],
       categoryId: ['', Validators.required],
       categoryName: ['', Validators.required],
@@ -215,8 +219,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       // Recurring fields
       isRecurring: [false],
       recurringInterval: [RecurringInterval.MONTHLY],
-      recurringStartDate: [dayjs().format('YYYY-MM-DD')],
-      recurringEndDate: [dayjs().add(1, 'year').format('YYYY-MM-DD')],
+      recurringStartDate: [this.dateService.toLocalISOString(new Date())],
+      recurringEndDate: [this.dateService.toLocalISOString(nextYear)],
       recurringAmount: [0],
       recurringNotes: [''],
       recurringCategoryId: [''],
@@ -349,12 +353,12 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
 
   private patchTransactionForm(transaction: any): void {
-    this.transactionForm.patchValue({
+    const nextYear = new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
 
+    this.transactionForm.patchValue({
       amount: transaction.amount || '',
-      date: transaction.date ?
-        dayjs(this.dateService.toDate(transaction.date)).format('YYYY-MM-DD') :
-        dayjs().format('YYYY-MM-DD'),
+      date: this.dateService.toLocalISOString(transaction.date || new Date()),
       description: transaction.notes || '',
       categoryId: transaction.categoryId || '',
       categoryName: transaction.categoryName || '',
@@ -366,16 +370,12 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       paymentMethod: transaction.paymentMethod || '',
       isRecurring: transaction.isRecurring || false,
       recurringInterval: transaction.recurringInterval || RecurringInterval.MONTHLY,
-      recurringStartDate: transaction.nextOccurrence ?
-        dayjs(this.dateService.toDate(transaction.nextOccurrence)).format('YYYY-MM-DD') :
-        dayjs().format('YYYY-MM-DD'),
-      recurringEndDate: transaction.recurringEndDate ?
-        dayjs(this.dateService.toDate(transaction.recurringEndDate)).format('YYYY-MM-DD') :
-        dayjs().add(1, 'year').format('YYYY-MM-DD'),
-       paidByUserId: transaction.splitData?.paidByUserId || '',
-       paidBy: transaction.splitData?.paidBy || [],
-       splitBetween: transaction.splitData?.splitBetween || [],
-     });
+      recurringStartDate: this.dateService.toLocalISOString(transaction.nextOccurrence || new Date()),
+      recurringEndDate: this.dateService.toLocalISOString(transaction.recurringEndDate || nextYear),
+      paidByUserId: transaction.splitData?.paidByUserId || '',
+      paidBy: transaction.splitData?.paidBy || [],
+      splitBetween: transaction.splitData?.splitBetween || [],
+    });
 
     if (transaction.isCategorySplit) {
       this.transactionForm.patchValue({ isCategorySplit: true });
@@ -418,7 +418,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     } else {
       this.transactionForm.patchValue({
         amount: '',
-        date: dayjs().format('YYYY-MM-DD'),
+        date: this.dateService.toLocalISOString(new Date()),
         description: '',
         categoryId: '',
         categoryName: '',
@@ -549,7 +549,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           category: formData.categoryName,
           categoryId: formData.categoryId,
           type: formData.categoryType as TransactionType,
-          date: dayjs(formData.date).hour(dayjs().hour()).minute(dayjs().minute()).second(dayjs().second()).toDate(),
+          date: this.dateService.getLocalDateTimeFromForm(formData.date, true),
           notes: formData.description,
           taxAmount: formData.taxAmount || 0,
           taxPercentage: formData.taxPercentage || 0,
@@ -557,26 +557,29 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           paymentMethod: formData.paymentMethod || '',
           isRecurring: formData.isRecurring || false,
           recurringInterval: formData.recurringInterval || RecurringInterval.MONTHLY,
-          recurringEndDate: formData.recurringEndDate ? new Date(formData.recurringEndDate) : null,
+          recurringEndDate: formData.recurringEndDate ? this.dateService.getLocalDateTimeFromForm(formData.recurringEndDate) : null,
           nextOccurrence: formData.isRecurring ? (() => {
-            const startDate = dayjs(formData.recurringStartDate || formData.date);
-            const transactionDate = dayjs(formData.date);
+            const startStr = formData.recurringStartDate || formData.date;
+            const startDate = this.dateService.getLocalDateTimeFromForm(startStr);
+            const transactionDate = this.dateService.getLocalDateTimeFromForm(formData.date);
 
             // If start date is same or before transaction date, we need to calculate the NEXT occurrence
             // because the current transaction IS the first occurrence
-            if (startDate.isSameOrBefore(transactionDate, 'day')) {
-              const interval = formData.recurringInterval;
+            if (startDate.getTime() <= transactionDate.getTime()) {
+              const interval = formData.recurringInterval as RecurringInterval;
+              const nextDate = new Date(startDate);
               switch (interval) {
-                case 'daily': return startDate.add(1, 'days').toDate();
-                case 'weekly': return startDate.add(1, 'weeks').toDate();
-                case 'monthly': return startDate.add(1, 'months').toDate();
-                case 'yearly': return startDate.add(1, 'years').toDate();
-                default: return startDate.toDate();
+                case RecurringInterval.DAILY: nextDate.setDate(nextDate.getDate() + 1); break;
+                case RecurringInterval.WEEKLY: nextDate.setDate(nextDate.getDate() + 7); break;
+                case RecurringInterval.MONTHLY: nextDate.setMonth(nextDate.getMonth() + 1); break;
+                case RecurringInterval.YEARLY: nextDate.setFullYear(nextDate.getFullYear() + 1); break;
+                default: break;
               }
+              return nextDate;
             }
 
             // If start date is in the future, that IS the next occurrence
-            return startDate.toDate();
+            return startDate;
           })() : null,
           status: TransactionStatus.COMPLETED,
           isSplitTransaction: formData.isSplitTransaction || false,

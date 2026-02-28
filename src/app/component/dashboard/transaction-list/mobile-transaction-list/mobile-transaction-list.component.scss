@@ -660,8 +660,8 @@
 // Transaction Cards
 .transaction-card {
   background: white;
-  border-radius: 12px;
-  margin-bottom: 10px;
+  border-radius: 10px;
+  margin-bottom: 8px;
   border: 1px solid #e5e7eb;
   overflow: hidden;
   transition: all 0.2s ease;
@@ -678,7 +678,7 @@
   }
 
   &.selected {
-    border-color: #3b82f6;
+    border-color: var(--primary-500);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
 
@@ -706,8 +706,8 @@
 .transaction-main {
   display: flex;
   align-items: center;
-  padding: 12px;
-  gap: 12px;
+  padding: 8px 12px;
+  gap: 10px;
 }
 
 .transaction-icon {
@@ -715,9 +715,9 @@
 }
 
 .icon-container {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -734,16 +734,16 @@
 
 .income-icon {
   color: #059669;
-  font-size: 22px;
-  width: 22px;
-  height: 22px;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
 }
 
 .expense-icon {
   color: #dc2626;
-  font-size: 22px;
-  width: 22px;
-  height: 22px;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
 }
 
 .transaction-details {
@@ -767,14 +767,14 @@
 }
 
 .transaction-category {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #6b7280;
   font-weight: 500;
   margin: 0;
 }
 
 .transaction-date {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #9ca3af;
   display: flex;
   align-items: center;
@@ -805,7 +805,7 @@
 }
 
 .amount-value {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   margin: 0;
 
@@ -986,31 +986,30 @@
 .transaction-details-expanded {
   background: #f8fafc;
   border-top: 1px solid #e5e7eb;
-  padding: 16px 12px;
+  padding: 10px 12px;
   animation: slideDown 0.3s ease;
-
- 
 }
 
 .details-container {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 4px;
 }
 
 .detail-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 8px 0;
+  padding: 4px 0;
   border-bottom: 1px solid #f1f5f9;
+  gap: 12px;
 
   &:last-child {
     border-bottom: none;
   }
 
   :host-context(.dark-theme) & {
-    border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
+    border-color: var(--primary-200);
   }
 }
 
@@ -1019,24 +1018,26 @@
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
-  min-width: 120px;
+  min-width: 110px;
+  color: #6b7280;
+  padding-top: 1px; // Align with the first line of the value
+
+  span {
+    font-size: 12px;
+    font-weight: 500;
+    color: #4b5563;
+
+    :host-context(.dark-theme) & {
+      color: #9ca3af;
+    }
+  }
 }
 
 .detail-icon {
   font-size: 18px;
   width: 18px;
   height: 18px;
-  color: #6b7280;
-}
-
-.detail-label span {
-  font-size: 14px;
-  font-weight: 500;
-  color: #374151;
-
-  :host-context(.dark-theme) & {
-    color: mat.get-theme-color(dark.$dark-theme, neutral, 90);
-  }
+  color: #9ca3af;
 }
 
 .detail-value {
@@ -1045,11 +1046,12 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 2px;
+  gap: 4px;
+  min-width: 0; // Allow wrapping
 }
 
 .account-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #1f2937;
 
@@ -1059,7 +1061,7 @@
 }
 
 .account-type {
-  font-size: 12px;
+  font-size: 11px;
   color: #6b7280;
   font-style: italic;
 }
@@ -1093,23 +1095,29 @@
 }
 
 .created-date,
-.created-time {
-  font-size: 14px;
-  color: #6b7280;
+.created-time,
+.updated-date,
+.tax-amount,
+.tax-percentage {
+  font-size: 13px;
+  font-weight: 500;
+  color: #4b5563;
+
+  :host-context(.dark-theme) & {
+    color: #9ca3af;
+  }
 }
 
 .transaction-notes {
-  font-size: 14px;
-  color: #374151;
+  font-size: 13px;
+  color: var(--primary-600);
   font-style: italic;
   line-height: 1.4;
-  text-align: left;
-  max-width: 200px;
+  text-align: right;
   word-wrap: break-word;
+  max-width: 100%;
 
-  :host-context(.dark-theme) & {
-    color: mat.get-theme-color(dark.$dark-theme, neutral, 90);
-  }
+  
 }
 
 // Floating Action Button

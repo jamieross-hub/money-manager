@@ -136,6 +136,29 @@ export class DateService {
   }
 
   /**
+   * Converts a form date string (YYYY-MM-DD) to a local Date object.
+   * If preserveTime is true, it keeps the current hour, minute, and second.
+   * @param formDate - string in YYYY-MM-DD format
+   * @param preserveTime - boolean to preserve current time
+   * @returns Date object in local time
+   */
+  getLocalDateTimeFromForm(formDate: string, preserveTime: boolean = false): Date {
+    if (!formDate) return new Date();
+    
+    const [year, month, day] = formDate.split('-').map(Number);
+    const date = new Date();
+    date.setFullYear(year);
+    date.setMonth(month - 1);
+    date.setDate(day);
+    
+    if (!preserveTime) {
+      date.setHours(0, 0, 0, 0);
+    }
+    
+    return date;
+  }
+
+  /**
    * Compare two date values safely
    * @param date1 - First date value
    * @param date2 - Second date value
@@ -234,9 +257,26 @@ export class DateService {
   }
 
   /**
-   * Get date as ISO string for form inputs
+   * Get date as local ISO string for form inputs (YYYY-MM-DD)
+   * This respects the local timezone unlike toISOString()
    * @param dateValue - Date value
-   * @returns ISO date string (YYYY-MM-DD)
+   * @returns ISO date string (YYYY-MM-DD) in local time
+   */
+  toLocalISOString(dateValue: any): string {
+    const date = this.toDate(dateValue);
+    if (!date) return '';
+
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * Get date as UTC ISO string (YYYY-MM-DD)
+   * @param dateValue - Date value
+   * @returns ISO date string (YYYY-MM-DD) in UTC
    */
   toISOString(dateValue: any): string {
     const date = this.toDate(dateValue);

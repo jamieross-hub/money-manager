@@ -373,21 +373,9 @@
 								</div>
 								<div class="detail-value">
 									<span class="account-name">{{ tx._accountName }}</span>
-									<span class="account-type" *ngIf="tx._accountType">({{
-										tx._accountType }})</span>
+									<span class="account-type" *ngIf="tx._accountType">({{ tx._accountType }})</span>
 								</div>
 							</div>
-
-							<!-- Transaction ID -->
-							<!-- <div class="detail-row" *ngIf="tx.id">
-								<div class="detail-label">
-									<mat-icon class="detail-icon">fingerprint</mat-icon>
-									<span>Transaction ID</span>
-								</div>
-								<div class="detail-value">
-									<span class="transaction-id">{{ tx.id }}</span>
-								</div>
-							</div> -->
 
 							<!-- Recurring Status -->
 							<div class="detail-row" *ngIf="tx.isRecurring">
@@ -400,39 +388,36 @@
 								</div>
 							</div>
 
-							<!-- Sync Status -->
-							<!-- <div class="detail-row" *ngIf="!isGuest()">
+							<!-- Transaction Date -->
+							<div class="detail-row">
 								<div class="detail-label">
-									<mat-icon class="detail-icon" [style.color]="tx._syncStatusColor">{{
-										tx._syncStatusIcon }}</mat-icon>
-									<span>Status</span>
+									<mat-icon class="detail-icon">event</mat-icon>
+									<span>Date</span>
 								</div>
 								<div class="detail-value">
-									<span class="sync-status" [style.color]="tx._syncStatusColor">{{
-										tx._syncStatusInfo }}</span>
+									<span class="transaction-date font-medium">{{ tx._fullTransactionDateDisplay }}</span>
 								</div>
-							</div> -->
+							</div>
 
-							<!-- Created Date -->
-							<div class="detail-row">
+							<!-- Created Date (Commented out by user) -->
+							<!-- <div class="detail-row">
 								<div class="detail-label">
 									<mat-icon class="detail-icon">schedule</mat-icon>
 									<span>Created Date</span>
 								</div>
 								<div class="detail-value">
-									<span class="created-date">{{ tx._fullDateDisplay
-										}}</span>
+									<span class="created-date">{{ tx._createdAtDisplay }}</span>
 								</div>
-							</div>
+							</div> -->
 
-							<!-- Created Time -->
+							<!-- Updated Date -->
 							<div class="detail-row">
 								<div class="detail-label">
 									<mat-icon class="detail-icon">update</mat-icon>
-									<span>Update Date</span>
+									<span>Updated Date</span>
 								</div>
 								<div class="detail-value">
-									<span class="created-time">{{ tx._updatedDisplay }}</span>
+									<span class="updated-date">{{ tx._updatedAtDisplay }}</span>
 								</div>
 							</div>
 
@@ -464,19 +449,20 @@
 									<mat-icon class="detail-icon">payment</mat-icon>
 									<span>Tax Amount</span>
 								</div>
-								<div class="detail-value"></div>
-								<span class="tax-amount">{{ tx.taxAmount | currency }}</span>
+								<div class="detail-value">
+									<span class="tax-amount">{{ tx.taxAmount | currency }}</span>
+								</div>
 							</div>
-						</div>
 
-						<!-- Tax Percentage -->
-						<div class="detail-row" *ngIf="tx.taxPercentage">
-							<div class="detail-label">
-								<mat-icon class="detail-icon">payment</mat-icon>
-								<span>Tax Percentage</span>
-							</div>
-							<div class="detail-value">
-								<span class="tax-percentage">{{ tx.taxPercentage }}%</span>
+							<!-- Tax Percentage -->
+							<div class="detail-row" *ngIf="tx.taxPercentage">
+								<div class="detail-label">
+									<mat-icon class="detail-icon">percent</mat-icon>
+									<span>Tax Percentage</span>
+								</div>
+								<div class="detail-value">
+									<span class="tax-percentage">{{ tx.taxPercentage }}%</span>
+								</div>
 							</div>
 						</div>
 
