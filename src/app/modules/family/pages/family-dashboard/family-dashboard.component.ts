@@ -10,6 +10,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatRippleModule } from '@angular/material/core';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 
 import { AppState } from 'src/app/store/app.state';
 import * as FamilyActions from '../../store/family.actions';
@@ -24,6 +26,9 @@ import { QuickActionsFabComponent, QuickActionsFabConfig, QuickAction } from 'sr
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
 import { CurrencyPipe } from 'src/app/util/pipes';
+import { ReportService } from 'src/app/util/service/db/report.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+
 @Component({
   selector: 'app-family-dashboard',
   standalone: true,
@@ -38,7 +43,10 @@ import { CurrencyPipe } from 'src/app/util/pipes';
     MatRippleModule,
     QuickActionsFabComponent,
     MatDialogModule,
-    CurrencyPipe
+    CurrencyPipe,
+    MatMenuModule,
+    MatDividerModule,
+    MatSnackBarModule
   ],
   templateUrl: './family-dashboard.component.html',
   styleUrls: ['./family-dashboard.component.scss']
@@ -52,6 +60,8 @@ export class FamilyDashboardComponent implements OnInit {
   private route = inject(ActivatedRoute);
   readonly breakpointService = inject(BreakpointService);
   private destroyRef = inject(DestroyRef);
+  private reportService = inject(ReportService);
+  private snackBar = inject(MatSnackBar);
 
   family = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null });
   members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers), { initialValue: [] as FamilyMember[] });
@@ -184,6 +194,50 @@ export class FamilyDashboardComponent implements OnInit {
         this.store.dispatch(FamilyActions.loadFamily({ familyId: id }));
       } else {
         this.store.dispatch(FamilyActions.loadMyFamily());
+      }
+    });
+  }
+
+  generateReport() {
+    const fam = this.family();
+    const userEmail = this.auth.currentUser?.email;
+    
+    if (!fam?.id || !userEmail) {
+      this.snackBar.open('Unable to generate report: Missing data', 'Close', { duration: 3000 });
+      return;
+    }
+
+    // Check if a report is already pending
+    this.reportService.getPendingReport(fam.id).subscribe({
+      next: (pendingReport) => {
+        if (pendingReport) {
+          this.snackBar.open('A report is already being prepared. Please check your email shortly.', 'Close', { 
+            duration: 5000 
+          });
+          return;
+        }
+
+        // If no pending report, request a new one
+        this.reportService.requestReport({
+          email: userEmail,
+          familyId: fam.id,
+          type: 'family_overview'
+        }).subscribe({
+          next: () => {
+            this.snackBar.open('Report requested! You will receive it via email soon.', 'Close', { 
+              duration: 5000,
+              panelClass: ['success-snackbar']
+            });
+          },
+          error: (err) => {
+            console.error('Report request failed:', err);
+            this.snackBar.open('Failed to request report. Please try again later.', 'Close', { duration: 3000 });
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error checking pending reports:', err);
+        // Fallback: Just try to request if check fails
       }
     });
   }

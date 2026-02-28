@@ -49,19 +49,46 @@
           </div>
         </div>
 
-        <!-- Header Actions -->
-        <div class="flex items-center gap-1">
-          <button mat-icon-button class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors" [routerLink]="['/dashboard/family/members']" matTooltip="Manage members">
+        <!-- Header Actions: Positioned Top Right -->
+        <div class="absolute top-4 right-3 flex items-center gap-0.5">
+          <button mat-icon-button class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors" 
+                  [routerLink]="['/dashboard/family/members']" matTooltip="Manage members">
             <mat-icon>manage_accounts</mat-icon>
           </button>
-          <button mat-icon-button class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors" [routerLink]="['/dashboard/family/reports']" matTooltip="Reports">
-            <mat-icon>insights</mat-icon>
+          
+          <!-- More Options Menu -->
+          <button mat-icon-button [matMenuTriggerFor]="familyMenu" 
+                  class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                  matTooltip="More options">
+            <mat-icon>more_vert</mat-icon>
           </button>
-          <button mat-icon-button class="text-red-400/80 hover:text-red-600 dark:hover:text-red-400 transition-colors" 
-                  (click)="deleteFamily()" 
-                  [matTooltip]="fam.ownerUserId === currentUserId ? 'Delete Family' : 'Leave Family'">
-            <mat-icon>{{ fam.ownerUserId === currentUserId ? 'delete_outline' : 'logout' }}</mat-icon>
-          </button>
+          
+          <mat-menu #familyMenu="matMenu" xPosition="before" class="!rounded-2xl !overflow-hidden border border-gray-100 dark:border-gray-800 shadow-xl">
+            <button mat-menu-item (click)="generateReport()">
+              <div class="flex items-center">
+                <mat-icon class="!mr-3 text-primary-500">mail_outline</mat-icon>
+                <div class="flex flex-col">
+                  <span class="font-medium">Email PDF Report</span>
+                  <span class="text-[10px] text-gray-500 -mt-0.5">Sends summary to your email</span>
+                </div>
+              </div>
+            </button>
+            <button mat-menu-item [routerLink]="['/dashboard/family/reports']">
+              <div class="flex items-center">
+                <mat-icon class="!mr-3 text-primary-500">insights</mat-icon>
+                <span class="font-medium">View Visual Reports</span>
+              </div>
+            </button>
+            
+            <mat-divider class="!my-1"></mat-divider>
+            
+            <button mat-menu-item (click)="deleteFamily()">
+              <div class="flex items-center text-red-500">
+                <mat-icon class="!mr-3 text-red-500">{{ fam.ownerUserId === currentUserId ? 'delete_outline' : 'logout' }}</mat-icon>
+                <span class="font-medium">{{ fam.ownerUserId === currentUserId ? 'Delete Family' : 'Leave Family' }}</span>
+              </div>
+            </button>
+          </mat-menu>
         </div>
       </div>
 
