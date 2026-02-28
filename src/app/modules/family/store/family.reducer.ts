@@ -67,4 +67,8 @@ export const familyReducer = createReducer(
     ...state,
     settlements: [settlement, ...state.settlements],
   })),
+  on(FamilyActions.deleteSettlementSuccess, (state, { settlementId }) => ({
+    ...state,
+    settlements: state.settlements.filter(s => s.id !== settlementId),
+  })),
 );

@@ -16,7 +16,7 @@ import { HapticFeedbackService } from '../haptic-feedback.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { UserService } from './user.service';
 import { LocalStorageKeyHelper } from '../../models/local-storage.model';
-import { of, map, from, catchError, tap, timeout } from 'rxjs';
+import { of, map, from, catchError, tap, timeout, switchMap } from 'rxjs';
 
 @Injectable({
     providedIn: 'root'
@@ -140,6 +140,51 @@ export class CategoryService {
                     console.error('[CategoryService] Pull failed:', error);
                 }
                 return of(undefined);
+            })
+        );
+    }
+
+    findOrCreateSystemCategory(
+        userId: string,
+        categoryName: string,
+        type: TransactionType,
+        icon: string,
+        color: string
+    ): Observable<string> {
+        return this.getCategories(userId).pipe(
+            switchMap(categories => {
+                // Try to find by flag first
+                let existing = categories.find(c => c.isSystem && c.type === type && c.name?.toLowerCase() === categoryName.toLowerCase());
+                
+                if (existing?.id) return of(existing.id);
+
+                // Fallback: search by name and type for backward compatibility
+                const legacy = categories.find(c => 
+                    c.name?.toLowerCase() === categoryName.toLowerCase() && 
+                    c.type === type
+                );
+
+                if (legacy) {
+                    // Migrate legacy category by setting isSystem to true
+                    return this.updateCategory(
+                        userId, 
+                        legacy.id!, 
+                        legacy.name || categoryName, 
+                        legacy.type!, 
+                        legacy.icon || icon, 
+                        legacy.color || color, 
+                        legacy.budget, 
+                        legacy.parentCategoryId, 
+                        legacy.isSubCategory, 
+                        legacy.group, 
+                        true // isSystem
+                    ).pipe(
+                        map(() => legacy.id!)
+                    );
+                }
+
+                // Neither found, create new
+                return this.createCategory(userId, categoryName, type, icon, color, undefined, true);
             })
         );
     }

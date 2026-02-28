@@ -32,6 +32,16 @@ export class CategoryFacadeService {
         return this.activeService.pullFromFirestore(userId);
     }
 
+    findOrCreateSystemCategory(
+        userId: string,
+        categoryName: string,
+        type: TransactionType,
+        icon: string,
+        color: string
+    ): Observable<string> {
+        return this.activeService.findOrCreateSystemCategory(userId, categoryName, type, icon, color);
+    }
+
     createCategory(userId: string, name: string, type: TransactionType, icon: string, color: string, group?: string, isSystem: boolean = false): Observable<string> {
         return this.activeService.createCategory(userId, name, type, icon, color, group, isSystem);
     }

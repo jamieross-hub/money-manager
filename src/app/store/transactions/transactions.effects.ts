@@ -47,6 +47,22 @@ export class TransactionsEffects {
         ))
   ));
 
+  cascadeDeleteSettlement$ = createEffect(() => this.actions$.pipe(
+    ofType(TransactionsActions.deleteTransactionSuccess),
+    mergeMap(({ transaction }) => {
+      // If the deleted personal transaction was linked to a settlement, delete the settlement too.
+      // E.g., user deletes the "Settlement" transfer from their transaction list.
+      if (transaction.settlementId && transaction.settlementFamilyId) {
+        return of({
+          type: '[Family] Delete Settlement',
+          familyId: transaction.settlementFamilyId,
+          settlementId: transaction.settlementId
+        });
+      }
+      return of({ type: '[Transactions] No Cascade Actions Needed' });
+    })
+  ));
+
   getTransaction$ = createEffect(() => this.actions$.pipe(
     ofType(TransactionsActions.getTransaction),
     mergeMap(({ userId, transactionId }) => 

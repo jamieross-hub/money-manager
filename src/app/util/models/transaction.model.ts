@@ -77,6 +77,10 @@ export interface Transaction extends Auditable, RecurrenceInfo {
   syncStatus: SyncStatus;
   isPending?: boolean;
   lastSyncedAt?: Date | Timestamp;
+
+  // Settlement link (set when this transaction was auto-created from a settlement)
+  settlementId?: string;
+  settlementFamilyId?: string;
 }
 
 /**

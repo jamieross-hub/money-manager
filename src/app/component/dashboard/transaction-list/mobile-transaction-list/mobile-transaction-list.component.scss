@@ -33,39 +33,154 @@
 // Active Filters Indicator
 .active-filters-indicator {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  flex-direction: column;
   background: var(--primary-50);
   border: 1px solid var(--primary-200);
-  border-radius: 8px;
+  border-radius: 12px;
   margin-bottom: 8px;
   animation: fadeIn 0.3s ease;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 
   :host-context(.dark-theme) & {
-    background: rgba(mat.get-theme-color(dark.$dark-theme, primary, 40), 0.2);
-    border-color: mat.get-theme-color(dark.$dark-theme, primary, 40);
+    background: rgba(mat.get-theme-color(dark.$dark-theme, primary, 40), 0.1);
+    border-color: rgba(mat.get-theme-color(dark.$dark-theme, primary, 40), 0.3);
+  }
+
+  &:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+    border-color: var(--primary-300);
+  }
+
+  &.expanded {
+    background: var(--surface-100);
+    border-color: var(--primary-400);
+
+  
+  }
+
+  .indicator-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    width: 100%;
   }
 
   .filter-icon {
     color: var(--primary-600);
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-
-    // :host-context(.dark-theme) & {
-    // 	color: #60a5fa;
-    // }
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
   }
 
   .filter-text {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--primary-600);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary-700);
+    flex: 1;
 
-    // :host-context(.dark-theme) & {
-    // 	color: #60a5fa;
-    // }
+    :host-context(.dark-theme) & {
+      color: mat.get-theme-color(dark.$dark-theme, primary, 80);
+    }
+  }
+
+  .expand-icon {
+    color: var(--primary-400);
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    transition: transform 0.2s ease;
+  }
+
+  .active-filter-details {
+    padding: 0 12px 12px 12px;
+    border-top: 1px solid rgba(var(--primary-600), 0.1);
+    animation: slideDown 0.2s ease-out;
+
+    .filter-chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .filter-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 9999px;
+      transition: all 0.15s ease;
+
+      :host-context(.dark-theme) & {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      &:hover {
+        background: var(--surface-50);
+        border-color: var(--primary-300);
+      }
+
+      mat-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+        color: var(--neutral-500);
+      }
+
+      .chip-text {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--neutral-700);
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        :host-context(.dark-theme) & {
+          color: var(--neutral-300);
+        }
+      }
+
+      button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        color: var(--neutral-400);
+        transition: color 0.15s ease;
+
+        &:hover {
+          color: #ef4444;
+        }
+
+        mat-icon {
+          font-size: 14px;
+          width: 14px;
+          height: 14px;
+        }
+      }
+    }
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -174,7 +289,7 @@
   :host-context(.dark-theme) & {
     background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
     border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
-    color: mat.get-theme-color(dark.$dark-theme, neutral, 95);
+    color: mat.get-theme-color(dark.$dark-theme, neutral, 90);
   }
 
   &:hover {
@@ -311,7 +426,7 @@
     transition: all 0.2s ease;
 
     :host-context(.dark-theme) & {
-      color: mat.get-theme-color(dark.$dark-theme, neutral, 95);
+      color: mat.get-theme-color(dark.$dark-theme, neutral, 90);
 
       &:hover {
         background: mat.get-theme-color(dark.$dark-theme, neutral-variant, 20);
@@ -438,7 +553,7 @@
 
       &:hover {
         background-color: rgba(255, 255, 255, 0.05);
-        color: mat.get-theme-color(dark.$dark-theme, neutral, 95);
+        color: mat.get-theme-color(dark.$dark-theme, neutral, 90);
       }
     }
   }
@@ -485,7 +600,7 @@
   margin-bottom: 8px;
 
   :host-context(.dark-theme) & {
-    color: mat.get-theme-color(dark.$dark-theme, neutral, 95);
+    color: mat.get-theme-color(dark.$dark-theme, neutral, 90);
   }
 }
 
@@ -647,7 +762,7 @@
   margin: 0;
 
   :host-context(.dark-theme) & {
-    color: mat.get-theme-color(dark.$dark-theme, neutral, 95);
+    color: mat.get-theme-color(dark.$dark-theme, neutral, 90);
   }
 }
 
@@ -874,10 +989,7 @@
   padding: 16px 12px;
   animation: slideDown 0.3s ease;
 
-  :host-context(.dark-theme) & {
-    background: mat.get-theme-color(dark.$dark-theme, neutral, 6);
-    border-color: mat.get-theme-color(dark.$dark-theme, neutral-variant, 30);
-  }
+ 
 }
 
 .details-container {
@@ -942,7 +1054,7 @@
   color: #1f2937;
 
   :host-context(.dark-theme) & {
-    color: mat.get-theme-color(dark.$dark-theme, neutral, 95);
+    color: mat.get-theme-color(dark.$dark-theme, neutral, 90);
   }
 }
 
@@ -1125,5 +1237,35 @@
 
   mat-icon {
     color: var(--primary-600);
+  }
+}
+
+.quick-clear-btn {
+  width: 28px !important;
+  height: 28px !important;
+  line-height: 28px !important;
+  margin-left: auto;
+  color: var(--primary-600);
+  background: rgba(var(--primary-rgb), 0.1);
+  border-radius: 50%;
+  padding: 0;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+
+  :host-context(.dark-theme) & {
+    color: #60a5fa;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  mat-icon {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  &:hover {
+    background: rgba(var(--primary-rgb), 0.2);
+    transform: scale(1.1);
   }
 }

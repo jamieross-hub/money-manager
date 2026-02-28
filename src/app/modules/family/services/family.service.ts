@@ -568,6 +568,10 @@ export class FamilyService {
     return { id: ref.id, ...data };
   }
 
+  async deleteSettlement(familyId: string, settlementId: string): Promise<void> {
+    await deleteDoc(doc(this.firestore, `${this.FAMILIES_COL}/${familyId}/settlements/${settlementId}`));
+  }
+
   /**
    * Compute net balances from split-expense shares minus recorded settlements.
    * Returns entries where `amount > 0` (from owes to).

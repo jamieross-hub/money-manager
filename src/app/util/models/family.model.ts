@@ -153,6 +153,8 @@ export interface Settlement {
   note?: string;
   settledAt: Date | Timestamp;
   createdAt: Date | Timestamp;
+  /** ID of the personal transfer transaction linked to this settlement */
+  linkedTransactionId?: string;
 }
 
 export interface AddSettlementRequest {
@@ -166,6 +168,8 @@ export interface AddSettlementRequest {
   amount: number;
   method: SettlementMethod;
   note?: string;
+  /** ID of the personal transfer transaction linked to this settlement */
+  linkedTransactionId?: string;
 }
 
 /**

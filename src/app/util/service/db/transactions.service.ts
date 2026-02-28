@@ -269,7 +269,7 @@ export class TransactionsService extends BaseService {
             if (transactionToDelete) {
                 this.localStorageUtility.deleteEntity('transactions', transactionId, 'id');
                 // Update store immediately
-                this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ transactionId }));
+                this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ transactionId, transaction: transactionToDelete }));
                 // Update account balance
                 this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
                     userId: userId,
@@ -301,7 +301,9 @@ export class TransactionsService extends BaseService {
 
             // 1. Optimistic updates
             handleBalanceDeletion();
-            this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ transactionId }));
+            if (transactionToDelete) {
+                this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ transactionId, transaction: transactionToDelete }));
+            }
             
             // 2. Update cache immediately
             this.updateTransactionCache(userId, 'delete', { id: transactionId } as Transaction);

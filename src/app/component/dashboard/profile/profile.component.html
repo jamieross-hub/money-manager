@@ -15,12 +15,18 @@
 		<div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pt-0 sm:pt-0 mt-0">
 			<!-- Left side: Avatar and Info -->
 			<div class="flex items-start gap-4 ">
-				<div
-					class="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-primary-400 to-secondary-500 flex items-center justify-center flex-shrink-0 shadow-inner mt-1">
+				<div (click)="fileInput.click()"
+					class="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-primary-400 to-secondary-500 flex items-center justify-center flex-shrink-0 shadow-inner mt-1 relative cursor-pointer group">
 					<img *ngIf="userProfile()?.photoURL" [src]="userProfile()?.photoURL"
-						class="w-full h-full object-cover " alt="Profile Photo">
-					<mat-icon class="text-white " *ngIf="!userProfile()?.photoURL">person</mat-icon>
+						class="w-full h-full object-cover" alt="Profile Photo">
+					<mat-icon class="text-white" *ngIf="!userProfile()?.photoURL">person</mat-icon>
+					
+					<!-- Upload Overlay -->
+					<div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+						<mat-icon class="text-white scale-75">camera_alt</mat-icon>
+					</div>
 				</div>
+				<input type="file" #fileInput (change)="onProfileImageSelected($event)" accept="image/*" class="hidden">
 				<div class="flex flex-col">
 					<p class="text-xl font-bold text-gray-900 dark:text-white m-0">{{ fullName() }}</p>
 					<p class="text-sm text-gray-500 dark:text-gray-400 m-0 mt-0.5">{{ userProfile()?.email }}</p>

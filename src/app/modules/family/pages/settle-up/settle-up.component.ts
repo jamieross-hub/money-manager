@@ -3,6 +3,7 @@ import {
   computed, effect, DestroyRef
 } from '@angular/core';
 import { Store } from '@ngrx/store';
+import { Actions, ofType } from '@ngrx/effects';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,6 +14,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatRippleModule } from '@angular/material/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { take, switchMap, map } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   SettleAvatarPipe, SettleAvatarColorPipe,
@@ -24,12 +26,17 @@ import { AppState } from 'src/app/store/app.state';
 import * as FamilyActions from '../../store/family.actions';
 import * as FamilySelectors from '../../store/family.selectors';
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
+import * as TransactionsActions from 'src/app/store/transactions/transactions.actions';
 import { FamilyService } from '../../services/family.service';
+import { CategoryService } from 'src/app/util/service/db/category.service';
 import {
   FamilyMember, FamilyTransaction, Settlement, BalanceEntry, AddSettlementRequest
 } from 'src/app/util/models/family.model';
 import { SettleDialogComponent, SettleDialogData } from './settle-dialog/settle-dialog.component';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
+import { TransactionType, SyncStatus, TransactionStatus, AccountType } from 'src/app/util/config/enums';
+import { Transaction } from 'src/app/util/models/transaction.model';
+import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
 @Component({
   selector: 'app-settle-up',
   standalone: true,
@@ -50,8 +57,10 @@ import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage
 export class SettleUpComponent implements OnInit {
   private store = inject(Store<AppState>);
   private familyService = inject(FamilyService);
+  private categoryService = inject(CategoryService);
   private dialog = inject(MatDialog);
   private destroyRef = inject(DestroyRef);
+  private actions$ = inject(Actions);
 
   family = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null });
   members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers), { initialValue: [] as FamilyMember[] });
@@ -65,6 +74,27 @@ export class SettleUpComponent implements OnInit {
   get currentUserId(): string { return this.profile()?.uid ?? ''; }
 
   private storageService = inject(LocalIndexDBStorageService);
+
+  /** User's accounts for default account resolution */
+  private readonly accounts = toSignal(
+    this.store.select(selectAllAccounts),
+    { initialValue: [] as any[] }
+  );
+
+  /**
+   * Mirrors the default account priority logic from mobile-add-transaction:
+   * 1. First BANK type account
+   * 2. First account if only one exists
+   * 3. Fallback: 'settlement'
+   */
+  private getDefaultAccountId(): string {
+    const accs = this.accounts();
+    if (!accs || accs.length === 0) return 'settlement';
+    const bankAccount = accs.find(a => a.type === AccountType.BANK);
+    if (bankAccount) return bankAccount.accountId;
+    if (accs.length === 1) return accs[0].accountId;
+    return 'settlement';
+  }
 
   /** All outstanding balances (from owes to) */
   balances = computed<BalanceEntry[]>(() => {
@@ -148,6 +178,54 @@ export class SettleUpComponent implements OnInit {
 
     ref.afterClosed().subscribe((req: AddSettlementRequest | undefined) => {
       if (req) {
+        const famId = this.family()?.id;
+
+        // 1. Subscribe to the successful settlement action BEFORE dispatching it
+        const sub = this.actions$.pipe(
+          ofType(FamilyActions.addSettlementSuccess),
+          take(1),
+          switchMap(({ settlement }: { settlement: Settlement }) => {
+            return this.categoryService.findOrCreateSystemCategory(
+              req.fromUserId,
+              'Settlement',
+              TransactionType.TRANSFER,
+              'handshake',
+              '#10b981'
+            ).pipe(
+              map((categoryId: string) => ({ settlement, categoryId }))
+            );
+          })
+        ).subscribe(({ settlement, categoryId }) => {
+          const userId = req.fromUserId;
+          const now = new Date();
+          const methodLabel = req.method === 'cash' ? 'Cash'
+            : req.method === 'upi' ? 'UPI'
+            : 'Bank Transfer';
+
+          const transferTx: Omit<Transaction, 'id'> = {
+            userId,
+            accountId: this.getDefaultAccountId(),
+            categoryId: categoryId,
+            category: 'Settlement',
+            payee: req.toDisplayName,
+            amount: req.amount,
+            type: TransactionType.TRANSFER,
+            date: now,
+            notes: `Settlement: ${req.fromDisplayName} \u2192 ${req.toDisplayName} via ${methodLabel}${req.note ? ' | ' + req.note : ''}`,
+            status: TransactionStatus.COMPLETED,
+            syncStatus: SyncStatus.PENDING,
+            createdAt: now,
+            updatedAt: now,
+            createdBy: userId,
+            updatedBy: userId,
+            settlementId: settlement.id,
+            settlementFamilyId: famId
+          };
+
+          this.store.dispatch(TransactionsActions.createTransaction({ userId, transaction: transferTx }));
+        });
+
+        // 2. Dispatch the settlement ONLY AFTER the listener is set up
         this.store.dispatch(FamilyActions.addSettlement({ request: req }));
       }
     });

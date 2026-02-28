@@ -147,7 +147,11 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   public filteredCategories: ReplaySubject<Category[]> = new ReplaySubject<Category[]>(1);
   protected _onDestroy = new Subject<void>();
   public isGuestUser: boolean = false;
-  private popstateListener = () => {
+  private popstateListener = (event: PopStateEvent) => {
+    if (this.isMobile) {
+      // Prevent other popstate listeners (like the router) from seeing this event
+      event.stopImmediatePropagation();
+    }
     this.dialogRef.close();
   };
 
@@ -230,6 +234,11 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     });
 
     this.isMobile = this.breakpointObserver.isMatched('(max-width: 640px)');
+
+    // Intercept hardware back button on mobile
+    if (this.isMobile) {
+      window.history.pushState({ modal: 'add-transaction' }, '');
+    }
   }
 
   ngOnInit(): void {
@@ -237,7 +246,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     this.initializeFormData();
     this.loadFamilyGroupInfo();
 
-    window.addEventListener('popstate', this.popstateListener);
+    window.addEventListener('popstate', this.popstateListener, { capture: true });
   }
 
   /** Loads the active family group's mode and member list */
@@ -540,7 +549,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           category: formData.categoryName,
           categoryId: formData.categoryId,
           type: formData.categoryType as TransactionType,
-          date: new Date(formData.date + ' ' + this.dateService.now().toDate().toLocaleTimeString()),
+          date: dayjs(formData.date).hour(dayjs().hour()).minute(dayjs().minute()).second(dayjs().second()).toDate(),
           notes: formData.description,
           taxAmount: formData.taxAmount || 0,
           taxPercentage: formData.taxPercentage || 0,
@@ -937,7 +946,13 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   }
 
   ngOnDestroy() {
-    window.removeEventListener('popstate', this.popstateListener);
+    window.removeEventListener('popstate', this.popstateListener, { capture: true });
+
+    // If dialog is closed via UI (Save/Cancel), clean up the history entry we pushed
+    if (this.isMobile && window.history.state?.modal === 'add-transaction') {
+      window.history.back();
+    }
+
     this._onDestroy.next();
     this._onDestroy.complete();
   }

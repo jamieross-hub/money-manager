@@ -98,9 +98,13 @@ export class UserComponent {
   });
 
   readonly profileImage = computed(() => {
-    const url = this.user()?.photoURL;
-    if (!url || url === 'undefined' || url === 'null') return 'assets/images/profile.png';
-    return url;
+    // Priority: custom photo from firestore profile > google photo from auth > safe default
+    const customUrl = this.userProfile()?.photoURL;
+    if (customUrl && customUrl !== 'undefined' && customUrl !== 'null' && !customUrl.includes('assets/images')) {
+      return this.userService.getAvatarUrl(customUrl);
+    }
+    
+    return this.userService.getAvatarUrl(this.user()?.photoURL);
   });
 
   readonly currentUserId = computed(() => this.userService.getCurrentUserId());
@@ -139,6 +143,10 @@ export class UserComponent {
   }
 
   // ── Template helpers ───────────────────────────────────────────────────────
+  getMemberAvatarUrl(member: FamilyMember): string {
+    return this.userService.getAvatarUrl(member.photoURL);
+  }
+
   onImageError(): void {
     this.photoURLOverride.set('assets/images/profile.png');
   }

@@ -59,3 +59,5 @@ export const loadSettlementsFailure = createAction('[Family] Load Settlements Fa
 export const addSettlement = createAction('[Family] Add Settlement', props<{ request: AddSettlementRequest }>());
 export const addSettlementSuccess = createAction('[Family] Add Settlement Success', props<{ settlement: Settlement }>());
 export const addSettlementFailure = createAction('[Family] Add Settlement Failure', props<{ error: string }>());
+export const deleteSettlement = createAction('[Family] Delete Settlement', props<{ familyId: string; settlementId: string }>());
+export const deleteSettlementSuccess = createAction('[Family] Delete Settlement Success', props<{ settlementId: string }>());

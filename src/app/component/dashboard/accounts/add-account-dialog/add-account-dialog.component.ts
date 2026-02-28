@@ -586,41 +586,12 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
   }
 
   private findOrCreateLoanPaymentCategory(userId: string): Observable<string> {
-    return this.categoryService.getCategories(userId).pipe(
-      switchMap(categories => {
-        // Try to find by flag first
-        let existing = categories.find(c => c.isSystem && c.type === TransactionType.EXPENSE && c.name?.toLowerCase() === 'loan payment');
-        
-        if (existing?.id) return of(existing.id);
-
-        // Fallback: search by name and type for backward compatibility
-        const legacy = categories.find(c => 
-          c.name.toLowerCase() === 'loan payment' && 
-          c.type === TransactionType.EXPENSE
-        );
-
-        if (legacy) {
-          // Migrate legacy category by setting isSystem to true
-          return this.categoryService.updateCategory(
-            userId, 
-            legacy.id!, 
-            legacy.name, 
-            legacy.type, 
-            legacy.icon, 
-            legacy.color, 
-            legacy.budget, 
-            legacy.parentCategoryId, 
-            legacy.isSubCategory, 
-            legacy.group, 
-            true // isSystem
-          ).pipe(
-            map(() => legacy.id!)
-          );
-        }
-
-        // Neither found, create new
-        return this.categoryService.createCategory(userId, 'Loan Payment', TransactionType.EXPENSE, 'account_balance', '#ef4444', undefined, true);
-      })
+    return this.categoryService.findOrCreateSystemCategory(
+      userId,
+      'Loan Payment',
+      TransactionType.EXPENSE,
+      'account_balance',
+      '#ef4444'
     );
   }
 

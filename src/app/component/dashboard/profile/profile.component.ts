@@ -764,6 +764,69 @@ export class ProfileComponent {
     });
   }
 
+  onProfileImageSelected(event: any): void {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 256;
+        const MAX_HEIGHT = 256;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        const base64Image = canvas.toDataURL('image/jpeg', 0.8);
+        const profile = this.userProfile();
+        if (profile) {
+          const updatedProfile: User = { ...profile, photoURL: base64Image, updatedAt: new Date() };
+          this.userProfile.set(updatedProfile);
+          
+          this.isLoading.set(true);
+          try {
+            if (this.userService.isGuestUser()) {
+              this.userService.storageService.setItem(`user-data-${updatedProfile.uid}`, updatedProfile);
+              this.store.dispatch(ProfileActions.setProfile({ profile: updatedProfile }));
+              this.notificationService.success('Profile picture updated successfully.');
+            } else {
+              this.store.dispatch(ProfileActions.updateProfile({
+                userId: updatedProfile.uid,
+                profile: updatedProfile
+              }));
+              this.notificationService.success(SUCCESS_MESSAGES.GENERAL.PROFILE_UPDATED);
+            }
+          } catch (error) {
+            console.error('Error saving profile picture:', error);
+            this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
+          } finally {
+            this.isLoading.set(false);
+          }
+        }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  }
+
   // ─── Utility Methods ──────────────────────────────────────────────
 
   getTimezoneLabel(timezoneValue: string): string {

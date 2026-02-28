@@ -223,4 +223,22 @@ export class FamilyEffects {
       )
     )
   );
+
+  deleteSettlement$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(FamilyActions.deleteSettlement),
+      mergeMap(({ familyId, settlementId }) =>
+        from(this.familyService.deleteSettlement(familyId, settlementId)).pipe(
+          map(() => {
+            this.notificationService.success('Settlement reverted');
+            return FamilyActions.deleteSettlementSuccess({ settlementId });
+          }),
+          catchError(err => {
+            this.notificationService.error('Failed to revert settlement');
+            return of(FamilyActions.clearError());
+          })
+        )
+      )
+    )
+  );
 }

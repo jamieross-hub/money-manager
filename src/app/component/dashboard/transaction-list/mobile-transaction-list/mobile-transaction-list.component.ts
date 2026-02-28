@@ -57,6 +57,11 @@ import { AppViewService } from 'src/app/util/service/app-view.service';
 import { UserService } from 'src/app/util/service/db/user.service';
 
 import { TransactionsService } from 'src/app/util/service/db/transactions.service';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map, distinctUntilChanged } from 'rxjs/operators';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
+import * as FamilySelectors from 'src/app/modules/family/store/family.selectors';
+import { FamilyMember } from 'src/app/util/models/family.model';
 
 dayjs.extend(weekOfYear);
 
@@ -142,6 +147,35 @@ export class MobileTransactionListComponent
   selectedDateRange = signal<{ startDate: Date; endDate: Date } | null>(null);
   selectedSort = signal<string>('date-desc');
   isRecurringFilter = signal<boolean | null>(null);
+  showActiveFilterDetails = signal<boolean>(false);
+
+  /**
+   * Toggles the visibility of individual filter chips.
+   */
+  toggleFilterDetails(event: MouseEvent) {
+    if ((event.target as HTMLElement).closest('.quick-clear-btn')) return;
+    this.showActiveFilterDetails.set(!this.showActiveFilterDetails());
+  }
+
+  /**
+   * Clears a specific filter type.
+   */
+  clearFilter(type: 'search' | 'category' | 'type' | 'date') {
+    switch (type) {
+      case 'search':
+        this.onSearchChange('');
+        break;
+      case 'category':
+        this.onCategoryChange('all');
+        break;
+      case 'type':
+        this.onTypeChange('all');
+        break;
+      case 'date':
+        this.onDateRangeChange(null);
+        break;
+    }
+  }
 
   // Computed View Models
   groupedTransactions = computed(() => {
@@ -279,6 +313,40 @@ export class MobileTransactionListComponent
 
   isGuest = computed(() => this.userService.isGuestUser());
 
+  /** True when the user's preferences have isFamilyMode enabled */
+  isFamilyMode = toSignal(
+    this.store.select(ProfileSelectors.selectProfile).pipe(
+      map(profile => profile?.preferences?.isFamilyMode ?? false)
+    ),
+    { initialValue: false }
+  );
+
+  /** Current user's UID */
+  private readonly currentUserProfile = this.store.selectSignal(ProfileSelectors.selectProfile);
+  get currentUserId(): string { return this.currentUserProfile()?.uid ?? ''; }
+
+  /** Family members list (for role lookups) */
+  familyMembers = toSignal(
+    this.store.select(FamilySelectors.selectFamilyMembers),
+    { initialValue: [] as FamilyMember[] }
+  );
+
+  /**
+   * Returns true if the current user can edit/delete the given transaction.
+   * - In personal mode: always allowed.
+   * - In family mode: only the creator of the transaction OR an admin can edit/delete.
+   */
+  canEditDelete(tx: Transaction): boolean {
+    if (!this.isFamilyMode()) return true;
+    const uid = this.currentUserId;
+    if (!uid) return false;
+    // Creator can always edit/delete their own transaction
+    if (tx.createdBy === uid || tx.userId === uid) return true;
+    // Admins can edit/delete any transaction
+    const me = this.familyMembers().find(m => m.userId === uid);
+    return me?.role === 'admin';
+  }
+
   // Labels (Computed)
   currentSortLabel = computed(() => {
     const option = this.sortOptions.find(opt => opt.value === this.selectedSort());
@@ -344,16 +412,26 @@ export class MobileTransactionListComponent
       this.showFilters = true;
     }
 
-    // Set initial date range based on App View preference
+    // Set initial date range based on App View preference and Family Mode
     this.subscription.add(
-      this.appViewService.appView$.subscribe(view => {
-        let range = 'this-month';
-        if (view === 'WEEKLY') {
-          range = 'this-week';
-        } else if (view === 'YEARLY') {
-          range = 'this-year';
+      this.store.select(ProfileSelectors.selectProfile).pipe(
+        map(profile => ({
+          view: profile?.preferences?.appView || 'MONTHLY',
+          isFamilyMode: profile?.preferences?.isFamilyMode ?? false
+        })),
+        distinctUntilChanged((prev, curr) => prev.view === curr.view && prev.isFamilyMode === curr.isFamilyMode)
+      ).subscribe(({ view, isFamilyMode }) => {
+        if (isFamilyMode) {
+          this.onDateRangeChange(null);
+        } else {
+          let range = 'this-month';
+          if (view === 'WEEKLY') {
+            range = 'this-week';
+          } else if (view === 'YEARLY') {
+            range = 'this-year';
+          }
+          this.onDateRangeChange(range);
         }
-        this.onDateRangeChange(range);
       })
     );
 

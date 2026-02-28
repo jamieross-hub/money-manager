@@ -8,7 +8,7 @@
 		<div *ngIf="isFamilyMode() && familyMembers().length > 0" class="avatar-stack flex items-center -space-x-4 mx-1">
 			<img *ngFor="let member of familyMembers().slice(0, 3)" 
 				class="flex-shrink-0 object-cover rounded-full w-8 h-8 border-2 border-white dark:border-slate-900 shadow-sm"
-				[src]="member.photoURL || 'assets/images/profile.png'" 
+				[src]="getMemberAvatarUrl(member)" 
 				[alt]="member.displayName"
 				[matTooltip]="member.displayName"
 				[style.z-index]="member.userId === currentUserId() ? '20' : 'auto'" />
