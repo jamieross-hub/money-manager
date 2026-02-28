@@ -34,7 +34,7 @@ import * as FamilyActions from '../../store/family.actions';
 import { selectUserFamilies, selectUserFamiliesLoading, selectFamilyError } from '../../store/family.selectors';
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import { QuickActionsFabComponent, QuickAction, QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
-
+import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 // ─── View Model ──────────────────────────────────────────────────────────────
 
 export type GroupType = 'family' | 'trip' | 'work' | 'other';
@@ -128,16 +128,27 @@ export class GroupSelectionComponent implements OnInit {
 
   groupSpends = signal<Record<string, number>>({});
 
+  private storageService = inject(LocalIndexDBStorageService);
+
   constructor() {
     effect(() => {
       const families = this.rawFamilies() || [];
       families.forEach(f => {
         if (f.id && this.groupSpends()[f.id] === undefined) {
-          // Initialize to 0 so we only fetch once per group
-          this.groupSpends.update(spends => ({ ...spends, [f.id as string]: 0 }));
+          const cacheKey = `groupSpends_${f.id}`;
+          const cachedSpend = this.storageService.getItem<number>(cacheKey);
+
+          if (cachedSpend !== null) {
+            this.groupSpends.update(spends => ({ ...spends, [f.id as string]: cachedSpend }));
+          } else {
+             // Initialize to 0 so we only fetch once per group
+             this.groupSpends.update(spends => ({ ...spends, [f.id as string]: 0 }));
+          }
+
           this.familyService.getTransactions(f.id).subscribe(txs => {
             const expense = txs.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
             this.groupSpends.update(spends => ({ ...spends, [f.id as string]: expense }));
+            this.storageService.setItem(cacheKey, expense);
           });
         }
       });

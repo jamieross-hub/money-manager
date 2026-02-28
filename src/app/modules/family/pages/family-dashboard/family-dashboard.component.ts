@@ -20,7 +20,7 @@ import { FamilyJoinDialogComponent } from '../../dialogs/family-join-dialog/fami
 import { FamilyTransaction, FamilyStats, Family, FamilyMember } from 'src/app/util/models/family.model';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { QuickActionsFabComponent, QuickActionsFabConfig, QuickAction } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
-
+import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 @Component({
   selector: 'app-family-dashboard',
   standalone: true,
@@ -97,10 +97,27 @@ export class FamilyDashboardComponent implements OnInit {
     }, { allowSignalWrites: true });
   }
 
+  private storageService = inject(LocalIndexDBStorageService);
+
   stats = computed(() => {
     const fam = this.family();
-    if (!fam) return null;
-    return this.familyService.computeStats(this.transactions(), this.members());
+    const trans = this.transactions();
+    const mems = this.members();
+
+    if (!fam?.id) return null;
+    
+    const cacheKey = `stats_${fam.id}`;
+    
+    if (mems.length === 0) {
+      const cachedStats = this.storageService.getItem<FamilyStats>(cacheKey);
+      if (cachedStats) {
+        return cachedStats;
+      }
+    }
+
+    const calculatedStats = this.familyService.computeStats(trans, mems);
+    this.storageService.setItem(cacheKey, calculatedStats);
+    return calculatedStats;
   });
 
   currentUserId = this.auth.currentUser?.uid;

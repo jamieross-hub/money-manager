@@ -29,7 +29,7 @@ import {
   FamilyMember, FamilyTransaction, Settlement, BalanceEntry, AddSettlementRequest
 } from 'src/app/util/models/family.model';
 import { SettleDialogComponent, SettleDialogData } from './settle-dialog/settle-dialog.component';
-
+import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 @Component({
   selector: 'app-settle-up',
   standalone: true,
@@ -64,14 +64,35 @@ export class SettleUpComponent implements OnInit {
   private readonly profile = this.store.selectSignal(ProfileSelectors.selectProfile);
   get currentUserId(): string { return this.profile()?.uid ?? ''; }
 
+  private storageService = inject(LocalIndexDBStorageService);
+
   /** All outstanding balances (from owes to) */
-  balances = computed<BalanceEntry[]>(() =>
-    this.familyService.computeBalances(
-      this.transactions(),
-      this.members(),
-      this.settlements()
-    )
-  );
+  balances = computed<BalanceEntry[]>(() => {
+    const trans = this.transactions();
+    const mems = this.members();
+    const sets = this.settlements();
+    const fam = this.family();
+
+    if (!fam?.id) return [];
+
+    const cacheKey = `balances_${fam.id}`;
+
+    // If data isn't fully loaded yet (e.g. initial mount), try to return the cached calculation from indexdb
+    if (mems.length === 0) {
+      const cachedBalances = this.storageService.getItem<BalanceEntry[]>(cacheKey);
+      if (cachedBalances && cachedBalances.length > 0) {
+        return cachedBalances;
+      }
+    }
+
+    // Perform calculation when data is loaded
+    const calculatedBalances = this.familyService.computeBalances(trans, mems, sets);
+
+    // Save calculation temp in indexdb to improve performance on next load
+    this.storageService.setItem(cacheKey, calculatedBalances);
+
+    return calculatedBalances;
+  });
 
   /** Balances involving the current user (highlighted) */
   myBalances = computed<BalanceEntry[]>(() => {

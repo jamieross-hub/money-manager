@@ -151,21 +151,6 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
       //   order: 5
       // }
     ]
-  },
-  {
-    label: 'NAVIGATION.ADMIN',
-    icon: 'admin_panel_settings',
-    order: 4,
-    isExpanded: false,
-    isCollapsible: true,
-    children: [
-      {
-        label: 'NAVIGATION.ADMIN_PANEL',
-        route: '/admin',
-        icon: 'admin_panel_settings',
-        order: 1
-      }
-    ]
   }
 ];
 

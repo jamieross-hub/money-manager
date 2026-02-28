@@ -10,6 +10,7 @@ import { AppState } from 'src/app/store/app.state';
 import * as FamilySelectors from '../../store/family.selectors';
 import { FamilyTransaction, FamilyMember, FamilyStats } from 'src/app/util/models/family.model';
 import { FamilyService } from '../../services/family.service';
+import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 
 @Component({
   selector: 'app-family-reports',
@@ -28,9 +29,29 @@ export class FamilyReportsComponent implements OnInit {
   transactions = signal<FamilyTransaction[]>([]);
   loading = signal(true);
 
+  private storageService = inject(LocalIndexDBStorageService);
+
   stats = computed(() => {
-    if (!this.transactions().length && !this.members().length) return null;
-    return this.familyService.computeStats(this.transactions(), this.members());
+    const mems = this.members();
+    const trans = this.transactions();
+    
+    const familyId = this.familyService.activeFamilyId();
+    if (!familyId) return null;
+
+    const cacheKey = `stats_${familyId}`;
+
+    if (mems.length === 0) {
+      const cachedStats = this.storageService.getItem<FamilyStats>(cacheKey);
+      if (cachedStats) {
+        return cachedStats;
+      }
+    }
+
+    if (!trans.length && !mems.length) return null;
+    
+    const calculatedStats = this.familyService.computeStats(trans, mems);
+    this.storageService.setItem(cacheKey, calculatedStats);
+    return calculatedStats;
   });
 
   categoryBreakdown = computed(() => {
