@@ -4,7 +4,6 @@ import { SignInComponent } from './component/auth/sign-in/sign-in.component';
 import { RegistrationComponent } from './component/auth/registration/registration.component';
 import { DashboardComponent } from './component/dashboard/dashboard.component';
 import { AuthGuard } from './util/guard/auth.guard';
-import { AdminGuard } from './util/guard/admin.guard';
 import { HomeComponent } from './component/dashboard/home/home.component';
 import { LandingComponent } from './component/landing/landing.component';
 import { NotificationSettingsComponent } from './util/components/notification-settings/notification-settings.component';
