@@ -243,7 +243,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit {
         this.hapticFeedback.successVibration();
       }
 
-      this.dialogRef.close(true);
+      this.dialogRef.close(formValue);
     } catch (error) {
       this.notificationService.error('Failed to save category');
       console.error('Error saving category:', error);

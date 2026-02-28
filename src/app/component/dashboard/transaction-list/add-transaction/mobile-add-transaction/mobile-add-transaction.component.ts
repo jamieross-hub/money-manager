@@ -468,6 +468,15 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
         if (transaction?.categoryId) {
           this.onCategoryChange(transaction.categoryId);
+        } else {
+          // If no previous transaction (first time), select the first available category
+          this.categoryList$.pipe(take(1)).subscribe(categories => {
+            const nonSystemCategories = categories.filter(c => !c.isSystem);
+            const defaultCat = nonSystemCategories.find(c => c.type === TransactionType.EXPENSE) || nonSystemCategories[0];
+            if (defaultCat?.id) {
+              this.onCategoryChange(defaultCat.id);
+            }
+          });
         }
       });
     }
@@ -694,10 +703,25 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   }
 
   openNewCategoryDialog(): void {
-    this.dialog.open(MobileCategoryAddEditPopupComponent, {
+    const dialogRef = this.dialog.open(MobileCategoryAddEditPopupComponent, {
       data: null, // null for new category
       disableClose: true,
       panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
+    });
+
+    dialogRef.afterClosed().subscribe((result: any) => {
+      if (result && typeof result === 'object' && result.name) {
+        // Wait for the store to update the categories list, then select it
+        this.categoryList$.pipe(
+          filter(categories => categories.some(c => c.name === result.name && c.type === result.type)),
+          take(1)
+        ).subscribe(categories => {
+          const newCat = categories.find(c => c.name === result.name && c.type === result.type);
+          if (newCat) {
+            this.onCategoryChange(newCat.id);
+          }
+        });
+      }
     });
   }
 
