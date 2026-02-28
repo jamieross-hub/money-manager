@@ -11,6 +11,8 @@ import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { SidebarNavParent, getAllNavigationItems } from '../../../util/config/sidebar.config';
 import { UserService } from 'src/app/util/service/db/user.service';
+import { User } from 'src/app/util/models';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'side-bar',
@@ -32,14 +34,16 @@ export class SideBarComponent implements AfterViewInit {
   @ViewChild('drawer') drawer!: MatDrawer;
   isAdmin: boolean = false;
   navigationSections: SidebarNavParent[] = [];
+  user$: Observable<User | null>;
 
   constructor(
     private auth: Auth,
     public router: Router,
     private elementRef: ElementRef,
-    private userService: UserService
+    public userService: UserService
   ) {
     this.navigationSections = getAllNavigationItems();
+    this.user$ = this.userService.userAuth$;
   }
 
   ngOnInit() {

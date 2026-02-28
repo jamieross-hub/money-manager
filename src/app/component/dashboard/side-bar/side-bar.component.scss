@@ -1,5 +1,5 @@
-.example-container {
-  background: transparent !important;
+:host {
+  display: block;
 }
 
 // Make the container non-blocking
@@ -8,21 +8,80 @@ mat-drawer-container {
   position: fixed !important;
   inset: 0 !important;
   z-index: 1000 !important;
+  background: transparent !important;
 }
 
 // Re-enable pointers for interactive children
-mat-drawer,
-.drawer-content-trigger,
-::ng-deep .mat-drawer-backdrop.mat-drawer-shown {
+mat-drawer {
   pointer-events: auto !important;
 }
 
-.full-height {
-  @apply h-[100vh];
+.drawer-content-trigger {
+  pointer-events: auto !important;
 }
 
-.color-ball {
-  height: 3rem;
-  width: 3rem;
-  font-size: clamp(2.5rem, 6vw, 4rem);
+::ng-deep .mat-drawer-backdrop.mat-drawer-shown {
+  pointer-events: auto !important;
+  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.4) !important;
+}
+
+.active-link {
+  @apply bg-blue-50/80 dark:bg-blue-900/20 shadow-sm shadow-blue-100/50 dark:shadow-none;
+  
+  .active-icon-bg {
+    @apply bg-blue-600 shadow-lg shadow-blue-200 dark:shadow-none;
+    
+    mat-icon {
+      @apply text-white;
+    }
+  }
+  
+  span {
+    @apply text-blue-700 dark:text-blue-400 font-bold;
+  }
+  
+  .active-indicator {
+    @apply opacity-100 translate-x-0;
+  }
+}
+
+.custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 0px;
+  }
+  
+  @media (min-width: 768px) {
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+      @apply bg-gray-200 dark:bg-slate-700 rounded-full;
+    }
+  }
+}
+
+// Safe area handling for notched mobile devices
+.mat-drawer {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.premium-badge {
+    animation: shimmer 2s infinite;
+    background: linear-gradient(
+      90deg,
+      #fcd34d 0%,
+      #fbbf24 50%,
+      #fcd34d 100%
+    );
+    background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
 }
