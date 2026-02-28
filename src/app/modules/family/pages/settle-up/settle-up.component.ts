@@ -12,6 +12,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatRippleModule } from '@angular/material/core';
 import { MatBadgeModule } from '@angular/material/badge';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   SettleAvatarPipe, SettleAvatarColorPipe,
@@ -38,7 +39,7 @@ import { SettleDialogComponent, SettleDialogData } from './settle-dialog/settle-
     MatButtonModule, MatIconModule,
     MatProgressSpinnerModule, MatChipsModule,
     MatDividerModule, MatDialogModule,
-    MatRippleModule, MatBadgeModule,
+    MatRippleModule, MatBadgeModule, MatTooltipModule,
     SettleAvatarPipe, SettleAvatarColorPipe,
     MethodIconPipe, MethodLabelPipe,
     SettleDatePipe, IOWEPipe, OwedToMePipe,
@@ -122,9 +123,6 @@ export class SettleUpComponent implements OnInit {
 
     const ref = this.dialog.open(SettleDialogComponent, {
       data,
-      width: '100%',
-      maxWidth: '420px',
-      panelClass: 'settle-dialog-panel',
     });
 
     ref.afterClosed().subscribe((req: AddSettlementRequest | undefined) => {

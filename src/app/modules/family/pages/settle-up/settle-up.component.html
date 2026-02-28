@@ -1,175 +1,188 @@
-<div class="min-h-screen bg-surface-100 dark:bg-gray-900 pb-24">
+<div class="settle-up-page">
 
   <!-- ═══════════ HEADER ═══════════ -->
-  <div class="settle-header px-4 pt-5 pb-5">
-    <div class="flex items-center justify-between mb-1">
+  <header class="settle-header">
+    <div class="header-content !mb-0">
       <div>
-        <h1 class="text-2xl font-black text-white tracking-tight">Settle Up</h1>
-        <p class="text-indigo-200 text-sm mt-0.5">{{ family()?.name }}</p>
+        <p class="text-2xl font-bold">Settle Up</p>
+        <p class="group-name">{{ family()?.name }}</p>
       </div>
-      <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+      <div class="h-10 w-10 flex items-center justify-center bg-white/10 rounded-xl hover:bg-white/20 transition-colors cursor-help" 
+           matTooltip="View group settlement rules">
         <mat-icon class="text-white !text-xl">handshake</mat-icon>
       </div>
     </div>
 
-    <!-- My balance summary pills -->
-    <div class="flex gap-2 mt-4 flex-wrap" *ngIf="!loading()">
-      <div class="balance-pill bg-red-500/90"
-           *ngIf="totalOwedByMe() > 0">
-        <mat-icon class="!text-sm !w-4 !h-4">arrow_upward</mat-icon>
+    <!-- Summary Pills (Owe/Owed) -->
+    <div class="flex gap-2 flex-wrap" *ngIf="!loading()">
+      <div class="balance-pill debt" *ngIf="totalOwedByMe() > 0">
+        <mat-icon class="!text-xs h-4 w-4">arrow_outward</mat-icon>
         <span>You owe ₹{{ totalOwedByMe() | number:'1.0-0' }}</span>
       </div>
-      <div class="balance-pill bg-emerald-500/90"
-           *ngIf="totalOwedToMe() > 0">
-        <mat-icon class="!text-sm !w-4 !h-4">arrow_downward</mat-icon>
+      <div class="balance-pill credit" *ngIf="totalOwedToMe() > 0">
+        <mat-icon class="!text-xs h-4 w-4">call_received</mat-icon>
         <span>₹{{ totalOwedToMe() | number:'1.0-0' }} owed to you</span>
       </div>
-      <div class="balance-pill bg-white/20"
-           *ngIf="totalOwedByMe() === 0 && totalOwedToMe() === 0 && !settlementsLoading()">
-        <mat-icon class="!text-sm !w-4 !h-4">check_circle</mat-icon>
-        <span>All settled up!</span>
+      <div class="balance-pill" *ngIf="totalOwedByMe() === 0 && totalOwedToMe() === 0 && !settlementsLoading()">
+        <mat-icon class="!text-xs h-4 w-4">verified</mat-icon>
+        <span>All settled up</span>
       </div>
     </div>
-  </div>
+  </header>
 
-  <!-- ═══════════ LOADING ═══════════ -->
-  <div *ngIf="loading()" class="flex justify-center py-16">
-    <mat-spinner diameter="36"></mat-spinner>
-  </div>
+  <!-- ═══════════ CONTENT ═══════════ -->
+  <main class="content-container mt-5">
 
-  <div *ngIf="!loading()" class="px-4 space-y-6 mt-4">
-
-    <!-- ═══════════ MY BALANCES ═══════════ -->
-    <section *ngIf="myBalances().length > 0">
-      <h2 class="section-label">Your Balances</h2>
-      <div class="card-list">
-        <div *ngFor="let b of myBalances(); trackBy: trackByEntry"
-             class="balance-card"
-             [class.owe-card]="b | iOwe : currentUserId"
-             [class.receive-card]="b | owedToMe : currentUserId"
-             matRipple>
-
-          <!-- Avatars -->
-          <div class="avatar-stack">
-            <div class="avatar" [style.background]="b.fromUserId | settleAvatarColor">
-              {{ b.fromDisplayName | settleAvatar }}
-            </div>
-            <div class="avatar-arrow">
-              <mat-icon class="!text-sm">arrow_forward</mat-icon>
-            </div>
-            <div class="avatar" [style.background]="b.toUserId | settleAvatarColor">
-              {{ b.toDisplayName | settleAvatar }}
-            </div>
-          </div>
-
-          <!-- Label -->
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-neutral-800 dark:text-white leading-tight">
-              <ng-container *ngIf="b | iOwe : currentUserId">
-                You owe <span class="text-red-500">{{ b.toDisplayName }}</span>
-              </ng-container>
-              <ng-container *ngIf="b | owedToMe : currentUserId">
-                <span class="text-emerald-500">{{ b.fromDisplayName }}</span> owes you
-              </ng-container>
-            </p>
-            <p class="text-xl font-black mt-0.5"
-               [class.text-red-500]="b | iOwe : currentUserId"
-               [class.text-emerald-500]="b | owedToMe : currentUserId">
-              ₹{{ b.amount | number:'1.0-0' }}
-            </p>
-          </div>
-
-          <!-- Settle button -->
-          <button class="settle-btn"
-                  [class.settle-btn-pay]="b | iOwe : currentUserId"
-                  [class.settle-btn-receive]="b | owedToMe : currentUserId"
-                  (click)="openSettleDialog(b)">
-            <mat-icon class="!text-base !w-4 !h-4 mr-1">swap_horiz</mat-icon>
-            Settle
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════ OTHER BALANCES ═══════════ -->
-    <section *ngIf="otherBalances().length > 0">
-      <h2 class="section-label">Other Balances</h2>
-      <div class="card-list">
-        <div *ngFor="let b of otherBalances(); trackBy: trackByEntry"
-             class="balance-card balance-card-neutral">
-
-          <!-- Avatars -->
-          <div class="avatar-stack">
-            <div class="avatar avatar-sm" [style.background]="b.fromUserId | settleAvatarColor">
-              {{ b.fromDisplayName | settleAvatar }}
-            </div>
-            <mat-icon class="!text-xs text-neutral-400 mx-0.5">arrow_forward</mat-icon>
-            <div class="avatar avatar-sm" [style.background]="b.toUserId | settleAvatarColor">
-              {{ b.toDisplayName | settleAvatar }}
-            </div>
-          </div>
-
-          <div class="flex-1 min-w-0">
-            <p class="text-sm text-neutral-600 dark:text-neutral-300">
-              {{ b.fromDisplayName }}
-              <mat-icon class="!text-xs align-middle">arrow_forward</mat-icon>
-              {{ b.toDisplayName }}
-            </p>
-          </div>
-
-          <span class="text-base font-bold text-neutral-700 dark:text-neutral-200">
-            ₹{{ b.amount | number:'1.0-0' }}
-          </span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════ ALL CLEAR ═══════════ -->
-    <div *ngIf="balances().length === 0 && !loading()"
-         class="flex flex-col items-center justify-center py-16 text-center">
-      <div class="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-4">
-        <mat-icon class="!text-4xl text-emerald-500">check_circle</mat-icon>
-      </div>
-      <p class="text-xl font-bold text-neutral-700 dark:text-white mb-1">All Settled Up! 🎉</p>
-      <p class="text-sm text-neutral-400">No outstanding balances in this group.</p>
+    <!-- Loading State -->
+    <div *ngIf="loading()" class="flex flex-col items-center justify-center py-24 gap-4">
+      <mat-spinner diameter="32" color="primary"></mat-spinner>
+      <p class="text-sm font-medium text-neutral-400">Updating balances...</p>
     </div>
 
-    <!-- ═══════════ SETTLEMENT HISTORY ═══════════ -->
-    <section *ngIf="settlements().length > 0">
-      <h2 class="section-label">Settlement History</h2>
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-neutral-100 dark:border-gray-700 overflow-hidden">
-        <div *ngFor="let s of settlements(); trackBy: trackBySettlement; let last = last"
-             class="flex items-center gap-3 px-4 py-3"
-             [class.border-b]="!last"
-             [class.border-neutral-100]="!last"
-             [class.dark:border-gray-700]="!last">
+    <ng-container *ngIf="!loading()">
 
-          <!-- Method icon -->
-          <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-indigo-50 dark:bg-indigo-900/30">
-            <mat-icon class="!text-lg text-indigo-500">{{ s.method | methodIcon }}</mat-icon>
+      <!-- ── Section: Your Balances ── -->
+      <section *ngIf="myBalances().length > 0">
+        <p class="section-label">Your Balances</p>
+        <div class="card-stack">
+          <div *ngFor="let b of myBalances(); trackBy: trackByEntry"
+               class="balance-card !flex-col !items-stretch !gap-3"
+               [class.owe]="b | iOwe : currentUserId"
+               [class.receive]="b | owedToMe : currentUserId"
+               (click)="openSettleDialog(b)"
+               matRipple>
+
+            <!-- Top Row: Participants & Action -->
+            <div class="flex items-center justify-between">
+              <!-- Visual Flow -->
+              <div class="avatar-pair shrink-0">
+                <div class="avatar" [style.background]="b.fromUserId | settleAvatarColor">
+                  <img *ngIf="b.fromPhotoURL" [src]="b.fromPhotoURL" alt="avatar" />
+                  <span *ngIf="!b.fromPhotoURL">{{ b.fromDisplayName | settleAvatar }}</span>
+                </div>
+                <div class="connector"><mat-icon>chevron_right</mat-icon></div>
+                <div class="avatar" [style.background]="b.toUserId | settleAvatarColor">
+                  <img *ngIf="b.toPhotoURL" [src]="b.toPhotoURL" alt="avatar" />
+                  <span *ngIf="!b.toPhotoURL">{{ b.toDisplayName | settleAvatar }}</span>
+                </div>
+              </div>
+
+              <!-- Action Button -->
+              <button mat-stroked-button class="flex-none"
+                      [class.pay]="b | iOwe : currentUserId"
+                      [class.get]="b | owedToMe : currentUserId"
+                      (click)="$event.stopPropagation(); openSettleDialog(b)">
+                <mat-icon class="!mr-1">{{ (b | iOwe : currentUserId) ? 'send' : 'login' }}</mat-icon>
+                <span>{{ (b | iOwe : currentUserId) ? 'Pay' : 'Settle' }}</span>
+              </button>
+            </div>
+
+            <!-- Bottom Row: Contextual Info -->
+            <div class="detail-row">
+              <p class="main-text truncate text-neutral-500 dark:text-neutral-400">
+                <ng-container *ngIf="b | iOwe : currentUserId">
+                  Pay <span class="highlight-red font-bold">{{ b.toDisplayName }}</span>
+                </ng-container>
+                <ng-container *ngIf="b | owedToMe : currentUserId">
+                  <span class="highlight-green font-bold">{{ b.fromDisplayName }}</span> owes
+                </ng-container>
+              </p>
+              <p class="amount-text !text-xl mt-1 !mb-0" 
+                 [class.text-red-600]="b | iOwe : currentUserId" 
+                 [class.text-primary-500]="b | owedToMe : currentUserId">
+                {{ b.amount | currency: 'INR':'symbol':'1.0-0' }}
+              </p>
+            </div>
           </div>
-
-          <!-- Details -->
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-neutral-800 dark:text-white leading-tight truncate">
-              {{ s.fromDisplayName }}
-              <mat-icon class="!text-xs align-middle text-neutral-400">arrow_forward</mat-icon>
-              {{ s.toDisplayName }}
-            </p>
-            <p class="text-xs text-neutral-400 mt-0.5">
-              {{ s.method | methodLabel }}
-              <span *ngIf="s.note" class="ml-1">· {{ s.note }}</span>
-              · {{ s.settledAt | settleDate }}
-            </p>
-          </div>
-
-          <!-- Amount -->
-          <span class="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex-shrink-0">
-            ₹{{ s.amount | number:'1.0-0' }}
-          </span>
         </div>
-      </div>
-    </section>
+      </section>
 
-  </div>
+      <!-- ── Section: Other Balances ── -->
+      <section *ngIf="otherBalances().length > 0">
+        <p class="section-label">Other Balances</p>
+        <div class="card-stack">
+          <div *ngFor="let b of otherBalances(); trackBy: trackByEntry"
+               class="flex flex-col gap-2 px-4 py-3 pb-[5px] bg-white dark:bg-neutral-800 rounded-xl border border-neutral-100 dark:border-neutral-700/50">
+            
+            <!-- Top Row: Participants & Amount -->
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold text-white overflow-hidden" 
+                     [style.background]="b.fromUserId | settleAvatarColor">
+                  <img *ngIf="b.fromPhotoURL" [src]="b.fromPhotoURL" alt="avatar" class="w-full h-full object-cover" />
+                  <span *ngIf="!b.fromPhotoURL">{{ b.fromDisplayName | settleAvatar }}</span>
+                </div>
+                <mat-icon class="!text-xs text-neutral-300">chevron_right</mat-icon>
+                <div class="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold text-white overflow-hidden" 
+                     [style.background]="b.toUserId | settleAvatarColor">
+                  <img *ngIf="b.toPhotoURL" [src]="b.toPhotoURL" alt="avatar" class="w-full h-full object-cover" />
+                  <span *ngIf="!b.toPhotoURL">{{ b.toDisplayName | settleAvatar }}</span>
+                </div>
+              </div>
+
+              <span class="text-sm font-bold text-neutral-800 dark:text-neutral-100">
+                {{ b.amount | currency: 'INR':'symbol':'1.0-0' }}
+              </span>
+            </div>
+
+            <!-- Bottom Row: Context -->
+            <div class="flex flex-col leading-tight">
+              <span class="text-[13px] font-bold text-neutral-800 dark:text-neutral-100 truncate">
+                {{ b.fromDisplayName }}
+              </span>
+              <span class="text-[11px] text-neutral-500 dark:text-neutral-400 truncate">
+                to {{ b.toDisplayName }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Section: Settlement History ── -->
+      <section *ngIf="settlements().length > 0">
+        <p class="section-label">Settlement History</p>
+        <div class="history-card">
+          <div *ngFor="let s of settlements(); trackBy: trackBySettlement; let last = last" class="history-item">
+            <!-- <div class="method-icon" matTooltip="{{ s.method | methodLabel }}">
+              <mat-icon>{{ s.method | methodIcon }}</mat-icon>
+            </div>
+             -->
+            <div class="item-info">
+              <div class="flex flex-col gap-0.5">
+                <div class="flex items-center">
+                  <div class="w-5 h-5 rounded-md overflow-hidden bg-neutral-100 mr-2 flex-shrink-0">
+                    <img *ngIf="s.fromPhotoURL" [src]="s.fromPhotoURL" alt="avatar" class="w-full h-full object-cover" />
+                    <div *ngIf="!s.fromPhotoURL" class="w-full h-full flex items-center justify-center text-[8px] font-bold text-neutral-500" 
+                         [style.background]="s.fromUserId | settleAvatarColor" style="color: white;">
+                      {{ s.fromDisplayName | settleAvatar }}
+                    </div>
+                  </div>
+                  <span class="text-sm font-bold text-neutral-800 dark:text-neutral-100">{{ s.fromDisplayName }}</span>
+                </div>
+                <div class="text-[11px] text-neutral-500 dark:text-neutral-400 pl-7">
+                  to {{ s.toDisplayName }}
+                </div>
+              </div>
+              <div class="meta-info pl-7">
+                 {{ s.settledAt | settleDate }} · {{ s.method | methodLabel }}
+                 <span *ngIf="s.note"> · "{{ s.note }}"</span>
+              </div>
+            </div>
+
+            <div class="amount">₹{{ s.amount | number:'1.0-0' }}</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Empty State: All Clear ── -->
+      <section *ngIf="balances().length === 0" class="empty-state">
+        <div class="icon-box">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <p class="!text-lg text-primary-500">Everything's Clear</p>
+        <p>No outstanding balances in this group. You're all square!</p>
+      </section>
+
+    </ng-container>
+  </main>
 </div>

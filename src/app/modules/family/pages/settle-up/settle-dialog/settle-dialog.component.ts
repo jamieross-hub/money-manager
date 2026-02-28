@@ -8,6 +8,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatRippleModule } from '@angular/material/core';
 
+import { CommonHeaderComponent } from 'src/app/util/components/dialog/common-header/common-header.component';
+import { CommonBodyContentComponent } from 'src/app/util/components/dialog/common-body-content/common-body-content.component';
+
 import { BalanceEntry, AddSettlementRequest, SettlementMethod } from 'src/app/util/models/family.model';
 
 export interface SettleDialogData {
@@ -28,6 +31,8 @@ export interface SettleDialogData {
     MatFormFieldModule,
     MatInputModule,
     MatRippleModule,
+    CommonHeaderComponent,
+    CommonBodyContentComponent,
   ],
   templateUrl: './settle-dialog.component.html',
   styleUrls: ['./settle-dialog.component.scss'],

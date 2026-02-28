@@ -2,35 +2,27 @@
   display: block;
 }
 
-.settle-dialog-container {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  border-radius: 24px;
-  overflow: hidden;
-}
-
-/* ── Header ──────────────────────────────────── */
-.dialog-header {
+.main {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 20px 14px;
-  border-bottom: 1px solid #f1f5f9;
+  flex-direction: column;
+  height: 100%;
+    background: repeating-linear-gradient(
+    135deg,
+    var(--surface-50),
+    var(--surface-50) 6px,
+    var(--surface-100) 6px,
+    var(--surface-100) 12px
+  );
 }
 
-/* ── Transfer row ────────────────────────────── */
 .transfer-row {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 16px 20px;
-  background: repeating-linear-gradient(
-    135deg,
-    #f8fafc,
-    #f8fafc 6px,
-    #eef2ff 6px,
-    #eef2ff 12px
-  );
+  padding: 10px 15px;
+  border-radius: 12px;
+
   border-bottom: 1px solid #e2e8f0;
 }
 
@@ -96,7 +88,7 @@
 
 /* ── Dialog body ─────────────────────────────── */
 .dialog-body {
-  padding: 20px;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -190,9 +182,9 @@
 }
 
 .method-btn-active {
-  border-color: #6366f1 !important;
-  background: #eef2ff !important;
-  color: #4f46e5 !important;
+  border-color: var(--primary-600) !important;
+  background: var(--surface-50) !important;
+  color: var(--primary-600) !important;
   box-shadow: 0 2px 8px rgba(99,102,241,0.2);
 }
 
@@ -252,7 +244,6 @@
   padding: 12px 20px;
   border-radius: 14px;
   border: none;
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
   color: white;
   font-size: 14px;
   font-weight: 700;
