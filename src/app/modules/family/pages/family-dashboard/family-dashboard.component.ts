@@ -2,7 +2,7 @@ import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, e
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Auth } from '@angular/fire/auth';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -14,6 +14,7 @@ import { MatRippleModule } from '@angular/material/core';
 import { AppState } from 'src/app/store/app.state';
 import * as FamilyActions from '../../store/family.actions';
 import * as FamilySelectors from '../../store/family.selectors';
+import * as ProfileActions from 'src/app/store/profile/profile.actions';
 import { FamilyService } from '../../services/family.service';
 import { FamilyCreateDialogComponent } from '../../dialogs/family-create-dialog/family-create-dialog.component';
 import { FamilyJoinDialogComponent } from '../../dialogs/family-join-dialog/family-join-dialog.component';
@@ -21,6 +22,7 @@ import { FamilyTransaction, FamilyStats, Family, FamilyMember } from 'src/app/ut
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { QuickActionsFabComponent, QuickActionsFabConfig, QuickAction } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
+import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
 @Component({
   selector: 'app-family-dashboard',
   standalone: true,
@@ -33,7 +35,8 @@ import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage
     MatProgressSpinnerModule, 
     MatTooltipModule, 
     MatRippleModule,
-    QuickActionsFabComponent
+    QuickActionsFabComponent,
+    MatDialogModule
   ],
   templateUrl: './family-dashboard.component.html',
   styleUrls: ['./family-dashboard.component.scss']
@@ -183,5 +186,46 @@ export class FamilyDashboardComponent implements OnInit {
 
   addTransaction() {
     // TODO: implement transaction addition logic
+  }
+
+  deleteFamily() {
+    const fam = this.family();
+    const familyId = fam?.id;
+    if (!familyId) return;
+
+    const isOwner = fam.ownerUserId === this.currentUserId;
+    const title = isOwner ? 'Delete Family' : 'Leave Family';
+    const message = isOwner 
+      ? 'Are you sure you want to delete this family? This action cannot be undone and all data will be lost for all members.'
+      : 'Are you sure you want to leave this family?';
+
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title,
+        message,
+        confirmText: isOwner ? 'Delete' : 'Leave',
+        confirmColor: 'warn'
+      }
+    });
+
+    ref.afterClosed().subscribe(async (ok) => {
+      if (ok) {
+        try {
+          if (isOwner) {
+            await this.familyService.deleteFamily(familyId);
+          } else {
+            await this.familyService.leaveFamily(familyId);
+            // Update local preferences
+            this.store.dispatch(ProfileActions.updatePreferences({
+              userId: this.currentUserId!,
+              preferences: { activeFamilyId: null, isFamilyMode: false }
+            }));
+          }
+          this.router.navigate(['/dashboard']);
+        } catch (error: any) {
+          alert(error.message || 'An error occurred');
+        }
+      }
+    });
   }
 }
