@@ -5,6 +5,7 @@ import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bott
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
+import { MatTabsModule } from '@angular/material/tabs';
 import { FamilyMember, SplitBetweenMember } from 'src/app/util/models/family.model';
 
 export type SplitMode = 'equally' | 'unequally' | 'percentage';
@@ -12,7 +13,6 @@ export type SplitMode = 'equally' | 'unequally' | 'percentage';
 export interface SplitConfigSheetData {
   members: FamilyMember[];
   totalAmount: number;
-  currencySymbol?: string;
   initialMode: SplitMode;
   initialSplits: SplitBetweenMember[];
 }
@@ -35,13 +35,13 @@ interface SplitItem {
     FormsModule,
     MatIconModule,
     MatButtonModule,
-    MatRippleModule
+    MatRippleModule,
+    MatTabsModule
   ]
 })
 export class SplitConfigSheetComponent implements OnInit {
   public members = signal<SplitItem[]>([]);
   public totalAmount = signal<number>(0);
-  public currencySymbol = signal<string>('₹');
   public currentMode = signal<SplitMode>('equally');
 
   public readonly modes: { value: SplitMode; label: string; icon: string }[] = [
@@ -56,6 +56,56 @@ export class SplitConfigSheetComponent implements OnInit {
     let hash = 0;
     for (const c of userId) hash = (hash * 31 + c.charCodeAt(0)) & 0xffff;
     return this.memberColors[hash % this.memberColors.length];
+  }
+
+  getModeIndex(): number {
+    return this.modes.findIndex(m => m.value === this.currentMode());
+  }
+
+  setModeByIndex(index: number): void {
+    if (this.modes[index]) {
+      this.setMode(this.modes[index].value);
+    }
+  }
+
+  // --- Mobile Swipe Support ---
+  private touchStartX = 0;
+  private touchEndX = 0;
+  private touchStartY = 0;
+  private touchEndY = 0;
+
+  onTouchStart(event: TouchEvent): void {
+    this.touchStartX = event.changedTouches[0].screenX;
+    this.touchStartY = event.changedTouches[0].screenY;
+  }
+
+  onTouchEnd(event: TouchEvent): void {
+    this.touchEndX = event.changedTouches[0].screenX;
+    this.touchEndY = event.changedTouches[0].screenY;
+    this.handleSwipe();
+  }
+
+  private handleSwipe(): void {
+    const swipeDistanceX = this.touchStartX - this.touchEndX;
+    const swipeDistanceY = this.touchStartY - this.touchEndY;
+    const swipeThreshold = 50; // Minimum distance to be considered a swipe
+
+    // Ensure horizontal swipe is dominant to prevent accidental swipes on scroll
+    if (Math.abs(swipeDistanceX) > swipeThreshold && Math.abs(swipeDistanceX) > Math.abs(swipeDistanceY)) {
+      const currentIndex = this.getModeIndex();
+      
+      if (swipeDistanceX > 0) {
+        // Swiped left, go to next tab
+        if (currentIndex < this.modes.length - 1) {
+          this.setModeByIndex(currentIndex + 1);
+        }
+      } else {
+        // Swiped right, go to previous tab
+        if (currentIndex > 0) {
+          this.setModeByIndex(currentIndex - 1);
+        }
+      }
+    }
   }
 
   // --- Computed totals based on mode ---
@@ -107,9 +157,6 @@ export class SplitConfigSheetComponent implements OnInit {
     if (this.data) {
       this.totalAmount.set(this.data.totalAmount || 0);
       this.currentMode.set(this.data.initialMode || 'equally');
-      if (this.data.currencySymbol) {
-        this.currencySymbol.set(this.data.currencySymbol);
-      }
 
       // Reconcile initial data into member list
       const splitList: SplitItem[] = [];

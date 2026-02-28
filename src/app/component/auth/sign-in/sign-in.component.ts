@@ -495,7 +495,7 @@ export class SignInComponent implements OnInit, OnDestroy {
     if (this.userService.getCurrentUserSnapshot()?.preferences?.isFamilyMode) {
       this.router.navigate(['/dashboard/family']);
     } else {
-      this.router.navigate(['/dashboard']);
+      this.router.navigate(['/dashboard/home']);
     }
   }
 

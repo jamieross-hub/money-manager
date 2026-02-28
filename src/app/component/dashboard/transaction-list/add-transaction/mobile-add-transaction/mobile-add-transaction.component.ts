@@ -138,7 +138,6 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   );
 
   splitConfigMode = signal<SplitMode>('equally');
-  public currency = toSignal(this._store.select(fromProfile.selectUserCurrency));
   // ─────────────────────────────────────────────────────────────────────────
 
   public formattedAmount = signal('');
@@ -262,6 +261,15 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         if (members.length && !this.transactionForm.get('paidByUserId')?.value) {
           this.transactionForm.patchValue({ paidByUserId: this.userId });
         }
+
+        // If amount was typed before members loaded, calculate initial splits
+        const amountVal = this.transactionForm.get('amount')?.value;
+        if (amountVal && members.length > 0 && !this.editMode() && !this.viewMode()) {
+          const numericVal = typeof amountVal === 'string' ? parseFloat(amountVal.replace(/,/g, '')) : amountVal;
+          if (!isNaN(numericVal) && numericVal > 0) {
+            this.updateEqualSplitAmounts(numericVal);
+          }
+        }
       });
   }
 
@@ -381,8 +389,10 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         if (!isNaN(numericValue) && this.formattedAmount() !== this.formatCurrency(numericValue)) {
           this.formattedAmount.set(this.formatCurrency(numericValue));
         }
+        this.updateEqualSplitAmounts(isNaN(numericValue) ? 0 : numericValue);
       } else {
         this.formattedAmount.set('');
+        this.updateEqualSplitAmounts(0);
       }
     });
 
@@ -472,12 +482,14 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       const numericValue = parseFloat(numericString);
       if (!isNaN(numericValue)) {
         this.transactionForm.get('amount')?.setValue(numericValue, { emitEvent: false });
-        this.updateTaxCalculations('amount');
+        //this.updateTaxCalculations('amount');
+        this.updateEqualSplitAmounts(numericValue);
         // Don't format while typing to avoid cursor jumps, but we could if we handle selection
         // However, user specifically asked for visibility. Let's format on blur or smartly.
       }
     } else {
       this.transactionForm.get('amount')?.setValue('', { emitEvent: false });
+      this.updateEqualSplitAmounts(0);
     }
   }
 
@@ -759,6 +771,32 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     });
   }
 
+  private updateEqualSplitAmounts(totalAmount: number): void {
+    if (this.splitConfigMode() === 'equally') {
+      const currentSplits = this.transactionForm.get('splitBetween')?.value || [];
+      const members = this.familyMembers();
+      
+      if (currentSplits.length > 0) {
+        const splitAmount = +(totalAmount / currentSplits.length).toFixed(2);
+        const updatedSplits = currentSplits.map((s: any) => ({ ...s, amount: splitAmount }));
+        this.transactionForm.get('splitBetween')?.setValue(updatedSplits, { emitEvent: false });
+      } else if (totalAmount > 0 && members.length > 0 && !this.editMode() && !this.viewMode()) {
+        const splitAmount = +(totalAmount / members.length).toFixed(2);
+        const percentage = +(100 / members.length).toFixed(2);
+        
+        const initialSplits: SplitBetweenMember[] = members.map(m => ({
+          userId: m.userId,
+          displayName: m.displayName,
+          photoURL: m.photoURL || '',
+          amount: splitAmount,
+          percentage: percentage
+        }));
+        
+        this.transactionForm.patchValue({ splitBetween: initialSplits });
+      }
+    }
+  }
+
   // ============== SPLIT CONFIGURATION BOTTOM SHEET ==============
   openSplitConfigSheet() {
     if (this.viewMode()) return;
@@ -777,7 +815,6 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     const data: SplitConfigSheetData = {
       members: this.familyMembers(),
       totalAmount: totalAmount,
-      currencySymbol: this.currency() || '₹',
       initialMode: this.splitConfigMode(),
       initialSplits: currentSplits
     };

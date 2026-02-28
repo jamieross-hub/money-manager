@@ -515,10 +515,26 @@ app-chat {
   height: 100%;
 }
 
-.mat-bottom-sheet-container{
+.mat-bottom-sheet-container {
   min-height: 80vh;
+  padding: 0 !important;
+  border-top-left-radius: 1.5rem !important;
+  border-top-right-radius: 1.5rem !important;
+  overflow: hidden;
+  background-color: var(--surface-200);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+  transform: translateY(0%);
+  padding: 0px 5px !important;
+  background-color: transparent;
+  box-shadow: none;
+  max-height: 90vh;
+  // Safe area handling for modern mobile devices (e.g. iPhone)
+  padding-bottom: env(safe-area-inset-bottom) !important;
 
-
+  .mat-mdc-nav-list {
+  background-color: var(--surface-200) !important;
+  border-radius: 20px;
+  }
 }
 
 .auto-height-sheet {
@@ -529,6 +545,11 @@ app-chat {
 // .mat-mdc-tab-header{
 //   z-index: 99 !important;
 // }
+
+// Allow horizontal touch swipes to bubble up from tab headers
+.mat-mdc-tab-labels {
+  touch-action: pan-y !important;
+}
 
 // app-landing{
 //   overflow: scroll;
