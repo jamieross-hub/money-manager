@@ -207,7 +207,7 @@ export class FamilyService {
     batch.set(accountRef, accountData);
 
     // 2. Create Default Categories
-    const categoriesToCreate = defaultCategoriesForNewUser.slice(0, 8); // Just a subset for family
+    const categoriesToCreate = defaultCategoriesForNewUser // Just a subset for family
     for (const cat of categoriesToCreate) {
       const catId = 'cat_fam_' + Math.random().toString(36).substr(2, 9);
       const catData: Category = {
