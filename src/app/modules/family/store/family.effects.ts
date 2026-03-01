@@ -5,6 +5,8 @@ import { switchMap, map, catchError, mergeMap } from 'rxjs/operators';
 import { FamilyService } from '../services/family.service';
 import * as FamilyActions from './family.actions';
 import { NotificationService } from 'src/app/util/service/notification.service';
+import * as ProfileActions from 'src/app/store/profile/profile.actions';
+import { filter } from 'rxjs';
 
 @Injectable()
 export class FamilyEffects {
@@ -101,7 +103,17 @@ export class FamilyEffects {
 
   refreshUserFamilies$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(FamilyActions.createFamilySuccess, FamilyActions.joinFamilySuccess),
+      ofType(
+        FamilyActions.createFamilySuccess, 
+        FamilyActions.joinFamilySuccess,
+        ProfileActions.setProfile
+      ),
+      filter(action => {
+        if (action.type === ProfileActions.setProfile.type) {
+          return !!(action as any).profile;
+        }
+        return true;
+      }),
       map(() => FamilyActions.loadUserFamilies())
     )
   );

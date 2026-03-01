@@ -102,7 +102,26 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
 
   // Store observables
   transactions$: Observable<Transaction[]> = this.store.select(selectAllTransactions);
-  allTransactions: Transaction[] = [];
+  rawTransactions = toSignal(this.transactions$, { initialValue: [] as Transaction[] });
+  
+  allTransactions = computed(() => {
+    let transactions = [...this.rawTransactions()];
+    
+    // Filter by family mode if active
+    if (this.isFamilyMode()) {
+      // Show only family transactions
+      transactions = transactions.filter(tx => !!(tx as any).familyId || !!(tx as any).splitData || !!(tx as any).settlementFamilyId);
+    } else {
+      // In individual mode, hide family transactions
+      transactions = transactions.filter(tx => !(tx as any).familyId && !(tx as any).splitData && !(tx as any).settlementFamilyId);
+    }
+
+    return transactions.sort((a: any, b: any) => {
+      const dateA = this.dateService.toDate(a.date);
+      const dateB = this.dateService.toDate(b.date);
+      return (dateB?.getTime() ?? 0) - (dateA?.getTime() ?? 0);
+    });
+  });
 
   private profile = toSignal(this.store.select(ProfileSelectors.selectProfile));
   currentUserId = computed(() => this.profile()?.uid);
@@ -124,7 +143,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   ngOnInit() {
     this.setupDataSource();
     this.setupFilterServiceSubscriptions();
-    this.setupTransactionSubscriptions();
+    // this.setupTransactionSubscriptions(); // Removed in favor of computed signal
     this.loadCategories();
     this.loadAccounts();
     this.updateColumnVisibility();
@@ -193,20 +212,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
     };
   }
 
-  private setupTransactionSubscriptions() {
-    // Subscribe to transactions from store
-    this.subscription.add(
-      this.transactions$.subscribe(transactions => {
-        this.allTransactions = transactions.sort((a: any, b: any) => {
-          const dateA = this.dateService.toDate(a.date);
-          const dateB = this.dateService.toDate(b.date);
-          return (dateB?.getTime() ?? 0) - (dateA?.getTime() ?? 0);
-        });
-        this.updateFilteredData();
-        this.cdr.markForCheck();
-      })
-    );
-  }
+  // setupTransactionSubscriptions() removed and replaced by allTransactions computed signal
 
   private setupFilterServiceSubscriptions() {
     // Subscribe to filter state changes and update data source
@@ -234,13 +240,13 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
     if (!hasDateFilters && !hasSearchOrSpecificFilter) {
       // Filter to show only current year transactions when no specific filters are applied
       filteredData = this.filterService.filterCurrentYearTransactions(
-        this.allTransactions,
+        this.allTransactions(),
         filterState
       );
     } else {
       // Use all filters
       filteredData = this.filterService.filterTransactions(
-        this.allTransactions,
+        this.allTransactions(),
         filterState
       );
     }
@@ -367,7 +373,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   getTotalCount(): number {
-    return this.allTransactions.length;
+    return this.allTransactions().length;
   }
 
   getCurrentYear(): number {

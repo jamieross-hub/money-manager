@@ -174,9 +174,8 @@ export class GroupSelectionComponent implements OnInit {
     }, { allowSignalWrites: true, injector: this.injector });
 
     effect(() => {
-      const isLoading = this.userFamiliesLoading() && 
-                       !this.showDashboard() && 
-                       (this.rawFamilies()?.length || 0) === 0;
+      const isLoading = this.loadState() === 'loading' && 
+                       !this.showDashboard();
                        
       if (isLoading && !this.isInstanceLoading) {
         this.isInstanceLoading = true;
@@ -234,7 +233,7 @@ export class GroupSelectionComponent implements OnInit {
   });
 
   loadState = computed<LoadState>(() => {
-    if (this.userFamiliesLoading()) return 'loading';
+    if (!this.currentUserId || this.userFamiliesLoading()) return 'loading';
     if (this.familyError()) return 'error';
     return this.groups().length === 0 ? 'empty' : 'loaded';
   });

@@ -140,6 +140,20 @@ export class MobileTransactionListComponent
   showActiveFilterDetails = signal<boolean>(false);
   public selectedRange = signal<string | null>(null);
 
+  /** True when the user's preferences have isFamilyMode enabled */
+  isFamilyMode = toSignal(
+    this.store.select(ProfileSelectors.selectProfile).pipe(
+      map(profile => profile?.preferences?.isFamilyMode ?? false)
+    ),
+    { initialValue: false }
+  );
+
+  /** Current active family */
+  activeFamily = this.store.selectSignal(FamilySelectors.selectFamily);
+
+  /** True when the current family is in 'split' mode */
+  isSplitMode = computed(() => this.activeFamily()?.mode === 'split');
+
   categoryMap = computed(() => {
     const map = new Map<string, Category>();
     this.categories().forEach(cat => {
@@ -157,7 +171,18 @@ export class MobileTransactionListComponent
   });
 
   allTransactions = computed(() => {
-    return [...this.rawTransactions()].sort((a: any, b: any) => {
+    let transactions = [...this.rawTransactions()];
+    
+    // Filter by family mode if active
+    if (this.isFamilyMode()) {
+      // Show only family transactions
+      transactions = transactions.filter(tx => !!(tx as any).familyId || !!(tx as any).splitData || !!(tx as any).settlementFamilyId);
+    } else {
+      // In individual mode, hide family transactions
+      transactions = transactions.filter(tx => !(tx as any).familyId && !(tx as any).splitData && !(tx as any).settlementFamilyId);
+    }
+
+    return transactions.sort((a: any, b: any) => {
       const dateA = this.dateService.toDate(a.date);
       const dateB = this.dateService.toDate(b.date);
       return (dateB?.getTime() ?? 0) - (dateA?.getTime() ?? 0);
@@ -421,18 +446,13 @@ export class MobileTransactionListComponent
   isGuest = computed(() => this.userService.isGuestUser());
 
   /** True when the user's preferences have isFamilyMode enabled */
-  isFamilyMode = toSignal(
-    this.store.select(ProfileSelectors.selectProfile).pipe(
-      map(profile => profile?.preferences?.isFamilyMode ?? false)
-    ),
-    { initialValue: false }
-  );
+  // isFamilyMode = toSignal(...) // Moved up
 
   /** Current active family */
-  activeFamily = this.store.selectSignal(FamilySelectors.selectFamily);
+  // activeFamily = this.store.selectSignal(FamilySelectors.selectFamily); // Moved up
 
   /** True when the current family is in 'split' mode */
-  isSplitMode = computed(() => this.activeFamily()?.mode === 'split');
+  // isSplitMode = computed(() => this.activeFamily()?.mode === 'split'); // Moved up
 
   /** Current user's UID */
   private readonly currentUserProfile = this.store.selectSignal(ProfileSelectors.selectProfile);
