@@ -27,7 +27,7 @@ export class FamilyAccountsService extends AccountsService {
      * Override to use family group accounts path
      */
     protected override getAccountsPath(userId: string): string {
-        const familyId = this.familyService.activeFamilyId();
+        const familyId = this.getFamilyId();
         
         if (!familyId) {
             console.warn('[FamilyAccountsService] No familyId found, falling back to personal accounts');
@@ -35,5 +35,9 @@ export class FamilyAccountsService extends AccountsService {
         }
         
         return `family-groups/${familyId}/accounts`;
+    }
+
+    protected override getFamilyId(): string | undefined {
+        return this.familyService.activeFamilyId() || undefined;
     }
 }

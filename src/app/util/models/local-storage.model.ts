@@ -147,36 +147,46 @@ export class LocalStorageKeyHelper {
     /**
      * Get transactions cache key
      */
-    static getTransactionsCacheKey(uid: string): string {
-        return `${LocalStorageKey.TRANSACTIONS_CACHE}-${uid}`;
+    static getTransactionsCacheKey(uid: string, familyId?: string): string {
+        return familyId 
+            ? `${LocalStorageKey.TRANSACTIONS_CACHE}-${uid}-${familyId}`
+            : `${LocalStorageKey.TRANSACTIONS_CACHE}-${uid}`;
     }
 
     /**
      * Get categories cache key
      */
-    static getCategoriesCacheKey(uid: string): string {
-        return `${LocalStorageKey.CATEGORIES_CACHE}-${uid}`;
+    static getCategoriesCacheKey(uid: string, familyId?: string): string {
+        return familyId
+            ? `${LocalStorageKey.CATEGORIES_CACHE}-${uid}-${familyId}`
+            : `${LocalStorageKey.CATEGORIES_CACHE}-${uid}`;
     }
 
     /**
      * Get accounts cache key
      */
-    static getAccountsCacheKey(uid: string): string {
-        return `${LocalStorageKey.ACCOUNTS_CACHE}-${uid}`;
+    static getAccountsCacheKey(uid: string, familyId?: string): string {
+        return familyId
+            ? `${LocalStorageKey.ACCOUNTS_CACHE}-${uid}-${familyId}`
+            : `${LocalStorageKey.ACCOUNTS_CACHE}-${uid}`;
     }
 
     /**
      * Get budgets cache key
      */
-    static getBudgetsCacheKey(uid: string): string {
-        return `${LocalStorageKey.BUDGETS_CACHE}-${uid}`;
+    static getBudgetsCacheKey(uid: string, familyId?: string): string {
+        return familyId
+            ? `${LocalStorageKey.BUDGETS_CACHE}-${uid}-${familyId}`
+            : `${LocalStorageKey.BUDGETS_CACHE}-${uid}`;
     }
 
     /**
      * Get goals cache key
      */
-    static getGoalsCacheKey(uid: string): string {
-        return `${LocalStorageKey.GOALS_CACHE}-${uid}`;
+    static getGoalsCacheKey(uid: string, familyId?: string): string {
+        return familyId
+            ? `${LocalStorageKey.GOALS_CACHE}-${uid}-${familyId}`
+            : `${LocalStorageKey.GOALS_CACHE}-${uid}`;
     }
 
     /**

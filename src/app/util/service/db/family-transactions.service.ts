@@ -43,7 +43,7 @@ export class FamilyTransactionsService extends TransactionsService {
     }
 
     protected override getTransactionsPath(userId: string): string {
-        const familyId = this.familyService.activeFamilyId();
+        const familyId = this.getFamilyId();
         
         if (!familyId) {
             console.warn('[FamilyTransactionsService] No familyId found, falling back to personal transactions');
@@ -55,5 +55,9 @@ export class FamilyTransactionsService extends TransactionsService {
 
     protected override getTransactionPath(userId: string, transactionId: string): string {
         return `${this.getTransactionsPath(userId)}/${transactionId}`;
+    }
+
+    protected override getFamilyId(): string | undefined {
+        return this.familyService.activeFamilyId() || undefined;
     }
 }

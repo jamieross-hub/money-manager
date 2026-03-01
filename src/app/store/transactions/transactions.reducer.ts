@@ -14,14 +14,16 @@ export const transactionsReducer = createReducer(
   })),
   
   on(TransactionsActions.loadTransactionsSuccess, (state, { transactions }) => {
-    const entities = transactions.reduce((acc, transaction) => {
+    const filteredTransactions = transactions.filter(t => !t.familyId && !t.splitData);
+    
+    const entities = filteredTransactions.reduce((acc, transaction) => {
       if (transaction.id) {
         acc[transaction.id] = transaction;
       }
       return acc;
     }, {} as { [id: string]: any });
     
-    const ids = transactions.map(t => t.id).filter(id => id) as string[];
+    const ids = filteredTransactions.map(t => t.id).filter(id => id) as string[];
     
     return {
       ...state,
@@ -46,7 +48,7 @@ export const transactionsReducer = createReducer(
   })),
   
   on(TransactionsActions.createTransactionSuccess, (state, { transaction }) => {
-    if (!transaction.id) return state;
+    if (!transaction.id || transaction.familyId || transaction.splitData) return state;
     
     return {
       ...state,
@@ -74,7 +76,7 @@ export const transactionsReducer = createReducer(
   })),
   
   on(TransactionsActions.updateTransactionSuccess, (state, { transaction }) => {
-    if (!transaction.id) return state;
+    if (!transaction.id || transaction.familyId || transaction.splitData) return state;
     
     return {
       ...state,
@@ -134,7 +136,7 @@ export const transactionsReducer = createReducer(
   })),
   
   on(TransactionsActions.getTransactionSuccess, (state, { transaction }) => {
-    if (!transaction.id) return state;
+    if (!transaction.id || transaction.familyId || transaction.splitData) return state;
     
     return {
       ...state,

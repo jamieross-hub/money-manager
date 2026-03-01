@@ -42,6 +42,20 @@ export class AccountsService {
         return this.userService.getCurrentUserId() === 'offline-guest';
     }
 
+    /**
+     * Get the cache key for accounts
+     */
+    protected getAccountsCacheKey(userId: string): string {
+        return LocalStorageKeyHelper.getAccountsCacheKey(userId, this.getFamilyId());
+    }
+
+    /**
+     * Get the family ID for cache key (overridden in FamilyAccountsService)
+     */
+    protected getFamilyId(): string | undefined {
+        return undefined;
+    }
+
     // 🔹 Create a new account for the logged-in user
     createAccount(userId: string, accountData: CreateAccountRequest): Observable<string> {
         const accountId = this.generateAccountId();
@@ -132,7 +146,7 @@ export class AccountsService {
                 console.log(`[AccountsService] Pulled ${accounts.length} accounts from Firestore`);
 
                 // Update cache
-                this.localStorageUtility.setItem(LocalStorageKeyHelper.getAccountsCacheKey(userId), accounts);
+                this.localStorageUtility.setItem(this.getAccountsCacheKey(userId), accounts);
                 
                 // Update NgRx state
                 this.store.dispatch(AccountsActions.loadAccountsSuccess({ accounts }));
@@ -606,9 +620,9 @@ export class AccountsService {
     /**
      * Update account cache when accounts are created, updated, or deleted
      */
-    private updateAccountCache(userId: string, operation: 'create' | 'update' | 'delete', account?: Account): void {
+    protected updateAccountCache(userId: string, operation: 'create' | 'update' | 'delete', account?: Account): void {
         try {
-            const cacheKey = LocalStorageKeyHelper.getAccountsCacheKey(userId);
+            const cacheKey = this.getAccountsCacheKey(userId);
             const cachedAccounts = this.localStorageUtility.getItem<Account[]>(cacheKey) || [];
 
             switch (operation) {

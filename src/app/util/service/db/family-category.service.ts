@@ -33,7 +33,7 @@ export class FamilyCategoryService extends CategoryService {
      * Override to use family group categories path
      */
     protected override getCategoriesPath(userId: string): string {
-        const familyId = this.familyService.activeFamilyId();
+        const familyId = this.getFamilyId();
         
         if (!familyId) {
             console.warn('[FamilyCategoryService] No familyId found, falling back to personal categories');
@@ -41,5 +41,9 @@ export class FamilyCategoryService extends CategoryService {
         }
         
         return `family-groups/${familyId}/categories`;
+    }
+
+    protected override getFamilyId(): string | undefined {
+        return this.familyService.activeFamilyId() || undefined;
     }
 }

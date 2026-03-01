@@ -60,6 +60,20 @@ export class CategoryService {
         return this.userService.getCurrentUserId() === 'offline-guest';
     }
 
+    /**
+     * Get the cache key for categories
+     */
+    protected getCategoriesCacheKey(userId: string): string {
+        return LocalStorageKeyHelper.getCategoriesCacheKey(userId, this.getFamilyId());
+    }
+
+    /**
+     * Get the family ID for cache key (overridden in FamilyCategoryService)
+     */
+    protected getFamilyId(): string | undefined {
+        return undefined;
+    }
+
     private getUserCategoriesCollection(userId: string) {
         return collection(this.firestore, this.getCategoriesPath(userId));
     }
@@ -72,7 +86,7 @@ export class CategoryService {
 
         return new Observable<Category[]>(observer => {
             try {
-                const cachedCategories = this.localStorageUtility.getItem<Category[]>(LocalStorageKeyHelper.getCategoriesCacheKey(userId));
+                const cachedCategories = this.localStorageUtility.getItem<Category[]>(this.getCategoriesCacheKey(userId));
                 if (cachedCategories) {
                     observer.next(cachedCategories);
                 } else {
@@ -127,7 +141,7 @@ export class CategoryService {
                 console.log(`[CategoryService] Pulled ${categories.length} categories from Firestore`);
 
                 // Update cache
-                this.localStorageUtility.setItem(LocalStorageKeyHelper.getCategoriesCacheKey(userId), categories);
+                this.localStorageUtility.setItem(this.getCategoriesCacheKey(userId), categories);
                 
                 // Update NgRx state
                 this.store.dispatch(CategoriesActions.loadCategoriesSuccess({ categories }));
@@ -626,9 +640,9 @@ export class CategoryService {
     /**
      * Update category cache when categories are created, updated, or deleted
      */
-    private updateCategoryCache(userId: string, operation: 'create' | 'update' | 'delete', category?: Category): void {
+    protected updateCategoryCache(userId: string, operation: 'create' | 'update' | 'delete', category?: Category): void {
         try {
-            const cacheKey = LocalStorageKeyHelper.getCategoriesCacheKey(userId);
+            const cacheKey = this.getCategoriesCacheKey(userId);
             const cachedCategories = this.localStorageUtility.getItem<Category[]>(cacheKey) || [];
 
             switch (operation) {

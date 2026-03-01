@@ -591,7 +591,7 @@ export class CommonSyncService implements OnDestroy {
 
         // Update sync status for successful transactions
         if (item.type === 'transaction') {
-          await this.updateTransactionSyncStatus(item.data.id || item.id, 'synced');
+          await this.updateTransactionSyncStatus(item.data, 'synced');
         }
       } catch (error) {
         console.error(`Failed to process sync item ${item.id}:`, error);
@@ -653,15 +653,15 @@ export class CommonSyncService implements OnDestroy {
     }
   }
 
-  /**
-   * Update transaction sync status after successful sync
-   */
-  private async updateTransactionSyncStatus(transactionId: string, status: 'synced' | 'failed'): Promise<void> {
+  private async updateTransactionSyncStatus(transaction: any, status: 'synced' | 'failed'): Promise<void> {
+    const transactionId = transaction?.id;
+    if (!transactionId) return;
+
     try {
-      // Update in store
+      // Update in store - include all data to allow reducers to correctly filter familyTransactions
       this.store.dispatch(TransactionsActions.updateTransactionSuccess({
         transaction: {
-          id: transactionId,
+          ...transaction,
           syncStatus: status,
           lastSyncedAt: new Date()
         } as Transaction

@@ -238,24 +238,6 @@
   </div>
 
 
-  <!-- ══════════════════════════════════════════════════════════
-       BOTTOM ACTION AREA (sticky, visible when loaded/empty)
-  ══════════════════════════════════════════════════════════ -->
-  @if (loadState() === 'loaded' || loadState() === 'empty') {
-  @defer (on idle) {
-  <div class="gs-bottom-bar safe-area-bottom">
-    <button mat-flat-button color="primary" class="gs-btn-full" (click)="openCreateDialog()">
-      <mat-icon>add</mat-icon>
-      Create Group
-    </button>
-    <button mat-stroked-button color="primary" class="gs-btn-full" (click)="openJoinDialog()">
-      <mat-icon>link</mat-icon>
-      Join Group
-    </button>
-  </div>
-  }
-  }
-
 </div>
 }
 

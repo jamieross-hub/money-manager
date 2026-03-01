@@ -936,11 +936,25 @@ export class TransactionsService extends BaseService {
     }
 
     /**
+     * Get the cache key for transactions
+     */
+    protected getTransactionsCacheKey(userId: string): string {
+        return LocalStorageKeyHelper.getTransactionsCacheKey(userId, this.getFamilyId());
+    }
+
+    /**
+     * Get the family ID for cache key (overridden in FamilyTransactionsService)
+     */
+    protected getFamilyId(): string | undefined {
+        return undefined;
+    }
+
+    /**
      * Get cached transactions from localStorage
      */
-    private getCachedTransactions(userId: string): Transaction[] {
+    protected getCachedTransactions(userId: string): Transaction[] {
         try {
-            const cachedData = this.localStorageUtility.getItem<Transaction[]>(LocalStorageKeyHelper.getTransactionsCacheKey(userId));
+            const cachedData = this.localStorageUtility.getItem<Transaction[]>(this.getTransactionsCacheKey(userId));
             if (cachedData) {
                 return cachedData.filter(t => t && t.id);
             }
@@ -953,9 +967,9 @@ export class TransactionsService extends BaseService {
     /**
      * Cache transactions to localStorage
      */
-    private cacheTransactions(userId: string, transactions: Transaction[]): void {
+    protected cacheTransactions(userId: string, transactions: Transaction[]): void {
         try {
-            this.localStorageUtility.setItem(LocalStorageKeyHelper.getTransactionsCacheKey(userId), transactions);
+            this.localStorageUtility.setItem(this.getTransactionsCacheKey(userId), transactions);
         } catch (error) {
             console.error('Error caching transactions:', error);
         }
@@ -964,7 +978,7 @@ export class TransactionsService extends BaseService {
     /**
      * Update transaction cache when transactions are created, updated, or deleted
      */
-    private updateTransactionCache(userId: string, operation: 'create' | 'update' | 'delete', transaction?: Transaction): void {
+    protected updateTransactionCache(userId: string, operation: 'create' | 'update' | 'delete', transaction?: Transaction): void {
         try {
             const cachedTransactions = this.getCachedTransactions(userId);
 
