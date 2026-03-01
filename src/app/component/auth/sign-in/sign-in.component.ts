@@ -492,11 +492,7 @@ export class SignInComponent implements OnInit, OnDestroy {
    * Centralized navigation after successful sign-in
    */
   private navigateAfterSignIn(): void {
-    if (this.userService.getCurrentUserSnapshot()?.preferences?.isFamilyMode) {
-      this.router.navigate(['/dashboard/family']);
-    } else {
-      this.router.navigate(['/dashboard/home']);
-    }
+    this.router.navigate(['/dashboard/home']);
   }
 
   /**

@@ -9,16 +9,25 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { UserService } from 'src/app/util/service/db/user.service';
 
 import { MobileAddTransactionComponent } from '../transaction-list/add-transaction/mobile-add-transaction/mobile-add-transaction.component';
+import { GroupSelectionComponent } from 'src/app/modules/family/pages/group-selection/group-selection.component';
+import { Store } from '@ngrx/store';
+import { AppState } from 'src/app/store/app.state';
+import * as fromProfile from 'src/app/store/profile/profile.selectors';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs/operators';
+import { inject } from '@angular/core';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
   standalone: true,
-  imports: [CommonModule, RouterModule, ChatComponent],
+  imports: [CommonModule, RouterModule, ChatComponent, GroupSelectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HomeComponent {
+  private store = inject(Store<AppState>);
+  isFamilyMode = toSignal(this.store.select(fromProfile.selectUserPreferences).pipe(map(prefs => prefs?.isFamilyMode || false)));
   // topCategoriesConfig: TopCategoriesConfig = {
   //   title: 'Top Categories',
   //   subtitle: 'Top categories by spending',

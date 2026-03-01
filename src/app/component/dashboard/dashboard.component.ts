@@ -59,14 +59,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }, 2000);
 
     // Redirect to family dashboard on app start if family mode is enabled
-    this.userService.userAuth$.pipe(
-      filter((user: any) => !!user),
-      take(1)
-    ).subscribe((user: any) => {
-      if (user?.preferences?.isFamilyMode && (this.router.url === '/dashboard' || this.router.url === '/dashboard/home' || this.router.url === '/')) {
-        this.router.navigate(['/dashboard/family']);
-      }
-    });
+    // this.userService.userAuth$.pipe(
+    //   filter((user: any) => !!user),
+    //   take(1)
+    // ).subscribe((user: any) => {
+    //   if (user?.preferences?.isFamilyMode && (this.router.url === '/dashboard' || this.router.url === '/dashboard/home' || this.router.url === '/')) {
+    //     this.router.navigate(['/dashboard/family']);
+    //   }
+    // });
   }
 
   ngOnDestroy() {

@@ -1,67 +1,11 @@
-<!-- <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 md:grid-cols-4 md:gap-6 lg:grid-cols-12 lg:gap-8 lg:mt-20 lg:px-16 xl:gap-12 xl:px-24 2xl:gap-16 2xl:px-48"> -->
-<!-- Calendar View - Full width on mobile, hidden on larger screens -->
-<!-- <div class="col-span-1 sm:hidden">
-		<calendar-view></calendar-view>
+
+
+<ng-container *ngIf="isFamilyMode(); else personalMode">
+	<app-group-selection></app-group-selection>
+</ng-container>
+
+<ng-template #personalMode>
+	<div class="home-wrapper font-roboto grid h-full">
+		<app-chat class="safe-h-screen-chat"></app-chat>
 	</div>
-
-	<div class="col-span-1 sm:col-span-1 lg:col-span-4">
-		<app-top-categories-card [config]="topCategoriesConfig"></app-top-categories-card>
-	</div>
-
-	<div class="col-span-1 sm:col-span-1 lg:col-span-8">
-		<app-account-summary-card *ngIf="breakpointService.device.isDesktop"></app-account-summary-card>
-		<hr class="mb-5" />
-		<transaction-table> </transaction-table>
-	</div> -->
-
-<!-- Key Metrics Summary Card - Full width on all screens -->
-<!-- <div class="col-span-1 sm:col-span-2 lg:col-span-12">
-		<app-key-metrics-summary-card [config]="keyMetricsConfig"></app-key-metrics-summary-card>
-	</div> -->
-
-<!-- Top Categories Card - Full width on mobile, half width on tablet, 1/3 on desktop -->
-
-<!-- <div class="col-span-1 sm:col-span-1 lg:col-span-4" *ngIf="breakpointService.device.isDesktop">
-		 <app-upcoming-transactions-card [config]="upcomingTransactionsConfig"></app-upcoming-transactions-card>  
-		<app-financial-metrics-card [config]="financialMetricsConfig"></app-financial-metrics-card>
-	</div> -->
-
-<!-- Recent Activity Card - Full width on mobile, half width on tablet, 1/3 on desktop -->
-<!-- <div class="col-span-1 sm:col-span-1 lg:col-span-4">
-		<app-recent-activity-card [config]="recentActivityConfig"></app-recent-activity-card>
-	</div> -->
-
-<!-- Category Breakdown Card - Full width on mobile, half width on tablet, 1/3 on desktop -->
-<!-- <div class="col-span-1 sm:col-span-2 lg:col-span-8">
-		<app-category-breakdown-card [config]="categoryBreakdownConfig"></app-category-breakdown-card>
-	</div> -->
-
-<!-- <div class="col-span-1 sm:col-span-2 lg:col-span-4">
-		<app-category-breakdown-card [config]="categoryPieBreakdownConfig"></app-category-breakdown-card>
-	</div> -->
-
-<!-- Budget Card - Full width on mobile, half width on tablet, 5/12 on desktop -->
-<!-- <div class="col-span-1 sm:col-span-1 lg:col-span-7"></div> -->
-
-<!-- Monthly Trends Card - Full width on all screens -->
-<!-- <div class="col-span-1 sm:col-span-2 lg:col-span-12">
-		<app-monthly-trends-card [config]="monthlyTrendsConfig"></app-monthly-trends-card>
-	</div> -->
-
-<!-- Quick Actions FAB - Fixed position, not part of grid -->
-<!-- <app-quick-actions-fab [config]="quickActionsFabConfig"></app-quick-actions-fab> -->
-<!-- </section> -->
-
-
-<!-- Balance Card -->
-<!-- <div class="p-4" *ngIf="breakpointService.device.isDesktop">
-		<div class="max-w-4xl mx-auto  rounded-2xl shadow-sm animate-fadeUp">
-		
-		</div>
-	</div> -->
-<!-- <app-recent-activity-card [config]="recentActivityConfig"></app-recent-activity-card> -->
-
-
-<div class="home-wrapper font-roboto grid h-full">
-	<app-chat class="safe-h-screen-chat"></app-chat>
-</div>
+</ng-template>

@@ -17,6 +17,7 @@ import { AppState } from 'src/app/store/app.state';
 import * as FamilyActions from '../../store/family.actions';
 import * as FamilySelectors from '../../store/family.selectors';
 import * as ProfileActions from 'src/app/store/profile/profile.actions';
+import { selectAllTransactions } from 'src/app/store/transactions/transactions.selectors';
 import { FamilyService } from '../../services/family.service';
 import { FamilyCreateDialogComponent } from '../../dialogs/family-create-dialog/family-create-dialog.component';
 import { FamilyJoinDialogComponent } from '../../dialogs/family-join-dialog/family-join-dialog.component';
@@ -29,6 +30,7 @@ import { CurrencyPipe } from 'src/app/util/pipes';
 import { ReportService } from 'src/app/util/service/db/report.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { LoaderService } from 'src/app/util/service/loader.service';
+import { TransactionStatus } from 'src/app/util/config/enums';
 
 @Component({
   selector: 'app-family-dashboard',
@@ -81,8 +83,27 @@ export class FamilyDashboardComponent implements OnInit {
 
   private storeFamily = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null });
   members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers), { initialValue: [] as FamilyMember[] });
-  transactions = toSignal(this.store.select(FamilySelectors.selectFamilyTransactions), { initialValue: [] as FamilyTransaction[] });
-  recentTxns = toSignal(this.store.select(FamilySelectors.selectRecentTransactions), { initialValue: [] as FamilyTransaction[] });
+  
+  private storeFamilyTransactions = toSignal(this.store.select(FamilySelectors.selectFamilyTransactions), { initialValue: [] as FamilyTransaction[] });
+  private activeStoreTransactions = toSignal(this.store.select(selectAllTransactions), { initialValue: [] as any[] });
+
+  transactions = computed(() => {
+    const fam = this.family();
+    const activeId = this.familyService.activeFamilyId();
+    if (fam && activeId === fam.id) {
+       // We are viewing the active family, use real-time synced transactions!
+       const activeTxs = this.activeStoreTransactions()
+           .filter(tx => tx.status !== TransactionStatus.DELETED);
+       return activeTxs as FamilyTransaction[];
+    }
+    return this.storeFamilyTransactions();
+  });
+
+  recentTxns = computed(() => {
+    const txs = this.transactions() || [];
+    return txs.slice(0, 5);
+  });
+  
   loading = toSignal(this.store.select(FamilySelectors.selectFamilyLoading), { initialValue: true });
 
   recentActivities = computed(() => {
