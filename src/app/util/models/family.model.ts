@@ -1,4 +1,5 @@
 import { Timestamp } from '@angular/fire/firestore';
+import { TransactionStatus } from '../config/enums';
 
 // ─── Family ────────────────────────────────────────────────────────────────
 
@@ -89,6 +90,7 @@ export interface FamilyTransaction {
   settlementFamilyId?: string;
   settlementFromUserId?: string;
   settlementToUserId?: string;
+  status?: TransactionStatus;
 }
 
 // ─── Computed Stats ────────────────────────────────────────────────────────
@@ -143,6 +145,7 @@ export interface UpdateFamilyTransactionRequest {
   category?: string;
   date?: Date;
   note?: string;
+  status?: TransactionStatus;
 }
 
 // ─── Settlements ────────────────────────────────────────────────────────────

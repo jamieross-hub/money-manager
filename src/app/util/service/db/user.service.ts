@@ -34,7 +34,7 @@ import {
 } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, throwError, timer, firstValueFrom, of, from } from 'rxjs';
-import { catchError, retry, timeout, map, switchMap, tap } from 'rxjs/operators';
+import { catchError, retry, timeout, map, switchMap, tap, distinctUntilChanged } from 'rxjs/operators';
 import { authState } from '@angular/fire/auth';
 
 import { defaultBankAccounts } from 'src/app/component/auth/registration/registration.component';
@@ -140,6 +140,10 @@ export class UserService {
    * Initialize authentication state listener with enhanced security
    */
   private initializeAuthState(): void {
+    // Track a pending-clear timer so transient null emissions from Firebase
+    // (common during network loss/recovery) don't wipe the profile store.
+    let clearProfileTimer: ReturnType<typeof setTimeout> | null = null;
+
     onAuthStateChanged(getAuth(), async (user: any) => {
       // Check for guest mode
       const isGuest = this.storageService.getItem(LocalStorageKey.GUEST_MODE) === 'true';
@@ -157,6 +161,12 @@ export class UserService {
       );
 
       if (user) {
+        // Cancel any pending profile-clear that was triggered by a transient null.
+        if (clearProfileTimer) {
+          clearTimeout(clearProfileTimer);
+          clearProfileTimer = null;
+        }
+
         let userData = await this.getCurrentUser();
 
         // Sync vital display info from Auth object if missing in Firestore/Cache
@@ -182,8 +192,17 @@ export class UserService {
         // Check for suspicious activity
         this.detectSuspiciousActivity(user);
       } else {
-        this.store.dispatch(ProfileActions.clearProfile());
-        this.logAuditEvent('USER_LOGOUT', undefined, { timestamp: new Date().toISOString() });
+        // Firebase emits null both for genuine logouts AND transiently during
+        // network loss. Debounce the clear by 5 s so a momentary disconnect
+        // does not wipe the profile from the store.
+        clearProfileTimer = setTimeout(() => {
+          clearProfileTimer = null;
+          // Double-check: if a real Firebase user is present now, don't clear.
+          if (!this.auth.currentUser && !this.storageService.getItem(LocalStorageKey.GUEST_MODE)) {
+            this.store.dispatch(ProfileActions.clearProfile());
+            this.logAuditEvent('USER_LOGOUT', undefined, { timestamp: new Date().toISOString() });
+          }
+        }, 5000);
       }
     });
   }
@@ -361,24 +380,56 @@ export class UserService {
 
   /**
    * Proactively refresh the Firebase ID token every 55 minutes so it never
-   * expires mid-session.  If the refresh fails the user is signed out and
-   * redirected to the login page for a smooth UX.
+   * expires mid-session.  Only signs out on hard auth errors (revoked/disabled
+   * token), NOT on transient network failures — which would log the user out
+   * during momentary connectivity issues.
    */
   private startTokenRefresh(): void {
+    // Hard auth errors that require the user to re-authenticate
+    const AUTH_ERROR_CODES = new Set([
+      'auth/user-token-expired',
+      'auth/user-disabled',
+      'auth/token-revoked',
+      'auth/id-token-revoked',
+    ]);
+
+    const isHardAuthError = (err: any): boolean => {
+      const code: string = err?.code ?? '';
+      return AUTH_ERROR_CODES.has(code);
+    };
+
+    // Track UIDs that have already received a startup token refresh so we
+    // don't call getIdToken(true) again on every reconnect/re-emission.
+    const refreshedUids = new Set<string>();
+
     authState(this.auth)
       .pipe(
-        switchMap(user => {
-          if (!user) return of(null);
-          return from(user.getIdToken(true));
+        // Only act when the UID actually changes (ignore reconnect re-emissions).
+        map(user => user?.uid ?? null),
+        distinctUntilChanged(),
+        switchMap(uid => {
+          const user = this.auth.currentUser;
+          if (!user || !uid) return of(null);
+          // Only refresh once per UID per app session
+          if (refreshedUids.has(uid)) return of(null);
+          refreshedUids.add(uid);
+          return from(user.getIdToken(true)).pipe(
+            catchError(err => {
+              if (isHardAuthError(err)) {
+                console.error('[TokenRefresh] Hard auth error on startup, signing out:', err);
+                this.auth.signOut();
+                this.router.navigate(['/sign-in']);
+              } else {
+                // Transient network error — stay logged in
+                console.warn('[TokenRefresh] Transient error during startup token refresh (ignored):', err?.code ?? err);
+              }
+              return of(null);
+            })
+          );
         })
       )
       .subscribe({
-        next: token => token && console.log('🔄 Token refreshed successfully'),
-        error: err => {
-          console.error('Token refresh failed, signing out:', err);
-          this.auth.signOut();
-          this.router.navigate(['/sign-in']);
-        }
+        next: token => token && console.log('🔄 Token refreshed successfully')
       });
 
     // Re-run the refresh every 55 minutes (tokens expire after 60 min)
@@ -388,9 +439,14 @@ export class UserService {
         currentUser.getIdToken(true)
           .then(() => console.log('🔄 Periodic token refresh done'))
           .catch(err => {
-            console.error('Periodic token refresh failed, signing out:', err);
-            this.auth.signOut();
-            this.router.navigate(['/sign-in']);
+            if (isHardAuthError(err)) {
+              console.error('[TokenRefresh] Hard auth error, signing out:', err);
+              this.auth.signOut();
+              this.router.navigate(['/sign-in']);
+            } else {
+              // Network blip — do NOT sign out
+              console.warn('[TokenRefresh] Transient error during periodic token refresh (ignored):', err?.code ?? err);
+            }
           });
       }
     }, 55 * 60 * 1000); // 55 minutes

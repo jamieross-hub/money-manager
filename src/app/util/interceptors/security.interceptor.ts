@@ -138,27 +138,46 @@ function handleSecurityError(
 
 /**
  * Handle unauthorized errors (401)
+ *
+ * We do NOT immediately force-logout on every 401. On an unstable network,
+ * a 401 can be a race condition between an expiring token and the periodic
+ * token refresh (which runs every 55 minutes). The interceptor already
+ * retries once (retry(1) above), so a genuine auth failure will still reach
+ * here — but we guard against logging the user out while the token refresh
+ * is simply in-flight by checking whether a Firebase user is still present.
  */
 function handleUnauthorizedError(
   router: Router,
   userService: UserService,
   notificationService: NotificationService
 ): void {
-  console.warn('Unauthorized request detected');
+  console.warn('[SecurityInterceptor] 401 received — checking auth state before logout');
 
-  // Log the security event
-  logSecurityEvent('UNAUTHORIZED_REQUEST', {
-    url: window?.location?.href || '',
-    timestamp: new Date().toISOString()
-  });
+  // If there is no logged-in user at all, no action needed
+  if (!userService.getCurrentUserId()) {
+    return;
+  }
 
-  // Force logout user
-  userService.forceLogout('Unauthorized request detected');
+  // Give the token refresh a short window to complete before deciding to log out.
+  // If the user remains authenticated after 3 seconds this is a genuine 401.
+  setTimeout(() => {
+    if (!userService.getCurrentUserId()) {
+      // User was already logged out by the token refresh cycle
+      return;
+    }
 
-  notificationService.error('Session expired. Please log in again.');
-  router.navigate(['/landing'], {
-    queryParams: { error: 'unauthorized', redirect: router.url }
-  });
+    console.warn('[SecurityInterceptor] Genuine 401 - forcing logout');
+    logSecurityEvent('UNAUTHORIZED_REQUEST', {
+      url: window?.location?.href || '',
+      timestamp: new Date().toISOString()
+    });
+
+    userService.forceLogout('Unauthorized request detected');
+    notificationService.error('Session expired. Please log in again.');
+    router.navigate(['/landing'], {
+      queryParams: { error: 'unauthorized', redirect: router.url }
+    });
+  }, 3000);
 }
 
 /**

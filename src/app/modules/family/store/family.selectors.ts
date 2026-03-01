@@ -1,11 +1,15 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { FamilyState } from './family.state';
+import { TransactionStatus } from 'src/app/util/config/enums';
 
 export const selectFamilyState = createFeatureSelector<FamilyState>('family');
 
 export const selectFamily = createSelector(selectFamilyState, s => s?.family || null);
 export const selectFamilyMembers = createSelector(selectFamilyState, s => s?.members || []);
-export const selectFamilyTransactions = createSelector(selectFamilyState, s => s?.transactions || []);
+export const selectFamilyTransactions = createSelector(
+  selectFamilyState, 
+  s => (s?.transactions || []).filter(tx => tx.status !== TransactionStatus.DELETED)
+);
 export const selectFamilyLoading = createSelector(selectFamilyState, s => s?.loading || false);
 export const selectFamilyError = createSelector(selectFamilyState, s => s?.error || null);
 

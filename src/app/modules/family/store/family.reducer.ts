@@ -1,6 +1,7 @@
 import { createReducer, on } from '@ngrx/store';
 import { initialFamilyState } from './family.state';
 import * as FamilyActions from './family.actions';
+import { TransactionStatus } from 'src/app/util/config/enums';
 
 export const familyReducer = createReducer(
   initialFamilyState,
@@ -57,7 +58,9 @@ export const familyReducer = createReducer(
   })),
   on(FamilyActions.deleteTransactionSuccess, (state, { txId }) => ({
     ...state,
-    transactions: state.transactions.filter(tx => tx.id !== txId)
+    transactions: state.transactions.map(tx => 
+      tx.id === txId ? { ...tx, status: TransactionStatus.DELETED, updatedAt: new Date() } : tx
+    )
   })),
 
   // Clear error

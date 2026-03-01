@@ -73,6 +73,19 @@ export class AuthGuard implements CanActivate, CanActivateChild {
   private performSecurityCheck(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
     this.loaderService.show();
 
+    // ── Offline-first: Firebase keeps auth state in IndexedDB. auth.currentUser
+    // is populated synchronously from that cache even when fully offline.
+    // We resolve immediately from it and skip waiting for the authState observable,
+    // which requires a network round-trip to fully initialise.
+    const immediateUser = this.auth.currentUser;
+    if (immediateUser || this.userService.isGuestUser()) {
+      console.log('[AuthGuard] Resolved from cached auth state immediately');
+      this.backgroundSecurityCheck(route, state, immediateUser as User);
+      // loaderService.hide() is called inside backgroundSecurityCheck's finally block
+      return of(true);
+    }
+
+    // No synchronous user found — wait for authState (network may be needed).
     return authState(this.auth).pipe(
       take(1),
       map(firebaseUser => {
@@ -81,12 +94,23 @@ export class AuthGuard implements CanActivate, CanActivateChild {
           return true;
         }
 
-        // Auto-enable guest mode for unauthenticated access
+        // Truly unauthenticated — auto-enable guest mode.
         this.handleUnauthenticatedUser(state);
         return false;
       }),
-      timeout(10000),
+      // 20s timeout: Firebase can be slow resolving persistence on a bad connection.
+      // On timeout, fall back to auth.currentUser (synchronous cache) one more time.
+      timeout(20000),
       catchError(error => {
+        if (error?.name === 'TimeoutError') {
+          console.warn('[AuthGuard] authState timed out — falling back to cached auth state');
+          const cachedUser = this.auth.currentUser;
+          if (cachedUser || this.userService.isGuestUser()) {
+            this.backgroundSecurityCheck(route, state, cachedUser as User);
+            this.loaderService.hide();
+            return of(true);
+          }
+        }
         console.error('[AuthGuard] Timeout or error:', error);
         this.loaderService.hide();
         this.router.navigate(['/sign-in'], {
@@ -95,9 +119,7 @@ export class AuthGuard implements CanActivate, CanActivateChild {
         return of(false);
       }),
       finalize(() => {
-        // Ensure loader is eventually hidden if not already
-        // Note: backgroundSecurityCheck also calls hide() in a timeout(0),
-        // so we must be careful not to hide it too early if it's still doing work.
+        // backgroundSecurityCheck handles hide() in its finally block.
       })
     );
   }
@@ -109,34 +131,37 @@ export class AuthGuard implements CanActivate, CanActivateChild {
           this.updateSessionTimestamp(firebaseUser.uid);
         }
 
+        // Guest users: nothing else to check.
         if (this.userService.isGuestUser()) {
           this.loaderService.hide();
           return;
         }
 
-        if (firebaseUser && this.isSessionExpired(firebaseUser.uid)) {
+        const isOffline = !this.commonSyncService.isCurrentlyOnline();
+
+        // ── Session expiry: skip while offline.
+        // If the device goes offline for a while, the in-memory session timer
+        // would expire but the user cannot re-authenticate without a connection.
+        // Suspend the expiry check until back online.
+        if (!isOffline && firebaseUser && this.isSessionExpired(firebaseUser.uid)) {
           await this.handleSessionExpired(firebaseUser, state);
           return;
         }
 
-        // Check if we're offline and use cached user data
-        const isOffline = !this.commonSyncService.isCurrentlyOnline();
+        // ── User data: use IndexedDB cache when offline.
         let userData: AppUser | null;
-
         if (isOffline) {
-          // Use cached user data when offline
-          userData = this.userService.getCachedUserData(firebaseUser.uid);
+          userData = this.userService.getCachedUserData(firebaseUser?.uid);
           console.log('[AuthGuard] Offline mode - using cached user data:', userData ? 'found' : 'not found');
         } else {
-          // Try to get fresh user data when online
           userData = await this.userService.getCurrentUser();
         }
 
         if (!userData) {
           if (isOffline) {
-            // When offline and no cached data, allow access but log warning
-            console.warn('[AuthGuard] Offline mode - no cached user data available, allowing access');
-            this.updateSessionTimestamp(firebaseUser.uid);
+            // No cache but we have a valid Firebase token locally — allow access.
+            console.warn('[AuthGuard] Offline - no cached user data, allowing access with Firebase token');
+            this.updateSessionTimestamp(firebaseUser?.uid);
             return;
           } else {
             await this.handleInvalidUserData(firebaseUser, state);
@@ -144,10 +169,13 @@ export class AuthGuard implements CanActivate, CanActivateChild {
           }
         }
 
-        const hasPermission = await this.checkRoutePermissions(route, userData, firebaseUser);
+        // ── Route permissions: getIdTokenResult() makes a network call.
+        // Skip it when offline and grant access based on cached data.
+        const hasPermission = await this.checkRoutePermissions(route, userData, firebaseUser, isOffline);
         if (!hasPermission) {
           const routeData = route.data as RoutePermission;
-          if (routeData?.requireEmailVerification && !firebaseUser.emailVerified) {
+          // Skip email-verification enforcement offline (can't sign out & back in anyway).
+          if (!isOffline && routeData?.requireEmailVerification && !firebaseUser.emailVerified) {
             this.notificationService.error('Please verify your email address.');
             await this.userService.signOut();
             this.router.navigate(['/sign-in']);
@@ -158,14 +186,30 @@ export class AuthGuard implements CanActivate, CanActivateChild {
           return;
         }
 
-        this.updateSessionTimestamp(firebaseUser.uid);
+        this.updateSessionTimestamp(firebaseUser?.uid);
       } catch (error) {
         console.error('[AuthGuard] Background error:', error);
 
-        // If we're offline and there's an error, allow access
+        // Any error while offline → allow access. The user cannot help the
+        // situation by logging in again — they have no connectivity.
         if (!this.commonSyncService.isCurrentlyOnline()) {
-          console.warn('[AuthGuard] Offline mode - error occurred, allowing access for offline use');
-          this.updateSessionTimestamp(firebaseUser.uid);
+          console.warn('[AuthGuard] Offline - error in background check, allowing access');
+          if (firebaseUser?.uid) this.updateSessionTimestamp(firebaseUser.uid);
+          return;
+        }
+
+        // Network-related errors even when navigator.onLine says true
+        // (can happen briefly during network transitions).
+        const errorCode: string = (error as any)?.code ?? '';
+        const isNetworkError =
+          errorCode.includes('network') ||
+          errorCode.includes('unavailable') ||
+          (error as any)?.name === 'TimeoutError' ||
+          (error as any)?.message?.toLowerCase().includes('network');
+
+        if (isNetworkError) {
+          console.warn('[AuthGuard] Network error in background check, allowing access:', errorCode);
+          if (firebaseUser?.uid) this.updateSessionTimestamp(firebaseUser.uid);
           return;
         }
 
@@ -176,16 +220,33 @@ export class AuthGuard implements CanActivate, CanActivateChild {
     }, 0);
   }
 
-  private async checkRoutePermissions(route: ActivatedRouteSnapshot, userData: AppUser, firebaseUser: User): Promise<boolean> {
+  private async checkRoutePermissions(
+    route: ActivatedRouteSnapshot,
+    userData: AppUser,
+    firebaseUser: User,
+    isOffline = false
+  ): Promise<boolean> {
     const routeData = route.data as RoutePermission;
-    const idTokenResult = await firebaseUser.getIdTokenResult();
-    const isAdmin = !!idTokenResult.claims['admin'];
+
+    // ── getIdTokenResult() makes a network call to validate/refresh the token.
+    // When offline, skip it and default isAdmin to false (safe default).
+    let isAdmin = false;
+    if (!isOffline) {
+      try {
+        const idTokenResult = await firebaseUser.getIdTokenResult();
+        isAdmin = !!idTokenResult.claims['admin'];
+      } catch (err) {
+        console.warn('[AuthGuard] getIdTokenResult failed (network issue?), defaulting isAdmin=false:', err);
+        // Non-fatal: continue without admin escalation.
+      }
+    }
 
     if (isAdmin) {
       return true;
     }
 
-    if (routeData?.requireEmailVerification && !firebaseUser.emailVerified) {
+    // Skip email-verification check offline to avoid forcing sign-out.
+    if (!isOffline && routeData?.requireEmailVerification && !firebaseUser.emailVerified) {
       console.warn('[AuthGuard] Email not verified');
       return false;
     }
@@ -274,6 +335,11 @@ export class AuthGuard implements CanActivate, CanActivateChild {
       }, SECURITY_CONFIG.INACTIVITY_TIMEOUT);
     };
 
+    // Pause the inactivity timer when the device goes offline and resume on reconnect.
+    // Going offline (e.g. losing signal) must not be treated as user inactivity.
+    window.addEventListener('online', resetTimer);
+    window.addEventListener('offline', () => clearTimeout(inactivityTimer));
+
     ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
       document.addEventListener(event, resetTimer, true);
     });
@@ -282,8 +348,15 @@ export class AuthGuard implements CanActivate, CanActivateChild {
   }
 
   private handleInactivity(): void {
+    // Never log out while offline — the user cannot re-authenticate without a connection.
+    if (!this.commonSyncService.isCurrentlyOnline()) {
+      console.log('[AuthGuard] Inactivity timeout skipped: device is offline');
+      return;
+    }
+
     const currentUser = this.userService.getCurrentUserSnapshot();
-    if (currentUser) {
+    // Skip guest users — they are always offline-only
+    if (currentUser && currentUser.uid !== 'offline-guest') {
       console.log('[AuthGuard] Inactivity detected. Logging out user:', currentUser.uid);
       this.userService.signOut();
     }

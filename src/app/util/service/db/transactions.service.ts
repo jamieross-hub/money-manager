@@ -6,7 +6,7 @@ import { map, switchMap, tap, catchError, timeout } from 'rxjs/operators';
 import { orderBy, query, Timestamp, getDocs } from '@angular/fire/firestore';
 import { DateService } from '../date.service';
 import { Transaction } from '../../models/transaction.model';
-import { RecurringInterval, SyncStatus } from '../../config/enums';
+import { RecurringInterval, SyncStatus, TransactionStatus } from '../../config/enums';
 import { AppState } from 'src/app/store/app.state';
 import { Store } from '@ngrx/store';
 import * as CategoriesActions from '../../../store/categories/categories.actions';
@@ -259,7 +259,7 @@ export class TransactionsService extends BaseService {
     }
 
     /**
-     * Delete a transaction
+     * Delete a transaction (Soft Delete)
      */
     deleteTransaction(userId: string, transactionId: string): Observable<void> {
         if (this.isGuest()) {
@@ -267,9 +267,13 @@ export class TransactionsService extends BaseService {
             const transactionToDelete = transactions.find(t => t.id === transactionId);
 
             if (transactionToDelete) {
-                this.localStorageUtility.deleteEntity('transactions', transactionId, 'id');
+                const updatedTx = { ...transactionToDelete, status: TransactionStatus.DELETED, updatedAt: new Date() };
+                this.localStorageUtility.saveEntity('transactions', updatedTx, 'id');
                 // Update store immediately
-                this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ transactionId, transaction: transactionToDelete }));
+                this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ 
+                    transactionId, 
+                    transaction: updatedTx 
+                }));
                 // Update account balance
                 this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
                     userId: userId,
@@ -294,19 +298,23 @@ export class TransactionsService extends BaseService {
                         transactionType: 'delete',
                         oldTransaction: transactionToDelete
                     }));
-
-
                 }
             };
 
             // 1. Optimistic updates
             handleBalanceDeletion();
             if (transactionToDelete) {
-                this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ transactionId, transaction: transactionToDelete }));
+                const transactionWithDeletedStatus = { ...transactionToDelete, status: TransactionStatus.DELETED, updatedAt: new Date() };
+                this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ 
+                    transactionId, 
+                    transaction: transactionWithDeletedStatus as Transaction 
+                }));
             }
             
             // 2. Update cache immediately
-            this.updateTransactionCache(userId, 'delete', { id: transactionId } as Transaction);
+            if (transactionToDelete) {
+                this.updateTransactionCache(userId, 'update', { ...transactionToDelete, status: TransactionStatus.DELETED, updatedAt: new Date() } as Transaction);
+            }
 
             // 3. Complete observer immediately
             observer.next();
@@ -316,13 +324,13 @@ export class TransactionsService extends BaseService {
             const transactionRef = doc(this.firestore, this.getTransactionPath(userId, transactionId));
 
             if (this.commonSyncService.isCurrentlyOnline()) {
-                deleteDoc(transactionRef).catch(error => {
-                    console.warn('⚠️ Failed to delete transaction online, but already removed from local UI. Moving to sync queue:', error);
-                    this.addToSyncQueue('delete', { id: transactionId });
+                updateDoc(transactionRef, { status: TransactionStatus.DELETED, updatedAt: new Date() }).catch(error => {
+                    console.warn('⚠️ Failed to soft delete transaction online, moving to sync queue:', error);
+                    this.addToSyncQueue('update', { id: transactionId, status: TransactionStatus.DELETED, updatedAt: new Date() });
                 });
             } else {
                 // Offline mode - add to sync queue
-                this.addToSyncQueue('delete', { id: transactionId }).catch(error => {
+                this.addToSyncQueue('update', { id: transactionId, status: TransactionStatus.DELETED, updatedAt: new Date() }).catch(error => {
                     console.error('Failed to add to sync queue:', error);
                 });
             }
@@ -334,7 +342,7 @@ export class TransactionsService extends BaseService {
      */
     getTransactions(userId: string): Observable<Transaction[]> {
         if (this.isGuest()) {
-            const transactions = this.localStorageUtility.getEntities<Transaction>('transactions');
+            const transactions = this.localStorageUtility.getEntities<Transaction>('transactions').filter(t => t.status !== TransactionStatus.DELETED);
             this.transactionsSubject.next(transactions);
             return of(transactions);
         }
@@ -372,21 +380,65 @@ export class TransactionsService extends BaseService {
         return from(getDocs(transactionsRef)).pipe(
             timeout(20000), // Timeout after 20s for larger datasets
             tap((querySnapshot: any) => {
-                const transactions: Transaction[] = [];
+                const firestoreTransactions: Transaction[] = [];
                 querySnapshot.forEach((docSnap: any) => {
-                    transactions.push({ id: docSnap.id, ...docSnap.data() } as Transaction);
+                    firestoreTransactions.push({ id: docSnap.id, ...docSnap.data() } as Transaction);
                 });
 
-                console.log(`[TransactionsService] Pulled ${transactions.length} transactions from Firestore`);
+                console.log(`[TransactionsService] Pulled ${firestoreTransactions.length} transactions from Firestore`);
 
-                // Cache the fresh data
-                this.cacheTransactions(userId, transactions);
-                
+                // ── Offline-created transactions must survive the pull.
+                // When the user adds a transaction while offline it is:
+                //   1. Written to the local IndexedDB cache immediately.
+                //   2. Added to the CommonSyncService sync queue (syncStatus = PENDING).
+                //   3. Pushed to Firestore by manualSync() when coming online.
+                // BUT the subsequent pullFromFirestore fires concurrently and may
+                // receive Firestore data before the write has been committed.
+                // We protect local-pending transactions by merging instead of replacing.
+
+                const localTransactions = this.getCachedTransactions(userId);
+
+                // Build a map of Firestore transactions by ID for O(1) lookup.
+                const firestoreMap = new Map<string, Transaction>(
+                    firestoreTransactions.map(t => [t.id!, t])
+                );
+
+                // Collect local-pending transactions — those that exist locally but
+                // either are not in Firestore yet or have a PENDING sync status.
+                const pendingLocal = localTransactions.filter(localTx => {
+                    if (!localTx.id) return false;
+                    const inFirestore = firestoreMap.has(localTx.id);
+                    const isPending = localTx.syncStatus === SyncStatus.PENDING;
+                    // Keep if: (a) not in Firestore yet (offline-created, not pushed yet)
+                    //          (b) or explicitly marked PENDING (offline-updated)
+                    return !inFirestore || isPending;
+                });
+
+                if (pendingLocal.length > 0) {
+                    console.log(`[TransactionsService] Preserving ${pendingLocal.length} pending-local transaction(s) through pull`);
+                }
+
+                // Merge: Firestore data is the source of truth EXCEPT for pending local items.
+                // Pending local items overwrite any Firestore version for the same ID.
+                const pendingLocalMap = new Map<string, Transaction>(
+                    pendingLocal.map(t => [t.id!, t])
+                );
+
+                const merged: Transaction[] = [
+                    // Start with Firestore transactions, overriding with pending-local if present.
+                    ...firestoreTransactions.map(t => pendingLocalMap.get(t.id!) ?? t),
+                    // Append pending-local transactions that don't appear in Firestore at all.
+                    ...pendingLocal.filter(t => !firestoreMap.has(t.id!))
+                ];
+
+                // Persist the merged list back to local cache.
+                this.cacheTransactions(userId, merged);
+
                 // Update the subject for active components
-                this.transactionsSubject.next(transactions);
-                
+                this.transactionsSubject.next(merged);
+
                 // Update NgRx state via success action
-                this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions }));
+                this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: merged }));
             }),
             map(() => undefined),
             catchError(error => {
@@ -422,23 +474,47 @@ export class TransactionsService extends BaseService {
         console.log(`[TransactionsService] Starting real-time listener for user: ${userId}`);
 
         return new Observable<void>(observer => {
-            const unsubscribe = onSnapshot(transactionsRef, 
+            const unsubscribe = onSnapshot(transactionsRef,
                 (querySnapshot) => {
-                    const transactions: Transaction[] = [];
+                    const firestoreTransactions: Transaction[] = [];
                     querySnapshot.forEach((docSnap) => {
-                        transactions.push({ id: docSnap.id, ...docSnap.data() } as Transaction);
+                        firestoreTransactions.push({ id: docSnap.id, ...docSnap.data() } as Transaction);
                     });
 
-                    console.log(`[TransactionsService] Real-time update: ${transactions.length} transactions`);
+                    console.log(`[TransactionsService] Real-time update: ${firestoreTransactions.length} transactions`);
+
+                    // ── Same merge logic as pullFromFirestore.
+                    // onSnapshot fires when coming back online and may not yet contain
+                    // transactions that were pushed by the sync queue in the same moment.
+                    const localTransactions = this.getCachedTransactions(userId);
+                    const firestoreMap = new Map<string, Transaction>(
+                        firestoreTransactions.map(t => [t.id!, t])
+                    );
+
+                    const pendingLocal = localTransactions.filter(localTx => {
+                        if (!localTx.id) return false;
+                        const inFirestore = firestoreMap.has(localTx.id);
+                        const isPending = localTx.syncStatus === SyncStatus.PENDING;
+                        return !inFirestore || isPending;
+                    });
+
+                    const pendingLocalMap = new Map<string, Transaction>(
+                        pendingLocal.map(t => [t.id!, t])
+                    );
+
+                    const merged: Transaction[] = [
+                        ...firestoreTransactions.map(t => pendingLocalMap.get(t.id!) ?? t),
+                        ...pendingLocal.filter(t => !firestoreMap.has(t.id!))
+                    ];
 
                     // 1. Update cache
-                    this.cacheTransactions(userId, transactions);
-                    
+                    this.cacheTransactions(userId, merged);
+
                     // 2. Update subject
-                    this.transactionsSubject.next(transactions);
-                    
+                    this.transactionsSubject.next(merged);
+
                     // 3. Update NgRx state
-                    this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions }));
+                    this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: merged }));
 
                     observer.next();
                 },

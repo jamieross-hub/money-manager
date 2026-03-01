@@ -8,7 +8,7 @@ export const selectTransactionsState = createFeatureSelector<TransactionsState>(
 // Base selectors
 export const selectAllTransactions = createSelector(
   selectTransactionsState,
-  (state) => state.ids.map(id => state.entities[id]).filter(Boolean)
+  (state) => state.ids.map(id => state.entities[id]).filter(Boolean).filter(t => t.status !== TransactionStatus.DELETED)
 );
 
 export const selectTransactionsLoading = createSelector(

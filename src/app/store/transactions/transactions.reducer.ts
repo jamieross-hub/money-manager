@@ -1,6 +1,7 @@
 import { createReducer, on } from '@ngrx/store';
 import { TransactionsState, initialState } from './transactions.state';
 import * as TransactionsActions from './transactions.actions';
+import { TransactionStatus } from '../../util/config/enums';
 
 export const transactionsReducer = createReducer(
   initialState,
@@ -102,13 +103,18 @@ export const transactionsReducer = createReducer(
     error: null
   })),
   
-  on(TransactionsActions.deleteTransactionSuccess, (state, { transactionId }) => {
-    const { [transactionId]: removed, ...remainingEntities } = state.entities;
-    
+  on(TransactionsActions.deleteTransactionSuccess, (state, { transactionId, transaction }) => {
     return {
       ...state,
-      entities: remainingEntities,
-      ids: state.ids.filter(id => id !== transactionId),
+      entities: {
+        ...state.entities,
+        [transactionId]: {
+          ...state.entities[transactionId],
+          ...transaction,
+          status: TransactionStatus.DELETED,
+          updatedAt: new Date()
+        }
+      },
       loading: false,
       error: null
     };

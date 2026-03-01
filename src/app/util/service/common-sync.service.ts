@@ -97,7 +97,10 @@ export class CommonSyncService implements OnDestroy {
   private readonly LOW_PRIORITY_EXPIRY = 60 * 60 * 1000; // 1 hour
 
   private networkStatusSubject = new BehaviorSubject<NetworkStatus>({
-    online: false
+    // Use the real browser status at construction time — NOT a hardcoded false.
+    // A hardcoded false caused AuthGuard to incorrectly treat the user as offline
+    // during startup, even on a stable connection.
+    online: typeof navigator !== 'undefined' ? navigator.onLine : true
   });
 
   private syncStatusSubject = new BehaviorSubject<SyncStatus>({
@@ -414,7 +417,12 @@ export class CommonSyncService implements OnDestroy {
 
     // 1. Push pending changes first
     return from(this.manualSync()).pipe(
-      timeout(10000), // Timeout after 10s if push hangs
+      timeout(15000), // Timeout after 15s if push hangs
+      // Wait a short propagation window after pushing so Firestore batch commits
+      // are visible to the subsequent getDocs pull. Without this, the pull can
+      // arrive before the just-committed offline transactions are readable,
+      // even though manualSync() has already resolved.
+      switchMap(() => from(new Promise<void>(resolve => setTimeout(resolve, 1500)))),
       // 2. Pull changes from all collections
       switchMap(() => {
         return forkJoin([

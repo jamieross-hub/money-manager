@@ -38,7 +38,7 @@ import {
 
 const ACTIVE_FAMILY_ID_KEY = 'active_family_id';
 import { NotificationService } from 'src/app/util/service/notification.service';
-import { TransactionType, AccountType } from 'src/app/util/config/enums';
+import { TransactionType, AccountType, TransactionStatus } from 'src/app/util/config/enums';
 import { defaultCategoriesForNewUser } from 'src/app/util/config/config';
 import { Category, Account, User } from 'src/app/util/models';
 import { Store } from '@ngrx/store';
@@ -482,7 +482,8 @@ export class FamilyService {
       settlementId: request.settlementId,
       settlementFamilyId: request.settlementFamilyId,
       settlementFromUserId: request.settlementFromUserId,
-      settlementToUserId: request.settlementToUserId
+      settlementToUserId: request.settlementToUserId,
+      status: TransactionStatus.COMPLETED
     };
 
     const ref = await addDoc(this.getTransactionsCol(request.familyId), txData);
@@ -501,7 +502,10 @@ export class FamilyService {
   }
 
   async deleteTransaction(familyId: string, txId: string): Promise<void> {
-    await deleteDoc(this.getTransactionDoc(familyId, txId));
+    await updateDoc(this.getTransactionDoc(familyId, txId), {
+      status: TransactionStatus.DELETED,
+      updatedAt: new Date()
+    });
   }
 
   // ─── Stats ────────────────────────────────────────────────────────────────
@@ -527,6 +531,9 @@ export class FamilyService {
     let transactionCount = 0;
     // Accumulate
     transactions.forEach(tx => {
+      // Skip deleted transactions
+      if (tx.status === TransactionStatus.DELETED) return;
+
       // Skip settlements for expense/income stats as they are internal transfers
       if (tx.category === 'Settlement') return;
 
@@ -647,6 +654,7 @@ export class FamilyService {
 
     // Split expense shares → debtor owes payer
     for (const tx of transactions) {
+      if (tx.status === TransactionStatus.DELETED) continue;
       if (tx.type !== 'expense' || !tx.splitData) continue;
       const { paidByUserId, splitBetween, paidBy } = tx.splitData;
 
