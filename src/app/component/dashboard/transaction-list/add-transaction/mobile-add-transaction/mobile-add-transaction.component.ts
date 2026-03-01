@@ -1,4 +1,4 @@
-import { Component, Inject, inject, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { Component, Inject, inject, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, ChangeDetectorRef } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -170,7 +170,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     public breakpointService: BreakpointService,
     private userService: UserService,
     private currencyService: CurrencyService,
-    private bottomSheet: MatBottomSheet
+    private bottomSheet: MatBottomSheet,
+    private cdr: ChangeDetectorRef
   ) {
     this.isGuestUser = this.userService.isGuestUser();
     const tomorrow = new Date();
@@ -464,7 +465,10 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         });
 
         // Determine the default category (excluding system categories)
-        this.categoryList$.pipe(take(1)).subscribe(categories => {
+        this.categoryList$.pipe(
+          filter(cats => cats && cats.length > 0),
+          take(1)
+        ).subscribe(categories => {
           const nonSystemCategories = categories.filter(c => !c.isSystem);
           
           let categoryIdToSet = '';
@@ -480,8 +484,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           } else {
             // If no valid previous category, select the first non-system category (preferably Expense)
             const defaultCat = nonSystemCategories.find(c => c.type === TransactionType.EXPENSE) || nonSystemCategories[0];
-            if (defaultCat?.id) {
-              this.onCategoryChange(defaultCat.id);
+            if (defaultCat) {
+              this.onCategoryChange(defaultCat);
             }
           }
         });
@@ -732,25 +736,38 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     });
   }
 
-  onCategoryChange(categoryId: any): void {
-    if (!categoryId) return;
+  onCategoryChange(categoryOrId: any): void {
+    if (!categoryOrId) return;
 
+    // Direct object handling (from sheet or initialization)
+    if (typeof categoryOrId === 'object' && categoryOrId.id) {
+      this._applyCategoryData(categoryOrId);
+      return;
+    }
+
+    // ID lookup handling
+    const categoryId = categoryOrId;
     this.categoryList$.pipe(
-      take(1),
+      filter(categories => categories && categories.length > 0),
       map((categories: Category[]) => categories.find(c => c.id === categoryId)),
-      filter((category): category is Category => !!category)
+      filter((category): category is Category => !!category),
+      take(1)
     ).subscribe((category: Category) => {
-
-      this.currentCategoryIcon.set(category.icon);
-      this.currentCategoryColor.set(category.color);
-
-      this.transactionForm.patchValue({
-        categoryId: category.id,
-        categoryName: category.name,
-        categoryType: category.type,
-      });
-
+      this._applyCategoryData(category);
     });
+  }
+
+  private _applyCategoryData(category: Category): void {
+    this.currentCategoryIcon.set(category.icon);
+    this.currentCategoryColor.set(category.color);
+
+    this.transactionForm.patchValue({
+      categoryId: category.id,
+      categoryName: category.name,
+      categoryType: category.type,
+    });
+    
+    this.cdr.markForCheck();
   }
 
   openCategorySheet(): void {
@@ -770,7 +787,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
     sheetRef.afterDismissed().subscribe((category: Category | undefined) => {
       if (category) {
-        this.onCategoryChange(category.id);
+        this.onCategoryChange(category);
       }
     });
   }
