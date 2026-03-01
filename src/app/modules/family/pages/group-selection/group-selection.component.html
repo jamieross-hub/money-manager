@@ -1,4 +1,4 @@
-@defer (when loadState() !== 'loading') {
+
 
 @if (showDashboard()) {
 
@@ -260,66 +260,3 @@
 }
 
 
-} @placeholder {
-<div class="animate-pulse">
-  <!-- Header Section Skeleton (matches real header structure) -->
-  <div
-    class="header-section shadow-sm rounded-b-3xl px-5 pt-4 pb-6 border-b border-gray-100 dark:border-gray-800/50 mb-8 bg-gray-100 dark:bg-gray-800/50">
-
-    <!-- Top Nav & Actions -->
-    <div class="flex items-center justify-between mb-8 opacity-40">
-      <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-      <div class="flex gap-2">
-        <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-        <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-      </div>
-    </div>
-
-    <!-- Identity Area -->
-    <div class="flex items-center gap-4">
-      <!-- Family Avatar -->
-      <div class="w-16 h-16 rounded-2xl bg-gray-200 dark:bg-gray-700 border border-gray-200/50 dark:border-gray-600/30">
-      </div>
-      <div class="space-y-2 mt-[-4px]">
-        <div class="w-40 h-7 bg-gray-300 dark:bg-gray-600 rounded-lg"></div>
-        <div class="flex items-center gap-2 opacity-50">
-          <div class="w-4 h-4 rounded bg-gray-300 dark:bg-gray-600"></div>
-          <div class="w-20 h-3 bg-gray-300 dark:bg-gray-600 rounded"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Invite Code Skeleton -->
-    <div class="mt-8">
-      <div
-        class="w-36 h-12 bg-white/30 dark:bg-gray-700/30 rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
-      </div>
-    </div>
-  </div>
-
-  <!-- Stats Section Skeleton -->
-  <div class="px-5 mb-10 mt-2">
-    <div class="w-20 h-3.5 bg-gray-200 dark:bg-gray-800 rounded-full mb-4 opacity-70"></div>
-    <div class="grid grid-cols-3 gap-3">
-      <div class="h-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700"></div>
-      <div class="h-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700"></div>
-      <div class="h-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700"></div>
-    </div>
-  </div>
-
-  <!-- Activity/Breakdown Section Skeleton -->
-  <div class="px-5">
-    <div class="flex justify-between items-center mb-4 opacity-70">
-      <div class="w-28 h-3.5 bg-gray-200 dark:bg-gray-800 rounded-full"></div>
-    </div>
-
-    <div class="space-y-3">
-      <div class="h-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700"></div>
-      <div class="h-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 opacity-60">
-      </div>
-      <div class="h-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 opacity-40">
-      </div>
-    </div>
-  </div>
-</div>
-}
