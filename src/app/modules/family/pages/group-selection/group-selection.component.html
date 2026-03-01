@@ -1,224 +1,259 @@
-
-
- @defer (when selectedGroup()) {
+@defer (when loadState() !== 'loading') {
 
 @if (showDashboard()) {
- 
-    <app-family-dashboard 
-      [group]="selectedGroup()" 
-      (close)="showDashboard.set(false)">
-    </app-family-dashboard>
-  
+
+<app-family-dashboard [group]="selectedGroup()" (close)="showDashboard.set(false)">
+</app-family-dashboard>
+
 }
 
 @if (!showDashboard()) {
-  <div class="gs-page">
+<div class="gs-page">
 
-    @defer (on idle) {
-      <app-quick-actions-fab [config]="fabConfig" (actionClick)="handleQuickAction($event)"></app-quick-actions-fab>
-    }
+  @defer (on idle) {
+  <app-quick-actions-fab [config]="fabConfig" (actionClick)="handleQuickAction($event)"></app-quick-actions-fab>
+  }
 
-    <!-- ══════════════════════════════════════════════════════════
+  <!-- ══════════════════════════════════════════════════════════
          ERROR STATE
     ══════════════════════════════════════════════════════════ -->
-    @if (loadState() === 'error') {
-      <div class="gs-state-center">
-        <div class="gs-state-icon gs-state-icon--error">
-          <mat-icon>wifi_off</mat-icon>
-        </div>
-        <p class="gs-state-title">Couldn't load groups</p>
-        <p class="gs-state-subtitle">{{ errorMessage() }}</p>
-        <button mat-stroked-button color="primary" (click)="loadGroups()">
-          <mat-icon>refresh</mat-icon>
-          Retry
+  @if (loadState() === 'error') {
+  <div class="gs-state-center">
+    <div class="gs-state-icon gs-state-icon--error">
+      <mat-icon>wifi_off</mat-icon>
+    </div>
+    <p class="gs-state-title">Couldn't load groups</p>
+    <p class="gs-state-subtitle">{{ errorMessage() }}</p>
+    <button mat-stroked-button color="primary" (click)="loadGroups()">
+      <mat-icon>refresh</mat-icon>
+      Retry
+    </button>
+  </div>
+  }
+
+
+  <div class="gs-content">
+
+    <!-- ── EMPTY STATE ──────────────────────────────────── -->
+    @if (loadState() === 'empty') {
+    <div
+      class="flex flex-col items-center justify-center min-h-[50vh] px-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div
+        class="w-24 h-24 rounded-3xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mb-6 shadow-sm border border-primary-100 dark:border-primary-800/40">
+        <mat-icon class="!text-5xl !w-12 !h-12 text-primary-600 dark:text-primary-400">group_add</mat-icon>
+      </div>
+      <p class="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-3">No Groups Yet</p>
+      <p class="text-[15px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8 max-w-[280px] mx-auto opacity-80">
+        Create a family group or join an existing one to start tracking shared expenses.
+      </p>
+      <div class="flex flex-col w-full max-w-xs gap-3">
+        <button mat-flat-button color="primary"
+          class="!h-12 !rounded-2xl !text-[15px] font-bold shadow-lg shadow-primary-500/20"
+          (click)="openCreateDialog()">
+          <mat-icon class="mr-1">add</mat-icon>
+          Create New Group
+        </button>
+        <button mat-stroked-button
+          class="!h-12 !rounded-2xl !text-[15px] font-bold border-gray-200 dark:border-gray-700"
+          (click)="openJoinDialog()">
+          <mat-icon class="mr-1">link</mat-icon>
+          Join via Invite
         </button>
       </div>
+    </div>
+    }
+
+    <!-- ── ACTIVE GROUP CARD ──────────────────────────────── -->
+    @if (activeGroup(); as active) {
+    @defer (on idle) {
+    <section class="gs-section">
+      <p class="gs-section-label">Your Active Group</p>
+      <div class="gs-active-card" matRipple (click)="openGroup(active)">
+
+        <!-- Accent bar -->
+        <div class="gs-active-card__accent"></div>
+
+        <div class="gs-active-card__body">
+          <div class="gs-avatar gs-avatar--lg overflow-hidden" [style.background]="'var(--primary-500)'">
+            <img *ngIf="active.icon && active.icon.startsWith('data:')" [src]="active.icon"
+              class="w-full h-full object-cover" />
+            <mat-icon *ngIf="active.icon && !active.icon.startsWith('data:')"
+              class="text-white text-[24px] w-[24px] h-[24px]">{{ active.icon }}</mat-icon>
+            <ng-container *ngIf="!active.icon">{{ avatarInitials(active.name) }}</ng-container>
+          </div>
+
+          <!-- Info -->
+          <div class="gs-info">
+            <div class="gs-info__name-row">
+              <span class="gs-info__name">{{ active.name }}</span>
+            </div>
+            <div class="gs-info__meta">
+              <span class="gs-meta-text gs-meta-text--with-icon">
+                <mat-icon class="gs-meta-icon">{{ groupModeIcon[active.mode] }}</mat-icon>
+                {{ groupModeLabel[active.mode] }}
+              </span>
+              <span class="gs-dot">·</span>
+              <span class="gs-meta-text">{{ active.memberCount }} member{{ active.memberCount !== 1 ? 's' : '' }}</span>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Role badge -->
+        <span class="gs-role-badge" [class.gs-role-badge--admin]="active.role === 'admin'"
+          [class.gs-role-badge--member]="active.role === 'member'">
+          {{ active.role }}
+        </span>
+
+        <!-- Divider + stat row -->
+        <div class="gs-active-card__footer">
+          <div class="gs-active-card__activity">
+            <mat-icon class="gs-meta-icon"> money</mat-icon>
+            <span class="gs-meta-text">
+              {{ formatCurrency(active.totalSpend || 0, 'INR') }}
+            </span>
+          </div>
+          <button mat-button color="primary" class="gs-open-btn" (click)="$event.stopPropagation(); openGroup(active)">
+            Open
+            <mat-icon class="gs-open-btn__icon">arrow_forward</mat-icon>
+          </button>
+        </div>
+      </div>
+    </section>
+    } @placeholder {
+    <!-- Active Card Skeleton -->
+    <section class="gs-section animate-pulse mt-1">
+      <div class="w-24 h-3 bg-gray-200 dark:bg-gray-800 rounded-full mb-3 ml-1 opacity-70"></div>
+      <div class="h-[180px] bg-white dark:bg-gray-800/80 rounded-[28px] border border-gray-100 dark:border-gray-700/60 overflow-hidden relative">
+        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gray-200 dark:bg-gray-700"></div>
+        <div class="p-5 flex items-center gap-4">
+          <div class="w-16 h-16 rounded-3xl bg-gray-200 dark:bg-gray-700"></div>
+          <div class="space-y-2">
+            <div class="w-36 h-6 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+            <div class="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded opacity-60"></div>
+          </div>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 h-14 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-800 px-5 flex items-center">
+           <div class="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded opacity-50"></div>
+        </div>
+      </div>
+    </section>
+    }
     }
 
 
-    <div class="gs-content">
+    <!-- ── ALL GROUPS LIST ─────────────────────────────────── -->
+    @if (otherGroups().length > 0) {
+    @defer (on viewport) {
+    <section class="gs-section mt-2">
+      <p class="gs-section-label">Other Groups</p>
+      <div class="gs-list">
 
-      <!-- ── ACTIVE GROUP CARD ──────────────────────────────── -->
-      @if (activeGroup(); as active) {
-        @defer (on idle) {
-          <section class="gs-section">
-            <p class="gs-section-label">Your Active Group</p>
-            <div class="gs-active-card"
-                 matRipple (click)="openGroup(active)">
+        @for (group of otherGroups(); track group.id; let last = $last) {
+        <div class="gs-list-card" matRipple (click)="openGroup(group)">
 
-              <!-- Accent bar -->
-              <div class="gs-active-card__accent"></div>
+          <div class="gs-list-card__body">
+            <div class="gs-avatar gs-avatar--md overflow-hidden" [style.background]="'var(--primary-500)'">
+              <img *ngIf="group.icon && group.icon.startsWith('data:')" [src]="group.icon"
+                class="w-full h-full object-cover" />
+              <mat-icon *ngIf="group.icon && !group.icon.startsWith('data:')"
+                class="text-white text-[20px] w-[20px] h-[20px]">{{ group.icon }}</mat-icon>
+              <ng-container *ngIf="!group.icon">{{ avatarInitials(group.name) }}</ng-container>
+            </div>
 
-              <div class="gs-active-card__body">
-                <div class="gs-avatar gs-avatar--lg overflow-hidden"
-                     [style.background]="'var(--primary-500)'">
-                  <img *ngIf="active.icon && active.icon.startsWith('data:')" [src]="active.icon" class="w-full h-full object-cover" />
-                  <mat-icon *ngIf="active.icon && !active.icon.startsWith('data:')" class="text-white text-[24px] w-[24px] h-[24px]">{{ active.icon }}</mat-icon>
-                  <ng-container *ngIf="!active.icon">{{ avatarInitials(active.name) }}</ng-container>
-                </div>
-
-                <!-- Info -->
-                <div class="gs-info">
-                  <div class="gs-info__name-row">
-                    <span class="gs-info__name">{{ active.name }}</span>
-                  </div>
-                  <div class="gs-info__meta">
-                    <span class="gs-meta-text gs-meta-text--with-icon">
-                      <mat-icon class="gs-meta-icon">{{ groupModeIcon[active.mode] }}</mat-icon>
-                      {{ groupModeLabel[active.mode] }}
-                    </span>
-                    <span class="gs-dot">·</span>
-                    <span class="gs-meta-text">{{ active.memberCount }} member{{ active.memberCount !== 1 ? 's' : '' }}</span>
-            
-                  </div>
-                </div>
-
+            <!-- Info -->
+            <div class="gs-info">
+              <div class="gs-info__name-row">
+                <span class="gs-info__name">{{ group.name }}</span>
               </div>
-
-              <!-- Role badge -->
-              <span class="gs-role-badge"
-                    [class.gs-role-badge--admin]="active.role === 'admin'"
-                    [class.gs-role-badge--member]="active.role === 'member'">
-                {{ active.role }}
-              </span>
-
-              <!-- Divider + stat row -->
-              <div class="gs-active-card__footer">
-                <div class="gs-active-card__activity">
-                  <mat-icon class="gs-meta-icon"> money</mat-icon>
-                  <span class="gs-meta-text">
-                    {{ formatCurrency(active.totalSpend || 0, 'INR') }}
-                  </span>
-                </div>
-                <button mat-button color="primary" class="gs-open-btn"
-                        (click)="$event.stopPropagation(); openGroup(active)">
-                  Open
-                  <mat-icon class="gs-open-btn__icon">arrow_forward</mat-icon>
-                </button>
+              <div class="gs-info__meta">
+                <span class="gs-meta-text gs-meta-text--with-icon">
+                  <mat-icon class="gs-meta-icon">{{ groupModeIcon[group.mode] }}</mat-icon>
+                  {{ groupModeLabel[group.mode] }}
+                </span>
+                <span class="gs-dot">·</span>
+                <span class="gs-meta-text">
+                  {{ group.memberCount }} member{{ group.memberCount !== 1 ? 's' : '' }}
+                </span>
+                <span class="gs-dot">·</span>
+                <span class="gs-meta-text">
+                  {{ formatCurrency(group.totalSpend || 0, 'INR') }}
+                </span>
               </div>
             </div>
-          </section>
-        } @placeholder {
-          <div style="height: 180px;"></div>
-        }
-      }
 
+          </div>
 
-      <!-- ── ALL GROUPS LIST ─────────────────────────────────── -->
-      @if (otherGroups().length > 0) {
-        @defer (on viewport) {
-          <section class="gs-section mt-2">
-            <p class="gs-section-label">Other Groups</p>
-            <div class="gs-list">
+          <!-- Role badge -->
+          <span class="gs-role-badge" [class.gs-role-badge--admin]="group.role === 'admin'"
+            [class.gs-role-badge--member]="group.role === 'member'">
+            {{ group.role }}
+          </span>
 
-              @for (group of otherGroups(); track group.id; let last = $last) {
-                <div class="gs-list-card" matRipple (click)="openGroup(group)">
+          <!-- Footer with actions -->
+          <div class="gs-list-card__footer">
 
-                  <div class="gs-list-card__body">
-                    <div class="gs-avatar gs-avatar--md overflow-hidden"
-                         [style.background]="'var(--primary-500)'">
-                      <img *ngIf="group.icon && group.icon.startsWith('data:')" [src]="group.icon" class="w-full h-full object-cover" />
-                      <mat-icon *ngIf="group.icon && !group.icon.startsWith('data:')" class="text-white text-[20px] w-[20px] h-[20px]">{{ group.icon }}</mat-icon>
-                      <ng-container *ngIf="!group.icon">{{ avatarInitials(group.name) }}</ng-container>
-                    </div>
+            <button mat-button color="primary" (click)="$event.stopPropagation(); openGroup(group)">
+              <mat-icon>open_in_new</mat-icon>
+              Open
+            </button>
 
-                    <!-- Info -->
-                    <div class="gs-info">
-                      <div class="gs-info__name-row">
-                        <span class="gs-info__name">{{ group.name }}</span>
-                      </div>
-                      <div class="gs-info__meta">
-                        <span class="gs-meta-text gs-meta-text--with-icon">
-                          <mat-icon class="gs-meta-icon">{{ groupModeIcon[group.mode] }}</mat-icon>
-                          {{ groupModeLabel[group.mode] }}
-                        </span>
-                        <span class="gs-dot">·</span>
-                        <span class="gs-meta-text">
-                          {{ group.memberCount }} member{{ group.memberCount !== 1 ? 's' : '' }}
-                        </span>
-                        <span class="gs-dot">·</span>
-                        <span class="gs-meta-text">
-                          {{ formatCurrency(group.totalSpend || 0, 'INR') }}
-                        </span>
-                      </div>
-                    </div>
+            <div class="gs-list-card__actions" style="display: flex; gap: 4px;">
 
-                  </div>
+              @if (group.role !== 'admin') {
+              <button mat-button matTooltip="Leave Group" color="warn"
+                (click)="$event.stopPropagation(); requestLeave(group)">
+                <mat-icon>exit_to_app</mat-icon>
+                Leave
+              </button>
+              }
 
-                  <!-- Role badge -->
-                  <span class="gs-role-badge"
-                        [class.gs-role-badge--admin]="group.role === 'admin'"
-                        [class.gs-role-badge--member]="group.role === 'member'">
-                    {{ group.role }}
-                  </span>
-
-                  <!-- Footer with actions -->
-                  <div class="gs-list-card__footer">
-                    
-                    <button mat-button 
-                            color="primary"
-                            (click)="$event.stopPropagation(); openGroup(group)">
-                      <mat-icon>open_in_new</mat-icon>
-                      Open
-                    </button>
-                    
-                    <div class="gs-list-card__actions" style="display: flex; gap: 4px;">
-
-                      @if (group.role !== 'admin') {
-                        <button mat-button
-                                matTooltip="Leave Group"
-                                color="warn" 
-                                (click)="$event.stopPropagation(); requestLeave(group)">
-                          <mat-icon>exit_to_app</mat-icon>
-                          Leave
-                        </button>
-                      }
-                      
-                      @if (group.role === 'admin') {
-                        <button mat-button
-                                matTooltip="Delete Group"
-                                color="warn" 
-                                (click)="$event.stopPropagation(); requestDelete(group)">
-                          <mat-icon>delete_forever</mat-icon>
-                          Delete
-                        </button>
-                      }
-                    </div>
-                  </div>
-                </div>
+              @if (group.role === 'admin') {
+              <button mat-button matTooltip="Delete Group" color="warn"
+                (click)="$event.stopPropagation(); requestDelete(group)">
+                <mat-icon>delete_forever</mat-icon>
+                Delete
+              </button>
               }
             </div>
-          </section>
-        } @placeholder {
-          <div style="height: 200px; display: flex; align-items: center; justify-content: center; opacity: 0.5;">
-             <mat-spinner diameter="30"></mat-spinner>
           </div>
+        </div>
         }
-      }
+      </div>
+    </section>
+    } @placeholder {
+    <!-- Group List Skeleton -->
+    <section class="gs-section animate-pulse mt-4">
+      <div class="w-24 h-3 bg-gray-200 dark:bg-gray-800 rounded-full mb-3 ml-1 opacity-70"></div>
+      <div class="space-y-3">
+        <div class="h-20 bg-white dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-gray-700/60"></div>
+        <div class="h-20 bg-white dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-gray-700/60 opacity-60"></div>
+        <div class="h-20 bg-white dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-gray-700/60 opacity-30"></div>
+      </div>
+    </section>
+    }
+    }
 
-    </div>
-  
+  </div>
+
 
   <!-- ══════════════════════════════════════════════════════════
        BOTTOM ACTION AREA (sticky, visible when loaded/empty)
   ══════════════════════════════════════════════════════════ -->
-  @if (loadState() === 'loaded') {
-    @defer (on idle) {
-      <div class="gs-bottom-bar safe-area-bottom">
-        <button mat-flat-button color="primary"
-                class="gs-btn-full"
-                (click)="openCreateDialog()">
-          <mat-icon>add</mat-icon>
-          Create Group
-        </button>
-        <button mat-stroked-button color="primary"
-                class="gs-btn-full"
-                (click)="openJoinDialog()">
-          <mat-icon>link</mat-icon>
-          Join Group
-        </button>
-      </div>
-    }
+  @if (loadState() === 'loaded' || loadState() === 'empty') {
+  @defer (on idle) {
+  <div class="gs-bottom-bar safe-area-bottom">
+    <button mat-flat-button color="primary" class="gs-btn-full" (click)="openCreateDialog()">
+      <mat-icon>add</mat-icon>
+      Create Group
+    </button>
+    <button mat-stroked-button color="primary" class="gs-btn-full" (click)="openJoinDialog()">
+      <mat-icon>link</mat-icon>
+      Join Group
+    </button>
+  </div>
+  }
   }
 
 </div>
@@ -226,59 +261,65 @@
 
 
 } @placeholder {
-    <div class="animate-pulse">
-    <!-- Header Section Skeleton (matches real header structure) -->
-    <div class="header-section shadow-sm rounded-b-3xl px-5 pt-4 pb-6 border-b border-gray-100 dark:border-gray-800/50 mb-8 bg-gray-100 dark:bg-gray-800/50">
-      
-      <!-- Top Nav & Actions -->
-      <div class="flex items-center justify-between mb-8 opacity-40">
+<div class="animate-pulse">
+  <!-- Header Section Skeleton (matches real header structure) -->
+  <div
+    class="header-section shadow-sm rounded-b-3xl px-5 pt-4 pb-6 border-b border-gray-100 dark:border-gray-800/50 mb-8 bg-gray-100 dark:bg-gray-800/50">
+
+    <!-- Top Nav & Actions -->
+    <div class="flex items-center justify-between mb-8 opacity-40">
+      <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+      <div class="flex gap-2">
         <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-        <div class="flex gap-2">
-          <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-          <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-        </div>
-      </div>
-
-      <!-- Identity Area -->
-      <div class="flex items-center gap-4">
-        <!-- Family Avatar -->
-        <div class="w-16 h-16 rounded-2xl bg-gray-200 dark:bg-gray-700 border border-gray-200/50 dark:border-gray-600/30"></div>
-        <div class="space-y-2 mt-[-4px]">
-          <div class="w-40 h-7 bg-gray-300 dark:bg-gray-600 rounded-lg"></div>
-          <div class="flex items-center gap-2 opacity-50">
-             <div class="w-4 h-4 rounded bg-gray-300 dark:bg-gray-600"></div>
-             <div class="w-20 h-3 bg-gray-300 dark:bg-gray-600 rounded"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Invite Code Skeleton -->
-      <div class="mt-8">
-        <div class="w-36 h-12 bg-white/30 dark:bg-gray-700/30 rounded-2xl border border-gray-200/50 dark:border-gray-700/50"></div>
+        <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
       </div>
     </div>
 
-    <!-- Stats Section Skeleton -->
-    <div class="px-5 mb-10 mt-2">
-      <div class="w-20 h-3.5 bg-gray-200 dark:bg-gray-800 rounded-full mb-4 opacity-70"></div>
-      <div class="grid grid-cols-3 gap-3">
-        <div class="h-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700"></div>
-        <div class="h-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700"></div>
-        <div class="h-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700"></div>
+    <!-- Identity Area -->
+    <div class="flex items-center gap-4">
+      <!-- Family Avatar -->
+      <div class="w-16 h-16 rounded-2xl bg-gray-200 dark:bg-gray-700 border border-gray-200/50 dark:border-gray-600/30">
+      </div>
+      <div class="space-y-2 mt-[-4px]">
+        <div class="w-40 h-7 bg-gray-300 dark:bg-gray-600 rounded-lg"></div>
+        <div class="flex items-center gap-2 opacity-50">
+          <div class="w-4 h-4 rounded bg-gray-300 dark:bg-gray-600"></div>
+          <div class="w-20 h-3 bg-gray-300 dark:bg-gray-600 rounded"></div>
+        </div>
       </div>
     </div>
 
-    <!-- Activity/Breakdown Section Skeleton -->
-    <div class="px-5">
-      <div class="flex justify-between items-center mb-4 opacity-70">
-        <div class="w-28 h-3.5 bg-gray-200 dark:bg-gray-800 rounded-full"></div>
-      </div>
-      
-      <div class="space-y-3">
-        <div class="h-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700"></div>
-        <div class="h-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 opacity-60"></div>
-        <div class="h-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 opacity-40"></div>
+    <!-- Invite Code Skeleton -->
+    <div class="mt-8">
+      <div
+        class="w-36 h-12 bg-white/30 dark:bg-gray-700/30 rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
       </div>
     </div>
   </div>
-  }
+
+  <!-- Stats Section Skeleton -->
+  <div class="px-5 mb-10 mt-2">
+    <div class="w-20 h-3.5 bg-gray-200 dark:bg-gray-800 rounded-full mb-4 opacity-70"></div>
+    <div class="grid grid-cols-3 gap-3">
+      <div class="h-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700"></div>
+      <div class="h-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700"></div>
+      <div class="h-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700"></div>
+    </div>
+  </div>
+
+  <!-- Activity/Breakdown Section Skeleton -->
+  <div class="px-5">
+    <div class="flex justify-between items-center mb-4 opacity-70">
+      <div class="w-28 h-3.5 bg-gray-200 dark:bg-gray-800 rounded-full"></div>
+    </div>
+
+    <div class="space-y-3">
+      <div class="h-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700"></div>
+      <div class="h-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 opacity-60">
+      </div>
+      <div class="h-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 opacity-40">
+      </div>
+    </div>
+  </div>
+</div>
+}
