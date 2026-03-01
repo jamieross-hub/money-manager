@@ -168,27 +168,42 @@
       </div>
       
       <!-- SPLIT MODE -->
-      <div class="grid grid-cols-2 gap-3" *ngIf="fam.mode === 'split'">
+      <div class="grid grid-cols-2 gap-4" *ngIf="fam.mode === 'split'">
         <!-- Total Group Expenses -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-gray-700/60 flex flex-col justify-between relative overflow-hidden">
-          <div class="absolute top-0 right-0 p-2 opacity-[0.15] dark:opacity-20 pointer-events-none">
-            <mat-icon class="!text-[36px] !w-9 !h-9 text-red-500">public</mat-icon>
+        <div class="bg-white dark:bg-gray-800 rounded-[24px] p-5 shadow-sm border border-gray-100 dark:border-gray-700/60 transition-all hover:shadow-md cursor-default">
+          <div class="flex flex-col">
+            <span class="text-[10px] font-bold tracking-[0.1em] uppercase text-gray-400 dark:text-gray-500 mb-1.5">GROUP TOTAL</span>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[22px] font-black text-gray-900 dark:text-white leading-none">
+                {{ stats()?.totalExpense | currency }}
+              </span>
+            </div>
           </div>
-          <p class="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2 z-10">Total Group Expense</p>
-          <p class="text-[18px] font-bold text-gray-900 dark:text-white truncate z-10">
-             {{ stats()?.totalExpense | currency }}
-          </p>
+          <!-- <div class="mt-4 pt-3 border-t border-gray-50 dark:border-gray-700/40 flex items-center gap-2">
+            <div class="w-1.5 h-1.5 rounded-full bg-red-400"></div>
+            <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tighter">Total Spending</span>
+          </div> -->
         </div>
-        
+
         <!-- Current User's Expenses -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-gray-700/60 flex flex-col justify-between relative overflow-hidden">
-          <div class="absolute top-0 right-0 p-2 opacity-[0.15] dark:opacity-20 pointer-events-none">
-            <mat-icon class="!text-[36px] !w-9 !h-9 text-red-500">person</mat-icon>
+        <div class="bg-primary-50 dark:bg-primary-900/20 rounded-[24px] p-5 shadow-sm border border-primary-100/50 dark:border-primary-800/30 transition-all hover:shadow-md cursor-default relative overflow-hidden">
+          <!-- Subtle decoration watermark -->
+          <!-- <div class="absolute -right-3 -bottom-3 opacity-[0.08] dark:opacity-[0.12] pointer-events-none">
+            <mat-icon class="!w-20 !h-20 !text-primary-600 dark:text-primary-400">account_circle</mat-icon>
+          </div> -->
+          
+          <div class="flex flex-col relative z-10">
+            <span class="text-[10px] font-bold tracking-[0.1em] uppercase text-primary-500 dark:text-primary-400 mb-1.5">YOUR SHARE</span>
+            <div class="flex items-center gap-1.5 text-primary-600 dark:text-primary-300">
+              <span class="text-[22px] font-black leading-none">
+                {{ currentUserExpense() | currency }}
+              </span>
+            </div>
           </div>
-          <p class="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2 z-10">Your Expense</p>
-          <p class="text-[18px] font-bold text-gray-900 dark:text-white truncate z-10">
-             {{ currentUserExpense() | currency }}
-          </p>
+          <!-- <div class="mt-4 pt-3 border-t border-primary-100/30 dark:border-primary-800/20 flex items-center gap-2 relative z-10">
+            <div class="w-1.5 h-1.5 rounded-full bg-primary-500"></div>
+            <span class="text-[10px] font-bold text-primary-500/80 dark:text-primary-400 uppercase tracking-tighter">Personal Impact</span>
+          </div> -->
         </div>
       </div>
       
