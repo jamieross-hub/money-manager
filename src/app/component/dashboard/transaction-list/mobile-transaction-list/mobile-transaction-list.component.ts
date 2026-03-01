@@ -44,7 +44,7 @@ import {
 } from '../../../../util/components/custom-date-range-dialog';
 import { DateService } from 'src/app/util/service/date.service';
 import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
-import { selectAllTransactions } from 'src/app/store/transactions/transactions.selectors';
+import { selectSortedAllTransactions } from 'src/app/store/transactions/transactions.selectors';
 import { AppState } from 'src/app/store/app.state';
 import { Store } from '@ngrx/store';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
@@ -124,7 +124,7 @@ export class MobileTransactionListComponent
   destroy$: Subject<void> = new Subject<void>();
   
   // Base signals from Store
-  rawTransactions = toSignal(this.store.select(selectAllTransactions), { initialValue: [] as Transaction[] });
+  allTransactions = this.store.selectSignal<Transaction[]>(selectSortedAllTransactions);
   categories = toSignal(this.store.select(selectAllCategories), { initialValue: [] as Category[] });
   accounts = toSignal(this.store.select(selectAllAccounts), { initialValue: [] as Account[] });
 
@@ -170,24 +170,8 @@ export class MobileTransactionListComponent
     return map;
   });
 
-  allTransactions = computed(() => {
-    let transactions = [...this.rawTransactions()];
-    
-    // // Filter by family mode if active
-    // if (this.isFamilyMode()) {
-    //   // Show only family transactions
-    //   transactions = transactions.filter(tx => !!tx.familyId || !!tx.splitData || !!tx.settlementFamilyId);
-    // } else {
-    //   // In individual mode, hide family transactions
-    //   transactions = transactions.filter(tx => !tx.familyId && !tx.splitData && !tx.settlementFamilyId);
-    // }
+  // allTransactions now replaced by direct signal above
 
-    return transactions.sort((a, b) => {
-      const dateA = this.dateService.toDate(a.date);
-      const dateB = this.dateService.toDate(b.date);
-      return (dateB?.getTime() ?? 0) - (dateA?.getTime() ?? 0);
-    });
-  });
 
   upcomingTransactions = computed(() => {
     const range = this.selectedRange();

@@ -494,11 +494,49 @@ export class CommonSyncService implements OnDestroy {
         maxRetries: item.maxRetries || 3
       };
 
-      this.syncQueue.push(syncItem);
+      // Optimization: If a sync item for this specific record already exists in the queue,
+      // merge it instead of adding a new one. This prevents redundant Firestore operations
+      // and keeps the queue minimal.
+      const existingIndex = this.syncQueue.findIndex(qItem => 
+        qItem.type === syncItem.type && 
+        qItem.data?.id === syncItem.data?.id &&
+        qItem.data?.id !== undefined
+      );
+
+      if (existingIndex > -1) {
+        const existingItem = this.syncQueue[existingIndex];
+        
+        if (syncItem.operation === 'delete') {
+          if (existingItem.operation === 'create') {
+            // Created and deleted offline: remove from queue entirely
+            this.syncQueue.splice(existingIndex, 1);
+            await this.saveSyncQueue();
+            this.updateSyncStatus({ pendingItems: this.syncQueue.length });
+            console.log('Sync item optimized: create + delete removed from queue');
+            return { success: true };
+          } else {
+            // update + delete => just keep delete
+            this.syncQueue[existingIndex] = syncItem;
+          }
+        } else if (syncItem.operation === 'update' && existingItem.operation === 'create') {
+          // create + update => keep as create with new data
+          this.syncQueue[existingIndex] = {
+            ...syncItem,
+            operation: 'create',
+            id: existingItem.id // Keep original sync ID
+          };
+        } else {
+          // Default: replace existing with new (handles update + update)
+          this.syncQueue[existingIndex] = syncItem;
+        }
+      } else {
+        this.syncQueue.push(syncItem);
+      }
+
       await this.saveSyncQueue();
 
       this.updateSyncStatus({
-        pendingItems: this.syncStatus.pendingItems + 1
+        pendingItems: this.syncQueue.length
       });
 
       if (navigator.onLine) {
@@ -521,7 +559,7 @@ export class CommonSyncService implements OnDestroy {
    * Process the sync queue
    */
   private async processSyncQueue(): Promise<void> {
-    if (this.syncQueue.length === 0) return;
+    if (this.syncQueue.length === 0 || this.syncStatus.isSyncing) return;
 
     this.updateSyncStatus({ isSyncing: true });
 

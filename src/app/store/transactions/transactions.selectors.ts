@@ -22,6 +22,17 @@ export const selectAllTransactions = createSelector(
   }
 );
 
+export const selectSortedAllTransactions = createSelector(
+  selectAllTransactions,
+  (transactions) => {
+    return [...transactions].sort((a, b) => {
+      const dateA = a.date ? convertToDate(a.date) : new Date(0);
+      const dateB = b.date ? convertToDate(b.date) : new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }
+);
+
 export const selectTransactionsLoading = createSelector(
   selectTransactionsState,
   ProfileSelectors.selectIsFamilyMode,

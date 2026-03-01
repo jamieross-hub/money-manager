@@ -1,6 +1,7 @@
 import { createReducer, on } from '@ngrx/store';
 import { initialFamilyState } from './family.state';
 import * as FamilyActions from './family.actions';
+import * as TransactionsActions from 'src/app/store/transactions/transactions.actions';
 import { TransactionStatus } from 'src/app/util/config/enums';
 
 export const familyReducer = createReducer(
@@ -60,6 +61,37 @@ export const familyReducer = createReducer(
     ...state,
     transactions: state.transactions.map(tx => 
       tx.id === txId ? { ...tx, status: TransactionStatus.DELETED, updatedAt: new Date() } : tx
+    )
+  })),
+
+  // Handle standard transactions store actions for instant family updates
+  on(TransactionsActions.createTransactionSuccess, (state, { transaction }) => {
+    // If we're in Family Mode and the transaction appears to be a family/split one, add it
+    if (transaction.splitData || transaction.familyId) {
+      // Avoid duplicate if it was already added by a family listener or something
+      const exists = state.transactions.some(tx => tx.id === transaction.id);
+      if (!exists) {
+        return {
+          ...state,
+          transactions: [transaction, ...state.transactions]
+        };
+      }
+    }
+    return state;
+  }),
+  on(TransactionsActions.updateTransactionSuccess, (state, { transaction }) => {
+    if (transaction.id) {
+       return {
+         ...state,
+         transactions: state.transactions.map(tx => tx.id === transaction.id ? { ...tx, ...transaction } : tx)
+       };
+    }
+    return state;
+  }),
+  on(TransactionsActions.deleteTransactionSuccess, (state, { transactionId, transaction }) => ({
+    ...state,
+    transactions: state.transactions.map(tx => 
+      tx.id === transactionId ? { ...tx, ...transaction, status: TransactionStatus.DELETED, updatedAt: new Date() } : tx
     )
   })),
 
