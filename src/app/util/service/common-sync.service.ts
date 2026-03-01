@@ -48,6 +48,7 @@ export interface SyncItem {
   retryCount: number;
   maxRetries?: number;
   validationErrors?: string[];
+  collectionPath?: string;
 }
 
 export interface SyncStatus {
@@ -598,19 +599,19 @@ export class CommonSyncService implements OnDestroy {
    * Process transaction sync operations
    */
   private async processTransactionSync(item: SyncItem, batch: any, userId: string): Promise<void> {
-    const transactionsRef = collection(this.firestore, `users/${userId}/transactions`);
+    const basePath = item.collectionPath || `users/${userId}/transactions`;
 
     switch (item.operation) {
       case 'create':
-        const transactionRef = doc(this.firestore, `users/${userId}/transactions/${item.data.id}`);
+        const transactionRef = doc(this.firestore, `${basePath}/${item.data.id}`);
         batch.set(transactionRef, item.data);
         break;
       case 'update':
-        const updateRef = doc(this.firestore, `users/${userId}/transactions/${item.data.id}`);
+        const updateRef = doc(this.firestore, `${basePath}/${item.data.id}`);
         batch.update(updateRef, item.data);
         break;
       case 'delete':
-        const deleteRef = doc(this.firestore, `users/${userId}/transactions/${item.data.id}`);
+        const deleteRef = doc(this.firestore, `${basePath}/${item.data.id}`);
         batch.delete(deleteRef);
         break;
     }

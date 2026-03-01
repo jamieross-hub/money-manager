@@ -127,11 +127,11 @@ export class TransactionsService extends BaseService {
                             await firestoreTask;
                         } catch (error) {
                             console.warn('⚠️ Failed to create transaction online, moving to sync queue:', error);
-                            await this.addToSyncQueue('create', transactionData);
+                            await this.addToSyncQueue('create', transactionData, userId);
                         }
                     } else {
                         // Store offline
-                        await this.addToSyncQueue('create', transactionData);
+                        await this.addToSyncQueue('create', transactionData, userId);
                     }
                 } catch (error) {
                     console.error('Error in createTransaction:', error);
@@ -244,10 +244,10 @@ export class TransactionsService extends BaseService {
                             await updateDoc(transactionRef, updateData);
                         } catch (error) {
                             console.warn('⚠️ Failed to update transaction online, moving to sync queue:', error);
-                            await this.addToSyncQueue('update', { id: transactionId, ...updateData });
+                            await this.addToSyncQueue('update', { id: transactionId, ...updateData }, userId);
                         }
                     } else {
-                        await this.addToSyncQueue('update', { id: transactionId, ...updateData });
+                        await this.addToSyncQueue('update', { id: transactionId, ...updateData }, userId);
                     }
                 } catch (error) {
                     console.error('Error in updateTransaction:', error);
@@ -326,11 +326,11 @@ export class TransactionsService extends BaseService {
             if (this.commonSyncService.isCurrentlyOnline()) {
                 updateDoc(transactionRef, { status: TransactionStatus.DELETED, updatedAt: new Date() }).catch(error => {
                     console.warn('⚠️ Failed to soft delete transaction online, moving to sync queue:', error);
-                    this.addToSyncQueue('update', { id: transactionId, status: TransactionStatus.DELETED, updatedAt: new Date() });
+                    this.addToSyncQueue('update', { id: transactionId, status: TransactionStatus.DELETED, updatedAt: new Date() }, userId);
                 });
             } else {
                 // Offline mode - add to sync queue
-                this.addToSyncQueue('update', { id: transactionId, status: TransactionStatus.DELETED, updatedAt: new Date() }).catch(error => {
+                this.addToSyncQueue('update', { id: transactionId, status: TransactionStatus.DELETED, updatedAt: new Date() }, userId).catch(error => {
                     console.error('Failed to add to sync queue:', error);
                 });
             }
@@ -913,13 +913,14 @@ export class TransactionsService extends BaseService {
     /**
      * Add transaction to sync queue
      */
-    private async addToSyncQueue(operation: 'create' | 'update' | 'delete', data: any): Promise<void> {
+    private async addToSyncQueue(operation: 'create' | 'update' | 'delete', data: any, userId: string): Promise<void> {
         const syncItem: Omit<SyncItem, 'timestamp' | 'retryCount'> = {
             id: this.generateId(),
             type: 'transaction',
             operation: operation,
             data: data,
-            maxRetries: 3
+            maxRetries: 3,
+            collectionPath: this.getTransactionsPath(userId)
         };
 
         const result = await this.commonSyncService.registerSyncItem(syncItem);
