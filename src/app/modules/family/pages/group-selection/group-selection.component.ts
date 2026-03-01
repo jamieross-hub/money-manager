@@ -7,7 +7,9 @@ import {
   effect,
   DestroyRef,
   ChangeDetectionStrategy,
+  Injector,
 } from '@angular/core';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -37,6 +39,7 @@ import { selectUserFamilies, selectUserFamiliesLoading, selectFamilyError } from
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import { QuickActionsFabComponent, QuickAction, QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
+import { LoaderService } from 'src/app/util/service/loader.service';
 // ─── View Model ──────────────────────────────────────────────────────────────
 
 export type GroupType = 'family' | 'trip' | 'work' | 'other';
@@ -126,18 +129,25 @@ export class GroupSelectionComponent implements OnInit {
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private store = inject(Store<AppState>);
+  private loaderService = inject(LoaderService);
   public showDashboard = signal(false);
   public selectedGroup = signal<UserGroup | null>(null);
- 
   private autoOpened = false;
-
-  // ─── State ─────────────────────────────────────────────────────────────────
-
   groupSpends = signal<Record<string, number>>({});
-
+  private isInstanceLoading = false;
+  
   private storageService = inject(LocalIndexDBStorageService);
+  private injector = inject(Injector);
+  private destroyRef = inject(DestroyRef);
 
-  constructor() {
+  constructor() {}
+
+  async ngOnInit(): Promise<void> {
+    this.initializeEffects();
+    this.loadGroups();
+  }
+
+  private initializeEffects(): void {
     effect(() => {
       const families = this.rawFamilies() || [];
       families.forEach(f => {
@@ -152,14 +162,36 @@ export class GroupSelectionComponent implements OnInit {
              this.groupSpends.update(spends => ({ ...spends, [f.id as string]: 0 }));
           }
 
-          this.familyService.getTransactions(f.id).subscribe(txs => {
-            const expense = txs.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-            this.groupSpends.update(spends => ({ ...spends, [f.id as string]: expense }));
-            this.storageService.setItem(cacheKey, expense);
-          });
+          this.familyService.getTransactions(f.id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(txs => {
+              const expense = txs.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+              this.groupSpends.update(spends => ({ ...spends, [f.id as string]: expense }));
+              this.storageService.setItem(cacheKey, expense);
+            });
         }
       });
-    }, { allowSignalWrites: true });
+    }, { allowSignalWrites: true, injector: this.injector });
+
+    effect(() => {
+      const isLoading = this.userFamiliesLoading() && 
+                       !this.showDashboard() && 
+                       (this.rawFamilies()?.length || 0) === 0;
+                       
+      if (isLoading && !this.isInstanceLoading) {
+        this.isInstanceLoading = true;
+        this.loaderService.show();
+      } else if (!isLoading && this.isInstanceLoading) {
+        this.isInstanceLoading = false;
+        this.loaderService.hide();
+      }
+    }, { allowSignalWrites: true, injector: this.injector });
+
+    this.destroyRef.onDestroy(() => {
+      if (this.isInstanceLoading) {
+        this.loaderService.hide();
+      }
+    });
 
     effect(() => {
       const active = this.activeGroup();
@@ -167,7 +199,7 @@ export class GroupSelectionComponent implements OnInit {
         this.autoOpened = true;
         this.openGroup(active);
       }
-    }, { allowSignalWrites: true });
+    }, { allowSignalWrites: true, injector: this.injector });
   }
 
   rawFamilies = this.store.selectSignal(selectUserFamilies);
@@ -274,11 +306,7 @@ export class GroupSelectionComponent implements OnInit {
   private readonly profile = this.store.selectSignal(ProfileSelectors.selectProfile);
   get currentUserId(): string { return this.profile()?.uid ?? ''; }
 
-  // ─── Lifecycle ─────────────────────────────────────────────────────────────
 
-  async ngOnInit(): Promise<void> {
-    this.loadGroups();
-  }
 
   loadGroups(): void {
     this.store.dispatch(FamilyActions.loadUserFamilies());

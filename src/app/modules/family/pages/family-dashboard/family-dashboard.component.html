@@ -1,9 +1,6 @@
 <div class="family-dashboard bg-gray-50 dark:bg-gray-900">
 
-  <!-- Loading (only show if no family data at all) -->
-  <div *ngIf="loading() && !family()" class="flex justify-center items-center h-48">
-    <mat-spinner diameter="40"></mat-spinner>
-  </div>
+
 
   <!-- ── NO FAMILY: Empty state (only if not loading) ──────────────── -->
   <ng-container *ngIf="!loading() && !family()">

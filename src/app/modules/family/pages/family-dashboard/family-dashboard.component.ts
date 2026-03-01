@@ -28,6 +28,7 @@ import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/c
 import { CurrencyPipe } from 'src/app/util/pipes';
 import { ReportService } from 'src/app/util/service/db/report.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { LoaderService } from 'src/app/util/service/loader.service';
 
 @Component({
   selector: 'app-family-dashboard',
@@ -62,9 +63,11 @@ export class FamilyDashboardComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private reportService = inject(ReportService);
   private snackBar = inject(MatSnackBar);
+  private loaderService = inject(LoaderService);
  
   @Input() group: any;
   @Output() close = new EventEmitter<void>();
+  private isInstanceLoading = false;
  
   family = computed(() => {
     const fromStore = this.storeFamily();
@@ -191,6 +194,25 @@ export class FamilyDashboardComponent implements OnInit {
   }));
 
   private memberColors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
+
+  constructor() {
+    effect(() => {
+      const isLoading = this.loading() && !this.family();
+      if (isLoading && !this.isInstanceLoading) {
+        this.isInstanceLoading = true;
+        this.loaderService.show();
+      } else if (!isLoading && this.isInstanceLoading) {
+        this.isInstanceLoading = false;
+        this.loaderService.hide();
+      }
+    }, { allowSignalWrites: true });
+
+    this.destroyRef.onDestroy(() => {
+      if (this.isInstanceLoading) {
+        this.loaderService.hide();
+      }
+    });
+  }
 
   ngOnInit() {
     // If shown inline as a passive child (group input provided), we assume the parent dispatches actions
