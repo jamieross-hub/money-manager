@@ -130,7 +130,7 @@ export class GroupSelectionComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private store = inject(Store<AppState>);
   private loaderService = inject(LoaderService);
-  public showDashboard = signal(false);
+  public showDashboard = signal(true);
   public selectedGroup = signal<UserGroup | null>(null);
   private autoOpened = false;
   groupSpends = signal<Record<string, number>>({});
