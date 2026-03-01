@@ -3,6 +3,7 @@ import { Component, OnInit, ChangeDetectionStrategy, signal, inject, Input, inpu
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { TranslateModule } from '@ngx-translate/core';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AppState } from '../../../store/app.state';
@@ -25,7 +26,7 @@ import { filter, take, delay } from 'rxjs';
 @Component({
   selector: 'app-family-mode-toggle',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatSlideToggleModule],
+  imports: [CommonModule, MatIconModule, MatSlideToggleModule, TranslateModule],
   templateUrl: './family-mode-toggle.component.html',
   styleUrl: './family-mode-toggle.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

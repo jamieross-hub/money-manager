@@ -1,22 +1,23 @@
 @if (!isGuestMode()) {
-    <div class="family-mode-toggle-container flex items-center justify-between transition-all duration-300"
+    <div class="family-mode-toggle-container flex items-center justify-between transition-colors duration-200"
         [ngClass]="{
             'is-badge absolute top-4 right-4 px-4 py-1.5 rounded-full border bg-surface-500 w-auto z-10': !isFlat() && !breakpointService.device.isMobile,
             'is-badge fixed top-4 right-4 px-4 py-1.5 rounded-full border bg-surface-500 w-auto z-10': !isFlat() && breakpointService.device.isMobile,
-            'is-flat w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-slate-800 text-sm text-gray-600 dark:text-gray-300 capitalize': isFlat(),
+            'is-flat w-full px-4 py-2 text-sm text-gray-600 capitalize dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 dark:hover:text-white focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-800': isFlat(),
             'family-active': isFamilyMode(),
             'personal-active': !isFamilyMode()
         }">
-        <div class="flex items-center flex-1">
+        <div class="flex items-center">
             <mat-icon class="mode-icon !w-4 !h-4 !text-[18px] transition-all duration-300"
                     [class.mr-3]="isFlat()" [class.mr-2]="!isFlat()">family_restroom</mat-icon>
-            <span class="text-left font-semibold"
+            <span class="text-left"
                 [class.flex-1]="isFlat()"
                 [class.hidden]="!isFlat()" [class.sm:inline]="!isFlat()">
-                Family Mode
+                {{ 'USER_MENU.FAMILY_MODE' | translate }}
             </span>
         </div>
-        <div class="scale-90 origin-right translate-y-[1px]">
+        <div [class.scale-90]="!isFlat()" [class.origin-right]="!isFlat()" [class.translate-y-[1px]]="!isFlat()"
+             [class.flex]="isFlat()" [class.items-center]="isFlat()" [class.gap-3]="isFlat()">
             <mat-slide-toggle color="primary" class="family-toggle" [checked]="isFamilyMode()" (change)="toggleFamilyMode($event.checked)"></mat-slide-toggle>
         </div>
     </div>
