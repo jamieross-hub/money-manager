@@ -122,32 +122,138 @@ export class MobileTransactionListComponent
 
   private subscription = new Subscription();
   destroy$: Subject<void> = new Subject<void>();
-  categories = signal<Category[]>([]);
-  accounts = signal<Account[]>([]);
-  private availableCategories: (Category & { id: string })[] = [];
-
-  // Store observables
-  transactions$: Observable<Transaction[]> = this.store.select(selectAllTransactions);
-  public selectedRange = signal<string | null>(null);
-
-  // Optimization: Maps for O(1) access
-  private categoryMap = new Map<string, Category>();
-  private accountMap = new Map<string, Account>();
-
-  // Signals
-  allTransactions = signal<Transaction[]>([]);
-  upcomingTransactions = signal<Transaction[]>([]);
-  filteredTransactions = signal<Transaction[]>([]);
+  
+  // Base signals from Store
+  rawTransactions = toSignal(this.store.select(selectAllTransactions), { initialValue: [] as Transaction[] });
+  categories = toSignal(this.store.select(selectAllCategories), { initialValue: [] as Category[] });
+  accounts = toSignal(this.store.select(selectAllAccounts), { initialValue: [] as Account[] });
 
   // Filter Signals
-  searchTerm = signal<string>('');
-  selectedCategory = signal<string[]>(['all']);
-  selectedType = signal<string>('all');
-  selectedDate = signal<Date | null>(null);
-  selectedDateRange = signal<{ startDate: Date; endDate: Date } | null>(null);
+  searchTerm = toSignal(this.filterService.searchTerm$, { initialValue: '' });
+  selectedCategory = toSignal(this.filterService.selectedCategory$, { initialValue: ['all'] });
+  selectedType = toSignal(this.filterService.selectedType$, { initialValue: 'all' });
+  selectedDate = toSignal(this.filterService.selectedDate$, { initialValue: null });
+  selectedDateRange = toSignal(this.filterService.selectedDateRange$, { initialValue: null });
+  isRecurringFilter = toSignal(this.filterService.isRecurring$, { initialValue: null });
+  
   selectedSort = signal<string>('date-desc');
-  isRecurringFilter = signal<boolean | null>(null);
   showActiveFilterDetails = signal<boolean>(false);
+  public selectedRange = signal<string | null>(null);
+
+  categoryMap = computed(() => {
+    const map = new Map<string, Category>();
+    this.categories().forEach(cat => {
+      if (cat.id) map.set(cat.id, cat);
+    });
+    return map;
+  });
+
+  accountMap = computed(() => {
+    const map = new Map<string, Account>();
+    this.accounts().forEach(acc => {
+      map.set(acc.accountId, acc);
+    });
+    return map;
+  });
+
+  allTransactions = computed(() => {
+    return [...this.rawTransactions()].sort((a: any, b: any) => {
+      const dateA = this.dateService.toDate(a.date);
+      const dateB = this.dateService.toDate(b.date);
+      return (dateB?.getTime() ?? 0) - (dateA?.getTime() ?? 0);
+    });
+  });
+
+  upcomingTransactions = computed(() => {
+    const range = this.selectedRange();
+    if (range !== 'upcoming') return [];
+    
+    const recurring = this.allTransactions().filter(t => t.isRecurring);
+    const appView = this.appViewService.appView;
+    const today = dayjs().startOf('day').toDate();
+
+    let startDate: Date;
+    let endDate: Date;
+
+    if (appView === 'WEEKLY') {
+      startDate = today;
+      endDate = dayjs().add(1, 'week').endOf('day').toDate();
+    } else if (appView === 'YEARLY') {
+      startDate = today;
+      endDate = dayjs().add(1, 'year').endOf('day').toDate();
+    } else {
+      startDate = today;
+      endDate = dayjs().add(1, 'month').endOf('day').toDate();
+    }
+
+    return this.generateUpcomingTransactions(recurring, startDate, endDate);
+  });
+
+  filteredTransactions = computed(() => {
+    let sourceData = this.selectedRange() === 'upcoming' ? this.upcomingTransactions() : this.allTransactions();
+
+    const filteredData = this.filterService.filterTransactions(
+      sourceData,
+      {
+        searchTerm: this.searchTerm() || '',
+        selectedCategory: this.selectedCategory() || ['all'],
+        selectedType: this.selectedType() || 'all',
+        selectedDate: this.selectedDate() || null,
+        selectedDateRange: this.selectedDateRange() || null,
+        selectedYear: null,
+        categoryFilter: null,
+        accountFilter: [],
+        amountRange: { min: null, max: null },
+        statusFilter: [],
+        tags: [],
+        isRecurring: this.isRecurringFilter() || false,
+      }
+    );
+
+    let mergedData = filteredData;
+    if (this.selectedRange() !== 'upcoming') {
+      const endOfCheck = dayjs().add(3, 'day').endOf('day').toDate();
+      const recurring = this.allTransactions().filter(t => t.isRecurring);
+      const dueSoon = this.generateUpcomingTransactions(recurring, dayjs().subtract(1, 'year').toDate(), endOfCheck);
+
+      const actualData = filteredData.filter(t => {
+        if (t.isPending && t.isRecurring && !t.id?.startsWith('upcoming-')) {
+          const hasDuplicate = dueSoon.some(v => v.id?.startsWith(`upcoming-${t.id}-`) && dayjs(this.dateService.toDate(v.date)).isSame(this.dateService.toDate(t.date), 'day'));
+          return !hasDuplicate;
+        }
+        return true;
+      });
+
+      const existingIds = new Set(actualData.map(t => t.id));
+      const filteredDueSoon = dueSoon.filter(t => !existingIds.has(t.id!));
+
+      mergedData = [...filteredDueSoon, ...actualData];
+    } else {
+      mergedData = filteredData.filter(t => !(t.isPending && t.isRecurring && !t.id?.startsWith('upcoming-')));
+    }
+
+    return this.filterService.sortTransactions(mergedData, this.selectedSort());
+  });
+
+  availableCategories = computed(() => {
+    const cats = this.categories();
+    const txs = this.allTransactions();
+    if (!cats || !txs) return [];
+
+    const usedCategoryIds = new Set<string>();
+    txs.forEach(tx => {
+      if (tx.categoryId) usedCategoryIds.add(tx.categoryId);
+      if (tx.isCategorySplit && tx.categorySplits) {
+        tx.categorySplits.forEach(split => {
+          if (split.categoryId) usedCategoryIds.add(split.categoryId);
+        });
+      }
+    });
+
+    return cats
+      .filter(category => usedCategoryIds.has(category.id || ''))
+      .map(category => ({ ...category, id: category.id || '' }));
+  });
 
   /**
    * Toggles the visibility of individual filter chips.
@@ -204,9 +310,9 @@ export class MobileTransactionListComponent
 
       // Pre-calculate view properties (logic preserved)
       const categoryId = tx.categoryId || '';
-      const category = this.categoryMap.get(categoryId);
+      const category = this.categoryMap().get(categoryId);
       const accountId = tx.accountId || '';
-      const account = this.accountMap.get(accountId);
+      const account = this.accountMap().get(accountId);
 
       const createdDate = tx.createdAt || tx.date;
       const createdDateObj = dayjs(this.dateService.toDate(createdDate));
@@ -434,10 +540,6 @@ export class MobileTransactionListComponent
   }
 
   ngOnInit() {
-    this.setupFilterServiceSubscriptions();
-    this.setupTransactionSubscriptions();
-    this.loadUserCategories();
-    this.loadUserAccounts();
     if (this.route.url.includes('transactions')) {
       this.showFilters = true;
     }
@@ -482,141 +584,7 @@ export class MobileTransactionListComponent
     this.destroy$.complete();
   }
 
-  private setupTransactionSubscriptions() {
-    // Subscribe to transactions from store
-    this.subscription.add(
-      this.store.select(selectAllTransactions).subscribe(transactions => {
-        const sorted = transactions.sort((a: any, b: any) => {
-          const dateA = this.dateService.toDate(a.date);
-          const dateB = this.dateService.toDate(b.date);
-          return (dateB?.getTime() ?? 0) - (dateA?.getTime() ?? 0);
-        });
 
-        this.allTransactions.set(sorted);
-        // Refresh upcoming transactions if we are in upcoming range
-        if (this.selectedRange() === 'upcoming') {
-          this.onDateRangeChange('upcoming');
-        }
-        this.updateAvailableCategories();
-        this.filterTransactions();
-      })
-    );
-  }
-
-  private setupFilterServiceSubscriptions() {
-    // Subscribe to FilterService state changes and update signals
-    this.subscription.add(
-      this.filterService.searchTerm$.subscribe(term => {
-        this.searchTerm.set(term);
-        this.filterTransactions();
-      })
-    );
-
-    this.subscription.add(
-      this.filterService.selectedCategory$.subscribe(cats => {
-        this.selectedCategory.set(cats);
-        this.filterTransactions();
-      })
-    );
-
-    this.subscription.add(
-      this.filterService.selectedType$.subscribe(type => {
-        this.selectedType.set(type);
-        this.filterTransactions();
-      })
-    );
-
-    this.subscription.add(
-      this.filterService.selectedDate$.subscribe(date => {
-        this.selectedDate.set(date);
-        this.filterTransactions();
-      })
-    );
-
-    this.subscription.add(
-      this.filterService.selectedDateRange$.subscribe(range => {
-        this.selectedDateRange.set(range);
-        this.filterTransactions();
-      })
-    );
-
-    this.subscription.add(
-      this.filterService.isRecurring$.subscribe(isRec => {
-        this.isRecurringFilter.set(isRec);
-        this.filterTransactions();
-      })
-    );
-  }
-
-  // NOTE: We could use effects() instead of manual subscription + filterTransactions call,
-  // but to keep logic similar and controllable, we just ensure signals are updated.
-  // The 'filterTransactions' method updates 'filteredTransactions' signal which drives everything else.
-
-  // Removed updateGroupedTransactions() - now a computed signal
-
-  filterTransactions() {
-    // Determine source data based on selected range
-    let sourceData = this.allTransactions();
-    if (this.selectedRange() === 'upcoming') {
-      sourceData = this.upcomingTransactions();
-    }
-
-    // Use FilterService to filter transactions
-    const filteredData = this.filterService.filterTransactions(
-      sourceData,
-      {
-        searchTerm: this.searchTerm(),
-        selectedCategory: this.selectedCategory(),
-        selectedType: this.selectedType(),
-        selectedDate: this.selectedDate(),
-        selectedDateRange: this.selectedDateRange(),
-        selectedYear: null,
-        categoryFilter: null,
-        accountFilter: [],
-        amountRange: { min: null, max: null },
-        statusFilter: [],
-        tags: [],
-        isRecurring: this.isRecurringFilter(),
-      }
-    );
-
-    // Merge in due recurring transactions if not in 'upcoming' view specifically
-    // but only if we are in 'Today', 'This Week' or 'This Month' or 'All'
-    let mergedData = filteredData;
-    if (this.selectedRange() !== 'upcoming') {
-      const endOfCheck = dayjs().add(3, 'day').endOf('day').toDate();
-      const recurring = this.allTransactions().filter(t => t.isRecurring);
-      const dueSoon = this.generateUpcomingTransactions(recurring, dayjs().subtract(1, 'year').toDate(), endOfCheck);
-
-      // Filter out pure pending templates exclusively if their virtual duplicate is already in dueSoon
-      const actualData = filteredData.filter(t => {
-        if (t.isPending && t.isRecurring && !t.id?.startsWith('upcoming-')) {
-          const hasDuplicate = dueSoon.some(v => v.id?.startsWith(`upcoming-${t.id}-`) && dayjs(this.dateService.toDate(v.date)).isSame(this.dateService.toDate(t.date), 'day'));
-          return !hasDuplicate;
-        }
-        return true;
-      });
-
-      // Merge: avoid duplicates (upcoming-ids should be unique)
-      const existingIds = new Set(actualData.map(t => t.id));
-      const filteredDueSoon = dueSoon.filter(t => !existingIds.has(t.id));
-
-      mergedData = [...filteredDueSoon, ...actualData];
-    } else {
-      // In upcoming view, remove raw pending templates (replaced by virtual upcoming-* items)
-      mergedData = filteredData.filter(t => !(t.isPending && t.isRecurring && !t.id?.startsWith('upcoming-')));
-    }
-
-    // Sort after merging so the selected sort applies to ALL transactions (including virtual upcoming ones)
-    const finalData = this.filterService.sortTransactions(mergedData, this.selectedSort());
-
-    this.filteredTransactions.set(finalData);
-    this.cdr.markForCheck();
-
-    if (this.showChart) {
-      setTimeout(() => this.renderChart(), 50);
-    }
-  }
 
   onCategoryChange(category: string) {
     let newCategories = this.selectedCategory();
@@ -646,7 +614,6 @@ export class MobileTransactionListComponent
 
   onSortChange(sortValue: string) {
     this.selectedSort.set(sortValue);
-    this.filterTransactions();
   }
 
   onTypeChange(type: string) {
@@ -680,7 +647,6 @@ export class MobileTransactionListComponent
         endDate = dayjs().add(1, 'month').endOf('day').toDate();
       }
 
-      this.upcomingTransactions.set(this.generateUpcomingTransactions(recurring, startDate, endDate));
       this.filterService.setSelectedDateRange(startDate, endDate);
       return;
     }
@@ -964,37 +930,7 @@ export class MobileTransactionListComponent
   }
 
   getCategoriesList(): (Category & { id: string })[] {
-    return this.availableCategories;
-  }
-
-  private updateAvailableCategories() {
-    const cats = this.categories();
-    const txs = this.allTransactions();
-
-    if (!cats || !txs) return;
-
-    const usedCategoryIds = new Set<string>();
-
-    txs.forEach(tx => {
-      if (tx.categoryId) {
-        usedCategoryIds.add(tx.categoryId);
-      }
-
-      if (tx.isCategorySplit && tx.categorySplits) {
-        tx.categorySplits.forEach(split => {
-          if (split.categoryId) {
-            usedCategoryIds.add(split.categoryId);
-          }
-        });
-      }
-    });
-
-    this.availableCategories = cats
-      .filter(category => usedCategoryIds.has(category.id || ''))
-      .map(category => ({
-        ...category,
-        id: category.id || ''
-      }));
+    return this.availableCategories();
   }
 
   getCurrentYear(): number {
@@ -1018,51 +954,24 @@ export class MobileTransactionListComponent
   }
 
   getCategoryIcon(categoryId: string): string {
-    const category = this.categoryMap.get(categoryId);
+    const category = this.categoryMap().get(categoryId);
     return category?.icon || 'category';
   }
 
   getCategoryColor(categoryId: string): string {
-    const category = this.categoryMap.get(categoryId);
+    const category = this.categoryMap().get(categoryId);
     return category?.color || '#46777f';
   }
 
-  private async loadUserCategories(): Promise<void> {
-    this.subscription.add(
-      this.store.select(selectAllCategories).subscribe((categories: Category[]) => {
-        this.categories.set(categories);
-        this.categoryMap.clear();
-        categories.forEach(cat => {
-          if (cat.id) this.categoryMap.set(cat.id, cat);
-        });
-        this.updateAvailableCategories();
-        this.filterTransactions();
-        this.cdr.markForCheck();
-      })
-    );
-  }
 
-  private async loadUserAccounts(): Promise<void> {
-    this.subscription.add(
-      this.store.select(selectAllAccounts).subscribe((accounts: Account[]) => {
-        this.accounts.set(accounts);
-        this.accountMap.clear();
-        accounts.forEach(acc => {
-          this.accountMap.set(acc.accountId, acc);
-        });
-        this.filterTransactions();
-        this.cdr.markForCheck();
-      })
-    );
-  }
 
   getAccountName(accountId: string): string {
-    const account = this.accountMap.get(accountId);
+    const account = this.accountMap().get(accountId);
     return account?.name || 'Unknown Account';
   }
 
   getAccountType(accountId: string): string {
-    const account = this.accountMap.get(accountId);
+    const account = this.accountMap().get(accountId);
     return account?.type || 'Unknown';
   }
 

@@ -125,19 +125,21 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
       if (params['tab'] === 'recurring') {
         this.selectedTabIndex.set(3);
-        this.onTabChange(3);
+        this.filterService.setIsRecurring(true);
+        this.isRecurringTab.set(true);
       } else {
         this.selectedTabIndex.set(0);
-        this.onTabChange(0);
+        this.filterService.setIsRecurring(null);
+        this.isRecurringTab.set(false);
       }
       if (params['search']) {
         this.filterService.setSearchTerm(params['search']);
       }
-      // Signals auto-update template, but keeping strict check just in case mixed with OnPush and async pipe elsewhere (though we removed async pipes)
     });
   }
 
   onTabChange(index: number) {
+    if (this.selectedTabIndex() === index) return;
     this.selectedTabIndex.set(index);
     if (index === 3) {
       this.filterService.setIsRecurring(true);
@@ -359,6 +361,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       await Promise.all(deletePromises);
 
       this.notificationService.success(`Successfully deleted ${transactions.length} transaction(s)`);
+      this.store.dispatch(TransactionsActions.loadTransactions({ userId }));
     } catch (error) {
       console.error('Error deleting transactions:', error);
       this.notificationService.error('Failed to delete some transactions');
@@ -390,6 +393,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       await Promise.all(updatePromises);
 
       this.notificationService.success(`Successfully updated category for ${transactions.length} transaction(s)`);
+      this.store.dispatch(TransactionsActions.loadTransactions({ userId }));
     } catch (error) {
       console.error('Error updating transactions:', error);
       this.notificationService.error('Failed to update some transactions');

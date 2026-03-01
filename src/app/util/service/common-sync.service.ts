@@ -14,9 +14,7 @@ import { Transaction } from '../models/transaction.model';
 import { APP_CONFIG } from '../config/config';
 import { LocalIndexDBStorageService } from './indexdb-storage.service';
 import { LocalStorageKey, LocalStorageKeyHelper } from '../models/local-storage.model';
-import { TransactionsFacadeService } from './db/transactions-facade.service';
-import { AccountsFacadeService } from './db/accounts-facade.service';
-import { CategoryFacadeService } from './db/category-facade.service';
+
 import { TransactionsService } from './db/transactions.service';
 import { AccountsService } from './db/accounts.service';
 import { CategoryService } from './db/category.service';
@@ -320,7 +318,7 @@ export class CommonSyncService implements OnDestroy {
         
         // 2. Start real-time transaction listener reactively based on network
         // We add a delay to ensure app startup always starts with IndexedDB
-        const transactionsService = this.injector.get(TransactionsFacadeService);
+        const transactionsService = this.injector.get(TransactionsService);
         const realTimeSync$ = this.isOnline$.pipe(
           delay(10000), // Delay to ensure startup completes with local data
           switchMap(online => {
@@ -406,9 +404,9 @@ export class CommonSyncService implements OnDestroy {
 
     // Resolve services lazily to avoid circular dependencies
     // Using Facades ensures we pull from the correct source (Personal vs Family)
-    const transactionsService = this.injector.get(TransactionsFacadeService);
-    const accountsService = this.injector.get(AccountsFacadeService);
-    const categoryService = this.injector.get(CategoryFacadeService);
+    const transactionsService = this.injector.get(TransactionsService);
+    const accountsService = this.injector.get(AccountsService);
+    const categoryService = this.injector.get(CategoryService);
     const budgetsService = this.injector.get(BudgetsService);
     const goalsService = this.injector.get(GoalsService);
     const googleSheetsService = this.injector.get(GoogleSheetsService);
