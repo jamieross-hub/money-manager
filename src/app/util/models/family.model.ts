@@ -1,5 +1,7 @@
 import { Timestamp } from '@angular/fire/firestore';
 import { TransactionStatus } from '../config/enums';
+import { Transaction, SplitTransactionData, TransactionBaseRequest, UpdateTransactionRequest, SplitBetweenMember, PaidByMember } from './transaction.model';
+export { SplitBetweenMember, PaidByMember };
 
 // ─── Family ────────────────────────────────────────────────────────────────
 
@@ -34,64 +36,13 @@ export interface FamilyMember {
   isActive: boolean;
 }
 
-// ─── Family Transaction ────────────────────────────────────────────────────
+// ─── Family Transaction (Legacy/Compatibility) ──────────────────────────────
 
+/** @deprecated Use Transaction from transaction.model instead */
+export type FamilyTransaction = Transaction;
+
+/** @deprecated Use TransactionType from enums instead */
 export type FamilyTransactionType = 'income' | 'expense';
-
-/** Represents a single member's share in a split transaction */
-export interface SplitBetweenMember {
-  userId: string;
-  displayName: string;
-  photoURL?: string;
-  /** Percentage (0-100) of the transaction this member owes */
-  percentage: number;
-  /** Computed amount this member owes */
-  amount: number;
-}
-
-/** Represents a single member who paid part of the bill */
-export interface PaidByMember {
-  userId: string;
-  displayName: string;
-  photoURL?: string;
-  amount: number;
-}
-
-/** Extra data stored on a transaction when the group mode is 'split' */
-export interface SplitTransactionData {
-  /** The userId of the member who paid the bill. If multiple people paid, this can be 'multiple' */
-  paidByUserId: string;
-  paidByDisplayName: string;
-  paidByPhotoURL?: string;
-  /** If multiple people paid, this contains the breakdown */
-  paidBy?: PaidByMember[];
-  /** Members sharing the expense */
-  splitBetween: SplitBetweenMember[];
-}
-
-export interface FamilyTransaction {
-  id?: string;
-  familyId: string;
-  userId: string;
-  userDisplayName: string;
-  userPhotoURL?: string;
-  amount: number;
-  type: FamilyTransactionType;
-  category: string;
-  date: Date | Timestamp;
-  note?: string;
-  createdAt: Date | Timestamp;
-  updatedAt: Date | Timestamp;
-  /** Present only when the group mode is 'split' */
-  splitData?: SplitTransactionData;
-
-  // Settlement link fields
-  settlementId?: string;
-  settlementFamilyId?: string;
-  settlementFromUserId?: string;
-  settlementToUserId?: string;
-  status?: TransactionStatus;
-}
 
 // ─── Computed Stats ────────────────────────────────────────────────────────
 
@@ -124,29 +75,13 @@ export interface CreateFamilyRequest {
   icon?: string; // emoji or Data URL from uploaded image
 }
 
-export interface AddFamilyTransactionRequest {
+/** @deprecated Use CreateTransactionRequest from transaction.model instead */
+export interface AddFamilyTransactionRequest extends TransactionBaseRequest {
   familyId: string;
-  amount: number;
-  type: FamilyTransactionType;
-  category: string;
-  date: Date;
-  note?: string;
-
-  // Settlement link fields
-  settlementId?: string;
-  settlementFamilyId?: string;
-  settlementFromUserId?: string;
-  settlementToUserId?: string;
 }
 
-export interface UpdateFamilyTransactionRequest {
-  amount?: number;
-  type?: FamilyTransactionType;
-  category?: string;
-  date?: Date;
-  note?: string;
-  status?: TransactionStatus;
-}
+/** @deprecated Use UpdateTransactionRequest from transaction.model instead */
+export interface UpdateFamilyTransactionRequest extends UpdateTransactionRequest {}
 
 // ─── Settlements ────────────────────────────────────────────────────────────
 

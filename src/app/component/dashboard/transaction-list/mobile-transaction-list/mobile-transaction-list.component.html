@@ -278,13 +278,13 @@
 							<div class="icon-container" [style.background-color]="tx._categoryBgColor"
 								[style.color]="tx._categoryColor">
 								
-								@if(isFamilyMode() && isSplitMode() && tx['splitData']) {
+								@if(isFamilyMode() && isSplitMode() && tx.splitData) {
 									<div class="member-pic-stack">
-										@if(tx['splitData'].paidBy?.length > 1) {
-											@for (payer of tx['splitData'].paidBy.slice(0, 3); track payer.userId; let i = $index) {
+										@if((tx.splitData.paidBy || []).length > 1) {
+											@for (payer of (tx.splitData.paidBy || []).slice(0, 3); track payer.userId; let i = $index) {
 												<div class="member-pic-wrapper stacked">
-													<img *ngIf="payer.photoURL; else noPicPayer" [src]="payer.photoURL" alt="Payer">
-													<ng-template #noPicPayer>
+													<img *ngIf="payer.photoURL; else noPicPayerStack" [src]="payer.photoURL" alt="Payer">
+													<ng-template #noPicPayerStack>
 														<div class="initials-avatar stacked-text">
 															{{ payer.displayName ? payer.displayName.charAt(0).toUpperCase() : '?' }}
 														</div>
@@ -293,10 +293,10 @@
 											}
 										} @else {
 											<div class="member-pic-wrapper">
-												<img *ngIf="tx['splitData'].paidByPhotoURL; else noPicPayerSingle" [src]="tx['splitData'].paidByPhotoURL" alt="Payer">
-												<ng-template #noPicPayerSingle>
+												<img *ngIf="tx.splitData.paidByPhotoURL; else noPicPayerSingleIcon" [src]="tx.splitData.paidByPhotoURL" alt="Payer">
+												<ng-template #noPicPayerSingleIcon>
 													<div class="initials-avatar">
-														{{ tx['splitData'].paidByDisplayName ? tx['splitData'].paidByDisplayName.charAt(0).toUpperCase() : '?' }}
+														{{ tx.splitData.paidByDisplayName ? tx.splitData.paidByDisplayName.charAt(0).toUpperCase() : '?' }}
 													</div>
 												</ng-template>
 											</div>
@@ -510,21 +510,21 @@
 						</div>
 
 				<!-- Family Split Details -->
-				@if(tx['splitData']) {
+				@if(tx.splitData) {
 					<div class="mt-3 border border-indigo-100 dark:border-indigo-800/60 rounded-xl overflow-hidden bg-gradient-to-br from-indigo-50/50 to-primary-50/50 dark:from-indigo-900/10 dark:to-purple-900/10 shadow-sm transition-all duration-300">
 						<div class="p-3 flex flex-col gap-4">
 
 							<!-- Paid By row -->
-							@if(tx['splitData'].paidBy?.length) {
+							@if(tx.splitData.paidBy?.length) {
 								<div>
 									<p class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Paid By</p>
 									<div class="flex flex-col gap-2">
-										@for (payer of tx['splitData'].paidBy; track payer.userId) {
+										@for (payer of tx.splitData.paidBy; track payer.userId) {
 											<div class="flex items-center gap-2.5">
 												<!-- Avatar initial -->
 												<div class="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800/50 flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 overflow-hidden">
-													<img *ngIf="payer.photoURL; else noPicPayer" [src]="payer.photoURL" class="w-full h-full object-cover" alt="Profile Photo">
-													<ng-template #noPicPayer>
+													<img *ngIf="payer.photoURL; else noPicPayerDetail" [src]="payer.photoURL" class="w-full h-full object-cover" alt="Profile Photo">
+													<ng-template #noPicPayerDetail>
 														{{ payer.displayName ? payer.displayName.charAt(0).toUpperCase() : '?' }}
 													</ng-template>
 												</div>
@@ -547,14 +547,14 @@
 										<div class="flex items-center gap-2.5">
 											<!-- Avatar initial -->
 											<div class="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800/50 flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 overflow-hidden">
-												<img *ngIf="tx['splitData'].paidByPhotoURL; else noPicPayerSingle" [src]="tx['splitData'].paidByPhotoURL" class="w-full h-full object-cover" alt="Profile Photo">
-												<ng-template #noPicPayerSingle>
-													{{ tx['splitData'].paidByDisplayName ? tx['splitData'].paidByDisplayName.charAt(0).toUpperCase() : '?' }}
+												<img *ngIf="tx.splitData.paidByPhotoURL; else noPicPayerSingleDetail" [src]="tx.splitData.paidByPhotoURL" class="w-full h-full object-cover" alt="Profile Photo">
+												<ng-template #noPicPayerSingleDetail>
+													{{ tx.splitData.paidByDisplayName ? tx.splitData.paidByDisplayName.charAt(0).toUpperCase() : '?' }}
 												</ng-template>
 											</div>
 											<!-- Name -->
 											<span class="flex-1 text-xs font-medium text-gray-700 dark:text-gray-300 min-w-0 truncate">
-												{{ tx['splitData'].paidByDisplayName }}
+												{{ tx.splitData.paidByDisplayName }}
 											</span>
 											<!-- Amount chip -->
 											<span class="text-[11px] font-bold text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800/50 rounded-full px-2 py-0.5 flex-shrink-0">
@@ -566,10 +566,10 @@
 							}
 
 							<!-- Split Between -->
-							<div *ngIf="tx['splitData'].splitBetween?.length">
+							<div *ngIf="tx.splitData.splitBetween?.length">
 								<p class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Split Between</p>
 								<div class="flex flex-col gap-2">
-									@for (member of tx['splitData'].splitBetween; track member.userId) {
+									@for (member of tx.splitData.splitBetween; track member.userId) {
 										<div class="flex items-center gap-2.5">
 											<!-- Avatar initial -->
 											<div class="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800/50 flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 overflow-hidden">

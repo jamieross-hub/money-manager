@@ -606,7 +606,7 @@ export class CommonSyncService implements OnDestroy {
         break;
       case 'update':
         const updateRef = doc(this.firestore, `${basePath}/${item.data.id}`);
-        batch.update(updateRef, item.data);
+        batch.set(updateRef, item.data, { merge: true });
         break;
       case 'delete':
         const deleteRef = doc(this.firestore, `${basePath}/${item.data.id}`);
@@ -650,7 +650,7 @@ export class CommonSyncService implements OnDestroy {
         break;
       case 'update':
         const updateRef = doc(this.firestore, `users/${userId}/budgets/${item.data.id}`);
-        batch.update(updateRef, item.data);
+        batch.set(updateRef, item.data, { merge: true });
         break;
       case 'delete':
         const deleteRef = doc(this.firestore, `users/${userId}/budgets/${item.data.id}`);
@@ -672,7 +672,7 @@ export class CommonSyncService implements OnDestroy {
         break;
       case 'update':
         const updateRef = doc(this.firestore, `users/${userId}/accounts/${item.data.id}`);
-        batch.update(updateRef, item.data);
+        batch.set(updateRef, item.data, { merge: true });
         break;
       case 'delete':
         const deleteRef = doc(this.firestore, `users/${userId}/accounts/${item.data.id}`);
@@ -694,7 +694,7 @@ export class CommonSyncService implements OnDestroy {
         break;
       case 'update':
         const updateRef = doc(this.firestore, `users/${userId}/goals/${item.data.id}`);
-        batch.update(updateRef, item.data);
+        batch.set(updateRef, item.data, { merge: true });
         break;
       case 'delete':
         const deleteRef = doc(this.firestore, `users/${userId}/goals/${item.data.id}`);
@@ -716,7 +716,7 @@ export class CommonSyncService implements OnDestroy {
 
     switch (item.type) {
       case 'transaction':
-        const transactionValidation = this.validationService.validateTransactionData(item.data);
+        const transactionValidation = this.validationService.validateTransactionData(item.data, item.operation);
         if (!transactionValidation.isValid) {
           errors.push(...transactionValidation.errors);
         }

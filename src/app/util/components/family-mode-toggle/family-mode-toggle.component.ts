@@ -91,7 +91,7 @@ export class FamilyModeToggleComponent implements OnInit {
         filter(action => action.profile.preferences?.isFamilyMode === enabled),
         take(1),
       ).subscribe(() => {
-        window.location.reload();
+       // window.location.reload();
       });
     } catch (error) {
       console.error('Error toggling family mode:', error);

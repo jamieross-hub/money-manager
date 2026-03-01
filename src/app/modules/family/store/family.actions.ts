@@ -2,13 +2,13 @@ import { createAction, props } from '@ngrx/store';
 import {
   Family,
   FamilyMember,
-  FamilyTransaction,
   CreateFamilyRequest,
   AddFamilyTransactionRequest,
   UpdateFamilyTransactionRequest,
   Settlement,
   AddSettlementRequest,
 } from 'src/app/util/models/family.model';
+import { Transaction } from 'src/app/util/models/transaction.model';
 
 // ─── Load My Family ────────────────────────────────────────────────────────
 export const loadMyFamily = createAction('[Family] Load My Family');
@@ -46,9 +46,9 @@ export const updateMemberRoleSuccess = createAction('[Family] Update Member Role
 
 // ─── Transactions ──────────────────────────────────────────────────────────
 export const loadTransactions = createAction('[Family] Load Transactions', props<{ familyId: string }>());
-export const loadTransactionsSuccess = createAction('[Family] Load Transactions Success', props<{ transactions: FamilyTransaction[] }>());
+export const loadTransactionsSuccess = createAction('[Family] Load Transactions Success', props<{ transactions: Transaction[] }>());
 export const addTransaction = createAction('[Family] Add Transaction', props<{ request: AddFamilyTransactionRequest }>());
-export const addTransactionSuccess = createAction('[Family] Add Transaction Success', props<{ transaction: FamilyTransaction }>());
+export const addTransactionSuccess = createAction('[Family] Add Transaction Success', props<{ transaction: Transaction }>());
 export const updateTransaction = createAction('[Family] Update Transaction', props<{ familyId: string; txId: string; request: UpdateFamilyTransactionRequest }>());
 export const updateTransactionSuccess = createAction('[Family] Update Transaction Success', props<{ txId: string; request: UpdateFamilyTransactionRequest }>());
 export const deleteTransaction = createAction('[Family] Delete Transaction', props<{ familyId: string; txId: string }>());

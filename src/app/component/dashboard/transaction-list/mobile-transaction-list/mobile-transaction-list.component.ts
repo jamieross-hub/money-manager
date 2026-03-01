@@ -173,16 +173,16 @@ export class MobileTransactionListComponent
   allTransactions = computed(() => {
     let transactions = [...this.rawTransactions()];
     
-    // Filter by family mode if active
-    if (this.isFamilyMode()) {
-      // Show only family transactions
-      transactions = transactions.filter(tx => !!(tx as any).familyId || !!(tx as any).splitData || !!(tx as any).settlementFamilyId);
-    } else {
-      // In individual mode, hide family transactions
-      transactions = transactions.filter(tx => !(tx as any).familyId && !(tx as any).splitData && !(tx as any).settlementFamilyId);
-    }
+    // // Filter by family mode if active
+    // if (this.isFamilyMode()) {
+    //   // Show only family transactions
+    //   transactions = transactions.filter(tx => !!tx.familyId || !!tx.splitData || !!tx.settlementFamilyId);
+    // } else {
+    //   // In individual mode, hide family transactions
+    //   transactions = transactions.filter(tx => !tx.familyId && !tx.splitData && !tx.settlementFamilyId);
+    // }
 
-    return transactions.sort((a: any, b: any) => {
+    return transactions.sort((a, b) => {
       const dateA = this.dateService.toDate(a.date);
       const dateB = this.dateService.toDate(b.date);
       return (dateB?.getTime() ?? 0) - (dateA?.getTime() ?? 0);
@@ -314,7 +314,7 @@ export class MobileTransactionListComponent
     const range = this.selectedRange();
     const sort = this.selectedSort();
     const isDateSort = sort === 'date-desc' || sort === 'date-asc';
-    const groups: { date: string; dateHeader: string; transactions: any[]; isUpcomingGroup?: boolean }[] = [];
+    const groups: { date: string; dateHeader: string; transactions: (Transaction)[]; isUpcomingGroup?: boolean }[] = [];
     const dateHeaderCache = new Map<string, string>();
     const today = dayjs().startOf('day');
     const yesterday = dayjs().subtract(1, 'day').startOf('day');

@@ -8,7 +8,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { AppState } from 'src/app/store/app.state';
 import * as FamilySelectors from '../../store/family.selectors';
-import { FamilyTransaction, FamilyMember, FamilyStats } from 'src/app/util/models/family.model';
+import { FamilyMember, FamilyStats } from 'src/app/util/models/family.model';
+import { Transaction } from 'src/app/util/models/transaction.model';
 import { FamilyService } from '../../services/family.service';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 
@@ -26,7 +27,7 @@ export class FamilyReportsComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   members = signal<FamilyMember[]>([]);
-  transactions = signal<FamilyTransaction[]>([]);
+  transactions = signal<Transaction[]>([]);
   loading = signal(true);
 
   private storageService = inject(LocalIndexDBStorageService);

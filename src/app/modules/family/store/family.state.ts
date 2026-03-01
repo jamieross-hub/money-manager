@@ -1,10 +1,11 @@
-import { Family, FamilyMember, FamilyTransaction, Settlement } from 'src/app/util/models/family.model';
+import { Family, FamilyMember, Settlement } from 'src/app/util/models/family.model';
+import { Transaction } from 'src/app/util/models/transaction.model';
 
 export interface FamilyState {
   family: Family | null;
   userFamilies: Family[];
   members: FamilyMember[];
-  transactions: FamilyTransaction[];
+  transactions: Transaction[];
   settlements: Settlement[];
   loading: boolean;
   settlementsLoading: boolean;

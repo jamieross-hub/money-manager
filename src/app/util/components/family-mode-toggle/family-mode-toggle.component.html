@@ -9,13 +9,11 @@
         }">
         <div class="flex items-center flex-1">
             <mat-icon class="mode-icon !w-4 !h-4 !text-[18px] transition-all duration-300"
-                    [class.mr-3]="isFlat()" [class.mr-2]="!isFlat()">
-                {{ isFamilyMode() ? 'family_restroom' : 'person' }}
-            </mat-icon>
+                    [class.mr-3]="isFlat()" [class.mr-2]="!isFlat()">family_restroom</mat-icon>
             <span class="text-left font-semibold"
                 [class.flex-1]="isFlat()"
                 [class.hidden]="!isFlat()" [class.sm:inline]="!isFlat()">
-                {{ isFamilyMode() ? 'Family' : 'Personal' }} Mode
+                Family Mode
             </span>
         </div>
         <div class="scale-90 origin-right translate-y-[1px]">

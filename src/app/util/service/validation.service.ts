@@ -828,9 +828,7 @@ export class ValidationService implements IValidationService {
   /**
    * Validate transaction data
    */
-  validateTransactionData(data: any): ValidationResult {
-
-
+  validateTransactionData(data: any, operation: string = 'create'): ValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -838,31 +836,34 @@ export class ValidationService implements IValidationService {
       errors.push('Data contains undefined values');
     }
 
-    // Validate required fields
-    const requiredFields = ['amount', 'type', 'date', 'accountId', 'categoryId'];
-    for (const field of requiredFields) {
-      if (!this.validateRequired(data[field])) {
-        errors.push(`${field} is required`);
+    // Validate required fields - ONLY for create operations
+    // For updates, we allow partial data (like soft deletes)
+    if (operation === 'create') {
+      const requiredFields = ['amount', 'type', 'date', 'accountId', 'categoryId'];
+      for (const field of requiredFields) {
+        if (!this.validateRequired(data[field])) {
+          errors.push(`${field} is required`);
+        }
       }
     }
 
-    // Validate amount
-    if (data.amount && !this.validateAmount(data.amount)) {
+    // Validate amount if present
+    if (data.amount !== undefined && !this.validateAmount(data.amount)) {
       errors.push(ERROR_MESSAGES.VALIDATION.INVALID_AMOUNT);
     }
 
-    // Validate date
-    if (data.date && !this.validateDate(data.date)) {
+    // Validate date if present
+    if (data.date !== undefined && !this.validateDate(data.date)) {
       errors.push(ERROR_MESSAGES.VALIDATION.INVALID_DATE);
     }
 
-    // Validate payee length
-    if (data.payee && !this.validateLength(data.payee, 1, 100)) {
+    // Validate payee length if present
+    if (data.payee !== undefined && !this.validateLength(data.payee, 1, 100)) {
       errors.push('Payee name must be between 1 and 100 characters');
     }
 
-    // Validate notes length
-    if (data.notes && !this.validateLength(data.notes, 0, 500)) {
+    // Validate notes length if present
+    if (data.notes !== undefined && !this.validateLength(data.notes, 0, 500)) {
       warnings.push('Notes should not exceed 500 characters');
     }
 

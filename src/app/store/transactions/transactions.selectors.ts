@@ -2,23 +2,38 @@ import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { TransactionsState } from './transactions.state';
 import { Timestamp } from '@angular/fire/firestore';
 import { TransactionType, TransactionStatus } from '../../util/config/enums';
+import * as ProfileSelectors from '../profile/profile.selectors';
+import * as FamilySelectors from '../../modules/family/store/family.selectors';
+import { Transaction } from '../../util/models/transaction.model';
 
 export const selectTransactionsState = createFeatureSelector<TransactionsState>('transactions');
 
 // Base selectors
 export const selectAllTransactions = createSelector(
   selectTransactionsState,
-  (state) => state.ids.map(id => state.entities[id]).filter(Boolean).filter(t => t.status !== TransactionStatus.DELETED)
+  ProfileSelectors.selectIsFamilyMode,
+  FamilySelectors.selectFamily,
+  FamilySelectors.selectFamilyTransactions,
+  (state, isFamilyMode, activeFamily, familyTransactions) => {
+    if (isFamilyMode && activeFamily) {
+      return familyTransactions || [];
+    }
+    return state.ids.map(id => state.entities[id]).filter(Boolean).filter(t => t.status !== TransactionStatus.DELETED);
+  }
 );
 
 export const selectTransactionsLoading = createSelector(
   selectTransactionsState,
-  (state) => state.loading
+  ProfileSelectors.selectIsFamilyMode,
+  FamilySelectors.selectFamilyLoading,
+  (state, isFamilyMode, familyLoading) => isFamilyMode ? familyLoading : state.loading
 );
 
 export const selectTransactionsError = createSelector(
   selectTransactionsState,
-  (state) => state.error
+  ProfileSelectors.selectIsFamilyMode,
+  FamilySelectors.selectFamilyError,
+  (state, isFamilyMode, familyError) => isFamilyMode ? familyError : state.error
 );
 
 export const selectSelectedTransactionId = createSelector(
@@ -27,14 +42,14 @@ export const selectSelectedTransactionId = createSelector(
 );
 
 export const selectSelectedTransaction = createSelector(
-  selectTransactionsState,
+  selectAllTransactions,
   selectSelectedTransactionId,
-  (state, selectedId) => selectedId ? state.entities[selectedId] : null
+  (transactions, selectedId) => selectedId ? transactions.find(t => t.id === selectedId) || null : null
 );
 
 export const selectTransactionById = (transactionId: string) => createSelector(
-  selectTransactionsState,
-  (state) => state.entities[transactionId]
+  selectAllTransactions,
+  (transactions) => transactions.find(t => t.id === transactionId)
 );
 
 // Helper function to convert Timestamp to Date
@@ -198,7 +213,7 @@ export const selectCategorySummaries = createSelector(
   (transactions) => {
     const categoryMap = new Map<string, { categoryId: string; categoryName: string; totalAmount: number; transactionCount: number }>();
     
-    transactions.forEach(t => {
+    transactions.forEach((t) => {
       const key = t.categoryId;
       if (!categoryMap.has(key)) {
         categoryMap.set(key, {
@@ -225,11 +240,11 @@ export const selectAccountSummaries = createSelector(
   (transactions) => {
     const accountMap = new Map<string, { accountId: string; totalAmount: number; transactionCount: number }>();
     
-    transactions.forEach(t => {
-      const key = t.accountId;
+    transactions.forEach((t) => {
+      const key = t.accountId || 'unassigned';
       if (!accountMap.has(key)) {
         accountMap.set(key, {
-          accountId: t.accountId,
+          accountId: key,
           totalAmount: 0,
           transactionCount: 0
         });
@@ -267,5 +282,5 @@ export const selectPendingTransactions = createSelector(
 // Recurring transactions
 export const selectRecurringTransactions = createSelector(
   selectAllTransactions,
-  (transactions) => transactions.filter(t => t.isRecurring === true)
+  (transactions) => transactions.filter((t) => t.isRecurring === true)
 );

@@ -30,7 +30,7 @@ import * as TransactionsActions from 'src/app/store/transactions/transactions.ac
 import { FamilyService } from '../../services/family.service';
 import { CategoryService } from 'src/app/util/service/db/category.service';
 import {
-  FamilyMember, FamilyTransaction, Settlement, BalanceEntry, AddSettlementRequest
+  FamilyMember, Settlement, BalanceEntry, AddSettlementRequest
 } from 'src/app/util/models/family.model';
 import { SettleDialogComponent, SettleDialogData } from './settle-dialog/settle-dialog.component';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
@@ -64,7 +64,7 @@ export class SettleUpComponent implements OnInit {
 
   family = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null });
   members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers), { initialValue: [] as FamilyMember[] });
-  transactions = toSignal(this.store.select(FamilySelectors.selectFamilyTransactions), { initialValue: [] as FamilyTransaction[] });
+  transactions = toSignal(this.store.select(FamilySelectors.selectFamilyTransactions), { initialValue: [] as Transaction[] });
   settlements = toSignal(this.store.select(FamilySelectors.selectSettlements), { initialValue: [] as Settlement[] });
   loading = toSignal(this.store.select(FamilySelectors.selectFamilyLoading), { initialValue: true });
   settlementsLoading = toSignal(this.store.select(FamilySelectors.selectSettlementsLoading), { initialValue: false });

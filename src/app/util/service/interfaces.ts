@@ -207,4 +207,6 @@ export interface IValidationService {
   validateDate(date: Date): boolean;
   validateRequired(value: any): boolean;
   validateLength(value: string, min: number, max: number): boolean;
+  validateTransactionData(data: any, operation?: string): { isValid: boolean; errors: string[]; warnings?: string[] };
+  validateCommonData(data: any): { isValid: boolean; errors: string[]; warnings?: string[] };
 } 

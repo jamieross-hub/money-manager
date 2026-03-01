@@ -20,7 +20,8 @@ import * as ProfileActions from 'src/app/store/profile/profile.actions';
 import { FamilyService } from '../../services/family.service';
 import { FamilyCreateDialogComponent } from '../../dialogs/family-create-dialog/family-create-dialog.component';
 import { FamilyJoinDialogComponent } from '../../dialogs/family-join-dialog/family-join-dialog.component';
-import { FamilyTransaction, FamilyStats, Family, FamilyMember } from 'src/app/util/models/family.model';
+import { FamilyStats, Family, FamilyMember } from 'src/app/util/models/family.model';
+import { Transaction } from 'src/app/util/models/transaction.model';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { QuickActionsFabComponent, QuickActionsFabConfig, QuickAction } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
@@ -81,8 +82,8 @@ export class FamilyDashboardComponent implements OnInit {
 
   private storeFamily = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null });
   members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers), { initialValue: [] as FamilyMember[] });
-  transactions = toSignal(this.store.select(FamilySelectors.selectFamilyTransactions), { initialValue: [] as FamilyTransaction[] });
-  recentTxns = toSignal(this.store.select(FamilySelectors.selectRecentTransactions), { initialValue: [] as FamilyTransaction[] });
+  transactions = toSignal(this.store.select(FamilySelectors.selectFamilyTransactions), { initialValue: [] as Transaction[] });
+  recentTxns = toSignal(this.store.select(FamilySelectors.selectRecentTransactions), { initialValue: [] as Transaction[] });
   loading = toSignal(this.store.select(FamilySelectors.selectFamilyLoading), { initialValue: true });
 
   recentActivities = computed(() => {

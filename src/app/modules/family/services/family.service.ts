@@ -25,7 +25,6 @@ import { Auth } from '@angular/fire/auth';
 import {
   Family,
   FamilyMember,
-  FamilyTransaction,
   FamilyStats,
   FamilyMemberStats,
   CreateFamilyRequest,
@@ -35,6 +34,7 @@ import {
   AddSettlementRequest,
   BalanceEntry,
 } from 'src/app/util/models/family.model';
+import { Transaction } from 'src/app/util/models/transaction.model';
 
 const ACTIVE_FAMILY_ID_KEY = 'active_family_id';
 import { NotificationService } from 'src/app/util/service/notification.service';
@@ -455,35 +455,39 @@ export class FamilyService {
 
   // ─── Transactions ─────────────────────────────────────────────────────────
 
-  getTransactions(familyId: string): Observable<FamilyTransaction[]> {
+  getTransactions(familyId: string): Observable<Transaction[]> {
     const q = query(this.getTransactionsCol(familyId), orderBy('date', 'desc'));
     return from(getDocs(q)).pipe(
-      map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() as any } as FamilyTransaction))),
+      map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() as any } as Transaction))),
       catchError(() => of([]))
     );
   }
 
-  async addTransaction(request: AddFamilyTransactionRequest): Promise<FamilyTransaction> {
+  async addTransaction(request: AddFamilyTransactionRequest): Promise<Transaction> {
     const user = this.currentUser;
     if (!user) throw new Error('User not authenticated');
 
-    const txData: Omit<FamilyTransaction, 'id'> = {
+    const txData: Omit<Transaction, 'id'> = {
       familyId: request.familyId,
       userId: user.uid,
       userDisplayName: user.displayName || user.email?.split('@')[0] || 'Member',
       userPhotoURL: user.photoURL || '',
       amount: request.amount,
       type: request.type,
-      category: request.category,
+      categoryId: request.categoryId,
+      category: request.category || '',
       date: request.date,
-      note: request.note || '',
+      notes: request.notes || request.note || '',
       createdAt: new Date(),
       updatedAt: new Date(),
+      createdBy: user.uid,
+      updatedBy: user.uid,
       settlementId: request.settlementId,
       settlementFamilyId: request.settlementFamilyId,
       settlementFromUserId: request.settlementFromUserId,
       settlementToUserId: request.settlementToUserId,
-      status: TransactionStatus.COMPLETED
+      status: TransactionStatus.COMPLETED,
+      syncStatus: (request as any).syncStatus || (TransactionStatus.COMPLETED as any) // Compatibility
     };
 
     const ref = await addDoc(this.getTransactionsCol(request.familyId), txData);
@@ -491,12 +495,14 @@ export class FamilyService {
   }
 
   async updateTransaction(familyId: string, txId: string, request: UpdateFamilyTransactionRequest): Promise<void> {
-    const updateData: any = { updatedAt: new Date() };
+    const updateData: any = { updatedAt: new Date(), updatedBy: this.currentUser?.uid || '' };
     if (request.amount !== undefined) updateData.amount = request.amount;
     if (request.type) updateData.type = request.type;
+    if (request.categoryId) updateData.categoryId = request.categoryId;
     if (request.category) updateData.category = request.category;
     if (request.date) updateData.date = request.date;
-    if (request.note !== undefined) updateData.note = request.note;
+    if (request.notes !== undefined) updateData.notes = request.notes;
+    else if ((request as any).note !== undefined) updateData.notes = (request as any).note;
 
     await updateDoc(this.getTransactionDoc(familyId, txId), updateData);
   }
@@ -510,7 +516,7 @@ export class FamilyService {
 
   // ─── Stats ────────────────────────────────────────────────────────────────
 
-  computeStats(transactions: FamilyTransaction[], members: FamilyMember[]): FamilyStats {
+  computeStats(transactions: Transaction[], members: FamilyMember[]): FamilyStats {
     let totalIncome = 0;
     let totalExpense = 0;
     const memberMap = new Map<string, FamilyMemberStats>();
@@ -591,7 +597,7 @@ export class FamilyService {
     };
   }
 
-  canEditTransaction(tx: FamilyTransaction, currentUserId: string, isAdmin: boolean): boolean {
+  canEditTransaction(tx: Transaction, currentUserId: string, isAdmin: boolean): boolean {
     return isAdmin || tx.userId === currentUserId;
   }
 
@@ -638,7 +644,7 @@ export class FamilyService {
    * Returns entries where `amount > 0` (from owes to).
    */
   computeBalances(
-    transactions: FamilyTransaction[],
+    transactions: Transaction[],
     members: FamilyMember[],
     settlements: Settlement[]
   ): BalanceEntry[] {

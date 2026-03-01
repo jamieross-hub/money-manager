@@ -42,12 +42,49 @@ export interface TaxComponent {
 }
 
 /**
+ * Represents a single member's share in a split transaction
+ */
+export interface SplitBetweenMember {
+  userId: string;
+  displayName: string;
+  photoURL?: string;
+  /** Percentage (0-100) of the transaction this member owes */
+  percentage: number;
+  /** Computed amount this member owes */
+  amount: number;
+}
+
+/**
+ * Represents a single member who paid part of the bill
+ */
+export interface PaidByMember {
+  userId: string;
+  displayName: string;
+  photoURL?: string;
+  amount: number;
+}
+
+/**
+ * Extra data stored on a transaction when the group mode is 'split'
+ */
+export interface SplitTransactionData {
+  /** The userId of the member who paid the bill. If multiple people paid, this can be 'multiple' */
+  paidByUserId: string;
+  paidByDisplayName: string;
+  paidByPhotoURL?: string;
+  /** If multiple people paid, this contains the breakdown */
+  paidBy?: PaidByMember[];
+  /** Members sharing the expense */
+  splitBetween: SplitBetweenMember[];
+}
+
+/**
  * Base transaction interface
  */
 export interface Transaction extends Auditable, RecurrenceInfo {
   id?: string;
   userId: string;
-  accountId: string;
+  accountId?: string; // Optional for family transactions
   categoryId: string;
   category: string;
   payee?: string;
@@ -62,6 +99,13 @@ export interface Transaction extends Auditable, RecurrenceInfo {
   splitGroupId?: string;
   fromAccountId?: string;
   toAccountId?: string;
+
+  // Family related fields
+  familyId?: string;
+  userDisplayName?: string;
+  userPhotoURL?: string;
+  /** Present only when the group mode is 'split' */
+  splitData?: SplitTransactionData;
 
   // Category split support
   isCategorySplit?: boolean;
@@ -85,24 +129,54 @@ export interface Transaction extends Auditable, RecurrenceInfo {
   settlementFromUserId?: string;
   /** userId of the person who RECEIVED in the settlement link */
   settlementToUserId?: string;
+
+  // view properties
+  _isUpcoming?: boolean;
+  note?: string; // Compatibility with family 'note' field
+  _categoryColor?: string;
+  _categoryIcon?: string;
+  _categoryName?: string;
+  _categoryBgColor?: string;
+  _accountName?: string;
+  _accountType?: string;
+  _dateDisplay?: string;
+  _timeDisplay?: string;
+  _fullTransactionDateDisplay?: string;
+  _syncStatusColor?: string;
+  _syncStatusIcon?: string;
+  _syncStatusInfo?: string;
+  _recurringInfo?: string;
+  _isIncome?: boolean;
+  _createdAtDisplay?: string;
+  _updatedAtDisplay?: string;
+  _dueStatus?: string;
+  _isOverdue?: boolean;
 }
 
 /**
  * Base transaction input interface
  */
 export interface TransactionBaseRequest {
-  accountId: string;
+  accountId?: string; // Optional for family transactions
+  familyId?: string;  // Optional for personal transactions
   categoryId: string;
+  category?: string;  // Sometimes we send name instead of ID or both
   payee?: string;
   amount: number;
   type: TransactionType;
   date: Date;
   notes?: string;
+  note?: string;      // Compatibility with family 'note' field
   paymentMethod?: PaymentMethod;
   tags?: string[];
   isRecurring?: boolean;
   recurringInterval?: RecurringInterval;
   recurringEndDate?: Date;
+
+  // Family split support
+  splitData?: SplitTransactionData;
+  userDisplayName?: string;
+  userPhotoURL?: string;
 
   // Optional tax fields
   taxAmount?: number;
