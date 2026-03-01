@@ -98,7 +98,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         console.error('Error loading transactions:', error);
         // Use untracked if we don't want to loop, but here it's just a reaction to error
         this.notificationService.error('Failed to load transactions');
-        this.loaderService.hide();
+       // this.loaderService.hide();
       }
     });
 
@@ -106,7 +106,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     effect(() => {
       const loading = this.transactionsLoading();
       if (!loading) {
-        this.loaderService.hide();
+        //this.loaderService.hide();
       }
     });
   }
@@ -153,7 +153,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   }
 
   loadTransactions() {
-    this.loaderService.show();
+    //this.loaderService.show();
     const userId = this.userService.getCurrentUserId();
     if (userId) {
       this.store.dispatch(TransactionsActions.loadTransactions({ userId }));
@@ -241,12 +241,12 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   }
 
   private async importTransactions(transactions: any[]) {
-    this.loaderService.show();
+    //this.loaderService.show();
     const userId = this.userService.getCurrentUserId();
 
     if (!userId) {
       this.notificationService.error('User not authenticated');
-      this.loaderService.hide();
+      //this.loaderService.hide();
       return;
     }
 
@@ -288,7 +288,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         }
       }
 
-      this.loaderService.hide();
+     // this.loaderService.hide();
 
       if (successCount > 0) {
         this.notificationService.success(`Successfully imported ${successCount} transactions`);
@@ -300,7 +300,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       }
 
     } catch (error) {
-      this.loaderService.hide();
+      //this.loaderService.hide();
       this.notificationService.error('Failed to import transactions');
       console.error('Import error:', error);
     }
@@ -343,12 +343,12 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   async bulkDeleteTransactions(transactions: Transaction[]) {
     if (!transactions || transactions.length === 0) return;
 
-    this.loaderService.show();
+    //this.loaderService.show();
     const userId = this.userService.getCurrentUserId();
 
     if (!userId) {
       this.notificationService.error('User not authenticated');
-      this.loaderService.hide();
+      //this.loaderService.hide();
       return;
     }
 
@@ -366,7 +366,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       console.error('Error deleting transactions:', error);
       this.notificationService.error('Failed to delete some transactions');
     } finally {
-      this.loaderService.hide();
+      //this.loaderService.hide();
     }
   }
 
@@ -375,12 +375,12 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
     if (!transactions || transactions.length === 0 || !categoryId) return;
 
-    this.loaderService.show();
+    //this.loaderService.show();
     const userId = this.userService.getCurrentUserId();
 
     if (!userId) {
       this.notificationService.error('User not authenticated');
-      this.loaderService.hide();
+      //this.loaderService.hide();
       return;
     }
 
@@ -398,7 +398,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       console.error('Error updating transactions:', error);
       this.notificationService.error('Failed to update some transactions');
     } finally {
-      this.loaderService.hide();
+      //this.loaderService.hide();
     }
   }
 }

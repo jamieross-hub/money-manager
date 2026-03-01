@@ -179,16 +179,16 @@ export class GroupSelectionComponent implements OnInit {
                        
       if (isLoading && !this.isInstanceLoading) {
         this.isInstanceLoading = true;
-        this.loaderService.show();
+        //this.loaderService.show();
       } else if (!isLoading && this.isInstanceLoading) {
         this.isInstanceLoading = false;
-        this.loaderService.hide();
+        //this.loaderService.hide();
       }
     }, { allowSignalWrites: true, injector: this.injector });
 
     this.destroyRef.onDestroy(() => {
       if (this.isInstanceLoading) {
-        this.loaderService.hide();
+       //this.loaderService.hide();
       }
     });
 
