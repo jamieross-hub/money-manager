@@ -131,8 +131,8 @@ export class UserComponent {
     return [...members]
       .filter(m => m.isActive)
       .sort((a, b) => {
-        if (a.userId === userId) return 1;
-        if (b.userId === userId) return -1;
+        if (a.userId === userId) return -1; // Current user first
+        if (b.userId === userId) return 1;
         return 0;
       });
   });

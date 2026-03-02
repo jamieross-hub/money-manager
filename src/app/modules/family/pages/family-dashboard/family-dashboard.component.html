@@ -234,7 +234,7 @@
           <div *ngFor="let m of stats()!.memberBreakdown"
             class="bg-white dark:bg-gray-800 rounded-2xl p-3.5 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
 
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3" [class.opacity-60]="!m.isActive">
               <div
                 class="w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 overflow-hidden"
                 [style.background]="memberColor(m.userId)">
@@ -242,8 +242,11 @@
                 <span *ngIf="!m.photoURL" class="text-white">{{ m.displayName ? m.displayName.charAt(0).toUpperCase() :
                   '?' }}</span>
               </div>
-              <span class="text-[15px] font-bold text-gray-800 dark:text-gray-200 truncate max-w-[120px]">{{
-                m.displayName }}</span>
+              <div class="flex flex-col">
+                <span class="text-[15px] font-bold text-gray-800 dark:text-gray-200 truncate max-w-[120px]">{{
+                  m.displayName }}</span>
+                <span *ngIf="!m.isActive" class="text-[10px] uppercase tracking-wider font-extrabold text-red-400 -mt-0.5">Left Group</span>
+              </div>
             </div>
 
             <div class="flex items-center gap-3">

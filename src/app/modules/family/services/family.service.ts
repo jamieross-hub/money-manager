@@ -440,7 +440,7 @@ export class FamilyService {
   // ─── Members ──────────────────────────────────────────────────────────────
 
   getMembers(familyId: string): Observable<FamilyMember[]> {
-    const q = query(this.getMembersCol(familyId), where('isActive', '==', true));
+    const q = query(this.getMembersCol(familyId)); // Return all members (active and inactive)
     return new Observable<FamilyMember[]>(observer => {
       const unsubscribe = onSnapshot(q, (snap) => {
         const members = snap.docs.map(d => ({ id: d.id, ...d.data() as any } as FamilyMember));
@@ -563,6 +563,7 @@ export class FamilyService {
         totalExpense: 0,
         netBalance: 0,
         transactionCount: 0,
+        isActive: m.isActive,
       });
     });
 

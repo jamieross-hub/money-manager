@@ -5,23 +5,24 @@
 		type="button">
 		
 		<!-- Avatar Stack for Family Mode -->
-		<div *ngIf="isFamilyMode() && familyMembers().length > 0" class="avatar-stack flex items-center -space-x-4 mx-1">
-			<img *ngFor="let member of familyMembers().slice(0, 3)" 
-				class="flex-shrink-0 object-cover rounded-full w-8 h-8 border-2 border-white dark:border-slate-900 shadow-sm"
+		<div *ngIf="isFamilyMode() && sortedMembers().length > 0" class="avatar-stack flex flex-row-reverse items-center -space-x-4 space-x-reverse hover:-space-x-2 transition-all duration-300 ml-1 mr-1 cursor-pointer">
+			<img *ngFor="let member of sortedMembers().slice(0, 3); let i = index" 
+				class="flex-shrink-0 object-cover rounded-full w-8 h-8 ring-2 ring-white dark:ring-slate-900 shadow-md transition-all hover:scale-110 hover:ring-blue-500"
 				[src]="getMemberAvatarUrl(member)" 
 				(error)="onImageError($event)"
 				[alt]="member.displayName"
 				[matTooltip]="member.displayName"
-				[style.z-index]="member.userId === currentUserId() ? '20' : 'auto'" />
-			<div *ngIf="familyMembers().length > 3" 
-				class="flex items-center justify-center w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 bg-gray-100 dark:bg-slate-800 text-[10px] font-bold z-10">
-				+{{familyMembers().length - 3}}
+				[style.z-index]="20 - i" />
+			<div *ngIf="sortedMembers().length > 3" 
+				class="flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-white dark:ring-slate-900 bg-gradient-to-br from-gray-50 to-gray-200 dark:from-slate-700 dark:to-slate-900 text-[10px] font-black shadow-sm text-gray-700 dark:text-gray-300"
+				[style.z-index]="10">
+				+{{sortedMembers().length - 3}}
 			</div>
 		</div>
 
 		<!-- Single Avatar for Personal Mode or Family Mode with no group selected -->
 		<img *ngIf="!isFamilyMode() || familyMembers().length === 0" 
-			class="flex-shrink-0 object-cover mx-1 rounded-full w-9 h-9 border-2 border-gray-200 dark:border-slate-800"
+			class="flex-shrink-0 object-cover mx-1 rounded-full w-9 h-9 ring-2 ring-white dark:ring-slate-800 shadow-md border border-gray-100 dark:border-slate-700 transition-transform hover:scale-105"
 			[src]="profileImage()" (error)="onImageError($event)" alt="avatar" />
 
 		<span class="mx-1 truncate max-w-100" *ngIf="(!isMobile() || !user().photoURL)">{{(user().displayName ?
