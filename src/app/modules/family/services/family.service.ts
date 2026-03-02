@@ -64,10 +64,19 @@ export class FamilyService {
     this.syncActiveFamilyWithProfile();
   }
 
+  private isTransitioning = false;
+
   private syncActiveFamilyWithProfile(): void {
     // Sync the signal with store preferences when they change
     this.store.select(fromProfile.selectUserPreferences).subscribe(prefs => {
       if (prefs && prefs.activeFamilyId !== undefined) {
+        if (this.isTransitioning) {
+          if (prefs.activeFamilyId === this.activeFamilyId()) {
+            this.isTransitioning = false;
+          }
+          return;
+        }
+
         if (prefs.activeFamilyId !== this.activeFamilyId()) {
           this.activeFamilyId.set(prefs.activeFamilyId);
           // Also sync to persistent storage for immediate availability on next boot
@@ -170,17 +179,17 @@ export class FamilyService {
 
     // 4. Finally, update user's preferences with familyId
     // This completes the "Group Created" state transition for the user
+    // 4. Finally, update user's preferences with familyId
+    // This completes the "Group Created" state transition for the user
     try {
-      // ONLY switch if no family is currently active
-      if (!this.activeFamilyId()) {
-        this.store.dispatch(ProfileActions.updatePreferences({
-          userId: user.uid,
-          preferences: {
-            activeFamilyId: familyId,
-            isFamilyMode: true
-          }
-        }));
-      }
+      this.setActiveFamily(familyId);
+      this.store.dispatch(ProfileActions.updatePreferences({
+        userId: user.uid,
+        preferences: {
+          activeFamilyId: familyId,
+          isFamilyMode: true
+        }
+      }));
     } catch (e) {
       console.warn('Could not update user preferences with activeFamilyId:', e);
       // We don't throw here as the family is already created, but the user might need to toggle it manually
@@ -319,6 +328,10 @@ export class FamilyService {
   }
 
   setActiveFamily(id: string | null): void {
+    const previousId = this.activeFamilyId();
+    if (previousId === id) return;
+
+    this.isTransitioning = true;
     this.activeFamilyId.set(id);
     try {
       if (id) {
@@ -507,11 +520,18 @@ export class FamilyService {
     await updateDoc(this.getTransactionDoc(familyId, txId), updateData);
   }
 
-  async deleteTransaction(familyId: string, txId: string): Promise<void> {
-    await updateDoc(this.getTransactionDoc(familyId, txId), {
+  async deleteTransaction(familyId: string, txId: string): Promise<Transaction> {
+    const docRef = this.getTransactionDoc(familyId, txId);
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) throw new Error('Transaction not found');
+    const transaction = { id: snap.id, ...snap.data() as any } as Transaction;
+
+    await updateDoc(docRef, {
       status: TransactionStatus.DELETED,
       updatedAt: new Date()
     });
+
+    return { ...transaction, status: TransactionStatus.DELETED };
   }
 
   // ─── Stats ────────────────────────────────────────────────────────────────
@@ -635,8 +655,27 @@ export class FamilyService {
     return { id: ref.id, ...data };
   }
 
-  async deleteSettlement(familyId: string, settlementId: string): Promise<void> {
-    await deleteDoc(doc(this.firestore, `${this.FAMILIES_COL}/${familyId}/settlements/${settlementId}`));
+  async deleteSettlement(familyId: string, settlementId: string): Promise<string[]> {
+    const batch = writeBatch(this.firestore);
+    const deletedTxIds: string[] = [];
+    
+    // 1. Delete the settlement record itself
+    batch.delete(doc(this.firestore, `${this.FAMILIES_COL}/${familyId}/settlements/${settlementId}`));
+
+    // 2. Clear associated shared transactions in family collection
+    const q = query(this.getTransactionsCol(familyId), where('settlementId', '==', settlementId));
+    const snap = await getDocs(q);
+    
+    snap.forEach(d => {
+      deletedTxIds.push(d.id);
+      batch.update(d.ref, { 
+        status: TransactionStatus.DELETED, 
+        updatedAt: new Date() 
+      });
+    });
+
+    await batch.commit();
+    return deletedTxIds;
   }
 
   /**

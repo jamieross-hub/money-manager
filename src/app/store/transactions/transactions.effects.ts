@@ -4,6 +4,8 @@ import { of } from 'rxjs';
 import { map, mergeMap, catchError, switchMap } from 'rxjs/operators';
 import { TransactionsService } from '../../util/service/db/transactions.service';
 import * as TransactionsActions from './transactions.actions';
+import * as FamilyActions from '../../modules/family/store/family.actions';
+import { UserService } from '../../util/service/db/user.service';
 
 @Injectable()
 export class TransactionsEffects {
@@ -53,13 +55,23 @@ export class TransactionsEffects {
       // If the deleted personal transaction was linked to a settlement, delete the settlement too.
       // E.g., user deletes the "Settlement" transfer from their transaction list.
       if (transaction.settlementId && transaction.settlementFamilyId) {
-        return of({
-          type: '[Family] Delete Settlement',
+        return of(FamilyActions.deleteSettlement({
           familyId: transaction.settlementFamilyId,
           settlementId: transaction.settlementId
-        });
+        }));
       }
       return of({ type: '[Transactions] No Cascade Actions Needed' });
+    })
+  ));
+  
+  refreshOnSettlementDelete$ = createEffect(() => this.actions$.pipe(
+    ofType(FamilyActions.deleteSettlementSuccess),
+    mergeMap(() => {
+        const userId = this.userService.getCurrentUserId();
+        if (userId && userId !== 'offline-guest') {
+            return of(TransactionsActions.loadTransactions({ userId }));
+        }
+        return of({ type: '[Transactions] No Personal Refresh Needed' });
     })
   ));
 
@@ -81,6 +93,7 @@ export class TransactionsEffects {
 
   constructor(
     private actions$: Actions,
-    private transactionsService: TransactionsService
+    private transactionsService: TransactionsService,
+    private userService: UserService
   ) {}
-} 
+}

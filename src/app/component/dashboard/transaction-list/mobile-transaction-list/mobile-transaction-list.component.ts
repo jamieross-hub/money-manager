@@ -215,7 +215,7 @@ export class MobileTransactionListComponent
         amountRange: { min: null, max: null },
         statusFilter: [],
         tags: [],
-        isRecurring: this.isRecurringFilter() || false,
+        isRecurring: this.isRecurringFilter(),
       }
     );
 

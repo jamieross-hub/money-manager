@@ -212,9 +212,9 @@ export class FamilyEffects {
       ofType(FamilyActions.deleteTransaction),
       mergeMap(({ familyId, txId }) =>
         from(this.familyService.deleteTransaction(familyId, txId)).pipe(
-          map(() => {
+          map((transaction) => {
             this.notificationService.success('Transaction deleted');
-            return FamilyActions.deleteTransactionSuccess({ txId });
+            return FamilyActions.deleteTransactionSuccess({ txId, transaction });
           }),
           catchError(err => {
             this.notificationService.error('Failed to delete transaction');
@@ -260,9 +260,9 @@ export class FamilyEffects {
       ofType(FamilyActions.deleteSettlement),
       mergeMap(({ familyId, settlementId }) =>
         from(this.familyService.deleteSettlement(familyId, settlementId)).pipe(
-          map(() => {
+          map((deletedTxIds) => {
             this.notificationService.success('Settlement reverted');
-            return FamilyActions.deleteSettlementSuccess({ settlementId });
+            return FamilyActions.deleteSettlementSuccess({ settlementId, deletedTxIds });
           }),
           catchError(err => {
             this.notificationService.error('Failed to revert settlement');
@@ -272,4 +272,19 @@ export class FamilyEffects {
       )
     )
   );
+  
+  cascadeDeleteSettlement$ = createEffect(() => this.actions$.pipe(
+    ofType(FamilyActions.deleteTransactionSuccess),
+    mergeMap(({ transaction }) => {
+      const settlementId = transaction.settlementId;
+      const familyId = transaction.settlementFamilyId || transaction.familyId;
+      if (settlementId && familyId) {
+        return of(FamilyActions.deleteSettlement({
+          familyId,
+          settlementId
+        }));
+      }
+      return of({ type: '[Family] No Cascade Actions Needed' });
+    })
+  ));
 }

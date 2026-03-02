@@ -221,10 +221,22 @@ export class SettleUpComponent implements OnInit {
             settlementId: settlement.id,
             settlementFamilyId: famId,
             settlementFromUserId: req.fromUserId,
-            settlementToUserId: req.toUserId
+            settlementToUserId: req.toUserId,
+            familyId: famId // Also tag personal record with familyId for easier filtering
           };
 
+          const familyTxRequest = {
+            ...transferTx,
+            familyId: famId!,
+            userDisplayName: req.fromDisplayName,
+            userPhotoURL: req.fromPhotoURL
+          };
+
+          // 1. Record in personal transactions (for account balance)
           this.store.dispatch(TransactionsActions.createTransaction({ userId, transaction: transferTx }));
+          
+          // 2. Record in family transactions (for shared visibility)
+          this.store.dispatch(FamilyActions.addTransaction({ request: familyTxRequest as any }));
         });
 
         // 2. Dispatch the settlement ONLY AFTER the listener is set up

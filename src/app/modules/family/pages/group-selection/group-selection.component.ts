@@ -194,7 +194,7 @@ export class GroupSelectionComponent implements OnInit {
 
     effect(() => {
       const active = this.activeGroup();
-      if (active && !this.autoOpened) {
+      if (active && (!this.autoOpened || (this.selectedGroup()?.id !== active.id && !this.showDashboard()))) {
         this.autoOpened = true;
         this.openGroup(active);
       }
@@ -396,7 +396,11 @@ export class GroupSelectionComponent implements OnInit {
   // ─── Dialogs ───────────────────────────────────────────────────────────────
 
   openCreateDialog(): void {
-    const ref = this.dialog.open(FamilyCreateDialogComponent, { disableClose: true });
+    const existingNames = this.groups().map(g => g.name);
+    const ref = this.dialog.open(FamilyCreateDialogComponent, { 
+      disableClose: true,
+      data: { existingNames }
+    });
     ref.afterClosed().subscribe(async result => {
       if (result) {
         this.store.dispatch(FamilyActions.createFamily({ request: result }));

@@ -24,7 +24,12 @@ export const familyReducer = createReducer(
 
   // Create family
   on(FamilyActions.createFamily, state => ({ ...state, loading: true, error: null })),
-  on(FamilyActions.createFamilySuccess, (state, { family }) => ({ ...state, loading: false, family })),
+  on(FamilyActions.createFamilySuccess, (state, { family }) => ({ 
+    ...state, 
+    loading: false, 
+    family,
+    userFamilies: [family, ...state.userFamilies]
+  })),
   on(FamilyActions.createFamilyFailure, (state, { error }) => ({ ...state, loading: false, error })),
 
   // Join family
@@ -57,10 +62,10 @@ export const familyReducer = createReducer(
       tx.id === txId ? { ...tx, ...request, updatedAt: new Date() } : tx
     )
   })),
-  on(FamilyActions.deleteTransactionSuccess, (state, { txId }) => ({
+  on(FamilyActions.deleteTransactionSuccess, (state, { txId, transaction }) => ({
     ...state,
     transactions: state.transactions.map(tx => 
-      tx.id === txId ? { ...tx, status: TransactionStatus.DELETED, updatedAt: new Date() } : tx
+      tx.id === txId ? { ...tx, ...transaction, status: TransactionStatus.DELETED, updatedAt: new Date() } : tx
     )
   })),
 
@@ -106,8 +111,13 @@ export const familyReducer = createReducer(
     ...state,
     settlements: [settlement, ...state.settlements],
   })),
-  on(FamilyActions.deleteSettlementSuccess, (state, { settlementId }) => ({
+  on(FamilyActions.deleteSettlementSuccess, (state, { settlementId, deletedTxIds }) => ({
     ...state,
     settlements: state.settlements.filter(s => s.id !== settlementId),
+    transactions: state.transactions.map(tx => 
+      (deletedTxIds?.includes(tx.id || '') || tx.settlementId === settlementId)
+        ? { ...tx, status: TransactionStatus.DELETED, updatedAt: new Date() }
+        : tx
+    )
   })),
 );

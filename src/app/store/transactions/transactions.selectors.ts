@@ -16,7 +16,27 @@ export const selectAllTransactions = createSelector(
   FamilySelectors.selectFamilyTransactions,
   (state, isFamilyMode, activeFamily, familyTransactions) => {
     if (isFamilyMode && activeFamily) {
-      return familyTransactions || [];
+      // Include personal transactions that are explicitly linked to this family (like settlements)
+      const personalLinkedTxs = state.ids
+        .map(id => state.entities[id])
+        .filter(Boolean)
+        .filter(t => t.status !== TransactionStatus.DELETED && (t.familyId == activeFamily.id || t.settlementFamilyId == activeFamily.id));
+
+      const merged = [...(familyTransactions || []), ...personalLinkedTxs];
+      // De-duplicate if somehow same transaction is in both
+      const seenIds = new Set();
+      const seenSettlements = new Set();
+      return merged.filter(t => {
+        if (seenIds.has(t.id)) return false;
+        seenIds.add(t.id);
+        
+        if (t.settlementId) {
+          if (seenSettlements.has(t.settlementId)) return false;
+          seenSettlements.add(t.settlementId);
+        }
+        
+        return true;
+      });
     }
     return state.ids.map(id => state.entities[id]).filter(Boolean).filter(t => t.status !== TransactionStatus.DELETED);
   }

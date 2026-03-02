@@ -52,7 +52,7 @@ export const addTransactionSuccess = createAction('[Family] Add Transaction Succ
 export const updateTransaction = createAction('[Family] Update Transaction', props<{ familyId: string; txId: string; request: UpdateFamilyTransactionRequest }>());
 export const updateTransactionSuccess = createAction('[Family] Update Transaction Success', props<{ txId: string; request: UpdateFamilyTransactionRequest }>());
 export const deleteTransaction = createAction('[Family] Delete Transaction', props<{ familyId: string; txId: string }>());
-export const deleteTransactionSuccess = createAction('[Family] Delete Transaction Success', props<{ txId: string }>());
+export const deleteTransactionSuccess = createAction('[Family] Delete Transaction Success', props<{ txId: string; transaction: Transaction }>());
 
 // ─── Error ─────────────────────────────────────────────────────────────────
 export const clearError = createAction('[Family] Clear Error');
@@ -65,4 +65,4 @@ export const addSettlement = createAction('[Family] Add Settlement', props<{ req
 export const addSettlementSuccess = createAction('[Family] Add Settlement Success', props<{ settlement: Settlement }>());
 export const addSettlementFailure = createAction('[Family] Add Settlement Failure', props<{ error: string }>());
 export const deleteSettlement = createAction('[Family] Delete Settlement', props<{ familyId: string; settlementId: string }>());
-export const deleteSettlementSuccess = createAction('[Family] Delete Settlement Success', props<{ settlementId: string }>());
+export const deleteSettlementSuccess = createAction('[Family] Delete Settlement Success', props<{ settlementId: string; deletedTxIds?: string[] }>());

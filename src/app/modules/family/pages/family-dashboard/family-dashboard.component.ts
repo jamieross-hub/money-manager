@@ -284,7 +284,11 @@ export class FamilyDashboardComponent implements OnInit {
   }
 
   createFamily() {
-    const ref = this.dialog.open(FamilyCreateDialogComponent, { disableClose: true });
+    const existingNames = this.store.selectSignal(FamilySelectors.selectUserFamilies)()?.map(f => f.name) || [];
+    const ref = this.dialog.open(FamilyCreateDialogComponent, { 
+      disableClose: true,
+      data: { existingNames }
+    });
     ref.afterClosed().subscribe(result => {
       if (result) this.store.dispatch(FamilyActions.createFamily({ request: result }));
     });

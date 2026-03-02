@@ -699,9 +699,11 @@ export class FilterService {
 
     // Apply recurring filter
     if (state.isRecurring !== null && state.isRecurring !== undefined) {
-      filtered = filtered.filter(transaction =>
-        transaction.isRecurring === state.isRecurring
-      );
+      filtered = filtered.filter(transaction => {
+        // Treat undefined or null as false for the isRecurring check
+        const txIsRecurring = !!transaction.isRecurring;
+        return txIsRecurring === state.isRecurring;
+      });
     }
 
     return filtered;

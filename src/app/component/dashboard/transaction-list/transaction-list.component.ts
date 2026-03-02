@@ -28,6 +28,8 @@ import { AppState } from '../../../store/app.state';
 import * as TransactionsActions from '../../../store/transactions/transactions.actions';
 import * as TransactionsSelectors from '../../../store/transactions/transactions.selectors';
 import * as CategoriesActions from '../../../store/categories/categories.actions';
+import * as FamilyActions from '../../../modules/family/store/family.actions';
+import * as ProfileSelectors from '../../../store/profile/profile.selectors';
 import { DateService } from 'src/app/util/service/date.service';
 import { RecurringInterval, SyncStatus, TransactionStatus, TransactionType } from 'src/app/util/config/enums';
 import { APP_CONFIG } from 'src/app/util/config/config';
@@ -174,8 +176,21 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   async deleteTransaction(transaction: Transaction) {
     const userId = this.userService.getCurrentUserId();
     if (userId && transaction.id) {
-      this.store.dispatch(TransactionsActions.deleteTransaction({ userId, transactionId: transaction.id }));
-      this.notificationService.success('Transaction deleted successfully');
+      const isFamily = !!transaction.familyId && !transaction.accountId;
+      
+      if (isFamily) {
+        this.store.dispatch(FamilyActions.deleteTransaction({ 
+          familyId: transaction.familyId!, 
+          txId: transaction.id 
+        }));
+      } else {
+        this.store.dispatch(TransactionsActions.deleteTransaction({ 
+          userId, 
+          transactionId: transaction.id 
+        }));
+      }
+      
+      this.notificationService.success('Transaction deleted');
     }
   }
 

@@ -362,12 +362,13 @@
 								matTooltip="Edit transaction">
 								<mat-icon>edit</mat-icon>
 							</button>
+							
+							<span *ngIf="!canEdit(tx) && !canDelete(tx)" class="text-[11px] text-gray-400 dark:text-gray-500 italic px-2">View only</span>
+							<span *ngIf="!canEdit(tx) && canDelete(tx) && tx.settlementId" class="text-[10px] text-gray-400 dark:text-gray-500 italic px-1">Uneditable settlement</span>
 							<button *ngIf="canDelete(tx)" mat-icon-button class="action-button delete-btn" (click)="onDeleteTransaction(tx)"
 								matTooltip="Delete transaction">
 								<mat-icon>delete</mat-icon>
 							</button>
-							<span *ngIf="!canEdit(tx) && !canDelete(tx)" class="text-[11px] text-gray-400 dark:text-gray-500 italic px-2">View only</span>
-							<span *ngIf="!canEdit(tx) && canDelete(tx) && tx.settlementId" class="text-[10px] text-gray-400 dark:text-gray-500 italic px-1">Uneditable settlement</span>
 						</div>
 					</div>
 

@@ -1,11 +1,8 @@
-
-
-<ng-container *ngIf="isFamilyMode(); else personalMode">
-	<app-group-selection></app-group-selection>
-</ng-container>
-
-<ng-template #personalMode>
-	<div class="home-wrapper font-roboto grid h-full">
-		<app-chat class="safe-h-screen-chat"></app-chat>
-	</div>
-</ng-template>
+@if(isFamilyMode()) {
+<app-group-selection></app-group-selection>
+}
+@else {
+<div class="home-wrapper font-roboto grid h-full">
+	<app-chat class="safe-h-screen-chat"></app-chat>
+</div>
+}
