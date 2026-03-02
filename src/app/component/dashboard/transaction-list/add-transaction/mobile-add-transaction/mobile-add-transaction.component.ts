@@ -57,6 +57,7 @@ import { FamilyMember, SplitBetweenMember, PaidByMember } from 'src/app/util/mod
 import { MultiplePaidBySheetComponent } from './multiple-paid-by-sheet/multiple-paid-by-sheet.component';
 import { SplitConfigSheetComponent, SplitConfigSheetData, SplitMode } from './split-config-sheet/split-config-sheet.component';
 import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
+import { ImageFallbackDirective } from 'src/app/util/directives';
 
 
 
@@ -88,7 +89,8 @@ import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button
     CategorySelectionSheetComponent,
     MatExpansionModule,
     CommonHeaderComponent,
-    CommonBodyContentComponent
+    CommonBodyContentComponent,
+    ImageFallbackDirective
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -211,7 +211,7 @@
 							<!-- Avatar -->
 							<div class="relative shrink-0">
 								@if(member.photoURL) {
-								<img [src]="member.photoURL" alt="" class="w-9 h-9 rounded-full object-cover ring-2"
+								<img [src]="member.photoURL" appImageFallback alt="" class="w-9 h-9 rounded-full object-cover ring-2"
 									[class.ring-primary-400]="isMemberPaidBy(member.userId)"
 									[class.ring-gray-200]="!isMemberPaidBy(member.userId)" />
 								} @else {
