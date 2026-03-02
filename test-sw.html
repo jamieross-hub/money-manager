@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Service Worker Push Test</title>
+</head>
+<body>
+  <h1>SW Push Test</h1>
+  <button id="req">Request Permission</button>
+  <button id="reg">Register SW</button>
+  <button id="notify">Send Local SW Notification via Message</button>
+  
+  <div id="log" style="white-space: pre-wrap; margin-top: 20px; font-family: monospace; border: 1px solid #ccc; padding: 10px;"></div>
+
+  <script>
+    function log(msg) {
+      document.getElementById('log').textContent += msg + '\n';
+      console.log(msg);
+    }
+
+    document.getElementById('req').addEventListener('click', async () => {
+      const perm = await Notification.requestPermission();
+      log('Permission: ' + perm);
+    });
+
+    document.getElementById('reg').addEventListener('click', async () => {
+      try {
+        const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        log('SW registered: ' + reg.scope);
+      } catch(e) {
+        log('SW error: ' + e);
+      }
+    });
+
+    document.getElementById('notify').addEventListener('click', async () => {
+      const reg = await navigator.serviceWorker.ready;
+      if(reg && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({
+              type: 'SHOW_NOTIFICATION',
+              notification: {
+                  title: 'Test SW Notification',
+                  body: 'This was routed through the service worker via postMessage',
+                  icon: '/assets/icon/app-icon/icon-192x192.png'
+              }
+          })
+          log('Message sent to SW');
+      } else {
+          log('No active SW controller');
+      }
+    });
+  </script>
+</body>
+</html>

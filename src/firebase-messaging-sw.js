@@ -48,9 +48,7 @@ function getNotificationOptions(payload, customOptions = {}) {
     body: payload.notification?.body || 'You have a new notification',
     icon: payload.notification?.icon || '/money-manager/assets/icon/app-icon/icon-192x192.png',
     badge: payload.notification?.badge || '/money-manager/assets/icon/app-icon/icon-72x72.png',
-    image: payload.notification?.image,
     data: payload.data || {},
-    tag: payload.notification?.tag,
     requireInteraction: payload.notification?.requireInteraction || false,
     silent: payload.notification?.silent || false,
     timestamp: payload.notification?.timestamp || Date.now(),
@@ -59,6 +57,11 @@ function getNotificationOptions(payload, customOptions = {}) {
       { action: 'dismiss', title: 'Dismiss' }
     ]
   };
+
+  // Only add optional properties if they are explicitly defined to avoid passing `undefined`
+  if (payload.notification?.image !== undefined) defaultOptions.image = payload.notification.image;
+  if (payload.notification?.tag !== undefined) defaultOptions.tag = payload.notification.tag;
+  if (payload.notification?.vibrate !== undefined) defaultOptions.vibrate = payload.notification.vibrate;
 
   // Platform-specific adjustments
   if (platform.isIOS && platform.isSafari) {
@@ -554,12 +557,30 @@ self.addEventListener('message', (event) => {
 
 // Function to show notification from message
 function showNotificationFromMessage(notificationData) {
-  const notificationOptions = getNotificationOptions({
-    notification: notificationData,
-    data: notificationData.data || {}
-  });
+  if (!notificationData) return;
 
-  self.registration.showNotification(notificationData.title, notificationOptions)
+  const title = notificationData.title || 'Family Expense Tracker';
+  
+  // Build a clean payload without undefined values
+  const payload = {
+    notification: {
+      body: notificationData.body,
+      icon: notificationData.icon,
+      badge: notificationData.badge,
+      image: notificationData.image,
+      tag: notificationData.tag,
+      requireInteraction: notificationData.requireInteraction,
+      silent: notificationData.silent,
+      timestamp: notificationData.timestamp,
+      actions: notificationData.actions,
+      vibrate: notificationData.vibrate
+    },
+    data: notificationData.data || {}
+  };
+
+  const notificationOptions = getNotificationOptions(payload);
+
+  self.registration.showNotification(title, notificationOptions)
     .then(() => console.log('Notification shown successfully via service worker'))
     .catch((error) => handleError(error, 'show notification from message'));
 }
