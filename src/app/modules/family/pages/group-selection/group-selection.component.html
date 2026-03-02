@@ -35,7 +35,7 @@
   <div class="gs-content">
 
     <!-- ── EMPTY STATE ──────────────────────────────────── -->
-    @if (loadState() === 'empty') {
+    @if (  loadState() === 'empty' && loadState() != 'loading') {
     <div
       class="flex flex-col items-center justify-center min-h-[50vh] px-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div
