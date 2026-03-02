@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, from, of, forkJoin } from 'rxjs';
-import { map, catchError, tap } from 'rxjs/operators';
+import { Observable, from, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import {
   Firestore,
   collection,
@@ -37,10 +37,6 @@ import {
 import { Transaction } from 'src/app/util/models/transaction.model';
 
 const ACTIVE_FAMILY_ID_KEY = 'active_family_id';
-const ACTIVE_FAMILY_DATA_KEY = 'active_family_data';
-const FAMILY_MEMBERS_PREFIX = 'family_members_';
-const FAMILY_TRANSACTIONS_PREFIX = 'family_txs_';
-
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { TransactionType, AccountType, TransactionStatus } from 'src/app/util/config/enums';
 import { defaultCategoriesForNewUser } from 'src/app/util/config/config';
@@ -49,7 +45,6 @@ import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import * as ProfileActions from 'src/app/store/profile/profile.actions';
 import * as fromProfile from 'src/app/store/profile/profile.selectors';
-import * as FamilyActions from '../store/family.actions';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 
@@ -326,45 +321,10 @@ export class FamilyService {
 
   private getInitialActiveFamilyId(): string | null {
     try {
-      const cachedId = this.storageService.getItem<string>(ACTIVE_FAMILY_ID_KEY);
-      // If we have a cached ID, we might also have cached data.
-      // We rely on the components/effects to call getMyFamily which will check the cache.
-      return cachedId;
+      return this.storageService.getItem(ACTIVE_FAMILY_ID_KEY);
     } catch {
       return null;
     }
-  }
-
-  private cacheActiveFamily(family: Family | null): void {
-    try {
-      if (family) {
-        this.storageService.setItem(ACTIVE_FAMILY_DATA_KEY, family);
-      } else {
-        this.storageService.removeItem(ACTIVE_FAMILY_DATA_KEY);
-      }
-    } catch (e) {
-      console.error('Error caching active family data:', e);
-    }
-  }
-
-  private getCachedActiveFamily(): Family | null {
-    return this.storageService.getItem<Family>(ACTIVE_FAMILY_DATA_KEY);
-  }
-
-  private cacheMembers(familyId: string, members: FamilyMember[]): void {
-    this.storageService.setItem(FAMILY_MEMBERS_PREFIX + familyId, members);
-  }
-
-  private getCachedMembers(familyId: string): FamilyMember[] {
-    return this.storageService.getItem<FamilyMember[]>(FAMILY_MEMBERS_PREFIX + familyId) || [];
-  }
-
-  private cacheTransactions(familyId: string, transactions: Transaction[]): void {
-    this.storageService.setItem(FAMILY_TRANSACTIONS_PREFIX + familyId, transactions);
-  }
-
-  private getCachedTransactions(familyId: string): Transaction[] {
-    return this.storageService.getItem<Transaction[]>(FAMILY_TRANSACTIONS_PREFIX + familyId) || [];
   }
 
   setActiveFamily(id: string | null): void {
@@ -398,26 +358,10 @@ export class FamilyService {
     if (!user) return null;
 
     const familyId = this.activeFamilyId();
-    if (!familyId) return null;
 
-    // 1. Try Cache First
-    const cached = this.getCachedActiveFamily();
-    if (cached && cached.id === familyId && cached.isActive) {
-      // Return cached version immediately for fast startup.
-      // The background pull will refresh it later.
-      return cached;
-    }
-
-    // 2. Fetch from Firestore
-    try {
+    if (familyId) {
       const family = await this.getFamily(familyId);
-      if (family?.isActive) {
-        this.cacheActiveFamily(family);
-        return family;
-      }
-    } catch (e) {
-      console.warn('Failed to fetch family from Firestore, using cache if available:', e);
-      return cached || null;
+      if (family?.isActive) return family;
     }
 
     return null;
@@ -496,16 +440,9 @@ export class FamilyService {
   // ─── Members ──────────────────────────────────────────────────────────────
 
   getMembers(familyId: string): Observable<FamilyMember[]> {
-    const cached = this.getCachedMembers(familyId);
-    if (cached.length > 0) return of(cached);
-
     const q = query(this.getMembersCol(familyId), where('isActive', '==', true));
     return from(getDocs(q)).pipe(
-      map(snap => {
-        const members = snap.docs.map(d => ({ id: d.id, ...d.data() as any } as FamilyMember));
-        this.cacheMembers(familyId, members);
-        return members;
-      }),
+      map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() as any } as FamilyMember))),
       catchError(() => of([]))
     );
   }
@@ -532,16 +469,9 @@ export class FamilyService {
   // ─── Transactions ─────────────────────────────────────────────────────────
 
   getTransactions(familyId: string): Observable<Transaction[]> {
-    const cached = this.getCachedTransactions(familyId);
-    if (cached.length > 0) return of(cached);
-
     const q = query(this.getTransactionsCol(familyId), orderBy('date', 'desc'));
     return from(getDocs(q)).pipe(
-      map(snap => {
-        const transactions = snap.docs.map(d => ({ id: d.id, ...d.data() as any } as Transaction));
-        this.cacheTransactions(familyId, transactions);
-        return transactions;
-      }),
+      map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() as any } as Transaction))),
       catchError(() => of([]))
     );
   }
@@ -858,38 +788,14 @@ export class FamilyService {
 
   pullFromFirestore(userId: string): Observable<void> {
     const familyId = this.activeFamilyId();
-    if (!familyId) return of(void 0);
-
-    console.log(`[FamilyService] Pulling family data for group: ${familyId}`);
-
-    return forkJoin({
-      family: from(this.getFamily(familyId)),
-      members: from(getDocs(query(this.getMembersCol(familyId), where('isActive', '==', true)))).pipe(
-        map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() as any } as FamilyMember)))
-      ),
-      transactions: from(getDocs(query(this.getTransactionsCol(familyId), orderBy('date', 'desc')))).pipe(
-        map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() as any } as Transaction)))
-      )
-    }).pipe(
-      tap(({ family, members, transactions }) => {
-        if (family) {
-          this.cacheActiveFamily(family);
-          this.store.dispatch(FamilyActions.loadMyFamilySuccess({ family }));
-        }
-        
-        this.cacheMembers(familyId, members);
-        this.store.dispatch(FamilyActions.loadMembersSuccess({ members }));
-        
-        this.cacheTransactions(familyId, transactions);
-        this.store.dispatch(FamilyActions.loadTransactionsSuccess({ transactions }));
-
-        console.log(`[FamilyService] Pull completed for family ${familyId}: ${members.length} members, ${transactions.length} txs`);
-      }),
-      map(() => void 0),
-      catchError(err => {
-        console.error('[FamilyService] Pull failed:', err);
-        return of(void 0);
-      })
-    );
+    if (familyId) {
+      // Re-trigger family load to refresh data from server
+      this.store.dispatch(ProfileActions.updatePreferences({ userId, preferences: {} })); 
+      // The store effects or components will reload if needed, or we can explicitly reload:
+      this.store.dispatch({ type: '[Family] Load Family', familyId });
+      this.store.dispatch({ type: '[Family] Load Members', familyId });
+      this.store.dispatch({ type: '[Family] Load Transactions', familyId });
+    }
+    return of(void 0);
   }
 }
