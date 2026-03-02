@@ -22,7 +22,7 @@ import { ThemeType } from 'src/app/util/models/theme.model';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 import { ClickOutsideDirective } from 'src/app/util/directives/click-outside.directive';
 import { LocalStorageKey } from 'src/app/util/models/local-storage.model';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
@@ -30,7 +30,7 @@ import { ThemeToggleComponent } from 'src/app/util/components/theme-toggle/theme
 import { FamilyModeToggleComponent } from 'src/app/util/components/family-mode-toggle/family-mode-toggle.component';
 import { FamilyService } from 'src/app/modules/family/services/family.service';
 import { FamilyMember } from 'src/app/util/models/family.model';
-import { map } from 'rxjs';
+import { map, switchMap, of } from 'rxjs';
 
 @Component({
   selector: 'app-user',
@@ -113,34 +113,29 @@ export class UserComponent {
 
   // ── Writable signals ───────────────────────────────────────────────────────
   readonly isOpen        = signal(false);
-  readonly familyMembers = signal<FamilyMember[]>([]);
+  
+  private readonly members$ = toObservable(this.familyService.activeFamilyId).pipe(
+    switchMap(id => (this.isFamilyMode() && id) ? this.familyService.getMembers(id) : of([] as FamilyMember[]))
+  );
+
+  readonly familyMembers = toSignal(this.members$, { initialValue: [] as FamilyMember[] });
 
   // photoURL override for image-error fallback
   private readonly photoURLOverride = signal<string | null>(null);
 
-  // ── Effect: load family members reactively ─────────────────────────────────
-  constructor() {
-    effect(() => {
-      const activeFamilyId = this.familyService.activeFamilyId();
-      if (this.isFamilyMode() && activeFamilyId) {
-        this.familyService.getMembers(activeFamilyId).subscribe((members: FamilyMember[]) => {
-          const userId = this.currentUserId();
-          this.familyMembers.set(
-            members
-              .filter(m => m.isActive)
-              .sort((a, b) => {
-                if (a.userId === userId) return 1;
-                if (b.userId === userId) return -1;
-                return 0;
-              })
-          );
-        });
-      } else {
-        this.familyMembers.set([]);
-      }
-    }, { allowSignalWrites: true });
+  constructor() {}
 
-  }
+  readonly sortedMembers = computed(() => {
+    const members = this.familyMembers();
+    const userId = this.currentUserId();
+    return [...members]
+      .filter(m => m.isActive)
+      .sort((a, b) => {
+        if (a.userId === userId) return 1;
+        if (b.userId === userId) return -1;
+        return 0;
+      });
+  });
 
   // ── Template helpers ───────────────────────────────────────────────────────
   getMemberAvatarUrl(member: FamilyMember): string {

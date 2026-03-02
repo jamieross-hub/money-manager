@@ -297,26 +297,26 @@ export class FamilyService {
     return family;
   }
 
-  async getMyFamilies(): Promise<Family[]> {
+  getMyFamilies(): Observable<Family[]> {
     const user = this.currentUser;
-    if (!user) return [];
+    if (!user) return of([]);
 
-    try {
-      // Query all family groups where this user is a member
-      const q = query(
-        collection(this.firestore, this.FAMILIES_COL),
-        where('memberIds', 'array-contains', user.uid),
-        where('isActive', '==', true)
-      );
-      
-      const snap = await getDocs(q);
-      if (snap.empty) return [];
+    const q = query(
+      collection(this.firestore, this.FAMILIES_COL),
+      where('memberIds', 'array-contains', user.uid),
+      where('isActive', '==', true)
+    );
 
-      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() as Omit<Family, 'id'> }));
-    } catch (error) {
-      console.error('Error fetching my families:', error);
-      return [];
-    }
+    return new Observable<Family[]>(observer => {
+      const unsubscribe = onSnapshot(q, (snap) => {
+        const families = snap.docs.map(doc => ({ id: doc.id, ...doc.data() as Omit<Family, 'id'> }));
+        observer.next(families);
+      }, (err) => {
+        console.error('Error in getMyFamilies listener:', err);
+        observer.next([]);
+      });
+      return () => unsubscribe();
+    });
   }
 
   private getInitialActiveFamilyId(): string | null {
@@ -441,10 +441,16 @@ export class FamilyService {
 
   getMembers(familyId: string): Observable<FamilyMember[]> {
     const q = query(this.getMembersCol(familyId), where('isActive', '==', true));
-    return from(getDocs(q)).pipe(
-      map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() as any } as FamilyMember))),
-      catchError(() => of([]))
-    );
+    return new Observable<FamilyMember[]>(observer => {
+      const unsubscribe = onSnapshot(q, (snap) => {
+        const members = snap.docs.map(d => ({ id: d.id, ...d.data() as any } as FamilyMember));
+        observer.next(members);
+      }, (err) => {
+        console.error('Members listener error:', err);
+        observer.next([]);
+      });
+      return () => unsubscribe();
+    });
   }
 
   async removeMember(familyId: string, memberId: string): Promise<void> {
@@ -470,10 +476,16 @@ export class FamilyService {
 
   getTransactions(familyId: string): Observable<Transaction[]> {
     const q = query(this.getTransactionsCol(familyId), orderBy('date', 'desc'));
-    return from(getDocs(q)).pipe(
-      map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() as any } as Transaction))),
-      catchError(() => of([]))
-    );
+    return new Observable<Transaction[]>(observer => {
+      const unsubscribe = onSnapshot(q, (snap) => {
+        const transactions = snap.docs.map(d => ({ id: d.id, ...d.data() as any } as Transaction));
+        observer.next(transactions);
+      }, (err) => {
+        console.error('Transactions listener error:', err);
+        observer.next([]);
+      });
+      return () => unsubscribe();
+    });
   }
 
   async addTransaction(request: AddFamilyTransactionRequest): Promise<Transaction> {
@@ -625,10 +637,16 @@ export class FamilyService {
 
   getSettlements(familyId: string): Observable<Settlement[]> {
     const q = query(this.getSettlementsCol(familyId), orderBy('settledAt', 'desc'));
-    return from(getDocs(q)).pipe(
-      map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() as any } as Settlement))),
-      catchError(() => of([]))
-    );
+    return new Observable<Settlement[]>(observer => {
+      const unsubscribe = onSnapshot(q, (snap) => {
+        const settlements = snap.docs.map(d => ({ id: d.id, ...d.data() as any } as Settlement));
+        observer.next(settlements);
+      }, (err) => {
+        console.error('Settlements listener error:', err);
+        observer.next([]);
+      });
+      return () => unsubscribe();
+    });
   }
 
   async addSettlement(request: AddSettlementRequest): Promise<Settlement> {

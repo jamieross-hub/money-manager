@@ -57,7 +57,7 @@ export class FamilyEffects {
     this.actions$.pipe(
       ofType(FamilyActions.loadUserFamilies),
       switchMap(() =>
-        from(this.familyService.getMyFamilies()).pipe(
+        this.familyService.getMyFamilies().pipe(
           map(families => FamilyActions.loadUserFamiliesSuccess({ families })),
           catchError(err => of(FamilyActions.loadUserFamiliesFailure({ error: err.message })))
         )

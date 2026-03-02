@@ -24,7 +24,7 @@ import * as AccountsActions from '../../../store/accounts/accounts.actions';
 import * as CategoriesActions from '../../../store/categories/categories.actions';
 import * as BudgetsActions from '../../../store/budgets/budgets.actions';
 import * as GoalsActions from '../../../store/goals/goals.actions';
-import { filter, take, delay } from 'rxjs';
+import { filter, take, delay, Subscription } from 'rxjs';
 import {
   APP_CONFIG,
   ERROR_MESSAGES,
@@ -286,23 +286,30 @@ export class ProfileComponent {
 
   // ─── Family Group ──────────────────────────────────────────────────
 
+  private familiesSubscription?: Subscription;
   private loadFamilies(): void {
     this.isFamilyLoading.set(true);
-    this.familyService.getMyFamilies().then(families => {
-      this.familyGroups.set(families);
-      const activeId = this.activeFamilyId();
-      if (activeId) {
-        this.familyService.getMembers(activeId).subscribe(members => {
-          this.familyMembers.set(members);
+    this.familiesSubscription?.unsubscribe();
+    
+    this.familiesSubscription = this.familyService.getMyFamilies()
+      .subscribe({
+        next: (families) => {
+          this.familyGroups.set(families);
+          const activeId = this.activeFamilyId();
+          if (activeId) {
+            this.familyService.getMembers(activeId).pipe(take(1)).subscribe(members => {
+              this.familyMembers.set(members);
+              this.isFamilyLoading.set(false);
+            });
+          } else {
+            this.isFamilyLoading.set(false);
+          }
+        },
+        error: () => {
+          this.familyGroups.set([]);
           this.isFamilyLoading.set(false);
-        });
-      } else {
-        this.isFamilyLoading.set(false);
-      }
-    }).catch(() => {
-      this.familyGroups.set([]);
-      this.isFamilyLoading.set(false);
-    });
+        }
+      });
   }
   async switchActiveFamily(familyId: string): Promise<void> {
     const profile = this.userProfile();
