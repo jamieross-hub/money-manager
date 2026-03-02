@@ -15,6 +15,7 @@ export const selectFamilyError = createSelector(selectFamilyState, s => s?.error
 
 export const selectUserFamilies = createSelector(selectFamilyState, s => s?.userFamilies || []);
 export const selectUserFamiliesLoading = createSelector(selectFamilyState, s => s?.userFamiliesLoading || false);
+export const selectUserFamiliesLoaded = createSelector(selectFamilyState, s => s?.userFamiliesLoaded || false);
 
 export const selectSettlements = createSelector(selectFamilyState, s => s?.settlements || []);
 export const selectSettlementsLoading = createSelector(selectFamilyState, s => s?.settlementsLoading || false);

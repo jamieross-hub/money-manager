@@ -10,6 +10,7 @@ export interface FamilyState {
   loading: boolean;
   settlementsLoading: boolean;
   userFamiliesLoading: boolean;
+  userFamiliesLoaded: boolean;
   error: string | null;
 }
 
@@ -22,5 +23,6 @@ export const initialFamilyState: FamilyState = {
   loading: false,
   settlementsLoading: false,
   userFamiliesLoading: false,
+  userFamiliesLoaded: false,
   error: null,
 };
