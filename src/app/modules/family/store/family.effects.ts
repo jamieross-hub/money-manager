@@ -213,7 +213,9 @@ export class FamilyEffects {
       mergeMap(({ familyId, txId }) =>
         from(this.familyService.deleteTransaction(familyId, txId)).pipe(
           map((transaction) => {
-            this.notificationService.success('Transaction deleted');
+            if (!transaction.settlementId) {
+              this.notificationService.success('Transaction deleted');
+            }
             return FamilyActions.deleteTransactionSuccess({ txId, transaction });
           }),
           catchError(err => {

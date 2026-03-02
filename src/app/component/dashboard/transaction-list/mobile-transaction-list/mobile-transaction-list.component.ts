@@ -907,13 +907,17 @@ export class MobileTransactionListComponent
   }
 
   onDeleteTransaction(transaction: Transaction) {
+    const isSettlement = !!transaction.settlementId;
+    
     this.dialog
       .open(ConfirmDialogComponent, {
         width: '300px',
         data: {
-          title: 'Delete Transaction',
-          message: 'Are you sure you want to delete this transaction?',
-          confirmText: 'Delete',
+          title: isSettlement ? 'Revert Settlement' : 'Delete Transaction',
+          message: isSettlement 
+                   ? 'Are you sure you want to revert this settlement? This will restore the previous balances between the members.' 
+                   : 'Are you sure you want to delete this transaction?',
+          confirmText: isSettlement ? 'Revert' : 'Delete',
           cancelText: 'Cancel',
         },
       })

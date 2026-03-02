@@ -190,7 +190,11 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         }));
       }
       
-      this.notificationService.success('Transaction deleted');
+      // If it's a settlement, the Effects layer will cascade and show 'Settlement reverted'
+      // We shouldn't show a double toast here.
+      if (!transaction.settlementId) {
+        this.notificationService.success('Transaction deleted');
+      }
     }
   }
 
