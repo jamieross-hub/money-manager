@@ -12,6 +12,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatRippleModule } from '@angular/material/core';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { TransactionStatus } from 'src/app/util/config/enums';
 
 import { AppState } from 'src/app/store/app.state';
 import * as FamilyActions from '../../store/family.actions';
@@ -20,7 +21,7 @@ import * as ProfileActions from 'src/app/store/profile/profile.actions';
 import { FamilyService } from '../../services/family.service';
 import { FamilyCreateDialogComponent } from '../../dialogs/family-create-dialog/family-create-dialog.component';
 import { FamilyJoinDialogComponent } from '../../dialogs/family-join-dialog/family-join-dialog.component';
-import { FamilyStats, Family, FamilyMember } from 'src/app/util/models/family.model';
+import { FamilyStats, Family, FamilyMember, Settlement, BalanceEntry } from 'src/app/util/models/family.model';
 import { Transaction } from 'src/app/util/models/transaction.model';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { QuickActionsFabComponent, QuickActionsFabConfig, QuickAction } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
@@ -84,6 +85,7 @@ export class FamilyDashboardComponent implements OnInit {
   members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers), { initialValue: [] as FamilyMember[] });
   transactions = toSignal(this.store.select(FamilySelectors.selectFamilyTransactions), { initialValue: [] as Transaction[] });
   recentTxns = toSignal(this.store.select(FamilySelectors.selectRecentTransactions), { initialValue: [] as Transaction[] });
+  settlements = toSignal(this.store.select(FamilySelectors.selectSettlements), { initialValue: [] as Settlement[] });
   loading = toSignal(this.store.select(FamilySelectors.selectFamilyLoading), { initialValue: true });
 
   recentActivities = computed(() => {
@@ -187,6 +189,55 @@ export class FamilyDashboardComponent implements OnInit {
     return memberStat ? memberStat.totalExpense : 0;
   });
 
+  currentUserSharePercentage = computed(() => {
+    const total = this.stats()?.totalExpense || 0;
+    const mine = this.currentUserExpense();
+    if (total <= 0) return 0;
+    return (mine / total) * 100;
+  });
+
+  settleBalances = computed(() => {
+    const txs = this.transactions();
+    const mems = this.members();
+    const sets = this.settlements();
+    const fam = this.family();
+    if (!fam?.id || mems.length === 0) return [];
+    return this.familyService.computeBalances(txs, mems, sets);
+  });
+
+  myNetSettleBalance = computed(() => {
+    const uid = this.currentUserId;
+    if (!uid) return 0;
+    const balances = this.settleBalances();
+    const owedByMe = balances.filter(b => b.fromUserId === uid).reduce((s, b) => s + b.amount, 0);
+    const owedToMe = balances.filter(b => b.toUserId === uid).reduce((s, b) => s + b.amount, 0);
+    return owedToMe - owedByMe;
+  });
+
+  currentUserPaid = computed(() => {
+    const txs = this.transactions();
+    const uid = this.currentUserId;
+    if (!txs || !uid) return 0;
+    
+    return txs.reduce((sum, tx) => {
+      if (tx.status === TransactionStatus.DELETED || tx.category === 'Settlement') return sum;
+      if (tx.type !== 'expense') return sum;
+
+      if (tx.splitData) {
+        // In split mode, check the explicit paidBy breakdown or the specific payer
+        if (tx.splitData.paidByUserId === 'multiple') {
+          const myPayment = tx.splitData.paidBy?.find(p => p.userId === uid);
+          return sum + (myPayment ? myPayment.amount : 0);
+        } else {
+          return sum + (tx.splitData.paidByUserId === uid ? tx.amount : 0);
+        }
+      } else {
+        // Simple mode: The creator (userId) is assumed to be the payer
+        return sum + (tx.userId === uid ? tx.amount : 0);
+      }
+    }, 0);
+  });
+
   fabConfig = computed<QuickActionsFabConfig>(() => ({
     mainButtonIcon: 'add',
     mainButtonColor: 'primary',
@@ -197,6 +248,13 @@ export class FamilyDashboardComponent implements OnInit {
   private memberColors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
 
   constructor() {
+    effect(() => {
+      const fam = this.family();
+      if (fam?.id) {
+        this.store.dispatch(FamilyActions.loadSettlements({ familyId: fam.id }));
+      }
+    }, { allowSignalWrites: true });
+
     effect(() => {
       const isLoading = this.loading() && !this.family();
       if (isLoading && !this.isInstanceLoading) {

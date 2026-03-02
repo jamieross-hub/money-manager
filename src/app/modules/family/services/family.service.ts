@@ -708,34 +708,57 @@ export class FamilyService {
   ): BalanceEntry[] {
     const netBalances = new Map<string, number>();
 
+    // Initialize all members to ensure they appear in balances even if they have no transactions
+    for (const m of members) {
+      if (!netBalances.has(m.userId)) {
+        netBalances.set(m.userId, 0);
+      }
+    }
+
+    // Round inside updateBalance to prevent long-term floating point drift
     const updateBalance = (userId: string, amount: number) => {
-      netBalances.set(userId, (netBalances.get(userId) || 0) + amount);
+      const current = netBalances.get(userId) || 0;
+      const updated = Math.round((current + amount) * 100) / 100;
+      netBalances.set(userId, updated);
     };
 
     // Calculate net balances from transactions
     for (const tx of transactions) {
       if (tx.status === TransactionStatus.DELETED) continue;
-      if (tx.type !== 'expense' || !tx.splitData) continue;
+      // Skip settlements for balance stats as they are mapped from settlements collection
+      if (tx.category === 'Settlement' || tx.type === TransactionType.TRANSFER) continue;
+      if (!tx.splitData) continue;
 
       const { paidByUserId, splitBetween, paidBy } = tx.splitData;
+      
+      // Income transactions are treated as "negative debt" - receiving money for the group
+      // means you OWE others their share, whereas paying (expense) means others OWE you.
+      const multiplier = tx.type === TransactionType.INCOME ? -1 : 1;
 
-      // Subtract shares (negative balance/debt)
+      // Subtract shares (negative balance/debt for expense, positive for income)
       let totalSplit = 0;
       for (const share of splitBetween) {
         const shareAmt = Number(share.amount) || 0;
         totalSplit += shareAmt;
-        updateBalance(share.userId, -shareAmt);
+        updateBalance(share.userId, -shareAmt * multiplier);
       }
 
-      // Add paid amounts (positive balance/credit)
+      // Add paid amounts (positive balance/credit for expense, negative for income)
       if (paidByUserId === 'multiple' && paidBy?.length) {
+        let totalPaid = 0;
         for (const payer of paidBy) {
           const payerAmt = Number(payer.amount) || 0;
-          updateBalance(payer.userId, payerAmt);
+          totalPaid += payerAmt;
+          updateBalance(payer.userId, payerAmt * multiplier);
+        }
+
+        // Validate multiple payer sum
+        if (Math.abs(totalPaid - totalSplit) > 0.01) {
+          console.error(`Value mismatch in transaction ${tx.id}: total split ${totalSplit} != total paid ${totalPaid}`);
         }
       } else {
         // Use the sum of all shares to ensure exact zero-sum if possible
-        updateBalance(paidByUserId, totalSplit);
+        updateBalance(paidByUserId, totalSplit * multiplier);
       }
     }
 
@@ -746,15 +769,23 @@ export class FamilyService {
       updateBalance(s.toUserId, -settleAmt);  // Receiver got paid, balance decreases
     }
 
+    // Balance corruption safety check
+    const totalNet = Array.from(netBalances.values()).reduce((sum, v) => sum + v, 0);
+    if (Math.abs(totalNet) > 0.1) { // Increased threshold for corruption check due to multi-step rounding
+      console.error("Balance corruption detected: net balances do not sum to zero", totalNet);
+    }
+
     // Separate into creditors (positive) and debtors (negative)
     const creditors: { id: string; amount: number }[] = [];
     const debtors: { id: string; amount: number }[] = [];
 
     for (const [userId, amount] of netBalances.entries()) {
       const roundedAmount = Math.round(amount * 100) / 100; // Prevent float artifacts
-      if (roundedAmount >= 0.01) {
+      // Use a small threshold (0.10) to filter out "dust" caused by rounding in transactions
+      // especially in split groups where 100/3 = 33.33 + 33.33 + 33.34
+      if (roundedAmount >= 0.1) { 
         creditors.push({ id: userId, amount: roundedAmount });
-      } else if (roundedAmount <= -0.01) {
+      } else if (roundedAmount <= -0.1) {
         debtors.push({ id: userId, amount: Math.abs(roundedAmount) });
       }
     }
@@ -773,6 +804,10 @@ export class FamilyService {
       // Settle the minimum of the two
       const settleAmt = Math.min(debtor.amount, creditor.amount);
       const roundedSettleAmt = Math.round(settleAmt * 100) / 100;
+
+      if (roundedSettleAmt < 0.01) {
+        break;
+      }
 
       const fromMember = memberMap.get(debtor.id);
       const toMember = memberMap.get(creditor.id);
@@ -797,6 +832,7 @@ export class FamilyService {
 
     return result;
   }
+
 
   pullFromFirestore(userId: string): Observable<void> {
     const familyId = this.activeFamilyId();
