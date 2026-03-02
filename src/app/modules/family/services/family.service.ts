@@ -698,7 +698,7 @@ export class FamilyService {
   }
 
   /**
-   * Compute net balances from split-expense shares minus recorded settlements.
+   * Compute net balances globally using a greedy settlement algorithm mechanism.
    * Returns entries where `amount > 0` (from owes to).
    */
   computeBalances(
@@ -706,100 +706,91 @@ export class FamilyService {
     members: FamilyMember[],
     settlements: Settlement[]
   ): BalanceEntry[] {
-    // Step 1: accumulate raw owed amounts between pairs.
-    // key = `${debtorId}::${creditorId}` → amount owed
-    const pairMap = new Map<string, number>();
+    const netBalances = new Map<string, number>();
 
-    const adjust = (debtorId: string, creditorId: string, delta: number) => {
-      if (debtorId === creditorId) return;
-      const key = `${debtorId}::${creditorId}`;
-      pairMap.set(key, (pairMap.get(key) ?? 0) + delta);
+    const updateBalance = (userId: string, amount: number) => {
+      netBalances.set(userId, (netBalances.get(userId) || 0) + amount);
     };
 
-    // Split expense shares → debtor owes payer
+    // Calculate net balances from transactions
     for (const tx of transactions) {
       if (tx.status === TransactionStatus.DELETED) continue;
       if (tx.type !== 'expense' || !tx.splitData) continue;
+
       const { paidByUserId, splitBetween, paidBy } = tx.splitData;
 
+      // Subtract shares (negative balance/debt)
+      let totalSplit = 0;
+      for (const share of splitBetween) {
+        totalSplit += share.amount;
+        updateBalance(share.userId, -share.amount);
+      }
+
+      // Add paid amounts (positive balance/credit)
       if (paidByUserId === 'multiple' && paidBy?.length) {
-         const netMap = new Map<string, number>();
-
-         // Add all amounts paid
-         for (const payer of paidBy) {
-             netMap.set(payer.userId, payer.amount);
-         }
-
-         // Subtract all amounts owed
-         for (const share of splitBetween) {
-             netMap.set(share.userId, (netMap.get(share.userId) || 0) - share.amount);
-         }
-
-         const creditors: {id: string, amt: number}[] = [];
-         const debtors: {id: string, amt: number}[] = [];
-
-         for (const [uid, amt] of netMap.entries()) {
-             if (amt > 0.01) creditors.push({ id: uid, amt });
-             else if (amt < -0.01) debtors.push({ id: uid, amt: Math.abs(amt) });
-         }
-
-         // Match debtors to creditors
-         let cIdx = 0;
-         for (const debtor of debtors) {
-             let debt = debtor.amt;
-             while (debt > 0.01 && cIdx < creditors.length) {
-                 const creditor = creditors[cIdx];
-                 const settleAmt = Math.min(debt, creditor.amt);
-                 adjust(debtor.id, creditor.id, settleAmt);
-                 debt -= settleAmt;
-                 creditor.amt -= settleAmt;
-                 if (creditor.amt < 0.01) {
-                     cIdx++;
-                 }
-             }
-         }
+        for (const payer of paidBy) {
+          updateBalance(payer.userId, payer.amount);
+        }
       } else {
-         for (const share of splitBetween) {
-           if (share.userId !== paidByUserId) {
-             adjust(share.userId, paidByUserId, share.amount);
-           }
-         }
+        // Use the sum of all shares to ensure exact zero-sum if possible
+        updateBalance(paidByUserId, totalSplit);
       }
     }
 
-    // Settlements → reduce debt (from paid to)
+    // Process settlements
     for (const s of settlements) {
-      adjust(s.fromUserId, s.toUserId, -s.amount);
+      updateBalance(s.fromUserId, s.amount); // Sender paid off debt, balance increases
+      updateBalance(s.toUserId, -s.amount);  // Receiver got paid, balance decreases
     }
 
-    // Step 2: collapse symmetric pairs and keep only positives
-    const seen = new Set<string>();
-    const memberMap = new Map(members.map(m => [m.userId, m]));
+    // Separate into creditors (positive) and debtors (negative)
+    const creditors: { id: string; amount: number }[] = [];
+    const debtors: { id: string; amount: number }[] = [];
+
+    for (const [userId, amount] of netBalances.entries()) {
+      if (amount > 0.01) {
+        creditors.push({ id: userId, amount });
+      } else if (amount < -0.01) {
+        debtors.push({ id: userId, amount: Math.abs(amount) });
+      }
+    }
+
+    // Always sort descending to pick largest available amounts (Greedy Settlement)
+    creditors.sort((a, b) => b.amount - a.amount);
+    debtors.sort((a, b) => b.amount - a.amount);
+
     const result: BalanceEntry[] = [];
+    const memberMap = new Map(members.map(m => [m.userId, m]));
 
-    for (const [key, amount] of pairMap.entries()) {
-      if (seen.has(key)) continue;
-      const [debtorId, creditorId] = key.split('::');
-      const reverseKey = `${creditorId}::${debtorId}`;
-      seen.add(key);
-      seen.add(reverseKey);
+    let i = 0; // index for debtors
+    let j = 0; // index for creditors
 
-      const net = amount - (pairMap.get(reverseKey) ?? 0);
-      if (Math.abs(net) < 0.01) continue;
+    while (i < debtors.length && j < creditors.length) {
+      const debtor = debtors[i];
+      const creditor = creditors[j];
 
-      const [fromId, toId] = net > 0 ? [debtorId, creditorId] : [creditorId, debtorId];
-      const fromMember = memberMap.get(fromId);
-      const toMember = memberMap.get(toId);
+      // Settle the minimum of the two
+      const settleAmt = Math.min(debtor.amount, creditor.amount);
+
+      const fromMember = memberMap.get(debtor.id);
+      const toMember = memberMap.get(creditor.id);
 
       result.push({
-        fromUserId: fromId,
-        fromDisplayName: fromMember?.displayName ?? fromId,
+        fromUserId: debtor.id,
+        fromDisplayName: fromMember?.displayName ?? debtor.id,
         fromPhotoURL: fromMember?.photoURL,
-        toUserId: toId,
-        toDisplayName: toMember?.displayName ?? toId,
+        toUserId: creditor.id,
+        toDisplayName: toMember?.displayName ?? creditor.id,
         toPhotoURL: toMember?.photoURL,
-        amount: Math.abs(net),
+        amount: Math.round(settleAmt * 100) / 100, // Handle float precision rounding safely
       });
+
+      // Update balances
+      debtor.amount -= settleAmt;
+      creditor.amount -= settleAmt;
+
+      if (debtor.amount < 0.01) i++;
+      if (creditor.amount < 0.01) j++;
     }
 
     return result.sort((a, b) => b.amount - a.amount);
