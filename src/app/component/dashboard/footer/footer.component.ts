@@ -61,7 +61,7 @@ export class FooterComponent {
   readonly isCategoryActive = computed(() => this.currentUrl() === '/dashboard/category');
   readonly isAccountsActive = computed(() => this.currentUrl() === '/dashboard/accounts');
   readonly isProfileActive = computed(() => this.currentUrl() === '/dashboard/profile');
-  readonly isFamilyActive = computed(() => this.currentUrl() === '/dashboard/family');
+  readonly isFamilyActive = computed(() => this.currentUrl() === '/dashboard/home');
   readonly isMoreActive = computed(() => [
     '/dashboard/accounts', '/dashboard/budgets', '/dashboard/goals', 
     '/dashboard/notes', '/dashboard/tax', '/dashboard/subscription'
