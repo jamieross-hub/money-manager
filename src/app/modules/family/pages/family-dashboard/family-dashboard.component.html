@@ -32,7 +32,7 @@
     <div class="animate-in fade-in duration-500">
       <!-- Header Section -->
       <div
-        class="shadow-sm rounded-b-3xl px-5 pt-4 pb-6 border-b border-gray-100 dark:border-gray-800/50 mb-6 relative header-section transition-all duration-300"
+        class="shadow-sm rounded-b-3xl px-5 pt-4 pb-6 border-b border-gray-100 dark:border-gray-800/50 mb-4 relative header-section transition-all duration-300"
         [style.backgroundImage]="fam.banner ? 'url(' + fam.banner + ')' : ''" [class.has-banner]="!!fam.banner">
 
         <!-- Overlay for readability when banner exists -->
@@ -122,7 +122,7 @@
           </mat-menu>
 
           <!-- Invite Code & Main Action Strip -->
-          <div class="mt-7 flex items-center justify-between">
+          <div class="mt-5 flex items-center justify-between">
             <div
               class="inline-flex items-center gap-3 pl-3.5 pr-2 py-2 backdrop-blur-md rounded-2xl border border-gray-200/50 dark:border-gray-700/50 group transition-all hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer shadow-sm hover:shadow-md"
               (click)="copyCode(fam.inviteCode)" matRipple>
@@ -143,7 +143,7 @@
       </div>
 
       <!-- Financial Overview (Stats) -->
-      <div class="px-1 mb-8">
+      <div class="px-1 mb-6">
         <p class="text-[13px] font-bold tracking-wider uppercase text-gray-500 dark:text-gray-400 mb-3 px-1">Overview
         </p>
 
@@ -187,63 +187,60 @@
           </div>
         </div>
 
-        <!-- SPLIT MODE: Refined Professional Master Card -->
-        <div class="bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-gray-800 dark:via-gray-800/95 dark:to-gray-900/90 rounded-[28px] p-4 shadow-sm border border-gray-100 dark:border-gray-800/80 transition-all hover:shadow-md cursor-default relative overflow-hidden mb-6" *ngIf="fam.mode === 'split'">
+        <!-- SPLIT MODE: Compact Professional Master Card -->
+        <!-- SPLIT MODE: Compact Professional Master Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800/80 mb-6 transition-all hover:shadow-md relative overflow-hidden" *ngIf="fam.mode === 'split'">
           
-          <!-- Subtle background decoration -->
-          <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-[0.06] dark:opacity-[0.1] pointer-events-none blur-3xl transition-colors duration-500"
-               [class.bg-red-500]="myNetSettleBalance() < -0.1"
-               [class.bg-green-500]="myNetSettleBalance() > 0.1"
-               [class.bg-primary-500]="myNetSettleBalance() >= -0.1 && myNetSettleBalance() <= 0.1"></div>
-
-          <!-- Top Section: Primary Balance Highlight -->
-          <div class="flex items-center justify-between mb-4 relative z-10">
-            <div class="flex flex-col">
-              <span class="text-[10px] font-bold tracking-[0.14em] uppercase mb-0.5 text-gray-400 dark:text-gray-500">
-                Group Spend
-              </span>
-              <div class="flex items-baseline gap-2">
-                <span class="text-[28px] font-black tracking-tight leading-none text-gray-900 dark:text-white">
-                  {{ stats()?.totalExpense | currency }}
+          <!-- Top Row: Group Spend & Personal Status -->
+          <div class="px-4 py-2 relative z-10">
+            <div class="flex items-center justify-between mb-1">
+              <div class="flex flex-col">
+                <span class="text-[9px] font-bold tracking-widest uppercase mb-0.5 text-gray-400 dark:text-gray-500">
+                  Group Spend
                 </span>
-                <span class="px-1.5 py-0.5 rounded text-[8px] font-black bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 uppercase tracking-wider">Total</span>
+                <div class="flex items-baseline gap-1.5">
+                  <span class="text-2xl font-black text-primary-800 dark:text-white ml-1">
+                    {{ stats()?.totalExpense | currency }}
+                  </span>
+                  <span class="text-[8px] font-black text-gray-400 uppercase opacity-50">Total</span>
+                </div>
               </div>
-            </div>
-          </div>
-
-          <!-- Decorative Divider -->
-          <div class="h-[1px] w-full bg-gradient-to-r from-transparent via-gray-100 dark:via-gray-800 to-transparent mb-4"></div>
-
-          <!-- Bottom Section: Contextual Stats -->
-          <div class="grid grid-cols-3 gap-1 relative z-10">
-             <div class="flex flex-col">
-                <span class="text-[9px] font-bold uppercase tracking-wider mb-0.5"
+              <div class="flex flex-col items-end">
+                <span class="text-[9px] font-bold uppercase tracking-widest mb-0.5"
                   [class.text-red-500]="myNetSettleBalance() < -0.1"
                   [class.text-green-600]="myNetSettleBalance() > 0.1"
                   [class.text-gray-400]="myNetSettleBalance() >= -0.1 && myNetSettleBalance() <= 0.1">
                   {{ myNetSettleBalance() > 0.1 ? 'You Get' : (myNetSettleBalance() < -0.1 ? 'You Owe' : 'Settled') }}
                 </span>
-                <span class="text-[15px] font-black"
+                <span class="text-xl font-black leading-none"
                   [class.text-red-600]="myNetSettleBalance() < -0.1"
                   [class.text-green-600]="myNetSettleBalance() > 0.1"
                   [class.text-gray-800]="myNetSettleBalance() >= -0.1 && myNetSettleBalance() <= 0.1"
                   [class.dark:text-gray-200]="myNetSettleBalance() >= -0.1 && myNetSettleBalance() <= 0.1">
                   {{ (myNetSettleBalance() < 0 ? -myNetSettleBalance() : myNetSettleBalance()) | currency }}
                 </span>
-             </div>
-             <div class="flex flex-col px-3 border-x border-gray-100 dark:border-gray-800/80">
-                <span class="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Paid</span>
-                <span class="text-[15px] font-black text-gray-800 dark:text-gray-200 truncate">{{ currentUserPaid() | currency }}</span>
-             </div>
-             <div class="flex flex-col items-end">
-                <span class="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Share</span>
-                <div class="flex items-center gap-1.5">
-                  <span class="text-[15px] font-black text-gray-800 dark:text-gray-200 truncate">{{ currentUserExpense() | currency }}</span>
-                  <div class="px-1.5 py-0.5 rounded bg-primary-50 dark:bg-primary-900/30 text-[8px] font-black text-primary-600 dark:text-primary-400">
-                    {{ currentUserSharePercentage() | number:'1.0-0' }}%
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Row: Contextual Stats -->
+          <div class="px-4 py-3 bg-gray-50/50 dark:bg-gray-900/40 border-t border-gray-100 dark:border-gray-700/50 relative z-10 shadow-inner">
+            <div class="flex items-center justify-between">
+              <div class="flex flex-col">
+                  <span class="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Paid</span>
+                  <span class="text-sm font-bold text-gray-800 dark:text-gray-200 ml-1">{{ currentUserPaid() | currency }}</span>
+              </div>
+              <div class="flex flex-col items-end">
+                  <span class="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Your Share</span>
+                  <div class="flex items-center gap-1.5">
+                     <div class="px-1 py-0.5 rounded bg-primary-50 dark:bg-primary-900/30 text-[10px] font-black text-primary-600 dark:text-primary-400">
+                      {{ currentUserSharePercentage() | number:'1.0-0' }}%
+                    </div>
+                    <span class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ currentUserExpense() | currency }}</span>
+                   
                   </div>
-                </div>
-             </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -259,7 +256,7 @@
         <!-- DEFAULT MODE (COMMON): Member Breakdown -->
         <div class="flex flex-col gap-3 pb-4" *ngIf="fam?.mode !== 'split'">
           <div *ngFor="let m of stats()!.memberBreakdown"
-            class="bg-white dark:bg-gray-800 rounded-2xl p-3.5 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
+            class="bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
 
             <div class="flex items-center gap-3" [class.opacity-60]="!m.isActive">
               <div
@@ -300,7 +297,7 @@
         <!-- SPLIT MODE: Recent Activity -->
         <div class="flex flex-col gap-3 pb-4" *ngIf="fam.mode === 'split'">
           <div *ngFor="let tx of recentActivities()"
-            class="bg-white dark:bg-gray-800 rounded-2xl p-3.5 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
+            class="bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
 
             <div class="flex items-center gap-3">
               <!-- User Avatars -->
