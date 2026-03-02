@@ -18,6 +18,8 @@ import { LocalStorageKey, LocalStorageKeyHelper } from '../models/local-storage.
 import { TransactionsService } from './db/transactions.service';
 import { AccountsService } from './db/accounts.service';
 import { CategoryService } from './db/category.service';
+import { AccountsFacadeService } from './db/accounts-facade.service';
+import { CategoryFacadeService } from './db/category-facade.service';
 import { BudgetsService } from './db/budgets.service';
 import { GoalsService } from './db/goals.service';
 import { UserService } from './db/user.service';
@@ -405,8 +407,8 @@ export class CommonSyncService implements OnDestroy {
     // Resolve services lazily to avoid circular dependencies
     // Using Facades ensures we pull from the correct source (Personal vs Family)
     const transactionsService = this.injector.get(TransactionsService);
-    const accountsService = this.injector.get(AccountsService);
-    const categoryService = this.injector.get(CategoryService);
+    const accountsService = this.injector.get(AccountsFacadeService);
+    const categoryService = this.injector.get(CategoryFacadeService);
     const budgetsService = this.injector.get(BudgetsService);
     const goalsService = this.injector.get(GoalsService);
     const googleSheetsService = this.injector.get(GoogleSheetsService);

@@ -20,6 +20,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { OverlayContainer } from '@angular/cdk/overlay';
 import { MobileBackButtonService } from './util/service/mobile-back-button.service';
+import { FamilyNotificationService } from './modules/family/services/family-notification.service';
 
 
 @Component({
@@ -56,7 +57,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private bottomSheet: MatBottomSheet,
     private overlayContainer: OverlayContainer,
-    private mobileBackButtonService: MobileBackButtonService
+    private mobileBackButtonService: MobileBackButtonService,
+    private familyNotificationService: FamilyNotificationService
   ) {
     this.navigationState = {
       canGoBack: false,

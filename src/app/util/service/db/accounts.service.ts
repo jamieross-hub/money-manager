@@ -104,7 +104,7 @@ export class AccountsService {
 
         return new Observable<Account[]>(observer => {
             try {
-                const cachedAccounts = this.localStorageUtility.getItem<Account[]>(LocalStorageKeyHelper.getAccountsCacheKey(userId));
+                const cachedAccounts = this.localStorageUtility.getItem<Account[]>(this.getAccountsCacheKey(userId));
                 if (cachedAccounts) {
                     observer.next(cachedAccounts);
                 } else {
