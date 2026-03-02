@@ -34,8 +34,47 @@
 
   <div class="gs-content">
 
+    <!-- ── LOADING STATE ──────────────────────────────────── -->
+    @if (loadState() === 'loading') {
+    <div class="animate-in fade-in duration-500">
+      <!-- Active Card Skeleton -->
+      <section class="gs-section animate-pulse mt-1">
+        <div class="w-24 h-3 bg-gray-200 dark:bg-gray-800 rounded-full mb-3 ml-1 opacity-70"></div>
+        <div
+          class="h-[180px] bg-white dark:bg-gray-800/80 rounded-[28px] border border-gray-100 dark:border-gray-700/60 overflow-hidden relative">
+          <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gray-200 dark:bg-gray-700"></div>
+          <div class="p-5 flex items-center gap-4">
+            <div class="w-16 h-16 rounded-3xl bg-gray-200 dark:bg-gray-700"></div>
+            <div class="space-y-2">
+              <div class="w-36 h-6 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+              <div class="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded opacity-60"></div>
+            </div>
+          </div>
+          <div
+            class="absolute bottom-0 left-0 right-0 h-14 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-800 px-5 flex items-center">
+            <div class="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded opacity-50"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Group List Skeleton -->
+      <section class="gs-section animate-pulse mt-4">
+        <div class="w-24 h-3 bg-gray-200 dark:bg-gray-800 rounded-full mb-3 ml-1 opacity-70"></div>
+        <div class="space-y-3">
+          <div class="h-20 bg-white dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-gray-700/60"></div>
+          <div
+            class="h-20 bg-white dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-gray-700/60 opacity-60">
+          </div>
+          <div
+            class="h-20 bg-white dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-gray-700/60 opacity-30">
+          </div>
+        </div>
+      </section>
+    </div>
+    }
+
     <!-- ── EMPTY STATE ──────────────────────────────────── -->
-    @if (  loadState() === 'empty' && loadState() != 'loading') {
+    @if (loadState() === 'empty') {
     <div
       class="flex flex-col items-center justify-center min-h-[50vh] px-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div
@@ -48,13 +87,11 @@
       </p>
       <div class="flex flex-col w-full max-w-xs gap-3">
         <button mat-flat-button color="primary"
-          class="!h-12 !rounded-2xl !text-[15px] font-bold shadow-lg shadow-primary-500/20"
-          (click)="openCreateDialog()">
+          class="!h-12 !rounded-2xl !text-[15px] font-bold shadow-lg shadow-primary-500/20" (click)="openCreateDialog()">
           <mat-icon class="mr-1">add</mat-icon>
           Create New Group
         </button>
-        <button mat-stroked-button
-          class="!h-12 !rounded-2xl !text-[15px] font-bold border-gray-200 dark:border-gray-700"
+        <button mat-stroked-button class="!h-12 !rounded-2xl !text-[15px] font-bold border-gray-200 dark:border-gray-700"
           (click)="openJoinDialog()">
           <mat-icon class="mr-1">link</mat-icon>
           Join via Invite
@@ -63,182 +100,126 @@
     </div>
     }
 
-    <!-- ── ACTIVE GROUP CARD ──────────────────────────────── -->
-    @if (activeGroup(); as active) {
-    @defer (on idle) {
-    <section class="gs-section">
-      <p class="gs-section-label">Your Active Group</p>
-      <div class="gs-active-card" matRipple (click)="openGroup(active)">
-
-        <!-- Accent bar -->
-        <div class="gs-active-card__accent"></div>
-
-        <div class="gs-active-card__body">
-          <div class="gs-avatar gs-avatar--lg overflow-hidden" [style.background]="'var(--primary-500)'">
-            <img *ngIf="active.icon && active.icon.startsWith('data:')" [src]="active.icon"
-              class="w-full h-full object-cover" />
-            <mat-icon *ngIf="active.icon && !active.icon.startsWith('data:')"
-              class="text-white text-[24px] w-[24px] h-[24px]">{{ active.icon }}</mat-icon>
-            <ng-container *ngIf="!active.icon">{{ avatarInitials(active.name) }}</ng-container>
-          </div>
-
-          <!-- Info -->
-          <div class="gs-info">
-            <div class="gs-info__name-row">
-              <span class="gs-info__name">{{ active.name }}</span>
-            </div>
-            <div class="gs-info__meta">
-              <span class="gs-meta-text gs-meta-text--with-icon">
-                <mat-icon class="gs-meta-icon">{{ groupModeIcon[active.mode] }}</mat-icon>
-                {{ groupModeLabel[active.mode] }}
-              </span>
-              <span class="gs-dot">·</span>
-              <span class="gs-meta-text">{{ active.memberCount }} member{{ active.memberCount !== 1 ? 's' : '' }}</span>
-
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Role badge -->
-        <span class="gs-role-badge" [class.gs-role-badge--admin]="active.role === 'admin'"
-          [class.gs-role-badge--member]="active.role === 'member'">
-          {{ active.role }}
-        </span>
-
-        <!-- Divider + stat row -->
-        <div class="gs-active-card__footer">
-          <div class="gs-active-card__activity">
-            <mat-icon class="gs-meta-icon"> money</mat-icon>
-            <span class="gs-meta-text">
-              {{ formatCurrency(active.totalSpend || 0, 'INR') }}
-            </span>
-          </div>
-          <button mat-button color="primary" class="gs-open-btn" (click)="$event.stopPropagation(); openGroup(active)">
-            Open
-            <mat-icon class="gs-open-btn__icon">arrow_forward</mat-icon>
-          </button>
-        </div>
-      </div>
-    </section>
-    } @placeholder {
-    <!-- Active Card Skeleton -->
-    <section class="gs-section animate-pulse mt-1">
-      <div class="w-24 h-3 bg-gray-200 dark:bg-gray-800 rounded-full mb-3 ml-1 opacity-70"></div>
-      <div class="h-[180px] bg-white dark:bg-gray-800/80 rounded-[28px] border border-gray-100 dark:border-gray-700/60 overflow-hidden relative">
-        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gray-200 dark:bg-gray-700"></div>
-        <div class="p-5 flex items-center gap-4">
-          <div class="w-16 h-16 rounded-3xl bg-gray-200 dark:bg-gray-700"></div>
-          <div class="space-y-2">
-            <div class="w-36 h-6 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-            <div class="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded opacity-60"></div>
-          </div>
-        </div>
-        <div class="absolute bottom-0 left-0 right-0 h-14 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-800 px-5 flex items-center">
-           <div class="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded opacity-50"></div>
-        </div>
-      </div>
-    </section>
-    }
-    }
-
-
-    <!-- ── ALL GROUPS LIST ─────────────────────────────────── -->
-    @if (otherGroups().length > 0) {
-    @defer (on viewport) {
-    <section class="gs-section mt-2">
-      <p class="gs-section-label">Other Groups</p>
-      <div class="gs-list">
-
-        @for (group of otherGroups(); track group.id; let last = $last) {
-        <div class="gs-list-card" matRipple (click)="openGroup(group)">
-
-          <div class="gs-list-card__body">
-            <div class="gs-avatar gs-avatar--md overflow-hidden" [style.background]="'var(--primary-500)'">
-              <img *ngIf="group.icon && group.icon.startsWith('data:')" [src]="group.icon"
+    <!-- ── LOADED STATE ─────────────────────────────────── -->
+    @if (loadState() === 'loaded') {
+    <div class="animate-in fade-in duration-500">
+      <!-- ACTIVE GROUP CARD -->
+      @if (activeGroup(); as active) {
+      @defer (on idle) {
+      <section class="gs-section">
+        <p class="gs-section-label">Your Active Group</p>
+        <div class="gs-active-card" matRipple (click)="openGroup(active)">
+          <div class="gs-active-card__accent"></div>
+          <div class="gs-active-card__body">
+            <div class="gs-avatar gs-avatar--lg overflow-hidden" [style.background]="'var(--primary-500)'">
+              <img *ngIf="active.icon && active.icon.startsWith('data:')" [src]="active.icon"
                 class="w-full h-full object-cover" />
-              <mat-icon *ngIf="group.icon && !group.icon.startsWith('data:')"
-                class="text-white text-[20px] w-[20px] h-[20px]">{{ group.icon }}</mat-icon>
-              <ng-container *ngIf="!group.icon">{{ avatarInitials(group.name) }}</ng-container>
+              <mat-icon *ngIf="active.icon && !active.icon.startsWith('data:')"
+                class="text-white text-[24px] w-[24px] h-[24px]">{{ active.icon }}</mat-icon>
+              <ng-container *ngIf="!active.icon">{{ avatarInitials(active.name) }}</ng-container>
             </div>
-
-            <!-- Info -->
             <div class="gs-info">
               <div class="gs-info__name-row">
-                <span class="gs-info__name">{{ group.name }}</span>
+                <span class="gs-info__name">{{ active.name }}</span>
               </div>
               <div class="gs-info__meta">
                 <span class="gs-meta-text gs-meta-text--with-icon">
-                  <mat-icon class="gs-meta-icon">{{ groupModeIcon[group.mode] }}</mat-icon>
-                  {{ groupModeLabel[group.mode] }}
+                  <mat-icon class="gs-meta-icon">{{ groupModeIcon[active.mode] }}</mat-icon>
+                  {{ groupModeLabel[active.mode] }}
                 </span>
                 <span class="gs-dot">·</span>
-                <span class="gs-meta-text">
-                  {{ group.memberCount }} member{{ group.memberCount !== 1 ? 's' : '' }}
-                </span>
-                <span class="gs-dot">·</span>
-                <span class="gs-meta-text">
-                  {{ formatCurrency(group.totalSpend || 0, 'INR') }}
-                </span>
+                <span class="gs-meta-text">{{ active.memberCount }} member{{ active.memberCount !== 1 ? 's' : ''
+                  }}</span>
               </div>
             </div>
-
           </div>
-
-          <!-- Role badge -->
-          <span class="gs-role-badge" [class.gs-role-badge--admin]="group.role === 'admin'"
-            [class.gs-role-badge--member]="group.role === 'member'">
-            {{ group.role }}
+          <span class="gs-role-badge" [class.gs-role-badge--admin]="active.role === 'admin'"
+            [class.gs-role-badge--member]="active.role === 'member'">
+            {{ active.role }}
           </span>
-
-          <!-- Footer with actions -->
-          <div class="gs-list-card__footer">
-
-            <button mat-button color="primary" (click)="$event.stopPropagation(); openGroup(group)">
-              <mat-icon>open_in_new</mat-icon>
-              Open
-            </button>
-
-            <div class="gs-list-card__actions" style="display: flex; gap: 4px;">
-
-              @if (group.role !== 'admin') {
-              <button mat-button matTooltip="Leave Group" color="warn"
-                (click)="$event.stopPropagation(); requestLeave(group)">
-                <mat-icon>exit_to_app</mat-icon>
-                Leave
-              </button>
-              }
-
-              @if (group.role === 'admin') {
-              <button mat-button matTooltip="Delete Group" color="warn"
-                (click)="$event.stopPropagation(); requestDelete(group)">
-                <mat-icon>delete_forever</mat-icon>
-                Delete
-              </button>
-              }
+          <div class="gs-active-card__footer">
+            <div class="gs-active-card__activity">
+              <mat-icon class="gs-meta-icon"> money</mat-icon>
+              <span class="gs-meta-text">
+                {{ formatCurrency(active.totalSpend || 0, 'INR') }}
+              </span>
             </div>
+            <button mat-button color="primary" class="gs-open-btn" (click)="$event.stopPropagation(); openGroup(active)">
+              Open
+              <mat-icon class="gs-open-btn__icon">arrow_forward</mat-icon>
+            </button>
           </div>
         </div>
-        }
-      </div>
-    </section>
-    } @placeholder {
-    <!-- Group List Skeleton -->
-    <section class="gs-section animate-pulse mt-4">
-      <div class="w-24 h-3 bg-gray-200 dark:bg-gray-800 rounded-full mb-3 ml-1 opacity-70"></div>
-      <div class="space-y-3">
-        <div class="h-20 bg-white dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-gray-700/60"></div>
-        <div class="h-20 bg-white dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-gray-700/60 opacity-60"></div>
-        <div class="h-20 bg-white dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-gray-700/60 opacity-30"></div>
-      </div>
-    </section>
-    }
+      </section>
+      }
+      }
+
+      <!-- OTHER GROUPS LIST -->
+      @if (otherGroups().length > 0) {
+      <section class="gs-section mt-4">
+        <p class="gs-section-label">Other Groups</p>
+        <div class="gs-list">
+          @for (group of otherGroups(); track group.id) {
+          <div class="gs-list-card" matRipple (click)="openGroup(group)">
+            <div class="gs-list-card__body">
+              <div class="gs-avatar gs-avatar--md overflow-hidden" [style.background]="'var(--primary-500)'">
+                <img *ngIf="group.icon && group.icon.startsWith('data:')" [src]="group.icon"
+                  class="w-full h-full object-cover" />
+                <mat-icon *ngIf="group.icon && !group.icon.startsWith('data:')"
+                  class="text-white text-[20px] w-[20px] h-[20px]">{{ group.icon }}</mat-icon>
+                <ng-container *ngIf="!group.icon">{{ avatarInitials(group.name) }}</ng-container>
+              </div>
+              <div class="gs-info">
+                <div class="gs-info__name-row">
+                  <span class="gs-info__name">{{ group.name }}</span>
+                </div>
+                <div class="gs-info__meta">
+                  <span class="gs-meta-text gs-meta-text--with-icon">
+                    <mat-icon class="gs-meta-icon">{{ groupModeIcon[group.mode] }}</mat-icon>
+                    {{ groupModeLabel[group.mode] }}
+                  </span>
+                  <span class="gs-dot">·</span>
+                  <span class="gs-meta-text">{{ group.memberCount }} member{{ group.memberCount !== 1 ? 's' : '' }}</span>
+                  <span class="gs-dot">·</span>
+                  <span class="gs-meta-text">{{ formatCurrency(group.totalSpend || 0, 'INR') }}</span>
+                </div>
+              </div>
+            </div>
+            <span class="gs-role-badge" [class.gs-role-badge--admin]="group.role === 'admin'"
+              [class.gs-role-badge--member]="group.role === 'member'">
+              {{ group.role }}
+            </span>
+            <div class="gs-list-card__footer">
+              <button mat-button color="primary" (click)="$event.stopPropagation(); openGroup(group)">
+                <mat-icon>open_in_new</mat-icon>
+                Open
+              </button>
+              <div class="gs-list-card__actions" style="display: flex; gap: 4px;">
+                @if (group.role !== 'admin') {
+                <button mat-button color="warn" (click)="$event.stopPropagation(); requestLeave(group)">
+                  <mat-icon>exit_to_app</mat-icon>
+                  Leave
+                </button>
+                }
+                @if (group.role === 'admin') {
+                <button mat-button color="warn" (click)="$event.stopPropagation(); requestDelete(group)">
+                  <mat-icon>delete_forever</mat-icon>
+                  Delete
+                </button>
+                }
+              </div>
+            </div>
+          </div>
+          }
+        </div>
+      </section>
+      }
+    </div>
     }
 
   </div>
-
-
 </div>
 }
+
 
 
