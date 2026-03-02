@@ -103,25 +103,10 @@ export class SettleUpComponent implements OnInit {
     const sets = this.settlements();
     const fam = this.family();
 
-    if (!fam?.id) return [];
+    if (!fam?.id || mems.length === 0) return [];
 
-    const cacheKey = `balances_${fam.id}`;
-
-    // If data isn't fully loaded yet (e.g. initial mount), try to return the cached calculation from indexdb
-    if (mems.length === 0) {
-      const cachedBalances = this.storageService.getItem<BalanceEntry[]>(cacheKey);
-      if (cachedBalances && cachedBalances.length > 0) {
-        return cachedBalances;
-      }
-    }
-
-    // Perform calculation when data is loaded
-    const calculatedBalances = this.familyService.computeBalances(trans, mems, sets);
-
-    // Save calculation temp in indexdb to improve performance on next load
-    this.storageService.setItem(cacheKey, calculatedBalances);
-
-    return calculatedBalances;
+    // Perform calculation when data is loaded (instantly responsive thanks to signals)
+    return this.familyService.computeBalances(trans, mems, sets);
   });
 
   /** Balances involving the current user (highlighted) */
@@ -186,7 +171,7 @@ export class SettleUpComponent implements OnInit {
           take(1),
           switchMap(({ settlement }: { settlement: Settlement }) => {
             return this.categoryService.findOrCreateSystemCategory(
-              req.fromUserId,
+              this.currentUserId, // <--- Securely always fetch/create on current user's DB
               'Settlement',
               TransactionType.TRANSFER,
               'handshake',
@@ -196,7 +181,10 @@ export class SettleUpComponent implements OnInit {
             );
           })
         ).subscribe(({ settlement, categoryId }) => {
-          const userId = req.fromUserId;
+          const userId = this.currentUserId; // <--- Securely log personal tx under current user
+          const amIPaying = userId === req.fromUserId;
+          const payee = amIPaying ? req.toDisplayName : req.fromDisplayName;
+
           const now = new Date();
           const methodLabel = req.method === 'cash' ? 'Cash'
             : req.method === 'upi' ? 'UPI'
@@ -207,9 +195,9 @@ export class SettleUpComponent implements OnInit {
             accountId: this.getDefaultAccountId(),
             categoryId: categoryId,
             category: 'Settlement',
-            payee: req.toDisplayName,
+            payee: payee,
             amount: req.amount,
-            type: TransactionType.TRANSFER,
+            type: amIPaying ? TransactionType.EXPENSE : TransactionType.INCOME, // Personal ledger reflects net flow
             date: now,
             notes: `Settlement: ${req.fromDisplayName} \u2192 ${req.toDisplayName} via ${methodLabel}${req.note ? ' | ' + req.note : ''}`,
             status: TransactionStatus.COMPLETED,
@@ -227,9 +215,10 @@ export class SettleUpComponent implements OnInit {
 
           const familyTxRequest = {
             ...transferTx,
+            type: TransactionType.TRANSFER, // Keep external family perspective as a neutral Transfer
             familyId: famId!,
-            userDisplayName: req.fromDisplayName,
-            userPhotoURL: req.fromPhotoURL
+            userDisplayName: this.profile()?.displayName || '',
+            userPhotoURL: this.profile()?.photoURL || ''
           };
 
           // 1. Record in personal transactions (for account balance)

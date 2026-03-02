@@ -722,14 +722,16 @@ export class FamilyService {
       // Subtract shares (negative balance/debt)
       let totalSplit = 0;
       for (const share of splitBetween) {
-        totalSplit += share.amount;
-        updateBalance(share.userId, -share.amount);
+        const shareAmt = Number(share.amount) || 0;
+        totalSplit += shareAmt;
+        updateBalance(share.userId, -shareAmt);
       }
 
       // Add paid amounts (positive balance/credit)
       if (paidByUserId === 'multiple' && paidBy?.length) {
         for (const payer of paidBy) {
-          updateBalance(payer.userId, payer.amount);
+          const payerAmt = Number(payer.amount) || 0;
+          updateBalance(payer.userId, payerAmt);
         }
       } else {
         // Use the sum of all shares to ensure exact zero-sum if possible
@@ -739,8 +741,9 @@ export class FamilyService {
 
     // Process settlements
     for (const s of settlements) {
-      updateBalance(s.fromUserId, s.amount); // Sender paid off debt, balance increases
-      updateBalance(s.toUserId, -s.amount);  // Receiver got paid, balance decreases
+      const settleAmt = Number(s.amount) || 0;
+      updateBalance(s.fromUserId, settleAmt); // Sender paid off debt, balance increases
+      updateBalance(s.toUserId, -settleAmt);  // Receiver got paid, balance decreases
     }
 
     // Separate into creditors (positive) and debtors (negative)
@@ -748,29 +751,28 @@ export class FamilyService {
     const debtors: { id: string; amount: number }[] = [];
 
     for (const [userId, amount] of netBalances.entries()) {
-      if (amount > 0.01) {
-        creditors.push({ id: userId, amount });
-      } else if (amount < -0.01) {
-        debtors.push({ id: userId, amount: Math.abs(amount) });
+      const roundedAmount = Math.round(amount * 100) / 100; // Prevent float artifacts
+      if (roundedAmount >= 0.01) {
+        creditors.push({ id: userId, amount: roundedAmount });
+      } else if (roundedAmount <= -0.01) {
+        debtors.push({ id: userId, amount: Math.abs(roundedAmount) });
       }
     }
-
-    // Always sort descending to pick largest available amounts (Greedy Settlement)
-    creditors.sort((a, b) => b.amount - a.amount);
-    debtors.sort((a, b) => b.amount - a.amount);
 
     const result: BalanceEntry[] = [];
     const memberMap = new Map(members.map(m => [m.userId, m]));
 
-    let i = 0; // index for debtors
-    let j = 0; // index for creditors
+    // Strictly Greedy matching by re-sorting remaining pools at every iteration
+    while (debtors.length > 0 && creditors.length > 0) {
+      debtors.sort((a, b) => b.amount - a.amount);
+      creditors.sort((a, b) => b.amount - a.amount);
 
-    while (i < debtors.length && j < creditors.length) {
-      const debtor = debtors[i];
-      const creditor = creditors[j];
+      const debtor = debtors[0];
+      const creditor = creditors[0];
 
       // Settle the minimum of the two
       const settleAmt = Math.min(debtor.amount, creditor.amount);
+      const roundedSettleAmt = Math.round(settleAmt * 100) / 100;
 
       const fromMember = memberMap.get(debtor.id);
       const toMember = memberMap.get(creditor.id);
@@ -782,18 +784,18 @@ export class FamilyService {
         toUserId: creditor.id,
         toDisplayName: toMember?.displayName ?? creditor.id,
         toPhotoURL: toMember?.photoURL,
-        amount: Math.round(settleAmt * 100) / 100, // Handle float precision rounding safely
+        amount: roundedSettleAmt,
       });
 
-      // Update balances
-      debtor.amount -= settleAmt;
-      creditor.amount -= settleAmt;
+      // Update balances and cleanly discard zeroed out members
+      debtor.amount = Math.round((debtor.amount - roundedSettleAmt) * 100) / 100;
+      creditor.amount = Math.round((creditor.amount - roundedSettleAmt) * 100) / 100;
 
-      if (debtor.amount < 0.01) i++;
-      if (creditor.amount < 0.01) j++;
+      if (debtor.amount < 0.01) debtors.shift();
+      if (creditor.amount < 0.01) creditors.shift();
     }
 
-    return result.sort((a, b) => b.amount - a.amount);
+    return result;
   }
 
   pullFromFirestore(userId: string): Observable<void> {

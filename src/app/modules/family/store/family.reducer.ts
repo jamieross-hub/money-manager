@@ -107,10 +107,44 @@ export const familyReducer = createReducer(
   on(FamilyActions.loadSettlements, state => ({ ...state, settlementsLoading: true })),
   on(FamilyActions.loadSettlementsSuccess, (state, { settlements }) => ({ ...state, settlementsLoading: false, settlements })),
   on(FamilyActions.loadSettlementsFailure, (state, { error }) => ({ ...state, settlementsLoading: false, error })),
-  on(FamilyActions.addSettlementSuccess, (state, { settlement }) => ({
-    ...state,
-    settlements: [settlement, ...state.settlements],
-  })),
+  
+  // Optimistically add settlement to UI instantly, using a temporary ID
+  on(FamilyActions.addSettlement, (state, { request }) => {
+    const tempSettlement: any = {
+      id: 'temp_' + Date.now(),
+      ...request,
+      settledAt: new Date(),
+      createdAt: new Date()
+    };
+    return {
+      ...state,
+      settlements: [tempSettlement, ...state.settlements],
+    };
+  }),
+
+  // Replace temporary UI settlement with real one once confirmed from API
+  on(FamilyActions.addSettlementSuccess, (state, { settlement }) => {
+    const existingIndex = state.settlements.findIndex(s => 
+      s.id && s.id.startsWith('temp_') && s.fromUserId === settlement.fromUserId && s.amount === settlement.amount
+    );
+    
+    let nextSettlements = [...state.settlements];
+    if (existingIndex !== -1) {
+      // Replace the temp one with the actual confirmed one
+      nextSettlements[existingIndex] = settlement;
+    } else {
+      // If no temp found, just push it or ignore if it's already there from onSnapshot
+      const alreadyExists = nextSettlements.some(s => s.id === settlement.id);
+      if (!alreadyExists) {
+        nextSettlements = [settlement, ...nextSettlements];
+      }
+    }
+
+    return {
+      ...state,
+      settlements: nextSettlements,
+    };
+  }),
   on(FamilyActions.deleteSettlementSuccess, (state, { settlementId, deletedTxIds }) => ({
     ...state,
     settlements: state.settlements.filter(s => s.id !== settlementId),
