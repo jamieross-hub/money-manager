@@ -14,6 +14,7 @@ import { TransactionsService } from 'src/app/util/service/db/transactions.servic
 import { CategoryService } from 'src/app/util/service/db/category.service';
 import { AccountsService } from 'src/app/util/service/db/accounts.service';
 import { Transaction } from 'src/app/util/models/transaction.model';
+import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
 import { Observable, of, Subject, takeUntil, firstValueFrom, forkJoin } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 import dayjs from 'dayjs';
@@ -152,7 +153,8 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
     private transactionsService: TransactionsService,
     private categoryService: CategoryService,
     private accountsService: AccountsService,
-    private userService: UserService
+    private userService: UserService,
+    private mobileBackButtonService: MobileBackButtonService
   ) {
     this.accountForm = this.buildForm();
 
@@ -172,9 +174,13 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.currentUserId.set(this.userService.getCurrentUserId() || '');
+    this.mobileBackButtonService.openModal('add-account', () => {
+      this.dialogRef.close();
+    });
   }
 
   ngOnDestroy(): void {
+    this.mobileBackButtonService.closeModal('add-account');
     this.destroy$.next();
     this.destroy$.complete();
   }

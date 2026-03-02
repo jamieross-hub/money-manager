@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatBottomSheetRef, MatBottomSheetModule } from '@angular/material/bottom-sheet';
@@ -11,6 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { CommonModule } from '@angular/common';
 import { CreateFamilyRequest } from 'src/app/util/models/family.model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
 
 export const GROUP_ICON_OPTIONS: { icon: string; label: string }[] = [
   { icon: 'family_restroom', label: 'Family' },
@@ -45,11 +46,12 @@ export const GROUP_ICON_OPTIONS: { icon: string; label: string }[] = [
   templateUrl: './family-create-dialog.component.html',
   styleUrls: ['./family-create-dialog.component.scss']
 })
-export class FamilyCreateDialogComponent {
+export class FamilyCreateDialogComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private dialogRef = inject(MatDialogRef<FamilyCreateDialogComponent>, { optional: true });
   private bottomSheetRef = inject(MatBottomSheetRef<FamilyCreateDialogComponent>, { optional: true });
   public data = inject(MAT_DIALOG_DATA, { optional: true });
+  private mobileBackButtonService = inject(MobileBackButtonService);
 
   readonly iconOptions = GROUP_ICON_OPTIONS;
 
@@ -70,6 +72,14 @@ export class FamilyCreateDialogComponent {
     if (!newName || !existing) return false;
     return existing.some(n => n.toLowerCase().trim() === newName);
   });
+
+  ngOnInit() {
+    this.mobileBackButtonService.openModal('family-create', () => this.close());
+  }
+
+  ngOnDestroy() {
+    this.mobileBackButtonService.closeModal('family-create');
+  }
 
   selectIcon(icon: string): void {
     this.selectedIcon.set(icon);

@@ -62,6 +62,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { APP_CONFIG } from 'src/app/util/config/config';
+import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
 
 @Component({
   selector: 'app-mobile-category-add-edit-popup',
@@ -111,7 +112,7 @@ import { APP_CONFIG } from 'src/app/util/config/config';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MobileCategoryAddEditPopupComponent implements OnInit {
+export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
   categoryForm: FormGroup;
   public isSubmitting = signal<boolean>(false);
   public userId = signal<string>('');
@@ -149,7 +150,8 @@ export class MobileCategoryAddEditPopupComponent implements OnInit {
     public breakpointService: BreakpointService,
     private validationService: ValidationService,
     private ssrService: SsrService,
-    private userService: UserService
+    private userService: UserService,
+    private mobileBackButtonService: MobileBackButtonService
   ) {
     this.categoryForm = this.fb.group({
       name: ['', [
@@ -187,12 +189,10 @@ export class MobileCategoryAddEditPopupComponent implements OnInit {
   ngOnInit(): void {
     this.userId.set(this.userService.getCurrentUserId() || '');
 
-    if (this.ssrService.isClientSide()) {
-      window.addEventListener('popstate', (event) => {
-        this.dialogRef.close();
-        event.preventDefault();
-      });
-    }
+    // Register mobile back button interceptor
+    this.mobileBackButtonService.openModal('category-add-edit', () => {
+      this.dialogRef.close();
+    });
 
     if (this.dialogData) {
       this.categoryForm.patchValue({
@@ -356,6 +356,10 @@ export class MobileCategoryAddEditPopupComponent implements OnInit {
       this.notificationService.error('Category already exists');
     }
     return !!existingCategory;
+  }
+
+  ngOnDestroy(): void {
+    this.mobileBackButtonService.closeModal('category-add-edit');
   }
 }
 
