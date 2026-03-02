@@ -28,6 +28,7 @@ import { AppState } from 'src/app/store/app.state';
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import { ThemeToggleComponent } from 'src/app/util/components/theme-toggle/theme-toggle.component';
 import { FamilyModeToggleComponent } from 'src/app/util/components/family-mode-toggle/family-mode-toggle.component';
+import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 import { FamilyService } from 'src/app/modules/family/services/family.service';
 import { FamilyMember } from 'src/app/util/models/family.model';
 import { map, switchMap, of } from 'rxjs';
@@ -47,6 +48,7 @@ import { map, switchMap, of } from 'rxjs';
     MatDialogModule,
     ThemeToggleComponent,
     FamilyModeToggleComponent,
+    ImageFallbackDirective,
   ],
   animations: [
     trigger('slideDown', [
@@ -101,10 +103,10 @@ export class UserComponent {
     // Priority: custom photo from firestore profile > google photo from auth > safe default
     const customUrl = this.userProfile()?.photoURL;
     if (customUrl && customUrl !== 'undefined' && customUrl !== 'null' && !customUrl.includes('assets/images')) {
-      return this.userService.getAvatarUrl(customUrl);
+      return customUrl;
     }
     
-    return this.userService.getAvatarUrl(this.user()?.photoURL);
+    return this.user()?.photoURL;
   });
 
   readonly currentUserId = computed(() => this.userService.getCurrentUserId());
@@ -138,14 +140,10 @@ export class UserComponent {
   });
 
   // ── Template helpers ───────────────────────────────────────────────────────
-  getMemberAvatarUrl(member: FamilyMember): string {
-    return this.userService.getAvatarUrl(member.photoURL);
+  getMemberAvatarUrl(member: FamilyMember): any {
+    return member.photoURL;
   }
 
-  onImageError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    img.src = 'assets/images/profile.png';
-  }
 
   // ── UI actions ─────────────────────────────────────────────────────────────
   toggle(event?: Event): void {

@@ -16,7 +16,7 @@
     <div class="flex items-start gap-3">
       <!-- Preview bubble (Click to upload) -->
       <label class="w-14 h-14 rounded-2xl bg-primary-50 dark:bg-primary-900/40 border-2 border-primary-300 dark:border-primary-600 flex items-center justify-center overflow-hidden shrink-0 cursor-pointer hover:opacity-80 transition-opacity relative group">
-        <img *ngIf="isImageIcon" [src]="selectedIcon()" alt="group icon" class="w-full h-full object-cover" />
+        <img *ngIf="isImageIcon" [src]="selectedIcon()" appImageFallback alt="group icon" class="w-full h-full object-cover" />
         <mat-icon *ngIf="!isImageIcon" class="text-primary-500">{{ selectedIcon() }}</mat-icon>
         
         <!-- Upload Overlay on Hover (Optional aesthetic improvement) -->

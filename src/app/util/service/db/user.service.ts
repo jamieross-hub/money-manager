@@ -323,16 +323,6 @@ export class UserService {
     return this.storageService.getItem(LocalStorageKey.GUEST_MODE) === 'true';
   }
 
-  /**
-   * Helper method to reliably get an avatar photo URL, providing a default if missing.
-   */
-  public getAvatarUrl(photoURL?: string | null): string {
-    if (!photoURL || photoURL === 'undefined' || photoURL === 'null') {
-      return 'assets/images/profile.png';
-    }
-    return photoURL;
-  }
-
   async checkIfAdmin(user: any): Promise<void> {
     try {
       if (user) {

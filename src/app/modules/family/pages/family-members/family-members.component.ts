@@ -21,6 +21,7 @@ import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/c
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { CommonHeaderComponent } from 'src/app/util/components/dialog/common-header/common-header.component';
 import { CommonBodyContentComponent } from 'src/app/util/components/dialog/common-body-content/common-body-content.component';
+import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 
 @Component({
   selector: 'app-family-members',
@@ -36,7 +37,8 @@ import { CommonBodyContentComponent } from 'src/app/util/components/dialog/commo
     MatDividerModule,
     MatTooltipModule,
     CommonHeaderComponent,
-    CommonBodyContentComponent
+    CommonBodyContentComponent,
+    ImageFallbackDirective
   ],
   templateUrl: './family-members.component.html',
   styleUrls: ['./family-members.component.scss']

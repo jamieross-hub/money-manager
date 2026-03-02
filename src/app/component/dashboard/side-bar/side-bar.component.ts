@@ -14,6 +14,7 @@ import { UserService } from 'src/app/util/service/db/user.service';
 import { User } from 'src/app/util/models';
 import { Observable, Subscription } from 'rxjs';
 import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
+import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 
 @Component({
   selector: 'side-bar',
@@ -27,7 +28,8 @@ import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button
     MatButtonModule,
     MatTooltipModule,
     RouterModule,
-    TranslateModule
+    TranslateModule,
+    ImageFallbackDirective
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

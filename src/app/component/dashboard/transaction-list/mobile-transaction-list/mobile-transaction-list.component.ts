@@ -27,6 +27,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { TranslateModule } from '@ngx-translate/core';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import { IncludesPipe } from 'src/app/util/pipes/includes.pipe';
+import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 
 
 import { MatDialog } from '@angular/material/dialog';
@@ -90,7 +91,8 @@ interface SortOption {
     CurrencyPipe,
     IncludesPipe,
     FormsModule,
-    MatDividerModule
+    MatDividerModule,
+    ImageFallbackDirective
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

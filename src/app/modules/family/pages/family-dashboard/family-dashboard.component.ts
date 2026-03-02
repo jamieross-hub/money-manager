@@ -31,6 +31,7 @@ import { CurrencyPipe } from 'src/app/util/pipes';
 import { ReportService } from 'src/app/util/service/db/report.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { LoaderService } from 'src/app/util/service/loader.service';
+import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 
 @Component({
   selector: 'app-family-dashboard',
@@ -49,7 +50,8 @@ import { LoaderService } from 'src/app/util/service/loader.service';
     CurrencyPipe,
     MatMenuModule,
     MatDividerModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    ImageFallbackDirective
   ],
   templateUrl: './family-dashboard.component.html',
   styleUrls: ['./family-dashboard.component.scss']

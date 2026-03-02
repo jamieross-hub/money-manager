@@ -283,22 +283,12 @@
 										@if((tx.splitData.paidBy || []).length > 1) {
 											@for (payer of (tx.splitData.paidBy || []).slice(0, 3); track payer.userId; let i = $index) {
 												<div class="member-pic-wrapper stacked">
-													<img *ngIf="payer.photoURL; else noPicPayerStack" [src]="payer.photoURL" alt="Payer">
-													<ng-template #noPicPayerStack>
-														<div class="initials-avatar stacked-text">
-															{{ payer.displayName ? payer.displayName.charAt(0).toUpperCase() : '?' }}
-														</div>
-													</ng-template>
+													<img [src]="payer.photoURL" appImageFallback alt="Payer">
 												</div>
 											}
 										} @else {
 											<div class="member-pic-wrapper">
-												<img *ngIf="tx.splitData.paidByPhotoURL; else noPicPayerSingleIcon" [src]="tx.splitData.paidByPhotoURL" alt="Payer">
-												<ng-template #noPicPayerSingleIcon>
-													<div class="initials-avatar">
-														{{ tx.splitData.paidByDisplayName ? tx.splitData.paidByDisplayName.charAt(0).toUpperCase() : '?' }}
-													</div>
-												</ng-template>
+												<img [src]="tx.splitData.paidByPhotoURL" appImageFallback alt="Payer">
 											</div>
 										}
 									</div>
@@ -524,10 +514,7 @@
 											<div class="flex items-center gap-2.5">
 												<!-- Avatar initial -->
 												<div class="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800/50 flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 overflow-hidden">
-													<img *ngIf="payer.photoURL; else noPicPayerDetail" [src]="payer.photoURL" class="w-full h-full object-cover" alt="Profile Photo">
-													<ng-template #noPicPayerDetail>
-														{{ payer.displayName ? payer.displayName.charAt(0).toUpperCase() : '?' }}
-													</ng-template>
+													<img [src]="payer.photoURL" appImageFallback class="w-full h-full object-cover" alt="Profile Photo">
 												</div>
 												<!-- Name -->
 												<span class="flex-1 text-xs font-medium text-gray-700 dark:text-gray-300 min-w-0 truncate">
@@ -548,10 +535,7 @@
 										<div class="flex items-center gap-2.5">
 											<!-- Avatar initial -->
 											<div class="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800/50 flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 overflow-hidden">
-												<img *ngIf="tx.splitData.paidByPhotoURL; else noPicPayerSingleDetail" [src]="tx.splitData.paidByPhotoURL" class="w-full h-full object-cover" alt="Profile Photo">
-												<ng-template #noPicPayerSingleDetail>
-													{{ tx.splitData.paidByDisplayName ? tx.splitData.paidByDisplayName.charAt(0).toUpperCase() : '?' }}
-												</ng-template>
+												<img [src]="tx.splitData.paidByPhotoURL" appImageFallback class="w-full h-full object-cover" alt="Profile Photo">
 											</div>
 											<!-- Name -->
 											<span class="flex-1 text-xs font-medium text-gray-700 dark:text-gray-300 min-w-0 truncate">
@@ -574,10 +558,7 @@
 										<div class="flex items-center gap-2.5">
 											<!-- Avatar initial -->
 											<div class="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800/50 flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 overflow-hidden">
-												<img *ngIf="member.photoURL; else noPicMember" [src]="member.photoURL" class="w-full h-full object-cover" alt="Profile Photo">
-												<ng-template #noPicMember>
-													{{ member.displayName ? member.displayName.charAt(0).toUpperCase() : '?' }}
-												</ng-template>
+												<img [src]="member.photoURL" appImageFallback class="w-full h-full object-cover" alt="Profile Photo">
 											</div>
 											<!-- Name -->
 											<span class="flex-1 text-xs font-medium text-gray-700 dark:text-gray-300 min-w-0 truncate">

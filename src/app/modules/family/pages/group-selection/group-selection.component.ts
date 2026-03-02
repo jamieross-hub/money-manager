@@ -24,6 +24,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 
 import { FamilyService } from '../../services/family.service';
 import { FamilyCreateDialogComponent } from '../../dialogs/family-create-dialog/family-create-dialog.component';
@@ -119,6 +120,7 @@ type LoadState = 'loading' | 'loaded' | 'empty' | 'error';
     QuickActionsFabComponent,
     ConfirmDialogComponent,
     FamilyDashboardComponent,
+    ImageFallbackDirective,
   ],
   templateUrl: './group-selection.component.html',
   styleUrls: ['./group-selection.component.scss'],

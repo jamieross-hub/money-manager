@@ -12,6 +12,7 @@ import { CommonModule } from '@angular/common';
 import { CreateFamilyRequest } from 'src/app/util/models/family.model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
+import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 
 export const GROUP_ICON_OPTIONS: { icon: string; label: string }[] = [
   { icon: 'family_restroom', label: 'Family' },
@@ -41,7 +42,8 @@ export const GROUP_ICON_OPTIONS: { icon: string; label: string }[] = [
     MatSelectModule,
     MatIconModule,
     MatTooltipModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    ImageFallbackDirective
   ],
   templateUrl: './family-create-dialog.component.html',
   styleUrls: ['./family-create-dialog.component.scss']

@@ -37,6 +37,7 @@ import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage
 import { TransactionType, SyncStatus, TransactionStatus, AccountType } from 'src/app/util/config/enums';
 import { Transaction } from 'src/app/util/models/transaction.model';
 import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
+import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 @Component({
   selector: 'app-settle-up',
   standalone: true,
@@ -50,6 +51,7 @@ import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
     SettleAvatarPipe, SettleAvatarColorPipe,
     MethodIconPipe, MethodLabelPipe,
     SettleDatePipe, IOWEPipe, OwedToMePipe,
+    ImageFallbackDirective,
   ],
   templateUrl: './settle-up.component.html',
   styleUrls: ['./settle-up.component.scss'],

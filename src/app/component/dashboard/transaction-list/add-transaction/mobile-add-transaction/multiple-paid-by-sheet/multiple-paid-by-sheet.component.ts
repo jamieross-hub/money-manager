@@ -5,6 +5,7 @@ import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bott
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { FamilyMember, PaidByMember } from 'src/app/util/models/family.model';
+import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 
 export interface MultiplePaidBySheetData {
   members: FamilyMember[];
@@ -21,7 +22,8 @@ export interface MultiplePaidBySheetData {
     CommonModule,
     FormsModule,
     MatIconModule,
-    MatButtonModule
+    MatButtonModule,
+    ImageFallbackDirective
   ]
 })
 export class MultiplePaidBySheetComponent implements OnInit {

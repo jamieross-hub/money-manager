@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
 import { MatTabsModule } from '@angular/material/tabs';
 import { FamilyMember, SplitBetweenMember } from 'src/app/util/models/family.model';
+import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 
 export type SplitMode = 'equally' | 'unequally' | 'percentage';
 
@@ -36,7 +37,8 @@ interface SplitItem {
     MatIconModule,
     MatButtonModule,
     MatRippleModule,
-    MatTabsModule
+    MatTabsModule,
+    ImageFallbackDirective
   ]
 })
 export class SplitConfigSheetComponent implements OnInit {

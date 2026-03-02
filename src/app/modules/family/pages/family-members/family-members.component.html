@@ -51,11 +51,7 @@
             <!-- Avatar with ring -->
             <div class="relative flex-shrink-0">
               <div class="w-14 h-14 rounded-full p-0.5 border-2 overflow-hidden" [style.border-color]="memberColor(member.userId) + '40'">
-                <img *ngIf="member.photoURL" [src]="member.photoURL" alt="avatar" class="w-full h-full rounded-full object-cover" />
-                <div *ngIf="!member.photoURL" class="w-full h-full rounded-full flex items-center justify-center text-white font-bold text-xl shadow-inner"
-                  [style.background]="memberColor(member.userId)">
-                  {{ member.displayName.charAt(0).toUpperCase() }}
-                </div>
+                <img [src]="member.photoURL" appImageFallback alt="avatar" class="w-full h-full rounded-full object-cover" />
               </div>
               <!-- Online status or just decoration -->
               <div *ngIf="member.userId === currentUserId" 

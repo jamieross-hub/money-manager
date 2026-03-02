@@ -112,11 +112,13 @@
           <div class="gs-active-card__accent"></div>
           <div class="gs-active-card__body">
             <div class="gs-avatar gs-avatar--lg overflow-hidden" [style.background]="'var(--primary-500)'">
-              <img *ngIf="active.icon && active.icon.startsWith('data:')" [src]="active.icon"
-                class="w-full h-full object-cover" />
-              <mat-icon *ngIf="active.icon && !active.icon.startsWith('data:')"
-                class="text-white text-[24px] w-[24px] h-[24px]">{{ active.icon }}</mat-icon>
-              <ng-container *ngIf="!active.icon">{{ avatarInitials(active.name) }}</ng-container>
+              @if (active.icon && active.icon.startsWith('data:')) {
+                <img [src]="active.icon" appImageFallback class="w-full h-full object-cover" />
+              } @else if (active.icon) {
+                <mat-icon class="text-white text-[24px] w-[24px] h-[24px]">{{ active.icon }}</mat-icon>
+              } @else {
+                {{ avatarInitials(active.name) }}
+              }
             </div>
             <div class="gs-info">
               <div class="gs-info__name-row">
@@ -163,11 +165,13 @@
           <div class="gs-list-card" matRipple (click)="openGroup(group)">
             <div class="gs-list-card__body">
               <div class="gs-avatar gs-avatar--md overflow-hidden" [style.background]="'var(--primary-500)'">
-                <img *ngIf="group.icon && group.icon.startsWith('data:')" [src]="group.icon"
-                  class="w-full h-full object-cover" />
-                <mat-icon *ngIf="group.icon && !group.icon.startsWith('data:')"
-                  class="text-white text-[20px] w-[20px] h-[20px]">{{ group.icon }}</mat-icon>
-                <ng-container *ngIf="!group.icon">{{ avatarInitials(group.name) }}</ng-container>
+                @if (group.icon && group.icon.startsWith('data:')) {
+                  <img [src]="group.icon" appImageFallback class="w-full h-full object-cover" />
+                } @else if (group.icon) {
+                  <mat-icon class="text-white text-[20px] w-[20px] h-[20px]">{{ group.icon }}</mat-icon>
+                } @else {
+                  {{ avatarInitials(group.name) }}
+                }
               </div>
               <div class="gs-info">
                 <div class="gs-info__name-row">

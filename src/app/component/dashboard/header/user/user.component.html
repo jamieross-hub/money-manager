@@ -9,7 +9,7 @@
 			<img *ngFor="let member of sortedMembers().slice(0, 3); let i = index" 
 				class="flex-shrink-0 object-cover rounded-full w-8 h-8 ring-2 ring-white dark:ring-slate-900 shadow-md transition-all hover:scale-110 hover:ring-blue-500"
 				[src]="getMemberAvatarUrl(member)" 
-				(error)="onImageError($event)"
+				appImageFallback
 				[alt]="member.displayName"
 				[matTooltip]="member.displayName"
 				[style.z-index]="20 - i" />
@@ -23,7 +23,7 @@
 		<!-- Single Avatar for Personal Mode or Family Mode with no group selected -->
 		<img *ngIf="!isFamilyMode() || familyMembers().length === 0" 
 			class="flex-shrink-0 object-cover mx-1 rounded-full w-9 h-9 ring-2 ring-white dark:ring-slate-800 shadow-md border border-gray-100 dark:border-slate-700 transition-transform hover:scale-105"
-			[src]="profileImage()" (error)="onImageError($event)" alt="avatar" />
+			[src]="profileImage()" appImageFallback alt="avatar" />
 
 		<span class="mx-1 truncate max-w-100" *ngIf="(!isMobile() || !user().photoURL)">{{(user().displayName ?
 			user().displayName : (user().firstName ? user().firstName : 'USER_MENU.DEFAULT_USER' | translate)) |
