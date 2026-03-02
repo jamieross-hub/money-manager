@@ -56,6 +56,7 @@ import { FamilyService } from 'src/app/modules/family/services/family.service';
 import { FamilyMember, SplitBetweenMember, PaidByMember } from 'src/app/util/models/family.model';
 import { MultiplePaidBySheetComponent } from './multiple-paid-by-sheet/multiple-paid-by-sheet.component';
 import { SplitConfigSheetComponent, SplitConfigSheetData, SplitMode } from './split-config-sheet/split-config-sheet.component';
+import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
 
 
 
@@ -146,13 +147,6 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   public filteredCategories: ReplaySubject<Category[]> = new ReplaySubject<Category[]>(1);
   protected _onDestroy = new Subject<void>();
   public isGuestUser: boolean = false;
-  private popstateListener = (event: PopStateEvent) => {
-    if (this.isMobile) {
-      // Prevent other popstate listeners (like the router) from seeing this event
-      event.stopImmediatePropagation();
-    }
-    this.dialogRef.close();
-  };
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public dialogData: any,
@@ -171,7 +165,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     private userService: UserService,
     private currencyService: CurrencyService,
     private bottomSheet: MatBottomSheet,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private mobileBackButtonService: MobileBackButtonService
   ) {
     this.isGuestUser = this.userService.isGuestUser();
     const tomorrow = new Date();
@@ -241,17 +236,15 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     this.isMobile = this.breakpointObserver.isMatched('(max-width: 640px)');
 
     // Intercept hardware back button on mobile
-    if (this.isMobile) {
-      window.history.pushState({ modal: 'add-transaction' }, '');
-    }
+    this.mobileBackButtonService.openModal('add-transaction', () => {
+      this.dialogRef.close();
+    });
   }
 
   ngOnInit(): void {
     this.userId = this.userService.getCurrentUserId();
     this.initializeFormData();
     this.loadFamilyGroupInfo();
-
-    window.addEventListener('popstate', this.popstateListener, { capture: true });
   }
 
   /** Loads the active family group's mode and member list */
@@ -997,12 +990,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   }
 
   ngOnDestroy() {
-    window.removeEventListener('popstate', this.popstateListener, { capture: true });
-
-    // If dialog is closed via UI (Save/Cancel), clean up the history entry we pushed
-    if (this.isMobile && window.history.state?.modal === 'add-transaction') {
-      window.history.back();
-    }
+    this.mobileBackButtonService.closeModal('add-transaction');
 
     this._onDestroy.next();
     this._onDestroy.complete();

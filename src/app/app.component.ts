@@ -14,11 +14,12 @@ import { LocalStorageKey } from './util/models/local-storage.model';
 import { UserTrackingService, ScreenTrackingService, Analytics, logEvent } from '@angular/fire/analytics';
 import { UserService } from './util/service/db/user.service';
 import { SecurityService } from './util/service/security.service';
-import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { SwUpdate } from '@angular/service-worker';
 import { MatDialog } from '@angular/material/dialog';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { OverlayContainer } from '@angular/cdk/overlay';
+import { MobileBackButtonService } from './util/service/mobile-back-button.service';
 
 
 @Component({
@@ -54,7 +55,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private swUpdate: SwUpdate,
     private dialog: MatDialog,
     private bottomSheet: MatBottomSheet,
-    private overlayContainer: OverlayContainer
+    private overlayContainer: OverlayContainer,
+    private mobileBackButtonService: MobileBackButtonService
   ) {
     this.navigationState = {
       canGoBack: false,
@@ -65,6 +67,7 @@ export class AppComponent implements OnInit, OnDestroy {
       isMobile: false
     };
 
+    // Track page views
     this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe((event) => {
@@ -101,6 +104,17 @@ export class AppComponent implements OnInit, OnDestroy {
     this.setupEventListeners();
     this.firebaseMessagingService.listenForMessages();
     this.commonSyncService.startSync();
+
+    // Map back button logic
+    if (this.ssrService.isClientSide()) {
+      window.addEventListener('popstate', (event) => {
+        const isMobile = window.innerWidth <= 768; // Mobile breakpoint
+        if (isMobile && this.mobileBackButtonService.hasOpenModals()) {
+          // Instruct mobile back button service to close top modal/sidebar
+          this.mobileBackButtonService.popModal();
+        }
+      });
+    }
   }
 
 

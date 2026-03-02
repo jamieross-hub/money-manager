@@ -1,4 +1,4 @@
-import { Component, HostListener, ElementRef, AfterViewInit , ChangeDetectionStrategy} from '@angular/core';
+import { Component, HostListener, ElementRef, AfterViewInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { Router } from '@angular/router';
 import { ViewChild } from '@angular/core';
@@ -12,7 +12,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { SidebarNavParent, getAllNavigationItems } from '../../../util/config/sidebar.config';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { User } from 'src/app/util/models';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
+import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
 
 @Component({
   selector: 'side-bar',
@@ -30,20 +31,25 @@ import { Observable } from 'rxjs';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SideBarComponent implements AfterViewInit {
+export class SideBarComponent implements AfterViewInit, OnDestroy {
   @ViewChild('drawer') drawer!: MatDrawer;
   isAdmin: boolean = false;
   navigationSections: SidebarNavParent[] = [];
   user$: Observable<User | null>;
 
+  private drawerSub?: Subscription;
+  private boundDocumentClick: (event: Event) => void;
+
   constructor(
     private auth: Auth,
     public router: Router,
     private elementRef: ElementRef,
-    public userService: UserService
+    public userService: UserService,
+    private mobileBackButtonService: MobileBackButtonService
   ) {
     this.navigationSections = getAllNavigationItems();
     this.user$ = this.userService.userAuth$;
+    this.boundDocumentClick = this.handleDocumentClick.bind(this);
   }
 
   ngOnInit() {
@@ -58,7 +64,25 @@ export class SideBarComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     // Add click listener to document after view is initialized
-    document.addEventListener('click', this.handleDocumentClick.bind(this));
+    document.addEventListener('click', this.boundDocumentClick);
+
+    // Subscribe to drawer open state changes to handle history on mobile
+    this.drawerSub = this.drawer.openedChange.subscribe((isOpen: boolean) => {
+      if (isOpen) {
+        this.mobileBackButtonService.openModal('sidebar', () => {
+          this.drawer.close();
+        });
+      } else {
+        this.mobileBackButtonService.closeModal('sidebar');
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    document.removeEventListener('click', this.boundDocumentClick);
+    if (this.drawerSub) {
+      this.drawerSub.unsubscribe();
+    }
   }
 
   @HostListener('document:keydown', ['$event'])
