@@ -2,41 +2,16 @@
 
 
 
-  <!-- ── NO FAMILY: Empty state (only if not loading) ──────────────── -->
-  <ng-container *ngIf="!family() && !loading()">
-    <div class="flex flex-col items-center justify-center min-h-[calc(100vh-140px)] px-6 text-center animate-fade-in">
-      <div
-        class="w-20 h-20 rounded-full bg-primary-50 dark:bg-primary-900/40 flex items-center justify-center mb-5 shadow-sm">
-        <mat-icon class="!text-4xl !w-10 !h-10 text-primary-600 dark:text-primary-400">family_restroom</mat-icon>
-      </div>
-      <p class="text-xl font-bold tracking-tight text-gray-900 dark:text-white mb-3">Family Wallet</p>
-      <p class="text-[15px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8 max-w-sm">
-        Collaborate on finances with your family. Add entries together and get the full picture of your shared expenses.
-      </p>
-      <div class="flex flex-col w-full max-w-xs gap-3">
-        <button mat-flat-button color="primary" class="!h-13 !rounded-xl !text-[15px] font-medium w-full py-1"
-          (click)="createFamily()">
-          <mat-icon class="mr-2">add_circle</mat-icon>
-          Create New Family
-        </button>
-        <button mat-stroked-button (click)="joinFamily()">
-          <mat-icon class="mr-2">login</mat-icon>
-          Join via Code
-        </button>
-      </div>
-    </div>
-  </ng-container>
 
 
-  <ng-container *ngIf="family() as fam">
     <div class="animate-in fade-in duration-500">
       <!-- Header Section -->
       <div
         class="shadow-sm rounded-b-3xl px-5 pt-4 pb-6 border-b border-gray-100 dark:border-gray-800/50 mb-4 relative header-section transition-all duration-300"
-        [style.backgroundImage]="fam.banner ? 'url(' + fam.banner + ')' : ''" [class.has-banner]="!!fam.banner">
+        [style.backgroundImage]="family()?.banner ? 'url(' + family()?.banner + ')' : ''" [class.has-banner]="!!family()?.banner">
 
         <!-- Overlay for readability when banner exists -->
-        <div *ngIf="fam.banner" class="absolute inset-0 bg-black/40 dark:bg-black/50 rounded-b-3xl z-0"></div>
+        <div *ngIf="family()?.banner" class="absolute inset-0 bg-black/40 dark:bg-black/50 rounded-b-3xl z-0"></div>
 
         <!-- Header Content Container -->
         <div class="relative z-10">
@@ -65,13 +40,13 @@
             <!-- Family Avatar -->
             <div
               class="w-16 h-16 mt-[-12px] rounded-2xl overflow-hidden bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/50 dark:to-primary-800/30 flex items-center justify-center shadow-inner border border-primary-100 dark:border-primary-800 shrink-0">
-              <img *ngIf="fam.icon?.startsWith('data:')" [src]="fam.icon" alt="group icon"
+              <img *ngIf="family()?.icon?.startsWith('data:')" [src]="family()?.icon" alt="group icon"
                 class="w-full h-full object-cover" />
-              <mat-icon *ngIf="!fam.icon?.startsWith('data:')"
-                class="!text-3xl text-primary-600 dark:text-primary-400">{{ fam.icon || 'roofing' }}</mat-icon>
+              <mat-icon *ngIf="!family()?.icon?.startsWith('data:')"
+                class="!text-3xl text-primary-600 dark:text-primary-400">{{ family()?.icon || 'roofing' }}</mat-icon>
             </div>
             <div>
-              <p class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight mb-1">{{ fam.name
+              <p class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight mb-1">{{ family()?.name
                 }}</p>
               <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1.5 opacity-90">
                 <mat-icon class="!text-[16px] !w-4 !h-4 opacity-70">group</mat-icon>
@@ -113,9 +88,9 @@
 
             <button mat-menu-item (click)="deleteFamily()">
               <div class="flex items-center text-red-500">
-                <mat-icon class="!mr-3 text-red-500">{{ fam.ownerUserId === currentUserId ? 'delete_outline' : 'logout'
+                <mat-icon class="!mr-3 text-red-500">{{ family()?.ownerUserId === currentUserId ? 'delete_outline' : 'logout'
                   }}</mat-icon>
-                <span class="font-medium">{{ fam.ownerUserId === currentUserId ? 'Delete Family' : 'Leave Family'
+                <span class="font-medium">{{ family()?.ownerUserId === currentUserId ? 'Delete Family' : 'Leave Family'
                   }}</span>
               </div>
             </button>
@@ -125,11 +100,11 @@
           <div class="mt-5 flex items-center justify-between">
             <div
               class="inline-flex items-center gap-3 pl-3.5 pr-2 py-2 backdrop-blur-md rounded-2xl border border-gray-200/50 dark:border-gray-700/50 group transition-all hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer shadow-sm hover:shadow-md"
-              (click)="copyCode(fam.inviteCode)" matRipple>
+              (click)="copyCode(family()?.inviteCode || '')" matRipple>
               <div class="flex flex-col -gap-0.5">
                 <span class="text-[10px] font-bold tracking-widest uppercase text-gray-500 dark:text-gray-400">Invite
                   Code</span>
-                <span class="text-[16px] font-black tracking-[0.2em] text-gray-900 dark:text-white">{{ fam.inviteCode
+                <span class="text-[16px] font-black tracking-[0.2em] text-gray-900 dark:text-white">{{ family()?.inviteCode
                   }}</span>
               </div>
               <div
@@ -148,7 +123,7 @@
         </p>
 
         <!-- DEFAULT MODE (COMMON) -->
-        <div class="grid grid-cols-3 gap-3" *ngIf="fam.mode !== 'split'">
+        <div class="grid grid-cols-3 gap-3" *ngIf="family()?.mode !== 'split'">
           <!-- Income Card -->
           <div
             class="bg-white dark:bg-gray-800 rounded-2xl p-2 shadow-sm border border-gray-100 dark:border-gray-700/60 flex flex-col justify-between relative overflow-hidden">
@@ -189,7 +164,7 @@
 
         <!-- SPLIT MODE: Compact Professional Master Card -->
         <!-- SPLIT MODE: Compact Professional Master Card -->
-        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800/80 mb-6 transition-all hover:shadow-md relative overflow-hidden" *ngIf="fam.mode === 'split'">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800/80 mb-6 transition-all hover:shadow-md relative overflow-hidden" *ngIf="family()?.mode === 'split'">
           
           <!-- Top Row: Group Spend & Personal Status -->
           <div class="px-4 py-2 relative z-10">
@@ -249,13 +224,13 @@
       <div class="px-1 pb-2">
         <div class="flex items-center justify-between mb-3 px-1">
           <p class="text-[13px] font-bold tracking-wider uppercase text-gray-500 dark:text-gray-400">
-            {{ fam.mode === 'split' ? 'Recent Activity' : 'Member Activity' }}
+            {{ family()?.mode === 'split' ? 'Recent Activity' : 'Member Activity' }}
           </p>
         </div>
 
         <!-- DEFAULT MODE (COMMON): Member Breakdown -->
-        <div class="flex flex-col gap-3 pb-4" *ngIf="fam?.mode !== 'split'">
-          <div *ngFor="let m of stats()!.memberBreakdown"
+        <div class="flex flex-col gap-3 pb-4" *ngIf="family()?.mode !== 'split'">
+          <div *ngFor="let m of stats()?.memberBreakdown"
             class="bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
 
             <div class="flex items-center gap-3" [class.opacity-60]="!m.isActive">
@@ -272,7 +247,7 @@
             </div>
 
             <div class="flex items-center gap-3">
-              <ng-container *ngIf="fam?.mode !== 'split'">
+              <ng-container *ngIf="family()?.mode !== 'split'">
                 <div class="flex items-center gap-1.5">
                   <div
                     class="w-5 h-5 rounded-full bg-green-50 dark:bg-green-400/10 flex items-center justify-center text-green-600 dark:text-green-400">
@@ -295,7 +270,7 @@
         </div>
 
         <!-- SPLIT MODE: Recent Activity -->
-        <div class="flex flex-col gap-3 pb-4" *ngIf="fam.mode === 'split'">
+        <div class="flex flex-col gap-3 pb-4" *ngIf="family()?.mode === 'split'">
           <div *ngFor="let tx of recentActivities()"
             class="bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
 
@@ -368,7 +343,6 @@
         </div>
       </div>
     </div>
-  </ng-container>
  
 
 

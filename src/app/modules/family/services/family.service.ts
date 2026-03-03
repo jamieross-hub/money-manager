@@ -300,50 +300,75 @@ export class FamilyService {
   }
 
   getMyFamilies(): Observable<Family[]> {
+    const syncUser = this.userService.getCurrentUserSnapshot();
+    
+    // If we have a user now, start the stream immediately
+    if (syncUser) {
+      return this._getFamiliesStream(syncUser);
+    }
+
+    // Otherwise wait for the profile to be loaded
     return this.store.select(fromProfile.selectProfile).pipe(
       filter(profile => !!profile),
       take(1),
-      switchMap(user => {
-        if (!user) return of([]);
-        const cacheKey = `${LocalStorageKey.FAMILIES_CACHE}-${user.uid}`;
-        
-        return new Observable<Family[]>(observer => {
-          // 1. Emit cached data immediately if available
-          try {
-            const cached = this.storageService.getItem<Family[]>(cacheKey);
-            if (cached && Array.isArray(cached)) {
-              console.log(`[FamilyService] Emitting ${cached.length} cached families`);
-              observer.next(cached);
-            }
-          } catch (e) {
-            console.error('Error loading cached families:', e);
-          }
-
-          const q = query(
-            collection(this.firestore, this.FAMILIES_COL),
-            where('memberIds', 'array-contains', user.uid),
-            where('isActive', '==', true)
-          );
-
-          const unsubscribe = onSnapshot(q, (snap) => {
-            const families = snap.docs.map(doc => ({ id: doc.id, ...doc.data() as Omit<Family, 'id'> }));
-            console.log(`[FamilyService] Real-time families update: ${families.length}`);
-            
-            // 2. Cache the fresh data
-            try {
-              this.storageService.setItem(cacheKey, families);
-            } catch (e) {
-              console.error('Error caching families:', e);
-            }
-
-            observer.next(families);
-          }, (err) => {
-            console.error('Error in getMyFamilies listener:', err);
-          });
-          return () => unsubscribe();
-        });
-      })
+      switchMap(user => this._getFamiliesStream(user!))
     );
+  }
+
+  private _getFamiliesStream(user: User): Observable<Family[]> {
+    const cacheKey = `${LocalStorageKey.FAMILIES_CACHE}-${user.uid}`;
+    
+    return new Observable<Family[]>(observer => {
+      // 1. Emit cached data immediately if available (Synchronous)
+      try {
+        const cached = this.storageService.getItem<Family[]>(cacheKey);
+        if (cached && Array.isArray(cached)) {
+          observer.next(cached);
+        }
+      } catch (e) {
+        console.error('Error loading cached families:', e);
+      }
+
+      // 2. Real-time updates
+      const q = query(
+        collection(this.firestore, this.FAMILIES_COL),
+        where('memberIds', 'array-contains', user.uid),
+        where('isActive', '==', true)
+      );
+
+      const unsubscribe = onSnapshot(q, (snap) => {
+        const families = snap.docs.map(doc => ({ id: doc.id, ...doc.data() as Omit<Family, 'id'> }));
+        
+        // Cache the fresh data
+        try {
+          this.storageService.setItem(cacheKey, families);
+        } catch (e) {
+          console.error('Error caching families:', e);
+        }
+
+        observer.next(families);
+      }, (err) => {
+        console.error('Error in families listener:', err);
+      });
+      return () => unsubscribe();
+    });
+  }
+
+  /**
+   * Returns families from local cache synchronously if a user ID is available.
+   * Useful for seeding the store during component initialization.
+   */
+  getCachedFamiliesSync(): Family[] {
+    const user = this.userService.getCurrentUserSnapshot();
+    if (!user) return [];
+    
+    const cacheKey = `${LocalStorageKey.FAMILIES_CACHE}-${user.uid}`;
+    try {
+      const cached = this.storageService.getItem<Family[]>(cacheKey);
+      return (cached && Array.isArray(cached)) ? cached : [];
+    } catch {
+      return [];
+    }
   }
 
   private getInitialActiveFamilyId(): string | null {
@@ -508,6 +533,15 @@ export class FamilyService {
     });
   }
 
+  getCachedMembersSync(familyId: string): FamilyMember[] {
+    try {
+      const cached = this.storageService.getItem<FamilyMember[]>(`family-members-${familyId}`);
+      return (cached && Array.isArray(cached)) ? cached : [];
+    } catch {
+      return [];
+    }
+  }
+
   async removeMember(familyId: string, memberId: string): Promise<void> {
     // memberId here should be the userId since we use it as doc ID
     await updateDoc(this.getMemberDoc(familyId, memberId), { isActive: false });
@@ -560,6 +594,15 @@ export class FamilyService {
       });
       return () => unsubscribe();
     });
+  }
+
+  getCachedTransactionsSync(familyId: string): Transaction[] {
+    try {
+      const cached = this.storageService.getItem<Transaction[]>(`family-transactions-${familyId}`);
+      return (cached && Array.isArray(cached)) ? cached : [];
+    } catch {
+      return [];
+    }
   }
 
   async addTransaction(request: AddFamilyTransactionRequest): Promise<Transaction> {
@@ -741,6 +784,15 @@ export class FamilyService {
       });
       return () => unsubscribe();
     });
+  }
+
+  getCachedSettlementsSync(familyId: string): Settlement[] {
+    try {
+      const cached = this.storageService.getItem<Settlement[]>(`family-settlements-${familyId}`);
+      return (cached && Array.isArray(cached)) ? cached : [];
+    } catch {
+      return [];
+    }
   }
 
   async addSettlement(request: AddSettlementRequest): Promise<Settlement> {

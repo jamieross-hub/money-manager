@@ -297,17 +297,44 @@ export class FamilyDashboardComponent implements OnInit {
   ngOnInit() {
     // If shown inline as a passive child (group input provided), we assume the parent dispatches actions
     if (this.group) {
+      // 🚀 Seed the store even if group input is provided to make sure members/txs show up from cache
+      this._seedFromCache(this.group.id);
       return;
     }
 
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
+        this._seedFromCache(id);
         this.store.dispatch(FamilyActions.loadFamily({ familyId: id }));
       } else {
+        const activeId = this.familyService.activeFamilyId();
+        if (activeId) this._seedFromCache(activeId);
         this.store.dispatch(FamilyActions.loadMyFamily());
       }
     });
+  }
+
+  private _seedFromCache(familyId: string) {
+    if (!familyId) return;
+    
+    // 1. Members
+    const members = this.familyService.getCachedMembersSync(familyId);
+    if (members.length > 0) {
+      this.store.dispatch(FamilyActions.loadMembersSuccess({ members }));
+    }
+
+    // 2. Transactions
+    const txs = this.familyService.getCachedTransactionsSync(familyId);
+    if (txs.length > 0) {
+      this.store.dispatch(FamilyActions.loadTransactionsSuccess({ transactions: txs }));
+    }
+
+    // 3. Settlements
+    const settlements = this.familyService.getCachedSettlementsSync(familyId);
+    if (settlements.length > 0) {
+      this.store.dispatch(FamilyActions.loadSettlementsSuccess({ settlements }));
+    }
   }
 
   goBack() {

@@ -146,6 +146,14 @@ export class GroupSelectionComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     this.initializeEffects();
+
+    // 🚀 OPTIMIZATION: Seed the store from cache immediately
+    // This removes the 'blank' period while waiting for the effect to fire.
+    const cached = this.familyService.getCachedFamiliesSync();
+    if (cached.length > 0) {
+      this.store.dispatch(FamilyActions.loadUserFamiliesSuccess({ families: cached }));
+    }
+
     this.loadGroups();
   }
 
@@ -273,7 +281,7 @@ export class GroupSelectionComponent implements OnInit {
     theme: 'auto',
     actions: [
       {
-        id: 'add-group',
+        id: 'add-group', 
         label: 'Create Group',
         icon: 'add_circle',
         color: 'primary',
