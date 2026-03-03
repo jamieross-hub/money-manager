@@ -42,12 +42,6 @@ export class FamilyNotificationService {
       this.stopListener();
     });
 
-    // TEST: Trigger a test notification after 10 seconds in dev mode to verify browser support
-    if (!environment.production) {
-      setTimeout(() => {
-        this.showLocalNotification('System Test', 'If you see this, notifications are working correctly!');
-      }, 10000);
-    }
   }
 
   /**
@@ -110,10 +104,7 @@ export class FamilyNotificationService {
           if (shouldNotify) {
             console.log(`[FamilyNotificationService] Triggering notification for transaction ${change.doc.id}`);
             
-            const title = isOtherUser ? 'New Family Transaction' : 'Transaction Added (Test)';
-            const body = `${tx.userDisplayName || 'A member'} added: ${tx.notes || tx.category || 'Transaction'} (${tx.amount})`;
-            
-            // Trigger the shared notification manager alert (replaces manual showLocalNotification to avoid duplicates)
+            // Trigger the shared notification manager (push notification)
             this.notificationManager.sendTransactionAlert({
               id: change.doc.id,
               description: tx.notes || tx.category || 'New Transaction',
@@ -128,88 +119,6 @@ export class FamilyNotificationService {
     }, (error) => {
       console.error('[FamilyNotificationService] Listener error:', error);
     });
-  }
-
-  /**
-   * Shows a native browser notification
-   */
-  private showLocalNotification(title: string, body: string): void {
-    console.log(`[FamilyNotificationService] Attempting to show notification: ${title}`);
-    
-    if (typeof window === 'undefined' || !('Notification' in window)) {
-      console.warn('[FamilyNotificationService] Notifications not supported');
-      return;
-    }
-
-    if (Notification.permission !== 'granted') {
-      console.warn(`[FamilyNotificationService] Notification permission status: ${Notification.permission}`);
-      // Try to request it once more if default
-      if (Notification.permission === 'default') {
-        Notification.requestPermission().then(p => {
-           if (p === 'granted') this.showLocalNotification(title, body);
-        });
-      }
-      return;
-    }
-
-    try {
-      const options: any = {
-        body: body,
-        icon: environment.baseUrl + '/assets/icon/app-icon/icon-192x192.png',
-        badge: environment.baseUrl + '/assets/icon/app-icon/icon-72x72.png',
-        vibrate: [100, 50, 100],
-        timestamp: Date.now(),
-        data: {
-          url: window.location.origin + '/dashboard/transactions'
-        }
-      };
-
-      // In development, force direct notifications to bypass Service Worker complexities.
-      // This is because `ng serve` doesn't always handle SW properly.
-      if (!environment.production) {
-        console.log('[FamilyNotificationService] Dev mode: Using direct notification');
-        this.showDirectNotification(title, options);
-        return;
-      }
-
-      // In production, try Service Worker first
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        // Use a timeout to avoid hanging on a SW that isn't responding
-        const swPromise = Promise.race([
-          navigator.serviceWorker.ready,
-          new Promise((_, reject) => setTimeout(() => reject('SW Timeout'), 2000))
-        ]) as Promise<ServiceWorkerRegistration>;
-
-        swPromise.then(registration => {
-          registration.showNotification(title, options);
-          console.log('[FamilyNotificationService] Notification sent to Service Worker');
-        }).catch(err => {
-          console.warn('[FamilyNotificationService] Falling back to direct notification:', err);
-          this.showDirectNotification(title, options);
-        });
-      } else {
-        this.showDirectNotification(title, options);
-      }
-    } catch (error) {
-      console.error('[FamilyNotificationService] Error in showLocalNotification:', error);
-    }
-  }
-
-  private showDirectNotification(title: string, options: any): void {
-    try {
-      const n = new Notification(title, options);
-      console.log('[FamilyNotificationService] Direct notification shown');
-      
-      n.onclick = () => {
-        window.focus();
-        if (options.data?.url) {
-          window.location.href = options.data.url;
-        }
-        n.close();
-      };
-    } catch (err) {
-      console.error('[FamilyNotificationService] Direct notification failed:', err);
-    }
   }
 
   /**
