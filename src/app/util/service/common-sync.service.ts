@@ -603,7 +603,7 @@ export class CommonSyncService implements OnDestroy {
           failedItems.push(item.id);
           // Update sync status to failed for transactions
           if (item.type === 'transaction') {
-            await this.updateTransactionSyncStatus(item.data.id || item.id, 'failed');
+            await this.updateTransactionSyncStatus(item.data, 'failed');
           }
         }
       }

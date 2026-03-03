@@ -66,6 +66,7 @@ export class TransactionsService extends BaseService {
     createTransaction(userId: string, transaction: Omit<Transaction, 'id'>): Observable<void> {
         const transactionId = this.generateId();
         const now = new Date();
+        const isOnline = this.commonSyncService.isCurrentlyOnline();
         const transactionData: Transaction = {
             ...transaction,
             id: transactionId,
@@ -74,7 +75,7 @@ export class TransactionsService extends BaseService {
             updatedAt: now,
             createdBy: userId,
             updatedBy: userId,
-            syncStatus: SyncStatus.SYNCED
+            syncStatus: isOnline ? SyncStatus.SYNCED : SyncStatus.PENDING
         };
 
         if (this.isGuest()) {

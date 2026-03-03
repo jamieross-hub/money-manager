@@ -94,8 +94,10 @@ export class FamilyDashboardComponent implements OnInit {
     const mems = this.members();
     return this.recentTxns().map(tx => {
       let payerId = tx.userId;
-      let payerName = tx.userDisplayName || 'Unknown';
-      let payerPhoto = tx.userPhotoURL;
+      
+      const member = mems.find(m => m.userId === payerId);
+      let payerName = member?.displayName || tx.userDisplayName || 'Unknown';
+      let payerPhoto = member?.photoURL || tx.userPhotoURL;
       let payerLabel = payerName;
 
       // Settlement recipient info
@@ -125,15 +127,32 @@ export class FamilyDashboardComponent implements OnInit {
       } 
       // Handle Split transactions
       else if (tx.splitData) {
-        if (tx.splitData.paidByUserId === 'multiple') {
+        if (tx.splitData.paidByUserId === 'multiple' || (tx.splitData.paidBy && tx.splitData.paidBy.length > 1)) {
           payerId = 'multiple';
           payerName = 'Multiple';
           payerPhoto = undefined;
           payerLabel = 'Multiple people';
         } else {
-          payerId = tx.splitData.paidByUserId || tx.userId;
-          payerName = tx.splitData.paidByDisplayName || tx.userDisplayName || 'Unknown';
-          payerPhoto = tx.splitData.paidByPhotoURL || tx.userPhotoURL;
+          // Default to the explicit single payer in the split data, or the transaction creator
+          if (tx.splitData.paidBy && tx.splitData.paidBy.length === 1) {
+            payerId = tx.splitData.paidBy[0].userId;
+          } else {
+            payerId = tx.splitData.paidByUserId || tx.userId;
+          }
+
+          // Fetch fresh details from family members just in case the transaction is old or missing display name
+          const splitMember = mems.find(m => m.userId === payerId);
+          if (splitMember) {
+            payerName = splitMember.displayName;
+            payerPhoto = splitMember.photoURL;
+          } else if (tx.splitData.paidBy && tx.splitData.paidBy.length === 1) {
+            payerName = tx.splitData.paidBy[0].displayName || 'Unknown';
+            payerPhoto = tx.splitData.paidBy[0].photoURL;
+          } else {
+            payerName = tx.splitData.paidByDisplayName || tx.userDisplayName || 'Unknown';
+            payerPhoto = tx.splitData.paidByPhotoURL || tx.userPhotoURL;
+          }
+          
           payerLabel = payerId === this.currentUserId ? 'You' : payerName;
         }
       } 
