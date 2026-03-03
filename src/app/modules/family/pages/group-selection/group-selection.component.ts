@@ -236,9 +236,20 @@ export class GroupSelectionComponent implements OnInit {
   });
 
   loadState = computed<LoadState>(() => {
-    if (!this.currentUserId || this.userFamiliesLoading() || !this.userFamiliesLoaded()) return 'loading';
-    if (this.familyError()) return 'error';
-    return this.groups().length === 0 ? 'empty' : 'loaded';
+    const hasGroups = this.groups().length > 0;
+    const isLoading = this.userFamiliesLoading();
+    const isLoaded = this.userFamiliesLoaded();
+    const hasError = !!this.familyError();
+
+    // 1. If we have data (likely from cache), show it immediately
+    if (hasGroups) return 'loaded';
+
+    // 2. If we are waiting for user ID or active loading and have no data yet
+    if (!this.currentUserId || (isLoading && !isLoaded)) return 'loading';
+
+    // 3. terminal states
+    if (hasError) return 'error';
+    return 'empty';
   });
 
   errorMessage = computed(() => this.familyError() ?? 'Failed to load groups. Please try again.');

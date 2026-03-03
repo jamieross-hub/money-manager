@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, from, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, filter, take, switchMap } from 'rxjs/operators';
 import {
   Firestore,
   collection,
@@ -300,48 +300,50 @@ export class FamilyService {
   }
 
   getMyFamilies(): Observable<Family[]> {
-    const user = this.currentUser;
-    if (!user) return of([]);
-
-    const cacheKey = `${LocalStorageKey.FAMILIES_CACHE}-${user.uid}`;
-    
-    return new Observable<Family[]>(observer => {
-      // 1. Emit cached data immediately if available
-      try {
-        const cached = this.storageService.getItem<Family[]>(cacheKey);
-        if (cached && Array.isArray(cached)) {
-          console.log(`[FamilyService] Emitting ${cached.length} cached families`);
-          observer.next(cached);
-        }
-      } catch (e) {
-        console.error('Error loading cached families:', e);
-      }
-
-      const q = query(
-        collection(this.firestore, this.FAMILIES_COL),
-        where('memberIds', 'array-contains', user.uid),
-        where('isActive', '==', true)
-      );
-
-      const unsubscribe = onSnapshot(q, (snap) => {
-        const families = snap.docs.map(doc => ({ id: doc.id, ...doc.data() as Omit<Family, 'id'> }));
-        console.log(`[FamilyService] Real-time families update: ${families.length}`);
+    return this.store.select(fromProfile.selectProfile).pipe(
+      filter(profile => !!profile),
+      take(1),
+      switchMap(user => {
+        if (!user) return of([]);
+        const cacheKey = `${LocalStorageKey.FAMILIES_CACHE}-${user.uid}`;
         
-        // 2. Cache the fresh data
-        try {
-          this.storageService.setItem(cacheKey, families);
-        } catch (e) {
-          console.error('Error caching families:', e);
-        }
+        return new Observable<Family[]>(observer => {
+          // 1. Emit cached data immediately if available
+          try {
+            const cached = this.storageService.getItem<Family[]>(cacheKey);
+            if (cached && Array.isArray(cached)) {
+              console.log(`[FamilyService] Emitting ${cached.length} cached families`);
+              observer.next(cached);
+            }
+          } catch (e) {
+            console.error('Error loading cached families:', e);
+          }
 
-        observer.next(families);
-      }, (err) => {
-        console.error('Error in getMyFamilies listener:', err);
-        // On error, if we didn't emit anything yet, emit empty array to avoid hang
-        // But if we have cache, we already emitted it.
-      });
-      return () => unsubscribe();
-    });
+          const q = query(
+            collection(this.firestore, this.FAMILIES_COL),
+            where('memberIds', 'array-contains', user.uid),
+            where('isActive', '==', true)
+          );
+
+          const unsubscribe = onSnapshot(q, (snap) => {
+            const families = snap.docs.map(doc => ({ id: doc.id, ...doc.data() as Omit<Family, 'id'> }));
+            console.log(`[FamilyService] Real-time families update: ${families.length}`);
+            
+            // 2. Cache the fresh data
+            try {
+              this.storageService.setItem(cacheKey, families);
+            } catch (e) {
+              console.error('Error caching families:', e);
+            }
+
+            observer.next(families);
+          }, (err) => {
+            console.error('Error in getMyFamilies listener:', err);
+          });
+          return () => unsubscribe();
+        });
+      })
+    );
   }
 
   private getInitialActiveFamilyId(): string | null {
