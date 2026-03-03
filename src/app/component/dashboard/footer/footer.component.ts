@@ -17,6 +17,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { AppState } from 'src/app/store/app.state';
 import * as fromProfile from 'src/app/store/profile/profile.selectors';
 import { FamilyService } from '../../../modules/family/services/family.service';
+import { QuickActionsFabComponent, QuickAction } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 
 @Component({
   selector: 'app-footer',
@@ -24,7 +25,7 @@ import { FamilyService } from '../../../modules/family/services/family.service';
   styleUrls: ['./footer.component.scss'],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, TranslateModule, MatIconModule, MatButtonModule, RouterModule]
+  imports: [CommonModule, TranslateModule, MatIconModule, MatButtonModule, RouterModule, QuickActionsFabComponent]
 })
 export class FooterComponent {
   private commonSyncService = inject(CommonSyncService);
@@ -33,7 +34,7 @@ export class FooterComponent {
   private hapticFeedback = inject(HapticFeedbackService);
   public breakpointService = inject(BreakpointService);
   private store = inject(Store<AppState>);
-  private familyService = inject(FamilyService);
+  public familyService = inject(FamilyService);
 
   private hideFooterForRoutes: string[] = [];
 
@@ -63,7 +64,12 @@ export class FooterComponent {
   readonly isCategoryActive = computed(() => this.currentUrl() === '/dashboard/category');
   readonly isAccountsActive = computed(() => this.currentUrl() === '/dashboard/accounts');
   readonly isProfileActive = computed(() => this.currentUrl() === '/dashboard/profile');
-  readonly isFamilyActive = computed(() => this.currentUrl().includes('/dashboard/family'));
+  readonly isFamilyActive = computed(() => {
+    const url = this.currentUrl();
+    return url.includes('/dashboard/family/dashboard') || 
+           url.includes('/dashboard/family/groups') || 
+           url === '/dashboard/family';
+  });
   readonly isMoreActive = computed(() => [
     '/dashboard/accounts', '/dashboard/budgets', '/dashboard/goals', 
     '/dashboard/notes', '/dashboard/tax', '/dashboard/subscription'
@@ -77,6 +83,10 @@ export class FooterComponent {
     if (url.includes('/dashboard/category')) {
       return { icon: 'category', label: 'Category', bgClass: 'add-btn-purple', action: 'category' };
     }
+    if (url.includes('/dashboard/family/groups')) {
+      return { icon: 'groups', label: 'Actions', bgClass: 'add-btn-purple', action: 'family-groups' };
+    }
+
     return { icon: 'add_circle', label: 'Add', bgClass: '', action: 'transaction' };
   });
 
@@ -91,9 +101,15 @@ export class FooterComponent {
       this.addAccount();
     } else if (action === 'category') {
       this.addCategory();
+    } else if (action === 'family-groups') {
+      this.openFamilyActions();
     } else {
       this.addTransaction();
     }
+  }
+
+  private openFamilyActions() {
+    this.familyService.openCreateDialog();
   }
 
   private addAccount() {
@@ -120,11 +136,15 @@ export class FooterComponent {
   }
 
   home() {
-    const activeFamilyId = this.familyService.activeFamilyId();
-    if (activeFamilyId) {
-      this.navigateTo(`/dashboard/family/dashboard/${activeFamilyId}`);
+    if (this.isFamilyMode()) {
+      const activeFamilyId = this.familyService.activeFamilyId();
+      if (activeFamilyId) {
+        this.navigateTo(`/dashboard/family/dashboard/${activeFamilyId}`);
+      } else {
+        this.navigateTo('/dashboard/family');
+      }
     } else {
-      this.navigateTo('/dashboard/family');
+      this.navigateTo('/dashboard/home');
     }
   }
 
@@ -135,5 +155,9 @@ export class FooterComponent {
   navigateTo(route: string) {
     this.hapticFeedback.buttonClick();
     this.router.navigate([route]);
+  }
+
+  handleFamilyFabAction(action: QuickAction) {
+    this.familyService.handleFabAction(action);
   }
 }

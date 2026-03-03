@@ -1,4 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
+import { QuickAction, QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { Observable, from, of } from 'rxjs';
 import { map, catchError, filter, take, switchMap } from 'rxjs/operators';
 import {
@@ -48,6 +49,10 @@ import { AppState } from 'src/app/store/app.state';
 import * as ProfileActions from 'src/app/store/profile/profile.actions';
 import * as fromProfile from 'src/app/store/profile/profile.selectors';
 import { UserService } from 'src/app/util/service/db/user.service';
+import { FamilyCreateDialogComponent } from '../dialogs/family-create-dialog/family-create-dialog.component';
+import { FamilyJoinDialogComponent } from '../dialogs/family-join-dialog/family-join-dialog.component';
+import { selectUserFamilies } from '../store/family.selectors';
+import { MatDialog } from '@angular/material/dialog';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 
 @Injectable({ providedIn: 'root' })
@@ -61,7 +66,8 @@ export class FamilyService {
     private notificationService: NotificationService,
     private store: Store<AppState>,
     private userService: UserService,
-    private storageService: LocalIndexDBStorageService
+    private storageService: LocalIndexDBStorageService,
+    private dialog: MatDialog
   ) {
     this.syncActiveFamilyWithProfile();
   }
@@ -98,6 +104,40 @@ export class FamilyService {
 
   readonly activeFamilyId = signal<string | null>(this.getInitialActiveFamilyId());
   readonly sharedSelectedGroup = signal<any | null>(null);
+
+  fabConfig: QuickActionsFabConfig = {
+    mainButtonIcon: 'groups',
+    mainButtonColor: 'accent',
+    mainButtonTooltip: 'Group Actions',
+    showLabels: true,
+    animations: true,
+    autoHide: false,
+    theme: 'auto',
+    actions: [
+      {
+        id: 'add-group', 
+        label: 'Create Group',
+        icon: 'add_circle',
+        color: 'primary',
+        tooltip: 'Create group'
+      },
+      {
+        id: 'join-group',
+        label: 'Join Group',
+        icon: 'link',
+        color: 'accent',
+        tooltip: 'Join group'
+      }
+    ]
+  };
+
+  handleFabAction(action: QuickAction): void {
+    if (action.id === 'add-group') {
+      this.openCreateDialog();
+    } else if (action.id === 'join-group') {
+      this.openJoinDialog();
+    }
+  }
 
   // ─── Path Helpers ────────────────────────────────────────────────────────
 
@@ -138,6 +178,32 @@ export class FamilyService {
 
   private get currentUser() {
     return this.auth.currentUser;
+  }
+
+  // ─── Dialog Helpers ──────────────────────────────────────────────────────
+
+  openCreateDialog(): void {
+    this.store.select(selectUserFamilies).pipe(take(1)).subscribe(families => {
+      const existingNames = (families || []).map(f => f.name);
+      const ref = this.dialog.open(FamilyCreateDialogComponent, { 
+        disableClose: true,
+        data: { existingNames }
+      });
+      ref.afterClosed().subscribe(async (result: CreateFamilyRequest | undefined) => {
+        if (result) {
+          this.store.dispatch(FamilyActions.createFamily({ request: result }));
+        }
+      });
+    });
+  }
+
+  openJoinDialog(): void {
+    const ref = this.dialog.open(FamilyJoinDialogComponent, { disableClose: true });
+    ref.afterClosed().subscribe(async (code: string | undefined) => {
+      if (code) {
+        this.store.dispatch(FamilyActions.joinFamily({ inviteCode: code }));
+      }
+    });
   }
 
   // ─── Family CRUD ──────────────────────────────────────────────────────────

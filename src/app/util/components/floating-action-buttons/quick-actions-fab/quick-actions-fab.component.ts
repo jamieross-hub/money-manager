@@ -39,39 +39,10 @@ export interface QuickActionsFabConfig {
 })
 export class QuickActionsFabComponent implements OnInit, OnDestroy {
   @Input() config: QuickActionsFabConfig = {
-    title: 'Quick Actions',
-    mainButtonIcon: 'add',
-    mainButtonColor: 'primary',
-    mainButtonTooltip: 'Quick Actions',
-    showLabels: false,
-    animations: true,
-    autoHide: false,
-    autoHideDelay: 3000,
-    theme: 'auto',
-    actions: [
-      {
-        id: 'add-transaction',
-        label: 'Add Transaction',
-        icon: 'receipt',
-        color: 'accent',
-        tooltip: 'Add Transaction'
-      },
-      {
-        id: 'export-report',
-        label: 'Export Report',
-        icon: 'file_download',
-        color: 'warn',
-        tooltip: 'Export Report'
-      },
-      {
-        id: 'refresh-data',
-        label: 'Refresh Data',
-        icon: 'refresh',
-        color: 'primary',
-        tooltip: 'Refresh Data'
-      }
-    ]
+    // ... default config
+    actions: []
   };
+  @Input() isInline = false;
 
   @Output() actionClick = new EventEmitter<QuickAction>();
   @Output() mainButtonClick = new EventEmitter<void>();

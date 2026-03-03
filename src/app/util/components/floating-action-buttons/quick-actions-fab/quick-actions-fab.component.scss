@@ -15,6 +15,26 @@
     color: var(--primary-600) !important;
   }
 
+  // When expanding in a restricted height container (like footer)
+  .flex-col {
+     position: relative;
+  }
+
+  // Target the menu wrapper to float above the button
+  div.flex-col > div:not(.mat-mdc-fab):not(button) {
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    margin-bottom: 0.5rem;
+  }
+
+  // Ensure component doesn't clip its children
+  &.relative {
+    overflow: visible;
+  }
+
   // Animation classes for dynamic behavior
   .fab-animated {
     .mat-fab {

@@ -1,5 +1,5 @@
-<div class="quick-actions-fab fixed z-50 bottom-28 right-4 md:bottom-6 md:right-6 lg:bottom-32 lg:right-10">
-  <div class="flex flex-col items-end space-y-2 md:space-y-3" [ngClass]="animationClass">
+<div class="quick-actions-fab" [ngClass]="isInline ? 'relative flex flex-col items-center justify-center' : 'fixed z-50 bottom-28 right-4 md:bottom-6 md:right-6 lg:bottom-32 lg:right-10'">
+  <div class="flex flex-col space-y-2 md:space-y-3" [ngClass]="[animationClass, isInline ? 'items-center' : 'items-end']">
     <!-- Single Button Mode (when no actions) -->
     @if (effectiveConfig.actions.length === 0) {
     <button mat-fab [color]="effectiveConfig.mainButtonColor" [ngClass]="getMainButtonClass()"

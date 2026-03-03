@@ -1,4 +1,5 @@
 import { Actions, ofType } from '@ngrx/effects';
+import { Router } from '@angular/router';
 import { Component, OnInit, ChangeDetectionStrategy, signal, inject, Input, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -67,11 +68,11 @@ export class FamilyModeToggleComponent implements OnInit {
     });
   }
 
+  private readonly router = inject(Router);
+
   async toggleFamilyMode(enabled: boolean): Promise<void> {
     const profile = this.userProfile();
     if (!profile) return;
-
-    this.ignoreLoader = true;
 
     try {
       await this.applyPreferenceChanges({
@@ -89,10 +90,10 @@ export class FamilyModeToggleComponent implements OnInit {
 
       this.actions$.pipe(
         ofType(ProfileActions.updatePreferencesSuccess),
-        filter(action => action.profile.preferences?.isFamilyMode === enabled),
+        filter((action: any) => action.profile.preferences?.isFamilyMode === enabled),
         take(1),
       ).subscribe(() => {
-       // window.location.reload();
+        this.router.navigate(['/dashboard/home']);
       });
     } catch (error) {
       console.error('Error toggling family mode:', error);
