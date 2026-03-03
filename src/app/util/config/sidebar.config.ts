@@ -88,7 +88,7 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         route: '/dashboard/tax',
         icon: 'calculate',
         order: 3,
-        isPremium: true
+        isPremium: false
       },
       {
         label: 'Family Tracker',
@@ -101,14 +101,14 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         route: '/dashboard/google-sheets',
         icon: 'table_chart',
         order: 5,
-        isPremium: true
+        isPremium: false
       },
       {
         label: 'Connect AI Models',
         route: '/dashboard/openai-interaction',
         icon: 'smart_toy',
         order: 6,
-        isPremium: true
+        isPremium: false
       },
       {
         label: 'NAVIGATION.LOAN_CALCULATOR',
