@@ -113,10 +113,7 @@ export class FamilyNotificationService {
             const title = isOtherUser ? 'New Family Transaction' : 'Transaction Added (Test)';
             const body = `${tx.userDisplayName || 'A member'} added: ${tx.notes || tx.category || 'Transaction'} (${tx.amount})`;
             
-            // Show local browser notification
-            this.showLocalNotification(title, body);
-
-            // Also trigger the shared notification manager alert
+            // Trigger the shared notification manager alert (replaces manual showLocalNotification to avoid duplicates)
             this.notificationManager.sendTransactionAlert({
               id: change.doc.id,
               description: tx.notes || tx.category || 'New Transaction',
