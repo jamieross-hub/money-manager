@@ -1,11 +1,5 @@
 
 
-@if (showDashboard()) {
-<app-family-dashboard [group]="selectedGroup()" (close)="showDashboard.set(false)">
-</app-family-dashboard>
-}
-
-@if (!showDashboard()) {
 <div class="gs-page">
 
   @defer (on idle) {
@@ -182,7 +176,6 @@
 
   </div>
 </div>
-}
 
 
 

@@ -16,6 +16,7 @@ import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AppState } from 'src/app/store/app.state';
 import * as fromProfile from 'src/app/store/profile/profile.selectors';
+import { FamilyService } from '../../../modules/family/services/family.service';
 
 @Component({
   selector: 'app-footer',
@@ -32,6 +33,7 @@ export class FooterComponent {
   private hapticFeedback = inject(HapticFeedbackService);
   public breakpointService = inject(BreakpointService);
   private store = inject(Store<AppState>);
+  private familyService = inject(FamilyService);
 
   private hideFooterForRoutes: string[] = [];
 
@@ -61,7 +63,7 @@ export class FooterComponent {
   readonly isCategoryActive = computed(() => this.currentUrl() === '/dashboard/category');
   readonly isAccountsActive = computed(() => this.currentUrl() === '/dashboard/accounts');
   readonly isProfileActive = computed(() => this.currentUrl() === '/dashboard/profile');
-  readonly isFamilyActive = computed(() => this.currentUrl() === '/dashboard/home');
+  readonly isFamilyActive = computed(() => this.currentUrl().includes('/dashboard/family'));
   readonly isMoreActive = computed(() => [
     '/dashboard/accounts', '/dashboard/budgets', '/dashboard/goals', 
     '/dashboard/notes', '/dashboard/tax', '/dashboard/subscription'
@@ -118,7 +120,12 @@ export class FooterComponent {
   }
 
   home() {
-    this.navigateTo('/dashboard/home');
+    const activeFamilyId = this.familyService.activeFamilyId();
+    if (activeFamilyId) {
+      this.navigateTo(`/dashboard/family/dashboard/${activeFamilyId}`);
+    } else {
+      this.navigateTo('/dashboard/family');
+    }
   }
 
   quickExpense() {

@@ -73,17 +73,26 @@ export class FamilyDashboardComponent implements OnInit {
   @Output() close = new EventEmitter<void>();
   private isInstanceLoading = false;
  
+  private storeFamily = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null });
+  private allFamilies = toSignal(this.store.select(FamilySelectors.selectUserFamilies), { initialValue: [] });
+
   family = computed(() => {
     const fromStore = this.storeFamily();
-    // If we have a group input and it matches the current family in store, or store is empty, 
-    // we can use group data as a skeleton/instant state.
-    if (this.group && (!fromStore || fromStore.id === this.group.id)) {
-      return { ...fromStore, ...this.group } as Family;
+    // Prioritize: 1. Input group, 2. Shared service group, 3. Found in all families list
+    let skeleton = this.group || this.familyService.sharedSelectedGroup();
+
+    if (!skeleton) {
+      const activeId = this.familyService.activeFamilyId();
+      if (activeId) {
+        skeleton = this.allFamilies().find(f => f.id === activeId);
+      }
+    }
+
+    if (skeleton && (!fromStore || (skeleton.id && fromStore.id === skeleton.id))) {
+       return { ...fromStore, ...skeleton } as Family;
     }
     return fromStore;
   });
-
-  private storeFamily = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null });
   members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers), { initialValue: [] as FamilyMember[] });
   transactions = toSignal(this.store.select(FamilySelectors.selectFamilyTransactions), { initialValue: [] as Transaction[] });
   recentTxns = toSignal(this.store.select(FamilySelectors.selectRecentTransactions), { initialValue: [] as Transaction[] });

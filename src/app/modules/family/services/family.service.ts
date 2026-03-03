@@ -97,6 +97,7 @@ export class FamilyService {
   }
 
   readonly activeFamilyId = signal<string | null>(this.getInitialActiveFamilyId());
+  readonly sharedSelectedGroup = signal<any | null>(null);
 
   // ─── Path Helpers ────────────────────────────────────────────────────────
 

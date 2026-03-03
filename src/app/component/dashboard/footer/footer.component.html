@@ -7,14 +7,14 @@
 		<div class="grid grid-cols-5 gap-2 lg:max-w-md lg:mx-auto lg:gap-1" style="    align-items: flex-end;">
 			<!-- Home / Family (contextual) -->
 			@if(isFamilyMode()) {
-				<button (click)="navigateTo('/dashboard/home')" class="group flex flex-col items-center gap-2 lg:gap-1">
+				<button (click)="home()" class="group flex flex-col items-center gap-2 lg:gap-1">
 					<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
-						[ngClass]="isHomeActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
+						[ngClass]="isFamilyActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
 						<mat-icon class="text-lg lg:text-base relative bottom-1"
-							[ngClass]="isHomeActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">family_restroom</mat-icon>
+							[ngClass]="isFamilyActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">family_restroom</mat-icon>
 					</div>
 					<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
-						[ngClass]="isHomeActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">Family</span>
+						[ngClass]="isFamilyActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">Family</span>
 				</button>
 			} @else {
 				<button (click)="home()" class="group flex flex-col items-center gap-2 lg:gap-1">

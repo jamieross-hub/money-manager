@@ -8,6 +8,7 @@ import { SettleUpComponent } from './pages/settle-up/settle-up.component';
 
 const routes: Routes = [
   { path: '', component: GroupSelectionComponent },
+  { path: 'groups', component: GroupSelectionComponent },
   { path: 'dashboard', component: FamilyDashboardComponent },
   { path: 'dashboard/:id', component: FamilyDashboardComponent },
   { path: 'members', component: FamilyMembersComponent },

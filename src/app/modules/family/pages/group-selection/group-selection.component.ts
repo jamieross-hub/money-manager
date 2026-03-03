@@ -132,7 +132,6 @@ export class GroupSelectionComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private store = inject(Store<AppState>);
   private loaderService = inject(LoaderService);
-  public showDashboard = signal(false);
   public selectedGroup = signal<UserGroup | null>(null);
   private autoOpened = false;
   groupSpends = signal<Record<string, number>>({});
@@ -184,8 +183,7 @@ export class GroupSelectionComponent implements OnInit {
     }, { allowSignalWrites: true, injector: this.injector });
 
     effect(() => {
-      const isLoading = this.loadState() === 'loading' && 
-                       !this.showDashboard();
+      const isLoading = this.loadState() === 'loading';
                        
       if (isLoading && !this.isInstanceLoading) {
         this.isInstanceLoading = true;
@@ -202,13 +200,13 @@ export class GroupSelectionComponent implements OnInit {
       }
     });
 
-    effect(() => {
-      const active = this.activeGroup();
-      if (active && (!this.autoOpened || (this.selectedGroup()?.id !== active.id && !this.showDashboard()))) {
-        this.autoOpened = true;
-        this.openGroup(active);
-      }
-    }, { allowSignalWrites: true, injector: this.injector });
+    // effect(() => {
+    //   const active = this.activeGroup();
+    //   if (active && (!this.autoOpened || (this.selectedGroup()?.id !== active.id))) {
+    //     this.autoOpened = true;
+    //     this.openGroup(active);
+    //   }
+    // }, { allowSignalWrites: true, injector: this.injector });
   }
 
   rawFamilies = this.store.selectSignal(selectUserFamilies);
@@ -361,13 +359,9 @@ export class GroupSelectionComponent implements OnInit {
   }
 
   openGroup(group: UserGroup){
-    this.autoOpened = true;
     this.familyService.setActiveFamily(group.id);
-    this.store.dispatch(FamilyActions.loadFamily({ familyId: group.id }));
-    this.store.dispatch(FamilyActions.loadMembers({ familyId: group.id }));
-    this.store.dispatch(FamilyActions.loadTransactions({ familyId: group.id }));
-    this.selectedGroup.set(group);
-    this.showDashboard.set(true);
+    this.familyService.sharedSelectedGroup.set(group);
+    this.router.navigate(['/dashboard/family/dashboard', group.id]);
   }
 
   requestLeave(group: UserGroup): void {
