@@ -135,43 +135,7 @@ self.addEventListener('notificationclose', (event) => {
   }
 });
 
-// Handle push event (fallback for older browsers)
-self.addEventListener('push', (event) => {
-  console.log('Push event received:', event);
-
-  if (event.data) {
-    try {
-      const payload = event.data.json();
-      console.log('Push payload:', payload);
-
-      const notificationTitle = payload.notification?.title || 'Money Manager';
-      const notificationOptions = getNotificationOptions(payload);
-
-      event.waitUntil(
-        self.registration.showNotification(notificationTitle, notificationOptions)
-          .then(() => console.log('Push notification shown successfully'))
-          .catch((error) => console.error('Failed to show push notification:', error))
-      );
-    } catch (error) {
-      console.error('Error parsing push data:', error);
-      
-      // Fallback notification
-      const fallbackOptions = getNotificationOptions({}, {
-        body: 'You have a new notification',
-        icon: '/money-manager/assets/icon/app-icon/icon-192x192.png',
-        badge: '/money-manager/assets/icon/app-icon/icon-72x72.png'
-      });
-
-      event.waitUntil(
-        self.registration.showNotification('Family Expense Tracker', fallbackOptions)
-          .then(() => console.log('Fallback notification shown successfully'))
-          .catch((error) => console.error('Failed to show fallback notification:', error))
-      );
-    }
-  } else {
-    console.log('Push event received without data');
-  }
-});
+// Handle push event fallback removed to prevent duplicate notifications
 
 // Handle service worker installation
 self.addEventListener('install', (event) => {

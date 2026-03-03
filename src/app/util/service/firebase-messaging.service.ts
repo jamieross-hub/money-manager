@@ -55,6 +55,7 @@ export class FirebaseMessagingService {
   private notificationSubject = new BehaviorSubject<NotificationPayload | null>(null);
   private swRegistration: ServiceWorkerRegistration | null = null;
   private platformInfo: PlatformInfo;
+  private messageListenerUnsubscribe: (() => void) | null = null;
 
   public token$: Observable<string | null> = this.tokenSubject.asObservable();
   public permission$: Observable<NotificationPermission> = this.permissionSubject.asObservable();
@@ -166,13 +167,15 @@ export class FirebaseMessagingService {
         });
       }
 
-      // Set up foreground message handler
-      onMessage(this.messaging, (payload) => {
-        this.ngZone.run(async () => {
-          console.log('Foreground message received:', payload);
-          await this.handleForegroundMessage(payload);
+      // Set up foreground message handler only once
+      if (!this.messageListenerUnsubscribe && this.messaging) {
+        this.messageListenerUnsubscribe = onMessage(this.messaging, (payload) => {
+          this.ngZone.run(async () => {
+            console.log('Foreground message received:', payload);
+            await this.handleForegroundMessage(payload);
+          });
         });
-      });
+      }
 
       // Don't automatically request permission - let user do it manually
       console.log('Firebase messaging initialized without automatic permission request');
@@ -224,13 +227,15 @@ export class FirebaseMessagingService {
         });
       }
 
-      // Set up foreground message handler
-      onMessage(this.messaging, (payload) => {
-        this.ngZone.run(async () => {
-          console.log('Foreground message received:', payload);
-          await this.handleForegroundMessage(payload);
+      // Set up foreground message handler only once
+      if (!this.messageListenerUnsubscribe && this.messaging) {
+        this.messageListenerUnsubscribe = onMessage(this.messaging, (payload) => {
+          this.ngZone.run(async () => {
+            console.log('Foreground message received:', payload);
+            await this.handleForegroundMessage(payload);
+          });
         });
-      });
+      }
 
       // Request permission and get token
       await this.requestPermission();
@@ -832,12 +837,7 @@ export class FirebaseMessagingService {
   }
 
   listenForMessages() {
-    const messaging = getMessaging();
-
-    onMessage(messaging, (payload) => {
-      console.log('Message received: ', payload);
-      // Show toast or notification manually if needed
-      alert('Message received: ' + payload);
-    });
+    // Left intentionally blank. The actual listening is handled in the initialization methods
+    // to prevent duplicate listeners and annoying alerts.
   }
 } 
