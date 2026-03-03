@@ -822,6 +822,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           // Multiple paid
           this.transactionForm.patchValue({ paidByUserId: 'multiple', paidBy: result });
         }
+        this.cdr.markForCheck();
       }
     });
   }
@@ -886,6 +887,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           this.splitConfigMode.set(result.mode);
           this.transactionForm.patchValue({ splitBetween: result.splits });
           this.transactionForm.get('splitBetween')?.markAsDirty();
+          this.cdr.markForCheck();
        }
     });
   }
@@ -966,6 +968,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         this.isCategorySplit.set(true);
         this.transactionForm.patchValue({ isCategorySplit: true });
         this.notificationService.success('Category splits configured successfully');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -974,6 +977,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     this.categorySplits = [];
     this.isCategorySplit.set(false);
     this.transactionForm.patchValue({ isCategorySplit: false });
+    this.cdr.markForCheck();
   }
 
   getTotalSplitAmount(): number {
