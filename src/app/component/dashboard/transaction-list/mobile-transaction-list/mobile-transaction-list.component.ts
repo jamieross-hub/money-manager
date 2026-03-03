@@ -456,7 +456,7 @@ export class MobileTransactionListComponent
    * - Transactions linked to a settlement CANNOT be edited (to prevent data inconsistency).
    */
   canEdit(tx: Transaction): boolean {
-    if (tx.settlementId || tx.categoryId === 'adjustment') return false;
+    if (tx.settlementId || tx.categoryId === 'adjustment' || tx.status === 'pending') return false;
     return this.canPerformAction(tx);
   }
 
