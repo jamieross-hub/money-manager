@@ -95,35 +95,27 @@
         <p class="section-label">Other Balances</p>
         <div class="card-stack">
           <div *ngFor="let b of otherBalances(); trackBy: trackByEntry"
-               class="flex flex-col gap-2 px-4 py-3 pb-[5px] bg-white dark:bg-neutral-800 rounded-xl border border-neutral-100 dark:border-neutral-700/50">
+               class="balance-card !flex-row !items-center !gap-3 !p-3 !py-2.5 opacity-80 cursor-default">
             
-            <!-- Top Row: Participants & Amount -->
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <div class="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold text-white overflow-hidden" 
-                     [style.background]="b.fromUserId | settleAvatarColor">
-                  <img [src]="b.fromPhotoURL" appImageFallback alt="avatar" class="w-full h-full object-cover" />
-                </div>
-                <mat-icon class="!text-xs text-neutral-300">chevron_right</mat-icon>
-                <div class="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold text-white overflow-hidden" 
-                     [style.background]="b.toUserId | settleAvatarColor">
-                  <img [src]="b.toPhotoURL" appImageFallback alt="avatar" class="w-full h-full object-cover" />
-                </div>
+            <!-- Lead: Visual Pair -->
+            <div class="avatar-pair shrink-0 scale-75 -ml-2">
+              <div class="avatar" [style.background]="b.fromUserId | settleAvatarColor">
+                <img [src]="b.fromPhotoURL" appImageFallback alt="avatar" />
               </div>
-
-              <span class="text-sm font-bold text-neutral-800 dark:text-neutral-100">
-                {{ b.amount | currency: 'INR':'symbol':'1.0-0' }}
-              </span>
+              <div class="connector"><mat-icon class="!text-[12px]">chevron_right</mat-icon></div>
+              <div class="avatar" [style.background]="b.toUserId | settleAvatarColor">
+                <img [src]="b.toPhotoURL" appImageFallback alt="avatar" />
+              </div>
             </div>
 
-            <!-- Bottom Row: Context -->
-            <div class="flex flex-col leading-tight">
-              <span class="text-[13px] font-bold text-neutral-800 dark:text-neutral-100 truncate">
-                {{ b.fromDisplayName }}
-              </span>
-              <span class="text-[11px] text-neutral-500 dark:text-neutral-400 truncate">
-                to {{ b.toDisplayName }}
-              </span>
+            <!-- Content: Info -->
+            <div class="flex-1 min-w-0">
+              <p class="text-[12px] font-bold text-neutral-800 dark:text-neutral-100 truncate mb-0.5">
+                {{ b.fromDisplayName }} <span class="text-neutral-400 font-normal">→</span> {{ b.toDisplayName }}
+              </p>
+              <p class="text-[14px] font-bold text-neutral-500 leading-none">
+                {{ b.amount | currency: 'INR':'symbol':'1.0-0' }}
+              </p>
             </div>
           </div>
         </div>

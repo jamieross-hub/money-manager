@@ -67,10 +67,4 @@ export class NotificationService {
     this.snackBar.open(message, action, config);
   }
 
-  pushNotification(message: string, action: string = "Close"): void {
-    new Notification(message, {
-      body: message,
-      icon: environment.baseUrl + '/assets/icon/app-icon/icon-192x192.png',
-    });
-  }
 }
