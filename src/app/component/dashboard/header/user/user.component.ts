@@ -113,6 +113,8 @@ export class UserComponent {
 
   readonly isFamilyMode = computed(() => this.userProfile()?.preferences?.isFamilyMode || false);
 
+  readonly myFamilies = toSignal(this.familyService.getMyFamilies(), { initialValue: [] });
+
   // ── Writable signals ───────────────────────────────────────────────────────
   readonly isOpen        = signal(false);
   

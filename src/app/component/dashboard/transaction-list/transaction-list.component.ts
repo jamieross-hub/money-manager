@@ -173,6 +173,16 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     });
   }
 
+  adjustTransaction(transaction: Transaction) {
+    let dialogRef = this._dialog.open(MobileAddTransactionComponent, {
+      panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
+      data: { transaction, mode: 'adjustment' }
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
+    });
+  }
+
   async deleteTransaction(transaction: Transaction) {
     const userId = this.userService.getCurrentUserId();
     if (userId && transaction.id) {

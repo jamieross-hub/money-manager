@@ -61,7 +61,8 @@ export const APP_CONFIG = {
     MAX_ACCOUNT_BALANCE: 999999999.99,
     RESERVED_CATEGORY_NAMES: {
       'loan payment': 'is a reserved name for Loan Account category',
-      'settlement': 'is a reserved name for Family Group settlements'
+      'settlement': 'is a reserved name for Family Group settlements',
+      'adjustment': 'is a reserved name for Ledger adjustments'
     }
   },
 
@@ -910,6 +911,13 @@ export const defaultCategoriesForNewUser: Category[] = [
     type: TransactionType.EXPENSE,
     color: '#40916c', // Slate 400
     icon: 'category',
+    createdAt: Date.now(),
+  },
+  {
+    name: 'Adjustment',
+    type: TransactionType.EXPENSE,
+    color: '#64748B', // Slate 500
+    icon: 'rule',
     createdAt: Date.now(),
   },
 ];

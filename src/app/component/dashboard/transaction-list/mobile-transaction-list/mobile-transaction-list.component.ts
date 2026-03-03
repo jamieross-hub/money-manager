@@ -102,6 +102,7 @@ export class MobileTransactionListComponent
   @Output() deleteTransaction = new EventEmitter<Transaction>();
   @Output() addTransaction = new EventEmitter<void>();
   @Output() importTransactions = new EventEmitter<void>();
+  @Output() adjustTransaction = new EventEmitter<Transaction>();
 
   isRecurring = input<boolean>(false);
 
@@ -906,6 +907,10 @@ export class MobileTransactionListComponent
 
   onEditTransaction(transaction: Transaction) {
     this.editTransaction.emit(transaction);
+  }
+
+  onAdjustTransaction(transaction: Transaction) {
+    this.adjustTransaction.emit(transaction);
   }
 
   onDeleteTransaction(transaction: Transaction) {

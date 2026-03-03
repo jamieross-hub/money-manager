@@ -20,8 +20,8 @@
 			</div>
 		</div>
 
-		<!-- Single Avatar for Personal Mode or Family Mode with no group selected -->
-		<img *ngIf="!isFamilyMode() || familyMembers().length === 0" 
+		<!-- Single Avatar for Personal Mode or if no family stack can be shown -->
+		<img *ngIf="!isFamilyMode() || myFamilies().length === 0 || familyMembers().length === 0" 
 			class="flex-shrink-0 object-cover mx-1 rounded-full w-9 h-9 ring-2 ring-white dark:ring-slate-800 shadow-md border border-gray-100 dark:border-slate-700 transition-transform hover:scale-105"
 			[src]="profileImage()" appImageFallback alt="avatar" />
 

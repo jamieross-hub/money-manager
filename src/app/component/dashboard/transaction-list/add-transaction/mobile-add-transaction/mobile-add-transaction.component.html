@@ -1,12 +1,29 @@
 <!-- Mobile Header -->
-<app-common-header [title]="viewMode() ? 'View' : (dialogData?.id ? 'Edit' : 'Add') + ' Transaction'"
+<app-common-header [title]="viewMode() ? 'View' : (adjustmentMode() ? 'Adjust' : (dialogData?.id ? 'Edit' : 'Add')) + ' Transaction'"
 	[showAddButton]="!viewMode()" [showEditButton]="viewMode()" [isSubmitting]="isSubmitting()"
-	addButtonTooltip="Save Transaction" (addButtonClick)="onSubmit()" (editButtonClick)="enableEditing()"
+	[addButtonTooltip]="adjustmentMode() ? 'Record Adjustment' : 'Save Transaction'" (addButtonClick)="onSubmit()" (editButtonClick)="enableEditing()"
 	(closeButtonClick)="onClose()"></app-common-header>
 
 <app-common-body-content>
 	<form [formGroup]="transactionForm" (ngSubmit)="onSubmit()" (keydown.enter)="!viewMode() && onSubmit()"
 		class="space-y-6">
+
+		<!-- Adjustment Info Card -->
+		<div *ngIf="adjustmentMode()" class="bg-surface-100 rounded-xl p-4 border border-blue-100 dark:border-blue-800 -mt-2">
+			<div class="flex gap-1">
+			
+				<div>
+					<p class="text-sm font-bold text-warning dark:text-blue-100 !mb-1 flex items-start gap-1"> 
+						<mat-icon class="!text-lg mt-[-5px]">info</mat-icon> 
+						<span>Adjustment Mode</span>
+					</p>
+					<p class="text-xs text-warning dark:text-blue-200 mt-1">
+						You are creating an adjustment for a transaction you cannot edit directly. 
+						A new ledger entry will be created to balance the original transaction.
+					</p>
+				</div>
+			</div>
+		</div>
 		<!-- Amount, Description, Category, and Date Field - Combined Card -->
 		<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm space-y-4">
 			<!-- Amount Field -->
@@ -224,7 +241,7 @@
 									[class.text-gray-600]="!isMemberPaidBy(member.userId)"
 									[class.dark:text-gray-300]="!isMemberPaidBy(member.userId)"
 									[class.ring-gray-200]="!isMemberPaidBy(member.userId)">
-									{{ member.displayName.charAt(0).toUpperCase() }}
+									{{ (member.displayName || member.userId || '').charAt(0).toUpperCase() }}
 								</div>
 								}
 							</div>
@@ -296,7 +313,7 @@
 										@if(member.photoURL) {
 										<img [src]="member.photoURL" class="w-full h-full rounded-full object-cover" />
 										} @else {
-										{{ member.displayName.charAt(0).toUpperCase() }}
+										{{ (member.displayName || member.userId || '').charAt(0).toUpperCase() }}
 										}
 									</div>
 									<span class="text-xs font-medium text-gray-700 dark:text-gray-300 line-clamp-1">{{

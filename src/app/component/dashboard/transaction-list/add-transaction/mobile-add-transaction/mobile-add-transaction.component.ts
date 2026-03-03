@@ -115,6 +115,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   public editMode = signal(false);
   public viewMode = signal(false);
   public TransactionType = TransactionType;
+  public adjustmentMode = signal(false);
+  public originalTransaction: Transaction | null = null;
 
   public recurringMinDate: string;
   public recurringMaxDate: string;
@@ -128,6 +130,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     ),
     { initialValue: false }
   );
+  public categories = toSignal(this._store.select(selectAllCategories), { initialValue: [] as Category[] });
 
   // ─── Family / Split Mode ───────────────────────────────────────────────────
   /** All members of the active family group. Loaded after ngOnInit. */
@@ -245,6 +248,14 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
   ngOnInit(): void {
     this.userId = this.userService.getCurrentUserId();
+    
+    if (this.dialogData && this.dialogData.mode === 'adjustment') {
+      this.adjustmentMode.set(true);
+      this.originalTransaction = this.dialogData.transaction;
+    } else if (this.dialogData && this.dialogData.id) {
+       this.editMode.set(true);
+    }
+
     this.initializeFormData();
     this.loadFamilyGroupInfo();
   }
@@ -347,6 +358,90 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     return data;
   }
 
+  private calculateAdjustmentSplitData(newSplitData: any, multiplier: number = 1) {
+    // If neither had split data, nothing to adjust in splitting
+    if (!this.originalTransaction?.splitData && !newSplitData) return null;
+
+    const originalSplitBetween = this.originalTransaction?.splitData?.splitBetween || [];
+    const newSplitBetween = newSplitData?.splitBetween || [];
+
+    const adjustedSplitBetween: any[] = [];
+    const allMemberIds = new Set([
+      ...originalSplitBetween.map((m: any) => m.userId),
+      ...newSplitBetween.map((m: any) => m.userId)
+    ]);
+
+    allMemberIds.forEach(userId => {
+      const oldM = originalSplitBetween.find((m: any) => m.userId === userId);
+      const newM = newSplitBetween.find((m: any) => m.userId === userId);
+      const diffAmount = ((newM?.amount || 0) - (oldM?.amount || 0)) * multiplier;
+
+      if (Math.abs(diffAmount) > 0.001) {
+        adjustedSplitBetween.push({
+          userId,
+          displayName: newM?.displayName || oldM?.displayName || '',
+          photoURL: newM?.photoURL || oldM?.photoURL || '',
+          amount: parseFloat(diffAmount.toFixed(2)),
+          percentage: 0
+        });
+      }
+    });
+
+    if (adjustedSplitBetween.length === 0 && !newSplitData) return null;
+
+    return {
+      ...(newSplitData || {}),
+      splitBetween: adjustedSplitBetween,
+    };
+  }
+
+  private calculateAdjustmentPaidByData(newPaidByUserId: string, newPaidBy: PaidByMember[], multiplier: number = 1) {
+    if (!this.originalTransaction) return { paidByUserId: newPaidByUserId, paidBy: newPaidBy };
+
+    const originalPaidByUserId = this.originalTransaction.splitData?.paidByUserId || '';
+    const originalPaidBy = this.originalTransaction.splitData?.paidBy || [];
+    const originalAmount = this.originalTransaction.amount || 0;
+
+    const members = this.familyMembers();
+
+    // Helper to get normalized original paidBy list
+    const getNormalizedPaidBy = (userId: string, list: PaidByMember[], total: number): PaidByMember[] => {
+      if (userId === 'multiple') return list;
+      const m = members.find(mem => mem.userId === userId);
+      return [{ userId, amount: total, displayName: m?.displayName || userId }];
+    };
+
+    const oldPayments = getNormalizedPaidBy(originalPaidByUserId, originalPaidBy, originalAmount);
+    const newPayments = getNormalizedPaidBy(newPaidByUserId, newPaidBy, parseFloat(this.transactionForm.get('amount')?.value || 0));
+
+    const adjustedPaidBy: PaidByMember[] = [];
+    const allMemberIds = new Set([
+      ...oldPayments.map(p => p.userId),
+      ...newPayments.map(p => p.userId)
+    ]);
+
+    allMemberIds.forEach(userId => {
+      const oldP = oldPayments.find(p => p.userId === userId);
+      const newP = newPayments.find(p => p.userId === userId);
+      const diffAmount = ((newP?.amount || 0) - (oldP?.amount || 0)) * multiplier;
+
+      if (Math.abs(diffAmount) > 0.001) {
+        const m = members.find(mem => mem.userId === userId);
+        adjustedPaidBy.push({
+          userId,
+          amount: parseFloat(diffAmount.toFixed(2)),
+          displayName: m?.displayName || userId
+        });
+      }
+    });
+
+    return {
+      paidByUserId: adjustedPaidBy.length === 1 && adjustedPaidBy[0].amount > 0 ? adjustedPaidBy[0].userId : 'multiple',
+      paidByDisplayName: adjustedPaidBy.length === 1 && adjustedPaidBy[0].amount > 0 ? adjustedPaidBy[0].displayName : 'Multiple People',
+      paidBy: adjustedPaidBy
+    };
+  }
+
 
   private patchTransactionForm(transaction: any): void {
     const nextYear = new Date();
@@ -401,8 +496,13 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       }
     });
 
-    // Check if we're in view mode
-    if (this.dialogData?.mode === 'view' && this.dialogData?.transaction) {
+    // Check if we're in adjustment mode
+    if (this.adjustmentMode()) {
+       this.patchTransactionForm(this.originalTransaction);
+       // Relax amount validator to allow 0 for adjustments
+       this.transactionForm.get('amount')?.setValidators([Validators.required, Validators.min(0)]);
+       this.transactionForm.get('amount')?.updateValueAndValidity();
+    } else if (this.dialogData?.mode === 'view' && this.dialogData?.transaction) {
       this.viewMode.set(true);
       this.editMode.set(false);
       this.patchTransactionForm(this.dialogData.transaction);
@@ -609,7 +709,63 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           updatedAt: new Date(),
         };
 
-        if (this.dialogData?.id) {
+        if (this.adjustmentMode() && this.originalTransaction) {
+          const originalAmount = this.originalTransaction.amount || 0;
+          const newAmount = parseFloat(formData.amount);
+          const adjustmentDiff = newAmount - originalAmount;
+
+          // Resolve adjustment type correctly
+          let adjType: TransactionType = this.originalTransaction.type;
+          if (this.originalTransaction.type === TransactionType.EXPENSE) {
+            adjType = adjustmentDiff >= 0 ? TransactionType.EXPENSE : TransactionType.INCOME;
+          } else {
+            adjType = adjustmentDiff >= 0 ? TransactionType.INCOME : TransactionType.EXPENSE;
+          }
+
+          // Sign multiplier: If we switched type (e.g. refunding an expense), we must flip the delta signs
+          const multiplier = (adjType === this.originalTransaction.type) ? 1 : -1;
+
+          // Calculate splitting deltas
+          const baseSplitData = this.isSplitGroupMode() ? this.buildSplitData() : null;
+          const finalAdjustmentSplitData = this.calculateAdjustmentSplitData(baseSplitData, multiplier);
+
+          // Calculate Paid By deltas
+          const paidByDeltas = this.calculateAdjustmentPaidByData(formData.paidByUserId, formData.paidBy, multiplier);
+          
+          if (finalAdjustmentSplitData) {
+            finalAdjustmentSplitData.paidByUserId = paidByDeltas.paidByUserId;
+            finalAdjustmentSplitData.paidByDisplayName = paidByDeltas.paidByDisplayName;
+            finalAdjustmentSplitData.paidBy = paidByDeltas.paidBy;
+          }
+
+          // Find Adjustment Category
+          const categories = this.categories();
+          const adjCategory = categories.find((c: any) => c.name.toLowerCase() === 'adjustment');
+          
+          const adjustmentData = {
+            ...transactionData,
+            amount: Math.abs(adjustmentDiff),
+            type: adjType,
+            category: adjCategory?.name || 'Adjustment',
+            categoryId: adjCategory?.id || 'adjustment',
+            notes: `Adjustment for: ${this.originalTransaction.category} on ${this.dateService.formatDate(this.originalTransaction.date)}.Original notes: ${formData.description}`,
+            splitData: finalAdjustmentSplitData,
+            userId: this.userId,
+            syncStatus: SyncStatus.PENDING,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            createdBy: this.userId,
+            updatedBy: this.userId,
+          };
+
+          await this.store.dispatch(
+            TransactionsActions.createTransaction({
+              userId: this.userId,
+              transaction: adjustmentData,
+            })
+          );
+          this.notificationService.success('Adjustment recorded successfully');
+        } else if (this.dialogData?.id) {
           await this.store.dispatch(
             TransactionsActions.updateTransaction({
               userId: this.userId,
