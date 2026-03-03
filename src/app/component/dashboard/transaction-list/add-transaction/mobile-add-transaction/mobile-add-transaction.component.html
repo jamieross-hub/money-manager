@@ -32,8 +32,8 @@
 					Amount *
 				</label>
 				<input #amountInput type="text" [ngModel]="formattedAmount()" [ngModelOptions]="{standalone: true}"
-					(input)="onFormattedAmountInput($event)" (blur)="onAmountBlur()" placeholder="0.00"
-					[disabled]="viewMode()"
+					(input)="onFormattedAmountInput($event)" (keydown)="onAmountKeyDown($event)" (blur)="onAmountBlur()" placeholder="0.00"
+					[disabled]="viewMode()" inputmode="decimal"
 					class="w-full text-2xl font-bold text-center py-3 px-4 border-0 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg"
 					[class.bg-gray-100]="viewMode()" />
 				@if(getAmountError() && transactionForm.get('amount')?.touched) {

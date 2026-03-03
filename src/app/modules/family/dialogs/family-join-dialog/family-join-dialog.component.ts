@@ -36,8 +36,21 @@ export class FamilyJoinDialogComponent implements OnInit, OnDestroy {
   }
 
   onCodeInput(event: any) {
-    const val: string = event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    this.form.patchValue({ inviteCode: val });
+    const input = event.target as HTMLInputElement;
+    const rawVal = input.value;
+    const transformedVal = rawVal.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+    
+    // Only update DOM if the transformed value is different from raw input
+    // to avoid interrupting composition on mobile keyboards
+    if (rawVal !== transformedVal) {
+      const selectionStart = input.selectionStart;
+      const selectionEnd = input.selectionEnd;
+      input.value = transformedVal;
+      input.setSelectionRange(selectionStart, selectionEnd);
+    }
+    
+    // Sync with form control without emitting event to avoid circular triggers
+    this.form.get('inviteCode')?.setValue(transformedVal, { emitEvent: false });
   }
 
   submit() {

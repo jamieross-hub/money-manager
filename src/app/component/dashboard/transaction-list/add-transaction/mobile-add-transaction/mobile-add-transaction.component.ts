@@ -155,6 +155,18 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
   public formattedAmount = signal('');
 
+  onAmountKeyDown(event: KeyboardEvent) {
+    const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End', '.'];
+    if (allowedKeys.includes(event.key) || (event.key >= '0' && event.key <= '9')) {
+      // Allow the key
+      if (event.key === '.' && this.formattedAmount().includes('.')) {
+        event.preventDefault(); // Prevent second decimal point
+      }
+      return;
+    }
+    event.preventDefault(); // Block everything else
+  }
+
   // ngx-mat-select-search properties
   public categoryFilterCtrl: FormControl = new FormControl();
   public filteredCategories: ReplaySubject<Category[]> = new ReplaySubject<Category[]>(1);
