@@ -47,11 +47,51 @@
 
     // Buttons in header
     .mat-icon-button {
-        color: white !important;
-        background: rgba(0,0,0,0.1);
-        &:hover {
-            background: rgba(0,0,0,0.2);
-        }
+      color: white !important;
+      background: rgba(0,0,0,0.1);
+      &:hover {
+        background: rgba(0,0,0,0.2);
+      }
     }
+  }
+}
+
+:host {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.family-dashboard {
+  font-family: 'Inter', system-ui, sans-serif;
+
+  // Headings
+  .text-2xl.font-bold, // Family Name
+  h1, h2, h3, h4, h5, h6,
+  [class*="heading-"] {
+    font-family: 'Poppins', sans-serif !important;
+  }
+
+  // Financial Data / Amounts
+  .text-2xl.font-black, // Group Spend
+  .text-xl.font-black,  // Net Settle Balance
+  .text-sm.font-bold,   // Paid/Share details
+  .text-\[17px\].font-bold, // Summary cards
+  .text-\[13px\].font-bold, // Member amounts
+  .text-\[14px\].font-bold, // Activity amounts
+  .font-mono,
+  .financial-amount {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-feature-settings: "tnum" on, "zero" on;
+    letter-spacing: -0.01em;
+  }
+
+  // Meta info / labels
+  .text-\[9px\], .text-\[10px\], .text-\[12px\], .text-\[13px\]:not(.font-bold) {
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.02em;
+  }
+
+  // Invite Code
+  .font-black.tracking-\[0\.2em\] {
+    font-family: 'JetBrains Mono', monospace !important;
   }
 }

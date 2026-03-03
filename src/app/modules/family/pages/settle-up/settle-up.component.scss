@@ -1,4 +1,8 @@
 
+:host {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
 /* ── Header ─────────────────────────── */
 .settle-header {
    background: repeating-linear-gradient(
@@ -20,13 +24,19 @@
   }
 
   h1 {
+    font-family: 'Poppins', sans-serif;
     font-size: 24px;
     font-weight: 800;
     margin: 0;
     letter-spacing: -0.02em;
   }
 
+  p.\!text-xl {
+    font-family: 'Poppins', sans-serif !important;
+  }
+
   .group-name {
+    font-family: 'Inter', sans-serif;
     font-size: 14px;
     color: rgba(255, 255, 255, 0.8);
     margin-top: 2px;
@@ -34,6 +44,8 @@
 }
 
 .balance-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-feature-settings: "tnum" on, "zero" on;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -45,6 +57,7 @@
   backdrop-filter: blur(8px);
   margin-top: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  letter-spacing: -0.01em;
 
   &.debt { background: var(--error-50); border-color: var(--error-50); color: var(--error-500); }
   &.credit { background: var(--primary-50); border-color: var(--primary-50); color: var(--primary-500); }
@@ -59,6 +72,7 @@
 }
 
 .section-label {
+  font-family: 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
@@ -131,6 +145,7 @@
   min-width: 0;
 
   .main-text {
+    font-family: 'Inter', sans-serif;
     font-size: 14px;
     font-weight: 600;
     color: var(--text-primary);
@@ -141,6 +156,8 @@
   }
 
   .amount-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-feature-settings: "tnum" on, "zero" on;
     font-size: 20px;
     font-weight: 800;
     letter-spacing: -0.01em;
@@ -148,6 +165,7 @@
 }
 
 .settle-action-btn {
+  font-family: 'Inter', sans-serif;
   background: var(--primary-50);
   color: var(--primary-700);
   border: none;
@@ -226,9 +244,12 @@
   }
 
   .amount {
+    font-family: 'JetBrains Mono', monospace;
+    font-feature-settings: "tnum" on, "zero" on;
     font-size: 15px;
     font-weight: 700;
     color: var(--success-600);
+    letter-spacing: -0.02em;
   }
 }
 
@@ -253,8 +274,14 @@
     mat-icon { font-size: 32px; width: 32px; height: 32px; }
   }
 
-  h3 { font-size: 18px; font-weight: 800; margin-bottom: 4px; color: var(--primary-500); }
-  p { font-size: 14px; color: var(--secondary-500); }
+  h3 { 
+    font-family: 'Poppins', sans-serif;
+    font-size: 18px; 
+    font-weight: 800; 
+    margin-bottom: 4px; 
+    color: var(--primary-500); 
+  }
+  p { font-family: 'Inter', sans-serif; font-size: 14px; color: var(--secondary-500); }
 }
 
 @media (max-width: 480px) {
