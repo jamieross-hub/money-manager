@@ -6,17 +6,17 @@
 		
 		<!-- Avatar Stack for Family Mode -->
 		<div *ngIf="isFamilyMode() && sortedMembers().length > 0" class="avatar-stack flex flex-row-reverse items-center -space-x-4 space-x-reverse hover:-space-x-2 transition-all duration-300 ml-1 mr-1 cursor-pointer">
-			<img *ngFor="let member of sortedMembers().slice(0, 3); let i = index" 
+			<img *ngFor="let member of sortedMembers().slice(0, 4); let i = index" 
 				class="flex-shrink-0 object-cover rounded-full w-8 h-8 ring-2 ring-white dark:ring-slate-900 shadow-md transition-all hover:scale-110 hover:ring-blue-500"
 				[src]="getMemberAvatarUrl(member)" 
 				appImageFallback
 				[alt]="member.displayName"
 				[matTooltip]="member.displayName"
 				[style.z-index]="20 - i" />
-			<div *ngIf="sortedMembers().length > 3" 
+			<div *ngIf="sortedMembers().length > 4" 
 				class="flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-white dark:ring-slate-900 bg-gradient-to-br from-gray-50 to-gray-200 dark:from-slate-700 dark:to-slate-900 text-[10px] font-black shadow-sm text-gray-700 dark:text-gray-300"
 				[style.z-index]="10">
-				+{{sortedMembers().length - 3}}
+				+{{sortedMembers().length - 4}}
 			</div>
 		</div>
 
