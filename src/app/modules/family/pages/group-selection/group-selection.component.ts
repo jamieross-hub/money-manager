@@ -236,19 +236,26 @@ export class GroupSelectionComponent implements OnInit {
   });
 
   loadState = computed<LoadState>(() => {
-    const hasGroups = this.groups().length > 0;
+    const families = this.rawFamilies() || [];
+    const hasGroups = families.length > 0;
     const isLoading = this.userFamiliesLoading();
     const isLoaded = this.userFamiliesLoaded();
     const hasError = !!this.familyError();
 
-    // 1. If we have data (likely from cache), show it immediately
+    // 1. DATA PRESENT: If we have groups, we are loaded. 
+    // This is the highest priority so cache shows up immediately.
     if (hasGroups) return 'loaded';
 
-    // 2. If we are waiting for user ID or active loading and have no data yet
-    if (!this.currentUserId || (isLoading && !isLoaded)) return 'loading';
-
-    // 3. terminal states
+    // 2. ERROR STATE: If there's a stored error and no data.
     if (hasError) return 'error';
+
+    // 3. LOADING STATE: If we are actively fetching, or haven't successfully 
+    // completed the first load yet.
+    if (!this.currentUserId || isLoading || !isLoaded) {
+      return 'loading';
+    }
+
+    // 4. EMPTY STATE: We finished loading (isLoaded: true) and have no data.
     return 'empty';
   });
 
