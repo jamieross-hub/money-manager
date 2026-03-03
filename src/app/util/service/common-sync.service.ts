@@ -639,14 +639,21 @@ export class CommonSyncService implements OnDestroy {
   private async processTransactionSync(item: SyncItem, batch: any, userId: string): Promise<void> {
     const basePath = item.collectionPath || `users/${userId}/transactions`;
 
+    // Ensure the transaction is updated as synced when pushing to Firestore
+    const dataToWrite = { ...item.data };
+    if ('syncStatus' in dataToWrite && item.operation !== 'delete') {
+      dataToWrite.syncStatus = 'synced';
+      dataToWrite.lastSyncedAt = new Date();
+    }
+
     switch (item.operation) {
       case 'create':
         const transactionRef = doc(this.firestore, `${basePath}/${item.data.id}`);
-        batch.set(transactionRef, item.data);
+        batch.set(transactionRef, dataToWrite);
         break;
       case 'update':
         const updateRef = doc(this.firestore, `${basePath}/${item.data.id}`);
-        batch.set(updateRef, item.data, { merge: true });
+        batch.set(updateRef, dataToWrite, { merge: true });
         break;
       case 'delete':
         const deleteRef = doc(this.firestore, `${basePath}/${item.data.id}`);
@@ -668,6 +675,23 @@ export class CommonSyncService implements OnDestroy {
           lastSyncedAt: new Date()
         } as Transaction
       }));
+
+      // Update the status in Local IndexedDB Cache
+      const userId = this.getCurrentUserId();
+      if (userId) {
+        const isFamily = !!transaction.familyId;
+        const cacheKey = LocalStorageKeyHelper.getTransactionsCacheKey(userId, isFamily ? transaction.familyId : undefined);
+        const cachedTransactions = this.storageService.getItem<Transaction[]>(cacheKey) || [];
+        const index = cachedTransactions.findIndex((t: Transaction) => t.id === transactionId);
+        if (index !== -1) {
+          cachedTransactions[index] = {
+            ...cachedTransactions[index],
+            syncStatus: status as any,
+            lastSyncedAt: new Date()
+          };
+          this.storageService.setItem(cacheKey, cachedTransactions);
+        }
+      }
 
       console.log(`Transaction ${transactionId} sync status updated to: ${status}`);
     } catch (error) {
