@@ -6,6 +6,7 @@ import { MatSlideToggle, MatSlideToggleModule, MatSlideToggleChange } from '@ang
 import { FirebaseMessagingService, NotificationPayload } from '../../service/firebase-messaging.service';
 import { APP_CONFIG } from '../../config/config';
 import { NotificationService } from '../../service/notification.service';
+import { UserService } from '../../service/db/user.service';
 import { environment } from '@env/environment';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatBottomSheetModule } from '@angular/material/bottom-sheet';
@@ -163,7 +164,8 @@ export class NotificationSettingsComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private snackBar: MatSnackBar,
     private storageService: LocalIndexDBStorageService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private userService: UserService
   ) { }
 
   ngOnInit(): void {
@@ -231,7 +233,9 @@ export class NotificationSettingsComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(token => {
         this.fcmToken = token;
-        this.fcmToken = token;
+        if (token) {
+          this.userService.updateFcmToken(token);
+        }
         this.collectDebugInfo();
         this.cdr.markForCheck();
       });

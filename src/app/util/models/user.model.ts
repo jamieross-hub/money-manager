@@ -23,6 +23,7 @@ export interface User {
 	providerId?: string;
 	displayName?: string;
 	profilePicture?: string;
+	fcmToken?: string;
 }
 
 

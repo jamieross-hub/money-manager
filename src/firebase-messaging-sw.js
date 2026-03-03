@@ -1,4 +1,5 @@
 // Firebase messaging service worker for background notifications
+importScripts('./ngsw-worker.js');
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
@@ -189,7 +190,17 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('sync', (event) => {
   console.log('Background sync event:', event.tag);
   
-  if (event.tag === 'sync-transactions') {
+  if (event.tag === 'sync-all-data') {
+    event.waitUntil(
+      self.clients.matchAll({ includeUncontrolled: true, type: 'window' }).then((clients) => {
+        if (clients && clients.length > 0) {
+          clients.forEach((client) => {
+            client.postMessage({ type: 'BACKGROUND_SYNC', tag: event.tag });
+          });
+        }
+      })
+    );
+  } else if (event.tag === 'sync-transactions') {
     event.waitUntil(syncPendingTransactions());
   } else if (event.tag === 'sync-budgets') {
     event.waitUntil(syncBudgetData());

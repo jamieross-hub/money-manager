@@ -1447,6 +1447,25 @@ export class UserService {
 
 
   /**
+   * Update FCM Token
+   */
+  async updateFcmToken(token: string): Promise<void> {
+    if (this.isGuestUser()) return;
+    const currentUser = this.auth.currentUser;
+    if (!currentUser) return;
+    try {
+      const userRef = doc(this.firestore, `users/${currentUser.uid}`);
+      await updateDoc(userRef, {
+        fcmToken: token,
+        updatedAt: serverTimestamp()
+      });
+      console.log('✅ FCM token updated in Firestore');
+    } catch (error) {
+      console.error('❌ Error updating FCM token:', error);
+    }
+  }
+
+  /**
    * Get all users for admin purposes
    */
   async getAllUsers(): Promise<any[]> {

@@ -352,33 +352,15 @@ export class FirebaseMessagingService {
 
   private async registerFirebaseMessagingSW(): Promise<void> {
     try {
-      // Check if Firebase messaging service worker is already registered
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      const firebaseSW = registrations.find(reg =>
-        reg.scope.includes(environment.serviceWorkerScope) ||
-        reg.active?.scriptURL.includes(environment.serviceWorkerScope + 'firebase-messaging-sw.js')
-      );
-
-      if (firebaseSW) {
-        console.log('Firebase messaging service worker already registered');
-        this.swRegistration = firebaseSW;
-        return;
-      }
-
-      // Platform-specific service worker registration
-      const swOptions = this.getServiceWorkerOptions();
-
-      // Register Firebase messaging service worker
-      console.log('Registering Firebase messaging service worker...');
-      this.swRegistration = await navigator.serviceWorker.register(environment.serviceWorkerScope + 'firebase-messaging-sw.js', swOptions);
-
-      console.log('Firebase messaging service worker registered successfully:', this.swRegistration);
-
-      // Wait for the service worker to be ready
-      await this.swRegistration.update();
-
+      if (!this.platformInfo.supportsServiceWorker) return;
+      
+      console.log('Waiting for Angular Service Worker to be ready...');
+      const registration = await navigator.serviceWorker.ready;
+      this.swRegistration = registration;
+      console.log('Firebase messaging service worker is ready:', this.swRegistration);
+      
     } catch (error) {
-      console.error('Failed to register Firebase messaging service worker:', error);
+      console.error('Failed to get service worker registration:', error);
       throw error;
     }
   }
