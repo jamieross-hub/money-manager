@@ -62,7 +62,7 @@ export enum LocalStorageKey {
     BUDGETS_CACHE = 'budgets-cache',
     GOALS_CACHE = 'goals-cache',
     GOOGLE_SHEETS_CACHE = 'google-sheets-cache',
-
+    FAMILIES_CACHE = 'families-cache',
 }
 
 /**

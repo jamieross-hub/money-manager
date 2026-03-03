@@ -593,7 +593,7 @@ export class CommonSyncService implements OnDestroy {
 
         // Update sync status for successful transactions
         if (item.type === 'transaction') {
-          await this.updateTransactionSyncStatus(item.data, 'synced');
+          await this.updateTransactionSyncStatus(item.data, 'synced', item.collectionPath);
         }
       } catch (error) {
         console.error(`Failed to process sync item ${item.id}:`, error);
@@ -603,7 +603,7 @@ export class CommonSyncService implements OnDestroy {
           failedItems.push(item.id);
           // Update sync status to failed for transactions
           if (item.type === 'transaction') {
-            await this.updateTransactionSyncStatus(item.data, 'failed');
+            await this.updateTransactionSyncStatus(item.data, 'failed', item.collectionPath);
           }
         }
       }
@@ -662,7 +662,7 @@ export class CommonSyncService implements OnDestroy {
     }
   }
 
-  private async updateTransactionSyncStatus(transaction: any, status: 'synced' | 'failed'): Promise<void> {
+  private async updateTransactionSyncStatus(transaction: any, status: 'synced' | 'failed', collectionPath?: string): Promise<void> {
     const transactionId = transaction?.id;
     if (!transactionId) return;
 
@@ -679,7 +679,7 @@ export class CommonSyncService implements OnDestroy {
       // Update the status in Local IndexedDB Cache
       const userId = this.getCurrentUserId();
       if (userId) {
-        const isFamily = !!transaction.familyId;
+        const isFamily = collectionPath ? collectionPath.includes('family-groups') : !!transaction.familyId;
         const cacheKey = LocalStorageKeyHelper.getTransactionsCacheKey(userId, isFamily ? transaction.familyId : undefined);
         const cachedTransactions = this.storageService.getItem<Transaction[]>(cacheKey) || [];
         const index = cachedTransactions.findIndex((t: Transaction) => t.id === transactionId);

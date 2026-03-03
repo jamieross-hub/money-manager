@@ -18,7 +18,12 @@ export const familyReducer = createReducer(
   })),
 
   // Load user families
-  on(FamilyActions.loadUserFamilies, state => ({ ...state, userFamiliesLoading: true, userFamiliesLoaded: false, error: null })),
+  on(FamilyActions.loadUserFamilies, state => ({ 
+    ...state, 
+    userFamiliesLoading: true, 
+    userFamiliesLoaded: state.userFamilies.length > 0, 
+    error: null 
+  })),
   on(FamilyActions.loadUserFamiliesSuccess, (state, { families }) => ({ ...state, userFamiliesLoading: false, userFamiliesLoaded: true, userFamilies: families })),
   on(FamilyActions.loadUserFamiliesFailure, (state, { error }) => ({ ...state, userFamiliesLoading: false, userFamiliesLoaded: true, error })),
 
