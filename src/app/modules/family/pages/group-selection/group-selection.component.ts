@@ -10,6 +10,7 @@ import {
   Injector,
 } from '@angular/core';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -41,6 +42,7 @@ import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import { QuickActionsFabComponent, QuickAction, QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 import { LoaderService } from 'src/app/util/service/loader.service';
+import { TransactionStatus } from 'src/app/util/config/enums';
 // ─── View Model ──────────────────────────────────────────────────────────────
 
 export type GroupType = 'family' | 'trip' | 'work' | 'other';
@@ -57,6 +59,7 @@ export interface UserGroup {
   totalSpend?: number;
   lastActivityAt?: Date;
   isActive: boolean;
+  isDeleted: boolean;
   inviteCode: string;
   ownerUserId: string;
 }
@@ -136,7 +139,11 @@ export class GroupSelectionComponent implements OnInit {
   private autoOpened = false;
   groupSpends = signal<Record<string, number>>({});
   private isInstanceLoading = false;
-  
+  private deletedFamiliesSubscription?: Subscription;
+
+  // Signal holding raw deleted (isActive=false) families
+  deletedRawFamilies = signal<Family[]>([]);
+
   private storageService = inject(LocalIndexDBStorageService);
   private injector = inject(Injector);
   private destroyRef = inject(DestroyRef);
@@ -154,6 +161,7 @@ export class GroupSelectionComponent implements OnInit {
     }
 
     this.loadGroups();
+    this.loadDeletedGroups();
   }
 
   private initializeEffects(): void {
@@ -174,7 +182,13 @@ export class GroupSelectionComponent implements OnInit {
           this.familyService.getTransactions(f.id)
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(txs => {
-              const expense = txs.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+              const expense = txs
+                .filter(t =>
+                  t.type === 'expense' &&
+                  t.status !== TransactionStatus.DELETED &&
+                  t.category !== 'Settlement'
+                )
+                .reduce((sum, t) => sum + t.amount, 0);
               this.groupSpends.update(spends => ({ ...spends, [f.id as string]: expense }));
               this.storageService.setItem(cacheKey, expense);
             });
@@ -232,6 +246,7 @@ export class GroupSelectionComponent implements OnInit {
       inviteCode: f.inviteCode,
       ownerUserId: f.ownerUserId,
       isActive: f.id === activeId,
+      isDeleted: false,
       totalSpend: this.groupSpends()[f.id!] || 0,
       lastActivityAt: f.updatedAt
         ? ((f.updatedAt as any)?.seconds
@@ -321,6 +336,29 @@ export class GroupSelectionComponent implements OnInit {
     return this.groups().filter(g => g.id !== active);
   });
 
+  deletedGroups = computed<UserGroup[]>(() => {
+    const currentUserId = this.currentUserId;
+    return this.deletedRawFamilies().map(f => ({
+      id: f.id!,
+      name: f.name,
+      type: inferGroupType(f.name),
+      mode: f.mode ?? 'common',
+      icon: f.icon,
+      memberCount: f.memberIds?.length ?? 1,
+      role: f.ownerUserId === currentUserId ? 'admin' : 'member' as FamilyMemberRole,
+      inviteCode: f.inviteCode,
+      ownerUserId: f.ownerUserId,
+      isActive: false,
+      isDeleted: true,
+      totalSpend: 0,
+      lastActivityAt: f.updatedAt
+        ? ((f.updatedAt as any)?.seconds
+          ? new Date((f.updatedAt as any).seconds * 1000)
+          : new Date(f.updatedAt as any))
+        : undefined,
+    }));
+  });
+
   // ─── Helpers (exposed to template) ─────────────────────────────────────────
 
   groupTypeIcon = GROUP_TYPE_ICON;
@@ -336,6 +374,14 @@ export class GroupSelectionComponent implements OnInit {
 
   loadGroups(): void {
     this.store.dispatch(FamilyActions.loadUserFamilies());
+  }
+
+  loadDeletedGroups(): void {
+    this.deletedFamiliesSubscription?.unsubscribe();
+    this.deletedFamiliesSubscription = this.familyService
+      .getDeletedFamilies()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(families => this.deletedRawFamilies.set(families));
   }
 
   // ─── Group Actions ─────────────────────────────────────────────────────────

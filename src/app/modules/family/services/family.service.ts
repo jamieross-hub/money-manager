@@ -438,6 +438,33 @@ export class FamilyService {
     }
   }
 
+  /**
+   * Returns an Observable of families where the current user is a member
+   * but the group has been deleted (isActive === false) by the admin.
+   * Members can still VIEW these groups but cannot perform any actions.
+   */
+  getDeletedFamilies(): Observable<Family[]> {
+    const user = this.userService.getCurrentUserSnapshot();
+    if (!user) return of([]);
+
+    return new Observable<Family[]>(observer => {
+      const q = query(
+        collection(this.firestore, this.FAMILIES_COL),
+        where('memberIds', 'array-contains', user.uid),
+        where('isActive', '==', false)
+      );
+
+      const unsubscribe = onSnapshot(q, (snap) => {
+        const families = snap.docs.map(d => ({ id: d.id, ...d.data() as Omit<Family, 'id'> }));
+        observer.next(families);
+      }, (err) => {
+        console.error('Error in deleted families listener:', err);
+        observer.next([]);
+      });
+      return () => unsubscribe();
+    });
+  }
+
   private getInitialActiveFamilyId(): string | null {
     try {
       return this.storageService.getItem(ACTIVE_FAMILY_ID_KEY);

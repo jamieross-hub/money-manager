@@ -133,8 +133,6 @@
                   </span>
                   <span class="gs-dot">·</span>
                   <span class="gs-meta-text">{{ group.memberCount }} member{{ group.memberCount !== 1 ? 's' : '' }}</span>
-                  <span class="gs-dot">·</span>
-                  <span class="gs-meta-text">{{ formatCurrency(group.totalSpend || 0, 'INR') }}</span>
                 </div>
               </div>
             </div>
@@ -143,10 +141,10 @@
               {{ group.role }}
             </span>
             <div class="gs-list-card__footer">
-              <button mat-button color="primary" (click)="$event.stopPropagation(); openGroup(group)">
-                <mat-icon>open_in_new</mat-icon>
-                Open
-              </button>
+              <div class="gs-list-card__activity">
+                <mat-icon class="gs-meta-icon">money</mat-icon>
+                <span class="gs-meta-text">{{ formatCurrency(group.totalSpend || 0, 'INR') }}</span>
+              </div>
               <div class="gs-list-card__actions" style="display: flex; gap: 4px;">
                 @if (group.role !== 'admin') {
                 <button mat-button color="warn" (click)="$event.stopPropagation(); requestLeave(group)">
@@ -161,6 +159,54 @@
                 </button>
                 }
               </div>
+            </div>
+          </div>
+          }
+        </div>
+      </section>
+      }
+
+      <!-- DELETED GROUPS LIST -->
+      @if (deletedGroups().length > 0) {
+      <section class="gs-section mt-4">
+        <p class="gs-section-label">Deleted Groups</p>
+        <div class="gs-list">
+          @for (group of deletedGroups(); track group.id) {
+          <div class="gs-list-card gs-list-card--deleted">
+            <div class="gs-list-card__body">
+              <div class="gs-avatar gs-avatar--md overflow-hidden gs-avatar--deleted">
+                @if (group.icon && group.icon.startsWith('data:')) {
+                  <img [src]="group.icon" appImageFallback class="w-full h-full object-cover" />
+                } @else if (group.icon) {
+                  <mat-icon class="text-white text-[20px] w-[20px] h-[20px]">{{ group.icon }}</mat-icon>
+                } @else {
+                  {{ avatarInitials(group.name) }}
+                }
+              </div>
+              <div class="gs-info">
+                <div class="gs-info__name-row">
+                  <span class="gs-info__name gs-info__name--deleted">{{ group.name }}</span>
+                </div>
+                <div class="gs-info__meta">
+                  <span class="gs-meta-text gs-meta-text--with-icon">
+                    <mat-icon class="gs-meta-icon">{{ groupModeIcon[group.mode] }}</mat-icon>
+                    {{ groupModeLabel[group.mode] }}
+                  </span>
+                  <span class="gs-dot">·</span>
+                  <span class="gs-meta-text">{{ group.memberCount }} member{{ group.memberCount !== 1 ? 's' : '' }}</span>
+                </div>
+              </div>
+            </div>
+            <!-- Deleted badge -->
+            <span class="gs-role-badge gs-role-badge--deleted">
+              <mat-icon class="gs-meta-icon" style="margin-right:3px">delete_forever</mat-icon>
+              Deleted
+            </span>
+            <div class="gs-list-card__footer">
+              <span class="gs-deleted-notice">
+                <mat-icon class="gs-meta-icon">info_outline</mat-icon>
+                This group was deleted by the admin
+              </span>
             </div>
           </div>
           }
