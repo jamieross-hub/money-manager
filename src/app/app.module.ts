@@ -102,7 +102,7 @@ import { CategoryFacadeService, PERSONAL_CATEGORY_SERVICE } from './util/service
 
 
     // Enhanced Service Worker with offline support and Firebase cloud messaging
-    ServiceWorkerModule.register('firebase-messaging-sw.js', {
+    ServiceWorkerModule.register('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:3000',
       scope: './'

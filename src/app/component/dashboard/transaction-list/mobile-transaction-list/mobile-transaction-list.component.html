@@ -270,6 +270,8 @@
 				<div class="transaction-card" 
 					[class.selected]="selectedTx?.id === tx.id" 
 					[class.upcoming]="tx._isUpcoming"
+					[class.opacity-50]="tx.syncStatus === 'pending'"
+					[class.grayscale]="tx.syncStatus === 'pending'"
 					(click)="onLongPress(tx)">
 					<!-- Main Transaction Content -->
 					<div class="transaction-main">

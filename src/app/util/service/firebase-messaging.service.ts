@@ -354,8 +354,10 @@ export class FirebaseMessagingService {
     try {
       if (!this.platformInfo.supportsServiceWorker) return;
       
-      console.log('Waiting for Angular Service Worker to be ready...');
-      const registration = await navigator.serviceWorker.ready;
+      console.log('Registering Firebase Service Worker manually...');
+      const registration = await navigator.serviceWorker.register(
+        './firebase-messaging-sw.js'
+      );
       this.swRegistration = registration;
       console.log('Firebase messaging service worker is ready:', this.swRegistration);
       
@@ -481,12 +483,25 @@ export class FirebaseMessagingService {
         return null;
       }
 
-      // Ensure service worker is ready
+      let registration = this.swRegistration;
+
+      // Ensure service worker is registered
+      if (this.platformInfo.supportsServiceWorker) {
+        registration = await navigator.serviceWorker.register(
+          './firebase-messaging-sw.js'
+        );
+        this.swRegistration = registration;
+      }
+
       if (this.swRegistration) {
         await this.swRegistration.update();
       }
 
       const tokenOptions = this.getPlatformSpecificTokenOptions();
+
+      if (registration) {
+        tokenOptions.serviceWorkerRegistration = registration; // 🔥 THIS IS IMPORTANT
+      }
 
       const token = await getToken(this.messaging, tokenOptions);
 
@@ -534,10 +549,19 @@ export class FirebaseMessagingService {
         return null;
       }
 
+      let registration = this.swRegistration;
+
+      if (this.platformInfo.supportsServiceWorker) {
+        registration = await navigator.serviceWorker.register(
+          './firebase-messaging-sw.js'
+        );
+        this.swRegistration = registration;
+      }
+
       // Force token refresh
       const token = await getToken(this.messaging, {
         vapidKey: environment.vapidKey,
-        serviceWorkerRegistration: this.swRegistration || undefined
+        serviceWorkerRegistration: registration || undefined // 🔥 THIS IS IMPORTANT
       });
 
       if (token) {

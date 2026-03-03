@@ -223,6 +223,8 @@
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"
         class="hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors cursor-pointer" 
         [class.upcoming-transaction]="isUpcoming(row)"
+        [class.opacity-50]="row.syncStatus === 'pending'"
+        [class.grayscale]="row.syncStatus === 'pending'"
         (click)="onRowClick(row)">
       </tr>
     </table>
@@ -235,6 +237,8 @@
       <div
         class="list-item list-item-bg border dark:border-slate-800 rounded-lg p-4 hover-effect transition-colors dark:bg-slate-900 dark:hover:bg-slate-800 cursor-pointer"
         [class.upcoming-transaction]="isUpcoming(element)"
+        [class.opacity-50]="element.syncStatus === 'pending'"
+        [class.grayscale]="element.syncStatus === 'pending'"
         (click)="onRowClick(element)">
         <div class="flex items-center justify-between">
           <!-- Left Section -->
@@ -345,6 +349,8 @@
       @for (element of dataSource.data; track element.id) {
       <div class="transaction-card dark:bg-slate-900 dark:border-slate-800 dark:border" 
         [class.upcoming-transaction]="isUpcoming(element)"
+        [class.opacity-50]="element.syncStatus === 'pending'"
+        [class.grayscale]="element.syncStatus === 'pending'"
         (click)="onRowClick(element)">
         <!-- Header Row -->
         <div class="card-header">
@@ -402,6 +408,8 @@
       <div
         class="list-item list-item-bg border dark:border-slate-800 rounded-lg p-3 hover-effect transition-colors dark:bg-slate-900 cursor-pointer"
         [class.upcoming-transaction]="isUpcoming(element)"
+        [class.opacity-50]="element.syncStatus === 'pending'"
+        [class.grayscale]="element.syncStatus === 'pending'"
         (click)="onRowClick(element)">
         <div class="flex items-center space-x-3">
           <!-- Category Icon -->
