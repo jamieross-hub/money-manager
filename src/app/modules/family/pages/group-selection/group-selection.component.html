@@ -34,45 +34,6 @@
 
   <div class="gs-content">
 
-    <!-- ── LOADING STATE ──────────────────────────────────── -->
-    @if (loadState() === 'loading') {
-    <div class="animate-in fade-in duration-500">
-      <!-- Active Card Skeleton -->
-      <section class="gs-section animate-pulse mt-1">
-        <div class="w-24 h-3 bg-gray-200 dark:bg-gray-800 rounded-full mb-3 ml-1 opacity-70"></div>
-        <div
-          class="h-[180px] bg-white dark:bg-gray-800/80 rounded-[28px] border border-gray-100 dark:border-gray-700/60 overflow-hidden relative">
-          <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gray-200 dark:bg-gray-700"></div>
-          <div class="p-5 flex items-center gap-4">
-            <div class="w-16 h-16 rounded-3xl bg-gray-200 dark:bg-gray-700"></div>
-            <div class="space-y-2">
-              <div class="w-36 h-6 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-              <div class="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded opacity-60"></div>
-            </div>
-          </div>
-          <div
-            class="absolute bottom-0 left-0 right-0 h-14 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-800 px-5 flex items-center">
-            <div class="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded opacity-50"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Group List Skeleton -->
-      <section class="gs-section animate-pulse mt-4">
-        <div class="w-24 h-3 bg-gray-200 dark:bg-gray-800 rounded-full mb-3 ml-1 opacity-70"></div>
-        <div class="space-y-3">
-          <div class="h-20 bg-white dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-gray-700/60"></div>
-          <div
-            class="h-20 bg-white dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-gray-700/60 opacity-60">
-          </div>
-          <div
-            class="h-20 bg-white dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-gray-700/60 opacity-30">
-          </div>
-        </div>
-      </section>
-    </div>
-    }
-
     <!-- ── EMPTY STATE ──────────────────────────────────── -->
     @if (loadState() === 'empty') {
     <div
@@ -101,11 +62,11 @@
     }
 
     <!-- ── LOADED STATE ─────────────────────────────────── -->
-    @if (loadState() === 'loaded') {
+
     <div class="animate-in fade-in duration-500">
       <!-- ACTIVE GROUP CARD -->
       @if (activeGroup(); as active) {
-      @defer (on idle) {
+
       <section class="gs-section">
         <p class="gs-section-label">Your Active Group</p>
         <div class="gs-active-card" matRipple (click)="openGroup(active)">
@@ -153,7 +114,7 @@
           </div>
         </div>
       </section>
-      }
+      
       }
 
       <!-- OTHER GROUPS LIST -->
@@ -219,7 +180,7 @@
       </section>
       }
     </div>
-    }
+    
 
   </div>
 </div>
