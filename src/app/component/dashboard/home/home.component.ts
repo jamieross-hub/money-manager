@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ChatComponent } from '../chat/chat.component';
@@ -16,6 +16,7 @@ import * as fromProfile from 'src/app/store/profile/profile.selectors';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs/operators';
 import { inject } from '@angular/core';
+import { FamilyService } from 'src/app/modules/family/services/family.service';
 
 @Component({
   selector: 'app-home',
@@ -28,6 +29,7 @@ import { inject } from '@angular/core';
 export class HomeComponent {
   private store = inject(Store<AppState>);
   isFamilyMode = toSignal(this.store.select(fromProfile.selectUserPreferences).pipe(map(prefs => prefs?.isFamilyMode || false)));
+  private familyService = inject(FamilyService);
   // topCategoriesConfig: TopCategoriesConfig = {
   //   title: 'Top Categories',
   //   subtitle: 'Top categories by spending',
@@ -177,6 +179,14 @@ export class HomeComponent {
         panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
       });
     }
+
+    effect(() => {
+      const isFamily = this.isFamilyMode();
+      const activeId = this.familyService.activeFamilyId();
+      if (isFamily && activeId) {
+        this.router.navigate([`/dashboard/family/dashboard/${activeId}`]);
+      }
+    });
   }
 
 

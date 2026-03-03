@@ -9,6 +9,7 @@ import { loadBudgets } from 'src/app/store/budgets/budgets.actions';
 import { loadCategories } from 'src/app/store/categories/categories.actions';
 import { loadGoals } from 'src/app/store/goals/goals.actions';
 import { loadProfile } from 'src/app/store/profile/profile.actions';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import { loadTransactions } from 'src/app/store/transactions/transactions.actions';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { ValidationService } from 'src/app/util/service/validation.service';
@@ -41,6 +42,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { PreLoginHeaderComponent } from '../../landing/pre-login-header/pre-login-header.component';
+import { filter, take, firstValueFrom } from 'rxjs';
 
 /**
  * Enhanced SignInComponent with comprehensive security validation
@@ -310,7 +312,7 @@ export class SignInComponent implements OnInit, OnDestroy {
         await this.loadUserData(user.user.uid);
       }
 
-      this.navigateAfterSignIn();
+      await this.navigateAfterSignIn();
 
     } catch (error: any) {
       this.handleSignInError(error, email);
@@ -432,7 +434,7 @@ export class SignInComponent implements OnInit, OnDestroy {
       // Load user data
       await this.loadUserData();
 
-      this.navigateAfterSignIn();
+      await this.navigateAfterSignIn();
 
     } catch (error: any) {
       this.handleGoogleSignInError(error);
@@ -454,7 +456,7 @@ export class SignInComponent implements OnInit, OnDestroy {
       await this.loadUserData(guestUid);
 
       this.notificationService.success('Logged in as Guest (Offline Mode)');
-      this.navigateAfterSignIn();
+      await this.navigateAfterSignIn();
     } catch (error) {
       console.error('Guest mode error:', error);
       this.notificationService.error('Failed to enable guest mode');
@@ -491,8 +493,26 @@ export class SignInComponent implements OnInit, OnDestroy {
   /**
    * Centralized navigation after successful sign-in
    */
-  private navigateAfterSignIn(): void {
-    this.router.navigate(['/dashboard/home']);
+  private async navigateAfterSignIn(): Promise<void> {
+    try {
+      // Wait for profile to load in store
+      const profile = await firstValueFrom(
+        this.store.select(ProfileSelectors.selectProfile).pipe(
+          filter(p => !!p),
+          take(1)
+        )
+      );
+
+      const activeFamilyId = profile?.preferences?.activeFamilyId;
+      if (activeFamilyId) {
+        this.router.navigate([`/dashboard/family/dashboard/${activeFamilyId}`]);
+      } else {
+        this.router.navigate(['/dashboard/home']);
+      }
+    } catch (error) {
+      console.error('Error during post-sign-in navigation:', error);
+      this.router.navigate(['/dashboard/home']);
+    }
   }
 
   /**
