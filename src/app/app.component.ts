@@ -4,7 +4,7 @@ import { Location } from '@angular/common';
 import { LoaderService } from './util/service/loader.service';
 import { PwaNavigationService, NavigationState } from './util/service/pwa-navigation.service';
 import { CommonSyncService } from './util/service/common-sync.service';
-import { filter, Subject, takeUntil } from 'rxjs';
+import { filter, Subject, takeUntil, take } from 'rxjs';
 import { APP_CONFIG } from './util/config/config';
 import { SsrService } from './util/service/ssr.service';
 import { FirebaseMessagingService } from './util/service/firebase-messaging.service';
@@ -106,6 +106,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.setupEventListeners();
     this.firebaseMessagingService.listenForMessages();
     this.commonSyncService.startSync();
+    this.refreshFcmToken();
 
     // Map back button logic
     if (this.ssrService.isClientSide()) {
@@ -119,6 +120,27 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
+
+  private refreshFcmToken(): void {
+    if (this.ssrService.isClientSide() && 'Notification' in window) {
+      if (Notification.permission === 'granted') {
+        this.userService.userAuth$.pipe(
+          filter(user => !!user && user.uid !== 'offline-guest'),
+          take(1)
+        ).subscribe(async () => {
+          try {
+            const token = await this.firebaseMessagingService.refreshToken();
+            if (token) {
+              await this.userService.updateFcmToken(token);
+              console.log('FCM token refreshed on app start');
+            }
+          } catch (error) {
+            console.error('Error refreshing FCM token:', error);
+          }
+        });
+      }
+    }
+  }
 
   ngOnDestroy() {
     this.destroy$.next();
