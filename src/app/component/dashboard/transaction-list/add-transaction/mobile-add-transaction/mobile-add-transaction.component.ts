@@ -132,6 +132,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     { initialValue: false }
   );
   public categories = toSignal(this._store.select(selectAllCategories), { initialValue: [] as Category[] });
+  public userProfile = this._store.selectSignal(fromProfile.selectProfile);
 
   // ─── Family / Split Mode ───────────────────────────────────────────────────
   /** All members of the active family group. Loaded after ngOnInit. */
@@ -712,6 +713,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           totalSplitAmount: this.categorySplits.reduce((sum, split) => sum + split.amount, 0),
           // Family split data (applies when group mode = 'split')
           splitData: this.isSplitGroupMode() ? this.buildSplitData() : null,
+          userDisplayName: this.userProfile()?.displayName || '',
+          userPhotoURL: this.userProfile()?.photoURL || '',
           updatedBy: this.userId,
           updatedAt: new Date(),
         };
