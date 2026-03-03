@@ -282,7 +282,11 @@
 								
 								@if(isFamilyMode() && isSplitMode() && tx.splitData) {
 									<div class="member-pic-stack">
-										@if((tx.splitData.paidBy || []).length > 1) {
+										@if(tx.categoryId === 'adjustment') {
+											<div class="member-pic-wrapper">
+												<img [src]="tx.userPhotoURL" appImageFallback alt="Creator">
+											</div>
+										} @else if((tx.splitData.paidBy || []).length > 1) {
 											@for (payer of (tx.splitData.paidBy || []).slice(0, 3); track payer.userId; let i = $index) {
 												<div class="member-pic-wrapper stacked">
 													<img [src]="payer.photoURL" appImageFallback alt="Payer">

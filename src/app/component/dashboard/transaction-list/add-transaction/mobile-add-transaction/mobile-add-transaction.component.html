@@ -79,7 +79,7 @@
 					@if(!breakpointService.device.isMobile) {
 					<mat-form-field appearance="fill" class="w-full">
 						<mat-label>Select a category</mat-label>
-						<mat-select formControlName="categoryId" [disabled]="viewMode()"
+						<mat-select formControlName="categoryId" [disabled]="viewMode() || isReservedCategory()"
 							(selectionChange)="onCategoryChange($event.value)">
 							<mat-select-trigger>
 								<div class="flex items-center gap-2" *ngIf="transactionForm.get('categoryId')?.value">
@@ -113,8 +113,8 @@
 					<!-- Custom Category Select Trigger for Bottom Sheet -->
 					<div (click)="openCategorySheet()"
 						class="relative w-full cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-3 px-4 flex items-center justify-between hover:border-blue-500 transition-colors"
-						[class.bg-gray-100]="viewMode()" [class.opacity-70]="viewMode()"
-						[class.pointer-events-none]="viewMode()">
+						[class.bg-gray-100]="viewMode() || isReservedCategory()" [class.opacity-70]="viewMode() || isReservedCategory()"
+						[class.pointer-events-none]="viewMode() || isReservedCategory()">
 
 						<div class="flex items-center gap-3">
 							<div *ngIf="transactionForm.get('categoryId')?.value"

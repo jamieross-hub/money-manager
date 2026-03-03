@@ -58,6 +58,7 @@ import { MultiplePaidBySheetComponent } from './multiple-paid-by-sheet/multiple-
 import { SplitConfigSheetComponent, SplitConfigSheetData, SplitMode } from './split-config-sheet/split-config-sheet.component';
 import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
 import { ImageFallbackDirective } from 'src/app/util/directives';
+import { APP_CONFIG } from 'src/app/util/config/config';
 
 
 
@@ -144,6 +145,12 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
   splitConfigMode = signal<SplitMode>('equally');
   // ─────────────────────────────────────────────────────────────────────────
+  
+  public isReservedCategory = computed(() => {
+    const name = this.transactionForm?.get('categoryName')?.value?.toLowerCase();
+    const reservedNames = Object.keys(APP_CONFIG.VALIDATION.RESERVED_CATEGORY_NAMES);
+    return reservedNames.includes(name);
+  });
 
   public formattedAmount = signal('');
 
@@ -451,8 +458,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       amount: transaction.amount || '',
       date: this.dateService.toLocalISOString(transaction.date || new Date()),
       description: transaction.notes || '',
-      categoryId: transaction.categoryId || '',
-      categoryName: transaction.categoryName || '',
+      categoryId: transaction.categoryId || (transaction.category?.toLowerCase() === 'adjustment' ? 'adjustment' : ''),
+      categoryName: transaction.categoryName || transaction.category || '',
       categoryType: transaction.categoryType || transaction.type || '',
       accountId: transaction.accountId || '',
       taxAmount: transaction.taxAmount || 0,
@@ -806,6 +813,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         this.loaderService.hide();
       }
     } else {
+      this.notificationService.error('Please fill in all required fields');
 
       // Show specific validation errors
 
@@ -901,10 +909,18 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     this.categoryList$.pipe(
       filter(categories => categories && categories.length > 0),
       map((categories: Category[]) => categories.find(c => c.id === categoryId)),
-      filter((category): category is Category => !!category),
       take(1)
-    ).subscribe((category: Category) => {
-      this._applyCategoryData(category);
+    ).subscribe((category: Category | undefined) => {
+      if (category) {
+        this._applyCategoryData(category);
+      } else {
+        // Fallback for reserved categories or manual input if ID not in store
+        const currentName = this.transactionForm.get('categoryName')?.value;
+        const currentType = this.transactionForm.get('categoryType')?.value;
+        if (currentName && currentType) {
+           this.cdr.markForCheck();
+        }
+      }
     });
   }
 
