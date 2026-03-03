@@ -336,7 +336,7 @@ export class MobileTransactionListComponent
         _categoryName: category?.name || categoryId || 'Unknown',
         _accountName: account?.name || 'Unknown Account',
         _accountType: account?.type || 'Unknown',
-        _dateDisplay: dateObj.format('dd MMM '),
+        _dateDisplay: dateObj.format('DD MMM HH:mm'),
         _timeDisplay: dateObj.format('hh:mm a'),
         _fullTransactionDateDisplay: dateObj.format('DD MMM YYYY, hh:mm a'),
         _syncStatusColor: this.getSyncStatusColor(tx),

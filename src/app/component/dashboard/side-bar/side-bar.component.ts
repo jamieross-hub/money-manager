@@ -15,6 +15,10 @@ import { User } from 'src/app/util/models';
 import { Observable, Subscription } from 'rxjs';
 import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
 import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
+import { Store } from '@ngrx/store';
+import { AppState } from 'src/app/store/app.state';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { selectIsFamilyMode } from 'src/app/store/profile/profile.selectors';
 
 @Component({
   selector: 'side-bar',
@@ -39,6 +43,9 @@ export class SideBarComponent implements AfterViewInit, OnDestroy {
   navigationSections: SidebarNavParent[] = [];
   user$: Observable<User | null>;
 
+  /** True when the user has family mode enabled — drives familyOnly nav items */
+  readonly isFamilyMode = toSignal(this.store.select(selectIsFamilyMode), { initialValue: false });
+
   private drawerSub?: Subscription;
   private boundDocumentClick: (event: Event) => void;
 
@@ -47,7 +54,8 @@ export class SideBarComponent implements AfterViewInit, OnDestroy {
     public router: Router,
     private elementRef: ElementRef,
     public userService: UserService,
-    private mobileBackButtonService: MobileBackButtonService
+    private mobileBackButtonService: MobileBackButtonService,
+    private store: Store<AppState>
   ) {
     this.navigationSections = getAllNavigationItems();
     this.user$ = this.userService.userAuth$;

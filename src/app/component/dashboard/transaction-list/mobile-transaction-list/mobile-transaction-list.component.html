@@ -275,11 +275,11 @@
 					(click)="onLongPress(tx)">
 					<!-- Main Transaction Content -->
 					<div class="transaction-main">
-						<!-- Icon Section -->
+						<!-- Icon -->
 						<div class="transaction-icon">
 							<div class="icon-container" [style.background-color]="tx._categoryBgColor"
 								[style.color]="tx._categoryColor">
-								
+
 								@if(isFamilyMode() && isSplitMode() && tx.splitData) {
 									<div class="member-pic-stack">
 										@if(tx.categoryId === 'adjustment') {
@@ -299,54 +299,47 @@
 										}
 									</div>
 								} @else {
-									<mat-icon [style.color]="tx._categoryColor">
-										{{ tx._categoryIcon }}
-									</mat-icon>
+									<mat-icon [style.color]="tx._categoryColor">{{ tx._categoryIcon }}</mat-icon>
 									@if(tx.isSplitTransaction) {
-									<mat-icon class="split-transaction">bookmark</mat-icon>
+										<mat-icon class="split-transaction">bookmark</mat-icon>
 									}
 									@if(tx.isCategorySplit) {
-									<mat-icon class="category-split-transaction">category</mat-icon>
+										<mat-icon class="category-split-transaction">category</mat-icon>
 									}
 								}
 							</div>
 						</div>
 
-						<!-- Transaction Details -->
+						<!-- Details (left) -->
 						<div class="transaction-details">
-							<div class="transaction-title text-base">
-								{{ tx.category | titlecase }}
+							<div class="transaction-title">{{ tx.category | titlecase }}</div>
 
+							<div class="transaction-meta-row" *ngIf="tx.isRecurring || (tx.isSplitTransaction && !(isFamilyMode() && isSplitMode()))">
+								@if(tx.isRecurring) {
+									<span class="tx-chip tx-chip--recurring">
+										<mat-icon class="tx-chip__icon">repeat</mat-icon>
+										{{ tx.recurringInterval | titlecase }}
+									</span>
+								}
+								@if(tx.isSplitTransaction && !(isFamilyMode() && isSplitMode())) {
+									<span class="tx-chip tx-chip--split">Split</span>
+								}
 							</div>
 
-							@if(tx.isRecurring) {
-							<div class="recurring-badge">
-								<mat-icon class="recurring-icon-small">repeat</mat-icon>
-								<span>{{ tx.recurringInterval | titlecase }}</span>
-								<!-- @if(tx._isUpcoming) {
-									<span class="due-status" [class.overdue]="tx._isOverdue">{{ tx._dueStatus }}</span>
-								} -->
-							</div>
-							}
-							<!-- <div class="transaction-category text-base">
-                  {{ tx.category }}
-                </div> -->
-							<!-- <div class="transaction-date text-base">
-								{{ tx._dateDisplay }}
-							</div> -->
-							<div *ngIf="tx.notes" class="transaction-notes text-base">
-								{{ tx.notes }}
-							</div>
+							<div *ngIf="tx.notes" class="transaction-notes">{{ tx.notes }}</div>
 						</div>
 
-						<!-- Amount Section -->
+						<!-- Amount (right) -->
 						<div class="transaction-amount">
-							<div class="amount-value text-base"
-								[ngClass]="tx._isIncome ? 'income-text' : 'expense-text'">
+							<div class="amount-value" [ngClass]="tx._isIncome ? 'income-text' : 'expense-text'">
 								{{ tx._isIncome ? '+' : '-' }}{{ tx.amount | currency }}
 							</div>
 							<div class="amount-type">
-								{{ tx._timeDisplay }}
+								@if (selectedRange() === null) {
+									{{ tx._dateDisplay }}
+								} @else {
+									{{ tx._timeDisplay }}
+								}
 							</div>
 						</div>
 					</div>

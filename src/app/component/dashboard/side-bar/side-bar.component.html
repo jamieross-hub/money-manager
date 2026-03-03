@@ -53,38 +53,40 @@
 							<!-- Section Items -->
 							<div class="space-y-1.5 overflow-hidden transition-all duration-300" [class.max-h-0]="section.isCollapsible && !section.isExpanded" [class.max-h-[1000px]]="!section.isCollapsible || section.isExpanded">
 								@for (child of section.children; track child.label) {
-									<!-- External Link -->
-									@if (child.externalUrl) {
-										<a [href]="child.externalUrl" target="_blank"
-											 class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/80 transition-all duration-200 group">
-											<div class="w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-slate-700 transition-all shadow-sm group-hover:shadow-md">
-												<mat-icon class="text-gray-500 dark:text-slate-400 group-hover:text-blue-600 transition-colors !text-[1.2rem] !h-[1.2rem] !w-[1.2rem]">{{ child.icon }}</mat-icon>
-											</div>
-											<span class="text-sm font-semibold text-gray-600 dark:text-slate-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">{{ child.label | translate }}</span>
-											<mat-icon class="ml-auto text-gray-300 dark:text-slate-600 !text-[1rem] !w-[16px] !h-[16px]">open_in_new</mat-icon>
-										</a>
-									} @else {
-										<!-- Regular Route -->
-										<a [routerLink]="child.route" [queryParams]="child.queryParams"
-											 routerLinkActive="active-link"
-											 [routerLinkActiveOptions]="{exact: false}"
-											 (click)="drawer.close()"
-											 class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/80 transition-all duration-200 group relative overflow-hidden">
-											
-											<div class="w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-slate-700 transition-all shadow-sm active-icon-bg">
-												<mat-icon class="text-gray-500 dark:text-slate-400 group-hover:text-blue-600 transition-colors !text-[1.2rem] !h-[1.2rem] !w-[1.2rem] active-icon-color">{{ child.icon }}</mat-icon>
-											</div>
+									@if (!child.familyOnly || isFamilyMode()) {
+										<!-- External Link -->
+										@if (child.externalUrl) {
+											<a [href]="child.externalUrl" target="_blank"
+												 class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/80 transition-all duration-200 group">
+												<div class="w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-slate-700 transition-all shadow-sm group-hover:shadow-md">
+													<mat-icon class="text-gray-500 dark:text-slate-400 group-hover:text-blue-600 transition-colors !text-[1.2rem] !h-[1.2rem] !w-[1.2rem]">{{ child.icon }}</mat-icon>
+												</div>
+												<span class="text-sm font-semibold text-gray-600 dark:text-slate-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">{{ child.label | translate }}</span>
+												<mat-icon class="ml-auto text-gray-300 dark:text-slate-600 !text-[1rem] !w-[16px] !h-[16px]">open_in_new</mat-icon>
+											</a>
+										} @else {
+											<!-- Regular Route -->
+											<a [routerLink]="child.route" [queryParams]="child.queryParams"
+												 routerLinkActive="active-link"
+												 [routerLinkActiveOptions]="{exact: false}"
+												 (click)="drawer.close()"
+												 class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/80 transition-all duration-200 group relative overflow-hidden">
+												
+												<div class="w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-slate-700 transition-all shadow-sm active-icon-bg">
+													<mat-icon class="text-gray-500 dark:text-slate-400 group-hover:text-blue-600 transition-colors !text-[1.2rem] !h-[1.2rem] !w-[1.2rem] active-icon-color">{{ child.icon }}</mat-icon>
+												</div>
 
-											<span class="text-sm font-semibold text-gray-600 dark:text-slate-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">{{ child.label | translate }}</span>
-											
-											<!-- Premium Badge -->
-											<div *ngIf="child.isPremium" class="ml-auto">
-												<div class="px-2 py-0.5 rounded-lg premium-badge text-white text-[9px] font-black uppercase tracking-tighter shadow-sm">PRO</div>
-											</div>
+												<span class="text-sm font-semibold text-gray-600 dark:text-slate-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">{{ child.label | translate }}</span>
+												
+												<!-- Premium Badge -->
+												<div *ngIf="child.isPremium" class="ml-auto">
+													<div class="px-2 py-0.5 rounded-lg premium-badge text-white text-[9px] font-black uppercase tracking-tighter shadow-sm">PRO</div>
+												</div>
 
-											<!-- Active Indicator Bar -->
-											<div class="absolute left-0 w-1.5 h-6 bg-primary-600 rounded-r-full active-indicator opacity-0 transition-all duration-300 -translate-x-full"></div>
-										</a>
+												<!-- Active Indicator Bar -->
+												<div class="absolute left-0 w-1.5 h-6 bg-primary-600 rounded-r-full active-indicator opacity-0 transition-all duration-300 -translate-x-full"></div>
+											</a>
+										}
 									}
 								}
 							</div>

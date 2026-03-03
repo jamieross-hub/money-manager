@@ -6,6 +6,8 @@ export interface SidebarNavChild {
   isPremium?: boolean;
   queryParams?: any;
   externalUrl?: string;
+  /** If true, only show this item when the user has family mode active */
+  familyOnly?: boolean;
 }
 
 export interface SidebarNavParent {
@@ -42,6 +44,13 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         route: '/dashboard/transactions',
         icon: 'receipt_long',
         order: 3
+      },
+      {
+        label: 'NAVIGATION.GROUP_SELECTION',
+        route: '/dashboard/family/groups',
+        icon: 'group',
+        order: 4,
+        familyOnly: true
       },
       {
         label: 'NAVIGATION.RECURRING',
