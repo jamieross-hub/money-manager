@@ -37,7 +37,7 @@ export class FamilyJoinDialogComponent implements OnInit, OnDestroy {
 
   onCodeInput(event: any) {
     const val: string = event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    this.form.get('inviteCode')?.setValue(val.slice(0, 4), { emitEvent: false });
+    this.form.patchValue({ inviteCode: val });
   }
 
   submit() {

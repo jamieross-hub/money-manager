@@ -26,9 +26,9 @@
 					</div>
 				</div>
 				<input type="file" #fileInput (change)="onProfileImageSelected($event)" accept="image/*" class="hidden">
-				<div class="flex flex-col">
-					<p class="text-xl font-bold text-gray-900 dark:text-white m-0">{{ fullName() }}</p>
-					<p class="text-sm text-gray-500 dark:text-gray-400 m-0 mt-0.5">{{ userProfile()?.email }}</p>
+				<div class="flex flex-col user-info">
+					<p class="text-xl font-bold text-gray-900 dark:text-white m-0 break-words">{{ fullName() }}</p>
+					<p class="text-sm text-gray-500 dark:text-gray-400 m-0 mt-0.5 break-all">{{ userProfile()?.email }}</p>
 					<p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ 'PROFILE.MEMBER_SINCE' | translate }} {{
 						getFormattedDate(userProfile()?.createdAt) }}</p>
 				</div>
