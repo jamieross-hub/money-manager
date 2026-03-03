@@ -130,7 +130,7 @@
     <button type="button"
             class="w-full py-3.5 rounded-xl font-bold text-[15px] transition-all flex items-center justify-center gap-2"
             [ngClass]="isValid() 
-                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5' 
+                ? 'bg-primary-600 hover:bg-primary-700 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5' 
                 : 'bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'"
             (click)="onSave()" 
             [disabled]="!isValid()">
