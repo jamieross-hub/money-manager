@@ -281,6 +281,7 @@
           </div>
           @for (tx of group.transactions; track tx.id) {
             <div class="transaction-card"
+              [@popIn]="tx._popState"
               [class.selected]="selectedTx?.id === tx.id"
               [class.upcoming]="tx._isUpcoming"
               [class.opacity-50]="tx.syncStatus === 'pending'"

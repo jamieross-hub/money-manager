@@ -58,7 +58,7 @@
       <!-- ── Section: Your Balances ── -->
       @if (myBalances().length > 0) {
         <section>
-          <p class="section-label">Your Balances</p>
+          <p class="section-label mb-3">Your Balances</p>
           <div class="card-stack">
             @for (b of myBalances(); track trackByEntry($index, b)) {
               <div
@@ -122,7 +122,7 @@
       <!-- ── Section: Other Balances ── -->
       @if (otherBalances().length > 0) {
         <section>
-          <p class="section-label">Other Balances</p>
+          <p class="section-label mb-3">Other Balances</p>
           <div class="card-stack">
             @for (b of otherBalances(); track trackByEntry($index, b)) {
               <div
@@ -155,7 +155,7 @@
       <!-- ── Section: Settlement History ── -->
       @if (settlements().length > 0) {
         <section>
-          <p class="section-label">Settlement History</p>
+          <p class="section-label mb-3">Settlement History</p>
           <div class="history-card">
             @for (s of settlements(); track trackBySettlement($index, s); let last = $last) {
               <div class="history-item">

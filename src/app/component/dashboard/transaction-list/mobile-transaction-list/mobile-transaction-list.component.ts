@@ -13,6 +13,7 @@ import {
   effect,
   input
 } from '@angular/core';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -94,7 +95,30 @@ interface SortOption {
     MatDividerModule,
     ImageFallbackDirective
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('popIn', [
+      transition('void => new', [
+        style({ 
+          opacity: 0, 
+          height: 0,
+          marginBottom: 0,
+          transform: 'scale(0.92) translateY(15px)',
+          overflow: 'hidden'
+        }),
+        // First, expand the space for the card gracefully
+        animate('350ms cubic-bezier(0.4, 0, 0.2, 1)', style({ 
+          height: '*', 
+          marginBottom: '8px' 
+        })),
+        // Then, pop the card content in with a natural bounce
+        animate('650ms cubic-bezier(0.175, 0.885, 0.32, 1.275)', style({ 
+          opacity: 1, 
+          transform: 'scale(1) translateY(0)' 
+        }))
+      ])
+    ])
+  ]
 })
 export class MobileTransactionListComponent
   implements OnInit, OnDestroy {
@@ -142,6 +166,7 @@ export class MobileTransactionListComponent
   selectedSort = signal<string>('date-desc');
   showActiveFilterDetails = signal<boolean>(false);
   public selectedRange = signal<string | null>(null);
+  private sessionStartTime = Date.now();
 
   /** True when the user's preferences have isFamilyMode enabled */
   isFamilyMode = toSignal(
@@ -350,7 +375,8 @@ export class MobileTransactionListComponent
                         (tx.createdAt ? dayjs(this.dateService.toDate(tx.createdAt)).format('DD MMM YYYY, hh:mm a') : 'N/A'),
         _isUpcoming: !!tx.isPending && (tx.id?.startsWith('upcoming-') || false),
         _dueStatus: tx.date ? this.getDueStatus(this.dateService.toDate(tx.date)!) : '',
-        _isOverdue: tx.date ? dayjs(this.dateService.toDate(tx.date)).isBefore(today, 'day') : false
+        _isOverdue: tx.date ? dayjs(this.dateService.toDate(tx.date)).isBefore(today, 'day') : false,
+        _popState: (tx.createdAt && (this.dateService.toDate(tx.createdAt)?.getTime() ?? 0) > this.sessionStartTime) ? 'new' : 'old'
       };
 
       let group = groups.find(g => g.date === dateKey);

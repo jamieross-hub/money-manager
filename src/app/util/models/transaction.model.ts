@@ -151,6 +151,7 @@ export interface Transaction extends Auditable, RecurrenceInfo {
   _updatedAtDisplay?: string;
   _dueStatus?: string;
   _isOverdue?: boolean;
+  _popState?: string;
 }
 
 /**
