@@ -14,7 +14,7 @@
 
 .icon-option-custom {
   flex: 0 0 calc(33% - 9px); // 4 items per row, accounting for gap
-  max-width: calc(33% - 9px);
+  max-width: calc(34% - 9px);
   cursor: pointer;
   background: white;
   min-height: 80px; 
@@ -84,9 +84,9 @@
 
   mat-icon {
     transition: all 0.2s ease;
-    font-size: 2rem;
-    width: 32px;
-    height: 32px;
+    font-size: 2.1rem;
+    width: 36px;
+    height: 36px;
   }
 }
 
