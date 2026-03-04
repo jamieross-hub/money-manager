@@ -36,6 +36,11 @@ export class FooterComponent {
   private store = inject(Store<AppState>);
   public familyService = inject(FamilyService);
 
+  // Breakpoint signals for template
+  readonly isMobile = this.breakpointService.isMobile;
+  readonly isTablePortrait = this.breakpointService.isTablePortrait;
+  readonly isDesktop = this.breakpointService.isDesktop;
+
   private hideFooterForRoutes: string[] = [];
 
   /** Reactively mirrors user preferences → isFamilyMode from the NgRx store. */

@@ -4,230 +4,99 @@
 
 :host {
 	display: block;
+	contain: layout style;
 }
 
 footer {
-  transition: all 0.3s ease;
-  background-color: var(--surface-200) !important;
-  border-top: 1px solid var(--neutral-200);
+	transition: background-color 0.2s ease, border-color 0.2s ease;
+	background-color: var(--surface-200) !important;
+	border-top: 1px solid var(--neutral-200);
+	position: relative;
+	z-index: 50;
+	// Removed backdrop-filter as it causes lag on mobile
 }
 
 .active-icon-box {
-  background-color: var(--primary-600);
-  color: var(--surface-50);
-  
-  &:hover { 
-    background-color: var(--primary-700);
-  }
+	background-color: var(--primary-600);
+	color: var(--surface-50);
+	will-change: background-color;
+
+	&:hover {
+		background-color: var(--primary-700);
+	}
 }
 
 .inactive-icon-box {
-  background-color: var(--surface-100);
-  color: var(--neutral-500);
-  
-  &:hover { 
-    background-color: var(--surface-200);
-  }
+	background-color: var(--surface-100);
+	color: var(--neutral-500);
+	will-change: background-color;
+
+	&:hover {
+		background-color: var(--surface-200);
+	}
 }
 
 .active-icon {
-  color: white !important;
+	color: white !important;
 }
 
 .inactive-icon {
-  color: var(--neutral-400) !important;
+	color: var(--neutral-400) !important;
 }
 
 .active-label {
-  color: var(--primary-600);
+	color: var(--primary-600);
 }
 
 .inactive-label {
-  color: var(--neutral-500);
+	color: var(--neutral-500);
 }
 
 .add-button-box {
-  background-color: var(--neutral-500);
-  &:hover { background-color: var(--neutral-600); }
+	background-color: var(--neutral-500);
+	will-change: transform, background-color;
+	&:hover {
+		background-color: var(--neutral-600);
+	}
 }
 
 .add-label {
-  color: var(--neutral-700);
+	color: var(--neutral-700);
 }
 
 // Dynamic FAB colours per page
 .add-btn-green {
-  background-color: var(--primary-600);
+	background-color: var(--primary-600);
 }
 
 .add-btn-purple {
-  background-color: var(--primary-600);
+	background-color: var(--primary-600);
 }
 
-// Desktop Footer Styles
-.hidden.md\:flex {
-	backdrop-filter: blur(10px);
-	background: var(--surface-alpha-80);
-}
+// Optimization for all footer buttons
+button {
+	outline: none !important;
+	-webkit-tap-highlight-color: transparent;
+	transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+	will-change: transform;
 
-// Mobile Footer Styles
-.md\:hidden {
-	backdrop-filter: blur(10px);
-	
-  :host-context(.light-theme) & {
-    background: rgba(255, 255, 255, 0.98);
-  }
-
-  :host-context(.dark-theme) & {
-    background: rgba(15, 23, 42, 0.98);
-  }
-
-	// Main action button
-	.main-action {
-		box-shadow: var(--shadow-md);
-
-		&:hover {
-			box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
-		}
-
-		&:active {
-			box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-		}
-	}
-
-	// Quick action buttons
-	.quick-action {
-		transition: all 0.2s ease;
-
-		&:hover {
-			transform: translateY(-2px);
-		}
-
-		&:active {
-			transform: translateY(0);
-		}
-
-		.action-icon {
-			transition: all 0.2s ease;
-		}
-
-		&:hover .action-icon {
-			transform: scale(1.1);
-		}
-	}
-
-	// Network status indicator
-	.network-status {
-		transition: all 0.3s ease;
-
-		&:hover {
-			transform: scale(1.05);
-		}
+	&:active {
+		transform: scale(0.95);
 	}
 }
 
-// Action button colors
-.action-income {
-	.action-icon {
-		background: linear-gradient(135deg, var(--success-500), var(--success-600));
-	}
-
-	&:hover {
-		background: rgba(var(--success-500), 0.1);
-	}
-}
-
-.action-expense {
-	.action-icon {
-		background: linear-gradient(135deg, var(--error-500), var(--error-600));
-	}
-
-	&:hover {
-		background: rgba(var(--error-500), 0.1);
-	}
-}
-
-.action-scan {
-	.action-icon {
-		background: linear-gradient(135deg, var(--primary-400), var(--primary-500));
-	}
-
-	&:hover {
-		background: rgba(var(--primary-500), 0.1);
-	}
-}
-
-.action-search, .action-more {
-	.action-icon {
-		background: linear-gradient(135deg, var(--neutral-400), var(--neutral-500));
-	}
-
-	&:hover {
-		background: rgba(var(--neutral-500), 0.1);
-	}
-}
-
-// Network status colors
-.network-online {
-	background: linear-gradient(135deg, var(--success-500), var(--success-600));
-}
-
-.network-offline {
-	background: linear-gradient(135deg, var(--error-500), var(--error-600));
-}
-
-.network-slow {
-	background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
-}
-
-// Responsive adjustments
-@media (max-width: 640px) {
-	.mobile-footer {
-		.main-action {
-			padding: 0.75rem 1.5rem;
-			font-size: 0.875rem;
-		}
-
-		.quick-actions {
-			gap: 0.25rem;
-		}
-
-		.action-icon {
-			width: 2rem;
-			height: 2rem;
-		}
-	}
-}
-
-// Dark mode enhancements handled by global variables
-
-// Animation for network status changes
-@keyframes networkPulse {
-	0% {
-		transform: scale(1);
-	}
-	50% {
-		transform: scale(1.1);
-	}
-	100% {
-		transform: scale(1);
-	}
-}
-
+// Glow animation optimized for GPU
 @keyframes glowPulse {
 	0% {
 		transform: scale(0.95);
-		box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
 		opacity: 0.7;
 	}
 	70% {
-		transform: scale(1.4);
-		box-shadow: 0 0 0 15px rgba(59, 130, 246, 0);
+		transform: scale(1.3);
 		opacity: 0;
 	}
 	100% {
 		transform: scale(0.95);
-		box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
 		opacity: 0;
 	}
 }
@@ -239,15 +108,14 @@ footer {
 	&::after {
 		content: "";
 		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
+		inset: -2px;
 		border-radius: inherit;
-		background: inherit;
-		animation: glowPulse 3s cubic-bezier(0.24, 0, 0.38, 1);
+		background: var(--primary-500);
+		opacity: 0;
+		animation: glowPulse 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 		z-index: -1;
 		pointer-events: none;
+		will-change: transform, opacity;
 	}
 }
 
@@ -255,82 +123,15 @@ button:has(.glow-animation) {
 	overflow: visible !important;
 }
 
-.network-status-changing {
-	animation: networkPulse 0.6s ease-in-out;
-}
-
-// Smooth transitions for all interactive elements
-button {
-	transition: all 0.2s ease;
-
-	&:focus {
-		outline: none;
-		box-shadow: none;
+// Dark mode overrides
+:host-context(.dark-theme) {
+	footer {
+		background-color: #0f172a !important; // slate-900
+		border-color: #1e293b; // slate-800
 	}
 }
 
-// Active state highlighting
-.footer-button {
-	transition: all 0.2s ease;
-
-	&.active {
-		.action-icon {
-			background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
-			box-shadow: var(--shadow-md);
-		}
-
-		.action-label {
-			color: var(--primary-500);
-			font-weight: 600;
-		}
-	}
-
-	&:hover:not(.active) {
-		.action-icon {
-			transform: translateY(-1px);
-			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-		}
-	}
-}
-
-// Mat Menu Customization
-.more-menu-panel {
-  
-	.mat-mdc-menu-panel {
-		background: var(--surface-100);
-		border-radius: 12px;
-		box-shadow: var(--shadow-lg);
-		border: 1px solid var(--neutral-200);
-	}
-
-	.mat-mdc-menu-item {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		padding: 12px 16px;
-		font-size: 14px;
-		font-weight: 500;
-		color: var(--neutral-800);
-		transition: all 0.2s ease;
-
-		&:hover {
-			background: var(--primary-50);
-		}
-
-		mat-icon {
-			color: var(--neutral-400);
-			font-size: 20px;
-			width: 20px;
-			height: 20px;
-		}
-
-		span {
-			font-weight: 500;
-		}
-	}
-}
-
-// Accessibility improvements
+// Accessibility
 @media (prefers-reduced-motion: reduce) {
 	* {
 		animation-duration: 0.01ms !important;
@@ -339,12 +140,3 @@ button {
 	}
 }
 
-.menu-item {
-	background-color: var(--surface-alpha-50);
-	border-radius: 12px;
-	margin: 4px;
-
-  &:hover {
-    background-color: var(--surface-alpha-80);
-  }
-}
