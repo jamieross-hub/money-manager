@@ -814,7 +814,9 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           this.hapticFeedback.successVibration();
         }
 
-        this.router.navigate(['/dashboard/transactions']);
+        this.router.navigate(['/dashboard/transactions']).catch(() => {
+          // Ignore navigation errors such as AbortError
+        });
 
         this.dialogRef.close(true);
       } catch (error) {

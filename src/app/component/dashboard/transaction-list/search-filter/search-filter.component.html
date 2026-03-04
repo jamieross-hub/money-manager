@@ -6,11 +6,11 @@
       <div class="flex items-center space-x-2">
         <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
         <span class="text-sm font-medium filter-text dark:text-slate-200">
-          {{ selectedYear }} Transactions
+          {{ selectedYear() }} Transactions
         </span>
       </div>
       <div class="flex items-center space-x-1">
-        <span class="text-sm font-semibold filter-count dark:text-slate-100">{{ filteredCount }}</span>
+        <span class="text-sm font-semibold filter-count dark:text-slate-100">{{ filteredCount() }}</span>
       </div>
     </div>
 
@@ -60,7 +60,7 @@
   <div>
     <mat-form-field appearance="fill" class="w-full">
       <mat-label>Search transactions...</mat-label>
-      <input matInput [ngModel]="searchTerm" (ngModelChange)="onSearchChange($event)"
+      <input matInput [ngModel]="searchTerm()" (ngModelChange)="onSearchChange($event)"
         placeholder="Search transactions..." />
       <mat-icon matSuffix class="text-gray-400 text-sm">search</mat-icon>
     </mat-form-field>
@@ -70,8 +70,9 @@
   <div>
     <mat-form-field appearance="fill" class="w-full">
       <mat-label>Year</mat-label>
-      <mat-select [ngModel]="selectedYear" (ngModelChange)="onSelectedYearChange($event)">
-        @for (year of availableYears; track year) {
+      <input type="hidden" [value]="selectedYear()" #yearInput>
+      <mat-select [ngModel]="selectedYear()" (ngModelChange)="onSelectedYearChange($event)">
+        @for (year of availableYears(); track year) {
           <mat-option [value]="year">
             {{ year }}
           </mat-option>
@@ -85,10 +86,10 @@
   <div>
     <mat-form-field appearance="fill" class="w-full">
       <mat-label>Month</mat-label>
-      <mat-select [ngModel]="selectedMonthOption" (ngModelChange)="onSelectedMonthChange($event)">
+      <mat-select [ngModel]="selectedMonthOption()" (ngModelChange)="onSelectedMonthChange($event)">
         <mat-option value="all">All Months</mat-option>
-        @for (month of months; track month.value) {
-          <mat-option [value]="month.value">
+        @for (month of months(); track month.value) {
+          <mat-option [value]="month.value.toString()">
             {{ month.label }}
           </mat-option>
         }
@@ -101,9 +102,9 @@
   <div>
     <mat-form-field appearance="fill" class="w-full">
       <mat-label>Category</mat-label>
-      <mat-select [ngModel]="selectedCategory" (ngModelChange)="onCategoryChange($event)">
+      <mat-select [ngModel]="selectedCategory()" (ngModelChange)="onCategoryChange($event)">
         <mat-option value="all">All Categories</mat-option>
-        @for (category of categories; track category.id) {
+        @for (category of categories(); track category.id) {
           <mat-option [value]="category.id">
             {{ category.name }}
           </mat-option>
@@ -117,7 +118,7 @@
   <div>
     <mat-form-field appearance="fill" class="w-full">
       <mat-label>Type</mat-label>
-      <mat-select [ngModel]="selectedType" (ngModelChange)="onTypeChange($event)">
+      <mat-select [ngModel]="selectedType()" (ngModelChange)="onTypeChange($event)">
         <mat-option value="all">All Types</mat-option>
         <mat-option value="income">Income</mat-option>
         <mat-option value="expense">Expense</mat-option>

@@ -1,5 +1,5 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { Component, OnInit, OnDestroy, ViewChild, Inject, NgZone, PLATFORM_ID, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, Inject, NgZone, PLATFORM_ID, ChangeDetectionStrategy, inject, effect } from '@angular/core';
 import { MatCalendar, MatCalendarCellClassFunction } from '@angular/material/datepicker';
 import { UserService } from '../../../util/service/db/user.service';
 import { FilterService } from '../../../util/service/filter.service';
@@ -122,17 +122,54 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
 
   private subscription = new Subscription();
 
-  constructor(
-    private breakpointObserver: BreakpointObserver,
-    private filterService: FilterService,
-    private notificationService: NotificationService,
-    private dateService: DateService,
-    private store: Store<AppState>,
-    @Inject(PLATFORM_ID) private platformId: Object,
-    private zone: NgZone
-  ) {
+  private readonly breakpointObserver = inject(BreakpointObserver);
+  private readonly filterService = inject(FilterService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly dateService = inject(DateService);
+  private readonly store = inject(Store<AppState>);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly zone = inject(NgZone);
+
+  constructor() {
     this.breakpointObserver.observe(['(max-width: 600px)']).subscribe(result => {
       this.isMobile = result.matches;
+    });
+
+    effect(() => {
+      const yearRange = this.filterService.selectedYear();
+      if (yearRange) {
+        const newYear = yearRange.startYear;
+        if (this.selectedYear !== newYear) {
+          this.selectedYear = newYear;
+          const currentMonth = dayjs(this.currentViewDate).month();
+          this.currentViewDate = dayjs(new Date(newYear, currentMonth, 1)).toDate();
+          if (this.calendar) {
+            this.calendar.activeDate = this.currentViewDate;
+          }
+        }
+      }
+      this.updatePieChart();
+    });
+
+    effect(() => {
+      const dateRange = this.filterService.selectedDateRange();
+      if (dateRange) {
+        const startMoment = dayjs(dateRange.startDate);
+        const endMoment = dayjs(dateRange.endDate);
+
+        this.selectedYear = startMoment.year();
+
+        if (startMoment.isSame(startMoment.clone().startOf('month')) &&
+          endMoment.isSame(endMoment.clone().endOf('month')) &&
+          startMoment.month() === endMoment.month()) {
+          this.selectedMonth = startMoment.month();
+          this.currentViewDate = startMoment.toDate();
+          if (this.calendar) {
+            this.calendar.activeDate = this.currentViewDate;
+          }
+        }
+      }
+      this.updatePieChart();
     });
   }
 
@@ -140,7 +177,6 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     this.loadTransactions();
     this.loadCategories();
     this.generateAvailableYears();
-    this.subscribeToFilterService();
   }
 
   ngAfterViewInit() {
@@ -224,12 +260,12 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     const categoryName = category ? category.name : categoryId;
 
     // Set category filter using the FilterService
-    this.filterService.setSelectedCategory([categoryId]);
+    this.filterService.selectedCategory.set([categoryId]);
 
     // Also set the date range to the current month/year for context
     const startDate = dayjs(new Date(this.selectedYear, this.selectedMonth, 1)).startOf('month').toDate();
     const endDate = dayjs(new Date(this.selectedYear, this.selectedMonth, 1)).endOf('month').toDate();
-    this.filterService.setSelectedDateRange(startDate, endDate);
+    this.filterService.selectedDateRange.set({ startDate, endDate });
 
     // Show success notification
     this.notificationService.success(`Filtering transactions for ${categoryName} in ${this.availableMonths[this.selectedMonth].label} ${this.selectedYear}`);
@@ -419,10 +455,10 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     if (date) {
       this.selectedDateTransactions = this.getTransactionsForDate(date);
       // Emit selected date to other components
-      this.filterService.setSelectedDate(date);
+      this.filterService.selectedDate.set(date);
     } else {
       this.selectedDateTransactions = [];
-      this.filterService.clearSelectedDate();
+      this.filterService.selectedDate.set(null);
     }
   }
 
@@ -446,7 +482,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
       }
       this.rangeTransactions = this.getTransactionsForDateRange(this.startDate, this.endDate);
       // Emit date range to other components
-      this.filterService.setSelectedDateRange(this.startDate, this.endDate);
+      this.filterService.selectedDateRange.set({ startDate: this.startDate, endDate: this.endDate });
     }
   }
 
@@ -523,7 +559,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     this.startDate = null;
     this.endDate = null;
     this.rangeTransactions = [];
-    this.filterService.clearSelectedDate();
+    this.filterService.selectedDate.set(null);
     this.updatePieChart();
   }
 
@@ -593,53 +629,11 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
   clearAll() {
     this.clearSelections();
     this.isControlsExpanded = this.isRangeMode = false;
-    this.filterService.clearSelectedDate();
+    this.filterService.selectedDate.set(null);
   }
 
   private subscribeToFilterService() {
-    // Subscribe to year changes
-    this.subscription.add(
-      this.filterService.selectedYear$.subscribe(yearRange => {
-        if (yearRange) {
-          const newYear = yearRange.startYear;
-          if (this.selectedYear !== newYear) {
-            this.selectedYear = newYear;
-            // Update the calendar's active view to the selected year
-            const currentMonth = dayjs(this.currentViewDate).month();
-            this.currentViewDate = dayjs(new Date(newYear, currentMonth, 1)).toDate();
-            if (this.calendar) {
-              this.calendar.activeDate = this.currentViewDate;
-            }
-          }
-        }
-        this.updatePieChart();
-      })
-    );
-
-    // Subscribe to date range changes (which includes month selections)
-    this.subscription.add(
-      this.filterService.selectedDateRange$.subscribe(dateRange => {
-        if (dateRange) {
-          const startMoment = dayjs(dateRange.startDate);
-          const endMoment = dayjs(dateRange.endDate);
-
-          this.selectedYear = startMoment.year();
-
-          // Check if the range represents a full month
-          if (startMoment.isSame(startMoment.clone().startOf('month')) &&
-            endMoment.isSame(endMoment.clone().endOf('month')) &&
-            startMoment.month() === endMoment.month()) {
-            this.selectedMonth = startMoment.month();
-            // Update the calendar's active view to this month
-            this.currentViewDate = startMoment.toDate();
-            if (this.calendar) {
-              this.calendar.activeDate = this.currentViewDate;
-            }
-          }
-        }
-        this.updatePieChart();
-      })
-    );
+    // Handled by effects in constructor
   }
 
   updateCalendar() {

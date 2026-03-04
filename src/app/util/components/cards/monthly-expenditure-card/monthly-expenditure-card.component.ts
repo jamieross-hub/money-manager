@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, NgZone, AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, NgZone, AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, effect, inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -55,14 +55,29 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
 
     private subscription = new Subscription();
 
-    constructor(
-        private store: Store<AppState>,
-        private filterService: FilterService,
-        @Inject(PLATFORM_ID) private platformId: Object,
-        private zone: NgZone,
-        private appViewService: AppViewService,
-        private cdr: ChangeDetectorRef
-    ) { }
+    private readonly store = inject(Store<AppState>);
+    private readonly filterService = inject(FilterService);
+    private readonly platformId = inject(PLATFORM_ID);
+    private readonly zone = inject(NgZone);
+    private readonly appViewService = inject(AppViewService);
+    private readonly cdr = inject(ChangeDetectorRef);
+
+    constructor() {
+        effect(() => {
+            const yearRange = this.filterService.selectedYear();
+            const dateRange = this.filterService.selectedDateRange();
+
+            if (yearRange) {
+                this.selectedYear = yearRange.startYear;
+            }
+            if (dateRange) {
+                const start = dayjs(dateRange.startDate);
+                this.selectedMonth = start.month();
+                this.selectedYear = start.year();
+            }
+            this.updateData();
+        });
+    }
 
     ngOnInit(): void {
         // Subscribe to App View
@@ -70,24 +85,6 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
             this.appViewService.appView$.subscribe(view => {
                 this.currentView = view;
                 this.updateChartLabels();
-                this.updateData();
-            })
-        );
-
-        // Synchronize with global filters
-        this.subscription.add(
-            combineLatest([
-                this.filterService.selectedYear$,
-                this.filterService.selectedDateRange$
-            ]).subscribe(([yearRange, dateRange]) => {
-                if (yearRange) {
-                    this.selectedYear = yearRange.startYear;
-                }
-                if (dateRange) {
-                    const start = dayjs(dateRange.startDate);
-                    this.selectedMonth = start.month();
-                    this.selectedYear = start.year();
-                }
                 this.updateData();
             })
         );

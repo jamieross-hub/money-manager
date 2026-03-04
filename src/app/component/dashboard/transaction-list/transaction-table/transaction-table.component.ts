@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, ViewChild, OnInit, OnDestroy, AfterViewInit, HostListener, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Output, EventEmitter, ViewChild, OnInit, OnDestroy, AfterViewInit, HostListener, Input, ChangeDetectionStrategy, ChangeDetectorRef, inject, effect } from '@angular/core';
 import { MatTableModule } from '@angular/material/table';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
@@ -71,6 +71,16 @@ import { computed } from '@angular/core';
   ]
 })
 export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewInit {
+  private readonly auth = inject(Auth);
+  private readonly dateService = inject(DateService);
+  private readonly filterService = inject(FilterService);
+  private readonly store = inject(Store<AppState>);
+  private readonly ssrService = inject(SsrService);
+  private readonly dialog = inject(MatDialog);
+  public readonly breakpointService = inject(BreakpointService);
+  private readonly userService = inject(UserService);
+  private readonly cdr = inject(ChangeDetectorRef);
+
   @Input() isHome: boolean = false;
   @Output() editTransaction = new EventEmitter<Transaction>();
   @Output() deleteTransaction = new EventEmitter<Transaction>();
@@ -128,17 +138,13 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   isFamilyMode = toSignal(this.store.select(ProfileSelectors.selectIsFamilyMode), { initialValue: false });
   familyMembers = toSignal(this.store.select(FamilySelectors.selectFamilyMembers), { initialValue: [] as FamilyMember[] });
 
-  constructor(
-    private auth: Auth,
-    private dateService: DateService,
-    private filterService: FilterService,
-    private store: Store<AppState>,
-    private ssrService: SsrService,
-    private dialog: MatDialog,
-    public breakpointService: BreakpointService,
-    private userService: UserService,
-    private cdr: ChangeDetectorRef
-  ) { }
+  constructor() {
+    effect(() => {
+      this.filterService.filterState();
+      this.updateFilteredData();
+      this.cdr.markForCheck();
+    });
+  }
 
   ngOnInit() {
     this.setupDataSource();
@@ -197,16 +203,16 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
       // Use FilterService for filtering logic
       const filtered = this.filterService.filterTransactions([data], {
         searchTerm: filter,
-        selectedCategory: this.filterService.getSelectedCategory(),
-        selectedType: this.filterService.getSelectedType(),
-        selectedYear: this.filterService.getSelectedYear(),
-        selectedDate: this.filterService.getSelectedDate(),
-        selectedDateRange: this.filterService.getSelectedDateRange(),
-        categoryFilter: this.filterService.getCategoryFilter(),
-        accountFilter: this.filterService.getAccountFilter(),
-        amountRange: this.filterService.getAmountRange(),
-        statusFilter: this.filterService.getStatusFilter(),
-        tags: this.filterService.getTags()
+        selectedCategory: this.filterService.selectedCategory(),
+        selectedType: this.filterService.selectedType(),
+        selectedYear: this.filterService.selectedYear(),
+        selectedDate: this.filterService.selectedDate(),
+        selectedDateRange: this.filterService.selectedDateRange(),
+        categoryFilter: this.filterService.categoryFilter(),
+        accountFilter: this.filterService.accountFilter(),
+        amountRange: this.filterService.amountRange(),
+        statusFilter: this.filterService.statusFilter(),
+        tags: this.filterService.tags()
       });
       return filtered.length > 0;
     };
@@ -215,13 +221,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   // setupTransactionSubscriptions() removed and replaced by allTransactions computed signal
 
   private setupFilterServiceSubscriptions() {
-    // Subscribe to filter state changes and update data source
-    this.subscription.add(
-      this.filterService.filterState$.subscribe(() => {
-        this.updateFilteredData();
-        this.cdr.markForCheck();
-      })
-    );
+    // Handled by effect in constructor
   }
 
   private updateFilteredData() {
@@ -231,9 +231,9 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
 
     // Check if we have specific date filters applied
     const filterState = this.filterService.getCurrentFilterState();
-    const hasDateFilters = this.filterService.getSelectedDate() ||
-      this.filterService.getSelectedDateRange() ||
-      this.filterService.getSelectedYear();
+    const hasDateFilters = this.filterService.selectedDate() ||
+      this.filterService.selectedDateRange() ||
+      this.filterService.selectedYear();
 
     const hasSearchOrSpecificFilter = filterState.searchTerm || filterState.isRecurring;
 
@@ -464,7 +464,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   getActiveFiltersCount(): number {
-    return this.filterService.getActiveFiltersCount();
+    return this.filterService.activeFiltersCount();
   }
 
   hasActiveFilters(): boolean {

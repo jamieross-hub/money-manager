@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, AfterViewInit, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef, signal, input, effect, computed } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, AfterViewInit, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef, signal, input, effect, computed, inject } from '@angular/core';
 
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -60,6 +60,20 @@ import { TransactionsService } from 'src/app/util/service/db/transactions.servic
 export class TransactionListComponent implements OnInit, OnDestroy {
   isHome = input<boolean>(false);
 
+  private readonly loaderService = inject(LoaderService);
+  private readonly _dialog = inject(MatDialog);
+  private readonly auth = inject(Auth);
+  private readonly notificationService = inject(NotificationService);
+  private readonly filterService = inject(FilterService);
+  private readonly store = inject(Store<AppState>);
+  private readonly dateService = inject(DateService);
+  public readonly breakpointService = inject(BreakpointService);
+  private readonly router = inject(Router);
+  private readonly transactionsService = inject(TransactionsService);
+  private readonly userService = inject(UserService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly cdr = inject(ChangeDetectorRef);
+
   // Signals from store
   transactions = this.store.selectSignal(TransactionsSelectors.selectAllTransactions);
   transactionsLoading = this.store.selectSignal(TransactionsSelectors.selectTransactionsLoading);
@@ -75,21 +89,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(
-    private loaderService: LoaderService,
-    private _dialog: MatDialog,
-    private auth: Auth,
-    private notificationService: NotificationService,
-    private filterService: FilterService,
-    private store: Store<AppState>,
-    private dateService: DateService,
-    public readonly breakpointService: BreakpointService,
-    private router: Router,
-    private transactionsService: TransactionsService,
-    private userService: UserService,
-    private route: ActivatedRoute,
-    private cdr: ChangeDetectorRef
-  ) {
+  constructor() {
     this.isTransactionsPage.set(this.router.url.includes('transactions') ? true : false);
 
     // Effect for error handling

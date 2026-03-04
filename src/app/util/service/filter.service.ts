@@ -1,5 +1,5 @@
 
-import { Injectable } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map, distinctUntilChanged } from 'rxjs/operators';
 import dayjs from 'dayjs';
@@ -59,72 +59,62 @@ export interface FilterHistory {
   providedIn: 'root'
 })
 export class FilterService {
-  // Core filter subjects
-  private selectedDateSubject = new BehaviorSubject<Date | null>(null);
-  private selectedDateRangeSubject = new BehaviorSubject<DateRange | null>(null);
-  private selectedYearSubject = new BehaviorSubject<YearRange | null>(null);
-  private categoryFilterSubject = new BehaviorSubject<CategoryFilter | null>(null);
-  private searchTermSubject = new BehaviorSubject<string>('');
-  private selectedCategorySubject = new BehaviorSubject<string[]>(['all']);
-  private selectedTypeSubject = new BehaviorSubject<string>('all');
-  private accountFilterSubject = new BehaviorSubject<string[]>([]);
-  private amountRangeSubject = new BehaviorSubject<{ min: number | null; max: number | null }>({ min: null, max: null });
-  private statusFilterSubject = new BehaviorSubject<string[]>([]);
-  private tagsSubject = new BehaviorSubject<string[]>([]);
-  private isRecurringSubject = new BehaviorSubject<boolean | null>(null);
-
-  // Combined filter state
-  private filterStateSubject = new BehaviorSubject<TransactionFilter>(this.getDefaultFilterState());
+  // Core filter signals
+  public selectedDate = signal<Date | null>(null);
+  public selectedDateRange = signal<DateRange | null>(null);
+  public selectedYear = signal<YearRange | null>(null);
+  public categoryFilter = signal<CategoryFilter | null>(null);
+  public searchTerm = signal<string>('');
+  public selectedCategory = signal<string[]>(['all']);
+  public selectedType = signal<string>('all');
+  public accountFilter = signal<string[]>([]);
+  public amountRange = signal<{ min: number | null; max: number | null }>({ min: null, max: null });
+  public statusFilter = signal<string[]>([]);
+  public tags = signal<string[]>([]);
+  public isRecurring = signal<boolean | null>(null);
 
   // Filter history and presets
-  private filterHistorySubject = new BehaviorSubject<FilterHistory[]>([]);
-  private filterPresetsSubject = new BehaviorSubject<FilterPreset[]>([]);
-  private activePresetSubject = new BehaviorSubject<string | null>(null);
+  public filterHistory = signal<FilterHistory[]>([]);
+  public filterPresets = signal<FilterPreset[]>([]);
+  public activePreset = signal<string | null>(null);
 
-  // Public observables
-  public selectedDate$ = this.selectedDateSubject.asObservable();
-  public selectedDateRange$ = this.selectedDateRangeSubject.asObservable();
-  public selectedYear$ = this.selectedYearSubject.asObservable();
-  public categoryFilter$ = this.categoryFilterSubject.asObservable();
-  public searchTerm$ = this.searchTermSubject.asObservable();
-  public selectedCategory$ = this.selectedCategorySubject.asObservable();
-  public selectedType$ = this.selectedTypeSubject.asObservable();
-  public accountFilter$ = this.accountFilterSubject.asObservable();
-  public amountRange$ = this.amountRangeSubject.asObservable();
-  public statusFilter$ = this.statusFilterSubject.asObservable();
-  public tags$ = this.tagsSubject.asObservable();
-  public isRecurring$ = this.isRecurringSubject.asObservable();
-  public filterState$ = this.filterStateSubject.asObservable();
-  public filterHistory$ = this.filterHistorySubject.asObservable();
-  public filterPresets$ = this.filterPresetsSubject.asObservable();
-  public activePreset$ = this.activePresetSubject.asObservable();
+  // Combined filter state (computed)
+  public filterState = computed<TransactionFilter>(() => ({
+    searchTerm: this.searchTerm(),
+    selectedCategory: this.selectedCategory(),
+    selectedType: this.selectedType(),
+    selectedDate: this.selectedDate(),
+    selectedDateRange: this.selectedDateRange(),
+    selectedYear: this.selectedYear(),
+    categoryFilter: this.categoryFilter(),
+    accountFilter: this.accountFilter(),
+    amountRange: this.amountRange(),
+    statusFilter: this.statusFilter(),
+    tags: this.tags(),
+    isRecurring: this.isRecurring()
+  }));
 
-  // Computed observables
-  public hasActiveFilters$ = this.filterState$.pipe(
-    map(state => this.hasActiveFilters(state)),
-    distinctUntilChanged()
-  );
+  // Computed filters
+  public hasActiveFilters = computed(() => this.calculateHasActiveFilters(this.filterState()));
+  public activeFiltersCount = computed(() => this.calculateActiveFiltersCount(this.filterState()));
 
-  public activeFiltersCount$ = this.filterState$.pipe(
-    map(state => this.getActiveFiltersCount(state)),
-    distinctUntilChanged()
-  );
+  // Backwards compatibility observables (optional, but good for migration)
+  // I will skip them for now to force refactoring components
+
 
   constructor(private localStorageService: LocalIndexDBStorageService) {
     // Initialize presets from localStorage
     this.initializePresets();
-    // Subscribe to all filter changes to update combined state
-    this.setupFilterStateUpdates();
   }
 
   // ===== DATE FILTER METHODS =====
   setSelectedDate(date: Date | null): void {
-    this.selectedDateSubject.next(date);
-    this.selectedDateRangeSubject.next(null);
+    this.selectedDate.set(date);
+    this.selectedDateRange.set(null);
   }
 
   getSelectedDate(): Date | null {
-    return this.selectedDateSubject.value;
+    return this.selectedDate();
   }
 
   setSelectedDateRange(startDate: Date, endDate: Date): void {
@@ -132,8 +122,8 @@ export class FilterService {
       console.warn('Invalid date range provided');
       return;
     }
-    this.selectedDateRangeSubject.next({ startDate, endDate });
-    this.selectedDateSubject.next(null);
+    this.selectedDateRange.set({ startDate, endDate });
+    this.selectedDate.set(null);
 
     // If the date range represents a full month within a specific year,
     // keep the year filter to maintain context
@@ -151,11 +141,11 @@ export class FilterService {
     }
 
     // For other date ranges, clear the year filter as they might conflict
-    this.selectedYearSubject.next(null);
+    this.selectedYear.set(null);
   }
 
   getSelectedDateRange(): DateRange | null {
-    return this.selectedDateRangeSubject.value;
+    return this.selectedDateRange();
   }
 
   // ===== YEAR FILTER METHODS =====
@@ -164,11 +154,11 @@ export class FilterService {
       console.warn('Invalid year range provided');
       return;
     }
-    this.selectedYearSubject.next({ startYear, endYear });
-    this.selectedDateSubject.next(null);
+    this.selectedYear.set({ startYear, endYear });
+    this.selectedDate.set(null);
 
     // Check if there's an existing date range that represents a month within this year
-    const currentDateRange = this.selectedDateRangeSubject.value;
+    const currentDateRange = this.selectedDateRange();
     if (currentDateRange) {
       const startDay = dayjs(currentDateRange.startDate);
       const endDay = dayjs(currentDateRange.endDate);
@@ -185,11 +175,11 @@ export class FilterService {
     }
 
     // Clear date range for other cases
-    this.selectedDateRangeSubject.next(null);
+    this.selectedDateRange.set(null);
   }
 
   getSelectedYear(): YearRange | null {
-    return this.selectedYearSubject.value;
+    return this.selectedYear();
   }
 
   // ===== CATEGORY FILTER METHODS =====
@@ -199,20 +189,20 @@ export class FilterService {
       return;
     }
     const filter: CategoryFilter = { categoryId, year, month, monthName };
-    this.categoryFilterSubject.next(filter);
+    this.categoryFilter.set(filter);
   }
 
   getCategoryFilter(): CategoryFilter | null {
-    return this.categoryFilterSubject.value;
+    return this.categoryFilter();
   }
 
   // ===== TRANSACTION FILTER METHODS =====
   setSearchTerm(searchTerm: string): void {
-    this.searchTermSubject.next(searchTerm || '');
+    this.searchTerm.set(searchTerm || '');
   }
 
   getSearchTerm(): string {
-    return this.searchTermSubject.value;
+    return this.searchTerm();
   }
 
   setSelectedCategory(categories: string[]): void {
@@ -220,19 +210,19 @@ export class FilterService {
       console.warn('Invalid categories array provided');
       return;
     }
-    this.selectedCategorySubject.next(categories);
+    this.selectedCategory.set(categories);
   }
 
   getSelectedCategory(): string[] {
-    return this.selectedCategorySubject.value;
+    return this.selectedCategory();
   }
 
   setSelectedType(type: string): void {
-    this.selectedTypeSubject.next(type || 'all');
+    this.selectedType.set(type || 'all');
   }
 
   getSelectedType(): string {
-    return this.selectedTypeSubject.value;
+    return this.selectedType();
   }
 
   // ===== ACCOUNT FILTER METHODS =====
@@ -241,20 +231,20 @@ export class FilterService {
       console.warn('Invalid accounts array provided');
       return;
     }
-    this.accountFilterSubject.next(accounts);
+    this.accountFilter.set(accounts);
   }
 
   getAccountFilter(): string[] {
-    return this.accountFilterSubject.value;
+    return this.accountFilter();
   }
 
   // ===== AMOUNT RANGE FILTER METHODS =====
   setAmountRange(min: number | null, max: number | null): void {
-    this.amountRangeSubject.next({ min, max });
+    this.amountRange.set({ min, max });
   }
 
   getAmountRange(): { min: number | null; max: number | null } {
-    return this.amountRangeSubject.value;
+    return this.amountRange();
   }
 
   // ===== STATUS FILTER METHODS =====
@@ -263,11 +253,11 @@ export class FilterService {
       console.warn('Invalid statuses array provided');
       return;
     }
-    this.statusFilterSubject.next(statuses);
+    this.statusFilter.set(statuses);
   }
 
   getStatusFilter(): string[] {
-    return this.statusFilterSubject.value;
+    return this.statusFilter();
   }
 
   // ===== TAGS FILTER METHODS =====
@@ -276,65 +266,65 @@ export class FilterService {
       console.warn('Invalid tags array provided');
       return;
     }
-    this.tagsSubject.next(tags);
+    this.tags.set(tags);
   }
 
   getTags(): string[] {
-    return this.tagsSubject.value;
+    return this.tags();
   }
 
   setIsRecurring(value: boolean | null): void {
-    this.isRecurringSubject.next(value);
+    this.isRecurring.set(value);
   }
 
   getIsRecurring(): boolean | null {
-    return this.isRecurringSubject.value;
+    return this.isRecurring();
   }
 
   // ===== CLEAR METHODS =====
   clearSelectedDate(): void {
-    this.selectedDateSubject.next(null);
-    this.selectedDateRangeSubject.next(null);
+    this.selectedDate.set(null);
+    this.selectedDateRange.set(null);
   }
 
   clearSelectedYear(): void {
-    this.selectedYearSubject.next(null);
+    this.selectedYear.set(null);
   }
 
   clearCategoryFilter(): void {
-    this.categoryFilterSubject.next(null);
+    this.categoryFilter.set(null);
   }
 
   clearSearchTerm(): void {
-    this.searchTermSubject.next('');
+    this.searchTerm.set('');
   }
 
   clearSelectedCategory(): void {
-    this.selectedCategorySubject.next(['all']);
+    this.selectedCategory.set(['all']);
   }
 
   clearSelectedType(): void {
-    this.selectedTypeSubject.next('all');
+    this.selectedType.set('all');
   }
 
   clearAccountFilter(): void {
-    this.accountFilterSubject.next([]);
+    this.accountFilter.set([]);
   }
 
   clearAmountRange(): void {
-    this.amountRangeSubject.next({ min: null, max: null });
+    this.amountRange.set({ min: null, max: null });
   }
 
   clearStatusFilter(): void {
-    this.statusFilterSubject.next([]);
+    this.statusFilter.set([]);
   }
 
   clearTags(): void {
-    this.tagsSubject.next([]);
+    this.tags.set([]);
   }
 
   clearIsRecurring(): void {
-    this.isRecurringSubject.next(null);
+    this.isRecurring.set(null);
   }
 
   // ===== CLEAR ALL FILTERS =====
@@ -350,43 +340,7 @@ export class FilterService {
     this.clearStatusFilter();
     this.clearTags();
     this.clearIsRecurring();
-    this.activePresetSubject.next(null);
-  }
-
-  // ===== FILTER STATE MANAGEMENT =====
-  private setupFilterStateUpdates(): void {
-    // Combine all filter observables to update the main state
-    combineLatest([
-      this.selectedDate$,
-      this.selectedDateRange$,
-      this.selectedYear$,
-      this.categoryFilter$,
-      this.searchTerm$,
-      this.selectedCategory$,
-      this.selectedType$,
-      this.accountFilter$,
-      this.amountRange$,
-      this.statusFilter$,
-      this.tags$,
-      this.isRecurring$
-    ]).subscribe(([date, dateRange, year, categoryFilter, searchTerm, categories, type, accounts, amountRange, statuses, tags, isRecurring]) => {
-      const filterState: TransactionFilter = {
-        searchTerm,
-        selectedCategory: categories,
-        selectedType: type,
-        selectedDate: date,
-        selectedDateRange: dateRange,
-        selectedYear: year,
-        categoryFilter,
-        accountFilter: accounts,
-        amountRange,
-        statusFilter: statuses,
-        tags,
-        isRecurring
-      };
-      this.filterStateSubject.next(filterState);
-      this.addToHistory(filterState);
-    });
+    this.activePreset.set(null);
   }
 
   // ===== FILTER PRESETS =====
@@ -404,26 +358,26 @@ export class FilterService {
       filter: currentState
     };
 
-    const presets = [...this.filterPresetsSubject.value, preset];
-    this.filterPresetsSubject.next(presets);
+    const presets = [...this.filterPresets(), preset];
+    this.filterPresets.set(presets);
     this.savePresetsToStorage(presets);
   }
 
   applyPreset(presetId: string): void {
-    const presets = this.filterPresetsSubject.value;
+    const presets = this.filterPresets();
     const preset = presets.find(p => p.id === presetId);
 
     if (preset) {
       this.applyFilterState(preset.filter);
-      this.activePresetSubject.next(presetId);
+      this.activePreset.set(presetId);
     } else {
       console.warn(`Preset with id ${presetId} not found`);
     }
   }
 
   deletePreset(presetId: string): void {
-    const presets = this.filterPresetsSubject.value.filter(p => p.id !== presetId);
-    this.filterPresetsSubject.next(presets);
+    const presets = this.filterPresets().filter(p => p.id !== presetId);
+    this.filterPresets.set(presets);
     this.savePresetsToStorage(presets);
   }
 
@@ -435,26 +389,25 @@ export class FilterService {
       description: this.generateFilterDescription(filterState)
     };
 
-    const currentHistory = this.filterHistorySubject.value;
+    const currentHistory = this.filterHistory();
     const newHistory = [history, ...currentHistory.slice(0, 9)]; // Keep last 10 entries
-    this.filterHistorySubject.next(newHistory);
+    this.filterHistory.set(newHistory);
   }
 
   getFilterHistory(): FilterHistory[] {
-    return this.filterHistorySubject.value;
+    return this.filterHistory();
   }
 
   clearFilterHistory(): void {
-    this.filterHistorySubject.next([]);
+    this.filterHistory.set([]);
   }
 
   // ===== UTILITY METHODS =====
   getCurrentFilterState(): TransactionFilter {
-    return this.filterStateSubject.value;
+    return this.filterState();
   }
 
-  hasActiveFilters(filterState?: TransactionFilter): boolean {
-    const state = filterState || this.getCurrentFilterState();
+  private calculateHasActiveFilters(state: TransactionFilter): boolean {
     return !!(
       state.searchTerm ||
       !state.selectedCategory.includes('all') ||
@@ -468,12 +421,11 @@ export class FilterService {
       state.statusFilter.length > 0 ||
       state.tags.length > 0 ||
       state.selectedYear ||
-      state.isRecurring !== null && state.isRecurring !== undefined
+      (state.isRecurring !== null && state.isRecurring !== undefined)
     );
   }
 
-  getActiveFiltersCount(filterState?: TransactionFilter): number {
-    const state = filterState || this.getCurrentFilterState();
+  private calculateActiveFiltersCount(state: TransactionFilter): number {
     let count = 0;
 
     if (state.searchTerm) count++;
@@ -501,7 +453,7 @@ export class FilterService {
       this.setSelectedDateRange(filterState.selectedDateRange.startDate, filterState.selectedDateRange.endDate);
     }
     if (filterState.selectedYear !== undefined && filterState.selectedYear) this.setSelectedYear(filterState.selectedYear.startYear, filterState.selectedYear.endYear);
-    if (filterState.categoryFilter !== undefined) this.categoryFilterSubject.next(filterState.categoryFilter);
+    if (filterState.categoryFilter !== undefined) this.categoryFilter.set(filterState.categoryFilter);
     if (filterState.accountFilter !== undefined) this.setAccountFilter(filterState.accountFilter);
     if (filterState.amountRange !== undefined) this.setAmountRange(filterState.amountRange.min, filterState.amountRange.max);
     if (filterState.statusFilter !== undefined) this.setStatusFilter(filterState.statusFilter);
@@ -557,7 +509,7 @@ export class FilterService {
 
   private initializePresets(): void {
     const presets = this.loadPresetsFromStorage();
-    this.filterPresetsSubject.next(presets);
+    this.filterPresets.set(presets);
   }
 
   private generatePresetId(): string {

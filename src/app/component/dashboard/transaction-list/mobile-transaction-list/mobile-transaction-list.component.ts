@@ -11,7 +11,8 @@ import {
   WritableSignal,
   Signal,
   effect,
-  input
+  input,
+  inject
 } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
@@ -128,6 +129,20 @@ export class MobileTransactionListComponent
   @Output() importTransactions = new EventEmitter<void>();
   @Output() adjustTransaction = new EventEmitter<Transaction>();
 
+  private readonly filterService = inject(FilterService);
+  private readonly userService = inject(UserService);
+  private readonly store = inject(Store<AppState>);
+  private readonly appViewService = inject(AppViewService);
+  private readonly dateService = inject(DateService);
+  private readonly categoryService = inject(CategoryService);
+  private readonly currencyService = inject(CurrencyService);
+  private readonly themeService = inject(ThemeSwitchingService);
+  private readonly transactionsService = inject(TransactionsService);
+  private readonly route = inject(Router);
+  private readonly dialog = inject(MatDialog);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly auth = inject(Auth);
+
   isRecurring = input<boolean>(false);
 
   selectedTx: Transaction | null = null;
@@ -156,12 +171,12 @@ export class MobileTransactionListComponent
   accounts = toSignal(this.store.select(selectAllAccounts), { initialValue: [] as Account[] });
 
   // Filter Signals
-  searchTerm = toSignal(this.filterService.searchTerm$, { initialValue: '' });
-  selectedCategory = toSignal(this.filterService.selectedCategory$, { initialValue: ['all'] });
-  selectedType = toSignal(this.filterService.selectedType$, { initialValue: 'all' });
-  selectedDate = toSignal(this.filterService.selectedDate$, { initialValue: null });
-  selectedDateRange = toSignal(this.filterService.selectedDateRange$, { initialValue: null });
-  isRecurringFilter = toSignal(this.filterService.isRecurring$, { initialValue: null });
+  searchTerm = this.filterService.searchTerm;
+  selectedCategory = this.filterService.selectedCategory;
+  selectedType = this.filterService.selectedType;
+  selectedDate = this.filterService.selectedDate;
+  selectedDateRange = this.filterService.selectedDateRange;
+  isRecurringFilter = this.filterService.isRecurring;
   
   selectedSort = signal<string>('date-desc');
   showActiveFilterDetails = signal<boolean>(false);
@@ -553,21 +568,9 @@ export class MobileTransactionListComponent
     return 'All Dates';
   });
 
-  constructor(
-    private readonly auth: Auth,
-    private readonly route: Router,
-    private readonly dialog: MatDialog,
-    public readonly dateService: DateService,
-    private readonly store: Store<AppState>,
-    private readonly filterService: FilterService,
-    private readonly categoryService: CategoryService,
-    private readonly currencyService: CurrencyService,
-    private readonly themeService: ThemeSwitchingService,
-    private readonly appViewService: AppViewService,
-    public readonly userService: UserService,
-    private readonly transactionsService: TransactionsService,
-    private readonly cdr: ChangeDetectorRef
-  ) {
+
+
+  constructor() {
     // Watch for Input changes and hook into filterService
     // Effect removed because the parent TransactionListComponent already calls filterService.setIsRecurring() directly.
 

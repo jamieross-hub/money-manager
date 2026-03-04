@@ -1,4 +1,4 @@
-import { ApplicationConfig, isDevMode, APP_INITIALIZER, provideZoneChangeDetection, importProvidersFrom } from '@angular/core';
+import { ApplicationConfig, isDevMode, APP_INITIALIZER, provideZonelessChangeDetection, importProvidersFrom } from '@angular/core';
 import { provideRouter, withViewTransitions, withHashLocation, withPreloading, PreloadAllModules } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -43,7 +43,7 @@ export function initializeLocalStorage(localStorageService: LocalIndexDBStorageS
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideZonelessChangeDetection(),
     provideAnimationsAsync(),
     provideRouter(routes,
       withViewTransitions({
