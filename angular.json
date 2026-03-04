@@ -8,13 +8,13 @@
       "schematics": {
         "@schematics/angular:component": {
           "style": "scss",
-          "standalone": false
+          "standalone": true
         },
         "@schematics/angular:directive": {
-          "standalone": false
+          "standalone": true
         },
         "@schematics/angular:pipe": {
-          "standalone": false
+          "standalone": true
         }
       },
       "root": "",
@@ -54,7 +54,10 @@
               "src/styles/styles.scss"
             ],
             "scripts": [],
-            "server": "src/main.server.ts"
+            "server": "src/main.server.ts",
+            "allowedCommonJsDependencies": [
+              "dayjs"
+            ]
           },
           "configurations": {
             "production": {

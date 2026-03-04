@@ -93,6 +93,7 @@
   border-radius: 10px;
   padding: 10px 15px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -112,19 +113,19 @@
 .avatar-pair {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   
   .avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
     color: white;
-    font-size: 15px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-size: 14px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.12);
     overflow: hidden;
 
     img {
@@ -135,9 +136,21 @@
   }
 
   .connector {
-    color: var(--secondary-500);
-    mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    color: var(--secondary-400);
+    mat-icon { font-size: 14px; width: 14px; height: 14px; }
   }
+}
+
+/* ── Balance action buttons ─────────── */
+button[mat-stroked-button].pay {
+  color: var(--error-600) !important;
+  border-color: var(--error-300) !important;
+  background: var(--error-50) !important;
+}
+button[mat-stroked-button].get {
+  color: var(--primary-700) !important;
+  border-color: var(--primary-300) !important;
+  background: var(--primary-50) !important;
 }
 
 .detail-row {

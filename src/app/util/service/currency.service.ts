@@ -136,13 +136,17 @@ export class CurrencyService {
       ? 0
       : (decimalPlaces !== undefined ? decimalPlaces : configDecimalPlaces);
 
+    // Auto-compact if >= 1,000,000 (6 digits/millions)
+    const isAutoCompact = Math.abs(roundedValue) >= 1000000;
+    const finalCompact = compact || isAutoCompact;
+
     const formatOptions: Intl.NumberFormatOptions = {
       style: 'currency',
       currency: currency,
       minimumFractionDigits: 0,
       maximumFractionDigits: effectiveDecimalPlaces,
       signDisplay: signDisplay,
-      notation: compact ? 'compact' : notation
+      notation: finalCompact ? 'compact' : notation
     };
 
     if (!showSymbol) {
