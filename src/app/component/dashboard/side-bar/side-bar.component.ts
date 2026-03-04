@@ -70,6 +70,15 @@ export class SideBarComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  closeDrawer() {
+    // Delay drawer closure slightly to ensure router navigation fires reliably on older Android devices
+    setTimeout(() => {
+      if (this.drawer) {
+        this.drawer.close();
+      }
+    }, 100);
+  }
+
   ngAfterViewInit() {
     // Add click listener to document after view is initialized
     document.addEventListener('click', this.boundDocumentClick);

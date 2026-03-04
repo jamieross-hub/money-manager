@@ -6,7 +6,7 @@
 			<!-- Header / Logo -->
 			<div class="flex items-center justify-between p-6 pb-2">
 				<div class="flex items-center gap-3">
-					<div class="w-10 h-10 bg-primary-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-none transition-transform hover:scale-105 active:scale-95 cursor-pointer" routerLink="/dashboard" (click)="drawer.close()">
+					<div class="w-10 h-10 bg-primary-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-none transition-transform hover:scale-105 active:scale-95 cursor-pointer" routerLink="/dashboard" (click)="closeDrawer()">
 						<mat-icon class="text-white !text-[1.8rem] !w-[30px] !h-[30px]">account_balance_wallet</mat-icon>
 					</div>
 					<div class="flex flex-col">
@@ -69,8 +69,8 @@
 											<a [routerLink]="child.route" [queryParams]="child.queryParams"
 												 routerLinkActive="active-link"
 												 [routerLinkActiveOptions]="{exact: false}"
-												 (click)="drawer.close()"
-												 class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/80 transition-all duration-200 group relative overflow-hidden">
+												 (click)="closeDrawer()"
+												 class="cursor-pointer flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/80 transition-all duration-200 group relative overflow-hidden">
 												
 												<div class="w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-slate-700 transition-all shadow-sm active-icon-bg">
 													<mat-icon class="text-gray-500 dark:text-slate-400 group-hover:text-blue-600 transition-colors !text-[1.2rem] !h-[1.2rem] !w-[1.2rem] active-icon-color">{{ child.icon }}</mat-icon>
@@ -98,7 +98,7 @@
 			<!-- Footer / Quick Actions -->
 			<div class="p-6 border-t border-gray-100 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/50">
 				<div class="flex items-center justify-between">
-					<button mat-icon-button class="!w-11 !h-11 rounded-xl text-gray-500 dark:text-slate-400 hover:text-blue-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300" [routerLink]="['/dashboard/profile']" [queryParams]="{tab: 'settings'}" (click)="drawer.close()" [matTooltip]="'COMMON.SETTINGS' | translate">
+					<button mat-icon-button class="cursor-pointer !w-11 !h-11 rounded-xl text-gray-500 dark:text-slate-400 hover:text-blue-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300" [routerLink]="['/dashboard/profile']" [queryParams]="{tab: 'settings'}" (click)="closeDrawer()" [matTooltip]="'COMMON.SETTINGS' | translate">
 						<mat-icon>settings</mat-icon>
 					</button>
 					
