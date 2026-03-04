@@ -1,4 +1,4 @@
-import { Component, OnInit , ChangeDetectionStrategy} from '@angular/core';
+import { Component, OnInit , ChangeDetectionStrategy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslationService, Language } from '../../service/translation.service';
 import { LanguageService } from '../../service/language.service';
@@ -19,12 +19,13 @@ export class LanguageSwitcherComponent implements OnInit {
   constructor(
     private translationService: TranslationService,
     private languageService: LanguageService
-  ) { }
+  ) { 
+    effect(() => {
+      this.currentLanguage = this.translationService.currentLanguage();
+    });
+  }
 
   ngOnInit(): void {
-    this.translationService.getCurrentLanguage().subscribe(lang => {
-      this.currentLanguage = lang;
-    });
 
     // Populate available languages from LanguageService
     this.availableLanguages = this.languageService.getAvailableLanguages().map((lang: any) => ({

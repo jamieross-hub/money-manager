@@ -2,11 +2,11 @@
   <!-- Header -->
   <div class="flex items-start gap-3 mb-6">
     <div class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
-      <mat-icon class="text-primary-600 dark:text-primary-300">group_add</mat-icon>
+      <mat-icon class="text-primary-600 dark:text-primary-300">{{ isEditMode() ? 'edit' : 'group_add' }}</mat-icon>
     </div>
     <div>
-      <p class="text-lg font-bold text-gray-900 dark:text-white !mb-0">Create Group</p>
-      <p class="text-xs text-gray-500 dark:text-gray-400 m-0">Start tracking together</p>
+      <p class="text-lg font-bold text-gray-900 dark:text-white !mb-0">{{ isEditMode() ? 'Edit Group' : 'Create Group' }}</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 m-0">{{ isEditMode() ? 'Update group details' : 'Start tracking together' }}</p>
     </div>
   </div>
 
@@ -116,12 +116,16 @@
       <button mat-stroked-button type="button" class="flex-1" (click)="close()" [disabled]="loading()">Cancel</button>
       <button mat-flat-button color="primary" type="button" class="flex-1" [disabled]="form.invalid || loading()" (click)="submit()">
         @if (!loading()) {
-          <mat-icon class="!text-base mr-1 mb-2">add</mat-icon>
+          <mat-icon class="!text-base mr-1 mb-2">{{ isEditMode() ? 'save' : 'add' }}</mat-icon>
         }
         @if (loading()) {
           <mat-progress-spinner mode="indeterminate" diameter="16" class="mr-2 inline-block"></mat-progress-spinner>
         }
-        {{ loading() ? 'Creating...' : 'Create' }}
+        @if (isEditMode()) {
+          {{ loading() ? 'Updating...' : 'Update' }}
+        } @else {
+          {{ loading() ? 'Creating...' : 'Create' }}
+        }
       </button>
     </div>
 

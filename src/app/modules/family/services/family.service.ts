@@ -267,6 +267,29 @@ export class FamilyService {
     return familyData;
   }
 
+  async updateFamily(familyId: string, request: Partial<CreateFamilyRequest>): Promise<void> {
+    const user = this.currentUser;
+    if (!user) throw new Error('User not authenticated');
+
+    const updateData: any = {
+      updatedAt: new Date()
+    };
+    if (request.name !== undefined) updateData.name = request.name;
+    if (request.mode !== undefined) updateData.mode = request.mode;
+    if (request.icon !== undefined) updateData.icon = request.icon;
+
+    await updateDoc(this.getFamilyDoc(familyId), updateData);
+    
+    // Update local cache
+    const cacheKey = `family-${familyId}`;
+    try {
+      const cached = this.storageService.getItem<Family>(cacheKey);
+      if (cached) {
+        this.storageService.setItem(cacheKey, { ...cached, ...updateData });
+      }
+    } catch (e) {}
+  }
+
   private async initializeFamilyDefaults(familyId: string, userId: string): Promise<void> {
     const batch = writeBatch(this.firestore);
 

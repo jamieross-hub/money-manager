@@ -31,6 +31,11 @@ export const createFamily = createAction('[Family] Create Family', props<{ reque
 export const createFamilySuccess = createAction('[Family] Create Family Success', props<{ family: Family }>());
 export const createFamilyFailure = createAction('[Family] Create Family Failure', props<{ error: string }>());
 
+// ─── Update Family ─────────────────────────────────────────────────────────
+export const updateFamily = createAction('[Family] Update Family', props<{ familyId: string; request: Partial<CreateFamilyRequest> }>());
+export const updateFamilySuccess = createAction('[Family] Update Family Success', props<{ familyId: string; request: Partial<CreateFamilyRequest> }>());
+export const updateFamilyFailure = createAction('[Family] Update Family Failure', props<{ error: string }>());
+
 // ─── Join Family ───────────────────────────────────────────────────────────
 export const joinFamily = createAction('[Family] Join Family', props<{ inviteCode: string }>());
 export const joinFamilySuccess = createAction('[Family] Join Family Success', props<{ family: Family }>());

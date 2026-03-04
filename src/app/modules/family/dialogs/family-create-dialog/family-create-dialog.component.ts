@@ -56,6 +56,8 @@ export class FamilyCreateDialogComponent implements OnInit, OnDestroy {
 
   readonly iconOptions = GROUP_ICON_OPTIONS;
 
+  isEditMode = computed(() => !!this.data?.family);
+  
   /** Currently selected icon – either an emoji from the preset list or a Data URL from file upload */
   selectedIcon = signal<string>('family_restroom');
   selectedOption = computed(() => this.iconOptions.find(opt => opt.icon === this.selectedIcon()));
@@ -70,12 +72,32 @@ export class FamilyCreateDialogComponent implements OnInit, OnDestroy {
   isDuplicateName = computed(() => {
     const newName = this.form.get('name')?.value?.toLowerCase().trim();
     const existing = (this.data as any)?.existingNames as string[];
+    const currentName = this.data?.family?.name?.toLowerCase().trim();
+    
     if (!newName || !existing) return false;
+    // In edit mode, ignore the current name as a duplicate
+    if (this.isEditMode() && newName === currentName) return false;
+    
     return existing.some(n => n.toLowerCase().trim() === newName);
   });
 
   ngOnInit() {
     this.mobileBackButtonService.openModal('family-create', () => this.close());
+    
+    if (this.isEditMode()) {
+      const family = this.data.family;
+      this.form.patchValue({
+        name: family.name,
+        mode: family.mode || 'common'
+      });
+      if (family.icon) {
+        this.selectedIcon.set(family.icon);
+      }
+      
+      // Optionally disable changing the mode if transactions already exist
+      // Since it's complex to check, we might want to warn or let the backend handle it
+      // this.form.get('mode')?.disable(); // Or keep it enabled
+    }
   }
 
   ngOnDestroy() {

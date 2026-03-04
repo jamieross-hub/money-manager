@@ -15,6 +15,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { TransactionType } from 'src/app/util/config/enums';
 import { DateService } from 'src/app/util/service/date.service';
+import { APP_CONFIG } from 'src/app/util/config/config';
 
 @Component({
     selector: 'app-category-selection-sheet',
@@ -46,7 +47,12 @@ export class CategorySelectionSheetComponent implements OnInit {
         private store: Store<AppState>,
         private dateService: DateService
     ) {
-        this.categories$ = this.store.select(selectAllCategories);
+        this.categories$ = this.store.select(selectAllCategories).pipe(
+            map(categories => {
+                const reservedNames = APP_CONFIG.VALIDATION.RESERVED_CATEGORY_NAMES;
+                return categories.filter(c => !(c.name.trim().toLowerCase() in reservedNames));
+            })
+        );
         this.transactions$ = this.store.select(selectAllTransactions);
         this.transactionType = data?.transactionType || TransactionType.EXPENSE;
     }

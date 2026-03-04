@@ -468,7 +468,20 @@ export class GroupSelectionComponent implements OnInit {
     });
     ref.afterClosed().subscribe(async result => {
       if (result) {
-        this.store.dispatch(FamilyActions.createFamily({ request: result }));
+        try {
+          this.loaderService.show();
+          const family = await this.familyService.createFamily(result);
+          if (family.id) {
+            this.familyService.setActiveFamily(family.id);
+            this.store.dispatch(FamilyActions.loadMyFamily());
+          }
+          this.loadGroups();
+          this.snackBar.open(`Created "${family.name}" family!`, 'OK', { duration: 3000 });
+        } catch (error: any) {
+          this.snackBar.open(error?.message || 'Failed to create group', 'Dismiss', { duration: 4000 });
+        } finally {
+          this.loaderService.hide();
+        }
       }
     });
   }
@@ -477,7 +490,20 @@ export class GroupSelectionComponent implements OnInit {
     const ref = this.dialog.open(FamilyJoinDialogComponent, { disableClose: true });
     ref.afterClosed().subscribe(async code => {
       if (code) {
-        this.store.dispatch(FamilyActions.joinFamily({ inviteCode: code }));
+        try {
+          this.loaderService.show();
+          const family = await this.familyService.joinByCode(code);
+          if (family.id) {
+            this.familyService.setActiveFamily(family.id);
+            this.store.dispatch(FamilyActions.loadMyFamily());
+          }
+          this.loadGroups();
+          this.snackBar.open(`Joined "${family.name}" family!`, 'OK', { duration: 3000 });
+        } catch (error: any) {
+          this.snackBar.open(error?.message || 'Failed to join group', 'Dismiss', { duration: 4000 });
+        } finally {
+          this.loaderService.hide();
+        }
       }
     });
   }

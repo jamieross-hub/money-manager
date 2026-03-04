@@ -83,6 +83,24 @@ export class FamilyEffects {
     )
   );
 
+  updateFamily$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(FamilyActions.updateFamily),
+      switchMap(({ familyId, request }) =>
+        from(this.familyService.updateFamily(familyId, request)).pipe(
+          map(() => {
+            this.notificationService.success('Group updated successfully');
+            return FamilyActions.updateFamilySuccess({ familyId, request });
+          }),
+          catchError(err => {
+            this.notificationService.error(err.message || 'Failed to update group');
+            return of(FamilyActions.updateFamilyFailure({ error: err.message }));
+          })
+        )
+      )
+    )
+  );
+
   joinFamily$ = createEffect(() =>
     this.actions$.pipe(
       ofType(FamilyActions.joinFamily),
@@ -105,6 +123,7 @@ export class FamilyEffects {
     this.actions$.pipe(
       ofType(
         FamilyActions.createFamilySuccess, 
+        FamilyActions.updateFamilySuccess,
         FamilyActions.joinFamilySuccess,
         ProfileActions.setProfile
       ),

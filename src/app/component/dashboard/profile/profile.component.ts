@@ -380,6 +380,10 @@ export class ProfileComponent {
           try {
             this.isLoading.set(true);
             const family = await this.familyService.joinByCode(code);
+            // After successfully joining, switch to the new family
+            if (family.id) {
+              await this.switchActiveFamily(family.id);
+            }
             this.loadFamilies();
             this.notificationService.success(`Joined "${family.name}" family!`);
           } catch (error: any) {

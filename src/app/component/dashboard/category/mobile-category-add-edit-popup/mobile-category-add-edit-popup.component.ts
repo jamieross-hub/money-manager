@@ -114,7 +114,12 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
   public isSubmitting = signal<boolean>(false);
   public userId = signal<string>('');
   
-  public allCategories = toSignal(this.store.select(selectAllCategories), { initialValue: [] as Category[] });
+  public allCategories = computed(() => {
+    const categories = this.store.selectSignal(selectAllCategories)() || [];
+    console.log('allCategories',categories);
+    const reservedNames = APP_CONFIG.VALIDATION.RESERVED_CATEGORY_NAMES;
+    return categories.filter(c => !(c.name.trim().toLowerCase() in reservedNames));
+  });
   public existingGroups = computed(() => [...new Set(this.allCategories().map(c => c.group).filter(g => !!g))] as string[]);
   
   public availableIcons = signal(CATEGORY_ICONS);

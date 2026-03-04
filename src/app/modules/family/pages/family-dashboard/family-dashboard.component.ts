@@ -415,7 +415,23 @@ export class FamilyDashboardComponent implements OnInit {
     });
   }
 
+  editFamily() {
+    const fam = this.family();
+    if (!fam) return;
 
+    const existingNames = this.store.selectSignal(FamilySelectors.selectUserFamilies)()?.map(f => f.name) || [];
+    const ref = this.dialog.open(FamilyCreateDialogComponent, { 
+      disableClose: true,
+      data: { existingNames, family: fam }
+    });
+    ref.afterClosed().subscribe(result => {
+      if (result && fam.id) {
+        this.store.dispatch(FamilyActions.updateFamily({ familyId: fam.id, request: result }));
+        // Reload to pick up the changes
+        this.store.dispatch(FamilyActions.loadFamily({ familyId: fam.id }));
+      }
+    });
+  }
 
   copyCode(code: string) {
     navigator.clipboard.writeText(code);
