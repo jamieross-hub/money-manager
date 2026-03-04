@@ -4,9 +4,9 @@
 
 /* Base styles */
 :host {
-  @include mixins.dialog-host-responsive;
   display: flex;
   flex-direction: column;
+  @include mixins.dialog-host-responsive;
 }
 
 /* Dark theme */

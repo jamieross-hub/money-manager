@@ -23,6 +23,10 @@ $shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   max-width: 90vw;
   width: 100%;
   
+  border-radius: $border-radius;
+  overflow: hidden;
+  box-shadow: $shadow;
+
   @include mobile {
     min-width: 280px;
     max-width: 95vw;
@@ -37,10 +41,6 @@ $shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     min-width: 450px;
     max-width: 550px;
   }
-  
-  border-radius: $border-radius;
-  overflow: hidden;
-  box-shadow: $shadow;
 }
 
 .dialog-header {

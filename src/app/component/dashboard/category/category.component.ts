@@ -32,7 +32,6 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { CategoryService } from 'src/app/util/service/db/category.service';
 import { Router } from '@angular/router';
 import { FormControl } from '@angular/forms';
-import { QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -47,8 +46,6 @@ import { MatListModule } from '@angular/material/list';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
-import { QuickActionsFabComponent } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
-import { CategoryCardComponent } from './category-card/category-card.component';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import { CategorySummaryCardComponent } from 'src/app/util/components/cards/category-summary-card/category-summary-card.component';
 
@@ -74,21 +71,11 @@ dayjs.extend(isBetween);
     MatProgressBarModule,
     MatTooltipModule,
     TranslateModule,
-    QuickActionsFabComponent,
-    CategoryCardComponent,
     CurrencyPipe,
     CategorySummaryCardComponent
   ]
 })
 export class CategoryComponent implements OnInit, OnDestroy {
-
-  public quickActionsFabConfig: QuickActionsFabConfig = {
-    title: 'Quick Actions',
-    mainButtonIcon: 'add',
-    mainButtonColor: 'primary',
-    mainButtonTooltip: 'Add Category',
-    actions: []
-  };
 
   @Input() isChildView: boolean = false;
 

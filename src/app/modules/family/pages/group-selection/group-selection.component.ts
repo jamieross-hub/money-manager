@@ -32,7 +32,6 @@ import { FamilyCreateDialogComponent } from '../../dialogs/family-create-dialog/
 import { FamilyJoinDialogComponent } from '../../dialogs/family-join-dialog/family-join-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
 import { Family, FamilyMemberRole } from 'src/app/util/models/family.model';
-import { FamilyDashboardComponent } from '../family-dashboard/family-dashboard.component';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import * as FamilyActions from '../../store/family.actions';
@@ -121,8 +120,6 @@ type LoadState = 'loading' | 'loaded' | 'empty' | 'error';
     MatListModule,
     MatTooltipModule,
     QuickActionsFabComponent,
-    ConfirmDialogComponent,
-    FamilyDashboardComponent,
     ImageFallbackDirective,
   ],
   templateUrl: './group-selection.component.html',

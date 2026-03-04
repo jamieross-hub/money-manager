@@ -7,14 +7,12 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { provideHttpClient, withInterceptors, HttpClient } from '@angular/common/http';
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
-import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { TranslateHttpLoader, provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { provideNativeDateAdapter } from '@angular/material/core';
-export function HttpLoaderFactory(http: HttpClient) {
-  return new TranslateHttpLoader(http, './assets/i18n/', '.json');
-}
+
 
 // LocalStorageService Factory
 export function initializeLocalStorage(localStorageService: LocalIndexDBStorageService) {
@@ -74,9 +72,7 @@ import { CategoryFacadeService, PERSONAL_CATEGORY_SERVICE } from './util/service
 
 
 @NgModule({
-  declarations: [
-    AppComponent,
-  ],
+  declarations: [AppComponent],
   imports: [
     BrowserModule,
     // Removal of AppRoutingModule from imports
@@ -110,8 +106,7 @@ import { CategoryFacadeService, PERSONAL_CATEGORY_SERVICE } from './util/service
     TranslateModule.forRoot({
       loader: {
         provide: TranslateLoader,
-        useFactory: HttpLoaderFactory,
-        deps: [HttpClient]
+        useClass: TranslateHttpLoader
       }
     }),
     RouterModule,
@@ -223,6 +218,10 @@ import { CategoryFacadeService, PERSONAL_CATEGORY_SERVICE } from './util/service
       provide: CategoryService,
       useExisting: CategoryFacadeService
     },
+    provideTranslateHttpLoader({
+      prefix: './assets/i18n/',
+      suffix: '.json'
+    }),
   ],
   bootstrap: [AppComponent]
 })

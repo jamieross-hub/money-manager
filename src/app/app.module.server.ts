@@ -10,13 +10,13 @@ import { AppShellComponent } from './app-shell/app-shell.component';
 
 
 @NgModule({
-  declarations: [AppShellComponent],
+  declarations: [],
   imports: [
+    AppShellComponent,
     AppModule,
     ServerModule,
     AppRoutingModule
   ],
   bootstrap: [AppComponent],
-
 })
 export class AppServerModule { }

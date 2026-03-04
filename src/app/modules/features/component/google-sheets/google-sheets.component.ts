@@ -28,10 +28,15 @@ interface ImportTransaction {
 }
 
 
+import { SharedModule } from '../../../../modules/shared/shared.module';
+import { CommonModule } from '@angular/common';
+
 @Component({
   selector: 'app-google-sheets',
   templateUrl: './google-sheets.component.html',
   styleUrls: ['./google-sheets.component.scss'],
+  standalone: true,
+  imports: [SharedModule, CommonModule],
   providers: [GoogleSheetsService],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

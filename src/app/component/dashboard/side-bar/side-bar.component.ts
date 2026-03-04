@@ -14,7 +14,6 @@ import { UserService } from 'src/app/util/service/db/user.service';
 import { User } from 'src/app/util/models';
 import { Observable, Subscription } from 'rxjs';
 import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
-import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -32,8 +31,7 @@ import { selectIsFamilyMode } from 'src/app/store/profile/profile.selectors';
     MatButtonModule,
     MatTooltipModule,
     RouterModule,
-    TranslateModule,
-    ImageFallbackDirective
+    TranslateModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

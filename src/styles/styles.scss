@@ -2,8 +2,8 @@
 @use './light-theme' as light;
 @use './dark-theme' as dark;
 
-@import './notification.scss';
-@import './dialog.scss';
+@use './notification.scss';
+@use './dialog.scss';
 
 /* You can add global styles to this file, and also import other style files */
 @tailwind base;

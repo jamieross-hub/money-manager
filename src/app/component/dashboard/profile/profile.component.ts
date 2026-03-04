@@ -65,8 +65,6 @@ import { ThemeToggleComponent } from 'src/app/util/components/theme-toggle/theme
 import { SsrService } from 'src/app/util/service/ssr.service';
 
 import { CommonSyncService } from 'src/app/util/service/common-sync.service';
-import { FamilyModeToggleComponent } from 'src/app/util/components/family-mode-toggle/family-mode-toggle.component';
-import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 @Component({
   selector: 'app-profile',
   templateUrl: './profile.component.html',
@@ -89,9 +87,7 @@ import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.d
     QuickActionsFabComponent,
     MatExpansionModule,
     ThemeToggleComponent,
-    FamilyModeToggleComponent,
-    MatBottomSheetModule,
-    ImageFallbackDirective
+    MatBottomSheetModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

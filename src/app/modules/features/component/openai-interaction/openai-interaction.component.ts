@@ -10,10 +10,15 @@ import { User } from '../../../../util/models';
 import { GeminiService } from '../../../../util/service/ai-chat/gemini.service';
 import { environment } from '@env/environment';
 
+import { SharedModule } from '../../../../modules/shared/shared.module';
+import { CommonModule } from '@angular/common';
+
 @Component({
   selector: 'app-openai-interaction',
   templateUrl: './openai-interaction.component.html',
   styleUrls: ['./openai-interaction.component.scss'],
+  standalone: true,
+  imports: [SharedModule, CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OpenaiInteractionComponent implements OnInit {

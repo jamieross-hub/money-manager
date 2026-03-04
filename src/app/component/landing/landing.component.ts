@@ -9,7 +9,6 @@ import { RouterModule } from '@angular/router';
 import { PreLoginHeaderComponent } from './pre-login-header/pre-login-header.component';
 import { PreFooterComponent } from './pre-footer/pre-footer.component';
 import { ContactFormComponent } from './contact-form/contact-form.component';
-import { PwaInstallPromptComponent } from 'src/app/util/components/pwa-install-prompt/pwa-install-prompt.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { HeaderComponent } from '../dashboard/header/header.component';
@@ -25,7 +24,6 @@ import { HeaderComponent } from '../dashboard/header/header.component';
     PreLoginHeaderComponent,
     PreFooterComponent,
     ContactFormComponent,
-    PwaInstallPromptComponent,
     MatButtonModule,
     MatIconModule,
     HeaderComponent,

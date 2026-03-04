@@ -21,7 +21,6 @@ import { Router } from '@angular/router';
 import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { ValidationService } from 'src/app/util/service/validation.service';
-import { IncludesPipe } from 'src/app/util/pipes/includes.pipe';
 import { AddAccountDialogComponent } from 'src/app/component/dashboard/accounts/add-account-dialog/add-account-dialog.component';
 import { MobileCategoryAddEditPopupComponent } from 'src/app/component/dashboard/category/mobile-category-add-edit-popup/mobile-category-add-edit-popup.component';
 
@@ -86,8 +85,6 @@ import { APP_CONFIG } from 'src/app/util/config/config';
     MatBottomSheetModule,
     TranslateModule,
     CurrencyPipe,
-    IncludesPipe,
-    CategorySelectionSheetComponent,
     MatExpansionModule,
     CommonHeaderComponent,
     CommonBodyContentComponent,

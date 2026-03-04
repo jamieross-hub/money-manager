@@ -1,5 +1,5 @@
 import { Component, Inject, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -33,8 +33,7 @@ import * as CategoriesSelectors from '../../../store/categories/categories.selec
     MatSelectModule,
     MatOptionModule,
     MatIconModule,
-    MatButtonModule,
-    CurrencyPipe
+    MatButtonModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

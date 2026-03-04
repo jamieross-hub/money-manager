@@ -41,7 +41,6 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { PreLoginHeaderComponent } from '../../landing/pre-login-header/pre-login-header.component';
 import { filter, take, firstValueFrom } from 'rxjs';
 
 /**
@@ -81,7 +80,6 @@ import { filter, take, firstValueFrom } from 'rxjs';
     MatSortModule,
     TranslateModule,
     MatProgressSpinnerModule,
-    PreLoginHeaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

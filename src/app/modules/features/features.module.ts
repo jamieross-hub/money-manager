@@ -11,20 +11,19 @@ import { SharedModule } from '../shared/shared.module';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 @NgModule({
-    declarations: [
-        BudgetsComponent,
-        BackupRestoreComponent,
-        TaxComponent,
-        GoogleSheetsComponent,
-        OpenaiInteractionComponent
-    ],
+    declarations: [],
     imports: [
         CommonModule,
         FeaturesRoutingModule,
         SharedModule,
         ReactiveFormsModule,
         FormsModule,
-        ReportsComponent
+        ReportsComponent,
+        BudgetsComponent,
+        BackupRestoreComponent,
+        TaxComponent,
+        GoogleSheetsComponent,
+        OpenaiInteractionComponent
     ]
 })
 export class FeaturesModule { }

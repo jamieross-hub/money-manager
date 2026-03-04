@@ -45,7 +45,6 @@ import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.d
     MatProgressSpinnerModule, 
     MatTooltipModule, 
     MatRippleModule,
-    QuickActionsFabComponent,
     MatDialogModule,
     CurrencyPipe,
     MatMenuModule,

@@ -36,7 +36,6 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslateModule } from '@ngx-translate/core';
-import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 
 export interface AccountStatementDialogData {
   account: Account;
@@ -77,7 +76,6 @@ export interface AccountStatementDialogData {
     MatSortModule,
     MatProgressSpinnerModule,
     TranslateModule,
-    CurrencyPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

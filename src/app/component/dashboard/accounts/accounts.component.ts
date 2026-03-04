@@ -19,7 +19,6 @@ import * as TransactionsSelectors from '../../../store/transactions/transactions
 import { DateService } from 'src/app/util/service/date.service';
 import { AccountType } from 'src/app/util/config/enums';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
-import { QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { ACCOUNT_GROUPS, AccountGroup, getAccountGroup } from 'src/app/util/config/account.config';
 import { Transaction } from 'src/app/util/models/transaction.model';
 import * as ProfileSelectors from '../../../store/profile/profile.selectors';
@@ -63,9 +62,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
-import { QuickActionsFabComponent } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { AccountSummaryCardComponent } from 'src/app/util/components/cards/account-summary-card/account-summary-card.component';
-import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import { AccountStatsPipe } from 'src/app/util/pipes/account-stats.pipe';
 
 
@@ -84,21 +81,11 @@ import { AccountStatsPipe } from 'src/app/util/pipes/account-stats.pipe';
     MatMenuModule,
     MatTooltipModule,
     TranslateModule,
-    QuickActionsFabComponent,
     AccountSummaryCardComponent,
-    CurrencyPipe,
     AccountStatsPipe
   ]
 })
 export class AccountsComponent implements OnInit, OnDestroy {
-
-  quickActionsFabConfig: QuickActionsFabConfig = {
-    title: 'Quick Actions',
-    mainButtonIcon: 'add',
-    mainButtonColor: 'primary',
-    mainButtonTooltip: 'Add Account',
-    actions: []
-  };
 
 
   // Observables from store

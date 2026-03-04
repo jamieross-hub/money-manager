@@ -118,6 +118,8 @@
   max-height: 400px;
   overflow-y: auto;
   padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
 
   @media (max-width: 640px) {
     max-height: 300px;
@@ -130,6 +132,4 @@
     border-radius: 2px;
     &:hover { background: rgba(156, 163, 175, 0.5); }
   }
-  scrollbar-width: thin;
-  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
 }

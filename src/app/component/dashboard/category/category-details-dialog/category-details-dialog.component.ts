@@ -26,7 +26,6 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatSlideToggle, MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSortModule } from '@angular/material/sort';
@@ -55,7 +54,6 @@ export interface CategoryDetailsDialogData {
   imports: [
     CommonModule,
 
-    MatSlideToggle,
     MatCardModule,
     MatListModule,
     MatButtonModule,
@@ -78,7 +76,6 @@ export interface CategoryDetailsDialogData {
     MatTabsModule,
     MatCheckboxModule,
     MatTooltipModule,
-    MatSlideToggleModule,
     MatAutocompleteModule,
     MatExpansionModule,
     MatDividerModule,

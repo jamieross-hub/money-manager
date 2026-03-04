@@ -17,7 +17,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { AppState } from 'src/app/store/app.state';
 import * as fromProfile from 'src/app/store/profile/profile.selectors';
 import { FamilyService } from '../../../modules/family/services/family.service';
-import { QuickActionsFabComponent, QuickAction } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
+
 
 @Component({
   selector: 'app-footer',
@@ -25,7 +25,7 @@ import { QuickActionsFabComponent, QuickAction } from 'src/app/util/components/f
   styleUrls: ['./footer.component.scss'],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, TranslateModule, MatIconModule, MatButtonModule, RouterModule, QuickActionsFabComponent]
+  imports: [CommonModule, TranslateModule, MatIconModule, MatButtonModule, RouterModule]
 })
 export class FooterComponent {
   private commonSyncService = inject(CommonSyncService);
@@ -155,9 +155,5 @@ export class FooterComponent {
   navigateTo(route: string) {
     this.hapticFeedback.buttonClick();
     this.router.navigate([route]);
-  }
-
-  handleFamilyFabAction(action: QuickAction) {
-    this.familyService.handleFabAction(action);
   }
 }

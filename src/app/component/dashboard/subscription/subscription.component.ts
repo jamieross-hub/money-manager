@@ -10,7 +10,6 @@ import { firstValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import { AppState } from 'src/app/store/app.state';
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 
@@ -19,7 +18,7 @@ import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
   templateUrl: './subscription.component.html',
   styleUrls: ['./subscription.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe],
+  imports: [CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SubscriptionComponent implements OnInit {

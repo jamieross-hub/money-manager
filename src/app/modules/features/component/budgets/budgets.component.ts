@@ -47,10 +47,15 @@ interface MonthlyBreakdown {
   balance: number;
 }
 
+import { SharedModule } from '../../../../modules/shared/shared.module';
+import { CommonModule } from '@angular/common';
+
 @Component({
   selector: 'app-budgets',
   templateUrl: './budgets.component.html',
   styleUrls: ['./budgets.component.scss'],
+  standalone: true,
+  imports: [SharedModule, CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BudgetsComponent implements OnInit, OnDestroy {
