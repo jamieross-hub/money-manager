@@ -1220,16 +1220,19 @@
   font-weight: bold;
 }
 
-.transaction-notes {
-  font-size: 13px;
-  color: var(--primary-600);
-  font-style: italic;
-  line-height: 1.4;
-  text-align: right;
-  word-wrap: break-word;
-  max-width: 100%;
-  
-  
+.transaction-details-expanded {
+  .transaction-notes {
+    font-size: 13px;
+    color: var(--primary-600);
+    font-style: italic;
+    line-height: 1.4;
+    text-align: right;
+    max-width: 100%;
+    white-space: normal;
+    word-break: break-word;
+    overflow: visible;
+    text-overflow: unset;
+  }
 }
 
 // Floating Action Button
