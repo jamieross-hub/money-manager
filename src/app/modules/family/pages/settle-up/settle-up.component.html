@@ -72,12 +72,12 @@
                 <ng-container *ngIf="b | iOwe : currentUserId">You owe</ng-container>
                 <ng-container *ngIf="b | owedToMe : currentUserId">Owes you</ng-container>
               </p>
-              <p class="text-xs font-bold text-neutral-800 dark:text-neutral-100 truncate leading-tight mb-0">
+              <p class="text-[12px] font-bold text-neutral-800 dark:text-neutral-100 truncate leading-tight mb-0">
                 <ng-container *ngIf="b | iOwe : currentUserId">{{ b.toDisplayName | titlecase }}</ng-container>
                 <ng-container *ngIf="b | owedToMe : currentUserId">{{ b.fromDisplayName | titlecase }}</ng-container>
               </p>
               <!-- Amount -->
-              <p class="text-xs font-black leading-tight mb-0"
+              <p class="text-sm font-black leading-tight mb-0"
                  [class.text-red-500]="b | iOwe : currentUserId"
                  [class.text-primary-600]="b | owedToMe : currentUserId">
                 {{ b.amount | currency: 'INR':'symbol':'1.0-0' }}
