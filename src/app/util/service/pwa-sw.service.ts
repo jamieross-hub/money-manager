@@ -1,10 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal, Signal } from '@angular/core';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { filter, map } from 'rxjs/operators';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { APP_CONFIG } from '../config/config';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 import { LocalStorageKey } from 'src/app/util/models/local-storage.model';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 export interface PwaUpdateInfo {
   available: boolean;
@@ -17,17 +18,18 @@ export interface PwaUpdateInfo {
   providedIn: 'root'
 })
 export class PwaSwService {
-  private updateInfoSubject = new BehaviorSubject<PwaUpdateInfo>({
+  private updateInfoSignal = signal<PwaUpdateInfo>({
     available: false,
     currentVersion: '',
     newVersion: '',
     updateReady: false
   });
 
-  public updateInfo$: Observable<PwaUpdateInfo> = this.updateInfoSubject.asObservable();
+  public readonly updateInfo: Signal<PwaUpdateInfo> = this.updateInfoSignal.asReadonly();
 
-  private backgroundSyncSubject = new BehaviorSubject<boolean>(false);
-  public backgroundSync$ = this.backgroundSyncSubject.asObservable();
+  private backgroundSyncSignal = signal<boolean>(false);
+  public readonly backgroundSync: Signal<boolean> = this.backgroundSyncSignal.asReadonly();
+  public readonly backgroundSync$: Observable<boolean> = toObservable(this.backgroundSync);
 
   constructor(
     private swUpdate: SwUpdate,
@@ -90,7 +92,7 @@ export class PwaSwService {
       updateReady: true
     };
 
-    this.updateInfoSubject.next(updateInfo);
+    this.updateInfoSignal.set(updateInfo);
     // Don't auto-reload — let the UI show an update banner
   }
 
@@ -111,7 +113,7 @@ export class PwaSwService {
     return this.swUpdate.activateUpdate()
       .then(() => {
         console.log('Service worker update activated');
-        this.updateInfoSubject.next({
+        this.updateInfoSignal.set({
           available: false,
           currentVersion: '',
           newVersion: '',
@@ -128,10 +130,10 @@ export class PwaSwService {
 
   /** Dismiss the update banner without refreshing */
   public dismissUpdate(): void {
-    this.updateInfoSubject.next({
-      ...this.updateInfoSubject.value,
+    this.updateInfoSignal.update(info => ({
+      ...info,
       available: false
-    });
+    }));
   }
 
   public checkForUpdate(): Promise<boolean> {
@@ -151,15 +153,15 @@ export class PwaSwService {
   }
 
   public getCurrentVersion(): string {
-    return this.updateInfoSubject.value.currentVersion;
+    return this.updateInfoSignal().currentVersion;
   }
 
   public isUpdateAvailable(): boolean {
-    return this.updateInfoSubject.value.available;
+    return this.updateInfoSignal().available;
   }
 
   public isUpdateReady(): boolean {
-    return this.updateInfoSubject.value.updateReady;
+    return this.updateInfoSignal().updateReady;
   }
 
   // Method to handle PWA navigation events
@@ -188,7 +190,7 @@ export class PwaSwService {
               break;
             case 'BACKGROUND_SYNC':
               console.log('Background sync event received from SW:', event.data);
-              this.backgroundSyncSubject.next(true);
+              this.backgroundSyncSignal.set(true);
               break;
             default:
               console.log('Unknown service worker message:', event.data);

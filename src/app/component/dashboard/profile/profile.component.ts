@@ -120,7 +120,7 @@ export class ProfileComponent {
   readonly activeFamilyId = this.familyService.activeFamilyId;
   readonly familyMembers = signal<any[]>([]);
   readonly isFamilyLoading = signal(false);
-  readonly currentTheme = signal<ThemeType>('light-theme');
+  readonly currentTheme = this.themeSwitchingService.currentTheme;
   readonly showPinSetup = signal(false);
   readonly isFamilyMode = signal(false);
   readonly newPinControl = new FormControl('', [Validators.required, Validators.pattern(/^\d{4}$/)]);
@@ -269,12 +269,7 @@ export class ProfileComponent {
       }
     });
 
-    // Listen to theme changes
-    this.themeSwitchingService.currentTheme.pipe(
-      takeUntilDestroyed()
-    ).subscribe(theme => {
-      this.currentTheme.set(theme);
-    });
+
   }
 
 

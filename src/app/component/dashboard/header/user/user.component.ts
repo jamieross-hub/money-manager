@@ -79,10 +79,7 @@ export class UserComponent {
     this.breakpointObserver.observe(Breakpoints.Handset).pipe(map(r => r.matches)),
     { initialValue: false }
   );
-  readonly isDarkTheme = toSignal(
-    this.themeSwitchingService.currentTheme.pipe(map(t => t === 'dark-theme')),
-    { initialValue: false }
-  );
+  readonly isDarkTheme = computed(() => this.themeSwitchingService.currentTheme() === 'dark-theme');
 
   // ── Computed signals ───────────────────────────────────────────────────────
   readonly isGuest = computed(() => this.userService.isGuestUser());

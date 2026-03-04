@@ -1,19 +1,18 @@
-import { Component, Input, OnInit, OnDestroy , ChangeDetectionStrategy} from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { LoaderService } from '../../service/loader.service';
-import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-loader',
   templateUrl: './loader.component.html',
   styleUrl: './loader.component.scss',
   standalone: true,
-  imports: [AsyncPipe],
+  imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoaderComponent implements OnInit, OnDestroy {
   @Input() message: string = '';
 
-  loading$ = this.loaderService.loading$;
+  isLoading = this.loaderService.isLoading;
   displayMessage: string = '';
 
   private loadingMessages: string[] = [

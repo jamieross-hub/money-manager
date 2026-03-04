@@ -4,8 +4,8 @@
     <div class="text-center" (click)="toggleExpenseIncome()">
       <div class="text-lg text-muted text-gray-500">You Expense | Income</div>
       <div class="text-responsive-lg mt-1 font-bold text-primary">
-        {{ showYearly ? (totalExpenses$ | async | currency:{round: true}) : (totalExpensesByMonth$ | async | currency:{round: true}) }} &nbsp; | &nbsp;
-        <span class="text-gray-500">{{ showYearly ? (totalIncome$ | async | currency:{round: true}) : (totalIncomeByMonth$ | async | currency:{round: true} ) }}</span>
+        {{ showYearly() ? (totalExpenses() | currency:{round: true}) : (totalExpensesByMonth() | currency:{round: true}) }} &nbsp; | &nbsp;
+        <span class="text-gray-500">{{ showYearly() ? (totalIncome() | currency:{round: true}) : (totalIncomeByMonth() | currency:{round: true} ) }}</span>
       </div>
     </div>
     

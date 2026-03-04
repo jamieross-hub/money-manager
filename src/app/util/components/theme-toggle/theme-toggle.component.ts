@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, Input } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, Input, effect } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -23,14 +23,15 @@ export class ThemeToggleComponent implements OnInit {
     private _themeSwitchingService: ThemeSwitchingService,
     private cdr: ChangeDetectorRef,
     private userService: UserService
-  ) { }
-
-  ngOnInit() {
-    // Subscribe to theme changes to update the toggle state
-    this._themeSwitchingService.currentTheme.subscribe(theme => {
+  ) {
+    effect(() => {
+      const theme = this._themeSwitchingService.currentTheme();
       this.isDarkTheme = theme === 'dark-theme';
       this.cdr.markForCheck();
     });
+  }
+
+  ngOnInit() {
   }
 
   public async toggleTheme() {

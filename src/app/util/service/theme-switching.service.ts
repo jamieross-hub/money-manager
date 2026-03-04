@@ -1,6 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Inject, Injectable, Renderer2, RendererFactory2 } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { Inject, Injectable, Renderer2, RendererFactory2, signal } from '@angular/core';
 import { ThemeType } from '../models/theme.model';
 import { SsrService } from './ssr.service';
 import { Meta } from '@angular/platform-browser';
@@ -13,7 +12,9 @@ export class ThemeSwitchingService {
   private renderer: Renderer2;
   private body: HTMLElement;
 
-  public currentTheme = new BehaviorSubject<ThemeType>('light-theme');
+  private themeSignal = signal<ThemeType>('light-theme');
+  public readonly currentTheme = this.themeSignal.asReadonly();
+  
   private previousClass: ThemeType = 'light-theme';
 
   constructor(
@@ -99,7 +100,7 @@ export class ThemeSwitchingService {
     this.renderer.addClass(this.body, theme);
 
     this.previousClass = theme;
-    this.currentTheme.next(theme);
+    this.themeSignal.set(theme);
 
     // Update theme-color meta tag
     const themeColor = theme === 'dark-theme' ? '#0a0b0a' : '#f7faf5';
@@ -112,3 +113,4 @@ export class ThemeSwitchingService {
     this.applyTheme(theme);
   }
 }
+

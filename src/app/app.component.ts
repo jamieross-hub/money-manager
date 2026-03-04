@@ -42,7 +42,7 @@ import { PinLockComponent } from './util/components/pin-lock/pin-lock.component'
 })
 export class AppComponent implements OnInit, OnDestroy {
   public title = APP_CONFIG.APP_NAME;
-  public isLocked$ = this.securityService.isLocked$;
+  public isLocked = this.securityService.isLocked;
   isOnline = false; // Will be set properly in ngOnInit
   navigationState: NavigationState;
   private destroy$ = new Subject<void>();

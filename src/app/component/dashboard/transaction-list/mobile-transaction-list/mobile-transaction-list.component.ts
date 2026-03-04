@@ -600,14 +600,13 @@ export class MobileTransactionListComponent
       })
     );
 
-    // Subscribe to theme changes
-    this.subscription.add(
-      this.themeService.currentTheme.subscribe(() => {
-        // if (this.showChart) { // showChart is not defined
-        //   this.renderChart();
-        // }
-      })
-    );
+    // React to theme changes (e.g., for charts)
+    effect(() => {
+      this.themeService.currentTheme();
+      // if (this.showChart) {
+      //   this.renderChart();
+      // }
+    });
   }
 
   ngOnDestroy() {

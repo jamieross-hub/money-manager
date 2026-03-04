@@ -1,23 +1,20 @@
-import { Injectable } from '@angular/core';
-import { TranslateService } from '@ngx-translate/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Injectable, signal, effect, inject } from '@angular/core';
 import { APP_CONFIG } from '../config/config';
-import { LanguageCode } from '../config/enums';
 import { UserService } from './db/user.service';
 import { TranslationService } from './translation.service';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Injectable({
     providedIn: 'root'
 })
 export class LanguageService {
-    private currentLanguageSubject = new BehaviorSubject<string>(APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT);
-    public currentLanguage$ = this.currentLanguageSubject.asObservable();
+    private readonly translationService = inject(TranslationService);
+    private readonly userService = inject(UserService);
 
-    constructor(
-        private translationService: TranslationService,
-        private userService: UserService,
-    ) {
-        // Initialization is handled by TranslationService via getInitialLanguage()
+    private languageSignal = signal<string>(APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT);
+    public readonly currentLanguage = this.languageSignal.asReadonly();
+
+    constructor() {
         this.syncWithUserPreferences();
     }
 
@@ -28,25 +25,23 @@ export class LanguageService {
             }
         });
 
-        // Sync local currentLanguageSubject with TranslationService
-        this.translationService.getCurrentLanguage().subscribe((lang: string) => {
-            if (this.currentLanguageSubject.value !== lang) {
-                this.currentLanguageSubject.next(lang);
+        // Sync local languageSignal with TranslationService
+        effect(() => {
+            const lang = this.translationService.currentLanguage();
+            if (this.languageSignal() !== lang) {
+                this.languageSignal.set(lang);
                 // Update HTML lang attribute
                 document.documentElement.lang = lang;
             }
         });
     }
 
-
-
-
     setLanguage(lang: string) {
         this.translationService.setLanguage(lang);
     }
 
     getCurrentLanguage(): string {
-        return this.currentLanguageSubject.value;
+        return this.languageSignal();
     }
 
     getAvailableLanguages() {
@@ -55,3 +50,4 @@ export class LanguageService {
             .filter((v, i, a) => a.findIndex(t => t.code === v.code) === i);
     }
 }
+

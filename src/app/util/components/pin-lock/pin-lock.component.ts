@@ -1,10 +1,8 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
-
+import { Component, HostListener, inject, effect } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { SecurityService } from 'src/app/util/service/security.service';
 import { UserService } from 'src/app/util/service/db/user.service';
-import { Subject, takeUntil } from 'rxjs';
 import { SsrService } from 'src/app/util/service/ssr.service';
 
 @Component({
@@ -14,24 +12,19 @@ import { SsrService } from 'src/app/util/service/ssr.service';
   templateUrl: './pin-lock.component.html',
   styleUrls: ['./pin-lock.component.scss']
 })
-export class PinLockComponent implements OnInit, OnDestroy {
-  isLocked = false;
+export class PinLockComponent {
+  private readonly securityService = inject(SecurityService);
+  private readonly userService = inject(UserService);
+  private readonly ssrService = inject(SsrService);
+
+  readonly isLocked = this.securityService.isLocked;
   enteredPin = '';
   pinError = '';
-  private destroy$ = new Subject<void>();
 
-  constructor(
-    private securityService: SecurityService,
-    private userService: UserService,
-    private ssrService: SsrService
-  ) {}
-
-  ngOnInit(): void {
-    this.securityService.isLocked$.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(locked => {
-      this.isLocked = locked;
-      if (locked) {
+  constructor() {
+    effect(() => {
+      // Accessing the signal to create a dependency
+      if (this.isLocked()) {
         this.pinError = '';
         this.enteredPin = '';
       }
@@ -40,18 +33,13 @@ export class PinLockComponent implements OnInit, OnDestroy {
 
   @HostListener('window:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent) {
-    if (!this.isLocked) return;
+    if (!this.isLocked()) return;
 
     if (event.key >= '0' && event.key <= '9') {
       this.onPinDigit(event.key);
     } else if (event.key === 'Backspace') {
       this.onPinClear();
     }
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   onPinDigit(digit: string): void {
@@ -90,7 +78,9 @@ export class PinLockComponent implements OnInit, OnDestroy {
     try {
       await this.userService.signOut();
       this.securityService.setPinVerified(false);
-      window.location.reload();
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
     } catch (error) {
       console.error('Logout failed:', error);
     }

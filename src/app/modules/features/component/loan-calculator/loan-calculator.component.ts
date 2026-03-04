@@ -59,7 +59,7 @@ export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy
 
     // amCharts
     // amCharts (Removed)
-    private themeSubscription: Subscription | undefined;
+
 
 
     constructor(
@@ -81,11 +81,7 @@ export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy
             this.calculateEMI();
         });
 
-        // Subscribe to theme changes for chart colors
-        // Subscribe to theme changes for chart colors
-        this.themeSubscription = this.themeService.currentTheme.subscribe(() => {
-            // Theme changes no longer need to update chart colors
-        });
+
 
         this.calculateEMI();
     }
@@ -98,10 +94,6 @@ export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy
     }
 
     ngOnDestroy(): void {
-
-        if (this.themeSubscription) {
-            this.themeSubscription.unsubscribe();
-        }
     }
 
     calculateEMI(): void {

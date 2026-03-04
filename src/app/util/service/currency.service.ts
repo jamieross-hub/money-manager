@@ -1,10 +1,8 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { Currency, DEFAULT_CURRENCY } from '../models/currency.model';
-import { UserService } from './db/user.service';
-import { APP_CONFIG } from '../config/config';
-
+import { Injectable, signal } from '@angular/core';
 import { CurrencyDetectionUtil } from '../helpers/currency-detection.util';
+import { APP_CONFIG } from '../config/config';
+import { DEFAULT_CURRENCY } from '../models/currency.model';
+import { UserService } from './db/user.service';
 
 export interface CurrencyFormatOptions {
   currency?: string;
@@ -22,11 +20,11 @@ export interface CurrencyFormatOptions {
   providedIn: 'root'
 })
 export class CurrencyService {
-  private currentCurrencySubject = new BehaviorSubject<string>(CurrencyDetectionUtil.detectCurrency());
-  public currentCurrency$ = this.currentCurrencySubject.asObservable();
+  private currencySignal = signal<string>(CurrencyDetectionUtil.detectCurrency());
+  public readonly currentCurrency = this.currencySignal.asReadonly();
 
-  private currentLanguageSubject = new BehaviorSubject<string>(APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT);
-  public currentLanguage$ = this.currentLanguageSubject.asObservable();
+  private languageSignal = signal<string>(APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT);
+  public readonly currentLanguage = this.languageSignal.asReadonly();
 
   constructor(private userService: UserService) {
     this.initializeCurrency();
@@ -54,36 +52,31 @@ export class CurrencyService {
   }
 
   getCurrentCurrency(): string {
-    return this.currentCurrencySubject.value;
+    return this.currencySignal();
   }
 
   setCurrentCurrency(currencyCode: string): void {
-    if (this.currentCurrencySubject.value !== currencyCode) {
-      this.currentCurrencySubject.next(currencyCode);
+    if (this.currencySignal() !== currencyCode) {
+      this.currencySignal.set(currencyCode);
     }
   }
 
   getCurrentLanguage(): string {
-    return this.currentLanguageSubject.value;
+    return this.languageSignal();
   }
 
   getCurrentLanguageForCurrency(): string {
-    const lang = this.currentLanguageSubject.value;
+    const lang = this.languageSignal();
     if (lang === 'en') return 'en-IN';
     if (lang === 'hi') return 'hi-IN';
     return lang;
   }
 
   setCurrentLanguage(languageCode: string): void {
-    if (this.currentLanguageSubject.value !== languageCode) {
-      this.currentLanguageSubject.next(languageCode);
+    if (this.languageSignal() !== languageCode) {
+      this.languageSignal.set(languageCode);
     }
   }
-
-  // getCurrencySymbol(currencyCode?: string): string {
-  //   const code = currencyCode || this.getCurrentCurrency();
-  //   return getCurrencySymbol(code);
-  // }
 
   getDefaultCurrency(): string {
     return DEFAULT_CURRENCY;
@@ -114,7 +107,7 @@ export class CurrencyService {
     }
 
     const {
-      currency = this.getCurrentCurrency(),
+      currency = this.currencySignal(),
       locale = this.getCurrentLanguageForCurrency(),
       showSymbol = true,
       showCode = false,
@@ -167,3 +160,4 @@ export class CurrencyService {
     }
   }
 }
+

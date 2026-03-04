@@ -1,9 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, combineLatest, map } from 'rxjs';
 import { UserService } from './db/user.service';
 import { NotificationService } from './notification.service';
 import { environment } from 'src/environments/environment';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 /**
  * Security event types
@@ -92,11 +92,19 @@ export interface SecurityStatus {
   providedIn: 'root'
 })
 export class SecurityService {
-  private readonly securityEvents = new BehaviorSubject<SecurityEvent[]>([]);
-  private readonly securityStatus = new BehaviorSubject<SecurityStatus | null>(null);
-  private readonly pinVerified = new BehaviorSubject<boolean>(false);
-  public readonly pinVerified$ = this.pinVerified.asObservable();
+  private readonly userService = inject(UserService);
+  private readonly router = inject(Router);
+  private readonly notificationService = inject(NotificationService);
 
+  private readonly securityEventsSignal = signal<SecurityEvent[]>([]);
+  private readonly securityStatusSignal = signal<SecurityStatus | null>(null);
+  private readonly pinVerifiedSignal = signal<boolean>(false);
+  
+  public readonly pinVerified = this.pinVerifiedSignal.asReadonly();
+  public readonly securityEvents = this.securityEventsSignal.asReadonly();
+  public readonly securityStatus = this.securityStatusSignal.asReadonly();
+
+  private readonly userAuth = toSignal(this.userService.userAuth$);
 
   private readonly securityConfig: SecurityConfig = {
     SESSION_TIMEOUT: 30 * 60 * 1000, // 30 minutes
@@ -112,39 +120,34 @@ export class SecurityService {
     BLOCKED_IPS: []
   };
 
-  public readonly securityEvents$ = this.securityEvents.asObservable();
-  public readonly securityStatus$ = this.securityStatus.asObservable();
-
   /**
-   * Observable representing if the app should be locked (PIN enabled + Not verified)
+   * Signal representing if the app should be locked (PIN enabled + Not verified)
    */
-  public readonly isLocked$: Observable<boolean> = combineLatest([
-    this.userService.userAuth$,
-    this.pinVerified$
-  ]).pipe(
-    map(([user, verified]) => {
-      // Bypass PIN lock in development mode
-      if (!environment.production) {
-        return false;
-      }
-      // App is locked if PIN is enabled, has a hash, and is not already verified
-      return !!(user?.preferences?.pinEnabled && user?.preferences?.pinHash && !verified);
-    })
-  );
+  public readonly isLocked = computed(() => {
+    const user = this.userAuth();
+    const verified = this.pinVerifiedSignal();
+    
+    // Bypass PIN lock in development mode
+    if (!environment.production) {
+      return false;
+    }
+    // App is locked if PIN is enabled, has a hash, and is not already verified
+    return !!(user?.preferences?.pinEnabled && user?.preferences?.pinHash && !verified);
+  });
 
 
   /**
    * Set PIN verified state manually
    */
   public setPinVerified(verified: boolean): void {
-    this.pinVerified.next(verified);
+    this.pinVerifiedSignal.set(verified);
   }
 
   /**
    * Check if PIN is currently verified in this session
    */
   public isPinVerified(): boolean {
-    return this.pinVerified.value;
+    return this.pinVerifiedSignal();
   }
 
   /**
@@ -170,15 +173,7 @@ export class SecurityService {
     return match;
   }
 
-
-
-
-
-  constructor(
-    private router: Router,
-    private userService: UserService,
-    private notificationService: NotificationService
-  ) {
+  constructor() {
     this.initializeSecurityMonitoring();
   }
 
@@ -222,15 +217,14 @@ export class SecurityService {
       resolved: false
     };
 
-    const currentEvents = this.securityEvents.value;
-    currentEvents.push(event);
-    
-    // Keep only last 1000 events
-    if (currentEvents.length > 1000) {
-      currentEvents.shift();
-    }
-    
-    this.securityEvents.next(currentEvents);
+    this.securityEventsSignal.update(currentEvents => {
+      const updatedEvents = [...currentEvents, event];
+      // Keep only last 1000 events
+      if (updatedEvents.length > 1000) {
+        updatedEvents.shift();
+      }
+      return updatedEvents;
+    });
     
     // Handle critical security events
     if (level === SecurityLevel.CRITICAL) {
@@ -284,7 +278,7 @@ export class SecurityService {
       recentSecurityEvents: this.getRecentSecurityEvents()
     };
     
-    this.securityStatus.next(status);
+    this.securityStatusSignal.set(status);
   }
 
   /**
@@ -316,7 +310,7 @@ export class SecurityService {
    * Get recent security events
    */
   private getRecentSecurityEvents(): SecurityEvent[] {
-    const events = this.securityEvents.value;
+    const events = this.securityEventsSignal();
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     return events.filter(event => event.timestamp > oneHourAgo);
   }
@@ -477,42 +471,42 @@ export class SecurityService {
    * Get security events by type
    */
   public getSecurityEventsByType(type: SecurityEventType): SecurityEvent[] {
-    return this.securityEvents.value.filter(event => event.type === type);
+    return this.securityEventsSignal().filter(event => event.type === type);
   }
 
   /**
    * Get security events by level
    */
   public getSecurityEventsByLevel(level: SecurityLevel): SecurityEvent[] {
-    return this.securityEvents.value.filter(event => event.level === level);
+    return this.securityEventsSignal().filter(event => event.level === level);
   }
 
   /**
    * Resolve security event
    */
   public resolveSecurityEvent(eventId: string): void {
-    const events = this.securityEvents.value;
-    const eventIndex = events.findIndex(event => event.id === eventId);
-    
-    if (eventIndex !== -1) {
-      events[eventIndex].resolved = true;
-      this.securityEvents.next(events);
-    }
+    this.securityEventsSignal.update(events => {
+      const updatedEvents = [...events];
+      const eventIndex = updatedEvents.findIndex(event => event.id === eventId);
+      if (eventIndex !== -1) {
+        updatedEvents[eventIndex] = { ...updatedEvents[eventIndex], resolved: true };
+      }
+      return updatedEvents;
+    });
   }
 
   /**
    * Clear resolved security events
    */
   public clearResolvedEvents(): void {
-    const events = this.securityEvents.value.filter(event => !event.resolved);
-    this.securityEvents.next(events);
+    this.securityEventsSignal.update(events => events.filter(event => !event.resolved));
   }
 
   /**
    * Generate unique event ID
    */
   private generateEventId(): string {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    return Date.now().toString(36) + Math.random().toString(36).substring(2);
   }
 
   /**
@@ -569,4 +563,5 @@ export class SecurityService {
       );
     }
   }
-} 
+}
+ 

@@ -1,5 +1,4 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Injectable, signal } from '@angular/core';
 import { APP_CONFIG } from '../config/config';
 import { TranslateService } from '@ngx-translate/core';
 import { LocalIndexDBStorageService } from './indexdb-storage.service';
@@ -7,19 +6,12 @@ import { LocalStorageKey } from '../models/local-storage.model';
 
 export type Language = string;
 
-interface Translations {
-  [key: string]: {
-    [lang: string]: string;
-  };
-}
-
 @Injectable({
   providedIn: 'root'
 })
 export class TranslationService {
-  private currentLanguage = new BehaviorSubject<Language>('en');
-
-
+  private currentLanguageSignal = signal<Language>('en');
+  public readonly currentLanguage = this.currentLanguageSignal.asReadonly();
 
   constructor(
     private translateService: TranslateService,
@@ -123,8 +115,6 @@ export class TranslationService {
     return null;
   }
 
-
-
   /**
    * Normalize language code to short format (e.g., 'en' -> 'en')
    */
@@ -133,27 +123,19 @@ export class TranslationService {
     return code.split('-')[0].toLowerCase();
   }
 
-  // Get current language as observable
-  getCurrentLanguage(): Observable<Language> {
-    return this.currentLanguage.asObservable();
-  }
-
   // Get current language value
   getCurrentLanguageValue(): Language {
-    return this.currentLanguage.value;
+    return this.currentLanguageSignal();
   }
 
   // Change language
   setLanguage(language: string): void {
     const normalizedLang = this.normalizeLanguageCode(language);
-    this.currentLanguage.next(normalizedLang);
+    this.currentLanguageSignal.set(normalizedLang);
     this.translateService.use(normalizedLang);
 
     // Try LocalStorageService first
     this.localStorageService.setItem(LocalStorageKey.APP_LANGUAGE, normalizedLang);
   }
-
-
-
-
-} 
+}
+ 

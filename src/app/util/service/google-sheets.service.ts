@@ -102,7 +102,7 @@ export class GoogleSheetsService extends BaseService {
       tap(snapshot => {
         const connections = snapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data() as any
         } as GoogleSheetsConnection));
 
         console.log(`[GoogleSheetsService] Pulled ${connections.length} connections from Firestore`);

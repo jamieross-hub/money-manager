@@ -1,5 +1,4 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Injectable, signal } from '@angular/core';
 import { APP_CONFIG } from '../config/config';
 
 export interface AppShellState {
@@ -12,41 +11,38 @@ export interface AppShellState {
   providedIn: 'root'
 })
 export class AppShellService {
-  private stateSubject = new BehaviorSubject<AppShellState>({
+  private stateSignal = signal<AppShellState>({
     isVisible: false,
     loadingMessage: `Loading ${APP_CONFIG.APP_NAME}`,
     loadingSubMessage: 'Preparing your financial dashboard...'
   });
 
-  public state$: Observable<AppShellState> = this.stateSubject.asObservable();
+  public readonly state = this.stateSignal.asReadonly();
 
   constructor() {}
 
   show(message?: string, subMessage?: string) {
-    const currentState = this.stateSubject.value;
-    this.stateSubject.next({
+    this.stateSignal.update(currentState => ({
       ...currentState,
       isVisible: true,
       loadingMessage: message || currentState.loadingMessage,
       loadingSubMessage: subMessage || currentState.loadingSubMessage
-    });
+    }));
   }
 
   hide() {
-    const currentState = this.stateSubject.value;
-    this.stateSubject.next({
+    this.stateSignal.update(currentState => ({
       ...currentState,
       isVisible: false
-    });
+    }));
   }
 
   updateMessage(message: string, subMessage?: string) {
-    const currentState = this.stateSubject.value;
-    this.stateSubject.next({
+    this.stateSignal.update(currentState => ({
       ...currentState,
       loadingMessage: message,
       loadingSubMessage: subMessage || currentState.loadingSubMessage
-    });
+    }));
   }
 
 
@@ -67,4 +63,5 @@ export class AppShellService {
   showAuthentication() {
     this.show('Authenticating', 'Verifying your credentials...');
   }
-} 
+}
+ 

@@ -1,4 +1,4 @@
-import { Injectable, Inject, PLATFORM_ID, Injector, signal, OnDestroy } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID, Injector, signal, OnDestroy, computed, Signal } from '@angular/core';
 import { BehaviorSubject, Observable, fromEvent, interval, from, of, Subject, combineLatest, merge, forkJoin, Subscription } from 'rxjs';
 import { map, switchMap, catchError, tap, take, filter, distinctUntilChanged, takeUntil, delay, startWith, timeout } from 'rxjs/operators';
 import { Firestore, collection, doc, writeBatch } from '@angular/fire/firestore';
@@ -97,15 +97,15 @@ export class CommonSyncService implements OnDestroy {
   private readonly HIGH_PRIORITY_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7 days
   private readonly LOW_PRIORITY_EXPIRY = 60 * 60 * 1000; // 1 hour
 
-  private networkStatusSubject = new BehaviorSubject<NetworkStatus>({
+  private networkStatusSignal = signal<NetworkStatus>({
     // Use the real browser status at construction time — NOT a hardcoded false.
     // A hardcoded false caused AuthGuard to incorrectly treat the user as offline
     // during startup, even on a stable connection.
     online: typeof navigator !== 'undefined' ? navigator.onLine : true
   });
 
-  private syncStatusSubject = new BehaviorSubject<SyncStatus>({
-    isOnline: navigator.onLine,
+  private syncStatusSignal = signal<SyncStatus>({
+    isOnline: typeof navigator !== 'undefined' ? navigator.onLine : false,
     pendingItems: 0,
     lastSyncTime: null,
     isSyncing: false,
@@ -115,10 +115,10 @@ export class CommonSyncService implements OnDestroy {
   
   private activeFamilyId$ = toObservable(this.familyService.activeFamilyId);
 
-  public networkStatus$: Observable<NetworkStatus> = this.networkStatusSubject.asObservable();
-  public isOnline$: Observable<boolean> = this.networkStatus$.pipe(
-    map(status => status.online)
-  );
+  public readonly networkStatus = this.networkStatusSignal.asReadonly();
+  public readonly networkStatus$: Observable<NetworkStatus> = toObservable(this.networkStatus);
+  public readonly isOnline: Signal<boolean> = computed(() => this.networkStatusSignal().online);
+  public readonly isOnline$: Observable<boolean> = toObservable(this.isOnline);
 
   private serviceWorkerRegistration: ServiceWorkerRegistration | null = null;
   private syncQueue: SyncItem[] = [];
@@ -138,7 +138,7 @@ export class CommonSyncService implements OnDestroy {
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     if (!isPlatformServer(this.platformId)) {
-      this.networkStatusSubject.next({ online: navigator.onLine });
+      this.networkStatusSignal.set({ online: navigator.onLine });
       this.initializeServices();
       this.setupServiceWorkerSyncListener();
     }
@@ -464,14 +464,14 @@ export class CommonSyncService implements OnDestroy {
    * Get sync status observable
    */
   get syncStatus$(): Observable<SyncStatus> {
-    return this.syncStatusSubject.asObservable();
+    return toObservable(this.syncStatusSignal);
   }
 
   /**
    * Get current sync status
    */
   get syncStatus(): SyncStatus {
-    return this.syncStatusSubject.value;
+    return this.syncStatusSignal();
   }
 
   /**
@@ -1035,14 +1035,14 @@ export class CommonSyncService implements OnDestroy {
    * Get current network status
    */
   public getCurrentNetworkStatus(): NetworkStatus {
-    return this.networkStatusSubject.value;
+    return this.networkStatusSignal();
   }
 
   /**
    * Check if currently online
    */
   public isCurrentlyOnline(): boolean {
-    return this.networkStatusSubject.value.online;
+    return this.networkStatusSignal().online;
   }
 
   /**
@@ -1083,7 +1083,7 @@ export class CommonSyncService implements OnDestroy {
    * Get connection quality
    */
   public getConnectionQuality(): string {
-    const status = this.networkStatusSubject.value;
+    const status = this.networkStatusSignal();
     if (!status.online) return 'offline';
     if (status.effectiveType === '4g') return 'excellent';
     if (status.effectiveType === '3g') return 'good';
@@ -1107,18 +1107,18 @@ export class CommonSyncService implements OnDestroy {
    * Update network status
    */
   private updateNetworkStatus(status: Partial<NetworkStatus>): void {
-    const currentStatus = this.networkStatusSubject.value;
+    const currentStatus = this.networkStatusSignal();
     const newStatus = { ...currentStatus, ...status };
-    this.networkStatusSubject.next(newStatus);
+    this.networkStatusSignal.set(newStatus);
   }
 
   /**
    * Update sync status
    */
   private updateSyncStatus(updates: Partial<SyncStatus>): void {
-    const currentStatus = this.syncStatusSubject.value;
-    const newStatus = { ...currentStatus, ...updates };
-    this.syncStatusSubject.next(newStatus);
+    const currentStatus = this.syncStatusSignal();
+    const newStatus = { ...currentStatus, ...updates, isOnline: this.isCurrentlyOnline() };
+    this.syncStatusSignal.set(newStatus);
   }
 
   /**
