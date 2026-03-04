@@ -1,33 +1,39 @@
 <div
-	class="common-header-container sticky top-0 z-20 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-	<div class="flex items-center justify-between px-4 py-3">
-		<h6 class="text-base !m-0 font-semibold text-gray-900 dark:text-gray-100">
-			{{ title }}
-		</h6>
-		<div class="flex items-center gap-2">
+  class="common-header-container sticky top-0 z-20 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+  <div class="flex items-center justify-between px-4 py-3">
+    <h6 class="text-base !m-0 font-semibold text-gray-900 dark:text-gray-100">
+      {{ title }}
+    </h6>
+    <div class="flex items-center gap-2">
 
-			<!-- Add Button -->
-			<button *ngIf="showAddButton" mat-icon-button type="button" color="primary" (click)="onAddButtonClick()"
-				[disabled]="addButtonDisabled || isSubmitting" [matTooltip]="addButtonTooltip"
-				class="w-10 h-10 !bg-primary">
-				<mat-icon class="text-white">
-					{{ isSubmitting ? 'hourglass_empty' : 'check' }}
-				</mat-icon>
-			</button>
+      <!-- Add Button -->
+      @if (showAddButton) {
+        <button mat-icon-button type="button" color="primary" (click)="onAddButtonClick()"
+          [disabled]="addButtonDisabled || isSubmitting" [matTooltip]="addButtonTooltip"
+          class="w-10 h-10 !bg-primary">
+          <mat-icon class="text-white">
+            {{ isSubmitting ? 'hourglass_empty' : 'check' }}
+          </mat-icon>
+        </button>
+      }
 
-			<!-- Edit Button -->
-			<button *ngIf="showEditButton" mat-icon-button type="button" color="primary" (click)="onEditButtonClick()"
-				matTooltip="Edit" class="w-10 h-10 !bg-primary">
-				<mat-icon class="text-white">edit</mat-icon>
-			</button>
+      <!-- Edit Button -->
+      @if (showEditButton) {
+        <button mat-icon-button type="button" color="primary" (click)="onEditButtonClick()"
+          matTooltip="Edit" class="w-10 h-10 !bg-primary">
+          <mat-icon class="text-white">edit</mat-icon>
+        </button>
+      }
 
 
-			<!-- Close Button -->
-			<button *ngIf="showCloseButton" mat-icon-button type="button" (click)="onCloseButtonClick()"
-				[matTooltip]="closeButtonTooltip"
-				class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-				<mat-icon>close</mat-icon>
-			</button>
-		</div>
-	</div>
+      <!-- Close Button -->
+      @if (showCloseButton) {
+        <button mat-icon-button type="button" (click)="onCloseButtonClick()"
+          [matTooltip]="closeButtonTooltip"
+          class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </div>
+  </div>
 </div>

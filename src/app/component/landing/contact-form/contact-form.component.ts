@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ContactService } from 'src/app/util/service/db/contact.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
 
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -16,13 +16,12 @@ import { TranslateModule } from '@ngx-translate/core';
     styleUrls: ['./contact-form.component.scss'],
     standalone: true,
     imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatButtonModule,
-        TranslateModule
-    ],
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    TranslateModule
+],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ContactFormComponent {

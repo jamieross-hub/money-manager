@@ -7,7 +7,7 @@ import {
   signal,
   computed,
 } from '@angular/core';
-import { NgFor, NgIf, NgClass } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -21,7 +21,7 @@ import dayjs from 'dayjs';
 @Component({
   selector: 'app-loan-summary-card',
   standalone: true,
-  imports: [NgIf, NgFor, NgClass, MatIconModule, CurrencyPipe],
+  imports: [NgClass, MatIconModule, CurrencyPipe],
   templateUrl: './loan-summary-card.component.html',
   styleUrls: ['./loan-summary-card.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

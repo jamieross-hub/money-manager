@@ -1,140 +1,154 @@
 <div class="relative inline-block" (clickOutside)="close()">
-	<!-- Dropdown toggle button -->
-	<button (click)="toggle($event)"
-		class="relative z-10 flex items-center p-2 text-sm text-gray-600 bg-transparent border border-transparent rounded-md focus:border-blue-500 focus:ring-opacity-40 dark:focus:ring-opacity-40 focus:ring-blue-300 dark:focus:ring-blue-400 focus:ring dark:text-white focus:outline-none transition-colors"
-		type="button">
-		
-		<!-- Avatar Stack for Family Mode -->
-		<div *ngIf="isFamilyMode() && sortedMembers().length > 0" class="avatar-stack flex flex-row-reverse items-center -space-x-4 space-x-reverse hover:-space-x-2 transition-all duration-300 ml-1 mr-1 cursor-pointer">
-			<img *ngFor="let member of sortedMembers().slice(0, 4); let i = index" 
-				class="flex-shrink-0 object-cover rounded-full w-8 h-8 ring-2 ring-white dark:ring-slate-900 shadow-md transition-all hover:scale-110 hover:ring-blue-500"
-				[src]="getMemberAvatarUrl(member)" 
-				appImageFallback
-				[alt]="member.displayName"
-				[matTooltip]="member.displayName"
-				[style.z-index]="20 - i" />
-			<div *ngIf="sortedMembers().length > 4" 
-				class="flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-white dark:ring-slate-900 bg-gradient-to-br from-gray-50 to-gray-200 dark:from-slate-700 dark:to-slate-900 text-[10px] font-black shadow-sm text-gray-700 dark:text-gray-300"
-				[style.z-index]="10">
-				+{{sortedMembers().length - 4}}
-			</div>
-		</div>
+  <!-- Dropdown toggle button -->
+  <button (click)="toggle($event)"
+    class="relative z-10 flex items-center p-2 text-sm text-gray-600 bg-transparent border border-transparent rounded-md focus:border-blue-500 focus:ring-opacity-40 dark:focus:ring-opacity-40 focus:ring-blue-300 dark:focus:ring-blue-400 focus:ring dark:text-white focus:outline-none transition-colors"
+    type="button">
 
-		<!-- Single Avatar for Personal Mode or if no family stack can be shown -->
-		<img *ngIf="!isFamilyMode() || myFamilies().length === 0 || familyMembers().length === 0" 
-			class="flex-shrink-0 object-cover mx-1 rounded-full w-9 h-9 ring-2 ring-white dark:ring-slate-800 shadow-md border border-gray-100 dark:border-slate-700 transition-transform hover:scale-105"
-			[src]="profileImage()" appImageFallback alt="avatar" />
+    <!-- Avatar Stack for Family Mode -->
+    @if (isFamilyMode() && sortedMembers().length > 0) {
+      <div class="avatar-stack flex flex-row-reverse items-center -space-x-4 space-x-reverse hover:-space-x-2 transition-all duration-300 ml-1 mr-1 cursor-pointer">
+        @for (member of sortedMembers().slice(0, 4); track member; let i = $index) {
+          <img
+            class="flex-shrink-0 object-cover rounded-full w-8 h-8 ring-2 ring-white dark:ring-slate-900 shadow-md transition-all hover:scale-110 hover:ring-blue-500"
+            [src]="getMemberAvatarUrl(member)"
+            appImageFallback
+            [alt]="member.displayName"
+            [matTooltip]="member.displayName"
+            [style.z-index]="20 - i" />
+        }
+        @if (sortedMembers().length > 4) {
+          <div
+            class="flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-white dark:ring-slate-900 bg-gradient-to-br from-gray-50 to-gray-200 dark:from-slate-700 dark:to-slate-900 text-[10px] font-black shadow-sm text-gray-700 dark:text-gray-300"
+            [style.z-index]="10">
+            +{{sortedMembers().length - 4}}
+          </div>
+        }
+      </div>
+    }
 
-		<span class="mx-1 truncate max-w-100" *ngIf="(!isMobile() || !user().photoURL)">{{(user().displayName ?
-			user().displayName : (user().firstName ? user().firstName : 'USER_MENU.DEFAULT_USER' | translate)) |
-			titlecase}}</span>
+    <!-- Single Avatar for Personal Mode or if no family stack can be shown -->
+    @if (!isFamilyMode() || myFamilies().length === 0 || familyMembers().length === 0) {
+      <img
+        class="flex-shrink-0 object-cover mx-1 rounded-full w-9 h-9 ring-2 ring-white dark:ring-slate-800 shadow-md border border-gray-100 dark:border-slate-700 transition-transform hover:scale-105"
+        [src]="profileImage()" appImageFallback alt="avatar" />
+    }
 
-		<svg *ngIf="!isMobile()" class="w-5 h-5 mx-1 transition-transform duration-200" [class.rotate-180]="isOpen()"
-			viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-			<path d="M12 15.713L18.01 9.70299L16.597 8.28799L12 12.888L7.40399 8.28799L5.98999 9.70199L12 15.713Z"
-				fill="currentColor"></path>
-		</svg>
-	</button>
+    @if ((!isMobile() || !user().photoURL)) {
+      <span class="mx-1 truncate max-w-100">{{(user().displayName ?
+        user().displayName : (user().firstName ? user().firstName : 'USER_MENU.DEFAULT_USER' | translate)) |
+      titlecase}}</span>
+    }
 
-	<!-- Dropdown menu -->
-	<div *ngIf="isOpen()"
-		class="absolute right-0 z-20 w-64 py-2 mt-2 overflow-hidden origin-top-right bg-white rounded-lg shadow-xl dark:bg-slate-900 border border-gray-200 dark:border-slate-800"
-		@slideDown>
+    @if (!isMobile()) {
+      <svg class="w-5 h-5 mx-1 transition-transform duration-200" [class.rotate-180]="isOpen()"
+        viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 15.713L18.01 9.70299L16.597 8.28799L12 12.888L7.40399 8.28799L5.98999 9.70199L12 15.713Z"
+        fill="currentColor"></path>
+      </svg>
+    }
+  </button>
 
-		<!-- Menu Items -->
-		<div class="py-1">
-
-			<!-- Family Mode Toggle -->
-			<app-family-mode-toggle [isFlat]="true" (click)="close()"></app-family-mode-toggle>
-
-			<!-- Theme Switcher -->
-			<div (click)="close()"
-				class="flex items-center justify-between w-full px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 dark:hover:text-white focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-800">
-				<div class="flex items-center">
-					<svg *ngIf="!isDarkTheme()" class="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="none"
-						xmlns="http://www.w3.org/2000/svg">
-						<path
-							d="M12 3V4M12 20V21M4 12H3M21 12H20M5.636 5.636L6.343 6.343M17.657 17.657L18.364 18.364M5.636 18.364L6.343 17.657M17.657 6.343L18.364 5.636M16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12Z"
-							stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-					</svg>
-					<svg *ngIf="isDarkTheme()" class="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="none"
-						xmlns="http://www.w3.org/2000/svg">
-						<path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-							fill="currentColor" />
-					</svg>
-					<span class="flex-1 text-left">{{ 'USER_MENU.DARK_MODE' | translate }}</span>
-				</div>
-				<!-- Toggle Switch UI -->
-				<app-theme-toggle [hideIcons]="true"></app-theme-toggle>
-			</div>
-
-			<button
-				class="flex items-center w-full px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 dark:hover:text-white focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-800"
-				(click)="viewProfile()">
-				<svg class="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<path
-						d="M7 8C7 5.23858 9.23858 3 12 3C14.7614 3 17 5.23858 17 8C17 10.7614 14.7614 13 12 13C9.23858 13 7 10.7614 7 8ZM12 11C13.6569 11 15 9.65685 15 8C15 6.34315 13.6569 5 12 5C10.3431 5 9 6.34315 9 8C9 9.65685 10.3431 11 12 11Z"
-						fill="currentColor"></path>
-					<path
-						d="M6.34315 16.3431C4.84285 17.8434 4 19.8783 4 22H6C6 20.4087 6.63214 18.8826 7.75736 17.7574C8.88258 16.6321 10.4087 16 12 16C13.5913 16 15.1174 16.6321 16.2426 17.7574C17.3679 18.8826 18 20.4087 18 22H20C20 19.8783 19.1571 17.8434 17.6569 16.3431C16.1566 14.8429 14.1217 14 12 14C9.87827 14 7.84344 14.8429 6.34315 16.3431Z"
-						fill="currentColor"></path>
-				</svg>
-				<span>{{ 'USER_MENU.PROFILE_SETTINGS' | translate }}</span>
-			</button>
-
-			<button
-				class="flex items-center w-full px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 dark:hover:text-white focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-800"
-				(click)="openCacheManager()">
-				<svg class="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<path
-						d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3ZM19 19H5V5H19V19ZM17 13H7V11H17V13ZM13 17H7V15H13V17ZM7 9V7H17V9H7Z"
-						fill="currentColor"></path>
-				</svg>
-				<span>{{ 'USER_MENU.CACHE_MGMT' | translate }}</span>
-			</button>
-
-			<button
-				class="flex items-center w-full px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 dark:hover:text-white focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-800"
-				(click)="openFeedback()">
-				<mat-icon class="text-sm mr-1">feedback</mat-icon>
-				<span>Feedback</span>
-			</button>
-
-			<button
-				class="flex items-center w-full px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 dark:hover:text-white focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-800"
-				(click)="shareApp()">
-				<mat-icon class="text-sm mr-1">share</mat-icon>
-				<span>{{ 'USER_MENU.SHARE_APP' | translate }}</span>
-			</button>
-		</div>
-
-		<!-- Divider -->
-		<div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-
-		<!-- Sign Out -->
-		<div class="py-1">
-			<button *ngIf="isGuest()" (click)="navigateToSignUp()"
-				class="flex items-center w-full px-4 py-2 text-sm text-green-600 capitalize transition-colors duration-200 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 focus:outline-none focus:bg-green-50 dark:focus:bg-green-900/20">
-				<svg class="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-						d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-						stroke="currentColor" />
-				</svg>
-				<span>{{ 'USER_MENU.SYNC_CLOUD' | translate }}</span>
-			</button>
-
-			<button (click)="signOut($event)"
-				class="flex items-center w-full px-4 py-2 text-sm text-red-600 capitalize transition-colors duration-200 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:bg-red-50 dark:focus:bg-red-900/20">
-				<svg class="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<path *ngIf="!isGuest()"
-						d="M19 21H10C8.89543 21 8 20.1046 8 19V15H10V19H19V5H10V9H8V5C8 3.89543 8.89543 3 10 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21ZM12 16V13H3V11H12V8L17 12L12 16Z"
-						fill="currentColor"></path>
-					<path *ngIf="isGuest()" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-						d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-						stroke="currentColor" />
-				</svg>
-				<span>{{ (isGuest() ? 'USER_MENU.EXIT_GUEST' : 'USER_MENU.SIGN_OUT') | translate }}</span>
-			</button>
-		</div>
-	</div>
+  <!-- Dropdown menu -->
+  @if (isOpen()) {
+    <div
+      class="absolute right-0 z-20 w-64 py-2 mt-2 overflow-hidden origin-top-right bg-white rounded-lg shadow-xl dark:bg-slate-900 border border-gray-200 dark:border-slate-800"
+      @slideDown>
+      <!-- Menu Items -->
+      <div class="py-1">
+        <!-- Family Mode Toggle -->
+        <app-family-mode-toggle [isFlat]="true" (click)="close()"></app-family-mode-toggle>
+        <!-- Theme Switcher -->
+        <div (click)="close()"
+          class="flex items-center justify-between w-full px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 dark:hover:text-white focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-800">
+          <div class="flex items-center">
+            @if (!isDarkTheme()) {
+              <svg class="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="none"
+                xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M12 3V4M12 20V21M4 12H3M21 12H20M5.636 5.636L6.343 6.343M17.657 17.657L18.364 18.364M5.636 18.364L6.343 17.657M17.657 6.343L18.364 5.636M16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12Z"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            }
+            @if (isDarkTheme()) {
+              <svg class="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="none"
+                xmlns="http://www.w3.org/2000/svg">
+                <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                  fill="currentColor" />
+              </svg>
+            }
+            <span class="flex-1 text-left">{{ 'USER_MENU.DARK_MODE' | translate }}</span>
+          </div>
+          <!-- Toggle Switch UI -->
+          <app-theme-toggle [hideIcons]="true"></app-theme-toggle>
+        </div>
+        <button
+          class="flex items-center w-full px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 dark:hover:text-white focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-800"
+          (click)="viewProfile()">
+          <svg class="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M7 8C7 5.23858 9.23858 3 12 3C14.7614 3 17 5.23858 17 8C17 10.7614 14.7614 13 12 13C9.23858 13 7 10.7614 7 8ZM12 11C13.6569 11 15 9.65685 15 8C15 6.34315 13.6569 5 12 5C10.3431 5 9 6.34315 9 8C9 9.65685 10.3431 11 12 11Z"
+            fill="currentColor"></path>
+            <path
+              d="M6.34315 16.3431C4.84285 17.8434 4 19.8783 4 22H6C6 20.4087 6.63214 18.8826 7.75736 17.7574C8.88258 16.6321 10.4087 16 12 16C13.5913 16 15.1174 16.6321 16.2426 17.7574C17.3679 18.8826 18 20.4087 18 22H20C20 19.8783 19.1571 17.8434 17.6569 16.3431C16.1566 14.8429 14.1217 14 12 14C9.87827 14 7.84344 14.8429 6.34315 16.3431Z"
+            fill="currentColor"></path>
+          </svg>
+          <span>{{ 'USER_MENU.PROFILE_SETTINGS' | translate }}</span>
+        </button>
+        <button
+          class="flex items-center w-full px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 dark:hover:text-white focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-800"
+          (click)="openCacheManager()">
+          <svg class="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3ZM19 19H5V5H19V19ZM17 13H7V11H17V13ZM13 17H7V15H13V17ZM7 9V7H17V9H7Z"
+            fill="currentColor"></path>
+          </svg>
+          <span>{{ 'USER_MENU.CACHE_MGMT' | translate }}</span>
+        </button>
+        <button
+          class="flex items-center w-full px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 dark:hover:text-white focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-800"
+          (click)="openFeedback()">
+          <mat-icon class="text-sm mr-1">feedback</mat-icon>
+          <span>Feedback</span>
+        </button>
+        <button
+          class="flex items-center w-full px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 dark:hover:text-white focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-800"
+          (click)="shareApp()">
+          <mat-icon class="text-sm mr-1">share</mat-icon>
+          <span>{{ 'USER_MENU.SHARE_APP' | translate }}</span>
+        </button>
+      </div>
+      <!-- Divider -->
+      <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+      <!-- Sign Out -->
+      <div class="py-1">
+        @if (isGuest()) {
+          <button (click)="navigateToSignUp()"
+            class="flex items-center w-full px-4 py-2 text-sm text-green-600 capitalize transition-colors duration-200 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 focus:outline-none focus:bg-green-50 dark:focus:bg-green-900/20">
+            <svg class="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                stroke="currentColor" />
+            </svg>
+            <span>{{ 'USER_MENU.SYNC_CLOUD' | translate }}</span>
+          </button>
+        }
+        <button (click)="signOut($event)"
+          class="flex items-center w-full px-4 py-2 text-sm text-red-600 capitalize transition-colors duration-200 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:bg-red-50 dark:focus:bg-red-900/20">
+          <svg class="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            @if (!isGuest()) {
+              <path
+                d="M19 21H10C8.89543 21 8 20.1046 8 19V15H10V19H19V5H10V9H8V5C8 3.89543 8.89543 3 10 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21ZM12 16V13H3V11H12V8L17 12L12 16Z"
+              fill="currentColor"></path>
+            }
+            @if (isGuest()) {
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                stroke="currentColor" />
+            }
+          </svg>
+          <span>{{ (isGuest() ? 'USER_MENU.EXIT_GUEST' : 'USER_MENU.SIGN_OUT') | translate }}</span>
+        </button>
+      </div>
+    </div>
+  }
 </div>

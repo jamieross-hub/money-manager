@@ -1,6 +1,6 @@
 
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatDialog } from '@angular/material/dialog';
 import { ReportsComponent } from 'src/app/modules/features/component/reports/reports.component';
 import { QuickActionsFabComponent, QuickAction, QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
@@ -16,10 +16,9 @@ import { Router } from '@angular/router';
     styleUrls: ['./summary.component.scss'],
     standalone: true,
     imports: [
-        CommonModule,
-        ReportsComponent,
-        QuickActionsFabComponent
-    ],
+    ReportsComponent,
+    QuickActionsFabComponent
+],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SummaryComponent {

@@ -3,14 +3,14 @@ import { CommonSyncService } from '../../service/common-sync.service';
 import { SsrService } from '../../service/ssr.service';
 import { NotificationService } from '../../service/notification.service';
 
-import { CommonModule } from '@angular/common';
+
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-offline-page',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule],
+  imports: [MatIconModule, MatButtonModule],
   template: `
     <div class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div class="max-w-md w-full text-center">

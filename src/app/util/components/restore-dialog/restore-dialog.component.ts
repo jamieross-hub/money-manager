@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -9,7 +9,7 @@ export type RestoreMode = 'replace' | 'merge';
 @Component({
     selector: 'restore-dialog',
     standalone: true,
-    imports: [CommonModule, MatIconModule, MatButtonModule, MatDialogModule],
+    imports: [MatIconModule, MatButtonModule, MatDialogModule],
     templateUrl: './restore-dialog.component.html',
     styleUrls: ['./restore-dialog.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush

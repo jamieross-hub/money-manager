@@ -1,55 +1,64 @@
 <div class="financial-metrics-card">
   <!-- Loading State -->
-  <div *ngIf="isLoading$ | async" class="loading-container">
-    <div class="loading-spinner">
-      <mat-icon class="animate-spin">refresh</mat-icon>
-      <span>Loading financial data...</span>
+  @if (isLoading$ | async) {
+    <div class="loading-container">
+      <div class="loading-spinner">
+        <mat-icon class="animate-spin">refresh</mat-icon>
+        <span>Loading financial data...</span>
+      </div>
     </div>
-  </div>
+  }
 
   <!-- Error State -->
-  <div *ngIf="hasError" class="error-container">
-    <mat-icon class="error-icon">error</mat-icon>
-    <span class="error-message">{{ effectiveConfig.error }}</span>
-    <button *ngIf="effectiveConfig.onRefresh" (click)="onRefreshClick()" class="retry-button">
-      <mat-icon>refresh</mat-icon>
-      Retry
-    </button>
-  </div>
+  @if (hasError) {
+    <div class="error-container">
+      <mat-icon class="error-icon">error</mat-icon>
+      <span class="error-message">{{ effectiveConfig.error }}</span>
+      @if (effectiveConfig.onRefresh) {
+        <button (click)="onRefreshClick()" class="retry-button">
+          <mat-icon>refresh</mat-icon>
+          Retry
+        </button>
+      }
+    </div>
+  }
 
   <!-- Empty State -->
-  <div *ngIf="(isEmpty | async) && !hasError && !(isLoading$ | async)" class="empty-container">
-    <mat-icon class="empty-icon">pie_chart</mat-icon>
-    <span class="empty-message">{{ effectiveConfig.emptyStateMessage }}</span>
-  </div>
+  @if ((isEmpty | async) && !hasError && !(isLoading$ | async)) {
+    <div class="empty-container">
+      <mat-icon class="empty-icon">pie_chart</mat-icon>
+      <span class="empty-message">{{ effectiveConfig.emptyStateMessage }}</span>
+    </div>
+  }
 
 
   <!-- Chart Container - Replaced with Summary View -->
   <div class="pie-chart-container flex flex-col justify-center items-center p-4">
-    <div *ngIf="metrics$ | async as metrics" class="w-full space-y-4">
-      <!-- Net Savings -->
-      <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-        <span class="text-gray-600 dark:text-gray-300 font-medium">Net Savings</span>
-        <span class="text-xl font-bold"
-          [ngClass]="metrics.savings >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
-          {{ formatCurrency(metrics.savings) }}
-        </span>
+    @if (metrics$ | async; as metrics) {
+      <div class="w-full space-y-4">
+        <!-- Net Savings -->
+        <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <span class="text-gray-600 dark:text-gray-300 font-medium">Net Savings</span>
+          <span class="text-xl font-bold"
+            [ngClass]="metrics.savings >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+            {{ formatCurrency(metrics.savings) }}
+          </span>
+        </div>
+        <!-- Expenses -->
+        <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <span class="text-gray-600 dark:text-gray-300 font-medium">Total Expenses</span>
+          <span class="text-xl font-bold text-red-600 dark:text-red-400">
+            {{ formatCurrency(metrics.expenses) }}
+          </span>
+        </div>
       </div>
-
-      <!-- Expenses -->
-      <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-        <span class="text-gray-600 dark:text-gray-300 font-medium">Total Expenses</span>
-        <span class="text-xl font-bold text-red-600 dark:text-red-400">
-          {{ formatCurrency(metrics.expenses) }}
-        </span>
-      </div>
-    </div>
+    }
   </div>
 
   <!-- Footer -->
   <!-- <div *ngIf="effectiveConfig.showFooter" class="card-footer">
-    <span class="footer-text">
-      {{ effectiveConfig.footerText }}: {{ getLastUpdatedTime() }}
-    </span>
-  </div> -->
+  <span class="footer-text">
+    {{ effectiveConfig.footerText }}: {{ getLastUpdatedTime() }}
+  </span>
+</div> -->
 </div>

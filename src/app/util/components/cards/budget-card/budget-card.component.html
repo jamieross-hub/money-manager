@@ -1,93 +1,90 @@
 <!-- OVERALL BUDGET CARD -->
-<div class="budget-summary-card" *ngIf="overallBudgetStats$ | async as stats">
-
-  <!-- HEADER -->
-  <header class="budget-header">
-    <span class="budget-label">MONTHLY BUDGET</span>
+@if (overallBudgetStats$ | async; as stats) {
+  <div class="budget-summary-card">
+    <!-- HEADER -->
+    <header class="budget-header">
+      <span class="budget-label">MONTHLY BUDGET</span>
     <span class="budget-status" [ngClass]="{
         'status-safe': stats.overallProgress < 100,
         'status-over': stats.overallProgress >= 100
       }">
-      {{ stats.overallProgress >= 100 ? 'Over' : 'On Track' }}
-    </span>
-  </header>
-
-  <!-- MAIN AMOUNT -->
-  <section class="budget-amount">
-    <div class="amount-primary">
-      {{ stats.totalSpent | currency}}
-    </div>
-    <div class="amount-secondary">
-      of {{ stats.totalBudget | currency}} monthly budget
-    </div>
-  </section>
-
-  <!-- PROGRESS BAR -->
-  <section class="budget-progress">
-    <div class="progress-bar">
+        {{ stats.overallProgress >= 100 ? 'Over' : 'On Track' }}
+      </span>
+    </header>
+    <!-- MAIN AMOUNT -->
+    <section class="budget-amount">
+      <div class="amount-primary">
+        {{ stats.totalSpent | currency}}
+      </div>
+      <div class="amount-secondary">
+        of {{ stats.totalBudget | currency}} monthly budget
+      </div>
+    </section>
+    <!-- PROGRESS BAR -->
+    <section class="budget-progress">
+      <div class="progress-bar">
       <div class="progress-fill" [style.width.%]="Math.min(stats.overallProgress || 0, 100)" [ngClass]="{
           'fill-safe': stats.overallProgress < 100,
           'fill-over': stats.overallProgress >= 100
         }"></div>
-    </div>
-
-    <div class="progress-info">
-      <span class="progress-percent">{{ stats.overallProgress | number:'1.0-0' }}% spent</span>
+      </div>
+      <div class="progress-info">
+        <span class="progress-percent">{{ stats.overallProgress | number:'1.0-0' }}% spent</span>
       <span class="progress-remaining" [ngClass]="{
           'text-danger': stats.totalBudget - stats.totalSpent < 0,
           'text-safe': stats.totalBudget - stats.totalSpent >= 0
         }">
-        {{ (stats.totalBudget - stats.totalSpent) | currency }} left
-      </span>
-    </div>
-  </section>
-
-  <!-- CATEGORIES SECTION -->
-  <section class="categories-section" *ngIf="detailedBudgetStats$ | async as details">
-    <button class="categories-header" (click)="toggleBudgetSummaryExpansion()" mat-button>
-      <span class="categories-title">Categories</span>
-      <mat-icon [class.expanded]="isBudgetSummaryExpanded">expand_more</mat-icon>
-    </button>
-
-    <!-- CATEGORY LIST -->
-    <div class="category-list" *ngIf="isBudgetSummaryExpanded">
-      @for (cat of details.categories; track cat.id) {
-      <div class="category-item">
-        <div class="category-info">
-          <span class="category-name">{{ cat.name }}</span>
-          <span class="category-amounts">
+          {{ (stats.totalBudget - stats.totalSpent) | currency }} left
+        </span>
+      </div>
+    </section>
+    <!-- CATEGORIES SECTION -->
+    @if (detailedBudgetStats$ | async; as details) {
+      <section class="categories-section">
+        <button class="categories-header" (click)="toggleBudgetSummaryExpansion()" mat-button>
+          <span class="categories-title">Categories</span>
+          <mat-icon [class.expanded]="isBudgetSummaryExpanded">expand_more</mat-icon>
+        </button>
+        <!-- CATEGORY LIST -->
+        @if (isBudgetSummaryExpanded) {
+          <div class="category-list">
+            @for (cat of details.categories; track cat.id) {
+              <div class="category-item">
+                <div class="category-info">
+                  <span class="category-name">{{ cat.name }}</span>
+                  <span class="category-amounts">
             <span class="amount-spent" [ngClass]="{
                   'text-danger': cat.progress >= 100,
                   'text-warning': cat.progress >= 80 && cat.progress < 100
                 }">
-              {{ cat.spent | currency}}
-            </span>
-            <span class="amount-divider">/</span>
-            <span class="amount-budget">{{ cat.budget | currency}}</span>
-          </span>
-        </div>
-
-        <div class="category-progress">
-          <div class="progress-bar">
+                      {{ cat.spent | currency}}
+                    </span>
+                    <span class="amount-divider">/</span>
+                    <span class="amount-budget">{{ cat.budget | currency}}</span>
+                  </span>
+                </div>
+                <div class="category-progress">
+                  <div class="progress-bar">
             <div class="progress-fill" [style.width.%]="Math.min(cat.progress, 100)" [ngClass]="{
                   'fill-safe': cat.progress < 80,
                   'fill-warning': cat.progress >= 80 && cat.progress < 100,
                   'fill-danger': cat.progress >= 100
                 }"></div>
-          </div>
-        </div>
-
-        <div class="category-status">
+                  </div>
+                </div>
+                <div class="category-status">
           <span [ngClass]="{
                 'text-danger': cat.remaining < 0,
                 'text-safe': cat.remaining >= 0
               }">
-            {{ cat.remaining < 0 ? (Math.abs(cat.remaining) | currency) + ' over budget' : (cat.remaining | currency)
-              + ' remaining' }} </span>
-        </div>
-      </div>
-      }
-    </div>
-  </section>
-
-</div>
+                    {{ cat.remaining < 0 ? (Math.abs(cat.remaining) | currency) + ' over budget' : (cat.remaining | currency)
+                  + ' remaining' }} </span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </section>
+    }
+  </div>
+}

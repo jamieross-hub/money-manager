@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, Inject, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
@@ -44,7 +44,6 @@ export interface ColorSelectorDialogData {
     MatFormFieldModule,
     FormsModule,
     ReactiveFormsModule,
-    CommonModule,
     IconModule,
     MatTooltipModule,
     MatDividerModule,
@@ -62,8 +61,8 @@ export interface ColorSelectorDialogData {
     MatStepperModule,
     MatTableModule,
     MatPaginatorModule,
-    MatSortModule,
-  ],
+    MatSortModule
+],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ColorSelectorDialogComponent implements OnInit {

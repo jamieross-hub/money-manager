@@ -1,84 +1,94 @@
 <div class="backup-restore-container">
-    <div class="header">
-        <h1 class="text-primary">{{ 'BACKUP.TITLE' | translate }}</h1>
-        <p class="description">{{ 'BACKUP.DESCRIPTION' | translate }}</p>
+  <div class="header">
+    <h1 class="text-primary">{{ 'BACKUP.TITLE' | translate }}</h1>
+    <p class="description">{{ 'BACKUP.DESCRIPTION' | translate }}</p>
+  </div>
+
+  <div class="grid-layout">
+    <!-- Export Section -->
+    <mat-card class="action-card export-card">
+      <mat-card-header>
+        <div mat-card-avatar class="header-icon">
+          <mat-icon>cloud_download</mat-icon>
+        </div>
+        <mat-card-title>{{ 'BACKUP.EXPORT_TITLE' | translate }}</mat-card-title>
+        <mat-card-subtitle class="!pt-[8px]">{{ 'BACKUP.EXPORT_SUBTITLE' | translate }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>{{ 'BACKUP.EXPORT_INFO' | translate }}</p>
+        <ul class="feature-list">
+          <li><mat-icon>check_circle</mat-icon> {{ 'BACKUP.EXPORT_ITEM_ALL_DATA' | translate }}</li>
+          <li><mat-icon>check_circle</mat-icon> {{ 'BACKUP.EXPORT_ITEM_LOCAL_ONLY' | translate }}</li>
+          <li><mat-icon>check_circle</mat-icon> {{ 'BACKUP.EXPORT_ITEM_JSON' | translate }}</li>
+        </ul>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="primary" (click)="onExport()" [disabled]="isLoading">
+          <mat-icon>download</mat-icon>
+          {{ 'BACKUP.EXPORT_BUTTON' | translate }}
+        </button>
+      </mat-card-actions>
+    </mat-card>
+
+    <!-- Import Section -->
+    <mat-card class="action-card import-card">
+      <mat-card-header>
+        <div mat-card-avatar class="header-icon">
+          <mat-icon>upload_file</mat-icon>
+        </div>
+        <mat-card-title>{{ 'BACKUP.IMPORT_TITLE' | translate }}</mat-card-title>
+        <mat-card-subtitle>{{ 'BACKUP.IMPORT_SUBTITLE' | translate }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="upload-area" (click)="fileInput.click()" [class.has-file]="selectedFile">
+          <input #fileInput type="file" (change)="onFileSelected($event)" accept=".json" hidden>
+          <mat-icon class="upload-icon">{{ selectedFile ? 'task' : 'add_to_drive' }}</mat-icon>
+          <div class="upload-text">
+            @if (!selectedFile) {
+              <span>{{ 'BACKUP.CHOOSE_FILE' | translate }}</span>
+            }
+            @if (selectedFile) {
+              <span>{{ selectedFile.name }} ({{ selectedFile.size | number }}
+              bytes)</span>
+            }
+          </div>
+        </div>
+
+        @if (selectedFile) {
+          <div class="import-actions">
+            <div class="mode-buttons">
+              <button mat-stroked-button color="primary" (click)="onImport('merge')" [disabled]="isLoading">
+                <mat-icon>merge_type</mat-icon>
+                {{ 'BACKUP.IMPORT_MERGE' | translate }}
+              </button>
+              <button mat-stroked-button color="warn" (click)="onImport('replace')" [disabled]="isLoading">
+                <mat-icon>published_with_changes</mat-icon>
+                {{ 'BACKUP.IMPORT_REPLACE' | translate }}
+              </button>
+            </div>
+            @if (selectedFile) {
+              <p class="warning-text">
+                <mat-icon>warning</mat-icon>
+                {{ 'BACKUP.IMPORT_WARNING' | translate }}
+              </p>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Security Note -->
+  <div class="security-note">
+    <mat-icon>security</mat-icon>
+    <span>{{ 'BACKUP.SECURITY_NOTE' | translate }}</span>
+  </div>
+
+  <!-- Loading Overlay -->
+  @if (isLoading) {
+    <div class="loading-overlay">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>{{ 'BACKUP.PROCESSING' | translate }}</p>
     </div>
-
-    <div class="grid-layout">
-        <!-- Export Section -->
-        <mat-card class="action-card export-card">
-            <mat-card-header>
-                <div mat-card-avatar class="header-icon">
-                    <mat-icon>cloud_download</mat-icon>
-                </div>
-                <mat-card-title>{{ 'BACKUP.EXPORT_TITLE' | translate }}</mat-card-title>
-                <mat-card-subtitle class="!pt-[8px]">{{ 'BACKUP.EXPORT_SUBTITLE' | translate }}</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-                <p>{{ 'BACKUP.EXPORT_INFO' | translate }}</p>
-                <ul class="feature-list">
-                    <li><mat-icon>check_circle</mat-icon> {{ 'BACKUP.EXPORT_ITEM_ALL_DATA' | translate }}</li>
-                    <li><mat-icon>check_circle</mat-icon> {{ 'BACKUP.EXPORT_ITEM_LOCAL_ONLY' | translate }}</li>
-                    <li><mat-icon>check_circle</mat-icon> {{ 'BACKUP.EXPORT_ITEM_JSON' | translate }}</li>
-                </ul>
-            </mat-card-content>
-            <mat-card-actions>
-                <button mat-raised-button color="primary" (click)="onExport()" [disabled]="isLoading">
-                    <mat-icon>download</mat-icon>
-                    {{ 'BACKUP.EXPORT_BUTTON' | translate }}
-                </button>
-            </mat-card-actions>
-        </mat-card>
-
-        <!-- Import Section -->
-        <mat-card class="action-card import-card">
-            <mat-card-header>
-                <div mat-card-avatar class="header-icon">
-                    <mat-icon>upload_file</mat-icon>
-                </div>
-                <mat-card-title>{{ 'BACKUP.IMPORT_TITLE' | translate }}</mat-card-title>
-                <mat-card-subtitle>{{ 'BACKUP.IMPORT_SUBTITLE' | translate }}</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-                <div class="upload-area" (click)="fileInput.click()" [class.has-file]="selectedFile">
-                    <input #fileInput type="file" (change)="onFileSelected($event)" accept=".json" hidden>
-                    <mat-icon class="upload-icon">{{ selectedFile ? 'task' : 'add_to_drive' }}</mat-icon>
-                    <div class="upload-text">
-                        <span *ngIf="!selectedFile">{{ 'BACKUP.CHOOSE_FILE' | translate }}</span>
-                        <span *ngIf="selectedFile">{{ selectedFile.name }} ({{ selectedFile.size | number }}
-                            bytes)</span>
-                    </div>
-                </div>
-
-                <div class="import-actions" *ngIf="selectedFile">
-                    <div class="mode-buttons">
-                        <button mat-stroked-button color="primary" (click)="onImport('merge')" [disabled]="isLoading">
-                            <mat-icon>merge_type</mat-icon>
-                            {{ 'BACKUP.IMPORT_MERGE' | translate }}
-                        </button>
-                        <button mat-stroked-button color="warn" (click)="onImport('replace')" [disabled]="isLoading">
-                            <mat-icon>published_with_changes</mat-icon>
-                            {{ 'BACKUP.IMPORT_REPLACE' | translate }}
-                        </button>
-                    </div>
-                    <p class="warning-text" *ngIf="selectedFile">
-                        <mat-icon>warning</mat-icon>
-                        {{ 'BACKUP.IMPORT_WARNING' | translate }}
-                    </p>
-                </div>
-            </mat-card-content>
-        </mat-card>
-    </div>
-
-    <!-- Security Note -->
-    <div class="security-note">
-        <mat-icon>security</mat-icon>
-        <span>{{ 'BACKUP.SECURITY_NOTE' | translate }}</span>
-    </div>
-
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" *ngIf="isLoading">
-        <mat-spinner diameter="50"></mat-spinner>
-        <p>{{ 'BACKUP.PROCESSING' | translate }}</p>
-    </div>
+  }
 </div>

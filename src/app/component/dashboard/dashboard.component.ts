@@ -1,5 +1,5 @@
 import { Component, ElementRef, ViewChild, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterModule } from '@angular/router';
 import { HeaderComponent } from './header/header.component';
 import { FooterComponent } from './footer/footer.component';
@@ -26,7 +26,7 @@ import { PwaSwService } from 'src/app/util/service/pwa-sw.service';
   styleUrl: './dashboard.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterModule, HeaderComponent, FooterComponent]
+  imports: [RouterModule, HeaderComponent, FooterComponent]
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   @ViewChild('mainContent') mainContent!: ElementRef<HTMLElement>;

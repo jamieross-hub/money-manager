@@ -45,7 +45,7 @@ import { FamilyCreateDialogComponent } from 'src/app/modules/family/dialogs/fami
 import { FamilyJoinDialogComponent } from 'src/app/modules/family/dialogs/family-join-dialog/family-join-dialog.component';
 import { MatBottomSheet, MatBottomSheetModule } from '@angular/material/bottom-sheet';
 
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -71,7 +71,6 @@ import { CommonSyncService } from 'src/app/util/service/common-sync.service';
   styleUrls: ['./profile.component.scss'],
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatIconModule,
@@ -88,7 +87,7 @@ import { CommonSyncService } from 'src/app/util/service/common-sync.service';
     MatExpansionModule,
     ThemeToggleComponent,
     MatBottomSheetModule
-  ],
+],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProfileComponent {

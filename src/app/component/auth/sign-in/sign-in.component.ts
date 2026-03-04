@@ -17,7 +17,7 @@ import { UserService } from 'src/app/util/service/db/user.service';
 import { SecurityService, SecurityEventType, SecurityLevel } from 'src/app/util/service/security.service';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
-import { CommonModule } from '@angular/common';
+
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -53,7 +53,6 @@ import { filter, take, firstValueFrom } from 'rxjs';
   styleUrl: './sign-in.component.scss',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     ReactiveFormsModule,
     MatFormFieldModule,
@@ -79,8 +78,8 @@ import { filter, take, firstValueFrom } from 'rxjs';
     MatPaginatorModule,
     MatSortModule,
     TranslateModule,
-    MatProgressSpinnerModule,
-  ],
+    MatProgressSpinnerModule
+],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SignInComponent implements OnInit, OnDestroy {

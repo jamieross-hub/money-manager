@@ -8,7 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { CommonModule } from '@angular/common';
+
 import { CreateFamilyRequest } from 'src/app/util/models/family.model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
@@ -32,7 +32,6 @@ export const GROUP_ICON_OPTIONS: { icon: string; label: string }[] = [
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatDialogModule,
     MatBottomSheetModule,
@@ -44,7 +43,7 @@ export const GROUP_ICON_OPTIONS: { icon: string; label: string }[] = [
     MatTooltipModule,
     MatProgressSpinnerModule,
     ImageFallbackDirective
-  ],
+],
   templateUrl: './family-create-dialog.component.html',
   styleUrls: ['./family-create-dialog.component.scss']
 })

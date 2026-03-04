@@ -1,133 +1,135 @@
 
-  <div class="p-3 sm:p-4 md:p-6">
-    <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
-      <div class="flex-1 min-w-0" *ngIf="effectiveConfig.title || effectiveConfig.subtitle || effectiveConfig.subtitle">
+<div class="p-3 sm:p-4 md:p-6">
+  <!-- Header Section -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+    @if (effectiveConfig.title || effectiveConfig.subtitle || effectiveConfig.subtitle) {
+      <div class="flex-1 min-w-0">
         <h3 class="text-base sm:text-lg md:text-xl font-semibold text-gray-900 dark:text-white truncate leading-tight">
           {{ effectiveConfig.title }}
         </h3>
         @if (effectiveConfig.subtitle) {
-        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
-          {{ effectiveConfig.subtitle }}
-        </p>
+          <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
+            {{ effectiveConfig.subtitle }}
+          </p>
         }
       </div>
-      @if (effectiveConfig.showHeaderIcon !== false) {
+    }
+    @if (effectiveConfig.showHeaderIcon !== false) {
       <div class="bg-blue-500/10 p-2 sm:p-3 rounded-lg flex-shrink-0 self-start sm:self-auto">
         <mat-icon class="text-blue-600 dark:text-blue-400 text-lg sm:text-xl">
           {{ effectiveConfig.headerIcon || 'analytics' }}
         </mat-icon>
       </div>
-      }
-    </div>
-    
-    <!-- Loading State -->
-    @if (isLoading$ | async) {
+    }
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading$ | async) {
     <div class="text-center py-8">
       <div class="inline-flex items-center justify-center w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full mb-4">
         <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
       </div>
       <p class="text-sm text-gray-600 dark:text-gray-400">Loading metrics data...</p>
     </div>
-    }
-    
-    <!-- Error State -->
-    @if (hasError) {
+  }
+
+  <!-- Error State -->
+  @if (hasError) {
     <div class="text-center py-8">
       <div class="bg-red-100 dark:bg-red-900/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
         <mat-icon class="text-red-600 dark:text-red-400">error</mat-icon>
       </div>
       <p class="text-sm text-red-600 dark:text-red-400">{{ effectiveConfig.error }}</p>
     </div>
-    }
-    
-    <!-- Metrics Grid -->
-    @if (!(isLoading$ | async) && !hasError) {
-    <div 
-      [ngClass]="gridColumns" 
+  }
+
+  <!-- Metrics Grid -->
+  @if (!(isLoading$ | async) && !hasError) {
+    <div
+      [ngClass]="gridColumns"
       class="gap-3 sm:gap-4 md:gap-6"
       [class.flex]="effectiveConfig.layout === 'list'"
       [class.flex-col]="effectiveConfig.layout === 'list'"
       [class.grid]="effectiveConfig.layout === 'grid'">
-      
+
       @for (metric of metrics$ | async; track metric.id || metric.title; let i = $index) {
-      <div 
-        class="metric-card rounded-xl border shadow-sm hover:shadow-md transition-all duration-200"
-        [ngClass]="getMetricClasses(metric)"
-        [class.cursor-pointer]="effectiveConfig.clickable"
-        [class.cursor-default]="!effectiveConfig.clickable"
-        [class.animate-fade-in]="effectiveConfig.animations"
-        [style.animation-delay]="effectiveConfig.animations ? (i * 0.1) + 's' : '0s'"
-        (click)="onMetricClick(metric)">
-        
-        <div class="p-3 sm:p-4 md:p-6">
-          <div class="flex items-start justify-between gap-3">
-            <!-- Content Section -->
-            <div class="flex-1 min-w-0">
-              <!-- Title -->
-              <p class="text-xs sm:text-sm font-medium truncate leading-tight" 
-                 [ngClass]="getMetricColorClass(metric.color, 'text')">
-                {{ metric.title }}
-              </p>
-              
-              <!-- Value -->
-              <p class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold truncate leading-tight mt-1" 
-                 [ngClass]="getMetricColorClass(metric.color, 'value')">
-                {{ formatCurrency(metric.value) }}
-              </p>
-              
-              <!-- Period -->
-              @if (effectiveConfig.showPeriod && metric.period) {
-              <p class="text-xs mt-1 leading-relaxed opacity-75" 
-                 [ngClass]="getMetricColorClass(metric.color, 'text')">
-                {{ metric.period }}
-              </p>
-              }
-              
-              <!-- Trend/Change -->
-              @if (effectiveConfig.showTrends && (metric.changeValue !== undefined || metric.changePercentage !== undefined)) {
-              <div class="flex items-center gap-1 mt-2">
-                @if (metric.trend) {
-                <mat-icon class="text-xs" [ngClass]="getTrendColor(metric)">
-                  {{ getTrendIcon(metric) }}
-                </mat-icon>
-                }
-                <p class="text-xs font-medium" [ngClass]="getTrendColor(metric)">
-                  {{ getChangeDisplay(metric) }}
+        <div
+          class="metric-card rounded-xl border shadow-sm hover:shadow-md transition-all duration-200"
+          [ngClass]="getMetricClasses(metric)"
+          [class.cursor-pointer]="effectiveConfig.clickable"
+          [class.cursor-default]="!effectiveConfig.clickable"
+          [class.animate-fade-in]="effectiveConfig.animations"
+          [style.animation-delay]="effectiveConfig.animations ? (i * 0.1) + 's' : '0s'"
+          (click)="onMetricClick(metric)">
+
+          <div class="p-3 sm:p-4 md:p-6">
+            <div class="flex items-start justify-between gap-3">
+              <!-- Content Section -->
+              <div class="flex-1 min-w-0">
+                <!-- Title -->
+                <p class="text-xs sm:text-sm font-medium truncate leading-tight"
+                  [ngClass]="getMetricColorClass(metric.color, 'text')">
+                  {{ metric.title }}
                 </p>
+
+                <!-- Value -->
+                <p class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold truncate leading-tight mt-1"
+                  [ngClass]="getMetricColorClass(metric.color, 'value')">
+                  {{ formatCurrency(metric.value) }}
+                </p>
+
+                <!-- Period -->
+                @if (effectiveConfig.showPeriod && metric.period) {
+                  <p class="text-xs mt-1 leading-relaxed opacity-75"
+                    [ngClass]="getMetricColorClass(metric.color, 'text')">
+                    {{ metric.period }}
+                  </p>
+                }
+
+                <!-- Trend/Change -->
+                @if (effectiveConfig.showTrends && (metric.changeValue !== undefined || metric.changePercentage !== undefined)) {
+                  <div class="flex items-center gap-1 mt-2">
+                    @if (metric.trend) {
+                      <mat-icon class="text-xs" [ngClass]="getTrendColor(metric)">
+                        {{ getTrendIcon(metric) }}
+                      </mat-icon>
+                    }
+                    <p class="text-xs font-medium" [ngClass]="getTrendColor(metric)">
+                      {{ getChangeDisplay(metric) }}
+                    </p>
+                  </div>
+                }
               </div>
+
+              <!-- Icon Section -->
+              @if (effectiveConfig.showIcons && metric.icon && effectiveConfig.showPeriod) {
+                <div class="flex-shrink-0" [ngClass]="getMetricColorClass(metric.color, 'bg')">
+                  <div class="p-2 sm:p-3 rounded-lg">
+                    <mat-icon class="text-base sm:text-lg md:text-xl"
+                      [ngClass]="getMetricColorClass(metric.color, 'text')">
+                      {{ metric.icon }}
+                    </mat-icon>
+                  </div>
+                </div>
               }
             </div>
-            
-            <!-- Icon Section -->
-            @if (effectiveConfig.showIcons && metric.icon && effectiveConfig.showPeriod) {
-            <div class="flex-shrink-0" [ngClass]="getMetricColorClass(metric.color, 'bg')">
-              <div class="p-2 sm:p-3 rounded-lg">
-                <mat-icon class="text-base sm:text-lg md:text-xl" 
-                          [ngClass]="getMetricColorClass(metric.color, 'text')">
-                  {{ metric.icon }}
-                </mat-icon>
-              </div>
+
+            <!-- Additional Info -->
+            <!-- @if (metric.description) {
+            <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+              <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                {{ metric.description }}
+              </p>
             </div>
-            }
+            } -->
           </div>
-          
-          <!-- Additional Info -->
-          <!-- @if (metric.description) {
-          <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-            <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-              {{ metric.description }}
-            </p>
-          </div>
-          } -->
         </div>
-      </div>
       }
     </div>
-    }
-    
-    <!-- Empty State -->
-    @if (isEmpty | async) {
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty | async) {
     <div class="text-center py-8">
       <div class="bg-gray-100 dark:bg-gray-700 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
         <mat-icon class="text-gray-400 text-2xl">analytics</mat-icon>
@@ -135,20 +137,20 @@
       <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">No Metrics Available</h4>
       <p class="text-sm text-gray-500 dark:text-gray-400">{{ effectiveConfig.emptyStateMessage }}</p>
     </div>
-    }
-    
-    <!-- Footer Section -->
-    @if (effectiveConfig.showFooter) {
+  }
+
+  <!-- Footer Section -->
+  @if (effectiveConfig.showFooter) {
     <div class="mt-4 sm:mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
       <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
         <span>{{ effectiveConfig.footerText || 'Last updated' }}</span>
         <div class="flex items-center gap-4">
           @if (effectiveConfig.showDebugInfo) {
-          <span class="text-xs opacity-75">Layout: {{ getCardsPerRowInfo() }}</span>
+            <span class="text-xs opacity-75">Layout: {{ getCardsPerRowInfo() }}</span>
           }
           <span>{{ getLastUpdatedTime() }}</span>
         </div>
       </div>
     </div>
-    }
-  </div>
+  }
+</div>

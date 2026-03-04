@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -107,7 +107,6 @@ type LoadState = 'loading' | 'loaded' | 'empty' | 'error';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
@@ -120,8 +119,8 @@ type LoadState = 'loading' | 'loaded' | 'empty' | 'error';
     MatListModule,
     MatTooltipModule,
     QuickActionsFabComponent,
-    ImageFallbackDirective,
-  ],
+    ImageFallbackDirective
+],
   templateUrl: './group-selection.component.html',
   styleUrls: ['./group-selection.component.scss'],
 })

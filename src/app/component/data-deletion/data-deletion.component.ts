@@ -1,7 +1,7 @@
 import { Component, OnInit , ChangeDetectionStrategy} from '@angular/core';
 import { Location } from '@angular/common';
 
-import { CommonModule } from '@angular/common';
+
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
@@ -9,7 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
     templateUrl: './data-deletion.component.html',
     styleUrls: ['./data-deletion.component.scss'],
     standalone: true,
-    imports: [CommonModule, MatIconModule],
+    imports: [MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DataDeletionComponent implements OnInit {

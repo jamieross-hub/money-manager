@@ -1,5 +1,7 @@
 <!-- Quick Actions FAB -->
-<app-quick-actions-fab [config]="quickActionsFabConfig" (actionClick)="onFabAction($event)"
-    *ngIf="breakpointService.device.isMobile"></app-quick-actions-fab>
+@if (breakpointService.device.isMobile) {
+  <app-quick-actions-fab [config]="quickActionsFabConfig" (actionClick)="onFabAction($event)"
+  ></app-quick-actions-fab>
+}
 
 <app-reports></app-reports>

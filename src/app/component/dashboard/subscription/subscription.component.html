@@ -1,30 +1,30 @@
 <div>
-    <h2>User Subscription</h2>
-  
-    <!-- Display current subscription details -->
-    <div *ngIf="subscription">
+  <h2>User Subscription</h2>
+
+  <!-- Display current subscription details -->
+  @if (subscription) {
+    <div>
       <p>Plan: {{ subscription.plan }}</p>
       <p>Start Date: {{ dateService.toDate(subscription.startDate) | date: 'short' }}</p>
       <p>End Date: {{ dateService.toDate(subscription.endDate) | date: 'short' }}</p>
       <button (click)="updatePlan('premium')">Upgrade to Premium</button>
       <button (click)="deleteSubscription()">Cancel Subscription</button>
     </div>
-  
-    <!-- Create a new subscription form (if no subscription exists) -->
-    <form *ngIf="!subscription" (submit)="createSubscription()">
+  }
+
+  <!-- Create a new subscription form (if no subscription exists) -->
+  @if (!subscription) {
+    <form (submit)="createSubscription()">
       <label for="plan">Plan:</label>
       <select id="plan" [(ngModel)]="newSubscription.plan" name="plan">
         <option value="free">Free</option>
         <option value="premium">Premium</option>
       </select>
-  
       <label for="startDate">Start Date:</label>
       <input type="date" id="startDate" [(ngModel)]="newSubscription.startDate" name="startDate" required />
-  
       <label for="endDate">End Date:</label>
       <input type="date" id="endDate" [(ngModel)]="newSubscription.endDate" name="endDate" required />
-  
       <button type="submit">Start Subscription</button>
     </form>
-  </div>
-  
+  }
+</div>

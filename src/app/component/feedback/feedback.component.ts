@@ -20,7 +20,7 @@ export interface FeedbackForm {
   rating?: number;
 }
 
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -37,7 +37,6 @@ import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
   styleUrls: ['./feedback.component.scss'],
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatIconModule,
@@ -45,7 +44,7 @@ import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
     MatInputModule,
     MatSelectModule,
     MatProgressSpinnerModule
-  ],
+],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FeedbackComponent implements OnInit, OnDestroy {

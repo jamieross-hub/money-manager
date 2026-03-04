@@ -9,7 +9,7 @@ import { TransactionType } from '../../../../util/config/enums';
 import { selectTransactionsByAccount } from '../../../../store/transactions/transactions.selectors';
 import { DateService } from '../../../../util/service/date.service';
 import { CurrencyService } from '../../../../util/service/currency.service';
-import { CommonModule } from '@angular/common';
+
 import { CommonHeaderComponent } from 'src/app/util/components/dialog/common-header/common-header.component';
 import { CommonBodyContentComponent } from 'src/app/util/components/dialog/common-body-content/common-body-content.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -47,7 +47,6 @@ export interface AccountStatementDialogData {
   styleUrls: ['./account-statement-dialog.component.scss'],
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     ReactiveFormsModule,
     CommonBodyContentComponent,
@@ -75,8 +74,8 @@ export interface AccountStatementDialogData {
     MatPaginatorModule,
     MatSortModule,
     MatProgressSpinnerModule,
-    TranslateModule,
-  ],
+    TranslateModule
+],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AccountStatementDialogComponent implements OnInit, OnDestroy {

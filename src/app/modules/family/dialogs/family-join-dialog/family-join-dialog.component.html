@@ -13,7 +13,7 @@
     <mat-form-field appearance="fill" class="w-full">
       <mat-label>Invite Code</mat-label>
       <div class="flex items-center justify-center w-full">
-       
+
         <input matInput formControlName="inviteCode"
           placeholder="XXXX"
           maxlength="4"
@@ -21,8 +21,12 @@
           (input)="onCodeInput($event)" />
       </div>
       <mat-hint align="end">Enter the 4 characters after FAM-</mat-hint>
-      <mat-error *ngIf="form.get('inviteCode')?.hasError('required')">Code is required</mat-error>
-      <mat-error *ngIf="form.get('inviteCode')?.hasError('pattern')">Invalid format. Use 4 characters (e.g. AB12)</mat-error>
+      @if (form.get('inviteCode')?.hasError('required')) {
+        <mat-error>Code is required</mat-error>
+      }
+      @if (form.get('inviteCode')?.hasError('pattern')) {
+        <mat-error>Invalid format. Use 4 characters (e.g. AB12)</mat-error>
+      }
     </mat-form-field>
 
     <div class="flex gap-3 mt-2">

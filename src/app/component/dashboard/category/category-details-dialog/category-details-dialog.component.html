@@ -25,64 +25,72 @@
   <!-- Dialog Content -->
   <div class="dialog-content">
     <mat-tab-group [(selectedIndex)]="selectedTabIndex" class="details-tabs">
-        <!-- Transactions Tab -->
-        <mat-tab label="Transactions">
-          <div class="tab-content">
-            <div class="transactions-section">
-              <div class="no-transactions" *ngIf="!data.recentTransactions?.length">
+      <!-- Transactions Tab -->
+      <mat-tab label="Transactions">
+        <div class="tab-content">
+          <div class="transactions-section">
+            @if (!data.recentTransactions?.length) {
+              <div class="no-transactions">
                 <mat-icon>receipt_long</mat-icon>
                 <p>No recent transactions</p>
               </div>
-              <div class="transaction-list" *ngIf="data.recentTransactions?.length">
-                <div class="transaction-item" *ngFor="let transaction of data.recentTransactions">
-                  <div class="transaction-info">
-                    <span class="description">{{ transaction.category }}</span>
-                    <span class="date">{{ dateService.toDate(transaction.date) | date:'shortDate' }}</span>
+            }
+            @if (data.recentTransactions?.length) {
+              <div class="transaction-list">
+                @for (transaction of data.recentTransactions; track transaction) {
+                  <div class="transaction-item">
+                    <div class="transaction-info">
+                      <span class="description">{{ transaction.category }}</span>
+                      <span class="date">{{ dateService.toDate(transaction.date) | date:'shortDate' }}</span>
+                    </div>
+                    <span class="amount" [class]="transaction.amount >= 0 ? 'positive' : 'negative'">
+                      {{ transaction.amount | currency }}
+                    </span>
                   </div>
-                  <span class="amount" [class]="transaction.amount >= 0 ? 'positive' : 'negative'">
-                    {{ transaction.amount | currency }}
-                  </span>
-                </div>
+                }
               </div>
-            </div>
+            }
           </div>
-        </mat-tab>
+        </div>
+      </mat-tab>
       <!-- Overview Tab -->
       <mat-tab label="Overview">
         <div class="tab-content">
           <!-- Budget Summary Card -->
-          <div class="summary-card" *ngIf="data.category?.budget?.hasBudget">
-            <div class="card-header">
-              <mat-icon>account_balance_wallet</mat-icon>
-              <h3>Budget Summary</h3>
-            </div>
-            <div class="budget-overview">
-              <div class="budget-amount">
-                <span class="amount">{{ data.category.budget?.budgetAmount | currency }}</span>
-                <span class="period">/ {{ formatBudgetPeriod(data.category.budget?.budgetPeriod) }}</span>
+          @if (data.category?.budget?.hasBudget) {
+            <div class="summary-card">
+              <div class="card-header">
+                <mat-icon>account_balance_wallet</mat-icon>
+                <h3>Budget Summary</h3>
               </div>
-              <div class="budget-progress">
-                <div class="progress-bar">
-                  <div class="progress-fill" 
-                       [style.width.%]="Math.min(calculateBudgetProgressPercentage(data.category), 100)" 
-                       [style.background-color]="getBudgetProgressColor(data.category)">
+              <div class="budget-overview">
+                <div class="budget-amount">
+                  <span class="amount">{{ data.category.budget?.budgetAmount | currency }}</span>
+                  <span class="period">/ {{ formatBudgetPeriod(data.category.budget?.budgetPeriod) }}</span>
+                </div>
+                <div class="budget-progress">
+                  <div class="progress-bar">
+                    <div class="progress-fill"
+                      [style.width.%]="Math.min(calculateBudgetProgressPercentage(data.category), 100)"
+                      [style.background-color]="getBudgetProgressColor(data.category)">
+                    </div>
+                  </div>
+                  <div class="progress-info">
+                    <span class="spent">{{ calculateBudgetSpent(data.category) | currency }} spent</span>
+                    <span class="percentage">{{ calculateBudgetProgressPercentage(data.category).toFixed(1) }}%</span>
                   </div>
                 </div>
-                <div class="progress-info">
-                  <span class="spent">{{ calculateBudgetSpent(data.category) | currency }} spent</span>
-                  <span class="percentage">{{ calculateBudgetProgressPercentage(data.category).toFixed(1) }}%</span>
-                </div>
-              </div>
-              <div class="budget-stats">
-                <div class="stat">
-                  <span class="label">Remaining</span>
-                  <span class="value" [class]="getRemainingBudgetClass(data.category)">
-                    {{ calculateBudgetRemaining(data.category) | currency }}
-                  </span>
+                <div class="budget-stats">
+                  <div class="stat">
+                    <span class="label">Remaining</span>
+                    <span class="value" [class]="getRemainingBudgetClass(data.category)">
+                      {{ calculateBudgetRemaining(data.category) | currency }}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          }
 
           <!-- Monthly Summary Card -->
           <div class="summary-card">
@@ -94,22 +102,24 @@
               <div class="stat-row">
                 <span class="label">{{ data.category.type === 'expense' ? 'Spent' : 'Earned' }}</span>
                 <span class="value" [class]="data.category.type === 'expense' ? 'negative' : 'positive'">
-                  {{ data.category.type === 'expense' ? 
-                     (calculateTotalSpentPerMonth(data.category) | currency) : 
-                     (calculateTotalIncomePerMonth(data.category) | currency) }}
+                  {{ data.category.type === 'expense' ?
+                  (calculateTotalSpentPerMonth(data.category) | currency) :
+                  (calculateTotalIncomePerMonth(data.category) | currency) }}
                 </span>
               </div>
-              <div class="stat-row" *ngIf="data.categoryStats?.totalTransactions">
-                <span class="label">Transactions</span>
-                <span class="value">{{ data.categoryStats.totalTransactions }}</span>
-              </div>
+              @if (data.categoryStats?.totalTransactions) {
+                <div class="stat-row">
+                  <span class="label">Transactions</span>
+                  <span class="value">{{ data.categoryStats.totalTransactions }}</span>
+                </div>
+              }
             </div>
           </div>
 
           <!-- Subcategories Summary -->
           @for (subCategory of data.subCategories; track subCategory.id) {
             <div class="mb-2">
-            <app-category-card
+              <app-category-card
                 [category]="subCategory"
                 [isMobile]="true"
                 [recentTransactions]="data.recentTransactions"
@@ -118,10 +128,10 @@
                 [subCategories]="[]"
                 [subCategoryCount]="0"
                 [Math]="Math"
-            >
-            </app-category-card>
+                >
+              </app-category-card>
             </div>
-        }
+          }
         </div>
       </mat-tab>
 
@@ -151,57 +161,64 @@
                 {{ data.category.color }}
               </span>
             </div>
-            <div class="detail-item" *ngIf="data.category.parentCategoryId">
-              <span class="label">Parent Category</span>
-              <span class="value">
-                <mat-icon>account_tree</mat-icon>
-                Subcategory
-              </span>
-            </div>
+            @if (data.category.parentCategoryId) {
+              <div class="detail-item">
+                <span class="label">Parent Category</span>
+                <span class="value">
+                  <mat-icon>account_tree</mat-icon>
+                  Subcategory
+                </span>
+              </div>
+            }
           </div>
 
           <!-- Budget Details -->
-          <div class="details-section" *ngIf="data.category?.budget?.hasBudget">
-            <h4>Budget Details</h4>
-            <div class="detail-item">
-              <span class="label">Budget Amount</span>
-              <span class="value">{{ data.category.budget?.budgetAmount | currency }}</span>
+          @if (data.category?.budget?.hasBudget) {
+            <div class="details-section">
+              <h4>Budget Details</h4>
+              <div class="detail-item">
+                <span class="label">Budget Amount</span>
+                <span class="value">{{ data.category.budget?.budgetAmount | currency }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">Period</span>
+                <span class="value">{{ formatBudgetPeriod(data.category.budget?.budgetPeriod) }}</span>
+              </div>
+              @if (data.category.budget?.budgetStartDate) {
+                <div class="detail-item">
+                  <span class="label">Start Date</span>
+                  <span class="value">{{ dateService.toDate(data.category.budget?.budgetStartDate) | date:'shortDate' }}</span>
+                </div>
+              }
             </div>
-            <div class="detail-item">
-              <span class="label">Period</span>
-              <span class="value">{{ formatBudgetPeriod(data.category.budget?.budgetPeriod) }}</span>
-            </div>
-            <div class="detail-item" *ngIf="data.category.budget?.budgetStartDate">
-              <span class="label">Start Date</span>
-              <span class="value">{{ dateService.toDate(data.category.budget?.budgetStartDate) | date:'shortDate' }}</span>
-            </div>
-          </div>
+          }
         </div>
       </mat-tab>
 
       <!-- Subcategories Tab -->
-      <mat-tab label="Subcategories" *ngIf="data.subCategories?.length">
-        <div class="tab-content">
-          <div class="subcategories-list">
-            @for (subCategory of data.subCategories; track subCategory.id) {
-              <app-category-card
-                [category]="subCategory"
-                [isMobile]="true"
-                [recentTransactions]="data.recentTransactions"
-                [categoryStats]="data.categoryStats"
-                [allTransactions]="data.allTransactions"
-                [subCategories]="data.subCategories"
-                [subCategoryCount]="data.subCategories.length"
-                [Math]="Math"
-            >
-            </app-category-card>
-            }
-
+      @if (data.subCategories?.length) {
+        <mat-tab label="Subcategories">
+          <div class="tab-content">
+            <div class="subcategories-list">
+              @for (subCategory of data.subCategories; track subCategory.id) {
+                <app-category-card
+                  [category]="subCategory"
+                  [isMobile]="true"
+                  [recentTransactions]="data.recentTransactions"
+                  [categoryStats]="data.categoryStats"
+                  [allTransactions]="data.allTransactions"
+                  [subCategories]="data.subCategories"
+                  [subCategoryCount]="data.subCategories.length"
+                  [Math]="Math"
+                  >
+                </app-category-card>
+              }
+            </div>
           </div>
-        </div>
-      </mat-tab>
+        </mat-tab>
+      }
 
-    
+
 
       <!-- Statistics Tab -->
       <mat-tab label="Statistics">
@@ -236,4 +253,4 @@
       </mat-tab>
     </mat-tab-group>
   </div>
-</div> 
+</div>

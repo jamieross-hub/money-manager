@@ -1,126 +1,130 @@
 <mat-drawer-container class="!fixed inset-0 !z-[999] pointer-events-none bg-transparent overflow-visible">
-	<mat-drawer #drawer [mode]="'over'"
-		class="!fixed bg-white/95 dark:bg-slate-900/95 shadow-2xl w-80 border-r border-gray-100 dark:border-slate-800 backdrop-blur-md pointer-events-auto rounded-r-3xl">
-		<div class="h-full flex flex-col overflow-hidden">
-			
-			<!-- Header / Logo -->
-			<div class="flex items-center justify-between p-6 pb-2">
-				<div class="flex items-center gap-3">
-					<div class="w-10 h-10 bg-primary-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-none transition-transform hover:scale-105 active:scale-95 cursor-pointer" routerLink="/dashboard" (click)="closeDrawer()">
-						<mat-icon class="text-white !text-[1.8rem] !w-[30px] !h-[30px]">account_balance_wallet</mat-icon>
-					</div>
-					<div class="flex flex-col">
-						<span class="text-base font-bold text-gray-900 dark:text-white leading-tight tracking-tight">{{ 'COMMON.MONEY_MANAGER' | translate }}</span>
-						<!-- <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest opacity-80">Portfolio</span> -->
-					</div>
-				</div>
-				<button mat-icon-button (click)="drawer.close()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
-					<mat-icon>close</mat-icon>
-				</button>
-			</div>
+  <mat-drawer #drawer [mode]="'over'"
+    class="!fixed bg-white/95 dark:bg-slate-900/95 shadow-2xl w-80 border-r border-gray-100 dark:border-slate-800 backdrop-blur-md pointer-events-auto rounded-r-3xl">
+    <div class="h-full flex flex-col overflow-hidden">
 
-			<!-- User Profile Card -->
-			<!-- <div class="px-6 py-6" *ngIf="user$ | async as user">
-				<div class="bg-gray-50/80 dark:bg-slate-800/50 rounded-2xl p-4 border border-gray-100 dark:border-slate-700/50 flex items-center gap-4 group cursor-pointer hover:bg-white dark:hover:bg-slate-800 hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-none transition-all duration-300 transform hover:-translate-y-1" routerLink="/dashboard/profile" (click)="drawer.close()">
-					<div class="relative">
-						 <img [src]="userService.getAvatarUrl(user.photoURL)" 
-								 class="w-12 h-12 rounded-xl object-cover border-2 border-white dark:border-slate-700 shadow-sm transition-transform group-hover:scale-105"
-								 alt="User Profile">
-						 <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full shadow-sm"></div>
-					</div>
-					<div class="flex flex-col overflow-hidden">
-						<span class="text-sm font-bold text-gray-900 dark:text-white truncate">{{ user.displayName || user.firstName || 'User' }}</span>
-						<span class="text-[11px] text-gray-500 dark:text-gray-400 truncate font-medium">{{ user.email }}</span>
-					</div>
-					<mat-icon class="ml-auto text-gray-300 dark:text-slate-600 group-hover:text-blue-500 group-hover:translate-x-1 transition-all">chevron_right</mat-icon>
-				</div>
-			</div> -->
+      <!-- Header / Logo -->
+      <div class="flex items-center justify-between p-6 pb-2">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-primary-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-none transition-transform hover:scale-105 active:scale-95 cursor-pointer" routerLink="/dashboard" (click)="closeDrawer()">
+            <mat-icon class="text-white !text-[1.8rem] !w-[30px] !h-[30px]">account_balance_wallet</mat-icon>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-base font-bold text-gray-900 dark:text-white leading-tight tracking-tight">{{ 'COMMON.MONEY_MANAGER' | translate }}</span>
+            <!-- <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest opacity-80">Portfolio</span> -->
+          </div>
+        </div>
+        <button mat-icon-button (click)="drawer.close()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
 
-			<!-- Navigation Scroll Area -->
-			<nav class="flex-1 px-4 py-2 overflow-y-auto custom-scrollbar">
-				@for (section of navigationSections; track section.label; let first = $first) {
-					@if (section.label === 'NAVIGATION.ADMIN' ? isAdmin : true) {
-						<div [class.mt-8]="!first" class="mb-4">
-							<!-- Section Heading -->
-							<div class="px-4 mb-3 flex items-center justify-between group/section cursor-pointer" 
-								 (click)="toggleSection(section)">
-								<span class="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">{{ section.label | translate }}</span>
-								<mat-icon *ngIf="section.isCollapsible" 
-													class="!text-[1rem] !w-[16px] !h-[16px] text-gray-300 dark:text-slate-600 transition-transform duration-300"
-													[class.rotate-180]="section.isExpanded">keyboard_arrow_down</mat-icon>
-							</div>
+      <!-- User Profile Card -->
+      <!-- <div class="px-6 py-6" *ngIf="user$ | async as user">
+      <div class="bg-gray-50/80 dark:bg-slate-800/50 rounded-2xl p-4 border border-gray-100 dark:border-slate-700/50 flex items-center gap-4 group cursor-pointer hover:bg-white dark:hover:bg-slate-800 hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-none transition-all duration-300 transform hover:-translate-y-1" routerLink="/dashboard/profile" (click)="drawer.close()">
+        <div class="relative">
+          <img [src]="userService.getAvatarUrl(user.photoURL)"
+            class="w-12 h-12 rounded-xl object-cover border-2 border-white dark:border-slate-700 shadow-sm transition-transform group-hover:scale-105"
+            alt="User Profile">
+          <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full shadow-sm"></div>
+        </div>
+        <div class="flex flex-col overflow-hidden">
+          <span class="text-sm font-bold text-gray-900 dark:text-white truncate">{{ user.displayName || user.firstName || 'User' }}</span>
+          <span class="text-[11px] text-gray-500 dark:text-gray-400 truncate font-medium">{{ user.email }}</span>
+        </div>
+        <mat-icon class="ml-auto text-gray-300 dark:text-slate-600 group-hover:text-blue-500 group-hover:translate-x-1 transition-all">chevron_right</mat-icon>
+      </div>
+    </div> -->
 
-							<!-- Section Items -->
-							<div class="space-y-1.5 overflow-hidden transition-all duration-300" [class.max-h-0]="section.isCollapsible && !section.isExpanded" [class.max-h-[1000px]]="!section.isCollapsible || section.isExpanded">
-								@for (child of section.children; track child.label) {
-									@if (!child.familyOnly || isFamilyMode()) {
-										<!-- External Link -->
-										@if (child.externalUrl) {
-											<a [href]="child.externalUrl" target="_blank"
-												 class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/80 transition-all duration-200 group">
-												<div class="w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-slate-700 transition-all shadow-sm group-hover:shadow-md">
-													<mat-icon class="text-gray-500 dark:text-slate-400 group-hover:text-blue-600 transition-colors !text-[1.2rem] !h-[1.2rem] !w-[1.2rem]">{{ child.icon }}</mat-icon>
-												</div>
-												<span class="text-sm font-semibold text-gray-600 dark:text-slate-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">{{ child.label | translate }}</span>
-												<mat-icon class="ml-auto text-gray-300 dark:text-slate-600 !text-[1rem] !w-[16px] !h-[16px]">open_in_new</mat-icon>
-											</a>
-										} @else {
-											<!-- Regular Route -->
-											<a [routerLink]="child.route" [queryParams]="child.queryParams"
-												 routerLinkActive="active-link"
-												 [routerLinkActiveOptions]="{exact: false}"
-												 (click)="closeDrawer()"
-												 class="cursor-pointer flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/80 transition-all duration-200 group relative overflow-hidden">
-												
-												<div class="w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-slate-700 transition-all shadow-sm active-icon-bg">
-													<mat-icon class="text-gray-500 dark:text-slate-400 group-hover:text-blue-600 transition-colors !text-[1.2rem] !h-[1.2rem] !w-[1.2rem] active-icon-color">{{ child.icon }}</mat-icon>
-												</div>
+    <!-- Navigation Scroll Area -->
+    <nav class="flex-1 px-4 py-2 overflow-y-auto custom-scrollbar">
+      @for (section of navigationSections; track section.label; let first = $first) {
+        @if (section.label === 'NAVIGATION.ADMIN' ? isAdmin : true) {
+          <div [class.mt-8]="!first" class="mb-4">
+            <!-- Section Heading -->
+            <div class="px-4 mb-3 flex items-center justify-between group/section cursor-pointer"
+              (click)="toggleSection(section)">
+              <span class="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">{{ section.label | translate }}</span>
+              @if (section.isCollapsible) {
+                <mat-icon
+                  class="!text-[1rem] !w-[16px] !h-[16px] text-gray-300 dark:text-slate-600 transition-transform duration-300"
+                [class.rotate-180]="section.isExpanded">keyboard_arrow_down</mat-icon>
+              }
+            </div>
 
-												<span class="text-sm font-semibold text-gray-600 dark:text-slate-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">{{ child.label | translate }}</span>
-												
-												<!-- Premium Badge -->
-												<div *ngIf="child.isPremium" class="ml-auto">
-													<div class="px-2 py-0.5 rounded-lg premium-badge text-white text-[9px] font-black uppercase tracking-tighter shadow-sm">PRO</div>
-												</div>
+            <!-- Section Items -->
+            <div class="space-y-1.5 overflow-hidden transition-all duration-300" [class.max-h-0]="section.isCollapsible && !section.isExpanded" [class.max-h-[1000px]]="!section.isCollapsible || section.isExpanded">
+              @for (child of section.children; track child.label) {
+                @if (!child.familyOnly || isFamilyMode()) {
+                  <!-- External Link -->
+                  @if (child.externalUrl) {
+                    <a [href]="child.externalUrl" target="_blank"
+                      class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/80 transition-all duration-200 group">
+                      <div class="w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-slate-700 transition-all shadow-sm group-hover:shadow-md">
+                        <mat-icon class="text-gray-500 dark:text-slate-400 group-hover:text-blue-600 transition-colors !text-[1.2rem] !h-[1.2rem] !w-[1.2rem]">{{ child.icon }}</mat-icon>
+                      </div>
+                      <span class="text-sm font-semibold text-gray-600 dark:text-slate-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">{{ child.label | translate }}</span>
+                      <mat-icon class="ml-auto text-gray-300 dark:text-slate-600 !text-[1rem] !w-[16px] !h-[16px]">open_in_new</mat-icon>
+                    </a>
+                  } @else {
+                    <!-- Regular Route -->
+                    <a [routerLink]="child.route" [queryParams]="child.queryParams"
+                      routerLinkActive="active-link"
+                      [routerLinkActiveOptions]="{exact: false}"
+                      (click)="closeDrawer()"
+                      class="cursor-pointer flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/80 transition-all duration-200 group relative overflow-hidden">
 
-												<!-- Active Indicator Bar -->
-												<div class="absolute left-0 w-1.5 h-6 bg-primary-600 rounded-r-full active-indicator opacity-0 transition-all duration-300 -translate-x-full"></div>
-											</a>
-										}
-									}
-								}
-							</div>
-						</div>
-					}
-				}
-			</nav>
+                      <div class="w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-white dark:group-hover:bg-slate-700 transition-all shadow-sm active-icon-bg">
+                        <mat-icon class="text-gray-500 dark:text-slate-400 group-hover:text-blue-600 transition-colors !text-[1.2rem] !h-[1.2rem] !w-[1.2rem] active-icon-color">{{ child.icon }}</mat-icon>
+                      </div>
 
-			<!-- Footer / Quick Actions -->
-			<div class="p-6 border-t border-gray-100 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/50">
-				<div class="flex items-center justify-between">
-					<button mat-icon-button class="cursor-pointer !w-11 !h-11 rounded-xl text-gray-500 dark:text-slate-400 hover:text-blue-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300" [routerLink]="['/dashboard/profile']" [queryParams]="{tab: 'settings'}" (click)="closeDrawer()" [matTooltip]="'COMMON.SETTINGS' | translate">
-						<mat-icon>settings</mat-icon>
-					</button>
-					
-					<button (click)="logout()" class="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-300 font-bold text-sm group">
-						<mat-icon class="!text-[1.2rem] transition-transform group-hover:-translate-x-1">logout</mat-icon>
-						<span>{{ 'COMMON.LOGOUT' | translate }}</span>
-					</button>
-				</div>
-			</div>
+                      <span class="text-sm font-semibold text-gray-600 dark:text-slate-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">{{ child.label | translate }}</span>
 
-		</div>
-	</mat-drawer>
+                      <!-- Premium Badge -->
+                      @if (child.isPremium) {
+                        <div class="ml-auto">
+                          <div class="px-2 py-0.5 rounded-lg premium-badge text-white text-[9px] font-black uppercase tracking-tighter shadow-sm">PRO</div>
+                        </div>
+                      }
 
-	<!-- Toggle Button (Content area) -->
-	<mat-drawer-content class="!overflow-visible">
-		<div class="drawer-content-trigger p-4 w-fit">
-			<button class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md shadow-2xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-slate-700 transition-all duration-300 hover:scale-110 active:scale-90 hover:rotate-3"
-				(click)="drawer.toggle()" 
-				[attr.aria-label]="'NAVIGATION.OPEN_SIDEBAR' | translate"
-				data-testid="sidebar-toggle">
-				<mat-icon class="text-gray-700 dark:text-gray-200">menu</mat-icon>
-			</button>
-		</div>
-	</mat-drawer-content>
+                      <!-- Active Indicator Bar -->
+                      <div class="absolute left-0 w-1.5 h-6 bg-primary-600 rounded-r-full active-indicator opacity-0 transition-all duration-300 -translate-x-full"></div>
+                    </a>
+                  }
+                }
+              }
+            </div>
+          </div>
+        }
+      }
+    </nav>
+
+    <!-- Footer / Quick Actions -->
+    <div class="p-6 border-t border-gray-100 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/50">
+      <div class="flex items-center justify-between">
+        <button mat-icon-button class="cursor-pointer !w-11 !h-11 rounded-xl text-gray-500 dark:text-slate-400 hover:text-blue-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300" [routerLink]="['/dashboard/profile']" [queryParams]="{tab: 'settings'}" (click)="closeDrawer()" [matTooltip]="'COMMON.SETTINGS' | translate">
+          <mat-icon>settings</mat-icon>
+        </button>
+
+        <button (click)="logout()" class="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-300 font-bold text-sm group">
+          <mat-icon class="!text-[1.2rem] transition-transform group-hover:-translate-x-1">logout</mat-icon>
+          <span>{{ 'COMMON.LOGOUT' | translate }}</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</mat-drawer>
+
+<!-- Toggle Button (Content area) -->
+<mat-drawer-content class="!overflow-visible">
+  <div class="drawer-content-trigger p-4 w-fit">
+    <button class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md shadow-2xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-slate-700 transition-all duration-300 hover:scale-110 active:scale-90 hover:rotate-3"
+      (click)="drawer.toggle()"
+      [attr.aria-label]="'NAVIGATION.OPEN_SIDEBAR' | translate"
+      data-testid="sidebar-toggle">
+      <mat-icon class="text-gray-700 dark:text-gray-200">menu</mat-icon>
+    </button>
+  </div>
+</mat-drawer-content>
 </mat-drawer-container>

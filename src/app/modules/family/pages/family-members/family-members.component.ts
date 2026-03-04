@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, DestroyRef } from '@angular/core';
 import { Location } from '@angular/common';
 import { Store } from '@ngrx/store';
-import { CommonModule } from '@angular/common';
+
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
@@ -28,18 +28,17 @@ import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.d
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, 
-    MatButtonModule, 
-    MatIconModule, 
-    MatDialogModule, 
-    MatProgressSpinnerModule, 
+    MatButtonModule,
+    MatIconModule,
+    MatDialogModule,
+    MatProgressSpinnerModule,
     MatMenuModule,
     MatDividerModule,
     MatTooltipModule,
     CommonHeaderComponent,
     CommonBodyContentComponent,
     ImageFallbackDirective
-  ],
+],
   templateUrl: './family-members.component.html',
   styleUrls: ['./family-members.component.scss']
 })

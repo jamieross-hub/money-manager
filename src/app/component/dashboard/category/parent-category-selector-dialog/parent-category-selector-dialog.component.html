@@ -1,31 +1,35 @@
 <app-common-header [title]="data.title" (closeButtonClick)="onCancel()" [showCloseButton]="true"></app-common-header>
 
 <app-common-body-content>
-	<p class="dialog-message">{{ data.message }}</p>
+  <p class="dialog-message">{{ data.message }}</p>
 
-	<div class="categories-container">
-		<div class="categories-list">
-			<mat-list class="category-list">
-				<mat-list-item *ngFor="let category of data.categories; trackBy: trackByCategory" (click)="selectCategory(category)" class="category-item" [class.selected]="selectedCategory === category">
-					<div class="category-info">
-						<div class="category-icon-wrapper">
-							<mat-icon [style.color]="category.color" class="category-icon">
-								{{ category.icon }}
-							</mat-icon>
-						</div>
-						<div class="category-details">
-							<span class="category-name">{{ category.name }}</span>
-							<span class="category-type">{{ category.type | titlecase }}</span>
-						</div>
-						<mat-icon class="select-icon">arrow_forward_ios</mat-icon>
-					</div>
-				</mat-list-item>
-			</mat-list>
-		</div>
+  <div class="categories-container">
+    <div class="categories-list">
+      <mat-list class="category-list">
+        @for (category of data.categories; track trackByCategory($index, category)) {
+          <mat-list-item (click)="selectCategory(category)" class="category-item" [class.selected]="selectedCategory === category">
+            <div class="category-info">
+              <div class="category-icon-wrapper">
+                <mat-icon [style.color]="category.color" class="category-icon">
+                  {{ category.icon }}
+                </mat-icon>
+              </div>
+              <div class="category-details">
+                <span class="category-name">{{ category.name }}</span>
+                <span class="category-type">{{ category.type | titlecase }}</span>
+              </div>
+              <mat-icon class="select-icon">arrow_forward_ios</mat-icon>
+            </div>
+          </mat-list-item>
+        }
+      </mat-list>
+    </div>
 
-		<div class="no-categories" *ngIf="data?.categories?.length === 0">
-			<mat-icon class="no-categories-icon">category</mat-icon>
-			<p>No categories available</p>
-		</div>
-	</div>
+    @if (data.categories.length === 0) {
+      <div class="no-categories">
+        <mat-icon class="no-categories-icon">category</mat-icon>
+        <p>No categories available</p>
+      </div>
+    }
+  </div>
 </app-common-body-content>

@@ -1,3 +1,4 @@
+import { provideZoneChangeDetection } from "@angular/core";
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 
 import { AppModule } from './app/app.module';
@@ -194,9 +195,7 @@ async function clearApplicationCaches(): Promise<void> {
 }
 
 // Bootstrap app immediately for fastest startup
-platformBrowserDynamic().bootstrapModule(AppModule, {
-  ngZoneEventCoalescing: true
-})
+platformBrowserDynamic().bootstrapModule(AppModule, { applicationProviders: [provideZoneChangeDetection({ eventCoalescing: true })], })
   .then(() => {
     console.log('✅ App bootstrapped successfully');
 

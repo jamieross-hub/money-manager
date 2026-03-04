@@ -37,12 +37,14 @@
         </div>
 
         <div class="instructions-list space-y-3 dark:text-slate-300">
-          <div *ngFor="let instruction of getSetupInstructions(); let i = index" class="flex gap-3 text-sm">
-            <span
-              class="flex-none w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">{{
+          @for (instruction of getSetupInstructions(); track instruction; let i = $index) {
+            <div class="flex gap-3 text-sm">
+              <span
+                class="flex-none w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">{{
               i + 1 }}</span>
-            <span class="pt-1 leading-relaxed">{{ instruction }}</span>
-          </div>
+              <span class="pt-1 leading-relaxed">{{ instruction }}</span>
+            </div>
+          }
         </div>
       </mat-card-content>
 
@@ -74,7 +76,9 @@
               <mat-label>Connection Name</mat-label>
               <input matInput formControlName="name" placeholder="e.g., Monthly Expenses">
               <mat-icon matPrefix class="text-slate-400 mr-2">label</mat-icon>
-              <mat-error *ngIf="getFieldError('name')">{{ getFieldError('name') }}</mat-error>
+              @if (getFieldError('name')) {
+                <mat-error>{{ getFieldError('name') }}</mat-error>
+              }
             </mat-form-field>
 
             <!-- Sheet Name -->
@@ -82,7 +86,9 @@
               <mat-label>Sheet Name</mat-label>
               <input matInput formControlName="sheetName" placeholder="e.g., Sheet1">
               <mat-icon matPrefix class="text-slate-400 mr-2">description</mat-icon>
-              <mat-error *ngIf="getFieldError('sheetName')">{{ getFieldError('sheetName') }}</mat-error>
+              @if (getFieldError('sheetName')) {
+                <mat-error>{{ getFieldError('sheetName') }}</mat-error>
+              }
             </mat-form-field>
           </div>
 
@@ -91,25 +97,31 @@
             <mat-label>Google Sheets URL</mat-label>
             <input matInput type="url" formControlName="spreadsheetUrl"
               placeholder="https://docs.google.com/spreadsheets/d/...">
-            <mat-icon matPrefix class="text-slate-400 mr-2">link</mat-icon>
-            <mat-hint class="dark:text-slate-500">Ensure the sheet is shared with "Anyone with the link can
+              <mat-icon matPrefix class="text-slate-400 mr-2">link</mat-icon>
+              <mat-hint class="dark:text-slate-500">Ensure the sheet is shared with "Anyone with the link can
               view"</mat-hint>
-            <mat-error *ngIf="getFieldError('spreadsheetUrl')">{{ getFieldError('spreadsheetUrl') }}</mat-error>
-          </mat-form-field>
+              @if (getFieldError('spreadsheetUrl')) {
+                <mat-error>{{ getFieldError('spreadsheetUrl') }}</mat-error>
+              }
+            </mat-form-field>
 
-          <!-- Active Toggle -->
-          <div class="flex items-center gap-3 py-2">
-            <mat-slide-toggle formControlName="isActive" color="primary"></mat-slide-toggle>
-            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Active Connection</span>
-          </div>
+            <!-- Active Toggle -->
+            <div class="flex items-center gap-3 py-2">
+              <mat-slide-toggle formControlName="isActive" color="primary"></mat-slide-toggle>
+              <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Active Connection</span>
+            </div>
 
-          <!-- Action Buttons -->
-          <div class="flex flex-wrap gap-4 mt-4">
-            <button type="button" mat-stroked-button (click)="testConnection()"
-              [disabled]="isTestingConnection || !connectionForm.valid"
-              class="flex-1 md:flex-none dark:border-slate-700 dark:text-slate-300">
-              <mat-spinner *ngIf="isTestingConnection" diameter="20" class="mr-2 inline-block"></mat-spinner>
-              <mat-icon *ngIf="!isTestingConnection" class="mr-2">settings_input_antenna</mat-icon>
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap gap-4 mt-4">
+              <button type="button" mat-stroked-button (click)="testConnection()"
+                [disabled]="isTestingConnection || !connectionForm.valid"
+                class="flex-1 md:flex-none dark:border-slate-700 dark:text-slate-300">
+              @if (isTestingConnection) {
+                <mat-spinner diameter="20" class="mr-2 inline-block"></mat-spinner>
+              }
+              @if (!isTestingConnection) {
+                <mat-icon class="mr-2">settings_input_antenna</mat-icon>
+              }
               {{ isTestingConnection ? 'Testing...' : 'Test Connection' }}
             </button>
 
@@ -126,104 +138,113 @@
     <!-- Connections List Section -->
     <div class="connections-list-header flex items-center justify-between mb-6 px-2">
       <h3 class="text-xl font-bold dark:text-white m-0">Your Connections</h3>
-      <span *ngIf="connections.length > 0"
-        class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full text-xs font-bold uppercase tracking-wider">
-        {{ connections.length }} Total
-      </span>
+      @if (connections.length > 0) {
+        <span
+          class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full text-xs font-bold uppercase tracking-wider">
+          {{ connections.length }} Total
+        </span>
+      }
     </div>
 
-    <div *ngIf="isLoading"
-      class="flex flex-col items-center justify-center py-24 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
-      <mat-spinner diameter="48" strokeWidth="3"></mat-spinner>
-      <p class="mt-4 text-slate-500 dark:text-slate-400 font-medium">Loading connections...</p>
-    </div>
-
-    <div *ngIf="!isLoading && connections.length === 0"
-      class="empty-state text-center py-24 bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800">
-      <div class="w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
-        <mat-icon class="text-slate-300 dark:text-slate-600 scale-150">table_chart</mat-icon>
+    @if (isLoading) {
+      <div
+        class="flex flex-col items-center justify-center py-24 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
+        <mat-spinner diameter="48" strokeWidth="3"></mat-spinner>
+        <p class="mt-4 text-slate-500 dark:text-slate-400 font-medium">Loading connections...</p>
       </div>
-      <h4 class="text-xl font-bold dark:text-white mb-2">No connections yet</h4>
-      <p class="text-slate-500 dark:text-slate-400 max-w-xs mx-auto">Create your first Google Sheets connection to start
-        importing your financial data.</p>
-    </div>
+    }
 
-    <div *ngIf="!isLoading && connections.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <mat-card *ngFor="let connection of connections; index as i"
-        class="connection-card dark:bg-slate-900 dark:border-slate-800 hover:shadow-xl transition-all duration-300">
-        <mat-card-content class="p-6">
-          <div class="flex items-start justify-between mb-6">
-            <div class="flex items-center gap-4">
-              <div
-                class="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/10">
-                <mat-icon class="text-white text-2xl">table_rows</mat-icon>
-              </div>
-              <div>
-                <h4 class="font-bold text-lg dark:text-white m-0">{{ connection.name }}</h4>
-                <div class="flex items-center gap-2 mt-1">
-                  <span
-                    class="text-xs font-mono text-slate-400 bg-slate-50 dark:bg-slate-800/50 px-2 py-0.5 rounded">ID: {{
-                    connection.spreadsheetId | slice:0:8 }}...</span>
+    @if (!isLoading && connections.length === 0) {
+      <div
+        class="empty-state text-center py-24 bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800">
+        <div class="w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
+          <mat-icon class="text-slate-300 dark:text-slate-600 scale-150">table_chart</mat-icon>
+        </div>
+        <h4 class="text-xl font-bold dark:text-white mb-2">No connections yet</h4>
+        <p class="text-slate-500 dark:text-slate-400 max-w-xs mx-auto">Create your first Google Sheets connection to start
+        importing your financial data.</p>
+      </div>
+    }
+
+    @if (!isLoading && connections.length > 0) {
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        @for (connection of connections; track connection; let i = $index) {
+          <mat-card
+            class="connection-card dark:bg-slate-900 dark:border-slate-800 hover:shadow-xl transition-all duration-300">
+            <mat-card-content class="p-6">
+              <div class="flex items-start justify-between mb-6">
+                <div class="flex items-center gap-4">
+                  <div
+                    class="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/10">
+                    <mat-icon class="text-white text-2xl">table_rows</mat-icon>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-lg dark:text-white m-0">{{ connection.name }}</h4>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span
+                        class="text-xs font-mono text-slate-400 bg-slate-50 dark:bg-slate-800/50 px-2 py-0.5 rounded">ID: {{
+                      connection.spreadsheetId | slice:0:8 }}...</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1">
+                  <mat-slide-toggle [checked]="connection.isActive"
+                    (change)="connection.isActive = $event.checked; updateConnection(connection)" color="primary"
+                  matTooltip="Enable/Disable"></mat-slide-toggle>
+                  <button mat-icon-button color="warn" (click)="deleteConnection(connection)" matTooltip="Delete Connection"
+                    class="hover:bg-red-50 dark:hover:bg-red-900/20">
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
                 </div>
               </div>
-            </div>
-
-            <div class="flex items-center gap-1">
-              <mat-slide-toggle [checked]="connection.isActive"
-                (change)="connection.isActive = $event.checked; updateConnection(connection)" color="primary"
-                matTooltip="Enable/Disable"></mat-slide-toggle>
-
-              <button mat-icon-button color="warn" (click)="deleteConnection(connection)" matTooltip="Delete Connection"
-                class="hover:bg-red-50 dark:hover:bg-red-900/20">
-                <mat-icon>delete_outline</mat-icon>
-              </button>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4 mb-6">
-            <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl">
-              <span class="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1">Sheet
-                Name</span>
-              <span class="font-semibold text-slate-700 dark:text-slate-300 truncate block">{{ connection.sheetName
-                }}</span>
-            </div>
-            <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl">
-              <span class="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1">Status</span>
-              <span class="flex items-center gap-1.5 font-semibold"
-                [class]="connection.isActive ? 'text-emerald-600 dark:text-emerald-500' : 'text-slate-400'">
-                <span class="w-1.5 h-1.5 rounded-full"
-                  [class]="connection.isActive ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-300'"></span>
-                {{ connection.isActive ? 'Active' : 'Inactive' }}
-              </span>
-            </div>
-            <div class="col-span-2 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl">
-              <span class="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1">Last Sync
-                Date</span>
-              <span class="font-semibold text-slate-700 dark:text-slate-300">
-                {{ connection.lastSync ? (connection.lastSync | date:'medium') : 'Never Synced' }}
-              </span>
-            </div>
-          </div>
-
-          <div class="flex gap-3">
-            <button mat-flat-button color="primary" (click)="importFromSheet(connection)"
-              [disabled]="isImporting && selectedSpreadsheetId === connection.spreadsheetId"
-              class="flex-1 shadow-lg shadow-blue-500/20">
-              <mat-spinner *ngIf="isImporting && selectedSpreadsheetId === connection.spreadsheetId" diameter="20"
-                class="mr-2 inline-block"></mat-spinner>
-              <mat-icon *ngIf="!(isImporting && selectedSpreadsheetId === connection.spreadsheetId)"
-                class="mr-2">cloud_download</mat-icon>
-              Sync Data
-            </button>
-
-            <a [href]="connection.spreadsheetUrl" target="_blank" mat-stroked-button
-              class="flex-1 dark:border-slate-700 dark:text-slate-300">
-              <mat-icon class="mr-2">open_in_new</mat-icon>
-              View Sheet
-            </a>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
+              <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl">
+                  <span class="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1">Sheet
+                  Name</span>
+                  <span class="font-semibold text-slate-700 dark:text-slate-300 truncate block">{{ connection.sheetName
+                  }}</span>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl">
+                  <span class="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1">Status</span>
+                  <span class="flex items-center gap-1.5 font-semibold"
+                    [class]="connection.isActive ? 'text-emerald-600 dark:text-emerald-500' : 'text-slate-400'">
+                    <span class="w-1.5 h-1.5 rounded-full"
+                    [class]="connection.isActive ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-300'"></span>
+                    {{ connection.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </div>
+                <div class="col-span-2 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl">
+                  <span class="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1">Last Sync
+                  Date</span>
+                  <span class="font-semibold text-slate-700 dark:text-slate-300">
+                    {{ connection.lastSync ? (connection.lastSync | date:'medium') : 'Never Synced' }}
+                  </span>
+                </div>
+              </div>
+              <div class="flex gap-3">
+                <button mat-flat-button color="primary" (click)="importFromSheet(connection)"
+                  [disabled]="isImporting && selectedSpreadsheetId === connection.spreadsheetId"
+                  class="flex-1 shadow-lg shadow-blue-500/20">
+                  @if (isImporting && selectedSpreadsheetId === connection.spreadsheetId) {
+                    <mat-spinner diameter="20"
+                    class="mr-2 inline-block"></mat-spinner>
+                  }
+                  @if (!(isImporting && selectedSpreadsheetId === connection.spreadsheetId)) {
+                    <mat-icon
+                    class="mr-2">cloud_download</mat-icon>
+                  }
+                  Sync Data
+                </button>
+                <a [href]="connection.spreadsheetUrl" target="_blank" mat-stroked-button
+                  class="flex-1 dark:border-slate-700 dark:text-slate-300">
+                  <mat-icon class="mr-2">open_in_new</mat-icon>
+                  View Sheet
+                </a>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+    }
   </div>
 </div>

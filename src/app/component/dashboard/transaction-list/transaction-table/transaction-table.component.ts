@@ -157,7 +157,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
     this.setupSorting();
   }
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize() {
     this.updateColumnVisibility();
   }

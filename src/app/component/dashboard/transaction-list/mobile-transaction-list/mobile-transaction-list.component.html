@@ -1,594 +1,629 @@
 <div class="mobile-transaction-container">
-	<!-- Chart area (amCharts) -->
-	<!-- Chart area removed -->
+  <!-- Chart area (amCharts) -->
+  <!-- Chart area removed -->
 
-	<!-- Mobile Filter Header -->
-	<div class="mobile-filter-header" *ngIf="showFilters && !showChart">
-		<!-- Active Filters Indicator -->
-		<div class="active-filters-indicator" *ngIf="activeFiltersCount() > 0" 
-			(click)="toggleFilterDetails($event)" [class.expanded]="showActiveFilterDetails()">
-			<div class="indicator-main">
-				<mat-icon class="filter-icon">filter_list</mat-icon>
-				<span class="filter-text">{{ activeFiltersCount() }} active {{ activeFiltersCount() === 1 ? 'filter' : 'filters' }}</span>
-				<mat-icon class="expand-icon">{{ showActiveFilterDetails() ? 'expand_less' : 'expand_more' }}</mat-icon>
-				<button mat-icon-button class="quick-clear-btn" (click)="quickClearFilters(); $event.stopPropagation()" matTooltip="Clear all filters">
-					<mat-icon>close</mat-icon>
-				</button>
-			</div>
+  <!-- Mobile Filter Header -->
+  @if (showFilters && !showChart) {
+    <div class="mobile-filter-header">
+      <!-- Active Filters Indicator -->
+      @if (activeFiltersCount() > 0) {
+        <div class="active-filters-indicator"
+          (click)="toggleFilterDetails($event)" [class.expanded]="showActiveFilterDetails()">
+          <div class="indicator-main">
+            <mat-icon class="filter-icon">filter_list</mat-icon>
+            <span class="filter-text">{{ activeFiltersCount() }} active {{ activeFiltersCount() === 1 ? 'filter' : 'filters' }}</span>
+            <mat-icon class="expand-icon">{{ showActiveFilterDetails() ? 'expand_less' : 'expand_more' }}</mat-icon>
+            <button mat-icon-button class="quick-clear-btn" (click)="quickClearFilters(); $event.stopPropagation()" matTooltip="Clear all filters">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+          <!-- Detailed Filter Chips -->
+          @if (showActiveFilterDetails()) {
+            <div class="active-filter-details">
+              <div class="filter-chip-list">
+                @if (searchTerm()) {
+                  <div class="filter-chip">
+                    <mat-icon>search</mat-icon>
+                    <span class="chip-text">{{ searchTerm() }}</span>
+                    <button (click)="clearFilter('search'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
+                  </div>
+                }
+                @if (selectedType() !== 'all') {
+                  <div class="filter-chip">
+                    <mat-icon>account_balance_wallet</mat-icon>
+                    <span class="chip-text">{{ currentTypeLabel() }}</span>
+                    <button (click)="clearFilter('type'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
+                  </div>
+                }
+                @if (!(selectedCategory() | includes:'all')) {
+                  <div class="filter-chip">
+                    <mat-icon>category</mat-icon>
+                    <span class="chip-text">{{ currentCategoryLabel() }}</span>
+                    <button (click)="clearFilter('category'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
+                  </div>
+                }
+                @if (selectedDate() || selectedDateRange()) {
+                  <div class="filter-chip">
+                    <mat-icon>calendar_today</mat-icon>
+                    <span class="chip-text">{{ currentDateLabel() }}</span>
+                    <button (click)="clearFilter('date'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+      <!-- Search Bar -->
+      <div class="search-container">
+        <div class="search-input-wrapper">
+          <mat-icon class="search-icon">search</mat-icon>
+          <input type="text" [ngModel]="searchTerm()" (ngModelChange)="onSearchChange($event)"
+            placeholder="Search transactions..." class="search-input" />
+          @if (searchTerm()) {
+            <button mat-icon-button class="clear-search-btn" (click)="onSearchChange('')">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+        </div>
+      </div>
+      <!-- Filter Menu Buttons -->
+      <div class="filter-menu-container md:justify-center">
+        <!-- Sort Menu -->
+        <button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="sortMenu"
+          [ngClass]="{'active': selectedSort() !== 'date-desc'}" matTooltip="{{ currentSortLabel() }}"
+          aria-label="Sort transactions">
+          <mat-icon>sort</mat-icon>
+          <span class="filter-btn-text">{{ currentSortLabel() }}</span>
+        </button>
+        <mat-menu #sortMenu="matMenu" class="filter-menu">
+          @for (option of sortOptions; track option.value) {
+            <button mat-menu-item [class.active-menu-item]="selectedSort() === option.value"
+              (click)="onSortChange(option.value)">
+              <mat-icon>{{ option.icon }}</mat-icon>
+              <span>{{ option.label }}</span>
+              @if (selectedSort() === option.value) {
+                <mat-icon class="check-icon">check</mat-icon>
+              }
+            </button>
+          }
+        </mat-menu>
+        <!-- Type Menu -->
+        <button mat-icon-button class="filter-menu-btn" [ngClass]="{'active': selectedType() !== 'all'}"
+          [matMenuTriggerFor]="typeMenu" matTooltip="{{ currentTypeLabel() }}"
+          aria-label="Filter by transaction type">
+          <mat-icon>account_balance_wallet</mat-icon>
+          <span class="filter-btn-text">{{ currentTypeLabel() }}</span>
+        </button>
+        <mat-menu #typeMenu="matMenu" class="filter-menu">
+          <button mat-menu-item [class.active-menu-item]="selectedType() === 'all'" (click)="onTypeChange('all')">
+            <mat-icon>list</mat-icon>
+            <span>All Types</span>
+            @if (selectedType() === 'all') {
+              <mat-icon class="check-icon">check</mat-icon>
+            }
+          </button>
+          <button mat-menu-item [class.active-menu-item]="selectedType() === 'income'"
+            (click)="onTypeChange('income')">
+            <mat-icon class="income-icon">trending_up</mat-icon>
+            <span>Income</span>
+            @if (selectedType() === 'income') {
+              <mat-icon class="check-icon">check</mat-icon>
+            }
+          </button>
+          <button mat-menu-item [class.active-menu-item]="selectedType() === 'expense'"
+            (click)="onTypeChange('expense')">
+            <mat-icon class="expense-icon">trending_down</mat-icon>
+            <span>Expense</span>
+            @if (selectedType() === 'expense') {
+              <mat-icon class="check-icon">check</mat-icon>
+            }
+          </button>
+        </mat-menu>
+        <!-- Category Menu -->
+        <button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="categoryMenu"
+          matTooltip="{{ currentCategoryLabel() }}" aria-label="Filter by category"
+          [ngClass]="{'active': !(selectedCategory() | includes:'all')}">
+          <mat-icon>category</mat-icon>
+          <span class="filter-btn-text">{{ currentCategoryLabel() }}</span>
+        </button>
+        <mat-menu #categoryMenu="matMenu" class="filter-menu">
+          <button mat-menu-item [class.active-menu-item]="(selectedCategory() | includes:'all')"
+            (click)="onCategoryChange('all'); $event.stopPropagation()">
+            <mat-icon>list</mat-icon>
+            <span>All Categories</span>
+            @if ((selectedCategory() | includes:'all')) {
+              <mat-icon class="check-icon">check</mat-icon>
+            }
+          </button>
+          <mat-divider></mat-divider>
+          @for (category of getCategoriesList(); track category.id) {
+            <button mat-menu-item [class.active-menu-item]="(selectedCategory() | includes:category.id)"
+              (click)="onCategoryChange(category.id); $event.stopPropagation()">
+              <mat-icon>{{ category.icon }}</mat-icon>
+              <span>{{ category.name }}</span>
+              @if (selectedCategory() | includes:category.id) {
+                <mat-icon class="check-icon">check</mat-icon>
+              }
+            </button>
+          }
+        </mat-menu>
+        <!-- Date Range Menu -->
+        <button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="dateMenu"
+          [ngClass]="{'active': selectedDateRange() !== null}" matTooltip="{{ currentDateLabel() }}"
+          aria-label="Filter by date range">
+          <mat-icon>calendar_today</mat-icon>
+          <span class="filter-btn-text">{{ currentDateLabel() }}</span>
+        </button>
+        <mat-menu #dateMenu="matMenu" class="filter-menu">
+          <button mat-menu-item [class.active-menu-item]="selectedRange() === null"
+            (click)="onDateRangeChange(null)">
+            <mat-icon>all_inclusive</mat-icon>
+            <span>All Time</span>
+            @if (selectedRange() === null) {
+              <mat-icon class="check-icon">check</mat-icon>
+            }
+          </button>
+          <button mat-menu-item [class.active-menu-item]="selectedRange() === 'this-week'"
+            (click)="onDateRangeChange('this-week')">
+            <mat-icon>calendar_view_week</mat-icon>
+            <span>This Week</span>
+            @if (selectedRange() === 'this-week') {
+              <mat-icon class="check-icon">check</mat-icon>
+            }
+          </button>
+          <button mat-menu-item [class.active-menu-item]="selectedRange() === 'this-month'"
+            (click)="onDateRangeChange('this-month')">
+            <mat-icon>calendar_month</mat-icon>
+            <span>This Month</span>
+            @if (selectedRange() === 'this-month') {
+              <mat-icon class="check-icon">check</mat-icon>
+            }
+          </button>
+          <button mat-menu-item [class.active-menu-item]="selectedRange() === 'last-month'"
+            (click)="onDateRangeChange('last-month')">
+            <mat-icon>calendar_view_month</mat-icon>
+            <span>Last Month</span>
+            @if (selectedRange() === 'last-month') {
+              <mat-icon class="check-icon">check</mat-icon>
+            }
+          </button>
+          <!-- //upcoming button -->
+          <button mat-menu-item [class.active-menu-item]="selectedRange() === 'upcoming'"
+            (click)="onDateRangeChange('upcoming')">
+            <mat-icon>calendar_today</mat-icon>
+            <span>Upcoming</span>
+            @if (selectedRange() === 'upcoming') {
+              <mat-icon class="check-icon">check</mat-icon>
+            }
+          </button>
+          <button mat-menu-item [class.active-menu-item]="selectedRange() === 'this-year'"
+            (click)="onDateRangeChange('this-year')">
+            <mat-icon>calendar_today</mat-icon>
+            <span>This Year</span>
+            @if (selectedRange() === 'this-year') {
+              <mat-icon class="check-icon">check</mat-icon>
+            }
+          </button>
+          <mat-divider></mat-divider>
+          <button mat-menu-item [class.active-menu-item]="selectedRange() === 'custom'"
+            (click)="openCustomDateRangeDialog()">
+            <mat-icon>date_range</mat-icon>
+            <span>Custom Range</span>
+            @if (selectedRange() === 'custom') {
+              <mat-icon class="check-icon">check</mat-icon>
+            }
+          </button>
+        </mat-menu>
+        <!-- Chart Button -->
+        <!-- Chart Button Removed -->
+      </div>
+    </div>
+  }
 
-			<!-- Detailed Filter Chips -->
-			<div class="active-filter-details" *ngIf="showActiveFilterDetails()">
-				<div class="filter-chip-list">
-					@if (searchTerm()) {
-						<div class="filter-chip">
-							<mat-icon>search</mat-icon>
-							<span class="chip-text">{{ searchTerm() }}</span>
-							<button (click)="clearFilter('search'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
-						</div>
-					}
-					@if (selectedType() !== 'all') {
-						<div class="filter-chip">
-							<mat-icon>account_balance_wallet</mat-icon>
-							<span class="chip-text">{{ currentTypeLabel() }}</span>
-							<button (click)="clearFilter('type'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
-						</div>
-					}
-					@if (!(selectedCategory() | includes:'all')) {
-						<div class="filter-chip">
-							<mat-icon>category</mat-icon>
-							<span class="chip-text">{{ currentCategoryLabel() }}</span>
-							<button (click)="clearFilter('category'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
-						</div>
-					}
-					@if (selectedDate() || selectedDateRange()) {
-						<div class="filter-chip">
-							<mat-icon>calendar_today</mat-icon>
-							<span class="chip-text">{{ currentDateLabel() }}</span>
-							<button (click)="clearFilter('date'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
-						</div>
-					}
-				</div>
-			</div>
-		</div>
-
-		<!-- Search Bar -->
-		<div class="search-container">
-			<div class="search-input-wrapper">
-				<mat-icon class="search-icon">search</mat-icon>
-				<input type="text" [ngModel]="searchTerm()" (ngModelChange)="onSearchChange($event)"
-					placeholder="Search transactions..." class="search-input" />
-				<button *ngIf="searchTerm()" mat-icon-button class="clear-search-btn" (click)="onSearchChange('')">
-					<mat-icon>close</mat-icon>
-				</button>
-			</div>
-		</div>
-
-		<!-- Filter Menu Buttons -->
-		<div class="filter-menu-container md:justify-center">
-			<!-- Sort Menu -->
-			<button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="sortMenu"
-				[ngClass]="{'active': selectedSort() !== 'date-desc'}" matTooltip="{{ currentSortLabel() }}"
-				aria-label="Sort transactions">
-				<mat-icon>sort</mat-icon>
-				<span class="filter-btn-text">{{ currentSortLabel() }}</span>
-			</button>
-
-			<mat-menu #sortMenu="matMenu" class="filter-menu">
-				@for (option of sortOptions; track option.value) {
-				<button mat-menu-item [class.active-menu-item]="selectedSort() === option.value"
-					(click)="onSortChange(option.value)">
-					<mat-icon>{{ option.icon }}</mat-icon>
-					<span>{{ option.label }}</span>
-					@if (selectedSort() === option.value) {
-					<mat-icon class="check-icon">check</mat-icon>
-					}
-				</button>
-				}
-			</mat-menu>
-
-			<!-- Type Menu -->
-			<button mat-icon-button class="filter-menu-btn" [ngClass]="{'active': selectedType() !== 'all'}"
-				[matMenuTriggerFor]="typeMenu" matTooltip="{{ currentTypeLabel() }}"
-				aria-label="Filter by transaction type">
-				<mat-icon>account_balance_wallet</mat-icon>
-				<span class="filter-btn-text">{{ currentTypeLabel() }}</span>
-			</button>
-
-			<mat-menu #typeMenu="matMenu" class="filter-menu">
-				<button mat-menu-item [class.active-menu-item]="selectedType() === 'all'" (click)="onTypeChange('all')">
-					<mat-icon>list</mat-icon>
-					<span>All Types</span>
-					<mat-icon *ngIf="selectedType() === 'all'" class="check-icon">check</mat-icon>
-				</button>
-				<button mat-menu-item [class.active-menu-item]="selectedType() === 'income'"
-					(click)="onTypeChange('income')">
-					<mat-icon class="income-icon">trending_up</mat-icon>
-					<span>Income</span>
-					<mat-icon *ngIf="selectedType() === 'income'" class="check-icon">check</mat-icon>
-				</button>
-				<button mat-menu-item [class.active-menu-item]="selectedType() === 'expense'"
-					(click)="onTypeChange('expense')">
-					<mat-icon class="expense-icon">trending_down</mat-icon>
-					<span>Expense</span>
-					<mat-icon *ngIf="selectedType() === 'expense'" class="check-icon">check</mat-icon>
-				</button>
-			</mat-menu>
-
-			<!-- Category Menu -->
-			<button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="categoryMenu"
-				matTooltip="{{ currentCategoryLabel() }}" aria-label="Filter by category"
-				[ngClass]="{'active': !(selectedCategory() | includes:'all')}">
-				<mat-icon>category</mat-icon>
-				<span class="filter-btn-text">{{ currentCategoryLabel() }}</span>
-			</button>
-
-			<mat-menu #categoryMenu="matMenu" class="filter-menu">
-				<button mat-menu-item [class.active-menu-item]="(selectedCategory() | includes:'all')"
-					(click)="onCategoryChange('all'); $event.stopPropagation()">
-					<mat-icon>list</mat-icon>
-					<span>All Categories</span>
-					<mat-icon *ngIf="(selectedCategory() | includes:'all')" class="check-icon">check</mat-icon>
-				</button>
-				<mat-divider></mat-divider>
-				@for (category of getCategoriesList(); track category.id) {
-				<button mat-menu-item [class.active-menu-item]="(selectedCategory() | includes:category.id)"
-					(click)="onCategoryChange(category.id); $event.stopPropagation()">
-					<mat-icon>{{ category.icon }}</mat-icon>
-					<span>{{ category.name }}</span>
-					@if (selectedCategory() | includes:category.id) {
-					<mat-icon class="check-icon">check</mat-icon>
-					}
-				</button>
-				}
-			</mat-menu>
-
-			<!-- Date Range Menu -->
-			<button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="dateMenu"
-				[ngClass]="{'active': selectedDateRange() !== null}" matTooltip="{{ currentDateLabel() }}"
-				aria-label="Filter by date range">
-				<mat-icon>calendar_today</mat-icon>
-				<span class="filter-btn-text">{{ currentDateLabel() }}</span>
-			</button>
-
-			<mat-menu #dateMenu="matMenu" class="filter-menu">
-				<button mat-menu-item [class.active-menu-item]="selectedRange() === null"
-					(click)="onDateRangeChange(null)">
-					<mat-icon>all_inclusive</mat-icon>
-					<span>All Time</span>
-					@if (selectedRange() === null) {
-					<mat-icon class="check-icon">check</mat-icon>
-					}
-				</button>
-				<button mat-menu-item [class.active-menu-item]="selectedRange() === 'this-week'"
-					(click)="onDateRangeChange('this-week')">
-					<mat-icon>calendar_view_week</mat-icon>
-					<span>This Week</span>
-					@if (selectedRange() === 'this-week') {
-					<mat-icon class="check-icon">check</mat-icon>
-					}
-				</button>
-				<button mat-menu-item [class.active-menu-item]="selectedRange() === 'this-month'"
-					(click)="onDateRangeChange('this-month')">
-					<mat-icon>calendar_month</mat-icon>
-					<span>This Month</span>
-					@if (selectedRange() === 'this-month') {
-					<mat-icon class="check-icon">check</mat-icon>
-					}
-				</button>
-				<button mat-menu-item [class.active-menu-item]="selectedRange() === 'last-month'"
-					(click)="onDateRangeChange('last-month')">
-					<mat-icon>calendar_view_month</mat-icon>
-					<span>Last Month</span>
-					@if (selectedRange() === 'last-month') {
-					<mat-icon class="check-icon">check</mat-icon>
-					}
-				</button>
-				<!-- //upcoming button -->
-				<button mat-menu-item [class.active-menu-item]="selectedRange() === 'upcoming'"
-					(click)="onDateRangeChange('upcoming')">
-					<mat-icon>calendar_today</mat-icon>
-					<span>Upcoming</span>
-					@if (selectedRange() === 'upcoming') {
-					<mat-icon class="check-icon">check</mat-icon>
-					}
-				</button>
-				<button mat-menu-item [class.active-menu-item]="selectedRange() === 'this-year'"
-					(click)="onDateRangeChange('this-year')">
-					<mat-icon>calendar_today</mat-icon>
-					<span>This Year</span>
-					@if (selectedRange() === 'this-year') {
-					<mat-icon class="check-icon">check</mat-icon>
-					}
-				</button>
-				<mat-divider></mat-divider>
-				<button mat-menu-item [class.active-menu-item]="selectedRange() === 'custom'"
-					(click)="openCustomDateRangeDialog()">
-					<mat-icon>date_range</mat-icon>
-					<span>Custom Range</span>
-					@if (selectedRange() === 'custom') {
-					<mat-icon class="check-icon">check</mat-icon>
-					}
-				</button>
-			</mat-menu>
-
-			<!-- Chart Button -->
-			<!-- Chart Button Removed -->
-		</div>
-	</div>
 
 
+  <!-- Transaction Summary -->
+  @if (showFilters && filteredTransactions().length > 0) {
+    <div class="transaction-summary">
+      <div class="summary-stats">
+        <div class="stat-item">
+          <span class="stat-value">{{ filteredCount() }}</span>
+          <span class="stat-total">/ {{ totalCount() }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value income">+{{ totalIncome() | currency:{round:true} }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value expense">-{{ totalExpenses() | currency:{round:true} }}</span>
+        </div>
+      </div>
+    </div>
+  }
 
-	<!-- Transaction Summary -->
-	<div class="transaction-summary" *ngIf="showFilters && filteredTransactions().length > 0">
-		<div class="summary-stats">
-			<div class="stat-item">
-				<span class="stat-value">{{ filteredCount() }}</span>
-				<span class="stat-total">/ {{ totalCount() }}</span>
-			</div>
-			<div class="stat-item">
-				<span class="stat-value income">+{{ totalIncome() | currency:{round:true} }}</span>
-			</div>
-			<div class="stat-item">
-				<span class="stat-value expense">-{{ totalExpenses() | currency:{round:true} }}</span>
-			</div>
-		</div>
-	</div>
+  <!-- Transaction List -->
+  <div class="transaction-list-container">
+    <div class="transaction-scroll">
+      <!-- Empty State -->
+      @if (!filteredTransactions().length) {
+        <div class="empty-state">
+          <div class="empty-icon">
+            <mat-icon>receipt_long</mat-icon>
+          </div>
+          <h3 class="empty-title text-base">No transactions found</h3>
+          <p class="empty-description text-base">
+            {{ allTransactions().length === 0 ? 'Start by adding your first transaction' : 'No transactions
+            match
+            your current filters. Try adjusting your search or filters.' }}
+          </p>
+          @if (allTransactions().length === 0) {
+            <button mat-flat-button color="primary" class="add-first-btn"
+              (click)="onAddTransaction()">
+              <mat-icon>add</mat-icon>
+              <span>Add First Transaction</span>
+            </button>
+          }
+          @if (allTransactions().length > 0 && hasActiveFilters()) {
+            <button mat-stroked-button
+              class="clear-filters-btn-large" (click)="clearAllFilters()">
+              <mat-icon>clear</mat-icon>
+              <span class="text-base">Clear Filters</span>
+            </button>
+          }
+        </div>
+      }
 
-	<!-- Transaction List -->
-	<div class="transaction-list-container">
-		<div class="transaction-scroll">
-			<!-- Empty State -->
-			<div *ngIf="!filteredTransactions().length" class="empty-state">
-				<div class="empty-icon">
-					<mat-icon>receipt_long</mat-icon>
-				</div>
-				<h3 class="empty-title text-base">No transactions found</h3>
-				<p class="empty-description text-base">
-					{{ allTransactions().length === 0 ? 'Start by adding your first transaction' : 'No transactions
-					match
-					your current filters. Try adjusting your search or filters.' }}
-				</p>
-				<button *ngIf="allTransactions().length === 0" mat-flat-button color="primary" class="add-first-btn"
-					(click)="onAddTransaction()">
-					<mat-icon>add</mat-icon>
-					<span>Add First Transaction</span>
-				</button>
-				<button *ngIf="allTransactions().length > 0 && hasActiveFilters()" mat-stroked-button
-					class="clear-filters-btn-large" (click)="clearAllFilters()">
-					<mat-icon>clear</mat-icon>
-					<span class="text-base">Clear Filters</span>
-				</button>
-			</div>
+      <!-- Transaction Cards -->
+      @for (group of groupedTransactions(); track group.date) {
+        <div class="date-group">
+          <div class="date-header">
+            {{ group.dateHeader }}
+          </div>
+          @for (tx of group.transactions; track tx.id) {
+            <div class="transaction-card"
+              [class.selected]="selectedTx?.id === tx.id"
+              [class.upcoming]="tx._isUpcoming"
+              [class.opacity-50]="tx.syncStatus === 'pending'"
+              [class.grayscale]="tx.syncStatus === 'pending'"
+              (click)="onLongPress(tx)">
+              <!-- Main Transaction Content -->
+              <div class="transaction-main">
+                <!-- Icon -->
+                <div class="transaction-icon">
+                  <div class="icon-container" [style.background-color]="tx._categoryBgColor"
+                    [style.color]="tx._categoryColor">
 
-			<!-- Transaction Cards -->
-			@for (group of groupedTransactions(); track group.date) {
-			<div class="date-group">
-				<div class="date-header">
-					{{ group.dateHeader }}
-				</div>
-				@for (tx of group.transactions; track tx.id) {
-				<div class="transaction-card" 
-					[class.selected]="selectedTx?.id === tx.id" 
-					[class.upcoming]="tx._isUpcoming"
-					[class.opacity-50]="tx.syncStatus === 'pending'"
-					[class.grayscale]="tx.syncStatus === 'pending'"
-					(click)="onLongPress(tx)">
-					<!-- Main Transaction Content -->
-					<div class="transaction-main">
-						<!-- Icon -->
-						<div class="transaction-icon">
-							<div class="icon-container" [style.background-color]="tx._categoryBgColor"
-								[style.color]="tx._categoryColor">
+                    @if(isFamilyMode() && isSplitMode() && tx.splitData) {
+                      <div class="member-pic-stack">
+                        @if(tx.categoryId === 'adjustment') {
+                          <div class="member-pic-wrapper">
+                            <img [src]="tx.userPhotoURL" appImageFallback alt="Creator">
+                          </div>
+                        } @else if((tx.splitData.paidBy || []).length > 1) {
+                          @for (payer of (tx.splitData.paidBy || []).slice(0, 3); track payer.userId; let i = $index) {
+                            <div class="member-pic-wrapper stacked">
+                              <img [src]="payer.photoURL" appImageFallback alt="Payer">
+                            </div>
+                          }
+                        } @else {
+                          <div class="member-pic-wrapper">
+                            <img [src]="tx.splitData.paidByPhotoURL" appImageFallback alt="Payer">
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <mat-icon [style.color]="tx._categoryColor">{{ tx._categoryIcon }}</mat-icon>
+                      @if(tx.isSplitTransaction) {
+                        <mat-icon class="split-transaction">bookmark</mat-icon>
+                      }
+                      @if(tx.isCategorySplit) {
+                        <mat-icon class="category-split-transaction">category</mat-icon>
+                      }
+                    }
+                  </div>
+                </div>
 
-								@if(isFamilyMode() && isSplitMode() && tx.splitData) {
-									<div class="member-pic-stack">
-										@if(tx.categoryId === 'adjustment') {
-											<div class="member-pic-wrapper">
-												<img [src]="tx.userPhotoURL" appImageFallback alt="Creator">
-											</div>
-										} @else if((tx.splitData.paidBy || []).length > 1) {
-											@for (payer of (tx.splitData.paidBy || []).slice(0, 3); track payer.userId; let i = $index) {
-												<div class="member-pic-wrapper stacked">
-													<img [src]="payer.photoURL" appImageFallback alt="Payer">
-												</div>
-											}
-										} @else {
-											<div class="member-pic-wrapper">
-												<img [src]="tx.splitData.paidByPhotoURL" appImageFallback alt="Payer">
-											</div>
-										}
-									</div>
-								} @else {
-									<mat-icon [style.color]="tx._categoryColor">{{ tx._categoryIcon }}</mat-icon>
-									@if(tx.isSplitTransaction) {
-										<mat-icon class="split-transaction">bookmark</mat-icon>
-									}
-									@if(tx.isCategorySplit) {
-										<mat-icon class="category-split-transaction">category</mat-icon>
-									}
-								}
-							</div>
-						</div>
+                <!-- Details (left) -->
+                <div class="transaction-details">
+                  <div class="transaction-title">{{ tx.category | titlecase }}</div>
 
-						<!-- Details (left) -->
-						<div class="transaction-details">
-							<div class="transaction-title">{{ tx.category | titlecase }}</div>
+                  @if (tx.isRecurring || (tx.isSplitTransaction && !(isFamilyMode() && isSplitMode()))) {
+                    <div class="transaction-meta-row">
+                      @if(tx.isRecurring) {
+                        <span class="tx-chip tx-chip--recurring">
+                          <mat-icon class="tx-chip__icon">repeat</mat-icon>
+                          {{ tx.recurringInterval | titlecase }}
+                        </span>
+                      }
+                      @if(tx.isSplitTransaction && !(isFamilyMode() && isSplitMode())) {
+                        <span class="tx-chip tx-chip--split">Split</span>
+                      }
+                    </div>
+                  }
 
-							<div class="transaction-meta-row" *ngIf="tx.isRecurring || (tx.isSplitTransaction && !(isFamilyMode() && isSplitMode()))">
-								@if(tx.isRecurring) {
-									<span class="tx-chip tx-chip--recurring">
-										<mat-icon class="tx-chip__icon">repeat</mat-icon>
-										{{ tx.recurringInterval | titlecase }}
-									</span>
-								}
-								@if(tx.isSplitTransaction && !(isFamilyMode() && isSplitMode())) {
-									<span class="tx-chip tx-chip--split">Split</span>
-								}
-							</div>
+                  @if (tx.notes) {
+                    <div class="transaction-notes">{{ tx.notes }}</div>
+                  }
+                </div>
 
-							<div *ngIf="tx.notes" class="transaction-notes">{{ tx.notes }}</div>
-						</div>
+                <!-- Amount (right) -->
+                <div class="transaction-amount">
+                  <div class="amount-value" [ngClass]="tx._isIncome ? 'income-text' : 'expense-text'">
+                    {{ tx._isIncome ? '+' : '-' }}{{ tx.amount | currency }}
+                  </div>
+                  <div class="amount-type">
+                    @if (selectedRange() === null) {
+                      {{ tx._dateDisplay }}
+                    } @else {
+                      {{ tx._timeDisplay }}
+                    }
+                  </div>
+                </div>
+              </div>
 
-						<!-- Amount (right) -->
-						<div class="transaction-amount">
-							<div class="amount-value" [ngClass]="tx._isIncome ? 'income-text' : 'expense-text'">
-								{{ tx._isIncome ? '+' : '-' }}{{ tx.amount | currency }}
-							</div>
-							<div class="amount-type">
-								@if (selectedRange() === null) {
-									{{ tx._dateDisplay }}
-								} @else {
-									{{ tx._timeDisplay }}
-								}
-							</div>
-						</div>
-					</div>
+              <!-- Action Buttons (shown when selected) -->
+              @if (selectedTx?.id === tx.id && !tx._isUpcoming) {
+                <div class="transaction-actions">
+                  <div class="actions-container flex items-center space-x-2">
+                    @if (canEdit(tx)) {
+                      <button mat-icon-button class="action-button edit-btn" (click)="onEditTransaction(tx)"
+                        matTooltip="Edit transaction">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                    }
+                    @if (!canEdit(tx) && !canDelete(tx)) {
+                      <span class="text-[11px] text-gray-400 dark:text-gray-500 italic px-2">View only</span>
+                    }
+                    @if (!canEdit(tx) && !tx.settlementId && tx.categoryId !== 'adjustment') {
+                      <button mat-icon-button class="action-button adjust-btn" (click)="onAdjustTransaction(tx)"
+                        matTooltip="Adjust transaction details">
+                        <mat-icon>tune</mat-icon>
+                      </button>
+                    }
+                    @if (!canEdit(tx) && canDelete(tx) && tx.settlementId) {
+                      <span class="text-[10px] text-gray-400 dark:text-gray-500 italic px-1">Uneditable settlement</span>
+                    }
+                    @if (canDelete(tx)) {
+                      <button mat-icon-button class="action-button delete-btn" (click)="onDeleteTransaction(tx)"
+                        matTooltip="Delete transaction">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
 
-					<!-- Action Buttons (shown when selected) -->
-					<div *ngIf="selectedTx?.id === tx.id && !tx._isUpcoming" class="transaction-actions">
-						<div class="actions-container flex items-center space-x-2">
-							<button *ngIf="canEdit(tx)" mat-icon-button class="action-button edit-btn" (click)="onEditTransaction(tx)"
-								matTooltip="Edit transaction">
-								<mat-icon>edit</mat-icon>
-							</button>
-							
-							<span *ngIf="!canEdit(tx) && !canDelete(tx)" class="text-[11px] text-gray-400 dark:text-gray-500 italic px-2">View only</span>
-							<button *ngIf="!canEdit(tx) && !tx.settlementId && tx.categoryId !== 'adjustment'" mat-icon-button class="action-button adjust-btn" (click)="onAdjustTransaction(tx)"
-								matTooltip="Adjust transaction details">
-								<mat-icon>tune</mat-icon>
-							</button>
-							<span *ngIf="!canEdit(tx) && canDelete(tx) && tx.settlementId" class="text-[10px] text-gray-400 dark:text-gray-500 italic px-1">Uneditable settlement</span>
-							<button *ngIf="canDelete(tx)" mat-icon-button class="action-button delete-btn" (click)="onDeleteTransaction(tx)"
-								matTooltip="Delete transaction">
-								<mat-icon>delete</mat-icon>
-							</button>
-						</div>
-					</div>
+              <!-- Upcoming Action Buttons -->
+              @if (tx._isUpcoming) {
+                <div class="transaction-actions upcoming-actions">
+                  <div class="actions-container">
+                    @if(tx._isUpcoming) {
+                      <span class="due-status" [class.overdue]="tx._isOverdue">{{ tx._dueStatus }}</span>
+                    }
+                    <button mat-flat-button color="primary" class="confirm-btn-compact !text-white" (click)="onConfirmRecurring(tx); $event.stopPropagation()" matTooltip="Confirm">
+                      <mat-icon>check</mat-icon>
+                    </button>
+                    <button mat-stroked-button color="warn" class="reject-btn-compact" (click)="onRejectRecurring(tx); $event.stopPropagation()" matTooltip="Reject">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              }
 
-					<!-- Upcoming Action Buttons -->
-					<div *ngIf="tx._isUpcoming" class="transaction-actions upcoming-actions">
-						<div class="actions-container">
-							@if(tx._isUpcoming) {
-								<span class="due-status" [class.overdue]="tx._isOverdue">{{ tx._dueStatus }}</span>
-							}
-							<button mat-flat-button color="primary" class="confirm-btn-compact !text-white" (click)="onConfirmRecurring(tx); $event.stopPropagation()" matTooltip="Confirm">
-								<mat-icon>check</mat-icon>
-							</button>
-							<button mat-stroked-button color="warn" class="reject-btn-compact" (click)="onRejectRecurring(tx); $event.stopPropagation()" matTooltip="Reject">
-								<mat-icon>close</mat-icon>
-							</button>
-						</div>
-					</div>
+              <!-- Expanded Details (shown when selected) -->
+              @if (selectedTx?.id === tx.id) {
+                <div class="transaction-details-expanded">
+                  <div class="details-container">
+                    <!-- Account Information -->
+                    <div class="detail-row">
+                      <div class="detail-label">
+                        <mat-icon class="detail-icon">account_balance</mat-icon>
+                        <span>Account</span>
+                      </div>
+                      <div class="detail-value">
+                        <span class="account-name">{{ tx._accountName }}</span>
+                        @if (tx._accountType) {
+                          <span class="account-type">({{ tx._accountType }})</span>
+                        }
+                      </div>
+                    </div>
+                    <!-- Recurring Status -->
+                    @if (tx.isRecurring) {
+                      <div class="detail-row">
+                        <div class="detail-label">
+                          <mat-icon class="detail-icon">repeat</mat-icon>
+                          <span>Recurring</span>
+                        </div>
+                        <div class="detail-value">
+                          <span class="recurring-info">{{ tx._recurringInfo }}</span>
+                        </div>
+                      </div>
+                    }
+                    <!-- Transaction Date -->
+                    <div class="detail-row">
+                      <div class="detail-label">
+                        <mat-icon class="detail-icon">event</mat-icon>
+                        <span>Transaction Date</span>
+                      </div>
+                      <div class="detail-value">
+                        <span class="transaction-date ">{{ tx._fullTransactionDateDisplay }}</span>
+                      </div>
+                    </div>
+                    <!-- Created Date (Commented out by user) -->
+                    <!-- <div class="detail-row">
+                    <div class="detail-label">
+                      <mat-icon class="detail-icon">schedule</mat-icon>
+                      <span>Created Date</span>
+                    </div>
+                    <div class="detail-value">
+                      <span class="created-date">{{ tx._createdAtDisplay }}</span>
+                    </div>
+                  </div> -->
+                  <!-- Updated Date -->
+                  <div class="detail-row">
+                    <div class="detail-label">
+                      <mat-icon class="detail-icon">update</mat-icon>
+                      <span>Updated Date</span>
+                    </div>
+                    <div class="detail-value">
+                      <span class="updated-date">{{ tx._updatedAtDisplay }}</span>
+                    </div>
+                  </div>
+                  <!-- Notes (if available) -->
+                  @if (tx.notes && tx.notes.trim()) {
+                    <div class="detail-row">
+                      <div class="detail-label">
+                        <mat-icon class="detail-icon">note</mat-icon>
+                        <span>Notes</span>
+                      </div>
+                      <div class="detail-value">
+                        <span class="transaction-notes">{{ tx.notes }}</span>
+                      </div>
+                    </div>
+                  }
+                  <!-- Payment Method -->
+                  @if (tx.paymentMethod) {
+                    <div class="detail-row">
+                      <div class="detail-label">
+                        <mat-icon class="detail-icon">payment</mat-icon>
+                        <span>Payment Method</span>
+                      </div>
+                      <div class="detail-value">
+                        <span class="payment-method">{{ tx.paymentMethod }}</span>
+                      </div>
+                    </div>
+                  }
+                  <!-- Tax Amount -->
+                  @if (tx.taxAmount) {
+                    <div class="detail-row">
+                      <div class="detail-label">
+                        <mat-icon class="detail-icon">payment</mat-icon>
+                        <span>Tax Amount</span>
+                      </div>
+                      <div class="detail-value">
+                        <span class="tax-amount">{{ tx.taxAmount | currency }}</span>
+                      </div>
+                    </div>
+                  }
+                  <!-- Tax Percentage -->
+                  @if (tx.taxPercentage) {
+                    <div class="detail-row">
+                      <div class="detail-label">
+                        <mat-icon class="detail-icon">percent</mat-icon>
+                        <span>Tax Percentage</span>
+                      </div>
+                      <div class="detail-value">
+                        <span class="tax-percentage">{{ tx.taxPercentage }}%</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+                <!-- Category Splits -->
+                @if (tx.isCategorySplit && tx.categorySplits?.length) {
+                  <div class="detail-row">
+                    <div class="detail-label">
+                      <mat-icon class="detail-icon">category</mat-icon>
+                      <span>Category Splits</span>
+                    </div>
+                    <div class="detail-value">
+                      <div class="category-splits-list">
+                        @for (split of tx.categorySplits; track split.categoryId) {
+                          <div class="category-split-item">
+                            <span class="split-category">{{ split.categoryName }}</span>
+                            <span class="split-amount">₹{{ split.amount.toFixed(2) }} ({{
+                            split.percentage.toFixed(1) }}%)</span>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+                <!-- Family Split Details -->
+                @if(tx.splitData) {
+                  <div class="mt-3 border border-indigo-100 dark:border-indigo-800/60 rounded-xl overflow-hidden bg-gradient-to-br from-indigo-50/50 to-primary-50/50 dark:from-indigo-900/10 dark:to-purple-900/10 shadow-sm transition-all duration-300">
+                    <div class="p-3 flex flex-col gap-4">
+                      <!-- Paid By row -->
+                      @if(tx.splitData.paidBy?.length) {
+                        <div>
+                          <p class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Paid By</p>
+                          <div class="flex flex-col gap-2">
+                            @for (payer of tx.splitData.paidBy; track payer.userId) {
+                              <div class="flex items-center gap-2.5">
+                                <!-- Avatar initial -->
+                                <div class="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800/50 flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 overflow-hidden">
+                                  <img [src]="payer.photoURL" appImageFallback class="w-full h-full object-cover" alt="Profile Photo">
+                                </div>
+                                <!-- Name -->
+                                <span class="flex-1 text-xs font-medium text-gray-700 dark:text-gray-300 min-w-0 truncate">
+                                  {{ payer.displayName }}
+                                </span>
+                                <!-- Amount chip -->
+                                <span class="text-[11px] font-bold text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800/50 rounded-full px-2 py-0.5 flex-shrink-0">
+                                  {{ payer.amount | currency }}
+                                </span>
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      } @else {
+                        <div>
+                          <p class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Paid By</p>
+                          <div class="flex flex-col gap-2">
+                            <div class="flex items-center gap-2.5">
+                              <!-- Avatar initial -->
+                              <div class="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800/50 flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 overflow-hidden">
+                                <img [src]="tx.splitData.paidByPhotoURL" appImageFallback class="w-full h-full object-cover" alt="Profile Photo">
+                              </div>
+                              <!-- Name -->
+                              <span class="flex-1 text-xs font-medium text-gray-700 dark:text-gray-300 min-w-0 truncate">
+                                {{ tx.splitData.paidByDisplayName }}
+                              </span>
+                              <!-- Amount chip -->
+                              <span class="text-[11px] font-bold text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800/50 rounded-full px-2 py-0.5 flex-shrink-0">
+                                {{ tx.amount | currency }}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      }
+                      <!-- Split Between -->
+                      @if (tx.splitData.splitBetween.length) {
+                        <div>
+                          <p class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Split Between</p>
+                          <div class="flex flex-col gap-2">
+                            @for (member of tx.splitData.splitBetween; track member.userId) {
+                              <div class="flex items-center gap-2.5">
+                                <!-- Avatar initial -->
+                                <div class="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800/50 flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 overflow-hidden">
+                                  <img [src]="member.photoURL" appImageFallback class="w-full h-full object-cover" alt="Profile Photo">
+                                </div>
+                                <!-- Name -->
+                                <span class="flex-1 text-xs font-medium text-gray-700 dark:text-gray-300 min-w-0 truncate">
+                                  {{ member.displayName }}
+                                </span>
+                                <!-- Amount chip -->
+                                <span class="text-[11px] font-bold text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800/50 rounded-full px-2 py-0.5 flex-shrink-0">
+                                  {{ member.amount | currency }}
+                                </span>
+                                <!-- Percentage -->
+                                <span class="text-[10px] font-medium text-gray-500 dark:text-gray-400 flex-shrink-0 w-8 text-right">
+                                  {{ member.percentage.toFixed(0) }}%
+                                </span>
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
 
-					<!-- Expanded Details (shown when selected) -->
-					<div *ngIf="selectedTx?.id === tx.id" class="transaction-details-expanded">
-						<div class="details-container">
-							<!-- Account Information -->
-							<div class="detail-row">
-								<div class="detail-label">
-									<mat-icon class="detail-icon">account_balance</mat-icon>
-									<span>Account</span>
-								</div>
-								<div class="detail-value">
-									<span class="account-name">{{ tx._accountName }}</span>
-									<span class="account-type" *ngIf="tx._accountType">({{ tx._accountType }})</span>
-								</div>
-							</div>
-
-							<!-- Recurring Status -->
-							<div class="detail-row" *ngIf="tx.isRecurring">
-								<div class="detail-label">
-									<mat-icon class="detail-icon">repeat</mat-icon>
-									<span>Recurring</span>
-								</div>
-								<div class="detail-value">
-									<span class="recurring-info">{{ tx._recurringInfo }}</span>
-								</div>
-							</div>
-
-							<!-- Transaction Date -->
-							<div class="detail-row">
-								<div class="detail-label">
-									<mat-icon class="detail-icon">event</mat-icon>
-									<span>Transaction Date</span>
-								</div>
-								<div class="detail-value">
-									<span class="transaction-date ">{{ tx._fullTransactionDateDisplay }}</span>
-								</div>
-							</div>
-
-							<!-- Created Date (Commented out by user) -->
-							<!-- <div class="detail-row">
-								<div class="detail-label">
-									<mat-icon class="detail-icon">schedule</mat-icon>
-									<span>Created Date</span>
-								</div>
-								<div class="detail-value">
-									<span class="created-date">{{ tx._createdAtDisplay }}</span>
-								</div>
-							</div> -->
-
-							<!-- Updated Date -->
-							<div class="detail-row">
-								<div class="detail-label">
-									<mat-icon class="detail-icon">update</mat-icon>
-									<span>Updated Date</span>
-								</div>
-								<div class="detail-value">
-									<span class="updated-date">{{ tx._updatedAtDisplay }}</span>
-								</div>
-							</div>
-
-							<!-- Notes (if available) -->
-							<div class="detail-row" *ngIf="tx.notes && tx.notes.trim()">
-								<div class="detail-label">
-									<mat-icon class="detail-icon">note</mat-icon>
-									<span>Notes</span>
-								</div>
-								<div class="detail-value">
-									<span class="transaction-notes">{{ tx.notes }}</span>
-								</div>
-							</div>
-
-							<!-- Payment Method -->
-							<div class="detail-row" *ngIf="tx.paymentMethod">
-								<div class="detail-label">
-									<mat-icon class="detail-icon">payment</mat-icon>
-									<span>Payment Method</span>
-								</div>
-								<div class="detail-value">
-									<span class="payment-method">{{ tx.paymentMethod }}</span>
-								</div>
-							</div>
-
-							<!-- Tax Amount -->
-							<div class="detail-row" *ngIf="tx.taxAmount">
-								<div class="detail-label">
-									<mat-icon class="detail-icon">payment</mat-icon>
-									<span>Tax Amount</span>
-								</div>
-								<div class="detail-value">
-									<span class="tax-amount">{{ tx.taxAmount | currency }}</span>
-								</div>
-							</div>
-
-							<!-- Tax Percentage -->
-							<div class="detail-row" *ngIf="tx.taxPercentage">
-								<div class="detail-label">
-									<mat-icon class="detail-icon">percent</mat-icon>
-									<span>Tax Percentage</span>
-								</div>
-								<div class="detail-value">
-									<span class="tax-percentage">{{ tx.taxPercentage }}%</span>
-								</div>
-							</div>
-						</div>
-
-						<!-- Category Splits -->
-						<div class="detail-row" *ngIf="tx.isCategorySplit && tx.categorySplits?.length">
-							<div class="detail-label">
-								<mat-icon class="detail-icon">category</mat-icon>
-								<span>Category Splits</span>
-							</div>
-							<div class="detail-value">
-								<div class="category-splits-list">
-									@for (split of tx.categorySplits; track split.categoryId) {
-									<div class="category-split-item">
-										<span class="split-category">{{ split.categoryName }}</span>
-										<span class="split-amount">₹{{ split.amount.toFixed(2) }} ({{
-											split.percentage.toFixed(1) }}%)</span>
-									</div>
-									}
-								</div>
-							</div>
-						</div>
-
-				<!-- Family Split Details -->
-				@if(tx.splitData) {
-					<div class="mt-3 border border-indigo-100 dark:border-indigo-800/60 rounded-xl overflow-hidden bg-gradient-to-br from-indigo-50/50 to-primary-50/50 dark:from-indigo-900/10 dark:to-purple-900/10 shadow-sm transition-all duration-300">
-						<div class="p-3 flex flex-col gap-4">
-
-							<!-- Paid By row -->
-							@if(tx.splitData.paidBy?.length) {
-								<div>
-									<p class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Paid By</p>
-									<div class="flex flex-col gap-2">
-										@for (payer of tx.splitData.paidBy; track payer.userId) {
-											<div class="flex items-center gap-2.5">
-												<!-- Avatar initial -->
-												<div class="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800/50 flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 overflow-hidden">
-													<img [src]="payer.photoURL" appImageFallback class="w-full h-full object-cover" alt="Profile Photo">
-												</div>
-												<!-- Name -->
-												<span class="flex-1 text-xs font-medium text-gray-700 dark:text-gray-300 min-w-0 truncate">
-													{{ payer.displayName }}
-												</span>
-												<!-- Amount chip -->
-												<span class="text-[11px] font-bold text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800/50 rounded-full px-2 py-0.5 flex-shrink-0">
-													{{ payer.amount | currency }}
-												</span>
-											</div>
-										}
-									</div>
-								</div>
-							} @else {
-								<div>
-									<p class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Paid By</p>
-									<div class="flex flex-col gap-2">
-										<div class="flex items-center gap-2.5">
-											<!-- Avatar initial -->
-											<div class="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800/50 flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 overflow-hidden">
-												<img [src]="tx.splitData.paidByPhotoURL" appImageFallback class="w-full h-full object-cover" alt="Profile Photo">
-											</div>
-											<!-- Name -->
-											<span class="flex-1 text-xs font-medium text-gray-700 dark:text-gray-300 min-w-0 truncate">
-												{{ tx.splitData.paidByDisplayName }}
-											</span>
-											<!-- Amount chip -->
-											<span class="text-[11px] font-bold text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800/50 rounded-full px-2 py-0.5 flex-shrink-0">
-												{{ tx.amount | currency }}
-											</span>
-										</div>
-									</div>
-								</div>
-							}
-
-							<!-- Split Between -->
-							<div *ngIf="tx.splitData.splitBetween?.length">
-								<p class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Split Between</p>
-								<div class="flex flex-col gap-2">
-									@for (member of tx.splitData.splitBetween; track member.userId) {
-										<div class="flex items-center gap-2.5">
-											<!-- Avatar initial -->
-											<div class="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800/50 flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 overflow-hidden">
-												<img [src]="member.photoURL" appImageFallback class="w-full h-full object-cover" alt="Profile Photo">
-											</div>
-											<!-- Name -->
-											<span class="flex-1 text-xs font-medium text-gray-700 dark:text-gray-300 min-w-0 truncate">
-												{{ member.displayName }}
-											</span>
-											<!-- Amount chip -->
-											<span class="text-[11px] font-bold text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800/50 rounded-full px-2 py-0.5 flex-shrink-0">
-												{{ member.amount | currency }}
-											</span>
-											<!-- Percentage -->
-											<span class="text-[10px] font-medium text-gray-500 dark:text-gray-400 flex-shrink-0 w-8 text-right">
-												{{ member.percentage.toFixed(0) }}%
-											</span>
-										</div>
-									}
-								</div>
-							</div>
-
-						</div>
-					</div>
-				}
-				</div>
-				</div>
-				}
-
-			</div>
-			}
-		</div>
-	</div>
+      </div>
+    }
+  </div>
+</div>
 </div>

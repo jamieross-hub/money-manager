@@ -24,7 +24,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { CATEGORY_ICONS, CategoryIcon } from 'src/app/util/config/config';
 import { IconModule } from 'src/app/util/icon.module';
-import { CommonModule } from '@angular/common';
+
 
 export interface IconSelectorDialogData {
   currentIcon: string;
@@ -44,7 +44,6 @@ export interface IconSelectorDialogData {
     MatFormFieldModule,
     FormsModule,
     ReactiveFormsModule,
-    CommonModule,
     IconModule,
     MatTooltipModule,
     MatDividerModule,
@@ -62,8 +61,8 @@ export interface IconSelectorDialogData {
     MatStepperModule,
     MatTableModule,
     MatPaginatorModule,
-    MatSortModule,
-  ],
+    MatSortModule
+],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class IconSelectorDialogComponent {

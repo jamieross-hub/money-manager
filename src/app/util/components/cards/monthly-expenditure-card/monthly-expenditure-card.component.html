@@ -1,67 +1,73 @@
 <mat-card class="trend-card">
-    <div class="trend-header">
-        <div class="title-section">
-            <h3 class="card-title text-uppercase">{{ chartTitle }}</h3>
-            <div class="metrics-row">
-                <div class="metric-item">
-                    <span class="dot income-dot"></span>
-                    <span class="label">Income:</span>
-                    <span class="value">{{ totalIncome | currency }}</span>
-                </div>
-                <div class="metric-item">
-                    <span class="dot expense-dot"></span>
-                    <span class="label">Expenses:</span>
-                    <span class="value text-red-600">{{ totalExpenses | currency }}</span>
-                </div>
-            </div>
+  <div class="trend-header">
+    <div class="title-section">
+      <h3 class="card-title text-uppercase">{{ chartTitle }}</h3>
+      <div class="metrics-row">
+        <div class="metric-item">
+          <span class="dot income-dot"></span>
+          <span class="label">Income:</span>
+          <span class="value">{{ totalIncome | currency }}</span>
         </div>
-        <!-- <div class="action-section">
-            <div class="toggle-group !relative !top-0 !right-0 mb-2">
-                <button mat-icon-button [class.active]="viewMode === 'category'" (click)="toggleViewMode('category')"
-                    matTooltip="By Category">
-                    <mat-icon>category</mat-icon>
-                </button>
-                <button mat-icon-button [class.active]="viewMode === 'trend'" (click)="toggleViewMode('trend')"
-                    matTooltip="By Trend">
-                    <mat-icon>show_chart</mat-icon>
-                </button>
-            </div>
-            <div class="toggle-group !relative !top-0 !right-0">
-                <button mat-icon-button [class.active]="chartType === 'line'" (click)="toggleChartType('line')"
-                    matTooltip="Line Chart">
-                    <mat-icon>show_chart</mat-icon>
-                </button>
-                <button mat-icon-button [class.active]="chartType === 'bar'" (click)="toggleChartType('bar')"
-                    matTooltip="Bar Chart">
-                    <mat-icon>bar_chart</mat-icon>
-                </button>
-            </div>
-        </div> -->
+        <div class="metric-item">
+          <span class="dot expense-dot"></span>
+          <span class="label">Expenses:</span>
+          <span class="value text-red-600">{{ totalExpenses | currency }}</span>
+        </div>
+      </div>
     </div>
+    <!-- <div class="action-section">
+    <div class="toggle-group !relative !top-0 !right-0 mb-2">
+      <button mat-icon-button [class.active]="viewMode === 'category'" (click)="toggleViewMode('category')"
+        matTooltip="By Category">
+        <mat-icon>category</mat-icon>
+      </button>
+      <button mat-icon-button [class.active]="viewMode === 'trend'" (click)="toggleViewMode('trend')"
+        matTooltip="By Trend">
+        <mat-icon>show_chart</mat-icon>
+      </button>
+    </div>
+    <div class="toggle-group !relative !top-0 !right-0">
+      <button mat-icon-button [class.active]="chartType === 'line'" (click)="toggleChartType('line')"
+        matTooltip="Line Chart">
+        <mat-icon>show_chart</mat-icon>
+      </button>
+      <button mat-icon-button [class.active]="chartType === 'bar'" (click)="toggleChartType('bar')"
+        matTooltip="Bar Chart">
+        <mat-icon>bar_chart</mat-icon>
+      </button>
+    </div>
+  </div> -->
+</div>
 
-    <mat-card-content class="!p-0">
-        <!-- CSS Based Bar Chart -->
-        <div class="chart-container-inner" *ngIf="chartData.length > 0">
-            <div *ngFor="let item of chartData; let i = index" 
-                 class="bar-wrapper"
-                 [class.monthly-bar]="currentView === 'MONTHLY' && viewMode === 'trend'"
-                 [matTooltip]="(viewMode === 'category' ? item.period : item.period) + ': ' + (item.value | currency)"
-                 matTooltipPosition="above">
-                <div class="bar-tooltip">{{ item.value | currency }}</div>
-                <div class="bar" 
-                     [style.height.%]="maxChartValue > 0 ? (item.value / maxChartValue * 100) : 0"
-                     [style.background-color]="viewMode === 'category' ? item.color : null">
-                </div>
-                <!-- <span class="bar-label" [class.category-label]="viewMode === 'category'">
-                    <mat-icon *ngIf="viewMode === 'category'" class="text-[10px] mr-0.5">{{ item.icon }}</mat-icon>
-                    {{ item.period }}
-                </span> -->
-            </div>
-        </div>
+<mat-card-content class="!p-0">
+  <!-- CSS Based Bar Chart -->
+  @if (chartData.length > 0) {
+    <div class="chart-container-inner">
+      @for (item of chartData; track item; let i = $index) {
+        <div
+          class="bar-wrapper"
+          [class.monthly-bar]="currentView === 'MONTHLY' && viewMode === 'trend'"
+          [matTooltip]="(viewMode === 'category' ? item.period : item.period) + ': ' + (item.value | currency)"
+          matTooltipPosition="above">
+          <div class="bar-tooltip">{{ item.value | currency }}</div>
+          <div class="bar"
+            [style.height.%]="maxChartValue > 0 ? (item.value / maxChartValue * 100) : 0"
+            [style.background-color]="viewMode === 'category' ? item.color : null">
+          </div>
+          <!-- <span class="bar-label" [class.category-label]="viewMode === 'category'">
+          <mat-icon *ngIf="viewMode === 'category'" class="text-[10px] mr-0.5">{{ item.icon }}</mat-icon>
+          {{ item.period }}
+        </span> -->
+      </div>
+    }
+  </div>
+}
 
-        <div *ngIf="chartData.length === 0" class="p-6 text-center text-gray-500 italic">
-            No data available for the selected period.
-        </div>
-        <p class="chart-footer text-center mt-2">{{ chartFooter }}</p>
-    </mat-card-content>
+@if (chartData.length === 0) {
+  <div class="p-6 text-center text-gray-500 italic">
+    No data available for the selected period.
+  </div>
+}
+<p class="chart-footer text-center mt-2">{{ chartFooter }}</p>
+</mat-card-content>
 </mat-card>

@@ -26,7 +26,9 @@
           <mat-form-field appearance="fill" class="form-field">
             <mat-label>Name *</mat-label>
             <input matInput formControlName="name" placeholder="Your name" maxlength="50">
-            <mat-error *ngIf="isFieldInvalid('name')">{{ getFieldError('name') }}</mat-error>
+            @if (isFieldInvalid('name')) {
+              <mat-error>{{ getFieldError('name') }}</mat-error>
+            }
             <mat-hint>{{ feedbackForm.get('name')?.value?.length || 0 }}/50</mat-hint>
           </mat-form-field>
 
@@ -34,7 +36,9 @@
             <mat-label>Email *</mat-label>
             <input matInput formControlName="email" type="email" placeholder="your.email@example.com">
             <mat-icon matSuffix>email</mat-icon>
-            <mat-error *ngIf="isFieldInvalid('email')">{{ getFieldError('email') }}</mat-error>
+            @if (isFieldInvalid('email')) {
+              <mat-error>{{ getFieldError('email') }}</mat-error>
+            }
           </mat-form-field>
         </div>
       </div>
@@ -50,7 +54,9 @@
           <mat-form-field appearance="fill" class="form-field">
             <mat-label>Subject *</mat-label>
             <input matInput formControlName="subject" placeholder="Brief description of your feedback" maxlength="100">
-            <mat-error *ngIf="isFieldInvalid('subject')">{{ getFieldError('subject') }}</mat-error>
+            @if (isFieldInvalid('subject')) {
+              <mat-error>{{ getFieldError('subject') }}</mat-error>
+            }
             <mat-hint>{{ feedbackForm.get('subject')?.value?.length || 0 }}/100</mat-hint>
           </mat-form-field>
         </div>
@@ -59,27 +65,35 @@
           <mat-form-field appearance="fill" class="form-field category-field">
             <mat-label>Category *</mat-label>
             <mat-select formControlName="category">
-              <mat-option *ngFor="let category of feedbackCategories" [value]="category.value">
-                <div class="category-option">
-                  <mat-icon>{{ category.icon }}</mat-icon>
-                  <span>{{ category.label }}</span>
-                </div>
-              </mat-option>
+              @for (category of feedbackCategories; track category) {
+                <mat-option [value]="category.value">
+                  <div class="category-option">
+                    <mat-icon>{{ category.icon }}</mat-icon>
+                    <span>{{ category.label }}</span>
+                  </div>
+                </mat-option>
+              }
             </mat-select>
-            <mat-error *ngIf="isFieldInvalid('category')">{{ getFieldError('category') }}</mat-error>
+            @if (isFieldInvalid('category')) {
+              <mat-error>{{ getFieldError('category') }}</mat-error>
+            }
           </mat-form-field>
 
           <mat-form-field appearance="fill" class="form-field priority-field">
             <mat-label>Priority *</mat-label>
             <mat-select formControlName="priority">
-              <mat-option *ngFor="let priority of priorityLevels" [value]="priority.value">
-                <div class="priority-option">
-                  <div class="priority-indicator" [style.background-color]="priority.color"></div>
-                  <span>{{ priority.label }}</span>
-                </div>
-              </mat-option>
+              @for (priority of priorityLevels; track priority) {
+                <mat-option [value]="priority.value">
+                  <div class="priority-option">
+                    <div class="priority-indicator" [style.background-color]="priority.color"></div>
+                    <span>{{ priority.label }}</span>
+                  </div>
+                </mat-option>
+              }
             </mat-select>
-            <mat-error *ngIf="isFieldInvalid('priority')">{{ getFieldError('priority') }}</mat-error>
+            @if (isFieldInvalid('priority')) {
+              <mat-error>{{ getFieldError('priority') }}</mat-error>
+            }
           </mat-form-field>
         </div>
 
@@ -87,16 +101,20 @@
         <div class="rating-section">
           <label class="rating-label">How would you rate your experience? (Optional)</label>
           <div class="rating-stars">
-            <button type="button" *ngFor="let star of ratingOptions; let i = index" class="star-button"
-              [class.active]="feedbackForm.get('rating')?.value && i < feedbackForm.get('rating')?.value"
-              (click)="setRating(star)" (mouseenter)="setRating(star)"
-              (mouseleave)="setRating(feedbackForm.get('rating')?.value || 0)">
-              <mat-icon>{{ i < (feedbackForm.get('rating')?.value || 0) ? 'star' : 'star_border' }}</mat-icon>
-            </button>
+            @for (star of ratingOptions; track star; let i = $index) {
+              <button type="button" class="star-button"
+                [class.active]="feedbackForm.get('rating')?.value && i < feedbackForm.get('rating')?.value"
+                (click)="setRating(star)" (mouseenter)="setRating(star)"
+                (mouseleave)="setRating(feedbackForm.get('rating')?.value || 0)">
+                <mat-icon>{{ i < (feedbackForm.get('rating')?.value || 0) ? 'star' : 'star_border' }}</mat-icon>
+              </button>
+            }
           </div>
-          <span class="rating-text" *ngIf="feedbackForm.get('rating')?.value">
-            {{ feedbackForm.get('rating')?.value }}/5 stars
-          </span>
+          @if (feedbackForm.get('rating')?.value) {
+            <span class="rating-text">
+              {{ feedbackForm.get('rating')?.value }}/5 stars
+            </span>
+          }
         </div>
 
         <div class="form-row">
@@ -104,8 +122,10 @@
             <mat-label>Message *</mat-label>
             <textarea matInput formControlName="message"
               placeholder="Please provide detailed feedback, suggestions, or describe any issues you've encountered..."
-              rows="6" maxlength="1000"></textarea>
-            <mat-error *ngIf="isFieldInvalid('message')">{{ getFieldError('message') }}</mat-error>
+            rows="6" maxlength="1000"></textarea>
+            @if (isFieldInvalid('message')) {
+              <mat-error>{{ getFieldError('message') }}</mat-error>
+            }
             <mat-hint>{{ feedbackForm.get('message')?.value?.length || 0 }}/1000</mat-hint>
           </mat-form-field>
         </div>
@@ -114,54 +134,58 @@
       <!-- Submit Section -->
       <div class="submit-section">
         <!-- <div class="submit-info">
-          <mat-icon>info</mat-icon>
-          <span>Your feedback will be sent to our team and we'll get back to you as soon as possible.</span>
-        </div> -->
+        <mat-icon>info</mat-icon>
+        <span>Your feedback will be sent to our team and we'll get back to you as soon as possible.</span>
+      </div> -->
 
-        <div class="submit-actions">
-          <button type="button" mat-stroked-button (click)="resetForm()" [disabled]="isSubmitting" class="reset-button">
-            <mat-icon>refresh</mat-icon>
-            Reset
-          </button>
+      <div class="submit-actions">
+        <button type="button" mat-stroked-button (click)="resetForm()" [disabled]="isSubmitting" class="reset-button">
+          <mat-icon>refresh</mat-icon>
+          Reset
+        </button>
 
-          <button type="submit" mat-flat-button color="primary">
-            <mat-icon *ngIf="!isSubmitting">send</mat-icon>
-            <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
-            {{ isSubmitting ? 'Sending...' : 'Send Feedback' }}
-          </button>
-        </div>
-      </div>
-    </form>
-  </div>
-
-  <!-- Help Section -->
-  <!-- <div class="help-section">
-    <h3 class="help-title">
-      <mat-icon>help</mat-icon>
-      Need Help?
-    </h3>
-    <div class="help-content">
-      <div class="help-item">
-        <mat-icon>bug_report</mat-icon>
-        <div>
-          <h4>Bug Report</h4>
-          <p>Found a bug? Please include steps to reproduce the issue and any error messages you see.</p>
-        </div>
-      </div>
-      <div class="help-item">
-        <mat-icon>lightbulb</mat-icon>
-        <div>
-          <h4>Feature Request</h4>
-          <p>Have an idea for a new feature? Let us know how it would help you manage your money better.</p>
-        </div>
-      </div>
-      <div class="help-item">
-        <mat-icon>support</mat-icon>
-        <div>
-          <h4>Support</h4>
-          <p>Need help using the app? We're here to assist you with any questions or concerns.</p>
-        </div>
+        <button type="submit" mat-flat-button color="primary">
+          @if (!isSubmitting) {
+            <mat-icon>send</mat-icon>
+          }
+          @if (isSubmitting) {
+            <mat-spinner diameter="20"></mat-spinner>
+          }
+          {{ isSubmitting ? 'Sending...' : 'Send Feedback' }}
+        </button>
       </div>
     </div>
-  </div> -->
+  </form>
+</div>
+
+<!-- Help Section -->
+<!-- <div class="help-section">
+<h3 class="help-title">
+  <mat-icon>help</mat-icon>
+  Need Help?
+</h3>
+<div class="help-content">
+  <div class="help-item">
+    <mat-icon>bug_report</mat-icon>
+    <div>
+      <h4>Bug Report</h4>
+      <p>Found a bug? Please include steps to reproduce the issue and any error messages you see.</p>
+    </div>
+  </div>
+  <div class="help-item">
+    <mat-icon>lightbulb</mat-icon>
+    <div>
+      <h4>Feature Request</h4>
+      <p>Have an idea for a new feature? Let us know how it would help you manage your money better.</p>
+    </div>
+  </div>
+  <div class="help-item">
+    <mat-icon>support</mat-icon>
+    <div>
+      <h4>Support</h4>
+      <p>Need help using the app? We're here to assist you with any questions or concerns.</p>
+    </div>
+  </div>
+</div>
+</div> -->
 </div>

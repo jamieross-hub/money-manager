@@ -9,105 +9,125 @@
           <h3 class="category-name">{{ category.name }} <span class="text-[0.6rem] text-gray-400 italic"> {{category.type | titlecase}}</span></h3>
         </div>
       </div>
-      
+
       <div class="category-details">
         <!-- Budget Information -->
-        <div *ngIf="category?.budget?.hasBudget" class="budget-info">
-          <div class="budget-amount">
-            <span class="budget-label">Budget:</span>
-            <span class="budget-value">{{ category.budget?.budgetAmount | currency }}</span>
-            <span class="budget-period">/ {{ getCurrentBudgetPeriodText(category.budget?.budgetPeriod) }}</span>
-          </div>
-
-          <div class="budget-progress" *ngIf="category.budget?.hasBudget">
-            <div class="progress-bar" 
-                 [matTooltip]="getProgressComparisonTooltip(category)"
-                 matTooltipPosition="above">
-              <!-- Time progress background -->
-              <div class="time-progress-bg" 
-                   [style.width.%]="getTimeProgressPercentage(category.budget?.budgetPeriod)" 
-                   *ngIf="category.budget?.budgetPeriod">
-              </div>
-              <!-- Spending progress overlay -->
-              <div class="spending-progress-fill" 
-                   [style.width.%]="Math.min(calculateBudgetProgressPercentage(category), 100)" 
-                   [style.background-color]="getBudgetProgressColor(category)">
-              </div>
+        @if (category?.budget?.hasBudget) {
+          <div class="budget-info">
+            <div class="budget-amount">
+              <span class="budget-label">Budget:</span>
+              <span class="budget-value">{{ category.budget?.budgetAmount | currency }}</span>
+              <span class="budget-period">/ {{ getCurrentBudgetPeriodText(category.budget?.budgetPeriod) }}</span>
             </div>
-            <span class="progress-text">
-              {{ calculateBudgetSpent(category) | currency }} ({{ calculateBudgetProgressPercentage(category).toFixed(1) }}%)
-            </span>
-            <!-- <div class="progress-legend" *ngIf="category.budget?.budgetPeriod">
-              <span class="legend-item">
-                <span class="legend-color spending"></span>
-                <span class="legend-text">Spending</span>
-              </span>
-              <span class="legend-item">
-                <span class="legend-color time"></span>
-                <span class="legend-text">Time</span>
-              </span>
-            </div> -->
-            <div class="budget-details" *ngIf="category.budget?.budgetPeriod">
-              <!-- <span class="budget-detail-item">
-                {{ getRemainingDaysInBudgetPeriod(category.budget?.budgetPeriod) }} days left
-              </span> -->
-              <span class="budget-detail-item text-red-600" *ngIf="!isSpendingOnTrack(category)">
-                 Spent: {{ calculateBudgetSpent(category) | currency : {round: true} }}
-              </span>
-            </div>
+            @if (category.budget?.hasBudget) {
+              <div class="budget-progress">
+                <div class="progress-bar"
+                  [matTooltip]="getProgressComparisonTooltip(category)"
+                  matTooltipPosition="above">
+                  <!-- Time progress background -->
+                  @if (category.budget?.budgetPeriod) {
+                    <div class="time-progress-bg"
+                      [style.width.%]="getTimeProgressPercentage(category.budget?.budgetPeriod)"
+                      >
+                    </div>
+                  }
+                  <!-- Spending progress overlay -->
+                  <div class="spending-progress-fill"
+                    [style.width.%]="Math.min(calculateBudgetProgressPercentage(category), 100)"
+                    [style.background-color]="getBudgetProgressColor(category)">
+                  </div>
+                </div>
+                <span class="progress-text">
+                  {{ calculateBudgetSpent(category) | currency }} ({{ calculateBudgetProgressPercentage(category).toFixed(1) }}%)
+                </span>
+                <!-- <div class="progress-legend" *ngIf="category.budget?.budgetPeriod">
+                <span class="legend-item">
+                  <span class="legend-color spending"></span>
+                  <span class="legend-text">Spending</span>
+                </span>
+                <span class="legend-item">
+                  <span class="legend-color time"></span>
+                  <span class="legend-text">Time</span>
+                </span>
+              </div> -->
+              @if (category.budget?.budgetPeriod) {
+                <div class="budget-details">
+                  <!-- <span class="budget-detail-item">
+                  {{ getRemainingDaysInBudgetPeriod(category.budget?.budgetPeriod) }} days left
+                </span> -->
+                @if (!isSpendingOnTrack(category)) {
+                  <span class="budget-detail-item text-red-600">
+                    Spent: {{ calculateBudgetSpent(category) | currency : {round: true} }}
+                  </span>
+                }
+              </div>
+            }
           </div>
-        </div>
-        
-        <div class="category-spent" *ngIf="!category?.budget?.hasBudget">
-          <span class="category-spent-label">{{ category.type === 'expense' ? 'Spent:' : 'Income:' }}</span>
-          <span class="category-spent-value">{{ category.type === 'expense' ? (calculateTotalSpentPerMonth(category) | currency) : (calculateTotalIncomePerMonth(category) | currency) }}</span>
-        </div>
-
-        <div class="category-spent" *ngIf="breakpointService.device.isDesktop  && subCategoryCount > 0">
-          <span class="category-spent-label">Total sub-categories:</span>
-          <span class="category-spent-value">{{ subCategoryCount }}</span>
-        </div>
+        }
       </div>
-    </div>
-    
-    <div class="category-actions">
-      <mat-menu #menu="matMenu">
-        <button
-          mat-menu-item
-          (click)="onOpenBudgetDialog()"
-          class="action-button budget-button"
-          [matTooltip]="category.budget?.hasBudget ? 'Edit budget' : 'Set budget'"
-          *ngIf="category.type === 'expense'"
-        >
-          <mat-icon>account_balance_wallet</mat-icon> {{ category.budget?.hasBudget ? 'Edit Budget' : 'Set Budget' }}
-        </button>
-        <button mat-menu-item (click)="onEditCategory()" class="action-button edit-button" matTooltip="Edit category">
-          <mat-icon>edit</mat-icon> Edit
-        </button>
-        <button mat-menu-item *ngIf="!category.isSubCategory && !category.subCategories?.length" (click)="onSelectParentCategory()" class="action-button parent-button" matTooltip="Select parent category">
-          <mat-icon>account_tree</mat-icon> Select Parent Category
-        </button>
-        <button mat-menu-item (click)="onRemoveFromParentCategory()" class="action-button remove-parent-button" matTooltip="Remove from parent category" *ngIf="category.isSubCategory || category.parentCategoryId">
-          <mat-icon>account_tree_off</mat-icon> Remove from Parent
-        </button>
-        <button mat-menu-item (click)="onDeleteCategory()" class="action-button delete-button" matTooltip="Delete category">
-          <mat-icon class="!text-red-800">delete</mat-icon> Delete
-        </button>
-      </mat-menu>
-      <button matIconButton [matMenuTriggerFor]="menu">
-        <mat-icon>more_vert</mat-icon>
-      </button>
-    </div>
-  </div>
+    }
 
-  <!-- Expand/Collapse Button -->
-  <div class="expand-section" *ngIf="!isMobile">
+    @if (!category?.budget?.hasBudget) {
+      <div class="category-spent">
+        <span class="category-spent-label">{{ category.type === 'expense' ? 'Spent:' : 'Income:' }}</span>
+        <span class="category-spent-value">{{ category.type === 'expense' ? (calculateTotalSpentPerMonth(category) | currency) : (calculateTotalIncomePerMonth(category) | currency) }}</span>
+      </div>
+    }
+
+    @if (breakpointService.device.isDesktop  && subCategoryCount > 0) {
+      <div class="category-spent">
+        <span class="category-spent-label">Total sub-categories:</span>
+        <span class="category-spent-value">{{ subCategoryCount }}</span>
+      </div>
+    }
+  </div>
+</div>
+
+<div class="category-actions">
+  <mat-menu #menu="matMenu">
+    @if (category.type === 'expense') {
+      <button
+        mat-menu-item
+        (click)="onOpenBudgetDialog()"
+        class="action-button budget-button"
+        [matTooltip]="category.budget?.hasBudget ? 'Edit budget' : 'Set budget'"
+        >
+        <mat-icon>account_balance_wallet</mat-icon> {{ category.budget?.hasBudget ? 'Edit Budget' : 'Set Budget' }}
+      </button>
+    }
+    <button mat-menu-item (click)="onEditCategory()" class="action-button edit-button" matTooltip="Edit category">
+      <mat-icon>edit</mat-icon> Edit
+    </button>
+    @if (!category.isSubCategory && !category.subCategories?.length) {
+      <button mat-menu-item (click)="onSelectParentCategory()" class="action-button parent-button" matTooltip="Select parent category">
+        <mat-icon>account_tree</mat-icon> Select Parent Category
+      </button>
+    }
+    @if (category.isSubCategory || category.parentCategoryId) {
+      <button mat-menu-item (click)="onRemoveFromParentCategory()" class="action-button remove-parent-button" matTooltip="Remove from parent category">
+        <mat-icon>account_tree_off</mat-icon> Remove from Parent
+      </button>
+    }
+    <button mat-menu-item (click)="onDeleteCategory()" class="action-button delete-button" matTooltip="Delete category">
+      <mat-icon class="!text-red-800">delete</mat-icon> Delete
+    </button>
+  </mat-menu>
+  <button matIconButton [matMenuTriggerFor]="menu">
+    <mat-icon>more_vert</mat-icon>
+  </button>
+</div>
+</div>
+
+<!-- Expand/Collapse Button -->
+@if (!isMobile) {
+  <div class="expand-section">
     <button mat-button (click)="onOpenDetailsDialog()" class="expand-btn">
       <mat-icon>expand_more</mat-icon>
       <span>Show More</span>
     </button>
   </div>
+}
 
 
-  
-</div> 
+
+</div>

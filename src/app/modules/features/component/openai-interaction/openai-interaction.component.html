@@ -14,34 +14,39 @@
         </div>
       </div>
       <div class="header-actions">
-        <button 
-          *ngIf="currentState.isConnected"
-          class="test-button"
-          (click)="testConnection()"
-          [disabled]="currentState.isTestingConnection"
-        >
-          <mat-icon *ngIf="!currentState.isTestingConnection">wifi</mat-icon>
-          <div *ngIf="currentState.isTestingConnection" class="spinner"></div>
-          <span>{{ currentState.isTestingConnection ? 'Testing...' : 'Test Connection' }}</span>
-        </button>
+        @if (currentState.isConnected) {
+          <button
+            class="test-button"
+            (click)="testConnection()"
+            [disabled]="currentState.isTestingConnection"
+            >
+            @if (!currentState.isTestingConnection) {
+              <mat-icon>wifi</mat-icon>
+            }
+            @if (currentState.isTestingConnection) {
+              <div class="spinner"></div>
+            }
+            <span>{{ currentState.isTestingConnection ? 'Testing...' : 'Test Connection' }}</span>
+          </button>
+        }
       </div>
     </div>
 
     <!-- Provider Selection Tabs -->
     <div class="provider-tabs">
-      <button 
-        class="tab-button" 
+      <button
+        class="tab-button"
         [class.active]="selectedProvider === 'openai'"
         (click)="selectProvider('openai')"
-      >
+        >
         <mat-icon>terminal</mat-icon>
         <span>OpenAI</span>
       </button>
-      <button 
-        class="tab-button" 
+      <button
+        class="tab-button"
         [class.active]="selectedProvider === 'gemini'"
         (click)="selectProvider('gemini')"
-      >
+        >
         <mat-icon>auto_awesome</mat-icon>
         <span>Google Gemini</span>
       </button>
@@ -52,7 +57,7 @@
       <div class="section-header">
         <h2>{{ selectedProvider === 'openai' ? 'OpenAI' : 'Google Gemini' }} Status</h2>
       </div>
-      
+
       <div class="status-card">
         <div class="status-content">
           <div class="status-indicator">
@@ -65,76 +70,91 @@
             </div>
           </div>
           <div class="action-buttons">
-            <button 
-              *ngIf="!currentState.isConfiguring && !currentState.isConnected"
-              class="connect-btn primary"
-              (click)="currentState.isConfiguring = true"
-            >
-              <mat-icon>add</mat-icon>
-              <span>Connect API Key</span>
-            </button>
-            <div *ngIf="!currentState.isConfiguring && currentState.isConnected" class="btn-group">
-              <button class="change-btn secondary" (click)="currentState.isConfiguring = true">
-                <mat-icon>edit</mat-icon>
-                <span>Change Key</span>
+            @if (!currentState.isConfiguring && !currentState.isConnected) {
+              <button
+                class="connect-btn primary"
+                (click)="currentState.isConfiguring = true"
+                >
+                <mat-icon>add</mat-icon>
+                <span>Connect API Key</span>
               </button>
-              <button class="remove-btn danger" (click)="removeApiKey()">
-                <mat-icon>delete</mat-icon>
-                <span>Remove</span>
-              </button>
-            </div>
+            }
+            @if (!currentState.isConfiguring && currentState.isConnected) {
+              <div class="btn-group">
+                <button class="change-btn secondary" (click)="currentState.isConfiguring = true">
+                  <mat-icon>edit</mat-icon>
+                  <span>Change Key</span>
+                </button>
+                <button class="remove-btn danger" (click)="removeApiKey()">
+                  <mat-icon>delete</mat-icon>
+                  <span>Remove</span>
+                </button>
+              </div>
+            }
           </div>
         </div>
       </div>
 
       <!-- API Key Configuration Form -->
-      <div *ngIf="currentState.isConfiguring" class="form-section">
-        <div class="form-header">
-          <h3>Configure {{ selectedProvider === 'openai' ? 'OpenAI' : 'Google Gemini' }} API</h3>
-          <p>Enter your API key to enable AI-powered features</p>
+      @if (currentState.isConfiguring) {
+        <div class="form-section">
+          <div class="form-header">
+            <h3>Configure {{ selectedProvider === 'openai' ? 'OpenAI' : 'Google Gemini' }} API</h3>
+            <p>Enter your API key to enable AI-powered features</p>
+          </div>
+          <form [formGroup]="apiKeyForm" (ngSubmit)="saveApiKey()">
+            <div class="input-group">
+              <label for="apiKey">API Key</label>
+              <div class="input-wrapper">
+                <input
+                  id="apiKey"
+                  type="password"
+                  formControlName="apiKey"
+                  placeholder="{{ selectedProvider === 'openai' ? 'sk-...' : 'AIza...' }}"
+                  class="api-input"
+                  >
+                <mat-icon class="input-icon">key</mat-icon>
+              </div>
+              <div class="input-help">
+                <mat-icon>info</mat-icon>
+                @if (selectedProvider === 'openai') {
+                  <a href="https://platform.openai.com/api-keys" target="_blank" class="help-link">
+                    Get your API key from OpenAI Platform
+                  </a>
+                }
+                @if (selectedProvider === 'gemini') {
+                  <a href="https://aistudio.google.com/app/apikey" target="_blank" class="help-link">
+                    Get your API key from Google AI Studio
+                  </a>
+                }
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="cancel-btn" (click)="currentState.isConfiguring = false">
+                <span>Cancel</span>
+              </button>
+              <button type="button" class="test-btn primary" (click)="testAndSaveApiKey()" [disabled]="!apiKeyForm.valid || currentState.isTestingConnection">
+                @if (!currentState.isTestingConnection) {
+                  <mat-icon>wifi</mat-icon>
+                }
+                @if (currentState.isTestingConnection) {
+                  <div class="spinner"></div>
+                }
+                <span>{{ currentState.isTestingConnection ? 'Testing...' : 'Test & Save' }}</span>
+              </button>
+              <button type="submit" class="save-btn success" [disabled]="!apiKeyForm.valid || currentState.isSaving">
+                @if (!currentState.isSaving) {
+                  <mat-icon>save</mat-icon>
+                }
+                @if (currentState.isSaving) {
+                  <div class="spinner"></div>
+                }
+                <span>{{ currentState.isSaving ? 'Saving...' : 'Save Key' }}</span>
+              </button>
+            </div>
+          </form>
         </div>
-        
-        <form [formGroup]="apiKeyForm" (ngSubmit)="saveApiKey()">
-          <div class="input-group">
-            <label for="apiKey">API Key</label>
-            <div class="input-wrapper">
-              <input 
-                id="apiKey"
-                type="password" 
-                formControlName="apiKey"
-                placeholder="{{ selectedProvider === 'openai' ? 'sk-...' : 'AIza...' }}"
-                class="api-input"
-              >
-              <mat-icon class="input-icon">key</mat-icon>
-            </div>
-            <div class="input-help">
-              <mat-icon>info</mat-icon>
-              <a *ngIf="selectedProvider === 'openai'" href="https://platform.openai.com/api-keys" target="_blank" class="help-link">
-                Get your API key from OpenAI Platform
-              </a>
-              <a *ngIf="selectedProvider === 'gemini'" href="https://aistudio.google.com/app/apikey" target="_blank" class="help-link">
-                Get your API key from Google AI Studio
-              </a>
-            </div>
-          </div>
-          
-          <div class="form-actions">
-            <button type="button" class="cancel-btn" (click)="currentState.isConfiguring = false">
-              <span>Cancel</span>
-            </button>
-            <button type="button" class="test-btn primary" (click)="testAndSaveApiKey()" [disabled]="!apiKeyForm.valid || currentState.isTestingConnection">
-              <mat-icon *ngIf="!currentState.isTestingConnection">wifi</mat-icon>
-              <div *ngIf="currentState.isTestingConnection" class="spinner"></div>
-              <span>{{ currentState.isTestingConnection ? 'Testing...' : 'Test & Save' }}</span>
-            </button>
-            <button type="submit" class="save-btn success" [disabled]="!apiKeyForm.valid || currentState.isSaving">
-              <mat-icon *ngIf="!currentState.isSaving">save</mat-icon>
-              <div *ngIf="currentState.isSaving" class="spinner"></div>
-              <span>{{ currentState.isSaving ? 'Saving...' : 'Save Key' }}</span>
-            </button>
-          </div>
-        </form>
-      </div>
+      }
     </div>
   </div>
-</div> 
+</div>

@@ -13,19 +13,21 @@
           Total Balance
         </p>
         <div class="balance-subtitle text-xs dark:text-slate-400">Balance across {{ (positiveAccounts().length ) +
-          (negativeAccounts().length ) }} accounts</div>
+        (negativeAccounts().length ) }} accounts</div>
       </div>
     </div>
 
-    <div class="flex flex-col items-center w-full sm:items-end mt-3 sm:mt-0 min-w-0"
-      *ngIf="!breakpointService.isMobile()">
-      <span class="text-lg sm:text-xl font-semibold leading-none truncate"
-        [class.text-green-600]="totalBalance() >= 0"
-        [class.text-red-500]="totalBalance() < 0" aria-label="Total balance">
-        {{ totalBalance() | currency:{round:true} }}
-      </span>
-      <span class="balance-period text-xs dark:text-slate-500">as of today</span>
-    </div>
+    @if (!breakpointService.isMobile()) {
+      <div class="flex flex-col items-center w-full sm:items-end mt-3 sm:mt-0 min-w-0"
+        >
+        <span class="text-lg sm:text-xl font-semibold leading-none truncate"
+          [class.text-green-600]="totalBalance() >= 0"
+          [class.text-red-500]="totalBalance() < 0" aria-label="Total balance">
+          {{ totalBalance() | currency:{round:true} }}
+        </span>
+        <span class="balance-period text-xs dark:text-slate-500">as of today</span>
+      </div>
+    }
   </div>
 
   <!-- Divider -->
@@ -33,41 +35,45 @@
 
   <!-- Breakdown -->
   <div class="text-sm">
-    <div *ngIf="positiveAccounts().length" class="flex items-center gap-3">
-      <div
-        class="asset-icon-wrap rounded-lg p-2 flex items-center justify-center dark:bg-green-900/20 dark:text-green-400">
-        <mat-icon aria-hidden="true" class="dark:text-green-400">arrow_upward</mat-icon>
-      </div>
-      <div class="w-full">
-        <div class="flex items-center justify-between">
-          <div class="breakdown-label dark:text-slate-300">Assets</div>
-          <div class="breakdown-subtitle text-xs dark:text-slate-400">{{ positiveAccounts().length }} accounts</div>
+    @if (positiveAccounts().length) {
+      <div class="flex items-center gap-3">
+        <div
+          class="asset-icon-wrap rounded-lg p-2 flex items-center justify-center dark:bg-green-900/20 dark:text-green-400">
+          <mat-icon aria-hidden="true" class="dark:text-green-400">arrow_upward</mat-icon>
         </div>
-        <div class="mt-0 font-semibold text-green-600 dark:text-green-400" aria-label="Assets total">{{
-          totalPositiveBalance() | currency:{round:true}
+        <div class="w-full">
+          <div class="flex items-center justify-between">
+            <div class="breakdown-label dark:text-slate-300">Assets</div>
+            <div class="breakdown-subtitle text-xs dark:text-slate-400">{{ positiveAccounts().length }} accounts</div>
+          </div>
+          <div class="mt-0 font-semibold text-green-600 dark:text-green-400" aria-label="Assets total">{{
+            totalPositiveBalance() | currency:{round:true}
           }}</div>
-      </div>
-    </div>
-
-    <div *ngIf="negativeAccounts().length" class="flex items-center gap-3">
-      <div
-        class="liability-icon-wrap rounded-lg p-2 flex items-center justify-center dark:bg-red-900/20 dark:text-red-400">
-        <mat-icon aria-hidden="true" class="dark:text-red-400">arrow_downward</mat-icon>
-      </div>
-      <div class="w-full">
-        <div class="flex items-center justify-between">
-          <div class="breakdown-label dark:text-slate-300">Liabilities</div>
-          <div class="breakdown-subtitle text-xs dark:text-slate-400">{{ negativeAccounts().length }} accounts</div>
         </div>
-        <div class="mt-0 font-semibold text-red-500 dark:text-red-400" aria-label="Liabilities total">{{
-          totalNegativeBalance() |
-          currency:{round:true} }}</div>
       </div>
-    </div>
+    }
+
+    @if (negativeAccounts().length) {
+      <div class="flex items-center gap-3">
+        <div
+          class="liability-icon-wrap rounded-lg p-2 flex items-center justify-center dark:bg-red-900/20 dark:text-red-400">
+          <mat-icon aria-hidden="true" class="dark:text-red-400">arrow_downward</mat-icon>
+        </div>
+        <div class="w-full">
+          <div class="flex items-center justify-between">
+            <div class="breakdown-label dark:text-slate-300">Liabilities</div>
+            <div class="breakdown-subtitle text-xs dark:text-slate-400">{{ negativeAccounts().length }} accounts</div>
+          </div>
+          <div class="mt-0 font-semibold text-red-500 dark:text-red-400" aria-label="Liabilities total">{{
+            totalNegativeBalance() |
+          currency:{round:true} }}</div>
+        </div>
+      </div>
+    }
   </div>
 
   <!-- View All Button -->
-  <ng-container *ngIf="router.url !== '/dashboard/accounts'">
+  @if (router.url !== '/dashboard/accounts') {
     <div class="card-divider my-3 dark:border-slate-800"></div>
     <div class="flex justify-center mt-2">
       <button mat-stroked-button color="primary" class="w-full !rounded-xl dark:!text-blue-400 dark:!border-slate-700" routerLink="/dashboard/accounts">
@@ -75,6 +81,6 @@
         View All Accounts
       </button>
     </div>
-  </ng-container>
+  }
 
 </div>

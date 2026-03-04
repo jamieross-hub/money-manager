@@ -1,61 +1,67 @@
 <div class="flex flex-col h-full max-h-[80vh]">
-    <!-- Header with Drag Handle -->
-    <div
-        class="flex flex-col items-center pt-2 pb-2 px-2 bg-surface-200 rounded-t-xl sticky top-0 z-10 w-full">
-        <!-- Drag Handle -->
-        <div class="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mb-4" (click)="close()"></div>
+  <!-- Header with Drag Handle -->
+  <div
+    class="flex flex-col items-center pt-2 pb-2 px-2 bg-surface-200 rounded-t-xl sticky top-0 z-10 w-full">
+    <!-- Drag Handle -->
+    <div class="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mb-4" (click)="close()"></div>
 
-        <!-- <div class="flex items-center justify-end w-full mb-2">
-            <button mat-icon-button (click)="close()" class="text-gray-500">
-                <mat-icon>close</mat-icon>
-            </button>
-        </div> -->
+    <!-- <div class="flex items-center justify-end w-full mb-2">
+    <button mat-icon-button (click)="close()" class="text-gray-500">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div> -->
 
-        <!-- Search Bar -->
-        <mat-form-field appearance="fill" class="w-full search-field">
-            <mat-icon matPrefix class="text-gray-400 mr-2">search</mat-icon>
-            <input matInput [formControl]="searchControl" placeholder="Search categories...">
-            <button *ngIf="searchControl.value" matSuffix mat-icon-button aria-label="Clear"
-                (click)="searchControl.setValue('')">
-                <mat-icon>close</mat-icon>
-            </button>
-        </mat-form-field>
-    </div>
+  <!-- Search Bar -->
+  <mat-form-field appearance="fill" class="w-full search-field">
+    <mat-icon matPrefix class="text-gray-400 mr-2">search</mat-icon>
+    <input matInput [formControl]="searchControl" placeholder="Search categories...">
+    @if (searchControl.value) {
+      <button matSuffix mat-icon-button aria-label="Clear"
+        (click)="searchControl.setValue('')">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+  </mat-form-field>
+</div>
 
-    <!-- Category List -->
-    <div class="overflow-y-auto px-2 pb-4">
-        <mat-nav-list>
-            <ng-container *ngFor="let category of filteredCategories$ | async">
-                <mat-list-item (click)="selectCategory(category)"
-                    class="rounded-lg mb-1 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-                    [class.bg-blue-50]="category.id === data.selectedCategoryId"
-                    [class.dark:bg-blue-900]="category.id === data.selectedCategoryId && '20'">
-                    <div matListItemIcon class="w-10 h-10 rounded-full flex items-center justify-center mr-4 shrink-0"
-                        [style.background-color]="(category.color || '#cccccc') + '20'"
-                        [style.color]="category.color || '#cccccc'">
-                        <mat-icon>{{ category.icon }}</mat-icon>
-                    </div>
-                    <div matListItemTitle class="flex items-center gap-2 mb-0.5 ml-1">
-                        <span class="font-medium text-gray-800 dark:text-gray-200">{{ category.name | titlecase }}</span>
-                        <span class="text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider leading-none"
+<!-- Category List -->
+<div class="overflow-y-auto px-2 pb-4">
+  <mat-nav-list>
+    @for (category of filteredCategories$ | async; track category) {
+      <mat-list-item (click)="selectCategory(category)"
+        class="rounded-lg mb-1 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+        [class.bg-blue-50]="category.id === data.selectedCategoryId"
+        [class.dark:bg-blue-900]="category.id === data.selectedCategoryId && '20'">
+        <div matListItemIcon class="w-10 h-10 rounded-full flex items-center justify-center mr-4 shrink-0"
+          [style.background-color]="(category.color || '#cccccc') + '20'"
+          [style.color]="category.color || '#cccccc'">
+          <mat-icon>{{ category.icon }}</mat-icon>
+        </div>
+        <div matListItemTitle class="flex items-center gap-2 mb-0.5 ml-1">
+          <span class="font-medium text-gray-800 dark:text-gray-200">{{ category.name | titlecase }}</span>
+          <span class="text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider leading-none"
                               [ngClass]="{
                                 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': category.type === 'income',
                                 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': category.type === 'expense'
                               }">
-                            {{ category.type }}
-                        </span>
-                    </div>
-                    <div matListItemMeta *ngIf="category.id === data.selectedCategoryId">
-                        <mat-icon class="text-primary">check_circle</mat-icon>
-                    </div>
-                </mat-list-item>
-            </ng-container>
+            {{ category.type }}
+          </span>
+        </div>
+        @if (category.id === data.selectedCategoryId) {
+          <div matListItemMeta>
+            <mat-icon class="text-primary">check_circle</mat-icon>
+          </div>
+        }
+      </mat-list-item>
+    }
 
-            <div *ngIf="(filteredCategories$ | async)?.length === 0"
-                class="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400">
-                <mat-icon class="text-4xl mb-2 opacity-50">category_off</mat-icon>
-                <p>No categories found</p>
-            </div>
-        </mat-nav-list>
-    </div>
+    @if ((filteredCategories$ | async)?.length === 0) {
+      <div
+        class="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400">
+        <mat-icon class="text-4xl mb-2 opacity-50">category_off</mat-icon>
+        <p>No categories found</p>
+      </div>
+    }
+  </mat-nav-list>
+</div>
 </div>

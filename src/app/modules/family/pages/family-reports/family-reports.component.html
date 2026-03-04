@@ -8,90 +8,98 @@
     </p>
   </div>
 
-  <div *ngIf="loading() && !stats()" class="flex justify-center py-16"><mat-spinner diameter="36"></mat-spinner></div>
-  
-  <div *ngIf="stats()">
+  @if (loading() && !stats()) {
+    <div class="flex justify-center py-16"><mat-spinner diameter="36"></mat-spinner></div>
+  }
 
-    <!-- Overall Summary -->
-    <div class="px-4 mt-4 grid grid-cols-2 gap-3">
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
-        <p class="text-xs text-gray-500 dark:text-gray-400">Total Income</p>
-        <p class="text-xl font-bold text-green-600 dark:text-green-400 mt-1">
-          {{ stats()!.totalIncome | number:'1.0-0' }}
-        </p>
-      </div>
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
-        <p class="text-xs text-gray-500 dark:text-gray-400">Total Expense</p>
-        <p class="text-xl font-bold text-red-600 dark:text-red-400 mt-1">
-          {{ stats()!.totalExpense | number:'1.0-0' }}
-        </p>
-      </div>
-      <div class="col-span-2 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
-        <p class="text-xs text-gray-500 dark:text-gray-400">Net Balance</p>
-        <p class="text-2xl font-black mt-1"
-          [class.text-green-600]="stats()!.netBalance >= 0"
-          [class.dark:text-green-400]="stats()!.netBalance >= 0"
-          [class.text-red-600]="stats()!.netBalance < 0"
-          [class.dark:text-red-400]="stats()!.netBalance < 0">
-          {{ stats()!.netBalance | number:'1.0-0' }}
-        </p>
-      </div>
-    </div>
-
-    <!-- Category Breakdown -->
-    <div class="px-4 mt-5">
-      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Expense by Category</h2>
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
-        <div *ngFor="let cat of categoryBreakdown()" class="flex items-center gap-3 px-4 py-3">
-          <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-primary-50 dark:bg-primary-900/30 flex-shrink-0">
-            <mat-icon class="!text-sm text-primary-600 dark:text-primary-300">{{ getCategoryIcon(cat.category) }}</mat-icon>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm text-gray-800 dark:text-gray-100 font-medium">{{ cat.category }}</p>
-            <div class="mt-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div class="h-full bg-primary-500 rounded-full" [style.width.%]="cat.percentage"></div>
-            </div>
-          </div>
-          <span class="text-sm font-semibold text-gray-800 dark:text-gray-100 flex-shrink-0">
-            {{ cat.amount | number:'1.0-0' }}
-          </span>
+  @if (stats()) {
+    <div>
+      <!-- Overall Summary -->
+      <div class="px-4 mt-4 grid grid-cols-2 gap-3">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+          <p class="text-xs text-gray-500 dark:text-gray-400">Total Income</p>
+          <p class="text-xl font-bold text-green-600 dark:text-green-400 mt-1">
+            {{ stats()!.totalIncome | number:'1.0-0' }}
+          </p>
         </div>
-        <div *ngIf="!categoryBreakdown().length" class="px-4 py-8 text-center">
-          <p class="text-sm text-gray-400">No expense data yet</p>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+          <p class="text-xs text-gray-500 dark:text-gray-400">Total Expense</p>
+          <p class="text-xl font-bold text-red-600 dark:text-red-400 mt-1">
+            {{ stats()!.totalExpense | number:'1.0-0' }}
+          </p>
+        </div>
+        <div class="col-span-2 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+          <p class="text-xs text-gray-500 dark:text-gray-400">Net Balance</p>
+          <p class="text-2xl font-black mt-1"
+            [class.text-green-600]="stats()!.netBalance >= 0"
+            [class.dark:text-green-400]="stats()!.netBalance >= 0"
+            [class.text-red-600]="stats()!.netBalance < 0"
+            [class.dark:text-red-400]="stats()!.netBalance < 0">
+            {{ stats()!.netBalance | number:'1.0-0' }}
+          </p>
         </div>
       </div>
-    </div>
-
-    <!-- Member Breakdown -->
-    <div class="px-4 mt-5">
-      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Member Contribution</h2>
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
-        <div *ngFor="let m of stats()!.memberBreakdown" class="px-4 py-3">
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-2">
-              <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                [style.background]="memberColor(m.userId)">
-                {{ m.displayName.charAt(0).toUpperCase() }}
+      <!-- Category Breakdown -->
+      <div class="px-4 mt-5">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Expense by Category</h2>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
+          @for (cat of categoryBreakdown(); track cat) {
+            <div class="flex items-center gap-3 px-4 py-3">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-primary-50 dark:bg-primary-900/30 flex-shrink-0">
+                <mat-icon class="!text-sm text-primary-600 dark:text-primary-300">{{ getCategoryIcon(cat.category) }}</mat-icon>
               </div>
-              <span class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ m.displayName }}</span>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-gray-800 dark:text-gray-100 font-medium">{{ cat.category }}</p>
+                <div class="mt-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div class="h-full bg-primary-500 rounded-full" [style.width.%]="cat.percentage"></div>
+                </div>
+              </div>
+              <span class="text-sm font-semibold text-gray-800 dark:text-gray-100 flex-shrink-0">
+                {{ cat.amount | number:'1.0-0' }}
+              </span>
             </div>
-            <span class="text-xs text-gray-500">{{ m.transactionCount }} entries</span>
-          </div>
-          <div class="flex gap-4 text-xs">
-            <span class="text-green-600">↑ {{ m.totalIncome | number:'1.0-0' }}</span>
-            <span class="text-red-600">↓ {{ m.totalExpense | number:'1.0-0' }}</span>
-            <span class="font-semibold"
-              [class.text-green-600]="m.netBalance >= 0"
-              [class.text-red-600]="m.netBalance < 0">
-              Net: {{ m.netBalance | number:'1.0-0' }}
-            </span>
-          </div>
+          }
+          @if (!categoryBreakdown().length) {
+            <div class="px-4 py-8 text-center">
+              <p class="text-sm text-gray-400">No expense data yet</p>
+            </div>
+          }
         </div>
-        <div *ngIf="!stats()!.memberBreakdown.length" class="px-4 py-8 text-center">
-          <p class="text-sm text-gray-400">No member data yet</p>
+      </div>
+      <!-- Member Breakdown -->
+      <div class="px-4 mt-5">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Member Contribution</h2>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
+          @for (m of stats()!.memberBreakdown; track m) {
+            <div class="px-4 py-3">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                    [style.background]="memberColor(m.userId)">
+                    {{ m.displayName.charAt(0).toUpperCase() }}
+                  </div>
+                  <span class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ m.displayName }}</span>
+                </div>
+                <span class="text-xs text-gray-500">{{ m.transactionCount }} entries</span>
+              </div>
+              <div class="flex gap-4 text-xs">
+                <span class="text-green-600">↑ {{ m.totalIncome | number:'1.0-0' }}</span>
+                <span class="text-red-600">↓ {{ m.totalExpense | number:'1.0-0' }}</span>
+                <span class="font-semibold"
+                  [class.text-green-600]="m.netBalance >= 0"
+                  [class.text-red-600]="m.netBalance < 0">
+                  Net: {{ m.netBalance | number:'1.0-0' }}
+                </span>
+              </div>
+            </div>
+          }
+          @if (!stats()!.memberBreakdown.length) {
+            <div class="px-4 py-8 text-center">
+              <p class="text-sm text-gray-400">No member data yet</p>
+            </div>
+          }
         </div>
       </div>
     </div>
-
-  </div>
+  }
 </div>

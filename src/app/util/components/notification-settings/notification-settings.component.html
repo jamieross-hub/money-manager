@@ -15,113 +15,130 @@
     </div>
   </div>
 
-  <div class="ns-content" *ngIf="notificationsEnabled">
-    
-    <!-- Permission Status if default/denied -->
-    <div class="ns-card ns-permission-card" *ngIf="permissionStatus !== 'granted'" [class.denied]="permissionStatus === 'denied'">
-      <div class="ns-icon-bubble" [class]="permissionStatus">
-        {{ getStatusIcon() }}
-      </div>
-      <div class="ns-card-text">
-        <h3>Push Notifications</h3>
-        <p>Allow {{ APP_CONFIG.APP_NAME }} to send you alerts.</p>
-      </div>
-      <div class="ns-card-actions">
-        <button *ngIf="permissionStatus === 'default'" class="ns-btn ns-btn-primary" (click)="requestPermission()" [disabled]="isLoading">
-           <span *ngIf="!isLoading">Enable</span>
-        </button>
-        <button *ngIf="permissionStatus === 'denied'" class="ns-btn ns-btn-outline" (click)="openPermissionHelp()">Help</button>
+  @if (notificationsEnabled) {
+    <div class="ns-content">
+      <!-- Permission Status if default/denied -->
+      @if (permissionStatus !== 'granted') {
+        <div class="ns-card ns-permission-card" [class.denied]="permissionStatus === 'denied'">
+          <div class="ns-icon-bubble" [class]="permissionStatus">
+            {{ getStatusIcon() }}
+          </div>
+          <div class="ns-card-text">
+            <h3>Push Notifications</h3>
+            <p>Allow {{ APP_CONFIG.APP_NAME }} to send you alerts.</p>
+          </div>
+          <div class="ns-card-actions">
+            @if (permissionStatus === 'default') {
+              <button class="ns-btn ns-btn-primary" (click)="requestPermission()" [disabled]="isLoading">
+                @if (!isLoading) {
+                  <span>Enable</span>
+                }
+              </button>
+            }
+            @if (permissionStatus === 'denied') {
+              <button class="ns-btn ns-btn-outline" (click)="openPermissionHelp()">Help</button>
+            }
+          </div>
+        </div>
+      }
+      <!-- Notification Types -->
+      @if (permissionStatus === 'granted') {
+        <div class="ns-section">
+          <h3 class="ns-section-title">Alert Types</h3>
+          <div class="ns-list">
+            @for (type of notificationTypes; track type) {
+              <div class="ns-list-item">
+                <div class="ns-item-icon">{{ type.icon }}</div>
+                <div class="ns-item-content">
+                  <span class="ns-item-title">{{ type.title }}</span>
+                  <span class="ns-item-desc">{{ type.description }}</span>
+                </div>
+                <mat-slide-toggle
+                  [checked]="type.enabled"
+                  (change)="toggleNotificationType(type.key, $event)"
+                  color="primary">
+                </mat-slide-toggle>
+              </div>
+            }
+          </div>
+        </div>
+      }
+      <!-- Advanced Settings -->
+      @if (permissionStatus === 'granted') {
+        <div class="ns-section">
+          <h3 class="ns-section-title">Preferences</h3>
+          <div class="ns-list">
+            @for (setting of advancedSettings; track setting) {
+              <div class="ns-list-item">
+                <div class="ns-item-icon">{{ setting.icon }}</div>
+                <div class="ns-item-content">
+                  <span class="ns-item-title">{{ setting.title }}</span>
+                  <span class="ns-item-desc">{{ setting.description }}</span>
+                </div>
+                <mat-slide-toggle
+                  [checked]="getSettingValue(setting.key)"
+                  (change)="updateSetting(setting.key, $event)"
+                  color="primary">
+                </mat-slide-toggle>
+              </div>
+            }
+          </div>
+        </div>
+      }
+      <!-- System Actions / Token -->
+      @if (permissionStatus === 'granted' && fcmToken) {
+        <div class="ns-section">
+          <h3 class="ns-section-title">System</h3>
+          <div class="ns-list">
+            <div class="ns-list-item clickable" (click)="testNotification()" [class.disabled]="isLoading">
+              <div class="ns-item-icon">📤</div>
+              <div class="ns-item-content">
+                <span class="ns-item-title">Test Notification</span>
+                <span class="ns-item-desc">Send a test push to this device</span>
+              </div>
+              <mat-icon class="ns-chevron">chevron_right</mat-icon>
+            </div>
+            <div class="ns-list-item clickable" (click)="copyToken()">
+              <div class="ns-item-icon">📱</div>
+              <div class="ns-item-content">
+                <span class="ns-item-title">Device Token</span>
+                <span class="ns-item-desc ns-truncate" [title]="fcmToken">{{ fcmToken }}</span>
+              </div>
+              <mat-icon class="ns-chevron">content_copy</mat-icon>
+            </div>
+            <div class="ns-list-item clickable" (click)="refreshToken()" [class.disabled]="isLoading">
+              <div class="ns-item-icon">🔄</div>
+              <div class="ns-item-content">
+                <span class="ns-item-title">Refresh Token</span>
+                <span class="ns-item-desc">Request a new device token</span>
+              </div>
+              <mat-icon class="ns-chevron">chevron_right</mat-icon>
+            </div>
+          </div>
+        </div>
+      }
+      <!-- Debug -->
+      <div class="ns-section ns-debug">
+        <h3 class="ns-section-title">Debug Tools</h3>
+        <div class="ns-debug-actions">
+          <button class="ns-btn ns-btn-outline" (click)="debugServiceWorker()">Check SW</button>
+          <button class="ns-btn ns-btn-outline" (click)="forceServiceWorkerRegistration()">Force SW</button>
+        </div>
+        @if (debugInfo?.timestamp) {
+          <div class="ns-debug-output">
+            <pre>{{ debugInfo | json }}</pre>
+          </div>
+        }
       </div>
     </div>
-
-    <!-- Notification Types -->
-    <div class="ns-section" *ngIf="permissionStatus === 'granted'">
-      <h3 class="ns-section-title">Alert Types</h3>
-      <div class="ns-list">
-        <div class="ns-list-item" *ngFor="let type of notificationTypes">
-          <div class="ns-item-icon">{{ type.icon }}</div>
-          <div class="ns-item-content">
-            <span class="ns-item-title">{{ type.title }}</span>
-            <span class="ns-item-desc">{{ type.description }}</span>
-          </div>
-          <mat-slide-toggle
-            [checked]="type.enabled"
-            (change)="toggleNotificationType(type.key, $event)"
-            color="primary">
-          </mat-slide-toggle>
-        </div>
-      </div>
-    </div>
-
-    <!-- Advanced Settings -->
-    <div class="ns-section" *ngIf="permissionStatus === 'granted'">
-      <h3 class="ns-section-title">Preferences</h3>
-      <div class="ns-list">
-        <div class="ns-list-item" *ngFor="let setting of advancedSettings">
-          <div class="ns-item-icon">{{ setting.icon }}</div>
-          <div class="ns-item-content">
-            <span class="ns-item-title">{{ setting.title }}</span>
-            <span class="ns-item-desc">{{ setting.description }}</span>
-          </div>
-          <mat-slide-toggle
-            [checked]="getSettingValue(setting.key)"
-            (change)="updateSetting(setting.key, $event)"
-            color="primary">
-          </mat-slide-toggle>
-        </div>
-      </div>
-    </div>
-
-    <!-- System Actions / Token -->
-    <div class="ns-section" *ngIf="permissionStatus === 'granted' && fcmToken">
-      <h3 class="ns-section-title">System</h3>
-      <div class="ns-list">
-        <div class="ns-list-item clickable" (click)="testNotification()" [class.disabled]="isLoading">
-          <div class="ns-item-icon">📤</div>
-          <div class="ns-item-content">
-            <span class="ns-item-title">Test Notification</span>
-            <span class="ns-item-desc">Send a test push to this device</span>
-          </div>
-          <mat-icon class="ns-chevron">chevron_right</mat-icon>
-        </div>
-        
-        <div class="ns-list-item clickable" (click)="copyToken()">
-          <div class="ns-item-icon">📱</div>
-          <div class="ns-item-content">
-            <span class="ns-item-title">Device Token</span>
-            <span class="ns-item-desc ns-truncate" [title]="fcmToken">{{ fcmToken }}</span>
-          </div>
-          <mat-icon class="ns-chevron">content_copy</mat-icon>
-        </div>
-        
-        <div class="ns-list-item clickable" (click)="refreshToken()" [class.disabled]="isLoading">
-          <div class="ns-item-icon">🔄</div>
-          <div class="ns-item-content">
-            <span class="ns-item-title">Refresh Token</span>
-            <span class="ns-item-desc">Request a new device token</span>
-          </div>
-          <mat-icon class="ns-chevron">chevron_right</mat-icon>
-        </div>
-      </div>
-    </div>
-
-    <!-- Debug -->
-    <div class="ns-section ns-debug">
-      <h3 class="ns-section-title">Debug Tools</h3>
-      <div class="ns-debug-actions">
-        <button class="ns-btn ns-btn-outline" (click)="debugServiceWorker()">Check SW</button>
-        <button class="ns-btn ns-btn-outline" (click)="forceServiceWorkerRegistration()">Force SW</button>
-      </div>
-      <div class="ns-debug-output" *ngIf="debugInfo?.timestamp">
-        <pre>{{ debugInfo | json }}</pre>
-      </div>
-    </div>
-  </div>
+  }
 
   <!-- Disabled State -->
-  <div class="ns-disabled-state" *ngIf="!notificationsEnabled">
-    <div class="ns-disabled-icon">🔕</div>
-    <h3>Notifications are off</h3>
-    <p>Enable notifications at the top to configure preferences and receive alerts.</p>
-  </div>
+  @if (!notificationsEnabled) {
+    <div class="ns-disabled-state">
+      <div class="ns-disabled-icon">🔕</div>
+      <h3>Notifications are off</h3>
+      <p>Enable notifications at the top to configure preferences and receive alerts.</p>
+    </div>
+  }
 </div>

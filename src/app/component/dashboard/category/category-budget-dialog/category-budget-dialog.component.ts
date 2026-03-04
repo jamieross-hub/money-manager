@@ -5,7 +5,7 @@ import { Category } from 'src/app/util/models/category.model';
 import { CategoryBudgetService } from 'src/app/util/service/category-budget.service';
 import { Subscription } from 'rxjs';
 
-import { CommonModule } from '@angular/common';
+
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -27,7 +27,6 @@ export interface CategoryBudgetDialogData {
   styleUrls: ['./category-budget-dialog.component.scss'],
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     FormsModule,
     MatDialogModule,
@@ -40,7 +39,7 @@ export interface CategoryBudgetDialogData {
     MatNativeDateModule,
     CommonHeaderComponent,
     CommonBodyContentComponent
-  ],
+],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CategoryBudgetDialogComponent implements OnInit, OnDestroy {

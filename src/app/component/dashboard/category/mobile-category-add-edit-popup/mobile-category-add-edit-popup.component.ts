@@ -34,7 +34,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatNativeDateModule, MatOptionModule } from '@angular/material/core';
 import { TranslateModule } from '@ngx-translate/core';
-import { CommonModule } from '@angular/common';
+
 import { CommonHeaderComponent } from 'src/app/util/components/dialog/common-header/common-header.component';
 import { CommonBodyContentComponent } from 'src/app/util/components/dialog/common-body-content/common-body-content.component';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -70,14 +70,11 @@ import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button
   styleUrls: ['./mobile-category-add-edit-popup.component.scss'],
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     FormsModule,
     TranslateModule,
     CommonHeaderComponent,
     CommonBodyContentComponent,
-
-    // Material Modules
     MatCardModule,
     MatListModule,
     MatButtonModule,
@@ -108,8 +105,8 @@ import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button
     MatSnackBarModule,
     MatSliderModule,
     MatStepperModule,
-    MatBottomSheetModule,
-  ],
+    MatBottomSheetModule
+],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {

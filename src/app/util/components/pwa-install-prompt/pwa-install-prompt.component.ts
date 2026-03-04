@@ -6,55 +6,54 @@ import { Subject } from 'rxjs';
 import { APP_CONFIG } from '../../config/config';
 import { SsrService } from '../../service/ssr.service';
 
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-pwa-install-prompt',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
-    <div *ngIf="showInstallPrompt" class="pwa-install-prompt">
-      <div class="install-content">
-        <div class="install-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        
-        <div class="install-text">
-          <h3>Install {{ APP_CONFIG.APP_NAME }}</h3>
-          <p>Add to your home screen for quick access and offline functionality</p>
-        </div>
-        
-        <div class="install-actions">
-          <button 
-            (click)="installApp()"
-            class="install-btn primary"
-            type="button">
-            Install App
-          </button>
-          <button 
+    @if (showInstallPrompt) {
+      <div class="pwa-install-prompt">
+        <div class="install-content">
+          <div class="install-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="install-text">
+            <h3>Install {{ APP_CONFIG.APP_NAME }}</h3>
+            <p>Add to your home screen for quick access and offline functionality</p>
+          </div>
+          <div class="install-actions">
+            <button
+              (click)="installApp()"
+              class="install-btn primary"
+              type="button">
+              Install App
+            </button>
+            <button
+              (click)="dismissPrompt()"
+              class="install-btn secondary"
+              type="button">
+              Not Now
+            </button>
+          </div>
+          <button
             (click)="dismissPrompt()"
-            class="install-btn secondary"
+            class="close-btn"
+            [attr.aria-label]="'Close install prompt'"
             type="button">
-            Not Now
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </button>
         </div>
-        
-        <button 
-          (click)="dismissPrompt()"
-          class="close-btn"
-          [attr.aria-label]="'Close install prompt'"
-          type="button">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
       </div>
-    </div>
-  `,
+    }
+    `,
   styles: [`
     .pwa-install-prompt {
       position: fixed;

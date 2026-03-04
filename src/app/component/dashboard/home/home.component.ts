@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterModule } from '@angular/router';
 import { ChatComponent } from '../chat/chat.component';
 import { MatDialog } from '@angular/material/dialog';
@@ -23,7 +23,7 @@ import { FamilyService } from 'src/app/modules/family/services/family.service';
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
   standalone: true,
-  imports: [CommonModule, RouterModule, ChatComponent, GroupSelectionComponent],
+  imports: [RouterModule, ChatComponent, GroupSelectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HomeComponent {

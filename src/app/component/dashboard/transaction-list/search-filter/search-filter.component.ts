@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -28,7 +28,6 @@ import { FilterService } from '../../../../util/service/filter.service';
   styleUrls: ['./search-filter.component.scss'],
   standalone: true,
   imports: [
-    CommonModule,
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,
@@ -39,7 +38,7 @@ import { FilterService } from '../../../../util/service/filter.service';
     MatChipsModule,
     TranslateModule,
     FormsModule
-  ],
+],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SearchFilterComponent implements OnInit, OnChanges, OnDestroy {

@@ -5,9 +5,9 @@
     <div class="flex justify-center mb-4">
       <div
         class="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full cursor-pointer hover:bg-gray-300 transition-colors"
-        (click)="onCancel()"></div>
+      (click)="onCancel()"></div>
     </div>
-    <!-- 
+    <!--
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-xl font-bold text-gray-900 dark:text-white">Choose Color</h2>
       <button mat-icon-button (click)="onCancel()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
@@ -18,44 +18,52 @@
 
     <!-- Enhanced Search Bar -->
     <!-- <div class="mb-4">
-      <div class="relative flex items-center group">
-        <mat-icon
-          class="absolute left-4 text-gray-400 group-focus-within:text-primary transition-colors duration-200">search</mat-icon>
-        <input type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()" placeholder="Search colors..."
-          class="w-full bg-gray-50 dark:bg-gray-700/50 border-2 border-transparent focus:border-primary/20 focus:bg-white dark:focus:bg-gray-700 rounded-2xl py-3.5 pl-12 pr-12 text-sm outline-none transition-all duration-200 dark:text-gray-100 placeholder:text-gray-400"
-          autocomplete="off" spellcheck="false" />
-        <button *ngIf="searchTerm" mat-icon-button (click)="clearSearch()"
-          class="absolute right-2 text-gray-400 hover:text-gray-600" type="button" aria-label="Clear search">
-          <mat-icon class="text-lg">cancel</mat-icon>
-        </button>
-      </div>
-    </div> -->
-  </div>
+    <div class="relative flex items-center group">
+      <mat-icon
+      class="absolute left-4 text-gray-400 group-focus-within:text-primary transition-colors duration-200">search</mat-icon>
+      <input type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()" placeholder="Search colors..."
+        class="w-full bg-gray-50 dark:bg-gray-700/50 border-2 border-transparent focus:border-primary/20 focus:bg-white dark:focus:bg-gray-700 rounded-2xl py-3.5 pl-12 pr-12 text-sm outline-none transition-all duration-200 dark:text-gray-100 placeholder:text-gray-400"
+        autocomplete="off" spellcheck="false" />
+      <button *ngIf="searchTerm" mat-icon-button (click)="clearSearch()"
+        class="absolute right-2 text-gray-400 hover:text-gray-600" type="button" aria-label="Clear search">
+        <mat-icon class="text-lg">cancel</mat-icon>
+      </button>
+    </div>
+  </div> -->
+</div>
 
-  <!-- Colors Grid Container -->
-  <div class="overflow-y-auto px-5 pb-10 flex-1">
-    <div *ngIf="filteredColors.length === 0" class="flex flex-col items-center justify-center py-16 text-gray-400">
+<!-- Colors Grid Container -->
+<div class="overflow-y-auto px-5 pb-10 flex-1">
+  @if (filteredColors.length === 0) {
+    <div class="flex flex-col items-center justify-center py-16 text-gray-400">
       <mat-icon class="text-6xl opacity-20 mb-4">search_off</mat-icon>
       <p class="text-base font-medium">No matching colors found</p>
       <button mat-flat-button color="primary" (click)="clearSearch()" class="mt-4 rounded-xl px-6">
         Clear Search
       </button>
     </div>
+  }
 
-    <div *ngIf="filteredColors.length > 0" class="colors-grid-custom">
-      <button *ngFor="let color of filteredColors; trackBy: trackByColor" type="button"
-        (click)="selectColor(color.value)"
-        class="color-option-custom flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200"
-        [class.selected-color]="selectedColor.toUpperCase() === color.value.toUpperCase()"
-        [attr.aria-label]="'Select ' + color.label + ' color'"
-        [attr.aria-selected]="selectedColor.toUpperCase() === color.value.toUpperCase()">
-        <div class="w-10 h-10 rounded-full border-2 border-white dark:border-gray-700 shadow-sm mb-2"
+  @if (filteredColors.length > 0) {
+    <div class="colors-grid-custom">
+      @for (color of filteredColors; track trackByColor($index, color)) {
+        <button type="button"
+          (click)="selectColor(color.value)"
+          class="color-option-custom flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200"
+          [class.selected-color]="selectedColor.toUpperCase() === color.value.toUpperCase()"
+          [attr.aria-label]="'Select ' + color.label + ' color'"
+          [attr.aria-selected]="selectedColor.toUpperCase() === color.value.toUpperCase()">
+          <div class="w-10 h-10 rounded-full border-2 border-white dark:border-gray-700 shadow-sm mb-2"
           [style.background-color]="color.value"></div>
-        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center truncate w-full px-1">{{
+          <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center truncate w-full px-1">{{
           color.label }}</span>
-        <mat-icon *ngIf="selectedColor.toUpperCase() === color.value.toUpperCase()"
-          class="absolute top-2 right-2 text-xs bg-white dark:bg-gray-800 rounded-full shadow-sm text-primary">check</mat-icon>
-      </button>
+          @if (selectedColor.toUpperCase() === color.value.toUpperCase()) {
+            <mat-icon
+            class="absolute top-2 right-2 text-xs bg-white dark:bg-gray-800 rounded-full shadow-sm text-primary">check</mat-icon>
+          }
+        </button>
+      }
     </div>
-  </div>
+  }
+</div>
 </div>

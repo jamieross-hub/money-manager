@@ -1,5 +1,5 @@
 import { Component, Input, OnInit, OnDestroy, AfterViewInit, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef, signal, input, effect, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
@@ -43,7 +43,6 @@ import { TransactionsService } from 'src/app/util/service/db/transactions.servic
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     RouterModule,
     MatTabsModule,
     MatIconModule,
@@ -56,7 +55,7 @@ import { TransactionsService } from 'src/app/util/service/db/transactions.servic
     MobileTransactionListComponent,
     CalendarViewComponent,
     MonthlyExpenditureCardComponent
-  ]
+]
 })
 export class TransactionListComponent implements OnInit, OnDestroy {
   isHome = input<boolean>(false);

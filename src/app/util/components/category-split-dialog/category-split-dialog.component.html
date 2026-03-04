@@ -20,67 +20,77 @@
 
     <form [formGroup]="categorySplitForm">
       <div formArrayName="splits" class="splits-container">
-        <div *ngFor="let split of splitsArray.controls; let i = index" [formGroupName]="i" class="split-item">
-          <div class="split-header">
-            <h3>Split {{ i + 1 }}</h3>
-            <button type="button" mat-icon-button (click)="removeSplit(i)" [disabled]="splitsArray.length === 1"
-              class="remove-button" matTooltip="Remove split">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </div>
-
-          <div class="split-content">
-            <!-- Category Selection -->
-            <mat-form-field appearance="fill" class="w-full">
-              <mat-label>Category</mat-label>
-              <mat-select formControlName="categoryId" (selectionChange)="onCategoryChange($event.value, i)">
-                <mat-option *ngFor="let category of categories$ | async" [value]="category.id">
-                  <div class="category-option">
-                    <div class="category-icon" [style.background-color]="category.color">
-                      <mat-icon>{{ category.icon }}</mat-icon>
-                    </div>
-                    <span>{{ category.name }}</span>
-                  </div>
-                </mat-option>
-              </mat-select>
-              <mat-error *ngIf="split.get('categoryId')?.hasError('required')">
-                Category is required
-              </mat-error>
-            </mat-form-field>
-
-            <!-- Amount and Percentage -->
-            <div class="amount-percentage-row">
-              <mat-form-field appearance="fill" class="amount-field">
-                <mat-label>Amount</mat-label>
-                <input matInput type="number" formControlName="amount" step="0.01" min="0">
-                <mat-error *ngIf="split.get('amount')?.hasError('required')">
-                  Amount is required
-                </mat-error>
-                <mat-error *ngIf="split.get('amount')?.hasError('min')">
-                  Amount must be positive
-                </mat-error>
+        @for (split of splitsArray.controls; track split; let i = $index) {
+          <div [formGroupName]="i" class="split-item">
+            <div class="split-header">
+              <h3>Split {{ i + 1 }}</h3>
+              <button type="button" mat-icon-button (click)="removeSplit(i)" [disabled]="splitsArray.length === 1"
+                class="remove-button" matTooltip="Remove split">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+            <div class="split-content">
+              <!-- Category Selection -->
+              <mat-form-field appearance="fill" class="w-full">
+                <mat-label>Category</mat-label>
+                <mat-select formControlName="categoryId" (selectionChange)="onCategoryChange($event.value, i)">
+                  @for (category of categories$ | async; track category) {
+                    <mat-option [value]="category.id">
+                      <div class="category-option">
+                        <div class="category-icon" [style.background-color]="category.color">
+                          <mat-icon>{{ category.icon }}</mat-icon>
+                        </div>
+                        <span>{{ category.name }}</span>
+                      </div>
+                    </mat-option>
+                  }
+                </mat-select>
+                @if (split.get('categoryId')?.hasError('required')) {
+                  <mat-error>
+                    Category is required
+                  </mat-error>
+                }
               </mat-form-field>
-
-              <mat-form-field appearance="fill" class="percentage-field">
-                <mat-label>Percentage</mat-label>
-                <input matInput type="number" formControlName="percentage" step="0.01" min="0" max="100">
-                <span matSuffix>%</span>
-                <mat-error *ngIf="split.get('percentage')?.hasError('required')">
-                  Percentage is required
-                </mat-error>
-                <mat-error *ngIf="split.get('percentage')?.hasError('min') || split.get('percentage')?.hasError('max')">
-                  Percentage must be between 0 and 100
-                </mat-error>
+              <!-- Amount and Percentage -->
+              <div class="amount-percentage-row">
+                <mat-form-field appearance="fill" class="amount-field">
+                  <mat-label>Amount</mat-label>
+                  <input matInput type="number" formControlName="amount" step="0.01" min="0">
+                  @if (split.get('amount')?.hasError('required')) {
+                    <mat-error>
+                      Amount is required
+                    </mat-error>
+                  }
+                  @if (split.get('amount')?.hasError('min')) {
+                    <mat-error>
+                      Amount must be positive
+                    </mat-error>
+                  }
+                </mat-form-field>
+                <mat-form-field appearance="fill" class="percentage-field">
+                  <mat-label>Percentage</mat-label>
+                  <input matInput type="number" formControlName="percentage" step="0.01" min="0" max="100">
+                  <span matSuffix>%</span>
+                  @if (split.get('percentage')?.hasError('required')) {
+                    <mat-error>
+                      Percentage is required
+                    </mat-error>
+                  }
+                  @if (split.get('percentage')?.hasError('min') || split.get('percentage')?.hasError('max')) {
+                    <mat-error>
+                      Percentage must be between 0 and 100
+                    </mat-error>
+                  }
+                </mat-form-field>
+              </div>
+              <!-- Notes -->
+              <mat-form-field appearance="fill" class="w-full">
+                <mat-label>Notes (Optional)</mat-label>
+                <textarea matInput formControlName="notes" rows="2" placeholder="Add notes for this split..."></textarea>
               </mat-form-field>
             </div>
-
-            <!-- Notes -->
-            <mat-form-field appearance="fill" class="w-full">
-              <mat-label>Notes (Optional)</mat-label>
-              <textarea matInput formControlName="notes" rows="2" placeholder="Add notes for this split..."></textarea>
-            </mat-form-field>
           </div>
-        </div>
+        }
       </div>
 
       <!-- Add Split Button -->
@@ -92,12 +102,14 @@
       </div>
 
       <!-- Distribute Remaining Button -->
-      <div *ngIf="remainingAmount > 0" class="distribute-section">
-        <button type="button" mat-stroked-button (click)="distributeRemaining()" class="distribute-button">
-          <mat-icon>account_balance_wallet</mat-icon>
-          Distribute Remaining (₹{{ remainingAmount.toFixed(2) }})
-        </button>
-      </div>
+      @if (remainingAmount > 0) {
+        <div class="distribute-section">
+          <button type="button" mat-stroked-button (click)="distributeRemaining()" class="distribute-button">
+            <mat-icon>account_balance_wallet</mat-icon>
+            Distribute Remaining (₹{{ remainingAmount.toFixed(2) }})
+          </button>
+        </div>
+      }
     </form>
   </mat-dialog-content>
 
@@ -105,7 +117,9 @@
     <button mat-button (click)="onCancel()">Cancel</button>
     <button mat-raised-button color="primary" (click)="onSubmit()"
       [disabled]="categorySplitForm.invalid || remainingAmount >= 0.01 || isSubmitting">
-      <mat-icon *ngIf="isSubmitting" class="spinning">refresh</mat-icon>
+      @if (isSubmitting) {
+        <mat-icon class="spinning">refresh</mat-icon>
+      }
       {{ isSubmitting ? 'Saving...' : 'Save Splits' }}
     </button>
   </mat-dialog-actions>

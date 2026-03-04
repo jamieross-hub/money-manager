@@ -1,166 +1,173 @@
 <div class="import-dialog">
-	<h2 mat-dialog-title class="text-lg font-semibold mb-4">
-		<mat-icon class="mr-2">{{ data.transactions ? 'table_chart' : 'upload_file' }}</mat-icon>
-		{{ data.transactions ? 'Import from Google Sheets' : 'Import Transactions' }}
-	</h2>
+  <h2 mat-dialog-title class="text-lg font-semibold mb-4">
+    <mat-icon class="mr-2">{{ data.transactions ? 'table_chart' : 'upload_file' }}</mat-icon>
+    {{ data.transactions ? 'Import from Google Sheets' : 'Import Transactions' }}
+  </h2>
 
-	<div mat-dialog-content class="max-h-[70vh] overflow-y-auto">
-		<!-- Global Settings -->
-		<div *ngIf="accounts.length > 0" class="mb-6 p-4 bg-gray-50 rounded-lg">
-			<div class="flex flex-col sm:flex-row gap-4">
-				<div class="flex-1">
-					<label class="block text-sm font-medium text-gray-600 mb-1">Default Account</label>
-					<mat-select [(value)]="defaultAccountId" class="w-full"
-						placeholder="Select account for imported transactions">
-						@for (account of accounts; track account.accountId) {
-						<mat-option [value]="account.accountId">
-							{{ account.name }} ({{ account.type }})
-						</mat-option>
-						}
-					</mat-select>
-				</div>
-			</div>
-		</div>
+  <div mat-dialog-content class="max-h-[70vh] overflow-y-auto">
+    <!-- Global Settings -->
+    @if (accounts.length > 0) {
+      <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+        <div class="flex flex-col sm:flex-row gap-4">
+          <div class="flex-1">
+            <label class="block text-sm font-medium text-gray-600 mb-1">Default Account</label>
+            <mat-select [(value)]="defaultAccountId" class="w-full"
+              placeholder="Select account for imported transactions">
+              @for (account of accounts; track account.accountId) {
+                <mat-option [value]="account.accountId">
+                  {{ account.name }} ({{ account.type }})
+                </mat-option>
+              }
+            </mat-select>
+          </div>
+        </div>
+      </div>
+    }
 
-		<div *ngIf="!data?.transactions" class="mb-2 flex justify-end">
-			<button mat-stroked-button color="primary" (click)="downloadTemplate()" class="w-full sm:w-auto">
-				<mat-icon>download</mat-icon>
-				Download JSON Template
-			</button>
-		</div>
+    @if (!data.transactions) {
+      <div class="mb-2 flex justify-end">
+        <button mat-stroked-button color="primary" (click)="downloadTemplate()" class="w-full sm:w-auto">
+          <mat-icon>download</mat-icon>
+          Download JSON Template
+        </button>
+      </div>
+    }
 
-		<!-- File Upload Section -->
-		<div *ngIf="!data?.transactions" class="mb-6">
-			<div class="file-upload-container" #fileUploadContainer [class.drag-over]="isDragOver">
-				<input type="file" accept=".json" (change)="onFileSelected($event)" class="file-input"
-					[disabled]="isLoading" />
-				<div class="file-upload-overlay">
-					<mat-icon class="text-4xl mb-2">cloud_upload</mat-icon>
-					<p class="text-sm text-gray-600">
-						{{ isLoading ? 'Processing...' : 'Click to select file or drag and drop' }}
-					</p>
-					<p class="text-xs text-gray-500 mt-1">Supports JSON files only</p>
-					<div *ngIf="selectedFile" class="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-700">
-						<mat-icon class="text-sm mr-1">file_present</mat-icon>
-						{{ selectedFile.name }} ({{ fileType }})
-					</div>
-				</div>
-			</div>
+    <!-- File Upload Section -->
+    @if (!data.transactions) {
+      <div class="mb-6">
+        <div class="file-upload-container" #fileUploadContainer [class.drag-over]="isDragOver">
+          <input type="file" accept=".json" (change)="onFileSelected($event)" class="file-input"
+            [disabled]="isLoading" />
+          <div class="file-upload-overlay">
+            <mat-icon class="text-4xl mb-2">cloud_upload</mat-icon>
+            <p class="text-sm text-gray-600">
+              {{ isLoading ? 'Processing...' : 'Click to select file or drag and drop' }}
+            </p>
+            <p class="text-xs text-gray-500 mt-1">Supports JSON files only</p>
+            @if (selectedFile) {
+              <div class="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-700">
+                <mat-icon class="text-sm mr-1">file_present</mat-icon>
+                {{ selectedFile.name }} ({{ fileType }})
+              </div>
+            }
+          </div>
+        </div>
+        @if (error) {
+          <div class="error-message">
+            <mat-icon class="text-red-500">error</mat-icon>
+            <span class="text-red-600 text-sm">{{ error }}</span>
+          </div>
+        }
+      </div>
+    }
 
-			<div *ngIf="error" class="error-message">
-				<mat-icon class="text-red-500">error</mat-icon>
-				<span class="text-red-600 text-sm">{{ error }}</span>
-			</div>
-		</div>
+    <!-- Loading State -->
+    @if (isLoading && !data.transactions) {
+      <div class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p class="mt-2 text-gray-600">Processing file...</p>
+      </div>
+    }
 
-		<!-- Loading State -->
-		<div *ngIf="isLoading && !data?.transactions" class="loading-container">
-			<mat-spinner diameter="40"></mat-spinner>
-			<p class="mt-2 text-gray-600">Processing file...</p>
-		</div>
+    <!-- Transactions Preview -->
+    @if (parsedTransactions.length && !isLoading) {
+      <div class="transactions-preview">
+        <!-- Google Sheets Info Message -->
+        @if (data.transactions) {
+          <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div class="flex items-center gap-2">
+              <mat-icon class="text-blue-600 text-sm">info</mat-icon>
+              <span class="text-sm text-blue-800">
+                Data imported from Google Sheets. Review and select the transactions you want to import into
+                your account.
+              </span>
+            </div>
+          </div>
+        }
+        <div class="preview-header">
+          <h3 class="font-semibold mb-2">
+            {{ data.transactions ? 'Google Sheets Data Preview' : 'Preview & Select Transactions' }}
+          </h3>
+          <div class="preview-actions">
+            <button mat-button color="primary" (click)="toggleSelectAll()" class="text-sm">
+              {{ selectedToImport.size === parsedTransactions.length ? 'Deselect All' : 'Select All' }}
+            </button>
+            <span class="text-sm text-gray-600">
+              {{ selectedToImport.size }} of {{ parsedTransactions.length }} selected
+            </span>
+          </div>
+        </div>
+        <!-- Responsive Table -->
+        <div class="table-container">
+          <table class="transactions-table">
+            <thead>
+              <tr>
+                <th class="checkbox-col">
+                  <mat-checkbox [checked]="selectedToImport.size === parsedTransactions.length"
+                    [indeterminate]="selectedToImport.size > 0 && selectedToImport.size < parsedTransactions.length"
+                  (change)="toggleSelectAll()"></mat-checkbox>
+                </th>
+                <th>Amount</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Category</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (tx of parsedTransactions; track i; let i = $index) {
+                <tr class="transaction-row">
+                  <td class="checkbox-col">
+                    <mat-checkbox [checked]="selectedToImport.has(i)"
+                    (change)="toggleSelect(i)"></mat-checkbox>
+                  </td>
+                  <td class="amount-cell">
+                    <span [class.income]="tx.type === 'income'" [class.expense]="tx.type === 'expense'">
+                      {{ tx.type === 'income' ? '+' : '-' }}{{ tx.amount | currency }}
+                    </span>
+                  </td>
+                  <td class="payee-cell">{{ tx.description }}</td>
+                  <td class="type-cell">
+                    <span class="type-badge" [class.income]="tx.type === 'income'"
+                      [class.expense]="tx.type === 'expense'">
+                      {{ tx.type }}
+                    </span>
+                  </td>
+                  <td class="category-cell">
+                    <mat-select [value]="tx.categoryId + '-' + tx.category" class="category-select"
+                      (selectionChange)="updateCategory(i, $event.value)">
+                      <mat-option>
+                        <ngx-mat-select-search [formControl]="categoryFilterCtrl"
+                          placeholderLabel="Search categories..."
+                          noEntriesFoundLabel="No categories found">
+                        </ngx-mat-select-search>
+                      </mat-option>
+                      @for (category of filteredCategories | async; track category.id) {
+                        <mat-option [value]="category.id + '-' + category.name">
+                          <div class="option-content">
+                            <span class="option-text">{{ category.name }}</span>
+                          </div>
+                        </mat-option>
+                      }
+                    </mat-select>
+                  </td>
+                  <td class="date-cell">{{ tx.date | date:'dd MMM yyyy' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  </div>
 
-		<!-- Transactions Preview -->
-		<div *ngIf="parsedTransactions.length && !isLoading" class="transactions-preview">
-			<!-- Google Sheets Info Message -->
-			<div *ngIf="data?.transactions" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-				<div class="flex items-center gap-2">
-					<mat-icon class="text-blue-600 text-sm">info</mat-icon>
-					<span class="text-sm text-blue-800">
-						Data imported from Google Sheets. Review and select the transactions you want to import into
-						your account.
-					</span>
-				</div>
-			</div>
-
-			<div class="preview-header">
-				<h3 class="font-semibold mb-2">
-					{{ data.transactions ? 'Google Sheets Data Preview' : 'Preview & Select Transactions' }}
-				</h3>
-				<div class="preview-actions">
-					<button mat-button color="primary" (click)="toggleSelectAll()" class="text-sm">
-						{{ selectedToImport.size === parsedTransactions.length ? 'Deselect All' : 'Select All' }}
-					</button>
-					<span class="text-sm text-gray-600">
-						{{ selectedToImport.size }} of {{ parsedTransactions.length }} selected
-					</span>
-				</div>
-			</div>
-
-			<!-- Responsive Table -->
-			<div class="table-container">
-				<table class="transactions-table">
-					<thead>
-						<tr>
-							<th class="checkbox-col">
-								<mat-checkbox [checked]="selectedToImport.size === parsedTransactions.length"
-									[indeterminate]="selectedToImport.size > 0 && selectedToImport.size < parsedTransactions.length"
-									(change)="toggleSelectAll()"></mat-checkbox>
-							</th>
-							<th>Amount</th>
-							<th>Description</th>
-							<th>Type</th>
-							<th>Category</th>
-							<th>Date</th>
-						</tr>
-					</thead>
-					<tbody>
-						@for (tx of parsedTransactions; track i; let i = $index) {
-						<tr class="transaction-row">
-							<td class="checkbox-col">
-								<mat-checkbox [checked]="selectedToImport.has(i)"
-									(change)="toggleSelect(i)"></mat-checkbox>
-							</td>
-
-							<td class="amount-cell">
-								<span [class.income]="tx.type === 'income'" [class.expense]="tx.type === 'expense'">
-									{{ tx.type === 'income' ? '+' : '-' }}{{ tx.amount | currency }}
-								</span>
-							</td>
-
-							<td class="payee-cell">{{ tx.description }}</td>
-
-							<td class="type-cell">
-								<span class="type-badge" [class.income]="tx.type === 'income'"
-									[class.expense]="tx.type === 'expense'">
-									{{ tx.type }}
-								</span>
-							</td>
-
-							<td class="category-cell">
-								<mat-select [value]="tx.categoryId + '-' + tx.category" class="category-select"
-									(selectionChange)="updateCategory(i, $event.value)">
-									<mat-option>
-										<ngx-mat-select-search [formControl]="categoryFilterCtrl"
-											placeholderLabel="Search categories..."
-											noEntriesFoundLabel="No categories found">
-										</ngx-mat-select-search>
-									</mat-option>
-									@for (category of filteredCategories | async; track category.id) {
-									<mat-option [value]="category.id + '-' + category.name">
-										<div class="option-content">
-											<span class="option-text">{{ category.name }}</span>
-
-										</div>
-									</mat-option>
-									}
-								</mat-select>
-							</td>
-
-							<td class="date-cell">{{ tx.date | date:'dd MMM yyyy' }}</td>
-						</tr>
-						}
-					</tbody>
-				</table>
-			</div>
-		</div>
-	</div>
-
-	<div mat-dialog-actions align="end" class="dialog-actions">
-		<button mat-button (click)="close()" class="mr-2">Cancel</button>
-		<button mat-raised-button color="primary" (click)="importSelected()"
-			[disabled]="!parsedTransactions.length || selectedToImport.size === 0" class="import-button">
-			<mat-icon>{{ data.transactions ? 'table_chart' : 'cloud_upload' }}</mat-icon>
-			{{ data.transactions ? 'Import from Sheets' : 'Import Selected' }} ({{ selectedToImport.size }})
-		</button>
-	</div>
+  <div mat-dialog-actions align="end" class="dialog-actions">
+    <button mat-button (click)="close()" class="mr-2">Cancel</button>
+    <button mat-raised-button color="primary" (click)="importSelected()"
+      [disabled]="!parsedTransactions.length || selectedToImport.size === 0" class="import-button">
+      <mat-icon>{{ data.transactions ? 'table_chart' : 'cloud_upload' }}</mat-icon>
+      {{ data.transactions ? 'Import from Sheets' : 'Import Selected' }} ({{ selectedToImport.size }})
+    </button>
+  </div>
 </div>

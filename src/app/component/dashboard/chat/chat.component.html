@@ -5,69 +5,62 @@
     <div #scrollContainer class="flex-1 overflow-y-auto px-4 space-y-4 pt-4 pb-28 md:pb-4 flex"
       [ngStyle]="{'max-height': breakpointService.device.isMobile ? 'calc(78dvh - 100px)' : '70vh'}">
       <div class="max-w-screen-xl mx-auto w-full">
-        <div *ngFor="let msg of chatFacadeService.messages" class="flex fade-in"
-          [ngClass]="msg.sender === 'user' ? 'justify-end' : 'justify-start'">
-
-
-          <!-- Text/HTML Messages -->
-          <ng-container *ngIf="msg.type === 'text' || msg.type === 'html'">
-            <div class="px-4 py-2 my-2 rounded-2xl max-w-[100%] sm:max-w-[60%] text-sm sm:text-base shadow-sm"
-              [ngClass]="msg.sender === 'user' ? '!bg-primary-800 text-white rounded-br-md shadow-primary-500/20' : 'chat-bubble-bot rounded-bl-md'"
-              [innerHTML]="msg.text | safeHtml"
-              style="-webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text;">
-            </div>
-          </ng-container>
-
-          <!-- Account Summary Card -->
-          @if(msg.type === 'UI-ELEMENT' && msg.text === 'ACCOUNT_SUMMARY_CARD') {
-          <div class="relative top-0 z-10 w-full my-2">
-            <app-account-summary-card></app-account-summary-card>
+        @for (msg of chatFacadeService.messages; track msg) {
+          <div class="flex fade-in"
+            [ngClass]="msg.sender === 'user' ? 'justify-end' : 'justify-start'">
+            <!-- Text/HTML Messages -->
+            @if (msg.type === 'text' || msg.type === 'html') {
+              <div class="px-4 py-2 my-2 rounded-2xl max-w-[100%] sm:max-w-[60%] text-sm sm:text-base shadow-sm"
+                [ngClass]="msg.sender === 'user' ? '!bg-primary-800 text-white rounded-br-md shadow-primary-500/20' : 'chat-bubble-bot rounded-bl-md'"
+                [innerHTML]="msg.text | safeHtml"
+                style="-webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text;">
+              </div>
+            }
+            <!-- Account Summary Card -->
+            @if(msg.type === 'UI-ELEMENT' && msg.text === 'ACCOUNT_SUMMARY_CARD') {
+              <div class="relative top-0 z-10 w-full my-2">
+                <app-account-summary-card></app-account-summary-card>
+              </div>
+            }
+            @if(msg.type === 'UI-ELEMENT' && msg.text === 'LOAN_SUMMARY_CARD') {
+              <div class="relative top-0 z-10 w-full my-2">
+                <app-loan-summary-card></app-loan-summary-card>
+              </div>
+            }
+            @if(msg.type === 'UI-ELEMENT' && msg.text === 'MONTHLY_EXPENDITURE_CARD') {
+              <div class="relative top-0 z-10 w-full my-2">
+                <app-monthly-expenditure-card></app-monthly-expenditure-card>
+              </div>
+            }
+            <!-- Recent Activity Card -->
+            @if(msg.type === 'UI-ELEMENT' && msg.text === 'RECENT_ACTIVITY_CARD') {
+              <div class="relative top-0 z-10 w-full my-2">
+                <app-recent-activity-card></app-recent-activity-card>
+              </div>
+            }
+            <!-- Chat Category Dropdown -->
+            @if(msg.type === 'UI-ELEMENT' && msg.text === 'categoryDropdown') {
+              <app-chat-category-dropdown [placeholder]="msg?.data?.placeholder" [amount]="msg?.data?.amount"
+              [txType]="msg?.data?.type" (submitSelection)="onChatCategorySelected($event)"></app-chat-category-dropdown>
+            }
+            @if(msg.type === 'UI-ELEMENT' && msg.text === 'BUDGET_CARD') {
+              <div class="relative top-0 z-10 w-full my-2">
+                <app-budget-card></app-budget-card>
+              </div>
+            }
           </div>
-          }
-
-          @if(msg.type === 'UI-ELEMENT' && msg.text === 'LOAN_SUMMARY_CARD') {
-          <div class="relative top-0 z-10 w-full my-2">
-            <app-loan-summary-card></app-loan-summary-card>
-          </div>
-          }
-
-          @if(msg.type === 'UI-ELEMENT' && msg.text === 'MONTHLY_EXPENDITURE_CARD') {
-          <div class="relative top-0 z-10 w-full my-2">
-            <app-monthly-expenditure-card></app-monthly-expenditure-card>
-          </div>
-          }
-
-
-
-          <!-- Recent Activity Card -->
-          @if(msg.type === 'UI-ELEMENT' && msg.text === 'RECENT_ACTIVITY_CARD') {
-          <div class="relative top-0 z-10 w-full my-2">
-            <app-recent-activity-card></app-recent-activity-card>
-          </div>
-          }
-          <!-- Chat Category Dropdown -->
-          @if(msg.type === 'UI-ELEMENT' && msg.text === 'categoryDropdown') {
-          <app-chat-category-dropdown [placeholder]="msg?.data?.placeholder" [amount]="msg?.data?.amount"
-            [txType]="msg?.data?.type" (submitSelection)="onChatCategorySelected($event)"></app-chat-category-dropdown>
-
-          }
-
-          @if(msg.type === 'UI-ELEMENT' && msg.text === 'BUDGET_CARD') {
-          <div class="relative top-0 z-10 w-full my-2">
-            <app-budget-card></app-budget-card>
-          </div>
-          }
-
-        </div>
+        }
 
         <!-- Typing Loader -->
-        <div *ngIf="chatFacadeService.isTyping" class="flex justify-start fade-in">
-          <div class="chat-bubble-bot px-4 py-2 rounded-2xl rounded-bl-md shadow-sm ">
-            <span class="typing-dots">
-              <span></span><span></span><span></span>
-            </span>
+        @if (chatFacadeService.isTyping) {
+          <div class="flex justify-start fade-in">
+            <div class="chat-bubble-bot px-4 py-2 rounded-2xl rounded-bl-md shadow-sm ">
+              <span class="typing-dots">
+                <span></span><span></span><span></span>
+              </span>
+            </div>
           </div>
-        </div>
+        }
 
       </div>
     </div>
@@ -81,105 +74,114 @@
     <div class="w-full max-w-full relative">
 
       <!-- Voice Interaction Overlay -->
-      <div *ngIf="isRecording || voiceBlob"
-        class="flex items-center justify-between voice-overlay border rounded-full px-4 py-2 shadow-md animate-fade-in">
-
-        <!-- Recording State -->
-        <div *ngIf="isRecording" class="flex items-center gap-3 w-full">
-          <div class="blob red"></div> <!-- Pulsating red dot -->
-          <span class="text-primary-700 font-medium">Recording...</span>
-          <button (click)="stopRecording()"
-            class="ml-auto p-2 bg-red-100 text-red-500 rounded-full hover:bg-red-200 transition">
-            <mat-icon>stop</mat-icon>
-          </button>
+      @if (isRecording || voiceBlob) {
+        <div
+          class="flex items-center justify-between voice-overlay border rounded-full px-4 py-2 shadow-md animate-fade-in">
+          <!-- Recording State -->
+          @if (isRecording) {
+            <div class="flex items-center gap-3 w-full">
+              <div class="blob red"></div> <!-- Pulsating red dot -->
+              <span class="text-primary-700 font-medium">Recording...</span>
+              <button (click)="stopRecording()"
+                class="ml-auto p-2 bg-red-100 text-red-500 rounded-full hover:bg-red-200 transition">
+                <mat-icon>stop</mat-icon>
+              </button>
+            </div>
+          }
+          <!-- Review State -->
+          @if (!isRecording && voiceBlob && !isProcessingAudio) {
+            <div class="flex items-center justify-between w-full">
+              <span class="text-primary-700 font-medium flex-1">Recording finished</span>
+              <div class="flex items-center gap-2">
+                <button (click)="discardVoice()" matTooltip="Discharge"
+                  class="p-2 border border-slate-200 text-slate-500 rounded-full hover:bg-slate-100 transition search-input-wrap">
+                  <mat-icon>close</mat-icon>
+                </button>
+                <button (click)="confirmVoice()" matTooltip="Okay"
+                  class="p-2 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition shadow-sm">
+                  <mat-icon>check</mat-icon>
+                </button>
+              </div>
+            </div>
+          }
+          <!-- Processing State -->
+          @if (isProcessingAudio) {
+            <div class="flex items-center gap-3 w-full justify-center">
+              <span class="typing-dots"><span></span><span></span><span></span></span>
+              <span class="text-primary-600 font-medium">Transcribing...</span>
+            </div>
+          }
         </div>
-
-        <!-- Review State -->
-        <div *ngIf="!isRecording && voiceBlob && !isProcessingAudio" class="flex items-center justify-between w-full">
-          <span class="text-primary-700 font-medium flex-1">Recording finished</span>
-
-          <div class="flex items-center gap-2">
-            <button (click)="discardVoice()" matTooltip="Discharge"
-              class="p-2 border border-slate-200 text-slate-500 rounded-full hover:bg-slate-100 transition search-input-wrap">
-              <mat-icon>close</mat-icon>
-            </button>
-            <button (click)="confirmVoice()" matTooltip="Okay"
-              class="p-2 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition shadow-sm">
-              <mat-icon>check</mat-icon>
-            </button>
-          </div>
-        </div>
-
-        <!-- Processing State -->
-        <div *ngIf="isProcessingAudio" class="flex items-center gap-3 w-full justify-center">
-          <span class="typing-dots"><span></span><span></span><span></span></span>
-          <span class="text-primary-600 font-medium">Transcribing...</span>
-        </div>
-
-      </div>
+      }
 
 
       <!-- Standard Input Bar (Hidden during voice interaction) -->
-      <div *ngIf="!isRecording && !voiceBlob"
-        class="flex items-center search-input-wrap border rounded-full px-2 py-1 focus-within:ring-2 focus-within:ring-primary-100 focus-within:border-primary-300 transition shadow-sm">
-
-        <!-- Attachment Button -->
-        <button (click)="breakpointService.device.isMobile ? onMicClick() : onAttachmentClick()"
-          class="p-2 text-gray-400 hover:text-primary-500 transition rounded-full hover:bg-gray-100 relative top-[6px]">
-          <mat-icon class="material-icons-outlined text-[20px] leading-[20px] w-[20px] h-[20px]"
-            *ngIf="!breakpointService.device.isMobile">add</mat-icon>
-          <mat-icon class="material-icons-outlined text-[20px] leading-[20px] w-[20px] h-[20px]"
-            *ngIf="breakpointService.device.isMobile">mic</mat-icon>
-        </button>
-
-        <!-- Input Field with Autocomplete -->
-        <div class="flex-1 relative">
-          <!-- Suggestion Overlay -->
-          <div class="absolute inset-0 px-2 text-sm sm:text-base text-slate-400 opacity-40 flex items-center"
-            [class.pointer-events-none]="!suggestion" [class.cursor-pointer]="suggestion">
-            <span class="invisible">{{chatInput.value}}</span><span>{{suggestion}}</span>
+      @if (!isRecording && !voiceBlob) {
+        <div
+          class="flex items-center search-input-wrap border rounded-full px-2 py-1 focus-within:ring-2 focus-within:ring-primary-100 focus-within:border-primary-300 transition shadow-sm">
+          <!-- Attachment Button -->
+          <button (click)="breakpointService.device.isMobile ? onMicClick() : onAttachmentClick()"
+            class="p-2 text-gray-400 hover:text-primary-500 transition rounded-full hover:bg-gray-100 relative top-[6px]">
+            @if (!breakpointService.device.isMobile) {
+              <mat-icon class="material-icons-outlined text-[20px] leading-[20px] w-[20px] h-[20px]"
+              >add</mat-icon>
+            }
+            @if (breakpointService.device.isMobile) {
+              <mat-icon class="material-icons-outlined text-[20px] leading-[20px] w-[20px] h-[20px]"
+              >mic</mat-icon>
+            }
+          </button>
+          <!-- Input Field with Autocomplete -->
+          <div class="flex-1 relative">
+            <!-- Suggestion Overlay -->
+            <div class="absolute inset-0 px-2 text-sm sm:text-base text-slate-400 opacity-40 flex items-center"
+              [class.pointer-events-none]="!suggestion" [class.cursor-pointer]="suggestion">
+              <span class="invisible">{{chatInput.value}}</span><span>{{suggestion}}</span>
+            </div>
+            <!-- Actual Input -->
+            <input #chatInput type="text" [placeholder]="currentAnimatedPlaceholder"
+              (keydown.enter)="sendMessage(chatInput)" (keydown)="onTabKey($event, chatInput)"
+              (input)="onInputChange(chatInput)" (click)="completeSuggestion(chatInput)"
+              class="w-full bg-transparent border-none focus:outline-none px-2 text-sm sm:text-base relative z-10">
           </div>
-
-          <!-- Actual Input -->
-          <input #chatInput type="text" [placeholder]="currentAnimatedPlaceholder"
-            (keydown.enter)="sendMessage(chatInput)" (keydown)="onTabKey($event, chatInput)"
-            (input)="onInputChange(chatInput)" (click)="completeSuggestion(chatInput)"
-            class="w-full bg-transparent border-none focus:outline-none px-2 text-sm sm:text-base relative z-10">
-        </div>
-        <!-- Mic Button -->
-        <button *ngIf="!breakpointService.device.isMobile" (click)="onMicClick()"
-          class="p-2 text-gray-400 hover:text-primary-500 transition rounded-full  mr-1 relative top-[6px]">
-          <mat-icon class="material-icons-outlined text-[20px] leading-[20px] w-[20px] h-[20px]">mic</mat-icon>
-        </button>
-
-        <!-- Send Button -->
-        <button (click)="sendMessage(chatInput)"
-          class="bg-primary-800 hover:bg-primary-600 text-white p-2 rounded-full shadow-md transition flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 ">
-          <mat-icon
+          <!-- Mic Button -->
+          @if (!breakpointService.device.isMobile) {
+            <button (click)="onMicClick()"
+              class="p-2 text-gray-400 hover:text-primary-500 transition rounded-full  mr-1 relative top-[6px]">
+              <mat-icon class="material-icons-outlined text-[20px] leading-[20px] w-[20px] h-[20px]">mic</mat-icon>
+            </button>
+          }
+          <!-- Send Button -->
+          <button (click)="sendMessage(chatInput)"
+            class="bg-primary-800 hover:bg-primary-600 text-white p-2 rounded-full shadow-md transition flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 ">
+            <mat-icon
             class="material-icons-outlined text-[18px] sm:text-[20px] leading-[18px] sm:leading-[20px] w-[18px] sm:w-[20px] h-[18px] sm:h-[20px] relative top-[3px]">arrow_upward</mat-icon>
-        </button>
-      </div>
+          </button>
+        </div>
+      }
     </div>
 
     <!-- Quick Actions -->
-    <div class="flex gap-2 px-4 overflow-x-auto no-scrollbar justify-center mb-2"
-      *ngIf="!breakpointService.device.isMobile">
-      <mat-chip (click)="setQuickAction('Expense', ChatInput)"
-        class="quick-action-chip  py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-red-100 transition whitespace-nowrap">
-        <mat-icon matChipAvatar>remove</mat-icon>
-        Expense
-      </mat-chip>
-      <mat-chip (click)="setQuickAction('Income', ChatInput)"
-        class="quick-action-chip  border border-green-100 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-green-100 transition whitespace-nowrap">
-        <mat-icon matChipAvatar>add</mat-icon>
-        Income
-      </mat-chip>
-      <mat-chip (click)="setQuickAction('Transfer', ChatInput)"
-        class="quick-action-chip  border   py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-blue-100 transition whitespace-nowrap">
-        <mat-icon matChipAvatar>swap_horiz</mat-icon>
-        Transfer
-      </mat-chip>
-    </div>
+    @if (!breakpointService.device.isMobile) {
+      <div class="flex gap-2 px-4 overflow-x-auto no-scrollbar justify-center mb-2"
+        >
+        <mat-chip (click)="setQuickAction('Expense', ChatInput)"
+          class="quick-action-chip  py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-red-100 transition whitespace-nowrap">
+          <mat-icon matChipAvatar>remove</mat-icon>
+          Expense
+        </mat-chip>
+        <mat-chip (click)="setQuickAction('Income', ChatInput)"
+          class="quick-action-chip  border border-green-100 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-green-100 transition whitespace-nowrap">
+          <mat-icon matChipAvatar>add</mat-icon>
+          Income
+        </mat-chip>
+        <mat-chip (click)="setQuickAction('Transfer', ChatInput)"
+          class="quick-action-chip  border   py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-blue-100 transition whitespace-nowrap">
+          <mat-icon matChipAvatar>swap_horiz</mat-icon>
+          Transfer
+        </mat-chip>
+      </div>
+    }
 
   </div>
 </section>

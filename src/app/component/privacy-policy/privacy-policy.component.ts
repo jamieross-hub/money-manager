@@ -1,6 +1,6 @@
 import { Component , ChangeDetectionStrategy} from '@angular/core';
 
-import { CommonModule } from '@angular/common';
+
 import { MatIconModule } from '@angular/material/icon';
 import { TranslateModule } from '@ngx-translate/core';
 
@@ -9,7 +9,7 @@ import { TranslateModule } from '@ngx-translate/core';
   templateUrl: './privacy-policy.component.html',
   styleUrls: ['./privacy-policy.component.scss'],
   standalone: true,
-  imports: [CommonModule, MatIconModule, TranslateModule],
+  imports: [MatIconModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PrivacyPolicyComponent {

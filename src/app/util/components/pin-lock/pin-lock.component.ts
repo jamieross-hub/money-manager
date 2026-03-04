@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { SecurityService } from 'src/app/util/service/security.service';
@@ -10,7 +10,7 @@ import { SsrService } from 'src/app/util/service/ssr.service';
 @Component({
   selector: 'app-pin-lock',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule],
+  imports: [MatIconModule, MatButtonModule],
   templateUrl: './pin-lock.component.html',
   styleUrls: ['./pin-lock.component.scss']
 })

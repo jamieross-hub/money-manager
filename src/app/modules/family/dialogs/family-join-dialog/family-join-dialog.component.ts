@@ -6,14 +6,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
-import { CommonModule } from '@angular/common';
+
 import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
 
 @Component({
   selector: 'app-family-join-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ReactiveFormsModule, MatDialogModule, MatBottomSheetModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule],
+  imports: [ReactiveFormsModule, MatDialogModule, MatBottomSheetModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule],
   templateUrl: './family-join-dialog.component.html',
   styleUrls: ['./family-join-dialog.component.scss']
 })

@@ -2,30 +2,30 @@
 <div class="table-container-wrapper rounded-lg  overflow-hidden flex flex-col dark:bg-slate-900 dark:border-slate-800"
   [ngClass]="{'max-h-[calc(75vh-210px)]': isHome && !breakpointService.device.isTablePortrait,'max-h-[65vh]':isHome && breakpointService.device.isTablePortrait,'max-h-[75vh]': !isHome}">
   <!-- View Toggle Header -->
-  <div class="header-section flex justify-between items-center p-3 border-b dark:border-slate-800"
-    *ngIf="hasSelection() && (breakpointService.device.isTablePortrait || breakpointService.device.isDesktop) && !isHome">
-    <!-- <div class="flex items-center space-x-2">
+  @if (hasSelection() && (breakpointService.device.isTablePortrait || breakpointService.device.isDesktop) && !isHome) {
+    <div class="header-section flex justify-between items-center p-3 border-b dark:border-slate-800"
+      >
+      <!-- <div class="flex items-center space-x-2">
       <span class="text-sm font-medium text-gray-700">View:</span>
-      <button 
-        mat-button 
+      <button
+        mat-button
         [class]="!isListView ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'"
         (click)="toggleView()"
         class="text-xs px-3 py-1 rounded-md transition-colors"
-      >
+        >
         <mat-icon class="text-sm mr-1">table_chart</mat-icon>
         Table
       </button>
-      <button 
-        mat-button 
+      <button
+        mat-button
         [class]="isListView ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'"
         (click)="toggleView()"
         class="text-xs px-3 py-1 rounded-md transition-colors"
-      >
+        >
         <mat-icon class="text-sm mr-1">view_list</mat-icon>
         List
       </button>
     </div> -->
-
     <!-- Bulk Operations - Only for tablet portrait and desktop, and not on home page -->
     <div class="flex items-center space-x-2">
       <span class="text-sm text-gray-600">{{ getSelectedCount() }} selected</span>
@@ -41,28 +41,31 @@
       </button>
     </div>
   </div>
+}
 
-  <!-- Desktop/Tablet Table View -->
-  <div *ngIf="!isListView" class="hidden sm:flex flex-1 overflow-auto table-container">
+<!-- Desktop/Tablet Table View -->
+@if (!isListView) {
+  <div class="hidden sm:flex flex-1 overflow-auto table-container">
     <table mat-table [dataSource]="dataSource" matSort [@listAnimation]="dataSource.data.length"
       class="w-full min-w-[800px]">
       <!-- Checkbox Column - Only for tablet portrait and desktop, and not on home page -->
-      <ng-container matColumnDef="select"
-        *ngIf="(breakpointService.device.isTablePortrait || breakpointService.device.isDesktop) && !isHome">
-        <th mat-header-cell *matHeaderCellDef
-          class="bg-gray-50 dark:bg-slate-950 px-3 md:px-4 py-4 sticky top-0 z-10 w-[48px]">
-          <mat-checkbox (change)="$event ? toggleAllSelection() : null" [checked]="isAllSelected"
-            [indeterminate]="isIndeterminate" [disabled]="!dataSource.data.length" class="text-gray-700">
-          </mat-checkbox>
-        </th>
-        <td mat-cell *matCellDef="let element"
-          class="px-3 md:px-4 py-4 border-b border-gray-100 dark:border-slate-800 w-[48px]">
-          <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? toggleSelection(element) : null"
-            [checked]="isSelected(element)" class="text-gray-700">
-          </mat-checkbox>
-        </td>
-      </ng-container>
-
+      @if ((breakpointService.device.isTablePortrait || breakpointService.device.isDesktop) && !isHome) {
+        <ng-container matColumnDef="select"
+          >
+          <th mat-header-cell *matHeaderCellDef
+            class="bg-gray-50 dark:bg-slate-950 px-3 md:px-4 py-4 sticky top-0 z-10 w-[48px]">
+            <mat-checkbox (change)="$event ? toggleAllSelection() : null" [checked]="isAllSelected"
+              [indeterminate]="isIndeterminate" [disabled]="!dataSource.data.length" class="text-gray-700">
+            </mat-checkbox>
+          </th>
+          <td mat-cell *matCellDef="let element"
+            class="px-3 md:px-4 py-4 border-b border-gray-100 dark:border-slate-800 w-[48px]">
+            <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? toggleSelection(element) : null"
+              [checked]="isSelected(element)" class="text-gray-700">
+            </mat-checkbox>
+          </td>
+        </ng-container>
+      }
       <!-- Date Column -->
       <ng-container matColumnDef="Date">
         <th mat-header-cell *matHeaderCellDef mat-sort-header
@@ -74,21 +77,21 @@
         </th>
         <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100 dark:border-slate-800">
           <div class="text-xs md:text-sm text-gray-600 dark:text-slate-400">
-
             @if(breakpointService.device.isTablePortrait) {
-            {{ getDateTimestamp(element.date) | date:'MMM dd' }}
+              {{ getDateTimestamp(element.date) | date:'MMM dd' }}
             } @else if(breakpointService.device.isDesktop) {
-            {{ getDateTimestamp(element.date) | date:'dd MMM yyyy hh:mm a' }}
+              {{ getDateTimestamp(element.date) | date:'dd MMM yyyy hh:mm a' }}
             } @else {
-            {{ getDateTimestamp(element.date) | date:'dd MMM yyyy' }}
+              {{ getDateTimestamp(element.date) | date:'dd MMM yyyy' }}
             }
           </div>
-          <div class="text-xs text-gray-400 hidden md:block" *ngIf="!breakpointService.device.isDesktop">
-            {{ getDateTimestamp(element.date) | date:'hh:mm a' }}
-          </div>
+          @if (!breakpointService.device.isDesktop) {
+            <div class="text-xs text-gray-400 hidden md:block">
+              {{ getDateTimestamp(element.date) | date:'hh:mm a' }}
+            </div>
+          }
         </td>
       </ng-container>
-
       <!-- Type Column -->
       <ng-container matColumnDef="Type">
         <th mat-header-cell *matHeaderCellDef mat-sort-header
@@ -103,19 +106,18 @@
           <div
             class="inline-flex items-center gap-1.5 md:gap-2 px-1.5 md:px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-slate-800">
             <mat-icon class="text-xs md:text-sm" [style.color]="getCategoryColor(element.categoryId)">{{
-              getCategoryIcon(element.categoryId) }}</mat-icon>
+            getCategoryIcon(element.categoryId) }}</mat-icon>
             <span class="text-xs font-medium text-gray-800 dark:text-slate-200">
               {{getCategoryName(element.categoryId)}}
             </span>
-            <mat-icon *ngIf="element.isRecurring" 
-              class="text-[10px] md:text-xs text-primary-500 ml-1" 
+            @if (element.isRecurring) {
+              <mat-icon
+                class="text-[10px] md:text-xs text-primary-500 ml-1"
               matTooltip="Recurring Transaction">repeat</mat-icon>
+            }
           </div>
         </td>
       </ng-container>
-
-
-
       <!-- Amount Column -->
       <ng-container matColumnDef="Amount">
         <th mat-header-cell *matHeaderCellDef mat-sort-header
@@ -126,16 +128,19 @@
           </div>
         </th>
         <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100 dark:border-slate-800">
-          <span *ngIf="!element.isEditing" class="font-bold text-xs md:text-sm"
-            [class]="element.type === 'income' ? 'text-green-700' : 'text-red-800'">
-            {{ (element.type == 'income' ? '+' : '-') + (element?.amount | currency) }}
-          </span>
-          <input *ngIf="element.isEditing" [(ngModel)]="element.amount" type="number"
-            class="w-full px-2 md:px-3 py-1 md:py-2 border border-blue-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Enter amount" />
+          @if (!element.isEditing) {
+            <span class="font-bold text-xs md:text-sm"
+              [class]="element.type === 'income' ? 'text-green-700' : 'text-red-800'">
+              {{ (element.type == 'income' ? '+' : '-') + (element?.amount | currency) }}
+            </span>
+          }
+          @if (element.isEditing) {
+            <input [(ngModel)]="element.amount" type="number"
+              class="w-full px-2 md:px-3 py-1 md:py-2 border border-blue-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter amount" />
+          }
         </td>
       </ng-container>
-
       <!-- Status Column -->
       <ng-container matColumnDef="Status">
         <th mat-header-cell *matHeaderCellDef mat-sort-header
@@ -147,21 +152,24 @@
         </th>
         <td mat-cell *matCellDef="let element"
           class="px-3 md:px-4 py-4 border-b border-gray-100 dark:border-slate-800 hidden md:table-cell">
-          <span *ngIf="!element.isEditing">
-            <span class="inline-flex items-center px-2 md:px-3 py-1 rounded-full text-xs font-medium"
-              [class]="element.type === 'income' ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'">
-              <mat-icon class="text-xs mr-1">{{element.type === 'income' ? 'trending_up' : 'trending_down'}}</mat-icon>
-              {{element.type}}
+          @if (!element.isEditing) {
+            <span>
+              <span class="inline-flex items-center px-2 md:px-3 py-1 rounded-full text-xs font-medium"
+                [class]="element.type === 'income' ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'">
+                <mat-icon class="text-xs mr-1">{{element.type === 'income' ? 'trending_up' : 'trending_down'}}</mat-icon>
+                {{element.type}}
+              </span>
             </span>
-          </span>
-          <select *ngIf="element.isEditing" [(ngModel)]="element.type"
-            class="w-full px-2 md:px-3 py-1 md:py-2 border border-blue-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <option value="income">Income</option>
-            <option value="expense">Expense</option>
-          </select>
+          }
+          @if (element.isEditing) {
+            <select [(ngModel)]="element.type"
+              class="w-full px-2 md:px-3 py-1 md:py-2 border border-blue-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+          }
         </td>
       </ng-container>
-
       <!-- Account Column -->
       <ng-container matColumnDef="Account">
         <th mat-header-cell *matHeaderCellDef mat-sort-header
@@ -177,7 +185,6 @@
           </div>
         </td>
       </ng-container>
-
       <!-- Actions Column -->
       <ng-container matColumnDef="Actions">
         <th mat-header-cell *matHeaderCellDef
@@ -190,38 +197,48 @@
         <td mat-cell *matCellDef="let element"
           class="px-3 md:px-4 py-4 border-b border-gray-100 dark:border-slate-800 text-center">
           <!-- Normal state -->
-          <div *ngIf="!element.isEditing" class="flex justify-center items-center space-x-1 md:space-x-2">
-            <button *ngIf="canEdit(element)" mat-icon-button class="text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-              (click)="$event.stopPropagation(); onStartRowEdit(element)" matTooltip="Edit transaction">
-              <mat-icon class="text-sm md:text-base">edit</mat-icon>
-            </button>
-            <button *ngIf="canDelete(element)" mat-icon-button class="text-red-600 hover:bg-red-50 rounded-full transition-colors"
-              (click)="$event.stopPropagation(); onDeleteTransaction(element)" matTooltip="Delete transaction">
-              <mat-icon class="text-sm md:text-base">delete</mat-icon>
-            </button>
-            <span *ngIf="!canEdit(element) && !canDelete(element)" class="text-[11px] text-gray-400 dark:text-gray-500 italic px-2">View only</span>
-            <span *ngIf="!canEdit(element) && canDelete(element) && element.settlementId" class="text-[10px] text-gray-400 dark:text-gray-500 italic px-1">Uneditable settlement</span>
-          </div>
-
+          @if (!element.isEditing) {
+            <div class="flex justify-center items-center space-x-1 md:space-x-2">
+              @if (canEdit(element)) {
+                <button mat-icon-button class="text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                  (click)="$event.stopPropagation(); onStartRowEdit(element)" matTooltip="Edit transaction">
+                  <mat-icon class="text-sm md:text-base">edit</mat-icon>
+                </button>
+              }
+              @if (canDelete(element)) {
+                <button mat-icon-button class="text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                  (click)="$event.stopPropagation(); onDeleteTransaction(element)" matTooltip="Delete transaction">
+                  <mat-icon class="text-sm md:text-base">delete</mat-icon>
+                </button>
+              }
+              @if (!canEdit(element) && !canDelete(element)) {
+                <span class="text-[11px] text-gray-400 dark:text-gray-500 italic px-2">View only</span>
+              }
+              @if (!canEdit(element) && canDelete(element) && element.settlementId) {
+                <span class="text-[10px] text-gray-400 dark:text-gray-500 italic px-1">Uneditable settlement</span>
+              }
+            </div>
+          }
           <!-- Editing state -->
-          <div *ngIf="element.isEditing" class="flex justify-center space-x-1 md:space-x-2">
-            <button mat-icon-button color="primary"
-              class="bg-green-100 text-green-600 hover:bg-green-200 rounded-full transition-colors"
-              (click)="$event.stopPropagation(); onSaveRowEdit(element)" matTooltip="Save changes">
-              <mat-icon class="text-sm md:text-base">check</mat-icon>
-            </button>
-            <button mat-icon-button color="warn"
-              class="bg-red-100 text-red-600 hover:bg-red-200 rounded-full transition-colors"
-              (click)="$event.stopPropagation(); onCancelRowEdit(element)" matTooltip="Cancel editing">
-              <mat-icon class="text-sm md:text-base">close</mat-icon>
-            </button>
-          </div>
+          @if (element.isEditing) {
+            <div class="flex justify-center space-x-1 md:space-x-2">
+              <button mat-icon-button color="primary"
+                class="bg-green-100 text-green-600 hover:bg-green-200 rounded-full transition-colors"
+                (click)="$event.stopPropagation(); onSaveRowEdit(element)" matTooltip="Save changes">
+                <mat-icon class="text-sm md:text-base">check</mat-icon>
+              </button>
+              <button mat-icon-button color="warn"
+                class="bg-red-100 text-red-600 hover:bg-red-200 rounded-full transition-colors"
+                (click)="$event.stopPropagation(); onCancelRowEdit(element)" matTooltip="Cancel editing">
+                <mat-icon class="text-sm md:text-base">close</mat-icon>
+              </button>
+            </div>
+          }
         </td>
       </ng-container>
-
       <tr mat-header-row *matHeaderRowDef="displayedColumns" class="h-12 md:h-16 sticky top-0 z-10"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-        class="hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors cursor-pointer" 
+        class="hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
         [class.upcoming-transaction]="isUpcoming(row)"
         [class.opacity-50]="row.syncStatus === 'pending'"
         [class.grayscale]="row.syncStatus === 'pending'"
@@ -229,285 +246,319 @@
       </tr>
     </table>
   </div>
+}
 
-  <!-- Desktop/Tablet List View -->
-  <div *ngIf="isListView" class="hidden sm:flex flex-1 overflow-auto list-container">
+<!-- Desktop/Tablet List View -->
+@if (isListView) {
+  <div class="hidden sm:flex flex-1 overflow-auto list-container">
     <div class="w-full p-4 space-y-3">
       @for (element of dataSource.data; track element?.id) {
-      <div
-        class="list-item list-item-bg border dark:border-slate-800 rounded-lg p-4 hover-effect transition-colors dark:bg-slate-900 dark:hover:bg-slate-800 cursor-pointer"
-        [class.upcoming-transaction]="isUpcoming(element)"
-        [class.opacity-50]="element.syncStatus === 'pending'"
-        [class.grayscale]="element.syncStatus === 'pending'"
-        (click)="onRowClick(element)">
-        <div class="flex items-center justify-between">
-          <!-- Left Section -->
-          <div class="flex items-center space-x-4 flex-1">
-            <!-- Checkbox - Only for tablet portrait and desktop, and not on home page -->
-            <div *ngIf="(breakpointService.device.isTablePortrait || breakpointService.device.isDesktop) && !isHome"
-              class="flex-shrink-0">
-              <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? toggleSelection(element) : null"
-                [checked]="isSelected(element)" class="text-gray-700">
-              </mat-checkbox>
-            </div>
-
-            <!-- Category Icon -->
-            <div class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-slate-800">
-              <mat-icon class="text-lg" [style.color]="getCategoryColor(element.categoryId)">{{
+        <div
+          class="list-item list-item-bg border dark:border-slate-800 rounded-lg p-4 hover-effect transition-colors dark:bg-slate-900 dark:hover:bg-slate-800 cursor-pointer"
+          [class.upcoming-transaction]="isUpcoming(element)"
+          [class.opacity-50]="element.syncStatus === 'pending'"
+          [class.grayscale]="element.syncStatus === 'pending'"
+          (click)="onRowClick(element)">
+          <div class="flex items-center justify-between">
+            <!-- Left Section -->
+            <div class="flex items-center space-x-4 flex-1">
+              <!-- Checkbox - Only for tablet portrait and desktop, and not on home page -->
+              @if ((breakpointService.device.isTablePortrait || breakpointService.device.isDesktop) && !isHome) {
+                <div
+                  class="flex-shrink-0">
+                  <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? toggleSelection(element) : null"
+                    [checked]="isSelected(element)" class="text-gray-700">
+                  </mat-checkbox>
+                </div>
+              }
+              <!-- Category Icon -->
+              <div class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-slate-800">
+                <mat-icon class="text-lg" [style.color]="getCategoryColor(element.categoryId)">{{
                 getCategoryIcon(element?.categoryId) }}</mat-icon>
-            </div>
-
-            <!-- Transaction Details -->
-            <div class="flex-1 min-w-0">
-              <h4 class="font-medium text-gray-900 dark:text-slate-100 text-sm truncate flex items-center">
-                {{getCategoryName(element?.categoryId)}}
-                <mat-icon *ngIf="element.isRecurring" 
-                  class="text-[10px] text-blue-500 ml-1" 
-                  matTooltip="Recurring Transaction">repeat</mat-icon>
-              </h4>
-              <div class="flex items-center space-x-4 mt-1 text-xs text-gray-500 dark:text-slate-500">
-                <span>{{ getDateDisplay(element.date) }}</span>
-                <span class="inline-flex items-center"
-                  [class]="element.type === 'income' ? 'text-green-600' : 'text-red-600'">
-                  <mat-icon class="text-xs mr-1">{{element.type === 'income' ? 'trending_up' :
+              </div>
+              <!-- Transaction Details -->
+              <div class="flex-1 min-w-0">
+                <h4 class="font-medium text-gray-900 dark:text-slate-100 text-sm truncate flex items-center">
+                  {{getCategoryName(element?.categoryId)}}
+                  @if (element.isRecurring) {
+                    <mat-icon
+                      class="text-[10px] text-blue-500 ml-1"
+                    matTooltip="Recurring Transaction">repeat</mat-icon>
+                  }
+                </h4>
+                <div class="flex items-center space-x-4 mt-1 text-xs text-gray-500 dark:text-slate-500">
+                  <span>{{ getDateDisplay(element.date) }}</span>
+                  <span class="inline-flex items-center"
+                    [class]="element.type === 'income' ? 'text-green-600' : 'text-red-600'">
+                    <mat-icon class="text-xs mr-1">{{element.type === 'income' ? 'trending_up' :
                     'trending_down'}}</mat-icon>
-                  {{element.type}}
-                </span>
+                    {{element.type}}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-
-          <!-- Right Section -->
-          <div class="flex items-center space-x-3">
-            <!-- Amount -->
-            <div class="text-right">
-              <div class="font-bold text-sm" [class]="element.type === 'income' ? 'text-green-700' : 'text-red-800'">
-                {{ (element.type == 'income' ? '+' : '-') + (element.amount | currency) }}
+            <!-- Right Section -->
+            <div class="flex items-center space-x-3">
+              <!-- Amount -->
+              <div class="text-right">
+                <div class="font-bold text-sm" [class]="element.type === 'income' ? 'text-green-700' : 'text-red-800'">
+                  {{ (element.type == 'income' ? '+' : '-') + (element.amount | currency) }}
+                </div>
               </div>
-            </div>
-
-            <!-- Actions -->
-            <div class="flex items-center space-x-1">
-              <button *ngIf="canEdit(element)" mat-icon-button class="text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                (click)="$event.stopPropagation(); onStartRowEdit(element)" matTooltip="Edit transaction">
-                <mat-icon class="text-sm">edit</mat-icon>
-              </button>
-              <button *ngIf="canDelete(element)" mat-icon-button class="text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                (click)="$event.stopPropagation(); onDeleteTransaction(element)" matTooltip="Delete transaction">
-                <mat-icon class="text-sm">delete</mat-icon>
-              </button>
-              <span *ngIf="!canEdit(element) && !canDelete(element)" class="text-[10px] text-gray-400 dark:text-gray-500 italic px-2">View only</span>
-              <span *ngIf="!canEdit(element) && canDelete(element) && element.settlementId" class="text-[10px] text-gray-400 dark:text-gray-500 italic px-1">Uneditable settlement</span>
+              <!-- Actions -->
+              <div class="flex items-center space-x-1">
+                @if (canEdit(element)) {
+                  <button mat-icon-button class="text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                    (click)="$event.stopPropagation(); onStartRowEdit(element)" matTooltip="Edit transaction">
+                    <mat-icon class="text-sm">edit</mat-icon>
+                  </button>
+                }
+                @if (canDelete(element)) {
+                  <button mat-icon-button class="text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                    (click)="$event.stopPropagation(); onDeleteTransaction(element)" matTooltip="Delete transaction">
+                    <mat-icon class="text-sm">delete</mat-icon>
+                  </button>
+                }
+                @if (!canEdit(element) && !canDelete(element)) {
+                  <span class="text-[10px] text-gray-400 dark:text-gray-500 italic px-2">View only</span>
+                }
+                @if (!canEdit(element) && canDelete(element) && element.settlementId) {
+                  <span class="text-[10px] text-gray-400 dark:text-gray-500 italic px-1">Uneditable settlement</span>
+                }
+              </div>
             </div>
           </div>
         </div>
-      </div>
       }
     </div>
   </div>
+}
 
-  <!-- Fixed Footer with Totals -->
-  <div class="hidden sm:flex fixed-footer dark:bg-slate-900 dark:border-slate-800 border-t">
-    <div class="footer-content">
-      <!-- Transaction Count -->
-      <div class="transaction-count">
-        <mat-icon>receipt</mat-icon>
-        <span class="count-text">{{ getTransactionCount() }} transactions</span>
+<!-- Fixed Footer with Totals -->
+<div class="hidden sm:flex fixed-footer dark:bg-slate-900 dark:border-slate-800 border-t">
+  <div class="footer-content">
+    <!-- Transaction Count -->
+    <div class="transaction-count">
+      <mat-icon>receipt</mat-icon>
+      <span class="count-text">{{ getTransactionCount() }} transactions</span>
+    </div>
+
+    <!-- Totals Section -->
+    <div class="totals-section">
+      <!-- Income Total -->
+      <div class="total-item">
+        <mat-icon class="income">trending_up</mat-icon>
+        <span class="total-label dark:text-slate-400">Income:</span>
+        <span class="total-value income">{{ getTotalIncome() | currency }}</span>
       </div>
 
-      <!-- Totals Section -->
-      <div class="totals-section">
-        <!-- Income Total -->
-        <div class="total-item">
-          <mat-icon class="income">trending_up</mat-icon>
-          <span class="total-label dark:text-slate-400">Income:</span>
-          <span class="total-value income">{{ getTotalIncome() | currency }}</span>
-        </div>
+      <!-- Expense Total -->
+      <div class="total-item">
+        <mat-icon class="expense">trending_down</mat-icon>
+        <span class="total-label dark:text-slate-400">Expense:</span>
+        <span class="total-value expense">{{ getTotalExpense() | currency }}</span>
+      </div>
 
-        <!-- Expense Total -->
-        <div class="total-item">
-          <mat-icon class="expense">trending_down</mat-icon>
-          <span class="total-label dark:text-slate-400">Expense:</span>
-          <span class="total-value expense">{{ getTotalExpense() | currency }}</span>
-        </div>
-
-        <!-- Net Amount -->
-        <div class="total-item net-separator">
-          <mat-icon>account_balance_wallet</mat-icon>
-          <span class="total-label dark:text-slate-400">Net:</span>
-          <span class="total-value" [class]="getNetAmount() >= 0 ? 'net-positive' : 'net-negative'">
-            {{ (getNetAmount() >= 0 ? '+' : '') + (getNetAmount() | currency) }}
-          </span>
-        </div>
+      <!-- Net Amount -->
+      <div class="total-item net-separator">
+        <mat-icon>account_balance_wallet</mat-icon>
+        <span class="total-label dark:text-slate-400">Net:</span>
+        <span class="total-value" [class]="getNetAmount() >= 0 ? 'net-positive' : 'net-negative'">
+          {{ (getNetAmount() >= 0 ? '+' : '') + (getNetAmount() | currency) }}
+        </span>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Mobile Card View -->
-  <div *ngIf="!isListView" class="sm:hidden flex-1 overflow-auto max-h-full mobile-card-view">
+<!-- Mobile Card View -->
+@if (!isListView) {
+  <div class="sm:hidden flex-1 overflow-auto max-h-full mobile-card-view">
     <div class="p-4 space-y-3">
       @for (element of dataSource.data; track element.id) {
-      <div class="transaction-card dark:bg-slate-900 dark:border-slate-800 dark:border" 
-        [class.upcoming-transaction]="isUpcoming(element)"
-        [class.opacity-50]="element.syncStatus === 'pending'"
-        [class.grayscale]="element.syncStatus === 'pending'"
-        (click)="onRowClick(element)">
-        <!-- Header Row -->
-        <div class="card-header">
-          <div class="left-section">
-            <div class="category-icon">
-              <mat-icon [style.color]="getCategoryColor(element.categoryId)">{{ getCategoryIcon(element.categoryId)
+        <div class="transaction-card dark:bg-slate-900 dark:border-slate-800 dark:border"
+          [class.upcoming-transaction]="isUpcoming(element)"
+          [class.opacity-50]="element.syncStatus === 'pending'"
+          [class.grayscale]="element.syncStatus === 'pending'"
+          (click)="onRowClick(element)">
+          <!-- Header Row -->
+          <div class="card-header">
+            <div class="left-section">
+              <div class="category-icon">
+                <mat-icon [style.color]="getCategoryColor(element.categoryId)">{{ getCategoryIcon(element.categoryId)
                 }}</mat-icon>
-            </div>
-            <div class="transaction-info">
-              <div class="payee-name dark:text-slate-100 flex items-center">
-                {{getCategoryName(element.categoryId)}}
-                <mat-icon *ngIf="element.isRecurring" 
-                  class="text-[10px] text-blue-500 ml-1">repeat</mat-icon>
+              </div>
+              <div class="transaction-info">
+                <div class="payee-name dark:text-slate-100 flex items-center">
+                  {{getCategoryName(element.categoryId)}}
+                  @if (element.isRecurring) {
+                    <mat-icon
+                    class="text-[10px] text-blue-500 ml-1">repeat</mat-icon>
+                  }
+                </div>
               </div>
             </div>
-          </div>
-          <div class="right-section">
-            <div class="amount" [class]="element.type === 'income' ? 'income' : 'expense'">
-              {{ (element.type == 'income' ? '+' : '-') + (element.amount | currency) }}
-            </div>
-            <div class="date dark:text-slate-500">{{ getDateDisplay(element.date) }}</div>
-          </div>
-        </div>
-
-        <!-- Footer Row -->
-        <div class="card-footer dark:border-slate-800">
-          <span class="type-badge" [class]="element.type === 'income' ? 'income' : 'expense'">
-            <mat-icon>{{element.type === 'income' ? 'trending_up' : 'trending_down'}}</mat-icon>
-            {{element.type}}
-          </span>
-
-          <!-- Actions -->
-          <div class="action-buttons flex items-center">
-            <button *ngIf="canEdit(element)" mat-icon-button class="text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-              (click)="$event.stopPropagation(); onStartRowEdit(element)" matTooltip="Edit transaction">
-              <mat-icon>edit</mat-icon>
-            </button>
-            <button *ngIf="canDelete(element)" mat-icon-button class="text-red-600 hover:bg-red-50 rounded-full transition-colors"
-              (click)="$event.stopPropagation(); onDeleteTransaction(element)" matTooltip="Delete transaction">
-              <mat-icon>delete</mat-icon>
-            </button>
-            <span *ngIf="!canEdit(element) && !canDelete(element)" class="text-[10px] text-gray-400 dark:text-gray-500 italic px-2">View only</span>
-            <span *ngIf="!canEdit(element) && canDelete(element) && element.settlementId" class="text-[10px] text-gray-400 dark:text-gray-500 italic px-1">Uneditable settlement</span>
-          </div>
-        </div>
-      </div>
-      }
-    </div>
-  </div>
-
-  <!-- Mobile List View -->
-  <div *ngIf="isListView" class="sm:hidden flex-1 overflow-auto max-h-full mobile-list-view">
-    <div class="p-3 space-y-2">
-      @for (element of dataSource.data; track element.id) {
-      <div
-        class="list-item list-item-bg border dark:border-slate-800 rounded-lg p-3 hover-effect transition-colors dark:bg-slate-900 cursor-pointer"
-        [class.upcoming-transaction]="isUpcoming(element)"
-        [class.opacity-50]="element.syncStatus === 'pending'"
-        [class.grayscale]="element.syncStatus === 'pending'"
-        (click)="onRowClick(element)">
-        <div class="flex items-center space-x-3">
-          <!-- Category Icon -->
-          <div
-            class="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 dark:bg-slate-800 flex-shrink-0">
-            <mat-icon class="text-sm" [style.color]="getCategoryColor(element.categoryId)">{{
-              getCategoryIcon(element.categoryId) }}</mat-icon>
-          </div>
-
-          <!-- Transaction Details -->
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between">
-              <h4 class="font-medium text-gray-900 dark:text-slate-100 text-sm truncate">
-                {{getCategoryName(element.categoryId)}}</h4>
-              <div class="font-bold text-sm ml-2"
-                [class]="element.type === 'income' ? 'text-green-700' : 'text-red-800'">
+            <div class="right-section">
+              <div class="amount" [class]="element.type === 'income' ? 'income' : 'expense'">
                 {{ (element.type == 'income' ? '+' : '-') + (element.amount | currency) }}
               </div>
+              <div class="date dark:text-slate-500">{{ getDateDisplay(element.date) }}</div>
             </div>
-            <div class="flex items-center justify-between mt-1 text-gray-500 dark:text-slate-500">
-              <div class="flex items-center space-x-2 text-xs text-gray-500">
-                <span>{{ getDateDisplay(element.date) }}</span>
-                <span
-                  class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200">
-                  {{getCategoryName(element.categoryId)}}
-                  <mat-icon *ngIf="element.isRecurring" 
-                    class="text-[10px] text-blue-500 ml-1">repeat</mat-icon>
-                </span>
-              </div>
-              <div class="flex items-center space-x-1">
-                <button *ngIf="canEdit(element)" mat-icon-button class="text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+          </div>
+          <!-- Footer Row -->
+          <div class="card-footer dark:border-slate-800">
+            <span class="type-badge" [class]="element.type === 'income' ? 'income' : 'expense'">
+              <mat-icon>{{element.type === 'income' ? 'trending_up' : 'trending_down'}}</mat-icon>
+              {{element.type}}
+            </span>
+            <!-- Actions -->
+            <div class="action-buttons flex items-center">
+              @if (canEdit(element)) {
+                <button mat-icon-button class="text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
                   (click)="$event.stopPropagation(); onStartRowEdit(element)" matTooltip="Edit transaction">
-                  <mat-icon class="text-sm">edit</mat-icon>
+                  <mat-icon>edit</mat-icon>
                 </button>
-                <button *ngIf="canDelete(element)" mat-icon-button class="text-red-600 hover:bg-red-50 rounded-full transition-colors"
+              }
+              @if (canDelete(element)) {
+                <button mat-icon-button class="text-red-600 hover:bg-red-50 rounded-full transition-colors"
                   (click)="$event.stopPropagation(); onDeleteTransaction(element)" matTooltip="Delete transaction">
-                  <mat-icon class="text-sm">delete</mat-icon>
+                  <mat-icon>delete</mat-icon>
                 </button>
-                <span *ngIf="!canEdit(element) && !canDelete(element)" class="text-[10px] text-gray-400 dark:text-gray-500 italic px-1">View only</span>
-                <span *ngIf="!canEdit(element) && canDelete(element) && element.settlementId" class="text-[10px] text-gray-400 dark:text-gray-500 italic px-1">Uneditable settlement</span>
+              }
+              @if (!canEdit(element) && !canDelete(element)) {
+                <span class="text-[10px] text-gray-400 dark:text-gray-500 italic px-2">View only</span>
+              }
+              @if (!canEdit(element) && canDelete(element) && element.settlementId) {
+                <span class="text-[10px] text-gray-400 dark:text-gray-500 italic px-1">Uneditable settlement</span>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<!-- Mobile List View -->
+@if (isListView) {
+  <div class="sm:hidden flex-1 overflow-auto max-h-full mobile-list-view">
+    <div class="p-3 space-y-2">
+      @for (element of dataSource.data; track element.id) {
+        <div
+          class="list-item list-item-bg border dark:border-slate-800 rounded-lg p-3 hover-effect transition-colors dark:bg-slate-900 cursor-pointer"
+          [class.upcoming-transaction]="isUpcoming(element)"
+          [class.opacity-50]="element.syncStatus === 'pending'"
+          [class.grayscale]="element.syncStatus === 'pending'"
+          (click)="onRowClick(element)">
+          <div class="flex items-center space-x-3">
+            <!-- Category Icon -->
+            <div
+              class="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 dark:bg-slate-800 flex-shrink-0">
+              <mat-icon class="text-sm" [style.color]="getCategoryColor(element.categoryId)">{{
+              getCategoryIcon(element.categoryId) }}</mat-icon>
+            </div>
+            <!-- Transaction Details -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <h4 class="font-medium text-gray-900 dark:text-slate-100 text-sm truncate">
+                {{getCategoryName(element.categoryId)}}</h4>
+                <div class="font-bold text-sm ml-2"
+                  [class]="element.type === 'income' ? 'text-green-700' : 'text-red-800'">
+                  {{ (element.type == 'income' ? '+' : '-') + (element.amount | currency) }}
+                </div>
+              </div>
+              <div class="flex items-center justify-between mt-1 text-gray-500 dark:text-slate-500">
+                <div class="flex items-center space-x-2 text-xs text-gray-500">
+                  <span>{{ getDateDisplay(element.date) }}</span>
+                  <span
+                    class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200">
+                    {{getCategoryName(element.categoryId)}}
+                    @if (element.isRecurring) {
+                      <mat-icon
+                      class="text-[10px] text-blue-500 ml-1">repeat</mat-icon>
+                    }
+                  </span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  @if (canEdit(element)) {
+                    <button mat-icon-button class="text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                      (click)="$event.stopPropagation(); onStartRowEdit(element)" matTooltip="Edit transaction">
+                      <mat-icon class="text-sm">edit</mat-icon>
+                    </button>
+                  }
+                  @if (canDelete(element)) {
+                    <button mat-icon-button class="text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                      (click)="$event.stopPropagation(); onDeleteTransaction(element)" matTooltip="Delete transaction">
+                      <mat-icon class="text-sm">delete</mat-icon>
+                    </button>
+                  }
+                  @if (!canEdit(element) && !canDelete(element)) {
+                    <span class="text-[10px] text-gray-400 dark:text-gray-500 italic px-1">View only</span>
+                  }
+                  @if (!canEdit(element) && canDelete(element) && element.settlementId) {
+                    <span class="text-[10px] text-gray-400 dark:text-gray-500 italic px-1">Uneditable settlement</span>
+                  }
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
       }
     </div>
   </div>
+}
 
-  <!-- Mobile Footer with Totals -->
-  <div class="sm:hidden fixed-footer dark:bg-slate-900 dark:border-slate-800 border-t">
-    <div class="footer-content">
-      <!-- Transaction Count -->
-      <div class="transaction-count">
-        <mat-icon>receipt</mat-icon>
-        <span>{{ getTransactionCount() }} transactions</span>
+<!-- Mobile Footer with Totals -->
+<div class="sm:hidden fixed-footer dark:bg-slate-900 dark:border-slate-800 border-t">
+  <div class="footer-content">
+    <!-- Transaction Count -->
+    <div class="transaction-count">
+      <mat-icon>receipt</mat-icon>
+      <span>{{ getTransactionCount() }} transactions</span>
+    </div>
+
+    <!-- Totals Section -->
+    <div class="totals-section">
+      <!-- Income Total -->
+      <div class="total-item">
+        <mat-icon class="income">trending_up</mat-icon>
+        <span class="total-label dark:text-slate-400">Income:</span>
+        <span class="total-value income">{{ getTotalIncome() | currency }}</span>
       </div>
 
-      <!-- Totals Section -->
-      <div class="totals-section">
-        <!-- Income Total -->
-        <div class="total-item">
-          <mat-icon class="income">trending_up</mat-icon>
-          <span class="total-label dark:text-slate-400">Income:</span>
-          <span class="total-value income">{{ getTotalIncome() | currency }}</span>
-        </div>
+      <!-- Expense Total -->
+      <div class="total-item">
+        <mat-icon class="expense">trending_down</mat-icon>
+        <span class="total-label dark:text-slate-400">Expense:</span>
+        <span class="total-value expense">{{ getTotalExpense() | currency }}</span>
+      </div>
 
-        <!-- Expense Total -->
-        <div class="total-item">
-          <mat-icon class="expense">trending_down</mat-icon>
-          <span class="total-label dark:text-slate-400">Expense:</span>
-          <span class="total-value expense">{{ getTotalExpense() | currency }}</span>
-        </div>
-
-        <!-- Net Amount -->
-        <div class="total-item net-separator">
-          <mat-icon>account_balance_wallet</mat-icon>
-          <span class="total-label dark:text-slate-400">Net:</span>
-          <span class="total-value" [class]="getNetAmount() >= 0 ? 'net-positive' : 'net-negative'">
-            {{ (getNetAmount() >= 0 ? '+' : '') + (getNetAmount() | currency) }}
-          </span>
-        </div>
+      <!-- Net Amount -->
+      <div class="total-item net-separator">
+        <mat-icon>account_balance_wallet</mat-icon>
+        <span class="total-label dark:text-slate-400">Net:</span>
+        <span class="total-value" [class]="getNetAmount() >= 0 ? 'net-positive' : 'net-negative'">
+          {{ (getNetAmount() >= 0 ? '+' : '') + (getNetAmount() | currency) }}
+        </span>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Empty State -->
-  <div *ngIf="!dataSource.data?.length" class="text-center py-8 md:py-12 px-4">
+<!-- Empty State -->
+@if (!dataSource.data.length) {
+  <div class="text-center py-8 md:py-12 px-4">
     <mat-icon class="text-gray-400 dark:text-slate-600 text-4xl md:text-6xl mb-4">receipt_long</mat-icon>
     <h3 class="text-base md:text-lg font-medium text-gray-900 dark:text-slate-100 mb-2">No transactions for {{
-      getCurrentYear() }}</h3>
+    getCurrentYear() }}</h3>
     <p class="text-gray-500 dark:text-slate-400 mb-4 text-sm md:text-base">No transactions found for the current year.
       Start by adding your
-      first transaction to track your finances.</p>
+    first transaction to track your finances.</p>
     <button mat-flat-button color="primary" class="flex items-center space-x-2 mx-auto text-sm md:text-base"
       (click)="onAddTransaction()">
       <mat-icon class="text-primary-50">add</mat-icon>
       <span class="text-primary-50">Add Transaction</span>
     </button>
   </div>
+}
 </div>

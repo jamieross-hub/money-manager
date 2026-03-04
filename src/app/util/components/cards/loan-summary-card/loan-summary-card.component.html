@@ -37,101 +37,97 @@
 
 
   <!-- Individual Loans Section -->
-  <div class="loans-section" *ngIf="loans().length > 0 && isExpanded()">
-
-    <!-- Section Header -->
-    <div class="loans-header">
-      <span class="loans-title">
-        <mat-icon class="loans-title-icon">credit_card</mat-icon>
-        Loans
-        <span class="loan-count">{{ loans().length }}</span>
-      </span>
-    </div>
-
-    <!-- Loan Tabs (only when >1) -->
-    <div class="loan-tabs" *ngIf="loans().length > 1">
-      <button
-        *ngFor="let item of summary().items; let i = index"
-        class="loan-tab"
-        [ngClass]="{ active: selectedLoanIndex() === i }"
-        (click)="selectLoan(i)">
-        {{ item.name }}
-      </button>
-    </div>
-
-    <!-- Per-Loan Cards -->
-    <div class="loan-cards-grid">
-      <ng-container *ngFor="let item of summary().items; let i = index">
-        <div
-          class="loan-card"
+  @if (loans().length > 0 && isExpanded()) {
+    <div class="loans-section">
+      <!-- Section Header -->
+      <div class="loans-header">
+        <span class="loans-title">
+          <mat-icon class="loans-title-icon">credit_card</mat-icon>
+          Loans
+          <span class="loan-count">{{ loans().length }}</span>
+        </span>
+      </div>
+      <!-- Loan Tabs (only when >1) -->
+      @if (loans().length > 1) {
+        <div class="loan-tabs">
+          @for (item of summary().items; track item; let i = $index) {
+            <button
+              class="loan-tab"
+              [ngClass]="{ active: selectedLoanIndex() === i }"
+              (click)="selectLoan(i)">
+              {{ item.name }}
+            </button>
+          }
+        </div>
+      }
+      <!-- Per-Loan Cards -->
+      <div class="loan-cards-grid">
+        @for (item of summary().items; track item; let i = $index) {
+          <div
+            class="loan-card"
           [ngClass]="{
             'single': loans().length === 1,
             'hidden-card': loans().length > 1 && selectedLoanIndex() !== i,
             'status-closed': item.status === 'closed',
             'status-defaulted': item.status === 'defaulted'
           }">
-
-          <!-- Loan Card Header -->
-          <div class="loan-card-header">
-            <div class="loan-name-row">
-              <div class="loan-icon-wrap">
-                <mat-icon>account_balance</mat-icon>
+            <!-- Loan Card Header -->
+            <div class="loan-card-header">
+              <div class="loan-name-row">
+                <div class="loan-icon-wrap">
+                  <mat-icon>account_balance</mat-icon>
+                </div>
+                <div>
+                  <p class="loan-name">{{ item.name }}</p>
+                  <p class="loan-lender">{{ item.lender }}</p>
+                </div>
               </div>
-              <div>
-                <p class="loan-name">{{ item.name }}</p>
-                <p class="loan-lender">{{ item.lender }}</p>
+              <div class="loan-status-badge" [ngClass]="'badge-' + item.status">
+                {{ item.status }}
               </div>
             </div>
-            <div class="loan-status-badge" [ngClass]="'badge-' + item.status">
-              {{ item.status }}
+            <!-- Progress -->
+            <div class="loan-progress-wrap">
+              <div class="loan-progress-bar-bg">
+                <div class="loan-progress-bar-fill" [style.width.%]="item.paidPct"></div>
+              </div>
+              <div class="loan-progress-labels">
+                <span class="loan-pct-label">{{ item.paidPct }}% paid</span>
+                <span class="loan-mo-label">{{ item.moLeft }} mo left</span>
+              </div>
+            </div>
+            <!-- Amount Row -->
+            <div class="loan-amounts-row">
+              <div class="loan-amount-item">
+                <p class="loan-amount-value">{{ item.remaining | currency:{compact:true ,round:true} }}</p>
+                <p class="loan-amount-label">Remaining</p>
+              </div>
+              <div class="loan-amount-divider"></div>
+              <div class="loan-amount-item">
+                <p class="loan-amount-value">{{ item.paid | currency:{compact:true} }}</p>
+                <p class="loan-amount-label">Paid</p>
+              </div>
+              <div class="loan-amount-divider"></div>
+              <div class="loan-amount-item">
+                <p class="loan-amount-value">{{ item.monthly | currency:{compact:true } }}</p>
+                <p class="loan-amount-label">Monthly</p>
+              </div>
+            </div>
+            <!-- Footer -->
+            <div class="loan-card-footer">
+              <div class="loan-footer-item">
+                <mat-icon class="footer-icon">percent</mat-icon>
+                <span>{{ item.interestRate }} p.a.</span>
+              </div>
+              <div class="loan-footer-item">
+                <mat-icon class="footer-icon">flag</mat-icon>
+                <span>Ends {{ item.endYear }}</span>
+              </div>
             </div>
           </div>
-
-          <!-- Progress -->
-          <div class="loan-progress-wrap">
-            <div class="loan-progress-bar-bg">
-              <div class="loan-progress-bar-fill" [style.width.%]="item.paidPct"></div>
-            </div>
-            <div class="loan-progress-labels">
-              <span class="loan-pct-label">{{ item.paidPct }}% paid</span>
-              <span class="loan-mo-label">{{ item.moLeft }} mo left</span>
-            </div>
-          </div>
-
-          <!-- Amount Row -->
-          <div class="loan-amounts-row">
-            <div class="loan-amount-item">
-              <p class="loan-amount-value">{{ item.remaining | currency:{compact:true ,round:true} }}</p>
-              <p class="loan-amount-label">Remaining</p>
-            </div>
-            <div class="loan-amount-divider"></div>
-            <div class="loan-amount-item">
-              <p class="loan-amount-value">{{ item.paid | currency:{compact:true} }}</p>
-              <p class="loan-amount-label">Paid</p>
-            </div>
-            <div class="loan-amount-divider"></div>
-            <div class="loan-amount-item">
-              <p class="loan-amount-value">{{ item.monthly | currency:{compact:true } }}</p>
-              <p class="loan-amount-label">Monthly</p>
-            </div>
-          </div>
-
-          <!-- Footer -->
-          <div class="loan-card-footer">
-            <div class="loan-footer-item">
-              <mat-icon class="footer-icon">percent</mat-icon>
-              <span>{{ item.interestRate }} p.a.</span>
-            </div>
-            <div class="loan-footer-item">
-              <mat-icon class="footer-icon">flag</mat-icon>
-              <span>Ends {{ item.endYear }}</span>
-            </div>
-          </div>
-
-        </div>
-      </ng-container>
+        }
+      </div>
     </div>
-
-  </div>
+  }
 
 </div>

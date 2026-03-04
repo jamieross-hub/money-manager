@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -22,7 +22,6 @@ export interface CustomDateRangeData {
   styleUrls: ['./custom-date-range-dialog.component.scss'],
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     MatDatepickerModule,
     MatFormFieldModule,
@@ -31,7 +30,7 @@ export interface CustomDateRangeData {
     MatDialogModule,
     MatIconModule,
     MatTooltipModule
-  ],
+],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CustomDateRangeDialogComponent implements OnInit {

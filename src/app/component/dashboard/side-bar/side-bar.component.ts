@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { TranslateModule } from '@ngx-translate/core';
 import { SidebarNavParent, getAllNavigationItems } from '../../../util/config/sidebar.config';
 import { UserService } from 'src/app/util/service/db/user.service';
@@ -25,14 +25,13 @@ import { selectIsFamilyMode } from 'src/app/store/profile/profile.selectors';
   styleUrl: './side-bar.component.scss',
   standalone: true,
   imports: [
-    CommonModule,
     MatSidenavModule,
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,
     RouterModule,
     TranslateModule
-  ],
+],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SideBarComponent implements AfterViewInit, OnDestroy {
