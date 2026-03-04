@@ -556,42 +556,37 @@ app-chat {
 //   height: 100vh;
 //   display: block;
 // }
-/* View Transitions API - Modern Snappy Slide & Fade (Main Content Only) */
+/* View Transitions API - Simplified Slide & Fade (Main Content Only) */
 ::view-transition-old(main-content) {
-  animation: 150ms cubic-bezier(0.4, 0, 1, 1) both fade-out,
-             150ms cubic-bezier(0.4, 0, 0.2, 1) both slide-to-left;
+  animation: 50ms ease-in both slide-out;
 }
 
 ::view-transition-new(main-content) {
-  animation: 150ms cubic-bezier(0, 0, 0.2, 1) 50ms both fade-in,
-             150ms cubic-bezier(0.4, 0, 0.2, 1) both slide-from-right;
+  animation: 50ms ease-out both slide-in;
 }
 
 /* Ensure Footer stays static */
 ::view-transition-old(dashboard-footer),
 ::view-transition-new(dashboard-footer) {
   animation: none;
-  mix-blend-mode: normal;
 }
 
-@keyframes fade-in {
-  from { opacity: 0; }
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
 }
 
-@keyframes fade-out {
-  to { opacity: 0; }
-}
-
-@keyframes slide-from-right {
-  from { transform: translateX(30px); }
-}
-
-@keyframes slide-to-left {
-  to { transform: translateX(-30px); }
+@keyframes slide-out {
+  to {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
 }
 
 /* Optimize for performance */
 ::view-transition-group(main-content) {
-  animation-duration: 150ms;
+  animation-duration: 50ms;
   will-change: transform, opacity;
 }

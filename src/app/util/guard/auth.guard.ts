@@ -1,9 +1,10 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 import { Auth, authState } from '@angular/fire/auth';
-import { map, take } from 'rxjs/operators';
+import { map, take, finalize } from 'rxjs/operators';
 import { UserService } from '../service/db/user.service';
 import { UserRole } from '../models/user.model';
+import { LoaderService } from '../service/loader.service';
 
 /**
  * Functional AuthGuard for minimalist routing protection.
@@ -13,6 +14,7 @@ export const authGuard: CanActivateFn = (route, state) => {
   const auth = inject(Auth);
   const router = inject(Router);
   const userService = inject(UserService);
+  const loaderService = inject(LoaderService);
 
   // 1. Check for valid roles requirement
   const hasRolePermission = (): boolean => {
@@ -31,6 +33,7 @@ export const authGuard: CanActivateFn = (route, state) => {
   }
 
   // 3. SLOW PATH: Wait for Firebase Auth initialization
+  loaderService.show();
   return authState(auth).pipe(
     take(1),
     map(user => {
@@ -44,6 +47,7 @@ export const authGuard: CanActivateFn = (route, state) => {
       return router.createUrlTree(['/sign-in'], { 
         queryParams: { redirect: state.url } 
       });
-    })
+    }),
+    finalize(() => loaderService.hide())
   );
 };

@@ -10,7 +10,7 @@
 			<button (click)="home()" class="group flex flex-col items-center gap-2 lg:gap-1">
 				<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
 					[ngClass]="isFamilyActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
-					<mat-icon class="text-lg lg:text-base relative bottom-1"
+					<mat-icon class="text-xl lg:text-base relative bottom-1"
 						[ngClass]="isFamilyActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">family_restroom</mat-icon>
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
@@ -20,7 +20,7 @@
 			<button (click)="home()" class="group flex flex-col items-center gap-2 lg:gap-1">
 				<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
 					[ngClass]="isHomeActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
-					<mat-icon class="text-lg lg:text-base relative bottom-1"
+					<mat-icon class="text-xl lg:text-base relative bottom-1"
 						[ngClass]="isHomeActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">home</mat-icon>
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
@@ -34,7 +34,7 @@
 			<button (click)="quickExpense()" class="group flex flex-col items-center gap-2 lg:gap-1">
 				<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
 					[ngClass]="isExpenseActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
-					<mat-icon class="text-lg lg:text-base relative bottom-1"
+					<mat-icon class="text-xl lg:text-base relative bottom-1"
 						[ngClass]="isExpenseActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">trending_up</mat-icon>
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
@@ -47,7 +47,7 @@
 			<button (click)="onAddFabClick()" class="group flex flex-col items-center gap-2 lg:gap-1">
 				<div class="add-button-box w-12 h-12 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center shadow-md hover:scale-105 hover:shadow-lg transition-transform transition-colors duration-200"
 					[ngClass]="addConfig().bgClass" [class.glow-animation]="addConfig().label !== 'Add'">
-					<mat-icon class="text-white text-lg lg:text-base relative bottom-1">{{ addConfig().icon
+					<mat-icon class="text-white text-xl lg:text-base relative bottom-1">{{ addConfig().icon
 						}}</mat-icon>
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium add-label dark:text-slate-300">{{ addConfig().label
@@ -62,7 +62,7 @@
 				class="group flex flex-col items-center gap-2 lg:gap-1" *ngIf="isMobile()">
 				<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
 					[ngClass]="isSettleActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
-					<mat-icon class="text-lg lg:text-base relative bottom-1"
+					<mat-icon class="text-xl lg:text-base relative bottom-1"
 						[ngClass]="isSettleActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">handshake</mat-icon>
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
@@ -74,7 +74,7 @@
 				*ngIf="isMobile()">
 				<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
 					[ngClass]="isSummaryActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
-					<mat-icon class="text-lg lg:text-base relative bottom-1"
+					<mat-icon class="text-xl lg:text-base relative bottom-1"
 						[ngClass]="isSummaryActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">assessment</mat-icon>
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
@@ -89,7 +89,7 @@
 				*ngIf="!isMobile()">
 				<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
 					[ngClass]="isCategoryActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
-					<mat-icon class="text-lg lg:text-base relative bottom-1"
+					<mat-icon class="text-xl lg:text-base relative bottom-1"
 						[ngClass]="isCategoryActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">layers</mat-icon>
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
@@ -115,7 +115,7 @@
 				*ngIf="!isMobile()">
 				<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
 					[ngClass]="isAccountsActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
-					<mat-icon class="text-lg lg:text-base relative bottom-1"
+					<mat-icon class="text-xl lg:text-base relative bottom-1"
 						[ngClass]="isAccountsActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">account_balance</mat-icon>
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
@@ -127,7 +127,7 @@
 				*ngIf="isMobile()">
 				<div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
 					[ngClass]="isProfileActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
-					<mat-icon class="text-lg lg:text-base relative bottom-1"
+					<mat-icon class="text-xl lg:text-base relative bottom-1"
 						[ngClass]="isProfileActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">person</mat-icon>
 				</div>
 				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
