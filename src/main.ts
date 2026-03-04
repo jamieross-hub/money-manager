@@ -1,8 +1,7 @@
-import { provideZoneChangeDetection } from "@angular/core";
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-
-import { AppModule } from './app/app.module';
 import { LocalIndexDBStorageService } from './app/util/service/indexdb-storage.service';
+import { bootstrapApplication } from '@angular/platform-browser';
+import { AppComponent } from './app/app.component';
+import { appConfig } from './app/app.config';
 
 // PWA Navigation and Service Worker initialization
 function initializePwaFeatures() {
@@ -195,7 +194,7 @@ async function clearApplicationCaches(): Promise<void> {
 }
 
 // Bootstrap app immediately for fastest startup
-platformBrowserDynamic().bootstrapModule(AppModule, { applicationProviders: [provideZoneChangeDetection({ eventCoalescing: true })], })
+bootstrapApplication(AppComponent, appConfig)
   .then(() => {
     console.log('✅ App bootstrapped successfully');
 

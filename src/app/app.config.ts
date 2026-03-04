@@ -1,119 +1,51 @@
-import { NgModule, isDevMode, APP_INITIALIZER } from '@angular/core';
-import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
-
-import { AppRoutingModule, routes } from './app-routing.module';
-import { AppComponent } from './app.component';
+import { ApplicationConfig, isDevMode, APP_INITIALIZER, provideZoneChangeDetection, importProvidersFrom } from '@angular/core';
+import { provideRouter, withViewTransitions, withHashLocation, withPreloading, PreloadAllModules } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { provideHttpClient, withInterceptors, HttpClient } from '@angular/common/http';
-import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
-import { TranslateHttpLoader, provideTranslateHttpLoader } from '@ngx-translate/http-loader';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { CommonModule } from '@angular/common';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideClientHydration } from '@angular/platform-browser';
 import { provideNativeDateAdapter } from '@angular/material/core';
+import { ServiceWorkerModule } from '@angular/service-worker';
 
-
-// LocalStorageService Factory
-export function initializeLocalStorage(localStorageService: LocalIndexDBStorageService) {
-  return () => localStorageService.initialize();
-}
-
-
-// Firebase Imports
+import { routes } from './app-routing.module';
 import { environment } from '@env/environment';
+import { securityInterceptor } from './util/interceptors/security.interceptor';
+
+// Firebase
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideAuth, getAuth, indexedDBLocalPersistence } from '@angular/fire/auth';
 import { provideFirestore, getFirestore, enableMultiTabIndexedDbPersistence } from '@angular/fire/firestore';
 import { provideMessaging, getMessaging } from '@angular/fire/messaging';
 import { provideAnalytics, getAnalytics, UserTrackingService, ScreenTrackingService, setAnalyticsCollectionEnabled } from '@angular/fire/analytics';
 
-
-// Service Worker
-import { ServiceWorkerModule } from '@angular/service-worker';
-
-// Utility Modules
-import { IconModule } from './util/icon.module';
-
-// Directives
-// Directives
-
-// Components
-
-
-// Card Components
-
-// Common Sync Service (replaces BackgroundSyncService)
-import { CommonSyncService } from './util/service/common-sync.service';
+// Services
 import { LocalIndexDBStorageService } from './util/service/indexdb-storage.service';
-
-
-// NgRx Store
-import { AppStoreModule } from './store';
-
-// Security
-import { securityInterceptor } from './util/interceptors/security.interceptor';
-import { RouterModule, provideRouter, withViewTransitions, withHashLocation, withPreloading, PreloadAllModules } from '@angular/router';
-import { CurrencyPipe } from './util/pipes';
-import { OfflineIndicatorComponent } from './util/components/offline-indicator/offline-indicator.component';
-import { PwaInstallPromptComponent } from './util/components/pwa-install-prompt/pwa-install-prompt.component';
-import { LoaderComponent } from './util/components/loader/loader.component';
-import { PinLockComponent } from './util/components/pin-lock/pin-lock.component';
-import { TransactionsService } from './util/service/db/transactions.service';
+import { CommonSyncService } from './util/service/common-sync.service';
 import { FamilyTransactionsService } from './util/service/db/family-transactions.service';
 import { TransactionsFacadeService, PERSONAL_TRANSACTIONS_SERVICE } from './util/service/db/transactions-facade.service';
-import { AccountsService } from './util/service/db/accounts.service';
+import { TransactionsService } from './util/service/db/transactions.service';
 import { FamilyAccountsService } from './util/service/db/family-accounts.service';
 import { AccountsFacadeService, PERSONAL_ACCOUNTS_SERVICE } from './util/service/db/accounts-facade.service';
-import { CategoryService } from './util/service/db/category.service';
+import { AccountsService } from './util/service/db/accounts.service';
 import { FamilyCategoryService } from './util/service/db/family-category.service';
 import { CategoryFacadeService, PERSONAL_CATEGORY_SERVICE } from './util/service/db/category-facade.service';
+import { CategoryService } from './util/service/db/category.service';
 
+import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
+import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
+import { HttpClient } from '@angular/common/http';
 
+// Store
+import { AppStoreModule } from './store';
 
-@NgModule({
-  declarations: [AppComponent],
-  imports: [
-    BrowserModule,
-    // Removal of AppRoutingModule from imports
-    BrowserAnimationsModule,
+export function initializeLocalStorage(localStorageService: LocalIndexDBStorageService) {
+  return () => localStorageService.initialize();
+}
 
-    // Utility
-    IconModule,
-    MatIconModule,
-    MatButtonModule,
-    CommonModule,
-    // TranslatePipe,
-    CurrencyPipe,
-
-
-
-    // NgRx Store
-    AppStoreModule,
-    OfflineIndicatorComponent,
-    PwaInstallPromptComponent,
-    LoaderComponent,
-    PinLockComponent,
-
-
-
-    // Enhanced Service Worker with offline support and Firebase cloud messaging
-    ServiceWorkerModule.register('ngsw-worker.js', {
-      enabled: !isDevMode(),
-      registrationStrategy: 'registerWhenStable:3000',
-      scope: './'
-    }),
-    TranslateModule.forRoot({
-      loader: {
-        provide: TranslateLoader,
-        useClass: TranslateHttpLoader
-      }
-    }),
-    RouterModule,
-  ],
+export const appConfig: ApplicationConfig = {
   providers: [
+    provideZoneChangeDetection({ eventCoalescing: true }),
     provideAnimationsAsync(),
-    provideRouter(routes, 
+    provideRouter(routes,
       withViewTransitions({
         skipInitialTransition: true
       }),
@@ -123,6 +55,22 @@ import { CategoryFacadeService, PERSONAL_CATEGORY_SERVICE } from './util/service
     provideNativeDateAdapter(),
     provideHttpClient(withInterceptors([securityInterceptor])),
     provideClientHydration(),
+    importProvidersFrom(ServiceWorkerModule.register('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:3000'
+    })),
+    
+    // Store
+    importProvidersFrom(AppStoreModule),
+
+    // Translation
+    importProvidersFrom(TranslateModule.forRoot()),
+    provideTranslateHttpLoader({
+      prefix: './assets/i18n/',
+      suffix: '.json'
+    }),
+
+    // Services
     CommonSyncService,
     LocalIndexDBStorageService,
     {
@@ -132,7 +80,7 @@ import { CategoryFacadeService, PERSONAL_CATEGORY_SERVICE } from './util/service
       multi: true
     },
 
-    // Firebase Initialization
+    // Firebase
     provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
     provideAnalytics(() => {
       const analytics = getAnalytics();
@@ -144,7 +92,6 @@ import { CategoryFacadeService, PERSONAL_CATEGORY_SERVICE } from './util/service
     UserTrackingService,
     ScreenTrackingService,
 
-    // Auth with IndexedDB Persistence
     provideAuth(() => {
       const auth = getAuth();
       auth.setPersistence(indexedDBLocalPersistence)
@@ -153,10 +100,8 @@ import { CategoryFacadeService, PERSONAL_CATEGORY_SERVICE } from './util/service
       return auth;
     }),
 
-    // Firestore with IndexedDB Persistence (Improved)
     provideFirestore(() => {
       const firestore = getFirestore();
-
       enableMultiTabIndexedDbPersistence(firestore).then(() => {
         console.log("✅ Firestore multi-tab persistence enabled");
       }).catch((err) => {
@@ -166,13 +111,10 @@ import { CategoryFacadeService, PERSONAL_CATEGORY_SERVICE } from './util/service
           console.warn("⚠️ IndexedDB persistence not supported. Falling back to cache.");
         }
       });
-
       return firestore;
     }),
 
-    // Firebase Cloud Messaging (Browser-only)
     provideMessaging(() => {
-      // Only initialize messaging in browser context
       if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
         try {
           const messaging = getMessaging();
@@ -183,9 +125,10 @@ import { CategoryFacadeService, PERSONAL_CATEGORY_SERVICE } from './util/service
           return null as any;
         }
       }
-      return null as any; // Return null on server
+      return null as any;
     }),
-    // Transaction Services
+
+    // Transaction/Account/Category Services
     FamilyTransactionsService,
     TransactionsFacadeService,
     {
@@ -217,13 +160,6 @@ import { CategoryFacadeService, PERSONAL_CATEGORY_SERVICE } from './util/service
     {
       provide: CategoryService,
       useExisting: CategoryFacadeService
-    },
-    provideTranslateHttpLoader({
-      prefix: './assets/i18n/',
-      suffix: '.json'
-    }),
-  ],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }
-
+    }
+  ]
+};

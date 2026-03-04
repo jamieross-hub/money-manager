@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, isDevMode } from '@angular/core';
 import { ThemeSwitchingService } from './util/service/theme-switching.service';
-import { Location } from '@angular/common';
+import { Location, CommonModule } from '@angular/common';
 import { LoaderService } from './util/service/loader.service';
 import { PwaNavigationService, NavigationState } from './util/service/pwa-navigation.service';
 import { CommonSyncService } from './util/service/common-sync.service';
@@ -14,20 +14,30 @@ import { LocalStorageKey } from './util/models/local-storage.model';
 import { UserTrackingService, ScreenTrackingService, Analytics, logEvent } from '@angular/fire/analytics';
 import { UserService } from './util/service/db/user.service';
 import { SecurityService } from './util/service/security.service';
-import { ActivatedRoute, NavigationEnd, NavigationStart, Router } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, NavigationStart, Router, RouterModule } from '@angular/router';
 import { SwUpdate } from '@angular/service-worker';
 import { MatDialog } from '@angular/material/dialog';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { OverlayContainer } from '@angular/cdk/overlay';
 import { MobileBackButtonService } from './util/service/mobile-back-button.service';
 import { FamilyNotificationService } from './modules/family/services/family-notification.service';
+import { PwaInstallPromptComponent } from './util/components/pwa-install-prompt/pwa-install-prompt.component';
+import { LoaderComponent } from './util/components/loader/loader.component';
+import { PinLockComponent } from './util/components/pin-lock/pin-lock.component';
 
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
-  standalone: false,
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    PwaInstallPromptComponent,
+    LoaderComponent,
+    PinLockComponent
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent implements OnInit, OnDestroy {
