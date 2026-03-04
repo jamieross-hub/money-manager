@@ -574,13 +574,13 @@ app-chat {
 //   height: 100vh;
 //   display: block;
 // }
-/* View Transitions API - Simplified Slide & Fade (Main Content Only) */
+/* View Transitions API - Simple Fade (Main Content Only) */
 ::view-transition-old(main-content) {
-  animation: 50ms ease-in both slide-out;
+  animation: 50ms ease-out both fade-out;
 }
 
 ::view-transition-new(main-content) {
-  animation: 50ms ease-out both slide-in;
+  animation: 50ms ease-in both fade-in;
 }
 
 /* Ensure Footer stays static */
@@ -589,22 +589,16 @@ app-chat {
   animation: none;
 }
 
-@keyframes slide-in {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
+@keyframes fade-in {
+  from { opacity: 0; }
 }
 
-@keyframes slide-out {
-  to {
-    opacity: 0;
-    transform: translateX(-30px);
-  }
+@keyframes fade-out {
+  to { opacity: 0; }
 }
 
 /* Optimize for performance */
 ::view-transition-group(main-content) {
   animation-duration: 50ms;
-  will-change: transform, opacity;
+  will-change: opacity;
 }

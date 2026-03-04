@@ -570,6 +570,14 @@ export class MobileTransactionListComponent
   ) {
     // Watch for Input changes and hook into filterService
     // Effect removed because the parent TransactionListComponent already calls filterService.setIsRecurring() directly.
+
+    // React to theme changes (e.g., for charts)
+    effect(() => {
+      this.themeService.currentTheme();
+      // if (this.showChart) {
+      //   this.renderChart();
+      // }
+    });
   }
 
   ngOnInit() {
@@ -599,14 +607,6 @@ export class MobileTransactionListComponent
         }
       })
     );
-
-    // React to theme changes (e.g., for charts)
-    effect(() => {
-      this.themeService.currentTheme();
-      // if (this.showChart) {
-      //   this.renderChart();
-      // }
-    });
   }
 
   ngOnDestroy() {
