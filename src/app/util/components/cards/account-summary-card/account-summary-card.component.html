@@ -43,7 +43,7 @@
           <div class="breakdown-label dark:text-slate-300">Assets</div>
           <div class="breakdown-subtitle text-xs dark:text-slate-400">{{ positiveAccounts().length }} accounts</div>
         </div>
-        <div class="mt-1 font-medium text-green-600 dark:text-green-400" aria-label="Assets total">{{
+        <div class="mt-0 font-semibold text-green-600 dark:text-green-400" aria-label="Assets total">{{
           totalPositiveBalance() | currency:{round:true}
           }}</div>
       </div>
@@ -59,7 +59,7 @@
           <div class="breakdown-label dark:text-slate-300">Liabilities</div>
           <div class="breakdown-subtitle text-xs dark:text-slate-400">{{ negativeAccounts().length }} accounts</div>
         </div>
-        <div class="mt-1 font-medium text-red-500 dark:text-red-400" aria-label="Liabilities total">{{
+        <div class="mt-0 font-semibold text-red-500 dark:text-red-400" aria-label="Liabilities total">{{
           totalNegativeBalance() |
           currency:{round:true} }}</div>
       </div>

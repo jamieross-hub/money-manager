@@ -14,9 +14,9 @@
 			<div>
 				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category Name *</label>
 				<div class="relative">
-					<mat-icon class="absolute left-3 top-3 transform -translate-y-1/2 text-gray-400">label</mat-icon>
+					<!-- <mat-icon class="absolute left-3 top-3 transform -translate-y-1/2 text-gray-400">label</mat-icon> -->
 					<input type="text" formControlName="name" autofocus placeholder="e.g., Groceries" 
-						class="w-full py-3 px-4 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+						class="w-full py-3 px-4  border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
 				</div>
 				<div class="flex justify-between items-center mt-1">
 					@if(getNameError() && categoryForm.get('name')?.touched) {

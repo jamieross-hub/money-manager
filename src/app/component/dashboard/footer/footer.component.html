@@ -47,7 +47,7 @@
 			<button (click)="onAddFabClick()" class="group flex flex-col items-center gap-2 lg:gap-1">
 				<div class="add-button-box w-12 h-12 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center shadow-md hover:scale-105 hover:shadow-lg transition-transform transition-colors duration-200"
 					[ngClass]="addConfig().bgClass" [class.glow-animation]="addConfig().label !== 'Add'">
-					<mat-icon class="text-white text-xl lg:text-base relative bottom-1">{{ addConfig().icon
+					<mat-icon class="text-white text-lg lg:text-base relative bottom-1">{{ addConfig().icon
 						}}</mat-icon>
 				</div>
 				<span class="nav-label add-label dark:text-slate-300">{{ addConfig().label

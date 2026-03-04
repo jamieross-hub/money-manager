@@ -356,6 +356,24 @@ body {
   box-sizing: border-box;
 }
 
+/* Force Material to use our font system */
+.mat-typography,
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-unelevated-button,
+.mat-mdc-outlined-button,
+.mat-mdc-form-field,
+.mat-mdc-select,
+.mat-mdc-option,
+.mat-mdc-tab,
+.mat-mdc-dialog-title,
+.mat-mdc-table,
+.mat-mdc-card-title,
+.mat-mdc-card-subtitle {
+  @apply font-sans;
+  font-family: 'Inter', system-ui, sans-serif !important;
+}
+
 /* Ensure app-root takes full height and doesn't overflow */
 app-root {
   display: block;
