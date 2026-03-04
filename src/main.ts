@@ -2,7 +2,6 @@ import { LocalIndexDBStorageService } from './app/util/service/indexdb-storage.s
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app.component';
 import { appConfig } from './app/app.config';
-import { provideZonelessChangeDetection } from '@angular/core';
 
 // PWA Navigation and Service Worker initialization
 function initializePwaFeatures() {
@@ -195,7 +194,7 @@ async function clearApplicationCaches(): Promise<void> {
 }
 
 // Bootstrap app immediately for fastest startup
-bootstrapApplication(AppComponent, { ...appConfig, providers: [provideZonelessChangeDetection()] })
+bootstrapApplication(AppComponent, appConfig)
   .then(() => {
     console.log('✅ App bootstrapped successfully');
 
