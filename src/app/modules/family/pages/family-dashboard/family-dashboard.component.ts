@@ -507,7 +507,7 @@ export class FamilyDashboardComponent implements OnInit {
               preferences: { activeFamilyId: null, isFamilyMode: false }
             }));
           }
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/dashboard/family/groups']);
         } catch (error: any) {
           alert(error.message || 'An error occurred');
         }

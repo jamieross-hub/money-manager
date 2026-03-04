@@ -363,6 +363,7 @@ export class ProfileComponent {
           const family = await this.familyService.createFamily(result);
           this.loadFamilies();
           this.notificationService.success('Family created! Share the invite code with family members.');
+          this.router.navigate(['/dashboard/family/groups']);
         } catch (error: any) {
           this.notificationService.error(error?.message || ERROR_MESSAGES.NETWORK.SERVER_ERROR);
         } finally {
@@ -386,6 +387,7 @@ export class ProfileComponent {
             }
             this.loadFamilies();
             this.notificationService.success(`Joined "${family.name}" family!`);
+            this.router.navigate(['/dashboard/family/groups']);
           } catch (error: any) {
             this.notificationService.error(error?.message || ERROR_MESSAGES.NETWORK.SERVER_ERROR);
           } finally {
