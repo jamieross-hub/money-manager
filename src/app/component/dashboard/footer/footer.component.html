@@ -13,7 +13,7 @@
 					<mat-icon class="text-xl lg:text-base relative bottom-1"
 						[ngClass]="isFamilyActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">family_restroom</mat-icon>
 				</div>
-				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
+				<span class="nav-label"
 					[ngClass]="isFamilyActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">Family</span>
 			</button>
 			} @else {
@@ -23,7 +23,7 @@
 					<mat-icon class="text-xl lg:text-base relative bottom-1"
 						[ngClass]="isHomeActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">home</mat-icon>
 				</div>
-				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
+				<span class="nav-label"
 					[ngClass]="isHomeActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
 					'NAVIGATION.HOME' | translate }}</span>
 			</button>
@@ -37,7 +37,7 @@
 					<mat-icon class="text-xl lg:text-base relative bottom-1"
 						[ngClass]="isExpenseActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">trending_up</mat-icon>
 				</div>
-				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
+				<span class="nav-label"
 					[ngClass]="isExpenseActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
 					'NAVIGATION.EXPENSE' | translate }}</span>
 			</button>
@@ -50,7 +50,7 @@
 					<mat-icon class="text-white text-xl lg:text-base relative bottom-1">{{ addConfig().icon
 						}}</mat-icon>
 				</div>
-				<span class="text-xs lg:text-[10px] font-medium add-label dark:text-slate-300">{{ addConfig().label
+				<span class="nav-label add-label dark:text-slate-300">{{ addConfig().label
 					}}</span>
 			</button>
 
@@ -65,7 +65,7 @@
 					<mat-icon class="text-xl lg:text-base relative bottom-1"
 						[ngClass]="isSettleActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">handshake</mat-icon>
 				</div>
-				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
+				<span class="nav-label"
 					[ngClass]="isSettleActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">Settle</span>
 			</button>
 			} @else {
@@ -77,7 +77,7 @@
 					<mat-icon class="text-xl lg:text-base relative bottom-1"
 						[ngClass]="isSummaryActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">assessment</mat-icon>
 				</div>
-				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
+				<span class="nav-label"
 					[ngClass]="isSummaryActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
 					'NAVIGATION.SUMMARY' | translate }}</span>
 			</button>
@@ -92,7 +92,7 @@
 					<mat-icon class="text-xl lg:text-base relative bottom-1"
 						[ngClass]="isCategoryActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">layers</mat-icon>
 				</div>
-				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
+				<span class="nav-label"
 					[ngClass]="isCategoryActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
 					'NAVIGATION.CATEGORIES' | translate }}</span>
 			</button>
@@ -118,7 +118,7 @@
 					<mat-icon class="text-xl lg:text-base relative bottom-1"
 						[ngClass]="isAccountsActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">account_balance</mat-icon>
 				</div>
-				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
+				<span class="nav-label"
 					[ngClass]="isAccountsActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
 					'NAVIGATION.ACCOUNTS' | translate }}</span>
 			</button>
@@ -130,7 +130,7 @@
 					<mat-icon class="text-xl lg:text-base relative bottom-1"
 						[ngClass]="isProfileActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">person</mat-icon>
 				</div>
-				<span class="text-xs lg:text-[10px] font-medium transition-colors duration-200"
+				<span class="nav-label"
 					[ngClass]="isProfileActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
 					'NAVIGATION.PROFILE' | translate }}</span>
 			</button>

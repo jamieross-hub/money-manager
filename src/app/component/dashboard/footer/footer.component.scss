@@ -52,6 +52,10 @@ footer {
 	color: var(--neutral-500);
 }
 
+.nav-label {
+	@apply font-sans tracking-wide text-xs lg:text-[10px] font-medium transition-colors duration-200;
+}
+
 .add-button-box {
 	background-color: var(--neutral-500);
 	will-change: transform, background-color;
