@@ -263,7 +263,7 @@ export class MobileTransactionListComponent
     );
 
     let mergedData = filteredData;
-    if (this.selectedRange() !== 'upcoming') {
+    if (this.selectedRange() !== 'upcoming' && !this.isRecurring()) {
       const endOfCheck = dayjs().add(3, 'day').endOf('day').toDate();
       const recurring = this.allTransactions().filter(t => t.isRecurring);
       const dueSoon = this.generateUpcomingTransactions(recurring, dayjs().subtract(1, 'year').toDate(), endOfCheck);
@@ -280,7 +280,7 @@ export class MobileTransactionListComponent
       const filteredDueSoon = dueSoon.filter(t => !existingIds.has(t.id!));
 
       mergedData = [...filteredDueSoon, ...actualData];
-    } else {
+    } else if (this.selectedRange() === 'upcoming') {
       mergedData = filteredData.filter(t => !(t.isPending && t.isRecurring && !t.id?.startsWith('upcoming-')));
     }
 
@@ -394,6 +394,10 @@ export class MobileTransactionListComponent
         _popState: (tx.createdAt && (this.dateService.toDate(tx.createdAt)?.getTime() ?? 0) > this.sessionStartTime) ? 'new' : 'old'
       };
 
+      if (this.isRecurring() && txView._isUpcoming) {
+        return; // Skip upcoming transactions when isRecurring is true
+      }
+
       let group = groups.find(g => g.date === dateKey);
       if (!group) {
         let header = dateHeaderCache.get(dateKey);
@@ -420,7 +424,7 @@ export class MobileTransactionListComponent
         group = { date: dateKey, dateHeader: header, transactions: [], isUpcomingGroup: txView._isUpcoming };
         groups.push(group);
       }
-      group.transactions.push(txView);
+      group.transactions.push(txView as any);
     });
 
     // Re-order groups by date only when sorting by date; otherwise preserve insertion order (= sort order)
@@ -497,6 +501,7 @@ export class MobileTransactionListComponent
    * - Transactions linked to a settlement CANNOT be edited (to prevent data inconsistency).
    */
   canEdit(tx: Transaction): boolean {
+      if (!this.isFamilyMode()) return true;
     if (tx.settlementId || tx.categoryId === 'adjustment' || tx.status === 'pending') return false;
     return this.canPerformAction(tx);
   }
@@ -572,7 +577,11 @@ export class MobileTransactionListComponent
 
   constructor() {
     // Watch for Input changes and hook into filterService
-    // Effect removed because the parent TransactionListComponent already calls filterService.setIsRecurring() directly.
+    effect(() => {
+      if (this.isRecurring() || this.isFamilyMode()) {
+        this.onDateRangeChange(null);
+      }
+    }, { allowSignalWrites: true });
 
     // React to theme changes (e.g., for charts)
     effect(() => {
@@ -584,7 +593,7 @@ export class MobileTransactionListComponent
   }
 
   ngOnInit() {
-    if (this.route.url.includes('transactions')) {
+    if (this.route.url.includes('transactions') && !this.isRecurring()) {
       this.showFilters = true;
     }
 
@@ -597,7 +606,7 @@ export class MobileTransactionListComponent
         })),
         distinctUntilChanged((prev, curr) => prev.view === curr.view && prev.isFamilyMode === curr.isFamilyMode)
       ).subscribe(({ view, isFamilyMode }) => {
-        if (isFamilyMode) {
+        if (this.isRecurring() || isFamilyMode) {
           this.onDateRangeChange(null);
         } else {
           let range = 'this-month';
