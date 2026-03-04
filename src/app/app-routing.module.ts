@@ -3,7 +3,7 @@ import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 import { SignInComponent } from './component/auth/sign-in/sign-in.component';
 import { RegistrationComponent } from './component/auth/registration/registration.component';
 import { DashboardComponent } from './component/dashboard/dashboard.component';
-import { AuthGuard } from './util/guard/auth.guard';
+import { authGuard } from './util/guard/auth.guard';
 import { HomeComponent } from './component/dashboard/home/home.component';
 import { LandingComponent } from './component/landing/landing.component';
 import { NotificationSettingsComponent } from './util/components/notification-settings/notification-settings.component';
@@ -32,7 +32,7 @@ export const routes: Routes = [
     path: 'dashboard',
     component: DashboardComponent,
     title: 'Dashboard',
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
     data: {
       requireEmailVerification: true,
       requireActiveSession: true,

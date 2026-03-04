@@ -1,100 +1,49 @@
-import { Injectable } from "@angular/core";
-import {
-  CanActivate,
-  ActivatedRouteSnapshot,
-  RouterStateSnapshot,
-  Router,
-  CanActivateChild
-} from "@angular/router";
-import { Observable, of } from "rxjs";
-import { catchError, map, take } from "rxjs/operators";
-import { UserService } from "../service/db/user.service";
+import { inject } from '@angular/core';
+import { Router, CanActivateFn } from '@angular/router';
 import { Auth, authState } from '@angular/fire/auth';
-import { UserRole } from "../models/user.model";
-import { LoaderService } from "../service/loader.service";
+import { map, take } from 'rxjs/operators';
+import { UserService } from '../service/db/user.service';
+import { UserRole } from '../models/user.model';
 
 /**
- * Optimized AuthGuard for snappy navigation.
- * Prioritizes synchronous checks for logged-in users to eliminate flickering/loading states.
+ * Functional AuthGuard for minimalist routing protection.
+ * Resolve immediately if auth state is cached, otherwise wait for Firebase initialization.
  */
-@Injectable({
-  providedIn: "root",
-})
-export class AuthGuard implements CanActivate, CanActivateChild {
+export const authGuard: CanActivateFn = (route, state) => {
+  const auth = inject(Auth);
+  const router = inject(Router);
+  const userService = inject(UserService);
 
-  constructor(
-    private router: Router,
-    private userService: UserService,
-    private loaderService: LoaderService,
-    private auth: Auth
-  ) {}
-
-  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
-    return this.checkAuth(route, state);
-  }
-
-  canActivateChild(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
-    return this.checkAuth(route, state);
-  }
-
-  /**
-   * Core authentication check logic
-   */
-  private checkAuth(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
-    // 1. FAST PATH: Synchronous check (Firebase holds auth state in local persistence)
-    // This allows instant navigation for already authenticated users.
-    if (this.auth.currentUser || this.userService.isGuestUser()) {
-      return of(this.hasPermission(route));
-    }
-
-    // 2. SLOW PATH: Wait for Firebase Initialization
-    // Only triggered on hard refreshes or when the authentication state is unknown.
-    this.loaderService.show();
-    return authState(this.auth).pipe(
-      take(1),
-      map(user => {
-        this.loaderService.hide();
-        if (user || this.userService.isGuestUser()) {
-          return this.hasPermission(route);
-        }
-        
-        // Not logged in: Redirect to sign-in with original URL for return navigation
-        this.router.navigate(['/sign-in'], { 
-          queryParams: { redirect: state.url } 
-        });
-        return false;
-      }),
-      catchError((err) => {
-        console.error('[AuthGuard] Auth check error:', err);
-        this.loaderService.hide();
-        this.router.navigate(['/sign-in']);
-        return of(false);
-      })
-    );
-  }
-
-  /**
-   * Role-based permission check
-   */
-  private hasPermission(route: ActivatedRouteSnapshot): boolean {
+  // 1. Check for valid roles requirement
+  const hasRolePermission = (): boolean => {
     const requiredRoles = route.data?.['roles'] as UserRole[];
-    const user = this.userService.getCurrentUserSnapshot();
+    const user = userService.getCurrentUserSnapshot();
+    if (!requiredRoles?.length) return true;
+    return !!(user && requiredRoles.includes(user.role));
+  };
 
-    // If no roles are defined for the route, anyone authenticated can enter
-    if (!requiredRoles?.length) {
-      return true;
-    }
-
-    // Verify user role matches route requirements
-    if (user && requiredRoles.includes(user.role)) {
-      return true;
-    }
-
-    // Insufficient permissions: Redirect to dashboard
-    console.warn('[AuthGuard] Access denied: User lacks required role', { required: requiredRoles, actual: user?.role });
-    this.router.navigate(['/dashboard'], { 
-      queryParams: { error: 'unauthorized_access' } 
-    });
-    return false;
+  // 2. FAST PATH: Already authenticated or guest mode
+  if (auth.currentUser || userService.isGuestUser()) {
+    if (hasRolePermission()) return true;
+    
+    // Unauthorized: Redirect to dashboard
+    return router.createUrlTree(['/dashboard'], { queryParams: { error: 'unauthorized' } });
   }
-}
+
+  // 3. SLOW PATH: Wait for Firebase Auth initialization
+  return authState(auth).pipe(
+    take(1),
+    map(user => {
+      // If user is authenticated or guest mode is active
+      if (user || userService.isGuestUser()) {
+        if (hasRolePermission()) return true;
+        return router.createUrlTree(['/dashboard'], { queryParams: { error: 'unauthorized' } });
+      }
+
+      // Truly unauthenticated: Redirect to sign-in
+      return router.createUrlTree(['/sign-in'], { 
+        queryParams: { redirect: state.url } 
+      });
+    })
+  );
+};
