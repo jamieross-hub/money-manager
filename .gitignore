@@ -70,3 +70,4 @@ Thumbs.db
 /scripts/key.json
 /scripts/node_modules
 /dist
+/.npm-cache
