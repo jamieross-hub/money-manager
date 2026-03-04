@@ -9,11 +9,16 @@
 
 .main-content {
   background-color: var(--surface-100);
+  view-transition-name: main-content;
 }
 
 .dashboard-header, .dashboard-footer {
   display: block;
   background-color: var(--surface-100);
+}
+
+.dashboard-footer {
+  view-transition-name: dashboard-footer;
 }
 
 .dashboard-container {
