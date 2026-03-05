@@ -1,7 +1,7 @@
 <div class="mobile-transaction-container">
   <!-- Chart area (amCharts) -->
   <!-- Chart area removed -->
-    <cdk-virtual-scroll-viewport itemSize="85" minBufferPx="200" maxBufferPx="400" class="transaction-virtual-scroll">
+    
   <!-- Mobile Filter Header -->
   @if (showFilters && !showChart) {
     <div class="mobile-filter-header">
@@ -253,7 +253,14 @@
   }
 
   <!-- Transaction List -->
-  <div class="transaction-list-container">
+  <div class="transaction-list-container" #scrollContainer (scroll)="onScroll()">
+
+    @if (showScrollIndicator() && currentScrollHeader()) {
+      <div class="floating-scroll-indicator">
+        <mat-icon>calendar_month</mat-icon>
+        <span class="text-base">{{ currentScrollHeader() }}</span>
+      </div>
+    }
 
     <div class="transaction-scroll">
       <!-- Empty State -->
@@ -285,11 +292,12 @@
         </div>
       }
 
-     
-        <div *cdkVirtualFor="let item of flattenedTransactions(); trackBy: trackById" class="w-full px-2">
+      @for (item of flattenedTransactions(); track trackById($index, item)) {
+        <div  class="w-full px-2">
           @if (item._isHeader) {
             <div class="date-group mt-2">
-              <div class="date-header sticky top-0 z-10 py-1 mb-2 text-xs font-bold text-gray-400 bg-white dark:bg-slate-900 uppercase tracking-widest pl-1">
+              <div class="date-header sticky top-0 z-10 py-1 mb-2 text-xs font-bold text-gray-400 bg-white dark:bg-slate-900 uppercase tracking-widest pl-1"
+                [attr.data-header]="item.dateHeader">
                 {{ item.dateHeader }}
               </div>
             </div>
@@ -544,10 +552,10 @@
             }
           </div>
         }
-      </div>
+        </div>
+      }
    
     </div>
 
   </div>
-       </cdk-virtual-scroll-viewport>
 </div>

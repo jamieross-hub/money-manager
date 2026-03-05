@@ -12,9 +12,11 @@ import {
   Signal,
   effect,
   input,
-  inject
+  inject,
+  ViewChild,
+  ElementRef,
+  AfterViewInit
 } from '@angular/core';
-import { ScrollingModule } from '@angular/cdk/scrolling';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -100,7 +102,6 @@ interface SortOption {
     FormsModule,
     MatDividerModule,
     ImageFallbackDirective,
-    ScrollingModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
@@ -128,7 +129,7 @@ interface SortOption {
   ]
 })
 export class MobileTransactionListComponent
-  implements OnInit, OnDestroy {
+  implements OnInit, OnDestroy, AfterViewInit {
   @Output() editTransaction = new EventEmitter<Transaction>();
   @Output() deleteTransaction = new EventEmitter<Transaction>();
   @Output() addTransaction = new EventEmitter<void>();
@@ -154,6 +155,13 @@ export class MobileTransactionListComponent
 
   selectedTx: Transaction | null = null;
   showFilters: boolean = false;
+
+  @ViewChild('scrollContainer') scrollContainer?: ElementRef<HTMLElement>;
+  
+  showScrollIndicator = signal<boolean>(false);
+  currentScrollHeader = signal<string>('');
+  private scrollTimeout?: any;
+  private observer?: IntersectionObserver;
 
   // Signals defined below...
 
@@ -453,6 +461,14 @@ export class MobileTransactionListComponent
       }
     }, { allowSignalWrites: true });
 
+    // Handle re-observing headers when transactions change
+    effect(() => {
+      const transactions = this.flattenedTransactions();
+      if (transactions.length > 0) {
+        setTimeout(() => this.observeHeaders(), 300);
+      }
+    });
+
     // React to theme changes (e.g., for charts)
     effect(() => {
       this.themeService.currentTheme();
@@ -491,9 +507,55 @@ export class MobileTransactionListComponent
     );
   }
 
+  ngAfterViewInit() {
+    this.setupIntersectionObserver();
+  }
+
+  private setupIntersectionObserver() {
+    this.observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const headerText = entry.target.getAttribute('data-header');
+          if (headerText) {
+            this.currentScrollHeader.set(headerText);
+          }
+        }
+      });
+    }, {
+      root: this.scrollContainer?.nativeElement,
+      rootMargin: '-10px 0px -85% 0px', // Focus on headers near the top
+      threshold: [0, 1]
+    });
+  }
+
+  private observeHeaders() {
+    if (!this.observer || !this.scrollContainer) return;
+    
+    // Disconnect previous observations
+    this.observer.disconnect();
+
+    const headers = this.scrollContainer.nativeElement.querySelectorAll('.date-header');
+    headers.forEach(header => {
+      this.observer?.observe(header);
+    });
+  }
+
+  onScroll() {
+    if (this.scrollTimeout) {
+      clearTimeout(this.scrollTimeout);
+    }
+    
+    this.showScrollIndicator.set(true);
+    
+    this.scrollTimeout = setTimeout(() => {
+      this.showScrollIndicator.set(false);
+    }, 1500); // Hide after 1.5s of no scroll
+  }
+
   ngOnDestroy() {
     this.subscription.unsubscribe();
-    // this.disposeChart(); // disposeChart is not defined
+    this.observer?.disconnect();
+    if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
     this.destroy$.next();
     this.destroy$.complete();
   }
