@@ -39,6 +39,7 @@ import { Transaction } from 'src/app/util/models/transaction.model';
 import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
 import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 import { CommonSyncService } from 'src/app/util/service/common-sync.service';
+import { FamilyProcessorService } from 'src/app/util/service/family-processor.service';
 @Component({
   selector: 'app-settle-up',
   standalone: true,
@@ -65,6 +66,8 @@ export class SettleUpComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private actions$ = inject(Actions);
   private commonSyncService = inject(CommonSyncService);
+  private familyProcessor = inject(FamilyProcessorService);
+  private sessionStartTime = Date.now();
 
   family = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null });
   members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers), { initialValue: [] as FamilyMember[] });
@@ -101,17 +104,7 @@ export class SettleUpComponent implements OnInit {
   }
 
   /** All outstanding balances (from owes to) */
-  balances = computed<BalanceEntry[]>(() => {
-    const trans = this.transactions();
-    const mems = this.members();
-    const sets = this.settlements();
-    const fam = this.family();
-
-    if (!fam?.id || mems.length === 0) return [];
-
-    // Perform calculation when data is loaded (instantly responsive thanks to signals)
-    return this.familyService.computeBalances(trans, mems, sets);
-  });
+  balances = this.familyProcessor.balances;
 
   /** Balances involving the current user (highlighted) */
   myBalances = computed<BalanceEntry[]>(() => {
@@ -143,6 +136,23 @@ export class SettleUpComponent implements OnInit {
         this.store.dispatch(FamilyActions.loadMembers({ familyId: fam.id }));
         this.store.dispatch(FamilyActions.loadTransactions({ familyId: fam.id }));
         this.store.dispatch(FamilyActions.loadSettlements({ familyId: fam.id }));
+      }
+    }, { allowSignalWrites: true });
+
+    effect(() => {
+      const transactions = this.transactions();
+      const members = this.members();
+      const settlements = this.settlements();
+      const currentUserId = this.currentUserId;
+
+      if (transactions && members) {
+        this.familyProcessor.process({
+          transactions,
+          members,
+          settlements,
+          currentUserId,
+          sessionStartTime: this.sessionStartTime
+        });
       }
     }, { allowSignalWrites: true });
   }
