@@ -60,6 +60,12 @@ export class GeminiService {
     return true;
   }
 
+  initialize(user: any): void {
+    if (user?.preferences?.geminiApiKey) {
+      this.setApiKey(user.preferences.geminiApiKey);
+    }
+  }
+
   // ─── Core Methods ────────────────────────────────────────────────────────
 
   /**

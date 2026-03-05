@@ -58,6 +58,8 @@ import * as AccountsActions from 'src/app/store/accounts/accounts.actions';
 import { CurrencyDetectionUtil } from '../../helpers/currency-detection.util';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { LocalStorageKey } from '../../models/local-storage.model';
+import { OpenaiService } from '../ai-chat/openai.service';
+// import { GeminiService } from '../ai-chat/gemini.service';
 
 /**
  * Security configuration for user operations
@@ -124,7 +126,8 @@ export class UserService {
     private readonly firestore: Firestore,
     private readonly store: Store<AppState>,
     public readonly storageService: LocalIndexDBStorageService,
-    private readonly translationService: TranslationService
+    private readonly translationService: TranslationService,
+    private readonly openaiService: OpenaiService,
   ) {
     // Expose the NgRx profile slice as userAuth$ so existing subscribers keep working.
     this.userAuth$ = this.store.select(selectProfile);
@@ -182,6 +185,10 @@ export class UserService {
         if (userData?.preferences?.language) {
           this.translationService.setLanguage(userData.preferences.language as Language);
         }
+
+        // Initialize AI Services
+        this.openaiService.initialize(userData);
+      //  this.geminiService.initialize(userData);
 
         this.ensureUserDataCached(user.uid);
         this.logAuditEvent('USER_LOGIN', user.uid, {
