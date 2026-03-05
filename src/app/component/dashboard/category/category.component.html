@@ -16,6 +16,7 @@
     <div class="main-content" [ngClass]="{'mobile-padding': breakpointService.device.isMobile}">
       <!-- Header -->
       <!-- Header Section -->
+      @if (vm && !vm.isFamilyMode) {
       <header class="page-header max-w-8xl mx-auto">
         @if (!breakpointService.device.isMobile) {
           <div class="header-left">
@@ -29,11 +30,13 @@
         </button>
       </header>
       <!-- Summary Cards -->
-      <section class="summary-section" >
-        @defer {
-        <app-category-summary-card></app-category-summary-card>
+ 
+        <section class="summary-section">
+          @defer {
+            <app-category-summary-card></app-category-summary-card>
+          }
+        </section>
       }
-    </section>
     <!-- Controls: Search & Filter -->
     <section class="controls-section">
       <mat-form-field appearance="fill" class="search-bar" subscriptSizing="dynamic">

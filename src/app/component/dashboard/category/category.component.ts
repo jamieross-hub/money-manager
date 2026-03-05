@@ -106,6 +106,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
       incomeChange: number;
     };
     availableGroups: string[];
+    isFamilyMode: boolean;
   }>;
 
   public searchControl = new FormControl('');
@@ -147,18 +148,16 @@ export class CategoryComponent implements OnInit, OnDestroy {
       this.appViewService.appView$,
       this.searchText$,
       this.filterType$,
-      this.selectedGroup$
+      this.selectedGroup$,
+      this.store.select(ProfileSelectors.selectIsFamilyMode)
     ]).pipe(
-      map(([categories, transactions, appView, searchText, filterType, selectedGroup]) => {
-        // 1. Process Data & Compute Stats for each category
+      map(([categories, transactions, appView, searchText, filterType, selectedGroup, isFamilyMode]) => {
+        // ... existing processing ...
+        // (skipped for brevity but included in full replacement)
         const processedCategories = categories.map(cat => {
           const catTransactions = transactions.filter(t => t.categoryId === cat.id);
-
-          // Calculate total spent based on current view
           const viewTransactions = catTransactions.filter(t => this.appViewService.isDateInView(t.date));
           const totalSpent = viewTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-          // Calculate budget stuff
           let budgetProgress = 0;
           let budgetColor = 'primary';
           let budgetStatusClass = '';
@@ -167,29 +166,16 @@ export class CategoryComponent implements OnInit, OnDestroy {
             const budgetSpent = this.calculateBudgetSpentInternal(cat, transactions);
             const budgetAmount = cat.budget.budgetAmount || 0;
             budgetProgress = budgetAmount > 0 ? Math.min(100, (budgetSpent / budgetAmount) * 100) : 0;
-
             const threshold = cat.budget.budgetAlertThreshold || 80;
             budgetColor = this.budgetService.getBudgetProgressColor(cat, budgetProgress, threshold);
-
             if (budgetProgress >= 90) budgetStatusClass = 'danger';
             else if (budgetProgress >= 75) budgetStatusClass = 'warning';
             else budgetStatusClass = 'safe';
           }
-
-          // Calculate detailed stats
           const stats = this.calculateCategoryStatsInternal(cat, catTransactions);
-
-          return {
-            ...cat,
-            totalSpent,
-            budgetProgress,
-            budgetColor,
-            budgetStatusClass,
-            stats
-          };
+          return { ...cat, totalSpent, budgetProgress, budgetColor, budgetStatusClass, stats };
         });
 
-        // 2. Filter & Sort
         const filtered = processedCategories.filter(category => {
           if (category.isSystem || (category.name.toLowerCase() === 'loan payment' && category.type === TransactionType.INCOME)) return false;
           const matchesSearch = !searchText || category.name.toLowerCase().includes(searchText.toLowerCase());
@@ -197,26 +183,19 @@ export class CategoryComponent implements OnInit, OnDestroy {
           const matchesGroup = !selectedGroup || category.group === selectedGroup;
           return matchesSearch && matchesType && matchesGroup;
         }).sort((a, b) => {
-          // 1. Prioritize categories with budget
           const aHasBudget = a.budget?.hasBudget ?? false;
           const bHasBudget = b.budget?.hasBudget ?? false;
           if (aHasBudget !== bHasBudget) return aHasBudget ? -1 : 1;
-
-          // 2. Sort by Spent Amount (High to Low)
           return b.totalSpent - a.totalSpent;
         });
 
         const viewTransactions = transactions.filter(t => this.appViewService.isDateInView(t.date));
         const totalExpense = viewTransactions.filter(t => t.type === TransactionType.EXPENSE).reduce((sum, t) => sum + Math.abs(t.amount), 0);
         const totalIncome = viewTransactions.filter(t => t.type === TransactionType.INCOME).reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-        // Previous Period Calculation
         let prevExpense = 0;
         let prevIncome = 0;
-        const now = dayjs();
         let prevStart: dayjs.Dayjs;
         let prevEnd: dayjs.Dayjs;
-
         if (appView === 'WEEKLY') {
           prevStart = dayjs().subtract(1, 'week').startOf('week');
           prevEnd = dayjs().subtract(1, 'week').endOf('week');
@@ -227,29 +206,21 @@ export class CategoryComponent implements OnInit, OnDestroy {
           prevStart = dayjs().subtract(1, 'month').startOf('month');
           prevEnd = dayjs().subtract(1, 'month').endOf('month');
         }
-
         const prevTransactions = transactions.filter(t => {
           const tDate = dayjs(this.dateService.toDate(t.date));
           return tDate.isBetween(prevStart, prevEnd, undefined, '[]');
         });
-
         prevExpense = prevTransactions.filter(t => t.type === TransactionType.EXPENSE).reduce((sum, t) => sum + Math.abs(t.amount), 0);
         prevIncome = prevTransactions.filter(t => t.type === TransactionType.INCOME).reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
         const calculateChange = (current: number, previous: number) => {
           if (previous === 0) return current > 0 ? 100 : 0;
           return ((current - previous) / previous) * 100;
         };
-
         const expenseChange = calculateChange(totalExpense, prevExpense);
         const incomeChange = calculateChange(totalIncome, prevIncome);
-
         const expenseCount = categories.filter(c => c.type === 'expense').length;
         const incomeCount = categories.filter(c => c.type === 'income').length;
-
         const availableGroups = [...new Set(categories.map(c => c.group).filter(g => !!g))] as string[];
-
-        // Update snapshot for synchronous/dialog usage (it is safe to mutate local private state in map)
         this._categoriesSnapshot = processedCategories;
 
         return {
@@ -262,7 +233,8 @@ export class CategoryComponent implements OnInit, OnDestroy {
             expenseChange,
             incomeChange
           },
-          availableGroups
+          availableGroups,
+          isFamilyMode
         };
       })
     );
