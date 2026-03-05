@@ -27,7 +27,7 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { QuickActionsFabComponent, QuickActionsFabConfig, QuickAction } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
-import { CurrencyPipe } from 'src/app/util/pipes';
+import { CurrencyPipe, AppDatePipe } from 'src/app/util/pipes';
 import { ReportService } from 'src/app/util/service/db/report.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { LoaderService } from 'src/app/util/service/loader.service';
@@ -47,6 +47,7 @@ import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.d
     MatRippleModule,
     MatDialogModule,
     CurrencyPipe,
+    AppDatePipe,
     MatMenuModule,
     MatDividerModule,
     MatSnackBarModule,
@@ -462,12 +463,6 @@ export class FamilyDashboardComponent implements OnInit {
       }
     };
     reader.readAsDataURL(file);
-  }
-
-  formatDate(date: any): string {
-    if (!date) return '';
-    const d = date?.seconds ? new Date(date.seconds * 1000) : new Date(date);
-    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
   }
 
   addTransaction() {

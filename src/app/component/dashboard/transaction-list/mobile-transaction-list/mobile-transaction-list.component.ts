@@ -29,6 +29,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { TranslateModule } from '@ngx-translate/core';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import { IncludesPipe } from 'src/app/util/pipes/includes.pipe';
+import { AppDatePipe } from 'src/app/util/pipes/date.pipe';
 import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 
 
@@ -92,6 +93,7 @@ interface SortOption {
     TranslateModule,
     CurrencyPipe,
     IncludesPipe,
+    AppDatePipe,
     FormsModule,
     MatDividerModule,
     ImageFallbackDirective

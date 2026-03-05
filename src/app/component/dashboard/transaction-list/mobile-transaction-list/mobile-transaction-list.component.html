@@ -345,6 +345,13 @@
                   @if (tx.notes) {
                     <div class="transaction-notes">{{ tx.notes }}</div>
                   }
+                   <div class="amount-type">
+                    @if (selectedRange() === null) {
+                      {{ tx.date | appDate:'short-time' }}
+                    } @else {
+                      {{ tx.date | appDate:'time-only' }}
+                    }
+                  </div>
                 </div>
 
                 <!-- Amount (right) -->
@@ -352,13 +359,7 @@
                   <div class="amount-value" [ngClass]="tx._isIncome ? 'income-text' : 'expense-text'">
                     {{ tx._isIncome ? '+' : '-' }}{{ tx.amount | currency }}
                   </div>
-                  <div class="amount-type">
-                    @if (selectedRange() === null) {
-                      {{ tx._dateDisplay }}
-                    } @else {
-                      {{ tx._timeDisplay }}
-                    }
-                  </div>
+                 
                 </div>
               </div>
 
