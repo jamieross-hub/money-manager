@@ -69,7 +69,7 @@
           }
 
           <!-- ═══════════ NO DATA ═══════════ -->
-          @if (!isLoading && transactions.length === 0) {
+          @if (!isLoading && transactions().length === 0) {
             <mat-card class="!rounded-xl">
               <mat-card-content class="text-center py-8">
                 <mat-icon class="text-neutral-300 !text-6xl mb-4">assessment</mat-icon>
@@ -82,7 +82,7 @@
             </mat-card>
           }
 
-          @if (!isLoading && transactions.length > 0) {
+          @if (!isLoading && transactions().length > 0) {
             <div class="space-y-6">
               <!-- ═══════════ KEY METRICS ═══════════ -->
               <mat-card class="!rounded-xl !border-none">
@@ -210,7 +210,7 @@
                 </mat-card-content>
               </mat-card>
               <div class="flex justify-center mt-10">
-                <mat-button-toggle-group [value]="selectedPeriod" (change)="selectPeriod($event.value)"
+                <mat-button-toggle-group [value]="selectedPeriod()" (change)="selectPeriod($event.value)"
                   appearance="standard" class="period-toggle">
                   @for (p of periodOptions; track p) {
                     <mat-button-toggle [value]="p">
@@ -231,7 +231,7 @@
                     @if (!breakpointService.device.isMobile) {
                       <mat-form-field appearance="fill"
                         class="year-select-field !w-auto !text-primary-500 !bg-transparent !border-none">
-                        <mat-select [value]="selectedYear"
+                        <mat-select [value]="selectedYear()"
                           (selectionChange)="selectYear($event.value)">
                           @for (y of availableYears; track y) {
                             <mat-option [value]="y">{{ y
@@ -243,19 +243,19 @@
                   </div>
                   <div class="flex items-center justify-between mb-4 flex-wrap gap-2 px-4">
                     <div class="flex items-center gap-1 w-full justify-between px-4">
-                      @if (selectedPeriod === 'monthly' || selectedPeriod === 'weekly') {
+                      @if (selectedPeriod() === 'monthly' || selectedPeriod() === 'weekly') {
                         <button
-                          (click)="selectedPeriod === 'monthly' ? previousMonth() : previousWeek()"
+                          (click)="selectedPeriod() === 'monthly' ? previousMonth() : previousWeek()"
                           class="w-7 h-7 flex items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200 transition-colors text-neutral-600 cursor-pointer border-none outline-none dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-neutral-300">
                           <mat-icon class="!text-sm !w-auto !h-auto leading-none">chevron_left</mat-icon>
                         </button>
                       }
                       <span class="text-sm font-medium text-primary-600 flex items-center gap-2 mx-1 text-center">
-                        {{ (breakpointService.device.isMobile && (selectedPeriod !== 'monthly' && selectedPeriod !== 'weekly')) ? "" : getPeriodLabel('current') }}
-                        @if (breakpointService.device.isMobile && (selectedPeriod !== 'monthly' && selectedPeriod !== 'weekly')) {
+                        {{ (breakpointService.device.isMobile && (selectedPeriod() !== 'monthly' && selectedPeriod() !== 'weekly')) ? "" : getPeriodLabel('current') }}
+                        @if (breakpointService.device.isMobile && (selectedPeriod() !== 'monthly' && selectedPeriod() !== 'weekly')) {
                           <mat-form-field appearance="fill"
                             class="year-select-field !w-auto !text-primary-500 !bg-transparent !border-none mb-0">
-                            <mat-select [value]="selectedYear"
+                            <mat-select [value]="selectedYear()"
                               (selectionChange)="selectYear($event.value)">
                               @for (y of availableYears; track y) {
                                 <mat-option [value]="y">{{ y }}</mat-option>
@@ -264,9 +264,9 @@
                           </mat-form-field>
                         }
                       </span>
-                      @if (selectedPeriod === 'monthly' || selectedPeriod === 'weekly') {
+                      @if (selectedPeriod() === 'monthly' || selectedPeriod() === 'weekly') {
                         <button
-                          (click)="selectedPeriod === 'monthly' ? nextMonth() : nextWeek()"
+                          (click)="selectedPeriod() === 'monthly' ? nextMonth() : nextWeek()"
                           class="w-7 h-7 flex items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200 transition-colors text-neutral-600 cursor-pointer border-none outline-none dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-neutral-300">
                           <mat-icon class="!text-sm !w-auto !h-auto leading-none">chevron_right</mat-icon>
                         </button>
@@ -432,7 +432,7 @@
               <mat-card-content class="pt-4">
                 <p class="text-lg font-semibold text-neutral-500 mb-5 flex items-center gap-2">
                   <mat-icon class="text-primary-500">calendar_month</mat-icon>
-                  Monthly History ({{ selectedYear }})
+                  Monthly History ({{ selectedYear() }})
                 </p>
                 <div class="overflow-x-auto rounded-lg mat-elevation-z1">
                   <table mat-table [dataSource]="filteredMonthlySummaries"
@@ -511,7 +511,7 @@
       }
 
       <!-- ═══════════ NO DATA ═══════════ -->
-      @if (!isLoading && transactions.length === 0) {
+      @if (!isLoading && transactions().length === 0) {
         <mat-card class="!rounded-xl">
           <mat-card-content class="text-center py-8">
             <mat-icon class="text-neutral-300 !text-6xl mb-4">assessment</mat-icon>
@@ -523,7 +523,7 @@
         </mat-card>
       }
 
-      @if (!isLoading && transactions.length > 0) {
+      @if (!isLoading && transactions().length > 0) {
         <div class="space-y-6">
           <!-- Not enough data warning -->
           @if (!nextMonthPrediction) {

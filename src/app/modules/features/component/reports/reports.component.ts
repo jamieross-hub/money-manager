@@ -1,16 +1,17 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject, signal, effect } from '@angular/core';
 import { CommonModule, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { Subscription, take } from 'rxjs';
 import { Transaction } from '../../../../util/models/transaction.model';
 import { Store } from '@ngrx/store';
-import { AppState } from 'src/app/store/app.state';
+import { AppState } from '../../../../store/app.state';
 import * as TransactionsSelectors from '../../../../store/transactions/transactions.selectors';
 import * as CategoriesSelectors from '../../../../store/categories/categories.selectors';
-import { UserService } from 'src/app/util/service/db/user.service';
+import { UserService } from '../../../../util/service/db/user.service';
 import { CurrencyService } from '../../../../util/service/currency.service';
 import { DateService } from '../../../../util/service/date.service';
-import { AppViewService, AppView } from 'src/app/util/service/app-view.service';
-import dayjs from 'dayjs';
+import { AppViewService, AppView } from '../../../../util/service/app-view.service';
+import * as dayjs from 'dayjs';
+import { ReportsProcessorService, MonthlySummary, CategoryBreakdownItem, PeriodSummary, Prediction } from '../../../../util/service/reports-processor.service';
 
 // Angular Material
 import { MatCardModule } from '@angular/material/card';
@@ -27,60 +28,15 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { CategorySummaryCardComponent } from 'src/app/util/components/cards/category-summary-card/category-summary-card.component';
-import { BreakpointService } from 'src/app/util/service/breakpoint.service';
-import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
-import { AccountSummaryCardComponent } from 'src/app/util/components/cards/account-summary-card/account-summary-card.component';
+import { CategorySummaryCardComponent } from '../../../../util/components/cards/category-summary-card/category-summary-card.component';
+import { BreakpointService } from '../../../../util/service/breakpoint.service';
+import { CurrencyPipe } from '../../../../util/pipes/currency.pipe';
+import { AccountSummaryCardComponent } from '../../../../util/components/cards/account-summary-card/account-summary-card.component';
 import { RouterModule } from '@angular/router';
-import { AbsPipe } from 'src/app/util/pipes/abs.pipe';
-import { MathPipe } from 'src/app/util/pipes/math.pipe';
-import { TrendPipe } from 'src/app/util/pipes/trend.pipe';
-import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
-
-// ── Types ──
-
-export interface MonthlySummary {
-    month: number;      // 0-11
-    year: number;
-    label: string;      // "Jan 2025"
-    income: number;
-    expense: number;
-    savings: number;
-    savingsRate: number; // %
-    categoryBreakdown: CategoryBreakdownItem[];
-}
-
-export interface CategoryBreakdownItem {
-    categoryId: string;
-    categoryName: string;
-    categoryIcon: string;
-    categoryColor: string;
-    amount: number;
-    percentage: number;
-    transactionCount: number;
-}
-
-export interface PeriodSummary {
-    label: string;
-    income: number;
-    expense: number;
-    savings: number;
-    savingsRate: number;
-    avgMonthlySpending: number;
-    topCategory: CategoryBreakdownItem | null;
-    categoryBreakdown: CategoryBreakdownItem[];
-    expenseGrowth: number | null;  // % vs previous period
-}
-
-export interface Prediction {
-    label: string;
-    predictedExpense: number;
-    predictedIncome: number;
-    predictedSavings: number;
-    confidence: 'low' | 'medium' | 'high';
-    trend: 'increasing' | 'decreasing' | 'stable';
-    overspendCategories: CategoryBreakdownItem[];
-}
+import { AbsPipe } from '../../../../util/pipes/abs.pipe';
+import { MathPipe } from '../../../../util/pipes/math.pipe';
+import { TrendPipe } from '../../../../util/pipes/trend.pipe';
+import { LocalIndexDBStorageService } from '../../../../util/service/indexdb-storage.service';
 
 @Component({
     selector: 'app-reports',
@@ -118,8 +74,7 @@ export interface Prediction {
 export class ReportsComponent implements OnInit, OnDestroy {
 
     // ── State ──
-    transactions: Transaction[] = [];
-    isLoading = true;
+    private readonly reportsProcessor: ReportsProcessorService = inject(ReportsProcessorService);
 
     // Tab
     activeTab: 'summary' | 'forecast' = 'summary';
@@ -155,31 +110,45 @@ export class ReportsComponent implements OnInit, OnDestroy {
         }
     }
 
-    // Period selector
-    selectedPeriod: 'weekly' | 'monthly' | 'yearly' = 'monthly';
-    selectedYear: number = new Date().getFullYear();
-    selectedMonth: number | null = null;
-    selectedWeekOffset: number = 0;
-    availableYears: number[] = [];
+    // Period selector (Signals)
+    selectedPeriod = signal<'weekly' | 'monthly' | 'yearly'>('monthly');
+    selectedYear = signal<number>(new Date().getFullYear());
+    selectedMonth = signal<number | null>(null);
+    selectedWeekOffset = signal<number>(0);
 
-    // Computed
-    monthlySummaries: MonthlySummary[] = [];
-    filteredMonthlySummaries: MonthlySummary[] = [];
-    currentPeriodSummary: PeriodSummary | null = null;
-    previousPeriodSummary: PeriodSummary | null = null;
+    // Store Signals
+    readonly transactions = this.store.selectSignal(TransactionsSelectors.selectAllTransactions);
+    readonly allCategories = this.store.selectSignal(CategoriesSelectors.selectAllCategories);
 
-    // Predictions
-    nextMonthPrediction: Prediction | null = null;
-    next3MonthsPrediction: Prediction | null = null;
-    yearEndPrediction: Prediction | null = null;
+    // Data from ReportsProcessorService (Signals)
+    monthlySummariesSignal = this.reportsProcessor.monthlySummaries;
+    availableYearsSignal = this.reportsProcessor.availableYears;
+    avgMonthlySpendingSignal = this.reportsProcessor.avgMonthlySpending;
+    highestSpendingCategorySignal = this.reportsProcessor.highestSpendingCategory;
+    overallSavingsRateSignal = this.reportsProcessor.overallSavingsRate;
+    currentPeriodSummarySignal = this.reportsProcessor.currentPeriodSummary;
+    previousPeriodSummarySignal = this.reportsProcessor.previousPeriodSummary;
+    filteredMonthlySummariesSignal = this.reportsProcessor.filteredMonthlySummaries;
+    nextMonthPredictionSignal = this.reportsProcessor.nextMonthPrediction;
+    next3MonthsPredictionSignal = this.reportsProcessor.next3MonthsPrediction;
+    yearEndPredictionSignal = this.reportsProcessor.yearEndPrediction;
+    isProcessing = this.reportsProcessor.isProcessing;
 
-    // Key metrics
-    avgMonthlySpending = 0;
-    highestSpendingCategory: CategoryBreakdownItem | null = null;
-    overallSavingsRate = 0;
+    // Backward compatibility getters
+    get monthlySummaries() { return this.monthlySummariesSignal(); }
+    get availableYears() { return this.availableYearsSignal(); }
+    get avgMonthlySpending() { return this.avgMonthlySpendingSignal(); }
+    get highestSpendingCategory() { return this.highestSpendingCategorySignal(); }
+    get overallSavingsRate() { return this.overallSavingsRateSignal(); }
+    get currentPeriodSummary() { return this.currentPeriodSummarySignal(); }
+    get previousPeriodSummary() { return this.previousPeriodSummarySignal(); }
+    get filteredMonthlySummaries() { return this.filteredMonthlySummariesSignal(); }
+    get nextMonthPrediction() { return this.nextMonthPredictionSignal(); }
+    get next3MonthsPrediction() { return this.next3MonthsPredictionSignal(); }
+    get yearEndPrediction() { return this.yearEndPredictionSignal(); }
 
     get spendingLabel(): string {
-        switch (this.selectedPeriod) {
+        switch (this.selectedPeriod()) {
             case 'weekly': return 'Weekly Spending';
             case 'monthly': return 'Monthly Spending';
             case 'yearly': return 'Avg Monthly Spending';
@@ -187,9 +156,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
         }
     }
 
-    // Pre-computed trend data (for template binding with OnPush)
-    savingsTrend: MonthlySummary[] = [];
-    savingsTrendMax = 1;
+    // Pre-computed trend data (removed - not used in template)
 
     private subscriptions: Subscription[] = [];
 
@@ -216,18 +183,44 @@ export class ReportsComponent implements OnInit, OnDestroy {
         private appViewService: AppViewService,
         private cdr: ChangeDetectorRef,
         public breakpointService: BreakpointService
-    ) { }
+    ) {
+        // Effect to trigger processor when dependencies change
+        effect(() => {
+            const txns = this.transactions();
+            const period = this.selectedPeriod();
+            const year = this.selectedYear();
+            const month = this.selectedMonth();
+            const offset = this.selectedWeekOffset();
+            
+            if (txns && txns.length > 0) {
+                const iconMap: { [key: string]: string } = {};
+                const colorMap: { [key: string]: string } = {};
+                this.categoryIconMap.forEach((v, k) => iconMap[k] = v);
+                this.categoryColorMap.forEach((v, k) => colorMap[k] = v);
+
+                this.reportsProcessor.process({
+                    transactions: txns,
+                    selectedPeriod: period,
+                    selectedYear: year,
+                    selectedMonth: month,
+                    selectedWeekOffset: offset,
+                    categoryIconMap: iconMap,
+                    categoryColorMap: colorMap
+                });
+            }
+        }, { allowSignalWrites: true });
+
+        // Effect to update category maps when allCategories signal changes
+        this.updateCategoryMaps();
+    }
 
     ngOnInit(): void {
         const viewSub = this.appViewService.appView$.subscribe(view => {
-            if (view === 'WEEKLY') this.selectedPeriod = 'weekly';
-            else if (view === 'YEARLY') this.selectedPeriod = 'yearly';
-            else this.selectedPeriod = 'monthly';
-            this.computeAll();
+            if (view === 'WEEKLY') this.selectedPeriod.set('weekly');
+            else if (view === 'YEARLY') this.selectedPeriod.set('yearly');
+            else this.selectedPeriod.set('monthly');
         });
         this.subscriptions.push(viewSub);
-
-        this.loadTransactions();
     }
 
     ngOnDestroy(): void {
@@ -238,466 +231,35 @@ export class ReportsComponent implements OnInit, OnDestroy {
     // Data Loading
     // ══════════════════════════════════════════
 
-    private loadTransactions(): void {
-        const userId = this.userService.getCurrentUserId();
-        if (!userId) {
-            this.isLoading = false;
-            this.cdr.markForCheck();
-            return;
-        }
-
-        // Load category icons
-        const catSub = this.store.select(CategoriesSelectors.selectAllCategories)
-            .pipe(take(1))
-            .subscribe(categories => {
-                this.categoryIconMap.clear();
-                this.categoryColorMap.clear();
-                for (const cat of categories) {
-                    if (cat.id) {
-                        this.categoryIconMap.set(cat.id, cat.icon || 'category');
-                        this.categoryColorMap.set(cat.id, cat.color || '#9ca3af');
-                    }
+    private updateCategoryMaps(): void {
+        effect(() => {
+            const categories = this.allCategories();
+            this.categoryIconMap.clear();
+            this.categoryColorMap.clear();
+            for (const cat of categories) {
+                if (cat.id) {
+                    this.categoryIconMap.set(cat.id, cat.icon || 'category');
+                    this.categoryColorMap.set(cat.id, cat.color || '#9ca3af');
                 }
-            });
-        this.subscriptions.push(catSub);
-
-        const sub = this.store.select(TransactionsSelectors.selectAllTransactions)
-            .pipe(take(1))
-            .subscribe({
-                next: (transactions) => {
-                    this.transactions = transactions;
-                    this.computeAll();
-                    this.isLoading = false;
-                    this.cdr.markForCheck();
-                },
-                error: () => {
-                    this.isLoading = false;
-                    this.cdr.markForCheck();
-                }
-            });
-        this.subscriptions.push(sub);
+            }
+        });
     }
+
+    get isLoading() { return this.isProcessing() && this.transactions().length === 0; }
 
     // ══════════════════════════════════════════
     // Compute all data
     // ══════════════════════════════════════════
 
-    private computeAll(): void {
-        const userId = this.userService.getCurrentUserId();
-        const cacheKey = `reports_cache_${userId}`;
-
-        // Attempt to load from cache first for instant render
-        if (this.monthlySummaries.length === 0) {
-            const cachedState = this.storageService.getItem<any>(cacheKey);
-            if (cachedState) {
-               this.monthlySummaries = cachedState.monthlySummaries || [];
-               this.availableYears = cachedState.availableYears || [];
-               this.avgMonthlySpending = cachedState.avgMonthlySpending || 0;
-               this.highestSpendingCategory = cachedState.highestSpendingCategory || null;
-               this.overallSavingsRate = cachedState.overallSavingsRate || 0;
-               this.currentPeriodSummary = cachedState.currentPeriodSummary || null;
-               this.previousPeriodSummary = cachedState.previousPeriodSummary || null;
-               this.filteredMonthlySummaries = cachedState.filteredMonthlySummaries || [];
-               this.nextMonthPrediction = cachedState.nextMonthPrediction || null;
-               this.next3MonthsPrediction = cachedState.next3MonthsPrediction || null;
-               this.yearEndPrediction = cachedState.yearEndPrediction || null;
-               this.cdr.markForCheck();
-            }
-        }
-
-        // If no transactions yet, we're done for now
-        if (this.transactions.length === 0) {
-             return;
-        }
-
-        // Run calculation off the main thread to allow the UI to paint the cache
-        setTimeout(() => {
-            this.monthlySummaries = this.buildMonthlySummaries();
-            this.extractAvailableYears();
-            this.computeKeyMetrics();
-            this.computePeriodSummary();
-            this.computePredictions();
-
-            if (userId) {
-                this.storageService.setItem(cacheKey, {
-                    monthlySummaries: this.monthlySummaries,
-                    availableYears: this.availableYears,
-                    avgMonthlySpending: this.avgMonthlySpending,
-                    highestSpendingCategory: this.highestSpendingCategory,
-                    overallSavingsRate: this.overallSavingsRate,
-                    currentPeriodSummary: this.currentPeriodSummary,
-                    previousPeriodSummary: this.previousPeriodSummary,
-                    filteredMonthlySummaries: this.filteredMonthlySummaries,
-                    nextMonthPrediction: this.nextMonthPrediction,
-                    next3MonthsPrediction: this.next3MonthsPrediction,
-                    yearEndPrediction: this.yearEndPrediction
-                });
-            }
-            
-            this.cdr.markForCheck();
-        }, 0);
-    }
-
-    private extractAvailableYears(): void {
-        const yearSet = new Set<number>();
-        for (const m of this.monthlySummaries) {
-            yearSet.add(m.year);
-        }
-        this.availableYears = Array.from(yearSet).sort((a, b) => b - a);
-        // Ensure selectedYear is valid
-        if (this.availableYears.length > 0 && !this.availableYears.includes(this.selectedYear)) {
-            this.selectedYear = this.availableYears[0];
-        }
-    }
-
-    // ══════════════════════════════════════════
-    // Monthly Summaries
-    // ══════════════════════════════════════════
-
-    private buildMonthlySummaries(): MonthlySummary[] {
-        const map = new Map<string, { income: number; expense: number; categories: Map<string, CategoryBreakdownItem> }>();
-
-        for (const t of this.transactions) {
-            const d = this.dateService.toDate(t.date);
-            if (!d) continue;
-
-            const key = `${d.getFullYear()}-${d.getMonth()}`;
-            if (!map.has(key)) {
-                map.set(key, { income: 0, expense: 0, categories: new Map() });
-            }
-            const entry = map.get(key)!;
-
-            if (t.type === 'income') {
-                entry.income += t.amount;
-            } else if (t.type === 'expense') {
-                entry.expense += t.amount;
-
-                const catKey = t.categoryId || t.category || 'Uncategorized';
-                const catName = t.category || 'Uncategorized';
-                if (!entry.categories.has(catKey)) {
-                    entry.categories.set(catKey, { categoryId: catKey, categoryName: catName, categoryIcon: this.categoryIconMap.get(catKey) || 'category', categoryColor: this.categoryColorMap.get(catKey) || '#9ca3af', amount: 0, percentage: 0, transactionCount: 0 });
-                }
-                const cat = entry.categories.get(catKey)!;
-                cat.amount += t.amount;
-                cat.transactionCount += 1;
-            }
-        }
-
-        const summaries: MonthlySummary[] = [];
-        for (const [key, val] of map) {
-            const [yearStr, monthStr] = key.split('-');
-            const year = parseInt(yearStr);
-            const month = parseInt(monthStr);
-            const savings = val.income - val.expense;
-            const savingsRate = val.income > 0 ? (savings / val.income) * 100 : 0;
-
-            // Compute percentages
-            const categories = Array.from(val.categories.values());
-            if (val.expense > 0) {
-                categories.forEach(c => c.percentage = (c.amount / val.expense) * 100);
-            }
-            categories.sort((a, b) => b.amount - a.amount);
-
-            summaries.push({
-                month, year,
-                label: `${this.MONTHS[month]} ${year}`,
-                income: val.income,
-                expense: val.expense,
-                savings,
-                savingsRate,
-                categoryBreakdown: categories
-            });
-        }
-
-        summaries.sort((a, b) => {
-            if (a.year !== b.year) return b.year - a.year;
-            return b.month - a.month;
-        });
-
-        return summaries;
-    }
-
-    // ══════════════════════════════════════════
-    // Key Metrics
-    // ══════════════════════════════════════════
-
-    private computeKeyMetrics(): void {
-        if (this.monthlySummaries.length === 0) return;
-
-        // Average monthly spending
-        const totalExpense = this.monthlySummaries.reduce((s, m) => s + m.expense, 0);
-        const totalIncome = this.monthlySummaries.reduce((s, m) => s + m.income, 0);
-        this.avgMonthlySpending = totalExpense / this.monthlySummaries.length;
-
-        // Overall savings rate
-        this.overallSavingsRate = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0;
-
-        // Highest spending category across all months
-        const catMap = new Map<string, CategoryBreakdownItem>();
-        for (const m of this.monthlySummaries) {
-            for (const c of m.categoryBreakdown) {
-                if (!catMap.has(c.categoryId)) {
-                    catMap.set(c.categoryId, { ...c, categoryIcon: c.categoryIcon || this.categoryIconMap.get(c.categoryId) || 'category', categoryColor: c.categoryColor || this.categoryColorMap.get(c.categoryId) || '#9ca3af', amount: 0, transactionCount: 0, percentage: 0 });
-                }
-                const existing = catMap.get(c.categoryId)!;
-                existing.amount += c.amount;
-                existing.transactionCount += c.transactionCount;
-            }
-        }
-        const allCats = Array.from(catMap.values()).sort((a, b) => b.amount - a.amount);
-        if (totalExpense > 0) {
-            allCats.forEach(c => c.percentage = (c.amount / totalExpense) * 100);
-        }
-        this.highestSpendingCategory = allCats.length > 0 ? allCats[0] : null;
-    }
-
-    // ══════════════════════════════════════════
-    // Period Summary
-    // ══════════════════════════════════════════
-
-    computePeriodSummary(): void {
-        const now = new Date();
-        const year = this.selectedYear;
-        let currentMonths: MonthlySummary[] = [];
-        let previousMonths: MonthlySummary[] = [];
-
-        if (this.selectedPeriod === 'monthly') {
-            // For selected year: use the latest available month in that year
-            const monthsInYear = this.monthlySummaries.filter(m => m.year === year).sort((a, b) => b.month - a.month);
-            
-            if (this.selectedMonth === null) {
-                this.selectedMonth = year === now.getFullYear() ? now.getMonth() : (monthsInYear.length > 0 ? monthsInYear[0].month : 0);
-            }
-            
-            const currentMonth = this.selectedMonth;
-            currentMonths = this.monthlySummaries.filter(m => m.month === currentMonth && m.year === year);
-            const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-            const prevYear = currentMonth === 0 ? year - 1 : year;
-            previousMonths = this.monthlySummaries.filter(m => m.month === prevMonth && m.year === prevYear);
-        } else if (this.selectedPeriod === 'weekly') {
-            const startOfCurrentWeek = dayjs().add(this.selectedWeekOffset, 'week').startOf('week');
-            const endOfCurrentWeek = dayjs().add(this.selectedWeekOffset, 'week').endOf('week');
-            const startOfPrevWeek = dayjs().add(this.selectedWeekOffset - 1, 'week').startOf('week');
-            const endOfPrevWeek = dayjs().add(this.selectedWeekOffset - 1, 'week').endOf('week');
-
-            currentMonths = this.buildAdhocSummary(this.transactions.filter(t => {
-                const d = dayjs(this.dateService.toDate(t.date));
-                return d.isAfter(startOfCurrentWeek.subtract(1, 'millisecond')) && d.isBefore(endOfCurrentWeek.add(1, 'millisecond'));
-            }));
-
-            previousMonths = this.buildAdhocSummary(this.transactions.filter(t => {
-                const d = dayjs(this.dateService.toDate(t.date));
-                return d.isAfter(startOfPrevWeek.subtract(1, 'millisecond')) && d.isBefore(endOfPrevWeek.add(1, 'millisecond'));
-            }));
-        } else {
-            currentMonths = this.monthlySummaries.filter(m => m.year === year);
-            previousMonths = this.monthlySummaries.filter(m => m.year === year - 1);
-        }
-
-        this.currentPeriodSummary = this.aggregatePeriod(currentMonths, this.getPeriodLabel('current'));
-        this.previousPeriodSummary = this.aggregatePeriod(previousMonths, this.getPeriodLabel('previous'));
-
-        // Expense growth
-        if (this.currentPeriodSummary && this.previousPeriodSummary && this.previousPeriodSummary.expense > 0) {
-            this.currentPeriodSummary.expenseGrowth =
-                ((this.currentPeriodSummary.expense - this.previousPeriodSummary.expense) / this.previousPeriodSummary.expense) * 100;
-        }
-
-        // Filter monthly history for the table
-        this.filteredMonthlySummaries = this.monthlySummaries.filter(m => m.year === this.selectedYear);
-
-        this.cdr.markForCheck();
-    }
-
-    private buildAdhocSummary(txns: Transaction[]): MonthlySummary[] {
-        if (txns.length === 0) return [];
-        let income = 0;
-        let expense = 0;
-        const catMap = new Map<string, CategoryBreakdownItem>();
-
-        for (const t of txns) {
-            if (t.type === 'income') income += t.amount;
-            else if (t.type === 'expense') {
-                expense += t.amount;
-                const catKey = t.categoryId || t.category || 'Uncategorized';
-                const catName = t.category || 'Uncategorized';
-                if (!catMap.has(catKey)) {
-                    catMap.set(catKey, { categoryId: catKey, categoryName: catName, categoryIcon: this.categoryIconMap.get(catKey) || 'category', categoryColor: this.categoryColorMap.get(catKey) || '#9ca3af', amount: 0, percentage: 0, transactionCount: 0 });
-                }
-                const cat = catMap.get(catKey)!;
-                cat.amount += t.amount;
-                cat.transactionCount += 1;
-            }
-        }
-
-        const categories = Array.from(catMap.values());
-        if (expense > 0) categories.forEach(c => c.percentage = (c.amount / expense) * 100);
-        categories.sort((a, b) => b.amount - a.amount);
-
-        return [{
-            month: 0, year: 0, label: '', income, expense, savings: income - expense,
-            savingsRate: income > 0 ? ((income - expense) / income) * 100 : 0,
-            categoryBreakdown: categories
-        }];
-    }
-
-    private aggregatePeriod(months: MonthlySummary[], label: string): PeriodSummary | null {
-        if (months.length === 0) return null;
-
-        const income = months.reduce((s, m) => s + m.income, 0);
-        const expense = months.reduce((s, m) => s + m.expense, 0);
-        const savings = income - expense;
-        const savingsRate = income > 0 ? (savings / income) * 100 : 0;
-        const avgMonthlySpending = expense / (months.length || 1);
-
-        // Merge categories
-        const catMap = new Map<string, CategoryBreakdownItem>();
-        for (const m of months) {
-            for (const c of m.categoryBreakdown) {
-                if (!catMap.has(c.categoryId)) {
-                    catMap.set(c.categoryId, { ...c, categoryIcon: c.categoryIcon || this.categoryIconMap.get(c.categoryId) || 'category', categoryColor: c.categoryColor || this.categoryColorMap.get(c.categoryId) || '#9ca3af', amount: 0, transactionCount: 0, percentage: 0 });
-                }
-                const existing = catMap.get(c.categoryId)!;
-                existing.amount += c.amount;
-                existing.transactionCount += c.transactionCount;
-            }
-        }
-        const categories = Array.from(catMap.values()).sort((a, b) => b.amount - a.amount);
-        if (expense > 0) categories.forEach(c => c.percentage = (c.amount / expense) * 100);
-
-        return {
-            label, income, expense, savings, savingsRate, avgMonthlySpending,
-            topCategory: categories.length > 0 ? categories[0] : null,
-            categoryBreakdown: categories,
-            expenseGrowth: null
-        };
-    }
-
-    public getPeriodLabel(which: 'current' | 'previous'): string {
-        const now = new Date();
-        const year = this.selectedYear;
-        if (this.selectedPeriod === 'monthly') {
-            const currentMonth = this.selectedMonth !== null ? this.selectedMonth : (year === now.getFullYear() ? now.getMonth() : 0);
-            if (which === 'current') return `${this.MONTHS[currentMonth]} ${year}`;
-            const pm = currentMonth === 0 ? 11 : currentMonth - 1;
-            const py = currentMonth === 0 ? year - 1 : year;
-            return `${this.MONTHS[pm]} ${py}`;
-        } else if (this.selectedPeriod === 'weekly') {
-            const offset = which === 'current' ? this.selectedWeekOffset : this.selectedWeekOffset - 1;
-            const start = dayjs().add(offset, 'week').startOf('week');
-            const end = dayjs().add(offset, 'week').endOf('week');
-            
-            if (offset === 0 && which === 'current') return 'This Week';
-            if (offset === -1 && which === 'previous') return 'Last Week';
-            
-            return `${start.format('D MMM')} - ${end.format('D MMM YYYY')}`;
-        } else {
-            return which === 'current' ? `${year}` : `${year - 1}`;
-        }
-    }
-
-    // ══════════════════════════════════════════
-    // Predictions / Forecasting
-    // ══════════════════════════════════════════
-
-    private computePredictions(): void {
-        if (this.monthlySummaries.length < 2) {
-            this.nextMonthPrediction = null;
-            this.next3MonthsPrediction = null;
-            this.yearEndPrediction = null;
-            return;
-        }
-
-        // Use most recent 6 months (or all if fewer)
-        const recent = this.monthlySummaries.slice(0, Math.min(6, this.monthlySummaries.length));
-        const avgExpense = recent.reduce((s, m) => s + m.expense, 0) / recent.length;
-        const avgIncome = recent.reduce((s, m) => s + m.income, 0) / recent.length;
-
-        // Trend: compare first half to second half of recent
-        const half = Math.floor(recent.length / 2);
-        const recentHalf = recent.slice(0, half);
-        const olderHalf = recent.slice(half);
-        const recentAvgExp = recentHalf.reduce((s, m) => s + m.expense, 0) / (recentHalf.length || 1);
-        const olderAvgExp = olderHalf.reduce((s, m) => s + m.expense, 0) / (olderHalf.length || 1);
-
-        const trendFactor = olderAvgExp > 0 ? recentAvgExp / olderAvgExp : 1;
-        const trend: 'increasing' | 'decreasing' | 'stable' =
-            trendFactor > 1.05 ? 'increasing' : trendFactor < 0.95 ? 'decreasing' : 'stable';
-
-        const confidence: 'low' | 'medium' | 'high' =
-            recent.length >= 6 ? 'high' : recent.length >= 3 ? 'medium' : 'low';
-
-        // Find categories likely to overspend (above average trend)
-        const catAvgMap = new Map<string, { total: number; count: number; name: string; id: string }>();
-        for (const m of recent) {
-            for (const c of m.categoryBreakdown) {
-                if (!catAvgMap.has(c.categoryId)) {
-                    catAvgMap.set(c.categoryId, { total: 0, count: 0, name: c.categoryName, id: c.categoryId });
-                }
-                const e = catAvgMap.get(c.categoryId)!;
-                e.total += c.amount;
-                e.count += 1;
-            }
-        }
-        // Check which categories have growing trend in recent months
-        const overspendCategories: CategoryBreakdownItem[] = [];
-        for (const [catId, data] of catAvgMap) {
-            const catAvg = data.total / data.count;
-            // Check most recent month's spend vs average
-            const latestMonth = recent[0];
-            const latestCatSpend = latestMonth.categoryBreakdown.find(c => c.categoryId === catId);
-            if (latestCatSpend && latestCatSpend.amount > catAvg * 1.2) {
-                overspendCategories.push({
-                    categoryId: catId,
-                    categoryName: data.name,
-                    categoryIcon: this.categoryIconMap.get(catId) || 'category',
-                    categoryColor: this.categoryColorMap.get(catId) || '#9ca3af',
-                    amount: latestCatSpend.amount,
-                    percentage: catAvg > 0 ? ((latestCatSpend.amount - catAvg) / catAvg) * 100 : 0,
-                    transactionCount: latestCatSpend.transactionCount
-                });
-            }
-        }
-        overspendCategories.sort((a, b) => b.percentage - a.percentage);
-
-        // Next month
-        const predictedExpMonth = avgExpense * (trend === 'increasing' ? trendFactor : trend === 'decreasing' ? trendFactor : 1);
-        this.nextMonthPrediction = {
-            label: this.getNextMonthLabel(1),
-            predictedExpense: Math.round(predictedExpMonth),
-            predictedIncome: Math.round(avgIncome),
-            predictedSavings: Math.round(avgIncome - predictedExpMonth),
-            confidence, trend, overspendCategories
-        };
-
-        // Next 3 months
-        const predictedExp3 = predictedExpMonth * 3;
-        this.next3MonthsPrediction = {
-            label: `Next 3 Months`,
-            predictedExpense: Math.round(predictedExp3),
-            predictedIncome: Math.round(avgIncome * 3),
-            predictedSavings: Math.round((avgIncome * 3) - predictedExp3),
-            confidence, trend, overspendCategories
-        };
-
-        // Year-end
-        const now = new Date();
-        const remainingMonths = 12 - now.getMonth();
-        const currentYearMonths = this.monthlySummaries.filter(m => m.year === now.getFullYear());
-        const currentYearExpense = currentYearMonths.reduce((s, m) => s + m.expense, 0);
-        const currentYearIncome = currentYearMonths.reduce((s, m) => s + m.income, 0);
-        const predictedRemainingExp = predictedExpMonth * remainingMonths;
-        const predictedRemainingInc = avgIncome * remainingMonths;
-
-        this.yearEndPrediction = {
-            label: `Year-End ${now.getFullYear()}`,
-            predictedExpense: Math.round(currentYearExpense + predictedRemainingExp),
-            predictedIncome: Math.round(currentYearIncome + predictedRemainingInc),
-            predictedSavings: Math.round((currentYearIncome + predictedRemainingInc) - (currentYearExpense + predictedRemainingExp)),
-            confidence: recent.length >= 4 ? 'medium' : 'low',
-            trend, overspendCategories: []
-        };
-    }
+    private computeAll(): void {}
+    private extractAvailableYears(): void {}
+    private buildMonthlySummaries(): MonthlySummary[] { return []; }
+    private computeKeyMetrics(): void {}
+    computePeriodSummary(): void {}
+    private buildAdhocSummary(txns: Transaction[]): MonthlySummary[] { return []; }
+    private aggregatePeriod(months: MonthlySummary[], label: string): PeriodSummary | null { return null; }
+    public getPeriodLabel(which: 'current' | 'previous'): string { return ''; }
+    private computePredictions(): void {}
 
     private getNextMonthLabel(offset: number): string {
         const d = new Date();
@@ -710,19 +272,15 @@ export class ReportsComponent implements OnInit, OnDestroy {
     // ══════════════════════════════════════════
 
     selectPeriod(period: 'weekly' | 'monthly' | 'yearly'): void {
-        this.selectedPeriod = period;
-        this.selectedWeekOffset = 0;
-        this.selectedMonth = null;
-        // Optionally update the global app view here if desired
-        // e.g. this.appViewService.setAppView(period.toUpperCase());
-        this.computePeriodSummary();
+        this.selectedPeriod.set(period);
+        this.selectedWeekOffset.set(0);
+        this.selectedMonth.set(null);
     }
 
     selectYear(year: number): void {
-        this.selectedYear = year;
-        this.selectedMonth = null;
-        this.selectedWeekOffset = 0;
-        this.computePeriodSummary();
+        this.selectedYear.set(year);
+        this.selectedMonth.set(null);
+        this.selectedWeekOffset.set(0);
     }
 
     selectTab(tab: 'summary' | 'forecast'): void {
@@ -731,53 +289,43 @@ export class ReportsComponent implements OnInit, OnDestroy {
     }
 
     previousMonth(): void {
-        if (this.selectedPeriod !== 'monthly') return;
-        if (this.selectedMonth === null) {
+        if (this.selectedPeriod() !== 'monthly') return;
+        if (this.selectedMonth() === null) {
             const now = new Date();
-            this.selectedMonth = this.selectedYear === now.getFullYear() ? now.getMonth() : 0;
+            this.selectedMonth.set(this.selectedYear() === now.getFullYear() ? now.getMonth() : 0);
         }
         
-        if (this.selectedMonth === 0) {
-            this.selectedMonth = 11;
-            this.selectedYear--;
-            if (this.availableYears.length > 0 && !this.availableYears.includes(this.selectedYear)) {
-                this.availableYears = [...this.availableYears, this.selectedYear].sort((a,b) => b - a);
-            }
+        if (this.selectedMonth() === 0) {
+            this.selectedMonth.set(11);
+            this.selectedYear.update(y => y - 1);
         } else {
-            this.selectedMonth--;
+            this.selectedMonth.update(m => (m || 0) - 1);
         }
-        this.computePeriodSummary();
     }
 
     nextMonth(): void {
-        if (this.selectedPeriod !== 'monthly') return;
-        if (this.selectedMonth === null) {
+        if (this.selectedPeriod() !== 'monthly') return;
+        if (this.selectedMonth() === null) {
             const now = new Date();
-            this.selectedMonth = this.selectedYear === now.getFullYear() ? now.getMonth() : 0;
+            this.selectedMonth.set(this.selectedYear() === now.getFullYear() ? now.getMonth() : 0);
         }
         
-        if (this.selectedMonth === 11) {
-            this.selectedMonth = 0;
-            this.selectedYear++;
-            if (this.availableYears.length > 0 && !this.availableYears.includes(this.selectedYear)) {
-                this.availableYears = [...this.availableYears, this.selectedYear].sort((a,b) => b - a);
-            }
+        if (this.selectedMonth() === 11) {
+            this.selectedMonth.set(0);
+            this.selectedYear.update(y => y + 1);
         } else {
-            this.selectedMonth++;
+            this.selectedMonth.update(m => (m || 0) + 1);
         }
-        this.computePeriodSummary();
     }
 
     previousWeek(): void {
-        if (this.selectedPeriod !== 'weekly') return;
-        this.selectedWeekOffset--;
-        this.computePeriodSummary();
+        if (this.selectedPeriod() !== 'weekly') return;
+        this.selectedWeekOffset.update(o => o - 1);
     }
 
     nextWeek(): void {
-        if (this.selectedPeriod !== 'weekly') return;
-        this.selectedWeekOffset++;
-        this.computePeriodSummary();
+        if (this.selectedPeriod() !== 'weekly') return;
+        this.selectedWeekOffset.update(o => o + 1);
     }
 
     // Removed helper methods as they are now handled by pure pipes in the template
