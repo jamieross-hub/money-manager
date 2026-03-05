@@ -133,7 +133,8 @@ export class FamilyDashboardComponent implements OnInit {
 
     const getTime = (val: any) => {
       if (!val) return 0;
-      return val?.toDate ? val.toDate().getTime() : new Date(val).getTime();
+      const d = this.dateService.toDate(val);
+      return d ? d.getTime() : new Date(val).getTime();
     };
 
     // 1. Map regular transactions
@@ -193,6 +194,7 @@ export class FamilyDashboardComponent implements OnInit {
         recipientPhoto: undefined,
         _sortTime: sortTime,
         _createdTime: createdTime,
+        _trackId: tx.id || `tx_${i}_${sortTime}`,
         _popState: (tx.createdAt && (this.dateService.toDate(tx.createdAt)?.getTime() ?? 0) > this.sessionStartTime) ? 'new' : 'old'
       });
     }
@@ -207,7 +209,7 @@ export class FamilyDashboardComponent implements OnInit {
       
       allActivities.push({
         ...set,
-        id: set.id || `set_${set.createdAt}`,
+        id: set.id || `set_${createdTime}`,
         category: 'Settlement',
         type: 'settlement',
         date,
@@ -221,6 +223,7 @@ export class FamilyDashboardComponent implements OnInit {
         note: set.note || 'Settlement',
         _sortTime: sortTime,
         _createdTime: createdTime,
+        _trackId: set.id || `set_${i}_${sortTime}`,
         _popState: (set.createdAt && (this.dateService.toDate(set.createdAt)?.getTime() ?? 0) > this.sessionStartTime) ? 'new' : 'old'
       });
     }
@@ -247,6 +250,7 @@ export class FamilyDashboardComponent implements OnInit {
         note: `${m.displayName} ${m.isActive ? 'joined' : 'left'} the group`,
         _sortTime: sortTime,
         _createdTime: createdTime,
+        _trackId: `mem_${m.userId}_${m.isActive ? 'join' : 'leave'}_${sortTime}`,
         _popState: (m.joinedAt && (this.dateService.toDate(m.joinedAt)?.getTime() ?? 0) > this.sessionStartTime) ? 'new' : 'old'
       });
     }

@@ -246,7 +246,7 @@
       <!-- DEFAULT MODE (COMMON): Member Breakdown -->
       @if (family()?.mode !== 'split') {
         <div class="flex flex-col gap-3 pb-4">
-          @for (m of stats()?.memberBreakdown; track m) {
+          @for (m of stats()?.memberBreakdown; track m.userId) {
             <div
               class="bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
               <div class="flex items-center gap-3" [class.opacity-60]="!m.isActive">
@@ -290,7 +290,7 @@
       <!-- SPLIT MODE: Recent Activity -->
       @if (family()?.mode === 'split') {
         <div class="flex flex-col gap-3 pb-4">
-          @for (tx of recentActivities(); track tx) {
+          @for (tx of recentActivities(); track tx._trackId) {
             <div [@popIn]="tx._popState"
               class="bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
               <div class="flex items-center gap-3">

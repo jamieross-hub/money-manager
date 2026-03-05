@@ -7,7 +7,7 @@
     <!-- Avatar Stack for Family Mode -->
     @if (isFamilyMode() && sortedMembers().length > 0) {
       <div class="avatar-stack flex flex-row-reverse items-center -space-x-4 space-x-reverse hover:-space-x-2 transition-all duration-300 ml-1 mr-1 cursor-pointer">
-        @for (member of sortedMembers().slice(0, 4); track member; let i = $index) {
+        @for (member of sortedMembers().slice(0, 4); track member.userId; let i = $index) {
           <img
             class="flex-shrink-0 object-cover rounded-full w-8 h-8 ring-2 ring-white dark:ring-slate-900 shadow-md transition-all hover:scale-110 hover:ring-blue-500"
             [src]="getMemberAvatarUrl(member)"

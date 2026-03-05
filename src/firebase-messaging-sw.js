@@ -138,7 +138,21 @@ self.addEventListener('notificationclose', (event) => {
 });
 
 // Handle push event fallback removed to prevent duplicate notifications
-
+// Add push event listener for App Badging
+self.addEventListener('push', event => {
+  if (navigator.setAppBadge) {
+    try {
+      const data = event.data.json();
+      // Handle both direct unreadCount and FCM data payload unreadCount
+      const unreadCount = data.unreadCount !== undefined ? data.unreadCount : data.data?.unreadCount;
+      if (unreadCount !== undefined) {
+        navigator.setAppBadge(Number(unreadCount));
+      }
+    } catch (e) {
+      console.error('Error parsing push data for app badge:', e);
+    }
+  }
+});
 // Handle service worker installation
 self.addEventListener('install', (event) => {
   console.log('Firebase messaging service worker installed');

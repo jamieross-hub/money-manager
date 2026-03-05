@@ -1,4 +1,4 @@
-import { Injectable, NgZone, Inject, PLATFORM_ID } from '@angular/core';
+import { Injectable, NgZone, Inject, PLATFORM_ID, Injector, runInInjectionContext } from '@angular/core';
 import { getMessaging, getToken, onMessage, Messaging } from '@angular/fire/messaging';
 import { BehaviorSubject, Observable, from } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
@@ -64,7 +64,8 @@ export class FirebaseMessagingService {
   constructor(
     private ngZone: NgZone,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private storageService: LocalIndexDBStorageService
+    private storageService: LocalIndexDBStorageService,
+    private injector: Injector
   ) {
     this.platformInfo = this.detectPlatform();
     this.initializeMessagingWithoutPermission();
@@ -151,7 +152,9 @@ export class FirebaseMessagingService {
       await this.registerFirebaseMessagingSW();
 
       // Initialize Firebase messaging
-      this.messaging = getMessaging();
+      runInInjectionContext(this.injector, () => {
+        this.messaging = getMessaging();
+      });
 
       // Set up permission observer
       this.permissionSubject.next(Notification.permission);
@@ -211,7 +214,9 @@ export class FirebaseMessagingService {
       await this.registerFirebaseMessagingSW();
 
       // Initialize Firebase messaging
-      this.messaging = getMessaging();
+      runInInjectionContext(this.injector, () => {
+        this.messaging = getMessaging();
+      });
 
       // Set up permission observer
       this.permissionSubject.next(Notification.permission);
