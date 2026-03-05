@@ -15,7 +15,6 @@ import { NotificationService } from 'src/app/util/service/notification.service';
 import { ValidationService } from 'src/app/util/service/validation.service';
 
 import { IconSelectorDialogComponent } from '../icon-selector-dialog/icon-selector-dialog.component';
-import { ColorSelectorDialogComponent } from '../color-selector-dialog/color-selector-dialog.component';
 import { AppState } from 'src/app/store/app.state';
 import { Store } from '@ngrx/store';
 import { createCategory, updateCategory } from 'src/app/store/categories/categories.actions';
@@ -23,8 +22,8 @@ import { createCategory, updateCategory } from 'src/app/store/categories/categor
 import { SsrService } from 'src/app/util/service/ssr.service';
 import { Category } from 'src/app/util/models';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
-import { takeUntil, Observable, of } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
+import { takeUntil, Observable, of, debounceTime, distinctUntilChanged, filter, switchMap, finalize } from 'rxjs';
+import { map, startWith, catchError } from 'rxjs/operators';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { CATEGORY_ICONS, CATEGORY_COLORS, CategoryIcon } from 'src/app/util/config/config';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -63,6 +62,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { APP_CONFIG } from 'src/app/util/config/config';
 import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
+import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
+import { OpenaiService } from 'src/app/util/service/ai-chat/openai.service';
 
 @Component({
   selector: 'app-mobile-category-add-edit-popup',
@@ -105,13 +106,15 @@ import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button
     MatSnackBarModule,
     MatSliderModule,
     MatStepperModule,
-    MatBottomSheetModule
+    MatBottomSheetModule,
+    NgxMatSelectSearchModule
 ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
   categoryForm: FormGroup;
   public isSubmitting = signal<boolean>(false);
+  public isSuggesting = signal<boolean>(false);
   public userId = signal<string>('');
   
   public allCategories = computed(() => {
@@ -153,7 +156,8 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
     private validationService: ValidationService,
     private ssrService: SsrService,
     private userService: UserService,
-    private mobileBackButtonService: MobileBackButtonService
+    private mobileBackButtonService: MobileBackButtonService,
+    private openaiService: OpenaiService
   ) {
     this.categoryForm = this.fb.group({
       name: ['', [
@@ -184,6 +188,32 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
 
     this.colorValue = toSignal(this.categoryForm.controls['color'].valueChanges.pipe(startWith(this.categoryForm.controls['color'].value)), { initialValue: this.categoryForm.controls['color'].value });
     this.iconValue = toSignal(this.categoryForm.controls['icon'].valueChanges.pipe(startWith(this.categoryForm.controls['icon'].value)), { initialValue: this.categoryForm.controls['icon'].value });
+
+    // AI Suggestions
+    this.categoryForm.controls['name'].valueChanges.pipe(
+      debounceTime(1000),
+      distinctUntilChanged(),
+      filter(name => !!name && name.length > 2 && !this.dialogData?.isEdit),
+      switchMap(name => {
+        this.isSuggesting.set(true);
+        return this.openaiService.suggestCategoryIconAndColor(
+          name, 
+          this.availableIcons(), 
+          this.availableColors()
+        ).pipe(
+          finalize(() => this.isSuggesting.set(false)),
+          catchError(() => of(null))
+        );
+      })
+    ).subscribe((suggestion: { icon: string; color: string } | null) => {
+      if (suggestion) {
+        this.categoryForm.patchValue({
+          icon: suggestion.icon,
+          color: suggestion.color.toUpperCase()
+        }, { emitEvent: true });
+        this.hapticFeedback.lightVibration();
+      }
+    });
   }
 
 
@@ -303,21 +333,6 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
       });
   }
 
-  openColorSelectorDialog(): void {
-    this.bottomSheet
-      .open(ColorSelectorDialogComponent, {
-        data: {
-          currentColor: this.categoryForm.get('color')?.value,
-        },
-      })
-      .afterDismissed()
-      .subscribe((selectedColor: string) => {
-        if (selectedColor) {
-          this.categoryForm.patchValue({ color: selectedColor.toUpperCase() });
-          this.hapticFeedback.lightVibration();
-        }
-      });
-  }
 
   private _filterGroups(value: string): string[] {
     const filterValue = value.toLowerCase();

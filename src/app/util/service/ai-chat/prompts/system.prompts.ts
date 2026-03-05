@@ -79,5 +79,20 @@ RULES:
 - Use bullet points
 - Avoid conversational fluff
     `.trim()
+    },
+
+    categorySuggestion: {
+        role: 'system',
+        content: `
+You are a design assistant for a personal finance app. 
+Given a category name, suggest the most relevant icon and color from the provided list.
+
+RULES:
+- Return ONLY a valid JSON object.
+- JSON Schema: {"icon": "icon_name", "color": "#HEXCODE"}
+- Icon must be from the provided available icons list.
+- Color must be from the provided available colors list.
+- Be creative but practical.
+    `.trim()
     }
 };

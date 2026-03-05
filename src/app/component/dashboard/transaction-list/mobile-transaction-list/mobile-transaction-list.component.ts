@@ -656,7 +656,7 @@ export class MobileTransactionListComponent
       // Scroll into view with a slight delay to allow expansion rendering
       setTimeout(() => {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 350);
+      }, 150);
     }
   }
 

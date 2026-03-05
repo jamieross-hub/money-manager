@@ -58,6 +58,7 @@ import { SplitConfigSheetComponent, SplitConfigSheetData, SplitMode } from './sp
 import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
 import { ImageFallbackDirective } from 'src/app/util/directives';
 import { APP_CONFIG } from 'src/app/util/config/config';
+import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 
 
 
@@ -88,7 +89,8 @@ import { APP_CONFIG } from 'src/app/util/config/config';
     MatExpansionModule,
     CommonHeaderComponent,
     CommonBodyContentComponent,
-    ImageFallbackDirective
+    ImageFallbackDirective,
+    NgxMatSelectSearchModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

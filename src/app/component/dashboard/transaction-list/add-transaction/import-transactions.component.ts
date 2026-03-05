@@ -34,6 +34,7 @@ import { SsrService } from 'src/app/util/service/ssr.service';
 import { Observable, of, take, ReplaySubject, Subject } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { takeUntil } from 'rxjs/operators';
+import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 
 @Component({
   selector: 'import-transactions',
@@ -53,7 +54,8 @@ import { takeUntil } from 'rxjs/operators';
     MatProgressBarModule,
     MatCheckboxModule,
     MatProgressSpinnerModule,
-    TranslateModule
+    TranslateModule,
+    NgxMatSelectSearchModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

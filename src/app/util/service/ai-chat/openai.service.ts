@@ -4,6 +4,8 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { User } from '../../models';
 import { environment } from 'src/environments/environment';
+import { SYSTEM_PROMPTS } from './prompts/system.prompts';
+import { CategoryIcon } from '../../config/config';
 // If openai.types.ts exists and we want to use it, we could import it.
 // However, to be safe and self-contained as per the current file structure:
 export interface OpenAIMessage {
@@ -207,4 +209,39 @@ export class OpenaiService {
   //   };
   //   return this.sendMessage([systemMessage, userMessage]);
   // }
+
+  suggestCategoryIconAndColor(
+    categoryName: string, 
+    availableIcons: CategoryIcon[], 
+    availableColors: { label: string; value: string }[]
+  ): Observable<{ icon: string; color: string }> {
+    const systemMessage = SYSTEM_PROMPTS['categorySuggestion'];
+    const userMessage: OpenAIMessage = {
+      role: 'user',
+      content: `Suggest an icon and color for the category: "${categoryName}".
+      
+      Available Icons (use only the "icon" string): ${JSON.stringify(availableIcons.map(i => i.icon))}
+      Available Colors (use only the HEX code): ${JSON.stringify(availableColors.map(c => c.value))}
+      
+      Return JSON: {"icon": "...", "color": "..."}`
+    };
+
+    return this.sendMessage([systemMessage, userMessage]).pipe(
+      map(response => {
+        try {
+          // Find the first { and last } to handle any extra text from AI
+          const start = response.indexOf('{');
+          const end = response.lastIndexOf('}');
+          if (start !== -1 && end !== -1) {
+            const jsonStr = response.substring(start, end + 1);
+            return JSON.parse(jsonStr);
+          }
+          return JSON.parse(response);
+        } catch (e) {
+          console.error('Failed to parse AI suggestion JSON:', response);
+          throw new Error('Invalid suggestion format');
+        }
+      })
+    );
+  }
 }

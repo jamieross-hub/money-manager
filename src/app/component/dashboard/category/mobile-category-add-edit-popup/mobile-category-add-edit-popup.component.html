@@ -10,20 +10,49 @@
 
     <!-- Basic Details Section (Combines Name and Type) -->
     <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm space-y-4">
-      <!-- Category Name Field -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category Name *</label>
-        <div class="relative">
-          <!-- <mat-icon class="absolute left-3 top-3 transform -translate-y-1/2 text-gray-400">label</mat-icon> -->
-          <input type="text" formControlName="name" autofocus placeholder="e.g., Groceries"
-            class="w-full py-3 px-4  border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+      <!-- Compact Icon + Name Row -->
+      <div class="flex items-end gap-3">
+        <!-- Clickable Icon Selector -->
+        <div (click)="openIconSelectorDialog()" 
+          class="w-14 h-14 flex-shrink-0 flex items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all group overflow-hidden"
+          [style.background-color]="colorValue() + '1A'"
+          [class.animate-pulse]="isSuggesting()"
+          matTooltip="Change Icon">
+          <mat-icon class="!w-8 !h-8 !text-[32px] transition-transform group-hover:scale-110" 
+            [style.color]="colorValue() || '#005cbb'">
+            {{ iconValue() || 'category' }}
+          </mat-icon>
         </div>
-        <div class="flex justify-between items-center mt-1">
-          @if(getNameError() && categoryForm.get('name')?.touched) {
-            <p class="text-red-500 text-xs">{{ getNameError() }}</p>
-          }
-          <span class="text-xs text-gray-500 ml-auto">{{ categoryForm.get('name')?.value?.length || 0 }}/50</span>
+
+        <!-- Name Input -->
+        <div class="flex-grow">
+          <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1 px-1 flex justify-between">
+            <span>Category Name *</span>
+            @if(isSuggesting()) {
+              <span class="text-blue-500 animate-pulse lowercase font-medium">AI Suggesting...</span>
+            }
+          </label>
+          <div class="relative">
+            <input type="text" formControlName="name" autofocus placeholder="e.g., Groceries"
+              class="w-full py-2.5 px-4 text-base font-semibold border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50/30 dark:bg-gray-900/30 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400 transition-all shadow-sm" />
+            
+            @if(isSuggesting()) {
+              <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+                <div class="animate-spin rounded-full h-4 w-4 border-2 border-blue-500/20 border-t-blue-500"></div>
+              </div>
+            }
+          </div>
         </div>
+      </div>
+
+      <!-- Validation Errors & Character Count Row -->
+      <div class="flex justify-between items-center px-1">
+        @if(getNameError() && categoryForm.get('name')?.touched) {
+          <p class="text-red-500 text-[10px] font-medium leading-none m-0">{{ getNameError() }}</p>
+        } @else {
+          <div></div>
+        }
+        <span class="text-[10px] font-medium text-gray-400 dark:text-gray-500">{{ categoryForm.get('name')?.value?.length || 0 }}/50</span>
       </div>
 
       <!-- Category Type Field -->
@@ -55,94 +84,32 @@
 
     <!-- Appearance Section (Icon and Color) -->
     <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm space-y-4">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <!-- Category Icon Field -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category Icon *</label>
-          <!-- Mobile Selector -->
-          @if (breakpointService.device.isMobile) {
-            <div (click)="openIconSelectorDialog()"
-              class="relative w-full cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent py-3 px-4 flex items-center justify-between hover:border-blue-500 transition-colors">
-              <div class="flex items-center gap-3">
-                <mat-icon [style.color]="colorValue() || '#005cbb'">
-                  {{ iconValue() || 'category' }}
-                </mat-icon>
-                <span class="text-gray-900 dark:text-gray-100 font-medium capitalize">
-                  {{ getIconName(iconValue()) }}
-                </span>
-              </div>
-              <mat-icon class="text-gray-500 text-base">expand_more</mat-icon>
-            </div>
-          }
-
-          <!-- Desktop/Tablet Select -->
-          @if (!breakpointService.device.isMobile) {
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-select formControlName="icon">
-                <mat-select-trigger>
-                  <div class="flex items-center gap-2">
-                    <mat-icon>{{ iconValue() }}</mat-icon>
-                    <span class="capitalize">{{ getIconName(iconValue()) }}</span>
-                  </div>
-                </mat-select-trigger>
-                <mat-option>
-                  <ngx-mat-select-search [formControl]="iconFilterCtrl" placeholderLabel="Search icons..."></ngx-mat-select-search>
-                </mat-option>
-                @for (item of filteredIcons(); track item) {
-                  <mat-option [value]="item.icon">
-                    <div class="flex items-center gap-2">
-                      <mat-icon>{{ item.icon }}</mat-icon>
-                      <span class="capitalize">{{ item.name }}</span>
-                    </div>
-                  </mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-          }
-        </div>
-
-        <!-- Category Color Field -->
+      <div class="grid grid-cols-1 gap-4">
+        <!-- Category Color Field (Unified) -->
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category Color *</label>
-          <!-- Mobile Selector -->
-          @if (breakpointService.device.isMobile) {
-            <div (click)="openColorSelectorDialog()"
-              class="relative w-full cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent py-3 px-4 flex items-center justify-between hover:border-blue-500 transition-colors">
-              <div class="flex items-center gap-3">
-                <div class="w-6 h-6 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm"
-                [style.background-color]="colorValue() || '#005cbb'"></div>
-                <span class="text-gray-900 dark:text-gray-100 font-medium">
-                  {{ colorValue() || '#005cbb' }}
-                </span>
-              </div>
-              <mat-icon class="text-gray-500 text-base">expand_more</mat-icon>
-            </div>
-          }
-
-          <!-- Desktop/Tablet Select -->
-          @if (!breakpointService.device.isMobile) {
-            <mat-form-field appearance="outline" class="w-full">
-              <mat-select formControlName="color">
-                <mat-select-trigger>
-                  <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 rounded-full border border-gray-200" [style.background-color]="colorValue()"></div>
-                    <span>{{ getColorLabel(colorValue()) }}</span>
+          <mat-form-field appearance="outline" class="w-full custom-mat-field">
+            <mat-select formControlName="color" [panelClass]="'custom-select-panel'">
+              <mat-select-trigger>
+                <div class="flex items-center gap-3">
+                  <div class="w-6 h-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm" [style.background-color]="colorValue()"></div>
+                  <span class="font-bold text-gray-900 dark:text-gray-100">{{ getColorLabel(colorValue()) }}</span>
+                </div>
+              </mat-select-trigger>
+              <!-- <mat-option>
+                <ngx-mat-select-search [formControl]="colorFilterCtrl" placeholderLabel="Search colors..." 
+                  noEntriesFoundLabel="No colors found"></ngx-mat-select-search>
+              </mat-option> -->
+              @for (color of filteredColors(); track color) {
+                <mat-option [value]="color.value">
+                  <div class="flex items-center gap-3">
+                    <div class="w-5 h-5 rounded-md border border-gray-200 dark:border-gray-700" [style.background-color]="color.value"></div>
+                    <span class="font-medium">{{ color.label }}</span>
                   </div>
-                </mat-select-trigger>
-                <mat-option>
-                  <ngx-mat-select-search [formControl]="colorFilterCtrl" placeholderLabel="Search colors..."></ngx-mat-select-search>
                 </mat-option>
-                @for (color of filteredColors(); track color) {
-                  <mat-option [value]="color.value">
-                    <div class="flex items-center gap-2">
-                      <div class="w-4 h-4 rounded-full border border-gray-200" [style.background-color]="color.value"></div>
-                      <span>{{ color.label }}</span>
-                    </div>
-                  </mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-          }
+              }
+            </mat-select>
+          </mat-form-field>
         </div>
       </div>
     </div>
