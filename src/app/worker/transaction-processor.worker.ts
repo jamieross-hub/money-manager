@@ -182,7 +182,7 @@ addEventListener('message', ({ data }) => {
 
   // Merging Logic (Ported from component)
   let mergedData = filtered;
-  if (range !== 'upcoming' && !isRecurringMode && !isDeletedMode) {
+  if (range !== 'upcoming' && range !== null && !isRecurringMode && !isDeletedMode) {
     const endOfCheck = dayjs().add(3, 'day').endOf('day').toDate();
     const recurring = transactions.filter((t: any) => t.isRecurring);
     const dueSoon = generateUpcomingTransactions(recurring, dayjs().subtract(1, 'year').toDate(), endOfCheck, transactions);
