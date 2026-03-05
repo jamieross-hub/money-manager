@@ -34,6 +34,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { LoaderService } from 'src/app/util/service/loader.service';
 import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 import { DateService } from 'src/app/util/service/date.service';
+import { FamilyProcessorService } from 'src/app/util/service/family-processor.service';
 
 @Component({
   selector: 'app-family-dashboard',
@@ -92,6 +93,7 @@ export class FamilyDashboardComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private loaderService = inject(LoaderService);
   private dateService = inject(DateService);
+  private familyProcessor = inject(FamilyProcessorService);
   private sessionStartTime = Date.now();
 
   @Input() group: any;
@@ -124,169 +126,13 @@ export class FamilyDashboardComponent implements OnInit {
   settlements = toSignal(this.store.select(FamilySelectors.selectSettlements), { initialValue: [] as Settlement[] });
   loading = toSignal(this.store.select(FamilySelectors.selectFamilyLoading), { initialValue: true });
 
-  recentActivities = computed(() => {
-    const mems = this.members();
-    const currentUid = this.currentUserId;
-    const memberMap = new Map(mems.map(m => [m.userId, m]));
-
-    const allActivities = [];
-
-    const getTime = (val: any) => {
-      if (!val) return 0;
-      const d = this.dateService.toDate(val);
-      return d ? d.getTime() : new Date(val).getTime();
-    };
-
-    // 1. Map regular transactions
-    const txns = this.recentTxns();
-    for (let i = 0; i < txns.length; i++) {
-      const tx = txns[i];
-      if (tx.category === 'Settlement') continue;
-
-      let payerId = tx.userId;
-      let payerName = tx.userDisplayName || 'Unknown';
-      let payerPhoto = tx.userPhotoURL;
-
-      if (tx.splitData) {
-        const pd = tx.splitData;
-        if (pd.paidByUserId === 'multiple' || (pd.paidBy && pd.paidBy.length > 1)) {
-          payerId = 'multiple';
-          payerName = 'Multiple';
-          payerPhoto = undefined;
-        } else {
-          if (pd.paidBy && pd.paidBy.length === 1) {
-            payerId = pd.paidBy[0].userId;
-          } else {
-            payerId = pd.paidByUserId || tx.userId;
-          }
-
-          const splitMember = memberMap.get(payerId);
-          if (splitMember) {
-            payerName = splitMember.displayName;
-            payerPhoto = splitMember.photoURL;
-          } else if (pd.paidBy && pd.paidBy.length === 1) {
-            payerName = pd.paidBy[0].displayName || 'Unknown';
-            payerPhoto = pd.paidBy[0].photoURL;
-          } else {
-            payerName = pd.paidByDisplayName || tx.userDisplayName || 'Unknown';
-            payerPhoto = pd.paidByPhotoURL || tx.userPhotoURL;
-          }
-        }
-      } else {
-        const member = memberMap.get(payerId);
-        if (member) {
-          payerName = member.displayName;
-          payerPhoto = member.photoURL;
-        }
-      }
-
-      const sortTime = getTime(tx.date);
-      const createdTime = getTime(tx.createdAt);
-
-      allActivities.push({
-        ...tx,
-        payerId,
-        payerName,
-        payerPhoto,
-        payerLabel: payerId === currentUid ? 'You' : payerName,
-        recipientId: undefined,
-        recipientName: undefined,
-        recipientPhoto: undefined,
-        _sortTime: sortTime,
-        _createdTime: createdTime,
-        _trackId: tx.id || `tx_${i}_${sortTime}`,
-        _popState: (tx.createdAt && (this.dateService.toDate(tx.createdAt)?.getTime() ?? 0) > this.sessionStartTime) ? 'new' : 'old'
-      });
-    }
-
-    // 2. Map Settlements
-    const settlements = this.settlements();
-    for (let i = 0; i < settlements.length; i++) {
-      const set = settlements[i];
-      const date = set.settledAt || set.createdAt;
-      const sortTime = getTime(date);
-      const createdTime = getTime(set.createdAt);
-      
-      allActivities.push({
-        ...set,
-        id: set.id || `set_${createdTime}`,
-        category: 'Settlement',
-        type: 'settlement',
-        date,
-        payerId: set.fromUserId,
-        payerName: set.fromDisplayName,
-        payerPhoto: set.fromPhotoURL,
-        payerLabel: set.fromUserId === currentUid ? 'You' : set.fromDisplayName,
-        recipientId: set.toUserId,
-        recipientName: set.toDisplayName,
-        recipientPhoto: set.toPhotoURL,
-        note: set.note || 'Settlement',
-        _sortTime: sortTime,
-        _createdTime: createdTime,
-        _trackId: set.id || `set_${i}_${sortTime}`,
-        _popState: (set.createdAt && (this.dateService.toDate(set.createdAt)?.getTime() ?? 0) > this.sessionStartTime) ? 'new' : 'old'
-      });
-    }
-
-    // 3. Map Member Activities
-    for (let i = 0; i < mems.length; i++) {
-      const m = mems[i];
-      const sortTime = getTime(m.joinedAt);
-      const createdTime = getTime(m.joinedAt); // JoinedAt is practically the creation time for members in this context
-      
-      allActivities.push({
-        id: `mem_${m.userId}_${m.isActive ? 'join' : 'leave'}`,
-        category: 'MemberActivity',
-        type: m.isActive ? 'joined' : 'left',
-        amount: 0,
-        date: m.joinedAt,
-        payerId: m.userId,
-        payerName: m.displayName,
-        payerPhoto: m.photoURL,
-        payerLabel: m.displayName,
-        recipientId: undefined,
-        recipientName: undefined,
-        recipientPhoto: undefined,
-        note: `${m.displayName} ${m.isActive ? 'joined' : 'left'} the group`,
-        _sortTime: sortTime,
-        _createdTime: createdTime,
-        _trackId: `mem_${m.userId}_${m.isActive ? 'join' : 'leave'}_${sortTime}`,
-        _popState: (m.joinedAt && (this.dateService.toDate(m.joinedAt)?.getTime() ?? 0) > this.sessionStartTime) ? 'new' : 'old'
-      });
-    }
-
-    return allActivities.sort((a, b) => {
-      if (b._sortTime !== a._sortTime) {
-        return b._sortTime - a._sortTime;
-      }
-      return (b._createdTime || 0) - (a._createdTime || 0);
-    });
-  });
+  recentActivities = this.familyProcessor.activities;
 
 
 
   private storageService = inject(LocalIndexDBStorageService);
 
-  stats = computed(() => {
-    const fam = this.family();
-    const trans = this.transactions();
-    const mems = this.members();
-
-    if (!fam?.id) return null;
-
-    const cacheKey = `stats_${fam.id}`;
-
-    if (mems.length === 0) {
-      const cachedStats = this.storageService.getItem<FamilyStats>(cacheKey);
-      if (cachedStats) {
-        return cachedStats;
-      }
-    }
-
-    const calculatedStats = this.familyService.computeStats(trans, mems);
-    this.storageService.setItem(cacheKey, calculatedStats);
-    return calculatedStats;
-  });
+  stats = this.familyProcessor.stats;
 
   get currentUserId(): string | undefined {
     return this.auth.currentUser?.uid;
@@ -306,14 +152,7 @@ export class FamilyDashboardComponent implements OnInit {
     return (mine / total) * 100;
   });
 
-  settleBalances = computed(() => {
-    const txs = this.transactions();
-    const mems = this.members();
-    const sets = this.settlements();
-    const fam = this.family();
-    if (!fam?.id || mems.length === 0) return [];
-    return this.familyService.computeBalances(txs, mems, sets);
-  });
+  settleBalances = this.familyProcessor.balances;
 
   myNetSettleBalance = computed(() => {
     const uid = this.currentUserId;
@@ -362,6 +201,23 @@ export class FamilyDashboardComponent implements OnInit {
       const fam = this.family();
       if (fam?.id) {
         this.store.dispatch(FamilyActions.loadSettlements({ familyId: fam.id }));
+      }
+    }, { allowSignalWrites: true });
+
+    effect(() => {
+      const transactions = this.transactions();
+      const members = this.members();
+      const settlements = this.settlements();
+      const currentUserId = this.currentUserId;
+
+      if (transactions && members) {
+        this.familyProcessor.process({
+          transactions,
+          members,
+          settlements,
+          currentUserId,
+          sessionStartTime: this.sessionStartTime
+        });
       }
     }, { allowSignalWrites: true });
 
