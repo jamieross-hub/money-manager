@@ -160,8 +160,16 @@ export class MobileTransactionListComponent
   
   showScrollIndicator = signal<boolean>(false);
   currentScrollHeader = signal<string>('');
+  isHeaderHidden = signal<boolean>(false);
   private scrollTimeout?: any;
-  private observer?: IntersectionObserver;
+  private showIndicatorTimeout?: any;
+  private lastScrollTopSignal = signal<number>(0);
+  private lastScrollYSignal = signal<number>(0);
+  private lastThresholdScrollTopSignal = signal<number>(0);
+  private isScrollHandling = false;
+  // px per scroll event to be considered "fast"
+  private readonly FAST_SCROLL_THRESHOLD = 50;
+  private readonly HYSTERESIS_DISTANCE = 40;
 
   // Signals defined below...
 
@@ -461,13 +469,6 @@ export class MobileTransactionListComponent
       }
     }, { allowSignalWrites: true });
 
-    // Handle re-observing headers when transactions change
-    effect(() => {
-      const transactions = this.flattenedTransactions();
-      if (transactions.length > 0) {
-        setTimeout(() => this.observeHeaders(), 300);
-      }
-    });
 
     // React to theme changes (e.g., for charts)
     effect(() => {
@@ -508,53 +509,88 @@ export class MobileTransactionListComponent
   }
 
   ngAfterViewInit() {
-    this.setupIntersectionObserver();
+    // Scroll container is ready — header detection is done via onScroll()
   }
 
   private setupIntersectionObserver() {
-    this.observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const headerText = entry.target.getAttribute('data-header');
-          if (headerText) {
-            this.currentScrollHeader.set(headerText);
-          }
-        }
-      });
-    }, {
-      root: this.scrollContainer?.nativeElement,
-      rootMargin: '-10px 0px -85% 0px', // Focus on headers near the top
-      threshold: [0, 1]
-    });
+    // No-op: using scroll-based header detection instead
   }
 
   private observeHeaders() {
-    if (!this.observer || !this.scrollContainer) return;
-    
-    // Disconnect previous observations
-    this.observer.disconnect();
+    // No-op: using scroll-based header detection instead
+  }
 
-    const headers = this.scrollContainer.nativeElement.querySelectorAll('.date-header');
+  private updateCurrentScrollHeader() {
+    if (!this.scrollContainer) return;
+    const container = this.scrollContainer.nativeElement;
+    const containerTop = container.getBoundingClientRect().top;
+    const headers = container.querySelectorAll<HTMLElement>('.date-header');
+    let currentHeader = '';
     headers.forEach(header => {
-      this.observer?.observe(header);
+      const headerTop = header.getBoundingClientRect().top - containerTop;
+      // Header is at or above the top of the visible area (with small 24px buffer)
+      if (headerTop <= 24) {
+        currentHeader = header.getAttribute('data-header') || header.textContent?.trim() || '';
+      }
     });
+    if (currentHeader) {
+      this.currentScrollHeader.set(currentHeader);
+    }
   }
 
   onScroll() {
-    if (this.scrollTimeout) {
-      clearTimeout(this.scrollTimeout);
-    }
+    if (!this.scrollContainer || this.isScrollHandling) return;
     
-    this.showScrollIndicator.set(true);
-    
-    this.scrollTimeout = setTimeout(() => {
-      this.showScrollIndicator.set(false);
-    }, 1500); // Hide after 1.5s of no scroll
+    this.isScrollHandling = true;
+    requestAnimationFrame(() => {
+      const container = this.scrollContainer!.nativeElement;
+      const scrollTop = container.scrollTop;
+      const scrollHeight = container.scrollHeight;
+      const clientHeight = container.clientHeight;
+      const distanceScrolled = Math.abs(scrollTop - this.lastThresholdScrollTopSignal());
+
+      // 1. Header Visibility with Hysteresis
+      if (scrollTop <= 25) {
+        if (this.isHeaderHidden()) {
+          this.isHeaderHidden.set(false);
+          this.lastThresholdScrollTopSignal.set(scrollTop);
+        }
+      } else if (distanceScrolled > this.HYSTERESIS_DISTANCE) {
+        const isNearBottom = (scrollTop + clientHeight) >= (scrollHeight - 40);
+        const lastScrollTop = this.lastScrollTopSignal();
+
+        if (scrollTop > lastScrollTop && !isNearBottom) {
+          if (!this.isHeaderHidden()) {
+            this.isHeaderHidden.set(true);
+            this.lastThresholdScrollTopSignal.set(scrollTop);
+          }
+        } else if (scrollTop < lastScrollTop) {
+          this.lastThresholdScrollTopSignal.set(scrollTop);
+        }
+      }
+
+      this.lastScrollTopSignal.set(scrollTop);
+
+      // 2. Floating date indicator (Fast Scroll only)
+      const delta = Math.abs(scrollTop - this.lastScrollYSignal());
+      this.lastScrollYSignal.set(scrollTop);
+
+      if (delta >= this.FAST_SCROLL_THRESHOLD) {
+        this.updateCurrentScrollHeader();
+        if (this.showIndicatorTimeout) clearTimeout(this.showIndicatorTimeout);
+        if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
+        this.showScrollIndicator.set(true);
+        this.scrollTimeout = setTimeout(() => {
+          this.showScrollIndicator.set(false);
+        }, 1000);
+      }
+
+      this.isScrollHandling = false;
+    });
   }
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
-    this.observer?.disconnect();
     if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
     this.destroy$.next();
     this.destroy$.complete();
