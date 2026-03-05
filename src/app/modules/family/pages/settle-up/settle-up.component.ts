@@ -38,6 +38,7 @@ import { TransactionType, SyncStatus, TransactionStatus, AccountType } from 'src
 import { Transaction } from 'src/app/util/models/transaction.model';
 import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
 import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
+import { CommonSyncService } from 'src/app/util/service/common-sync.service';
 @Component({
   selector: 'app-settle-up',
   standalone: true,
@@ -63,6 +64,7 @@ export class SettleUpComponent implements OnInit {
   private dialog = inject(MatDialog);
   private destroyRef = inject(DestroyRef);
   private actions$ = inject(Actions);
+  private commonSyncService = inject(CommonSyncService);
 
   family = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null });
   members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers), { initialValue: [] as FamilyMember[] });
@@ -203,7 +205,7 @@ export class SettleUpComponent implements OnInit {
             date: now,
             notes: `Settlement: ${req.fromDisplayName} \u2192 ${req.toDisplayName} via ${methodLabel}${req.note ? ' | ' + req.note : ''}`,
             status: TransactionStatus.COMPLETED,
-            syncStatus: SyncStatus.PENDING,
+            syncStatus: this.commonSyncService.isCurrentlyOnline() ? SyncStatus.SYNCED : SyncStatus.PENDING,
             createdAt: now,
             updatedAt: now,
             createdBy: userId,

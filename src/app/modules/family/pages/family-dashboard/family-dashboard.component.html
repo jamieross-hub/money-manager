@@ -291,7 +291,7 @@
       @if (family()?.mode === 'split') {
         <div class="flex flex-col gap-3 pb-4">
           @for (tx of recentActivities(); track tx) {
-            <div
+            <div [@popIn]="tx._popState"
               class="bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <!-- User Avatars -->
@@ -322,7 +322,7 @@
                 }
                 <!-- Activity Info -->
                 <div class="flex flex-col">
-                  <span class="text-[14px] font-bold text-gray-800 dark:text-gray-200 truncate max-w-[160px]" *ngIf="tx.note">{{ tx.note}}</span>
+                  <span class="text-[14px] font-bold text-secondary-500 truncate " *ngIf="tx.note">{{ tx.note}}</span>
                   <span class="text-[12px] text-gray-500 dark:text-gray-400 truncate max-w-[160px]">
                     @if (tx.category === 'Settlement') {
                       <span class="font-medium text-primary-600 dark:text-primary-400">
@@ -331,7 +331,7 @@
                       tx.recipientId === currentUserId ? 'You' : tx.recipientName }}
                     </span>
                   }
-                  @if (tx.category !== 'Settlement') {
+                  @if (tx.category !== 'Settlement' && tx.category !== 'MemberActivity') {
                     <span class="font-medium">{{ tx.payerLabel }}</span> paid
                   }
 
@@ -343,12 +343,13 @@
             </div>
             <!-- Amount and Date -->
             <div class="flex flex-col items-end">
-              
-              <span class="text-[14px] font-bold" [class.text-green-600]="tx.type === 'income'"
-                [class.dark:text-green-400]="tx.type === 'income'" [class.text-gray-900]="tx.type !== 'income'"
-                [class.dark:text-white]="tx.type !== 'income'">
-                {{ tx.amount | currency }}
-              </span>
+              @if (tx.category !== 'MemberActivity') {
+                <span class="text-[14px] font-bold" [class.text-green-600]="tx.type === 'income'"
+                  [class.dark:text-green-400]="tx.type === 'income'" [class.text-gray-900]="tx.type !== 'income'"
+                  [class.dark:text-white]="tx.type !== 'income'">
+                  {{ tx.amount | currency }}
+                </span>
+              }
             </div>
           </div>
         }

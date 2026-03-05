@@ -14,6 +14,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { TransactionStatus } from 'src/app/util/config/enums';
 
+import { trigger, transition, style, animate } from '@angular/animations';
 import { AppState } from 'src/app/store/app.state';
 import * as FamilyActions from '../../store/family.actions';
 import * as FamilySelectors from '../../store/family.selectors';
@@ -32,18 +33,40 @@ import { ReportService } from 'src/app/util/service/db/report.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { LoaderService } from 'src/app/util/service/loader.service';
 import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
+import { DateService } from 'src/app/util/service/date.service';
 
 @Component({
   selector: 'app-family-dashboard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('popIn', [
+      transition('void => new', [
+        style({ 
+          opacity: 0, 
+          height: 0,
+          marginBottom: 0,
+          transform: 'scale(0.92) translateY(15px)',
+          overflow: 'hidden'
+        }),
+        animate('350ms cubic-bezier(0.4, 0, 0.2, 1)', style({ 
+          height: '*', 
+          marginBottom: '8px' 
+        })),
+        animate('650ms cubic-bezier(0.175, 0.885, 0.32, 1.275)', style({ 
+          opacity: 1, 
+          transform: 'scale(1) translateY(0)' 
+        }))
+      ])
+    ])
+  ],
   imports: [
-    CommonModule, 
-    RouterModule, 
-    MatButtonModule, 
-    MatIconModule, 
-    MatProgressSpinnerModule, 
-    MatTooltipModule, 
+    CommonModule,
+    RouterModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
     MatRippleModule,
     MatDialogModule,
     CurrencyPipe,
@@ -68,11 +91,13 @@ export class FamilyDashboardComponent implements OnInit {
   private reportService = inject(ReportService);
   private snackBar = inject(MatSnackBar);
   private loaderService = inject(LoaderService);
- 
+  private dateService = inject(DateService);
+  private sessionStartTime = Date.now();
+
   @Input() group: any;
   @Output() close = new EventEmitter<void>();
   private isInstanceLoading = false;
- 
+
   private storeFamily = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null });
   private allFamilies = toSignal(this.store.select(FamilySelectors.selectUserFamilies), { initialValue: [] });
 
@@ -89,7 +114,7 @@ export class FamilyDashboardComponent implements OnInit {
     }
 
     if (skeleton && (!fromStore || (skeleton.id && fromStore.id === skeleton.id))) {
-       return { ...fromStore, ...skeleton } as Family;
+      return { ...fromStore, ...skeleton } as Family;
     }
     return fromStore;
   });
@@ -101,85 +126,136 @@ export class FamilyDashboardComponent implements OnInit {
 
   recentActivities = computed(() => {
     const mems = this.members();
-    return this.recentTxns().map(tx => {
+    const currentUid = this.currentUserId;
+    const memberMap = new Map(mems.map(m => [m.userId, m]));
+
+    const allActivities = [];
+
+    const getTime = (val: any) => {
+      if (!val) return 0;
+      return val?.toDate ? val.toDate().getTime() : new Date(val).getTime();
+    };
+
+    // 1. Map regular transactions
+    const txns = this.recentTxns();
+    for (let i = 0; i < txns.length; i++) {
+      const tx = txns[i];
+      if (tx.category === 'Settlement') continue;
+
       let payerId = tx.userId;
-      
-      const member = mems.find(m => m.userId === payerId);
-      let payerName = member?.displayName || tx.userDisplayName || 'Unknown';
-      let payerPhoto = member?.photoURL || tx.userPhotoURL;
-      let payerLabel = payerName;
+      let payerName = tx.userDisplayName || 'Unknown';
+      let payerPhoto = tx.userPhotoURL;
 
-      // Settlement recipient info
-      let recipientId: string | undefined = undefined;
-      let recipientName: string | undefined = undefined;
-      let recipientPhoto: string | undefined = undefined;
-
-      // Handle Settlement transactions
-      if (tx.category === 'Settlement' && tx.settlementFromUserId) {
-        payerId = tx.settlementFromUserId;
-        const fromMember = mems.find(m => m.userId === tx.settlementFromUserId);
-        if (fromMember) {
-          payerName = fromMember.displayName;
-          payerPhoto = fromMember.photoURL;
-        }
-
-        recipientId = tx.settlementToUserId;
-        const toMember = mems.find(m => m.userId === tx.settlementToUserId);
-        if (toMember) {
-          recipientName = toMember.displayName;
-          recipientPhoto = toMember.photoURL;
-        } else {
-          recipientName = 'Unknown';
-        }
-        
-        payerLabel = payerId === this.currentUserId ? 'You' : payerName;
-      } 
-      // Handle Split transactions
-      else if (tx.splitData) {
-        if (tx.splitData.paidByUserId === 'multiple' || (tx.splitData.paidBy && tx.splitData.paidBy.length > 1)) {
+      if (tx.splitData) {
+        const pd = tx.splitData;
+        if (pd.paidByUserId === 'multiple' || (pd.paidBy && pd.paidBy.length > 1)) {
           payerId = 'multiple';
           payerName = 'Multiple';
           payerPhoto = undefined;
-          payerLabel = 'Multiple people';
         } else {
-          // Default to the explicit single payer in the split data, or the transaction creator
-          if (tx.splitData.paidBy && tx.splitData.paidBy.length === 1) {
-            payerId = tx.splitData.paidBy[0].userId;
+          if (pd.paidBy && pd.paidBy.length === 1) {
+            payerId = pd.paidBy[0].userId;
           } else {
-            payerId = tx.splitData.paidByUserId || tx.userId;
+            payerId = pd.paidByUserId || tx.userId;
           }
 
-          // Fetch fresh details from family members just in case the transaction is old or missing display name
-          const splitMember = mems.find(m => m.userId === payerId);
+          const splitMember = memberMap.get(payerId);
           if (splitMember) {
             payerName = splitMember.displayName;
             payerPhoto = splitMember.photoURL;
-          } else if (tx.splitData.paidBy && tx.splitData.paidBy.length === 1) {
-            payerName = tx.splitData.paidBy[0].displayName || 'Unknown';
-            payerPhoto = tx.splitData.paidBy[0].photoURL;
+          } else if (pd.paidBy && pd.paidBy.length === 1) {
+            payerName = pd.paidBy[0].displayName || 'Unknown';
+            payerPhoto = pd.paidBy[0].photoURL;
           } else {
-            payerName = tx.splitData.paidByDisplayName || tx.userDisplayName || 'Unknown';
-            payerPhoto = tx.splitData.paidByPhotoURL || tx.userPhotoURL;
+            payerName = pd.paidByDisplayName || tx.userDisplayName || 'Unknown';
+            payerPhoto = pd.paidByPhotoURL || tx.userPhotoURL;
           }
-          
-          payerLabel = payerId === this.currentUserId ? 'You' : payerName;
         }
-      } 
-      // Handle Simple transactions
-      else {
-        payerLabel = payerId === this.currentUserId ? 'You' : payerName;
+      } else {
+        const member = memberMap.get(payerId);
+        if (member) {
+          payerName = member.displayName;
+          payerPhoto = member.photoURL;
+        }
       }
 
-      return {
+      const sortTime = getTime(tx.date);
+      const createdTime = getTime(tx.createdAt);
+
+      allActivities.push({
         ...tx,
         payerId,
         payerName,
         payerPhoto,
-        payerLabel,
-        recipientId,
-        recipientName,
-        recipientPhoto
-      };
+        payerLabel: payerId === currentUid ? 'You' : payerName,
+        recipientId: undefined,
+        recipientName: undefined,
+        recipientPhoto: undefined,
+        _sortTime: sortTime,
+        _createdTime: createdTime,
+        _popState: (tx.createdAt && (this.dateService.toDate(tx.createdAt)?.getTime() ?? 0) > this.sessionStartTime) ? 'new' : 'old'
+      });
+    }
+
+    // 2. Map Settlements
+    const settlements = this.settlements();
+    for (let i = 0; i < settlements.length; i++) {
+      const set = settlements[i];
+      const date = set.settledAt || set.createdAt;
+      const sortTime = getTime(date);
+      const createdTime = getTime(set.createdAt);
+      
+      allActivities.push({
+        ...set,
+        id: set.id || `set_${set.createdAt}`,
+        category: 'Settlement',
+        type: 'settlement',
+        date,
+        payerId: set.fromUserId,
+        payerName: set.fromDisplayName,
+        payerPhoto: set.fromPhotoURL,
+        payerLabel: set.fromUserId === currentUid ? 'You' : set.fromDisplayName,
+        recipientId: set.toUserId,
+        recipientName: set.toDisplayName,
+        recipientPhoto: set.toPhotoURL,
+        note: set.note || 'Settlement',
+        _sortTime: sortTime,
+        _createdTime: createdTime,
+        _popState: (set.createdAt && (this.dateService.toDate(set.createdAt)?.getTime() ?? 0) > this.sessionStartTime) ? 'new' : 'old'
+      });
+    }
+
+    // 3. Map Member Activities
+    for (let i = 0; i < mems.length; i++) {
+      const m = mems[i];
+      const sortTime = getTime(m.joinedAt);
+      const createdTime = getTime(m.joinedAt); // JoinedAt is practically the creation time for members in this context
+      
+      allActivities.push({
+        id: `mem_${m.userId}_${m.isActive ? 'join' : 'leave'}`,
+        category: 'MemberActivity',
+        type: m.isActive ? 'joined' : 'left',
+        amount: 0,
+        date: m.joinedAt,
+        payerId: m.userId,
+        payerName: m.displayName,
+        payerPhoto: m.photoURL,
+        payerLabel: m.displayName,
+        recipientId: undefined,
+        recipientName: undefined,
+        recipientPhoto: undefined,
+        note: `${m.displayName} ${m.isActive ? 'joined' : 'left'} the group`,
+        _sortTime: sortTime,
+        _createdTime: createdTime,
+        _popState: (m.joinedAt && (this.dateService.toDate(m.joinedAt)?.getTime() ?? 0) > this.sessionStartTime) ? 'new' : 'old'
+      });
+    }
+
+    return allActivities.sort((a, b) => {
+      if (b._sortTime !== a._sortTime) {
+        return b._sortTime - a._sortTime;
+      }
+      return (b._createdTime || 0) - (a._createdTime || 0);
     });
   });
 
@@ -193,9 +269,9 @@ export class FamilyDashboardComponent implements OnInit {
     const mems = this.members();
 
     if (!fam?.id) return null;
-    
+
     const cacheKey = `stats_${fam.id}`;
-    
+
     if (mems.length === 0) {
       const cachedStats = this.storageService.getItem<FamilyStats>(cacheKey);
       if (cachedStats) {
@@ -248,7 +324,7 @@ export class FamilyDashboardComponent implements OnInit {
     const txs = this.transactions();
     const uid = this.currentUserId;
     if (!txs || !uid) return 0;
-    
+
     return txs.reduce((sum, tx) => {
       if (tx.status === TransactionStatus.DELETED || tx.category === 'Settlement') return sum;
       if (tx.type !== 'expense') return sum;
@@ -326,7 +402,7 @@ export class FamilyDashboardComponent implements OnInit {
 
   private _seedFromCache(familyId: string) {
     if (!familyId) return;
-    
+
     // 1. Members
     const members = this.familyService.getCachedMembersSync(familyId);
     if (members.length > 0) {
@@ -357,7 +433,7 @@ export class FamilyDashboardComponent implements OnInit {
   generateReport() {
     const fam = this.family();
     const userEmail = this.auth.currentUser?.email;
-    
+
     if (!fam?.id || !userEmail) {
       this.snackBar.open('Unable to generate report: Missing data', 'Close', { duration: 3000 });
       return;
@@ -367,8 +443,8 @@ export class FamilyDashboardComponent implements OnInit {
     this.reportService.getPendingReport(fam.id).subscribe({
       next: (pendingReport) => {
         if (pendingReport) {
-          this.snackBar.open('A report is already being prepared. Please check your email shortly.', 'Close', { 
-            duration: 5000 
+          this.snackBar.open('A report is already being prepared. Please check your email shortly.', 'Close', {
+            duration: 5000
           });
           return;
         }
@@ -380,7 +456,7 @@ export class FamilyDashboardComponent implements OnInit {
           type: 'family_overview'
         }).subscribe({
           next: () => {
-            this.snackBar.open('Report requested! You will receive it via email soon.', 'Close', { 
+            this.snackBar.open('Report requested! You will receive it via email soon.', 'Close', {
               duration: 5000,
               panelClass: ['success-snackbar']
             });
@@ -400,7 +476,7 @@ export class FamilyDashboardComponent implements OnInit {
 
   createFamily() {
     const existingNames = this.store.selectSignal(FamilySelectors.selectUserFamilies)()?.map(f => f.name) || [];
-    const ref = this.dialog.open(FamilyCreateDialogComponent, { 
+    const ref = this.dialog.open(FamilyCreateDialogComponent, {
       disableClose: true,
       data: { existingNames }
     });
@@ -421,7 +497,7 @@ export class FamilyDashboardComponent implements OnInit {
     if (!fam) return;
 
     const existingNames = this.store.selectSignal(FamilySelectors.selectUserFamilies)()?.map(f => f.name) || [];
-    const ref = this.dialog.open(FamilyCreateDialogComponent, { 
+    const ref = this.dialog.open(FamilyCreateDialogComponent, {
       disableClose: true,
       data: { existingNames, family: fam }
     });
@@ -476,7 +552,7 @@ export class FamilyDashboardComponent implements OnInit {
 
     const isOwner = fam.ownerUserId === this.currentUserId;
     const title = isOwner ? 'Delete Family' : 'Leave Family';
-    const message = isOwner 
+    const message = isOwner
       ? 'Are you sure you want to delete this family? This action cannot be undone and all data will be lost for all members.'
       : 'Are you sure you want to leave this family?';
 
