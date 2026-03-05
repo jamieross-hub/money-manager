@@ -62,11 +62,13 @@ import { AppViewService } from 'src/app/util/service/app-view.service';
 import { UserService } from 'src/app/util/service/db/user.service';
 
 import { TransactionsService } from 'src/app/util/service/db/transactions.service';
+import { TransactionProcessorService } from 'src/app/util/service/transaction-processor.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, distinctUntilChanged } from 'rxjs/operators';
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import * as FamilySelectors from 'src/app/modules/family/store/family.selectors';
 import { FamilyMember, Family } from 'src/app/util/models/family.model';
+import { AppView } from 'src/app/util/service/app-view.service';
 
 dayjs.extend(weekOfYear);
 
@@ -142,6 +144,7 @@ export class MobileTransactionListComponent
   private readonly currencyService = inject<CurrencyService>(CurrencyService);
   private readonly themeService = inject<ThemeSwitchingService>(ThemeSwitchingService);
   private readonly transactionsService = inject<TransactionsService>(TransactionsService);
+  private readonly processorService = inject(TransactionProcessorService);
   private readonly route = inject(Router);
   private readonly dialog = inject(MatDialog);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -195,6 +198,8 @@ export class MobileTransactionListComponent
     { initialValue: false }
   );
 
+  appView = toSignal(this.appViewService.appView$, { initialValue: 'MONTHLY' as AppView });
+
   /** Current active family */
   activeFamily = this.store.selectSignal<Family | null>(FamilySelectors.selectFamily);
 
@@ -209,24 +214,13 @@ export class MobileTransactionListComponent
     return map;
   });
 
-  flattenedTransactions = computed(() => {
-    const groups = this.groupedTransactions();
-    const flattened: any[] = [];
-    groups.forEach(group => {
-      flattened.push({ 
-        _isHeader: true, 
-        dateHeader: group.dateHeader,
-        id: `header-${group.date}` 
-      });
-      group.transactions.forEach(tx => {
-        flattened.push({ 
-          ...tx,
-          _isHeader: false
-        });
-      });
-    });
-    return flattened;
-  });
+  // Processor Signals
+  filteredTransactions = this.processorService.filteredTransactions;
+  flattenedTransactions = this.processorService.flattenedTransactions;
+  totalIncome = this.processorService.totalIncome;
+  totalExpenses = this.processorService.totalExpenses;
+  filteredCount = this.processorService.filteredCount;
+  isProcessing = this.processorService.isProcessing;
 
   accountMap = computed(() => {
     const map = new Map<string, Account>();
@@ -242,76 +236,23 @@ export class MobileTransactionListComponent
     return item.id;
   }
 
+  isGuest = computed(() => this.userService.isGuestUser());
+  activeFiltersCount = computed(() => {
+    // We can rely on service or compute locally if needed, keeping service for now but wrapping in signal if needed or just property
+    // But since `activeFiltersCount` was a property updated manually, let's use the service call inside an effect or just update it when filters change.
+    // Actually, let's just use the service directly in the template or compute it from our signals?
+    // The previous implementation updated `activeFiltersCount` property.
+    // Let's make it a computed based on our local signals which mirror the service.
 
-  upcomingTransactions = computed(() => {
-    const range = this.selectedRange();
-    if (range !== 'upcoming') return [];
-    
-    const recurring = this.allTransactions().filter(t => t.isRecurring);
-    const appView = this.appViewService.appView;
-    const today = dayjs().startOf('day').toDate();
-
-    let startDate: Date;
-    let endDate: Date;
-
-    if (appView === 'WEEKLY') {
-      startDate = today;
-      endDate = dayjs().add(1, 'week').endOf('day').toDate();
-    } else if (appView === 'YEARLY') {
-      startDate = today;
-      endDate = dayjs().add(1, 'year').endOf('day').toDate();
-    } else {
-      startDate = today;
-      endDate = dayjs().add(1, 'month').endOf('day').toDate();
-    }
-
-    return this.generateUpcomingTransactions(recurring, startDate, endDate);
-  });
-
-  filteredTransactions = computed(() => {
-    let sourceData = this.selectedRange() === 'upcoming' ? this.upcomingTransactions() : this.allTransactions();
-
-    const filteredData = this.filterService.filterTransactions(
-      sourceData,
-      {
-        searchTerm: this.searchTerm() || '',
-        selectedCategory: this.selectedCategory() || ['all'],
-        selectedType: this.selectedType() || 'all',
-        selectedDate: this.selectedDate() || null,
-        selectedDateRange: this.selectedDateRange() || null,
-        selectedYear: null,
-        categoryFilter: null,
-        accountFilter: [],
-        amountRange: { min: null, max: null },
-        statusFilter: [],
-        tags: [],
-        isRecurring: this.isRecurringFilter(),
-      }
-    );
-
-    let mergedData = filteredData;
-    if (this.selectedRange() !== 'upcoming' && !this.isRecurring()) {
-      const endOfCheck = dayjs().add(3, 'day').endOf('day').toDate();
-      const recurring = this.allTransactions().filter(t => t.isRecurring);
-      const dueSoon = this.generateUpcomingTransactions(recurring, dayjs().subtract(1, 'year').toDate(), endOfCheck);
-
-      const actualData = filteredData.filter(t => {
-        if (t.isPending && t.isRecurring && !t.id?.startsWith('upcoming-')) {
-          const hasDuplicate = dueSoon.some(v => v.id?.startsWith(`upcoming-${t.id}-`) && dayjs(this.dateService.toDate(v.date)).isSame(this.dateService.toDate(t.date), 'day'));
-          return !hasDuplicate;
-        }
-        return true;
-      });
-
-      const existingIds = new Set(actualData.map(t => t.id));
-      const filteredDueSoon = dueSoon.filter(t => !existingIds.has(t.id!));
-
-      mergedData = [...filteredDueSoon, ...actualData];
-    } else if (this.selectedRange() === 'upcoming') {
-      mergedData = filteredData.filter(t => !(t.isPending && t.isRecurring && !t.id?.startsWith('upcoming-')));
-    }
-
-    return this.filterService.sortTransactions(mergedData, this.selectedSort());
+    // Simpler: use the existing method `this.filterService.getActiveFiltersCount()` but we need to know when to trigger.
+    // Let's stick to updating a signal or just calling the service if using signals throughout.
+    // Using a computed that depends on the filter signals is best.
+    let count = 0;
+    if (this.searchTerm()) count++;
+    if (this.selectedType() !== 'all') count++;
+    if (!this.selectedCategory().includes('all')) count++;
+    if (this.selectedDate() || this.selectedDateRange()) count++;
+    return count;
   });
 
   availableCategories = computed(() => {
@@ -334,17 +275,11 @@ export class MobileTransactionListComponent
       .map(category => ({ ...category, id: category.id || '' }));
   });
 
-  /**
-   * Toggles the visibility of individual filter chips.
-   */
   toggleFilterDetails(event: MouseEvent) {
     if ((event.target as HTMLElement).closest('.quick-clear-btn')) return;
     this.showActiveFilterDetails.set(!this.showActiveFilterDetails());
   }
 
-  /**
-   * Clears a specific filter type.
-   */
   clearFilter(type: 'search' | 'category' | 'type' | 'date') {
     switch (type) {
       case 'search':
@@ -362,147 +297,7 @@ export class MobileTransactionListComponent
     }
   }
 
-  // Computed View Models
-  groupedTransactions = computed(() => {
-    const transactions = this.filteredTransactions();
-    const range = this.selectedRange();
-    const sort = this.selectedSort();
-    const isDateSort = sort === 'date-desc' || sort === 'date-asc';
-    const groups: { date: string; dateHeader: string; transactions: (Transaction)[]; isUpcomingGroup?: boolean }[] = [];
-    const dateHeaderCache = new Map<string, string>();
-    const today = dayjs().startOf('day');
-    const yesterday = dayjs().subtract(1, 'day').startOf('day');
-
-    // Separate upcoming/due transactions to show them first if needed or within groups
-    const sortedTransactions = [...transactions];
-    
-    sortedTransactions.forEach(tx => {
-      const txDate = this.dateService.toDate(tx.date);
-      const dateObj = dayjs(txDate);
-      
-      let dateKey: string;
-      if (range === 'this-year' || range === null) {
-        dateKey = dateObj.format('YYYY-MM');
-      } else {
-        dateKey = dateObj.format('YYYY-MM-DD');
-      }
-
-      // Pre-calculate view properties (logic preserved)
-      const categoryId = tx.categoryId || '';
-      const category = this.categoryMap().get(categoryId);
-      const accountId = tx.accountId || '';
-      const account = this.accountMap().get(accountId);
-
-      const createdDate = tx.createdAt || tx.date;
-      const createdDateObj = dayjs(this.dateService.toDate(createdDate));
-
-      const txView = {
-        ...tx,
-        _categoryColor: category?.color || '#46777f',
-        _categoryIcon: category?.icon || 'category',
-        _categoryName: category?.name || categoryId || 'Unknown',
-        _accountName: account?.name || 'Unknown Account',
-        _accountType: account?.type || 'Unknown',
-        _dateDisplay: dateObj.format('DD MMM HH:mm'),
-        _timeDisplay: dateObj.format('hh:mm a'),
-        _fullTransactionDateDisplay: dateObj.format('DD MMM YYYY, hh:mm a'),
-        _syncStatusColor: this.getSyncStatusColor(tx),
-        _syncStatusIcon: this.getSyncStatusIcon(tx),
-        _syncStatusInfo: this.getSyncStatusInfo(tx),
-        _recurringInfo: this.getRecurringInfo(tx),
-        _isIncome: tx.type === 'income',
-        _categoryBgColor: (category?.color || '#46777f') + '20',
-        _createdAtDisplay: tx.createdAt ? dayjs(this.dateService.toDate(tx.createdAt)).format('DD MMM YYYY, hh:mm a') : 'N/A',
-        _updatedAtDisplay: tx.updatedAt ? dayjs(this.dateService.toDate(tx.updatedAt)).format('DD MMM YYYY, hh:mm a') : 
-                        (tx.createdAt ? dayjs(this.dateService.toDate(tx.createdAt)).format('DD MMM YYYY, hh:mm a') : 'N/A'),
-        _isUpcoming: !!tx.isPending && (tx.id?.startsWith('upcoming-') || false),
-        _dueStatus: tx.date ? this.getDueStatus(this.dateService.toDate(tx.date)!) : '',
-        _isOverdue: tx.date ? dayjs(this.dateService.toDate(tx.date)).isBefore(today, 'day') : false,
-        _popState: (tx.createdAt && (this.dateService.toDate(tx.createdAt)?.getTime() ?? 0) > this.sessionStartTime) ? 'new' : 'old'
-      };
-
-      if (this.isRecurring() && txView._isUpcoming) {
-        return; // Skip upcoming transactions when isRecurring is true
-      }
-
-      let group = groups.find(g => g.date === dateKey);
-      if (!group) {
-        let header = dateHeaderCache.get(dateKey);
-        if (!header) {
-          if (txView._isUpcoming && txView._isOverdue) {
-            header = 'Overdue Recurring';
-          } else if (range === 'this-year' || range === null) {
-            header = dateObj.format('MMMM YYYY');
-          } else if (isDateSort) {
-            // Relative labels only when sorted by date
-            if (dateObj.isSame(today, 'day')) {
-              header = 'Today';
-            } else if (dateObj.isSame(yesterday, 'day')) {
-              header = 'Yesterday';
-            } else {
-              header = dateObj.format('dddd, DD MMM YYYY');
-            }
-          } else {
-            // Non-date sorts: always show explicit date
-            header = dateObj.format('DD MMM YYYY');
-          }
-          dateHeaderCache.set(dateKey, header);
-        }
-        group = { date: dateKey, dateHeader: header, transactions: [], isUpcomingGroup: txView._isUpcoming };
-        groups.push(group);
-      }
-      group.transactions.push(txView as any);
-    });
-
-    // Re-order groups by date only when sorting by date; otherwise preserve insertion order (= sort order)
-    if (isDateSort) {
-      return groups.sort((a, b) => {
-        if (a.dateHeader === 'Overdue Recurring') return -1;
-        if (b.dateHeader === 'Overdue Recurring') return 1;
-        return sort === 'date-asc'
-          ? a.date.localeCompare(b.date)
-          : b.date.localeCompare(a.date);
-      });
-    }
-
-    return groups;
-  });
-
-  // Cached view properties (Computed)
-  totalIncome = computed(() =>
-    this.filteredTransactions()
-      .filter(t => t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0)
-  );
-
-  totalExpenses = computed(() =>
-    this.filteredTransactions()
-      .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0)
-  );
-
-  netAmount = computed(() => this.totalIncome() - this.totalExpenses());
-  filteredCount = computed(() => this.filteredTransactions().length);
   totalCount = computed(() => this.allTransactions().length);
-  activeFiltersCount = computed(() => {
-    // We can rely on service or compute locally if needed, keeping service for now but wrapping in signal if needed or just property
-    // But since `activeFiltersCount` was a property updated manually, let's use the service call inside an effect or just update it when filters change.
-    // Actually, let's just use the service directly in the template or compute it from our signals?
-    // The previous implementation updated `activeFiltersCount` property.
-    // Let's make it a computed based on our local signals which mirror the service.
-
-    // Simpler: use the existing method `this.filterService.getActiveFiltersCount()` but we need to know when to trigger.
-    // Let's stick to updating a signal or just calling the service if using signals throughout.
-    // Using a computed that depends on the filter signals is best.
-    let count = 0;
-    if (this.searchTerm()) count++;
-    if (this.selectedType() !== 'all') count++;
-    if (!this.selectedCategory().includes('all')) count++;
-    if (this.selectedDate() || this.selectedDateRange()) count++;
-    return count;
-  });
-
-  isGuest = computed(() => this.userService.isGuestUser());
 
   /** True when the user's preferences have isFamilyMode enabled */
   // isFamilyMode = toSignal(...) // Moved up
@@ -603,6 +398,44 @@ export class MobileTransactionListComponent
 
 
   constructor() {
+    // Web Worker Effect
+    effect(() => {
+      const transactions = this.allTransactions();
+      const categories = this.categories();
+      const accounts = this.accounts();
+      const searchTerm = this.searchTerm();
+      const selectedCategory = this.selectedCategory();
+      const selectedType = this.selectedType();
+      const selectedDate = this.selectedDate();
+      const selectedDateRange = this.selectedDateRange();
+      const isRecurringFilter = this.isRecurringFilter();
+      const selectedSort = this.selectedSort();
+      const selectedRange = this.selectedRange();
+      const appView = this.appView();
+      const isRecurringMode = this.isRecurring();
+      const isFamilyMode = this.isFamilyMode();
+
+      this.processorService.process({
+        transactions,
+        categories,
+        accounts,
+        filters: {
+          searchTerm,
+          selectedCategory,
+          selectedType,
+          selectedDate,
+          selectedDateRange,
+          isRecurring: isRecurringFilter
+        },
+        sort: selectedSort,
+        range: selectedRange,
+        sessionStartTime: this.sessionStartTime,
+        appView,
+        isRecurringMode,
+        isFamilyMode
+      });
+    });
+
     // Watch for Input changes and hook into filterService
     effect(() => {
       if (this.isRecurring() || this.isFamilyMode()) {
@@ -758,156 +591,10 @@ export class MobileTransactionListComponent
     this.filterService.setSelectedDateRange(startDate, endDate);
   }
 
-  private generateUpcomingTransactions(recurringTransactions: Transaction[], startDate: Date, endDate: Date): Transaction[] {
-    const upcoming: Transaction[] = [];
-
-    recurringTransactions.forEach(rt => {
-      if (!rt.nextOccurrence || !rt.isRecurring) return;
-
-      let nextDate = this.dateService.toDate(rt.nextOccurrence);
-      if (!nextDate) return;
-
-      const baseTransaction = { ...rt };
-      const allTxs = this.allTransactions();
-
-      while (nextDate <= endDate) {
-        if (nextDate >= startDate) {
-          // Check if a real transaction already exists for this period to avoid duplicates
-          const exists = allTxs.some(t => {
-            if (t.id?.startsWith('upcoming-')) return false;
-
-            // Template transaction itself pending execution shouldn't count as existing fulfilled transaction
-            if (t.id === rt.id && t.isPending) return false;
-
-            if (t.categoryId !== baseTransaction.categoryId) return false;
-            if (t.amount !== baseTransaction.amount) return false;
-            if (t.accountId !== baseTransaction.accountId) return false;
-            if (t.type !== baseTransaction.type) return false;
-            
-            const txDate = this.dateService.toDate(t.date);
-            if (!(txDate instanceof Date)) return false;
-            // Use non-null assertion or local constant as nextDate is narrowed above
-            return this.isSamePeriod(txDate, nextDate!, rt.recurringInterval!);
-          });
-
-          if (!exists) {
-            const occurrence: Transaction = {
-              ...baseTransaction,
-              id: `upcoming-${baseTransaction.id}-${nextDate.getTime()}`,
-              date: new Date(nextDate),
-              status: SyncStatus.PENDING as any,
-              syncStatus: SyncStatus.PENDING,
-              isPending: true
-            };
-            upcoming.push(occurrence);
-            // Only show one upcoming occurrence per recurring transaction
-            break;
-          }
-        }
-        nextDate = this.calculateNextDate(nextDate, rt.recurringInterval!);
-      }
-    });
-
-    return upcoming;
-  }
-
-  private calculateNextDate(currentDate: Date, interval: RecurringInterval): Date {
-    const nextDate = new Date(currentDate);
-    switch (interval) {
-      case RecurringInterval.DAILY:
-        nextDate.setDate(nextDate.getDate() + 1);
-        break;
-      case RecurringInterval.WEEKLY:
-        nextDate.setDate(nextDate.getDate() + 7);
-        break;
-      case RecurringInterval.MONTHLY:
-        nextDate.setMonth(nextDate.getMonth() + 1);
-        break;
-      case RecurringInterval.YEARLY:
-        nextDate.setFullYear(nextDate.getFullYear() + 1);
-        break;
-    }
-    return nextDate;
-  }
-
-  private isSamePeriod(date1: Date, date2: Date, interval: RecurringInterval): boolean {
-    const d1 = dayjs(date1).startOf('day');
-    const d2 = dayjs(date2).startOf('day');
-
-    switch (interval) {
-      case RecurringInterval.DAILY:
-        return d1.isSame(d2, 'day');
-      case RecurringInterval.WEEKLY:
-        return d1.isSame(d2, 'week');
-      case RecurringInterval.MONTHLY:
-        return d1.isSame(d2, 'month');
-      case RecurringInterval.YEARLY:
-        return d1.isSame(d2, 'year');
-      default:
-        return false;
-    }
-  }
-
-  private getDueStatus(date: Date): string {
-    const today = dayjs().startOf('day');
-    const targetDate = dayjs(date).startOf('day');
-    const diffDays = targetDate.diff(today, 'day');
-
-    if (diffDays < 0) return 'Overdue';
-    if (diffDays === 0) return 'Due today';
-    if (diffDays === 1) return 'Due tomorrow';
-    if (diffDays <= 7) return `Due in ${diffDays} days`;
-    return '';
-  }
-
-  onConfirmRecurring(tx: Transaction) {
-    const userId = this.userService.getCurrentUserId();
-    if (!userId || userId === 'offline-guest') return;
-
-    // The 'tx' is a virtual transaction (upcoming-X-timestamp)
-    // Robust parsing for originalId which might contain dashes
-    const parts = tx.id?.split('-');
-    if (!parts || parts.length < 3) return;
-    const originalId = parts.slice(1, -1).join('-');
-    const originalTx = this.allTransactions().find(t => t.id === originalId);
-
-    if (originalTx) {
-      const confirmedDate = this.dateService.toDate(tx.date);
-      if (!confirmedDate) return;
-
-      this.subscription.add(
-        this.transactionsService.processRecurringTransaction(userId, originalTx, confirmedDate).subscribe(() => {
-          // Success handled by store update
-        })
-      );
-    }
-  }
-
-  onRejectRecurring(tx: Transaction) {
-    const userId = this.userService.getCurrentUserId();
-    if (!userId || userId === 'offline-guest') return;
-
-    const parts = tx.id?.split('-');
-    if (!parts || parts.length < 3) return;
-    const originalId = parts.slice(1, -1).join('-');
-    const originalTx = this.allTransactions().find(t => t.id === originalId);
-
-    if (originalTx) {
-       const skippedDate = this.dateService.toDate(tx.date);
-       if (!skippedDate) return;
-
-       this.subscription.add(
-        this.transactionsService.skipRecurringTransaction(userId, originalTx, skippedDate).subscribe(() => {
-          // Success handled by store update
-        })
-      );
-    }
-  }
-
   isCurrentMonth(): boolean {
     const currentMonth = dayjs().month();
     const currentYear = dayjs().year();
-    return this.filteredTransactions().some(tx => {
+    return this.filteredTransactions().some((tx: Transaction) => {
       const txDate = dayjs(this.dateService.toDate(tx.date));
       return txDate.month() === currentMonth && txDate.year() === currentYear;
     });
@@ -916,7 +603,7 @@ export class MobileTransactionListComponent
   isCurrentWeek(): boolean {
     const currentWeek = dayjs().week();
     const currentYear = dayjs().year();
-    return this.filteredTransactions().some(tx => {
+    return this.filteredTransactions().some((tx: Transaction) => {
       const txDate = dayjs(this.dateService.toDate(tx.date));
       return txDate.week() === currentWeek && txDate.year() === currentYear;
     });
@@ -925,7 +612,7 @@ export class MobileTransactionListComponent
   isLastMonth(): boolean {
     const lastMonth = dayjs().subtract(1, 'month').month();
     const lastMonthYear = dayjs().subtract(1, 'month').year();
-    return this.filteredTransactions().some(tx => {
+    return this.filteredTransactions().some((tx: Transaction) => {
       const txDate = dayjs(this.dateService.toDate(tx.date));
       return txDate.month() === lastMonth && txDate.year() === lastMonthYear;
     });
@@ -933,7 +620,7 @@ export class MobileTransactionListComponent
 
   isCurrentYear(): boolean {
     const currentYear = dayjs().year();
-    return this.filteredTransactions().some(tx => {
+    return this.filteredTransactions().some((tx: Transaction) => {
       const txDate = dayjs(this.dateService.toDate(tx.date));
       return txDate.year() === currentYear;
     });
@@ -1002,6 +689,50 @@ export class MobileTransactionListComponent
           this.deleteTransaction.emit(transaction);
         }
       });
+  }
+
+  onConfirmRecurring(tx: Transaction) {
+    const userId = this.userService.getCurrentUserId();
+    if (!userId || userId === 'offline-guest') return;
+
+    // The 'tx' is a virtual transaction (upcoming-X-timestamp)
+    // Robust parsing for originalId which might contain dashes
+    const parts = tx.id?.split('-');
+    if (!parts || parts.length < 3) return;
+    const originalId = parts.slice(1, -1).join('-');
+    const originalTx = this.allTransactions().find(t => t.id === originalId);
+
+    if (originalTx) {
+      const confirmedDate = this.dateService.toDate(tx.date);
+      if (!confirmedDate) return;
+
+      this.subscription.add(
+        this.transactionsService.processRecurringTransaction(userId, originalTx, confirmedDate).subscribe(() => {
+          // Success handled by store update
+        })
+      );
+    }
+  }
+
+  onRejectRecurring(tx: Transaction) {
+    const userId = this.userService.getCurrentUserId();
+    if (!userId || userId === 'offline-guest') return;
+
+    const parts = tx.id?.split('-');
+    if (!parts || parts.length < 3) return;
+    const originalId = parts.slice(1, -1).join('-');
+    const originalTx = this.allTransactions().find(t => t.id === originalId);
+
+    if (originalTx) {
+       const skippedDate = this.dateService.toDate(tx.date);
+       if (!skippedDate) return;
+
+       this.subscription.add(
+        this.transactionsService.skipRecurringTransaction(userId, originalTx, skippedDate).subscribe(() => {
+          // Success handled by store update
+        })
+      );
+    }
   }
 
   onAddTransaction() {
