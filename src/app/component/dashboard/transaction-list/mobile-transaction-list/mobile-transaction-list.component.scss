@@ -581,25 +581,15 @@
   // Enable smooth scrolling on touch devices
   -webkit-overflow-scrolling: touch;
 
-  // Custom scrollbar
+  // Hide scrollbar
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE/Edge
   &::-webkit-scrollbar {
-    width: 5px;
-  }
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  &::-webkit-scrollbar-thumb {
-    background-color: var(--neutral-300);
-    border-radius: 10px;
-    
-    :host-context(.dark-theme) & {
-      background-color: var(--neutral-700);
-    }
+    display: none; // Chrome/Safari
   }
 
   .cdk-virtual-scroll-content-wrapper{
     width: 100% !important;
-    
   }
 }
 
