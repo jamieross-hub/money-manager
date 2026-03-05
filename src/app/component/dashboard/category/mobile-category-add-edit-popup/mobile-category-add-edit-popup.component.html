@@ -16,7 +16,6 @@
         <div (click)="openIconSelectorDialog()" 
           class="w-14 h-14 flex-shrink-0 flex items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all group overflow-hidden"
           [style.background-color]="colorValue() + '1A'"
-          [class.animate-pulse]="isSuggesting()"
           matTooltip="Change Icon">
           <mat-icon class="!w-8 !h-8 !text-[32px] transition-transform group-hover:scale-110" 
             [style.color]="colorValue() || '#005cbb'">
@@ -29,16 +28,16 @@
           <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1 px-1 flex justify-between">
             <span>Category Name *</span>
             @if(isSuggesting()) {
-              <span class="text-blue-500 animate-pulse lowercase font-medium">AI Suggesting...</span>
+              <span class="text-primary-600 lowercase font-medium">AI Suggesting...</span>
             }
           </label>
           <div class="relative">
             <input type="text" formControlName="name" autofocus placeholder="e.g., Groceries"
-              class="w-full py-2.5 px-4 text-base font-semibold border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50/30 dark:bg-gray-900/30 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400 transition-all shadow-sm" />
+              class="w-full py-2.5 px-4 text-base font-semibold border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50/30 dark:bg-gray-900/30 focus:outline-none focus:ring-2 focus:ring-primary-600/20 focus:border-primary-600 dark:focus:border-primary-400 transition-all shadow-sm" />
             
             @if(isSuggesting()) {
               <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
-                <div class="animate-spin rounded-full h-4 w-4 border-2 border-blue-500/20 border-t-blue-500"></div>
+                <div class="animate-spin rounded-full h-4 w-4 border-2 border-primary-600/20 border-t-primary-600"></div>
               </div>
             }
           </div>

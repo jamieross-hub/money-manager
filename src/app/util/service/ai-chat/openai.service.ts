@@ -61,9 +61,7 @@ export class OpenaiService {
 
   initialize(user: User | null): void {
     const key = this.getApiKey(user);
-    if (key) {
-      this.setApiKey(key);
-    }
+    this.apiKey = key || '';
   }
 
   isApiKeySet(): boolean {
