@@ -569,11 +569,40 @@
 }
 
 .transaction-scroll {
-  height: 100%;
-  padding: 12px;
-  // overflow-y: auto;
-  max-height: 70vh;
+  height: auto;
 }
+
+.transaction-virtual-scroll {
+  width: 100%;
+  display: block;
+  flex: 1;
+  outline: none;
+  
+  // Enable smooth scrolling on touch devices
+  -webkit-overflow-scrolling: touch;
+
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--neutral-300);
+    border-radius: 10px;
+    
+    :host-context(.dark-theme) & {
+      background-color: var(--neutral-700);
+    }
+  }
+
+  .cdk-virtual-scroll-content-wrapper{
+    width: 100% !important;
+    
+  }
+}
+
 
 // Empty State
 .empty-state {

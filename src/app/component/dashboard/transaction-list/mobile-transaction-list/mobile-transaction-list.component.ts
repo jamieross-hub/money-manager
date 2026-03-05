@@ -14,6 +14,7 @@ import {
   input,
   inject
 } from '@angular/core';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -39,7 +40,7 @@ import { Subject, Subscription, Observable } from 'rxjs';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import { Auth } from '@angular/fire/auth';
-import { Account, Category } from 'src/app/util/models';
+import { Account, Category, User } from 'src/app/util/models';
 import { Router } from '@angular/router';
 import { ConfirmDialogComponent } from '../../../../util/components/confirm-dialog/confirm-dialog.component';
 import {
@@ -65,7 +66,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map, distinctUntilChanged } from 'rxjs/operators';
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import * as FamilySelectors from 'src/app/modules/family/store/family.selectors';
-import { FamilyMember } from 'src/app/util/models/family.model';
+import { FamilyMember, Family } from 'src/app/util/models/family.model';
 
 dayjs.extend(weekOfYear);
 
@@ -96,7 +97,8 @@ interface SortOption {
     AppDatePipe,
     FormsModule,
     MatDividerModule,
-    ImageFallbackDirective
+    ImageFallbackDirective,
+    ScrollingModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
@@ -131,15 +133,15 @@ export class MobileTransactionListComponent
   @Output() importTransactions = new EventEmitter<void>();
   @Output() adjustTransaction = new EventEmitter<Transaction>();
 
-  private readonly filterService = inject(FilterService);
-  private readonly userService = inject(UserService);
+  private readonly filterService = inject<FilterService>(FilterService);
+  private readonly userService = inject<UserService>(UserService);
   private readonly store = inject(Store<AppState>);
-  private readonly appViewService = inject(AppViewService);
-  private readonly dateService = inject(DateService);
-  private readonly categoryService = inject(CategoryService);
-  private readonly currencyService = inject(CurrencyService);
-  private readonly themeService = inject(ThemeSwitchingService);
-  private readonly transactionsService = inject(TransactionsService);
+  private readonly appViewService = inject<AppViewService>(AppViewService);
+  private readonly dateService = inject<DateService>(DateService);
+  private readonly categoryService = inject<CategoryService>(CategoryService);
+  private readonly currencyService = inject<CurrencyService>(CurrencyService);
+  private readonly themeService = inject<ThemeSwitchingService>(ThemeSwitchingService);
+  private readonly transactionsService = inject<TransactionsService>(TransactionsService);
   private readonly route = inject(Router);
   private readonly dialog = inject(MatDialog);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -194,7 +196,7 @@ export class MobileTransactionListComponent
   );
 
   /** Current active family */
-  activeFamily = this.store.selectSignal(FamilySelectors.selectFamily);
+  activeFamily = this.store.selectSignal<Family | null>(FamilySelectors.selectFamily);
 
   /** True when the current family is in 'split' mode */
   isSplitMode = computed(() => this.activeFamily()?.mode === 'split');
@@ -207,6 +209,25 @@ export class MobileTransactionListComponent
     return map;
   });
 
+  flattenedTransactions = computed(() => {
+    const groups = this.groupedTransactions();
+    const flattened: any[] = [];
+    groups.forEach(group => {
+      flattened.push({ 
+        _isHeader: true, 
+        dateHeader: group.dateHeader,
+        id: `header-${group.date}` 
+      });
+      group.transactions.forEach(tx => {
+        flattened.push({ 
+          ...tx,
+          _isHeader: false
+        });
+      });
+    });
+    return flattened;
+  });
+
   accountMap = computed(() => {
     const map = new Map<string, Account>();
     this.accounts().forEach(acc => {
@@ -216,6 +237,10 @@ export class MobileTransactionListComponent
   });
 
   // allTransactions now replaced by direct signal above
+
+  trackById(index: number, item: any): string {
+    return item.id;
+  }
 
 
   upcomingTransactions = computed(() => {
@@ -489,7 +514,7 @@ export class MobileTransactionListComponent
   // isSplitMode = computed(() => this.activeFamily()?.mode === 'split'); // Moved up
 
   /** Current user's UID */
-  private readonly currentUserProfile = this.store.selectSignal(ProfileSelectors.selectProfile);
+  private readonly currentUserProfile = this.store.selectSignal<User | null>(ProfileSelectors.selectProfile);
   get currentUserId(): string { return this.currentUserProfile()?.uid ?? ''; }
 
   /** Family members list (for role lookups) */
@@ -934,13 +959,17 @@ export class MobileTransactionListComponent
     return this.currentDateLabel();
   }
 
-  onLongPress(transaction: Transaction) {
+  onLongPress(transaction: Transaction, element: HTMLElement) {
     if (transaction.id?.startsWith('upcoming-')) return;
 
-    if (this.selectedTx?.id == transaction.id) {
+    if (this.selectedTx?.id === transaction.id) {
       this.selectedTx = null;
     } else {
       this.selectedTx = transaction;
+      // Scroll into view with a slight delay to allow expansion rendering
+      setTimeout(() => {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 350);
     }
   }
 
