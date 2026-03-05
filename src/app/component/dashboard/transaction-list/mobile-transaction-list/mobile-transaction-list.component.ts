@@ -49,7 +49,7 @@ import {
 } from '../../../../util/components/custom-date-range-dialog';
 import { DateService } from 'src/app/util/service/date.service';
 import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
-import { selectSortedAllTransactions } from 'src/app/store/transactions/transactions.selectors';
+import { selectSortedAllTransactions, selectSortedDeletedTransactions } from 'src/app/store/transactions/transactions.selectors';
 import { AppState } from 'src/app/store/app.state';
 import { Store } from '@ngrx/store';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
@@ -173,7 +173,16 @@ export class MobileTransactionListComponent
   destroy$: Subject<void> = new Subject<void>();
   
   // Base signals from Store
-  allTransactions = this.store.selectSignal<Transaction[]>(selectSortedAllTransactions);
+  allActiveTransactions = this.store.selectSignal<Transaction[]>(selectSortedAllTransactions);
+  deletedTransactions = this.store.selectSignal<Transaction[]>(selectSortedDeletedTransactions);
+  
+  allTransactions = computed(() => {
+    if (this.selectedRange() === 'deleted') {
+      return this.deletedTransactions();
+    }
+    return this.allActiveTransactions();
+  });
+
   categories = toSignal(this.store.select(selectAllCategories), { initialValue: [] as Category[] });
   accounts = toSignal(this.store.select(selectAllAccounts), { initialValue: [] as Account[] });
 
@@ -432,7 +441,8 @@ export class MobileTransactionListComponent
         sessionStartTime: this.sessionStartTime,
         appView,
         isRecurringMode,
-        isFamilyMode
+        isFamilyMode,
+        isDeletedMode: selectedRange === 'deleted'
       });
     });
 

@@ -18,7 +18,8 @@ addEventListener('message', ({ data }) => {
     sessionStartTime,
     appView,
     isRecurringMode,
-    isFamilyMode
+    isFamilyMode,
+    isDeletedMode
   } = data;
 
   if (!transactions) {
@@ -181,7 +182,7 @@ addEventListener('message', ({ data }) => {
 
   // Merging Logic (Ported from component)
   let mergedData = filtered;
-  if (range !== 'upcoming' && !isRecurringMode) {
+  if (range !== 'upcoming' && !isRecurringMode && !isDeletedMode) {
     const endOfCheck = dayjs().add(3, 'day').endOf('day').toDate();
     const recurring = transactions.filter((t: any) => t.isRecurring);
     const dueSoon = generateUpcomingTransactions(recurring, dayjs().subtract(1, 'year').toDate(), endOfCheck, transactions);
@@ -294,6 +295,7 @@ addEventListener('message', ({ data }) => {
         return '';
       })(),
       _isOverdue: txDate ? dateObj.isBefore(today, 'day') : false,
+      _isDeleted: tx.status === 'deleted',
       _popState: (createdAtDate && createdAtDate.getTime() > sessionStartTime) ? 'new' : 'old'
     };
 

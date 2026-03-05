@@ -720,6 +720,41 @@
       color: var(--neutral-500) !important;
     }
   }
+
+  &.deleted {
+    background: linear-gradient(135deg, #fff5f5 0%, #fffafa 100%);
+    border-color: #feb2b2;
+    
+    :host-context(.dark-theme) & {
+      background: linear-gradient(135deg, rgba(254, 178, 178, 0.08) 0%, rgba(254, 178, 178, 0.03) 100%);
+      border-color: rgba(254, 178, 178, 0.25);
+    }
+
+    .amount-value {
+      color: #e53e3e !important;
+      text-decoration: line-through;
+    }
+
+    .transaction-title {
+      color: #c53030 !important;
+      text-decoration: line-through;
+    }
+    
+    .transaction-notes, .amount-type {
+      color: #fc8181 !important;
+      text-decoration: line-through;
+    }
+
+    .icon-container {
+      background-color: #fff5f5 !important;
+      border: 1px solid #feb2b2;
+      
+     
+      mat-icon {
+        color: #e53e3e !important;
+      }
+    }
+  }
 }
 
 .transaction-main {

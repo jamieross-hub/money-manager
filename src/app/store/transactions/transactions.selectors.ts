@@ -42,6 +42,41 @@ export const selectAllTransactions = createSelector(
   }
 );
 
+export const selectDeletedTransactions = createSelector(
+  selectTransactionsState,
+  ProfileSelectors.selectIsFamilyMode,
+  FamilySelectors.selectFamily,
+  FamilySelectors.selectRawFamilyTransactions,
+  (state, isFamilyMode, activeFamily, familyTransactions) => {
+    if (isFamilyMode && activeFamily) {
+      const personalLinkedTxs = state.ids
+        .map(id => state.entities[id])
+        .filter(Boolean)
+        .filter(t => t.status === TransactionStatus.DELETED && (t.familyId == activeFamily.id || t.settlementFamilyId == activeFamily.id));
+
+      const merged = [...(familyTransactions || []).filter(t => t.status === TransactionStatus.DELETED), ...personalLinkedTxs];
+      const seenIds = new Set();
+      return merged.filter(t => {
+        if (seenIds.has(t.id)) return false;
+        seenIds.add(t.id);
+        return true;
+      });
+    }
+    return state.ids.map(id => state.entities[id]).filter(Boolean).filter(t => t.status === TransactionStatus.DELETED);
+  }
+);
+
+export const selectSortedDeletedTransactions = createSelector(
+  selectDeletedTransactions,
+  (transactions) => {
+    return [...transactions].sort((a, b) => {
+      const dateA = a.date ? convertToDate(a.date) : new Date(0);
+      const dateB = b.date ? convertToDate(b.date) : new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }
+);
+
 export const selectSortedAllTransactions = createSelector(
   selectAllTransactions,
   (transactions) => {

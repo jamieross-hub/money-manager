@@ -10,6 +10,10 @@ export const selectFamilyTransactions = createSelector(
   selectFamilyState, 
   s => (s?.transactions || []).filter(tx => tx.status !== TransactionStatus.DELETED)
 );
+export const selectRawFamilyTransactions = createSelector(
+  selectFamilyState,
+  s => s?.transactions || []
+);
 export const selectFamilyLoading = createSelector(selectFamilyState, s => s?.loading || false);
 export const selectFamilyError = createSelector(selectFamilyState, s => s?.error || null);
 

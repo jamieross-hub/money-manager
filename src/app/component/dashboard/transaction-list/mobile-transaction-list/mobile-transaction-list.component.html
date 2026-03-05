@@ -164,6 +164,17 @@
               <mat-icon class="check-icon">check</mat-icon>
             }
           </button>
+          
+          @if (isFamilyMode() && isSplitMode()) {
+            <button mat-menu-item [class.active-menu-item]="selectedRange() === 'deleted'"
+              (click)="onDateRangeChange('deleted')">
+              <mat-icon class="text-red-500">delete_outline</mat-icon>
+              <span>Deleted</span>
+              @if (selectedRange() === 'deleted') {
+                <mat-icon class="check-icon">check</mat-icon>
+              }
+            </button>
+          }
           <button mat-menu-item [class.active-menu-item]="selectedRange() === 'this-week'"
             (click)="onDateRangeChange('this-week')">
             <mat-icon>calendar_view_week</mat-icon>
@@ -287,6 +298,7 @@
               [@popIn]="item._popState"
               [class.selected]="selectedTx?.id === item.id"
               [class.upcoming]="item._isUpcoming"
+              [class.deleted]="item._isDeleted"
               [class.opacity-50]="item.syncStatus === 'pending'"
               [class.grayscale]="item.syncStatus === 'pending'"
               (click)="onLongPress(item, cardElement)">
@@ -331,7 +343,7 @@
                 <div class="transaction-details">
                   <div class="transaction-title">{{ item.category | titlecase }}</div>
 
-                  @if (item.isRecurring || (item.isSplitTransaction && !(isFamilyMode() && isSplitMode()))) {
+                  @if (item.isRecurring || (item.isSplitTransaction && !(isFamilyMode() && isSplitMode())) || item._isDeleted) {
                     <div class="transaction-meta-row">
                       @if(item.isRecurring) {
                         <span class="tx-chip tx-chip--recurring">
@@ -341,6 +353,9 @@
                       }
                       @if(item.isSplitTransaction && !(isFamilyMode() && isSplitMode())) {
                         <span class="tx-chip tx-chip--split">Split</span>
+                      }
+                      @if(item._isDeleted) {
+                        <span class="tx-chip tx-chip--deleted">Deleted</span>
                       }
                     </div>
                   }
@@ -366,7 +381,7 @@
               </div>
 
               <!-- Action Buttons (shown when selected) -->
-              @if (selectedTx?.id === item.id && !item._isUpcoming) {
+              @if (selectedTx?.id === item.id && !item._isUpcoming && !item._isDeleted) {
                 <div class="transaction-actions">
                   <div class="actions-container flex items-center space-x-2">
                     @if (canEdit(item)) {
