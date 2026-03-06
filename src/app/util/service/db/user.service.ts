@@ -147,7 +147,7 @@ export class UserService {
     // (common during network loss/recovery) don't wipe the profile store.
     let clearProfileTimer: ReturnType<typeof setTimeout> | null = null;
 
-    onAuthStateChanged(getAuth(), async (user: any) => {
+    onAuthStateChanged(this.auth, async (user: any) => {
       // Check for guest mode
       const isGuest = this.storageService.getItem(LocalStorageKey.GUEST_MODE) === 'true';
 

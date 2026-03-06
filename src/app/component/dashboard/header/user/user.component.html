@@ -4,6 +4,9 @@
     class="relative z-10 flex items-center p-2 text-sm text-gray-600 bg-transparent border border-transparent rounded-md focus:border-blue-500 focus:ring-opacity-40 dark:focus:ring-opacity-40 focus:ring-blue-300 dark:focus:ring-blue-400 focus:ring dark:text-white focus:outline-none transition-colors"
     type="button">
 
+    @if (updateAvailable()) {
+      <div class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white dark:ring-slate-900 animate-pulse z-20"></div>
+    }
     <!-- Avatar Stack for Family Mode -->
     @if (isFamilyMode() && sortedMembers().length > 0) {
       <div class="avatar-stack flex flex-row-reverse items-center -space-x-4 space-x-reverse hover:-space-x-2 transition-all duration-300 ml-1 mr-1 cursor-pointer">
@@ -95,14 +98,27 @@
           <span>{{ 'USER_MENU.PROFILE_SETTINGS' | translate }}</span>
         </button>
         <button
-          class="flex items-center w-full px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 dark:hover:text-white focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-800"
-          (click)="openCacheManager()">
-          <svg class="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3ZM19 19H5V5H19V19ZM17 13H7V11H17V13ZM13 17H7V15H13V17ZM7 9V7H17V9H7Z"
-            fill="currentColor"></path>
-          </svg>
-          <span>{{ 'USER_MENU.CACHE_MGMT' | translate }}</span>
+          class="flex items-center w-full px-4 py-2 text-sm transition-colors duration-200 focus:outline-none"
+          [class.bg-indigo-50]="updateAvailable()"
+          [class.dark:bg-indigo-900/20]="updateAvailable()"
+          [class.text-indigo-600]="updateAvailable()"
+          [class.dark:text-indigo-400]="updateAvailable()"
+          [class.text-gray-600]="!updateAvailable()"
+          [class.dark:text-gray-300]="!updateAvailable()"
+          [class.hover:bg-gray-100]="!updateAvailable()"
+          [class.dark:hover:bg-slate-800]="!updateAvailable()"
+          (click)="updateApp()">
+          <div class="relative flex items-center w-full">
+            <svg class="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3ZM19 19H5V5H19V19ZM17 13H7V11H17V13ZM13 17H7V15H13V17ZM7 9V7H17V9H7Z"
+              fill="currentColor"></path>
+            </svg>
+            <span class="flex-1 text-left">{{ 'USER_MENU.CACHE_MGMT' | translate }}</span>
+            @if (updateAvailable()) {
+              <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse mr-1"></div>
+            }
+          </div>
         </button>
         <button
           class="flex items-center w-full px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 dark:hover:text-white focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-800"

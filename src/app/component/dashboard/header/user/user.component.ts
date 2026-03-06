@@ -16,6 +16,7 @@ import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/c
 import { UserService } from 'src/app/util/service/db/user.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { trigger, state, style, transition, animate } from '@angular/animations';
+import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { ThemeSwitchingService } from 'src/app/util/service/theme-switching.service';
 import { ThemeType } from 'src/app/util/models/theme.model';
@@ -71,6 +72,7 @@ export class UserComponent {
   private readonly dialog              = inject(MatDialog);
   private readonly familyService       = inject(FamilyService);
   private readonly store               = inject(Store<AppState>);
+  private readonly swUpdate            = inject(SwUpdate);
 
   // ── Observables → signals ──────────────────────────────────────────────────
   private readonly userAuth    = toSignal(this.userService.userAuth$);
@@ -124,7 +126,22 @@ export class UserComponent {
   // photoURL override for image-error fallback
   private readonly photoURLOverride = signal<string | null>(null);
 
-  constructor() {}
+  readonly updateAvailable = signal(false);
+
+  constructor() {
+    if (this.swUpdate.isEnabled) {
+      this.swUpdate.versionUpdates.subscribe(evt => {
+        if (evt.type === 'VERSION_READY') {
+          this.updateAvailable.set(true);
+        }
+      });
+
+      // Poll for updates every 15 minutes
+      setInterval(() => {
+        this.swUpdate.checkForUpdate();
+      }, 15 * 60 * 1000);
+    }
+  }
 
   readonly sortedMembers = computed(() => {
     const members = this.familyMembers();
@@ -170,9 +187,73 @@ export class UserComponent {
     this.close();
   }
 
-  openCacheManager(): void {
-    this.showCacheManagerDialog();
+  updateApp(): void {
     this.close();
+    
+    // Create and show update overlay to inform the user
+    const overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 z-[9999] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4';
+    overlay.innerHTML = `
+      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center transform transition-all animate-in fade-in zoom-in duration-300">
+        <div class="mb-6 flex justify-center">
+          <div class="relative">
+            <div class="w-16 h-16 border-4 border-indigo-100 dark:border-indigo-900/30 rounded-full"></div>
+            <div class="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+          </div>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Updating App</h3>
+        <p class="text-gray-500 dark:text-gray-400 text-sm">Please wait while we prepare the latest version...</p>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // Increase delay slightly to ensure the overlay is fully visible
+    // and to let existing Firebase operations settle.
+    setTimeout(async () => {
+      try {
+        // 1. Log out cleanly - but use the lower-level logout to avoid router.navigate interference
+        // during an active window.location.reload()
+        try {
+          await this.userService.logout();
+        } catch (logErr) {
+          console.warn('Logout during update failed, proceeding anyway...', logErr);
+        }
+        
+        // 2. Clear known browser storage that might hold old state
+        if (typeof window !== 'undefined') {
+          // Clear Cache Storage (PWA assets)
+          if ('caches' in window) {
+            try {
+              const cacheNames = await caches.keys();
+              await Promise.all(cacheNames.map(name => caches.delete(name)));
+            } catch (cErr) { console.warn('Cache clear error:', cErr); }
+          }
+
+          // Activate update if ready
+          if (this.swUpdate.isEnabled && this.updateAvailable()) {
+            try {
+              await this.swUpdate.activateUpdate();
+            } catch (swErr) {
+              console.warn('SW activation failed, continuing...', swErr);
+            }
+          }
+
+          // Clear local/session storage
+          localStorage.clear();
+          sessionStorage.clear();
+          
+          // Save a flag to indicate we just updated
+          localStorage.setItem('app-updated', new Date().toISOString());
+        }
+
+        // 3. Final Hard Reload
+        console.log('🔄 Reloading application for update...');
+        window.location.reload();
+      } catch (error) {
+        console.error('Update reload sequence failed:', error);
+        window.location.reload();
+      }
+    }, 1500);
   }
 
   openHelp(): void {
@@ -242,77 +323,4 @@ export class UserComponent {
     }
   }
 
-  // ── Private helpers ────────────────────────────────────────────────────────
-  private showCacheManagerDialog(): void {
-    const overlay = document.createElement('div');
-    overlay.className = 'fixed inset-0 z-[9999] bg-black bg-opacity-50 flex items-center justify-center p-4';
-    overlay.innerHTML = `
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto">
-        <div class="p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Cache Management</h3>
-            <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
-          </div>
-          <div class="space-y-4">
-            <button onclick="clearAppCache()" class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-              </svg>
-              <span>Clear Cache</span>
-            </button>
-            <button onclick="forceAppUpdate()" class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-              </svg>
-              <span>Force Update</span>
-            </button>
-            <div class="p-3 bg-gray-50 rounded-lg">
-              <h4 class="font-medium text-gray-900 mb-2">App Information</h4>
-              <div class="space-y-1">
-                <div class="flex justify-between">
-                  <span class="text-sm text-gray-600">Version:</span>
-                  <span class="text-sm font-medium">${new Date().toISOString().split('T')[0]}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-sm text-gray-600">Last Updated:</span>
-                  <span class="text-sm font-medium">${new Date(this.localStorageService.getItem(LocalStorageKey.APP_VERSION) || new Date().toISOString().split('T')[0]).toLocaleDateString()}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-
-    (window as any).clearAppCache = async () => {
-      try {
-        if ('caches' in window) {
-          const names = await caches.keys();
-          await Promise.all(names.map(n => caches.delete(n)));
-        }
-        if ('indexedDB' in window) {
-          const dbs = await indexedDB.databases();
-          dbs.forEach(db => { if (db.name) indexedDB.deleteDatabase(db.name); });
-        }
-        this.notificationService.success('Cache cleared successfully!');
-        overlay.remove();
-      } catch (error) {
-        console.error('Failed to clear cache:', error);
-        this.notificationService.error('Failed to clear cache. Please try again.');
-      }
-    };
-
-    (window as any).forceAppUpdate = () => {
-      this.localStorageService.setItem(LocalStorageKey.APP_VERSION, new Date().toISOString().split('T')[0]);
-      this.notificationService.info('App update initiated');
-      window.location.reload();
-    };
-
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
-    document.body.appendChild(overlay);
-  }
 }
