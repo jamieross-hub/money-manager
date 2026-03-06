@@ -4,8 +4,7 @@
     
   <!-- Mobile Filter Header -->
   @if (showFilters && !showChart) {
-    <div class="mobile-filter-header" 
-         [class.header-hidden]="isHeaderHidden()">
+    <div class="mobile-filter-header">
       <!-- Active Filters Indicator -->
       @if (activeFiltersCount() > 0) {
         <div class="active-filters-indicator"
@@ -237,8 +236,7 @@
 
   <!-- Transaction Summary -->
   @if (showFilters && filteredTransactions().length > 0) {
-    <div class="transaction-summary" 
-         [class.header-hidden]="isHeaderHidden()">
+    <div class="transaction-summary">
       <div class="summary-stats">
         <div class="stat-item">
           <span class="stat-value">{{ filteredCount() }}</span>
@@ -255,16 +253,7 @@
   }
 
   <!-- Transaction List -->
-  <div class="transaction-list-container" #scrollContainer (scroll)="onScroll()">
-
-    @if (showScrollIndicator() && currentScrollHeader()) {
-      <div class="scroll-indicator-host">
-        <div class="floating-scroll-indicator">
-          <mat-icon>calendar_month</mat-icon>
-          <span>{{ currentScrollHeader() }}</span>
-        </div>
-      </div>
-    }
+  <div class="transaction-list-container" >
 
     <div class="transaction-scroll">
       <!-- Empty State -->

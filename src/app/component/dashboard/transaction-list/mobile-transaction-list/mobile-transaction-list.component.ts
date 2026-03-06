@@ -129,7 +129,7 @@ interface SortOption {
   ]
 })
 export class MobileTransactionListComponent
-  implements OnInit, OnDestroy, AfterViewInit {
+  implements OnInit, OnDestroy {
   @Output() editTransaction = new EventEmitter<Transaction>();
   @Output() deleteTransaction = new EventEmitter<Transaction>();
   @Output() addTransaction = new EventEmitter<void>();
@@ -155,21 +155,6 @@ export class MobileTransactionListComponent
 
   selectedTx: Transaction | null = null;
   showFilters: boolean = false;
-
-  @ViewChild('scrollContainer') scrollContainer?: ElementRef<HTMLElement>;
-  
-  showScrollIndicator = signal<boolean>(false);
-  currentScrollHeader = signal<string>('');
-  isHeaderHidden = signal<boolean>(false);
-  private scrollTimeout?: any;
-  private showIndicatorTimeout?: any;
-  private lastScrollTopSignal = signal<number>(0);
-  private lastScrollYSignal = signal<number>(0);
-  private lastThresholdScrollTopSignal = signal<number>(0);
-  private isScrollHandling = false;
-  // px per scroll event to be considered "fast"
-  private readonly FAST_SCROLL_THRESHOLD = 50;
-  private readonly HYSTERESIS_DISTANCE = 40;
 
   // Signals defined below...
 
@@ -508,94 +493,11 @@ export class MobileTransactionListComponent
     );
   }
 
-  ngAfterViewInit() {
-    // Scroll container is ready — header detection is done via onScroll()
-  }
-
-  private setupIntersectionObserver() {
-    // No-op: using scroll-based header detection instead
-  }
-
-  private observeHeaders() {
-    // No-op: using scroll-based header detection instead
-  }
-
-  private updateCurrentScrollHeader() {
-    if (!this.scrollContainer) return;
-    const container = this.scrollContainer.nativeElement;
-    const containerTop = container.getBoundingClientRect().top;
-    const headers = container.querySelectorAll<HTMLElement>('.date-header');
-    let currentHeader = '';
-    headers.forEach(header => {
-      const headerTop = header.getBoundingClientRect().top - containerTop;
-      // Header is at or above the top of the visible area (with small 24px buffer)
-      if (headerTop <= 24) {
-        currentHeader = header.getAttribute('data-header') || header.textContent?.trim() || '';
-      }
-    });
-    if (currentHeader) {
-      this.currentScrollHeader.set(currentHeader);
-    }
-  }
-
-  onScroll() {
-    if (!this.scrollContainer || this.isScrollHandling) return;
-    
-    this.isScrollHandling = true;
-    requestAnimationFrame(() => {
-      const container = this.scrollContainer!.nativeElement;
-      const scrollTop = container.scrollTop;
-      const scrollHeight = container.scrollHeight;
-      const clientHeight = container.clientHeight;
-      const distanceScrolled = Math.abs(scrollTop - this.lastThresholdScrollTopSignal());
-
-      // 1. Header Visibility with Hysteresis
-      if (scrollTop <= 25) {
-        if (this.isHeaderHidden()) {
-          this.isHeaderHidden.set(false);
-          this.lastThresholdScrollTopSignal.set(scrollTop);
-        }
-      } else if (distanceScrolled > this.HYSTERESIS_DISTANCE) {
-        const isNearBottom = (scrollTop + clientHeight) >= (scrollHeight - 40);
-        const lastScrollTop = this.lastScrollTopSignal();
-
-        if (scrollTop > lastScrollTop && !isNearBottom) {
-          if (!this.isHeaderHidden()) {
-            this.isHeaderHidden.set(true);
-            this.lastThresholdScrollTopSignal.set(scrollTop);
-          }
-        } else if (scrollTop < lastScrollTop) {
-          this.lastThresholdScrollTopSignal.set(scrollTop);
-        }
-      }
-
-      this.lastScrollTopSignal.set(scrollTop);
-
-      // 2. Floating date indicator (Fast Scroll only)
-      const delta = Math.abs(scrollTop - this.lastScrollYSignal());
-      this.lastScrollYSignal.set(scrollTop);
-
-      if (delta >= this.FAST_SCROLL_THRESHOLD) {
-        this.updateCurrentScrollHeader();
-        if (this.showIndicatorTimeout) clearTimeout(this.showIndicatorTimeout);
-        if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
-        this.showScrollIndicator.set(true);
-        this.scrollTimeout = setTimeout(() => {
-          this.showScrollIndicator.set(false);
-        }, 1000);
-      }
-
-      this.isScrollHandling = false;
-    });
-  }
-
   ngOnDestroy() {
     this.subscription.unsubscribe();
-    if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
     this.destroy$.next();
     this.destroy$.complete();
   }
-
 
 
   onCategoryChange(category: string) {
