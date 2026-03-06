@@ -323,17 +323,17 @@ body {
     --warning-800: #92400e;
     --warning-900: #78350f;
 
-    // Neutral Palette
-    --neutral-50: #{mat.get-theme-color(dark.$dark-theme, neutral, 95)};
-    --neutral-100: #{mat.get-theme-color(dark.$dark-theme, neutral, 90)};
-    --neutral-200: #{mat.get-theme-color(dark.$dark-theme, neutral, 80)};
-    --neutral-300: #{mat.get-theme-color(dark.$dark-theme, neutral, 70)};
-    --neutral-400: #{mat.get-theme-color(dark.$dark-theme, neutral, 60)};
-    --neutral-500: #{mat.get-theme-color(dark.$dark-theme, neutral, 50)};
-    --neutral-600: #{mat.get-theme-color(dark.$dark-theme, neutral, 40)};
-    --neutral-700: #{mat.get-theme-color(dark.$dark-theme, neutral, 30)};
-    --neutral-800: #{mat.get-theme-color(dark.$dark-theme, neutral, 20)};
-    --neutral-900: #{mat.get-theme-color(dark.$dark-theme, neutral, 10)};
+    // Neutral Palette (Inverted for Dark Theme to provide auto-contrast)
+    --neutral-50: #{mat.get-theme-color(dark.$dark-theme, neutral, 10)};
+    --neutral-100: #{mat.get-theme-color(dark.$dark-theme, neutral, 20)};
+    --neutral-200: #{mat.get-theme-color(dark.$dark-theme, neutral, 30)};
+    --neutral-300: #{mat.get-theme-color(dark.$dark-theme, neutral, 40)};
+    --neutral-400: #{mat.get-theme-color(dark.$dark-theme, neutral, 50)};
+    --neutral-500: #{mat.get-theme-color(dark.$dark-theme, neutral, 60)};
+    --neutral-600: #{mat.get-theme-color(dark.$dark-theme, neutral, 70)};
+    --neutral-700: #{mat.get-theme-color(dark.$dark-theme, neutral, 80)};
+    --neutral-800: #{mat.get-theme-color(dark.$dark-theme, neutral, 90)};
+    --neutral-900: #{mat.get-theme-color(dark.$dark-theme, neutral, 95)};
 
     // Surface Palette
     --surface-50: #{mat.get-theme-color(dark.$dark-theme, neutral, 4)};

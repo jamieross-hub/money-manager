@@ -97,7 +97,7 @@
                         <div
                           class="flex items-center justify-center md:justify-start gap-1 md:gap-2 mb-3">
                           <div
-                            class="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
+                            class="w-8 h-8 rounded-lg bg-surface-200 flex items-center justify-center flex-shrink-0">
                             <mat-icon class="!text-base text-primary-500">speed</mat-icon>
                           </div>
                           <span
@@ -109,11 +109,11 @@
                       </div>
                       <!-- Top Category -->
                       <div
-                        class="px-4 py-3 flex flex-col items-center md:block text-center md:text-left bg-primary-50">
+                        class="px-4 py-3 flex flex-col items-center md:block text-center md:text-left bg-surface-100">
                         <div
                           class="flex items-center justify-center md:justify-start gap-1 md:gap-2 mb-3">
                           <div
-                            class="w-8 h-8 rounded-lg bg-warning-50 flex items-center justify-center flex-shrink-0 text-neutral-500">
+                            class="w-8 h-8 rounded-lg bg-surface-200 flex items-center justify-center flex-shrink-0 text-neutral-500">
                             <mat-icon class="!text-base ">category</mat-icon>
                           </div>
                           <span
@@ -161,7 +161,7 @@
                         <div class="px-4 py-3">
                           <div class="flex items-center gap-2 mb-3">
                             <div
-                              class="w-8 h-8 rounded-lg bg-success-50 flex items-center justify-center flex-shrink-0">
+                              class="w-8 h-8 rounded-lg bg-surface-200 flex items-center justify-center flex-shrink-0">
                               <mat-icon class="!text-base text-success-500">savings</mat-icon>
                             </div>
                             <span
@@ -179,7 +179,7 @@
                         <div class="px-4 py-3">
                           <div class="flex items-center gap-2 mb-3">
                             <div
-                              class="w-8 h-8 rounded-lg bg-error-50 flex items-center justify-center flex-shrink-0">
+                              class="w-8 h-8 rounded-lg bg-surface-200 flex items-center justify-center flex-shrink-0">
                               <mat-icon
                               class="!text-base text-error-500">trending_up</mat-icon>
                             </div>
@@ -246,7 +246,7 @@
                       @if (selectedPeriod() === 'monthly' || selectedPeriod() === 'weekly') {
                         <button
                           (click)="selectedPeriod() === 'monthly' ? previousMonth() : previousWeek()"
-                          class="w-7 h-7 flex items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200 transition-colors text-neutral-600 cursor-pointer border-none outline-none dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-neutral-300">
+                          class="w-7 h-7 flex items-center justify-center rounded-full bg-surface-200 hover:bg-surface-300 transition-colors text-neutral-600 cursor-pointer border-none outline-none">
                           <mat-icon class="!text-sm !w-auto !h-auto leading-none">chevron_left</mat-icon>
                         </button>
                       }
@@ -267,7 +267,7 @@
                       @if (selectedPeriod() === 'monthly' || selectedPeriod() === 'weekly') {
                         <button
                           (click)="selectedPeriod() === 'monthly' ? nextMonth() : nextWeek()"
-                          class="w-7 h-7 flex items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200 transition-colors text-neutral-600 cursor-pointer border-none outline-none dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-neutral-300">
+                          class="w-7 h-7 flex items-center justify-center rounded-full bg-surface-200 hover:bg-surface-300 transition-colors text-neutral-600 cursor-pointer border-none outline-none">
                           <mat-icon class="!text-sm !w-auto !h-auto leading-none">chevron_right</mat-icon>
                         </button>
                       }
@@ -305,11 +305,9 @@
                         </div>
                         <mat-divider></mat-divider>
                         <!-- Savings / Deficit -->
-                        <div class="flex justify-between items-center py-3 px-4 rounded-lg border"
-                          [class.bg-success-50]="currentPeriodSummary.savings >= 0"
-                          [class.border-success-200]="currentPeriodSummary.savings >= 0"
-                          [class.bg-error-50]="currentPeriodSummary.savings < 0"
-                          [class.border-error-200]="currentPeriodSummary.savings < 0">
+                        <div class="flex justify-between items-center py-3 px-4 rounded-lg border border-surface-300"
+                          [class.bg-neutral-200]="currentPeriodSummary.savings >= 0"
+                          [class.bg-error-100]="currentPeriodSummary.savings < 0">
                           <span class="text-sm font-medium"
                             [class.text-success-700]="currentPeriodSummary.savings >= 0"
                             [class.text-error-700]="currentPeriodSummary.savings < 0">
@@ -551,9 +549,9 @@
                     Spending Trend
                   </p>
                   <div class="flex items-center gap-3 p-4 rounded-lg"
-                    [class.bg-error-50]="nextMonthPrediction.trend === 'increasing'"
-                    [class.bg-success-50]="nextMonthPrediction.trend === 'decreasing'"
-                    [class.bg-primary-50]="nextMonthPrediction.trend === 'stable'">
+                    [class.bg-error-100]="nextMonthPrediction.trend === 'increasing'"
+                    [class.bg-success-100]="nextMonthPrediction.trend === 'decreasing'"
+                    [class.bg-primary-100]="nextMonthPrediction.trend === 'stable'">
                     <mat-icon class="!text-3xl"
                       [class]="nextMonthPrediction.trend | trend:'color'">
                       {{ nextMonthPrediction.trend | trend:'icon' }}
@@ -608,8 +606,8 @@
                       <mat-divider></mat-divider>
                     </div>
                     <div class="flex justify-between py-2 px-3 rounded-lg mt-2"
-                      [class.bg-success-50]="nextMonthPrediction.predictedSavings >= 0"
-                      [class.bg-error-50]="nextMonthPrediction.predictedSavings < 0">
+                      [class.bg-success-100]="nextMonthPrediction.predictedSavings >= 0"
+                      [class.bg-error-100]="nextMonthPrediction.predictedSavings < 0">
                       <span class="text-sm font-medium"
                         [class.text-success-700]="nextMonthPrediction.predictedSavings >= 0"
                         [class.text-error-700]="nextMonthPrediction.predictedSavings < 0">
@@ -661,8 +659,8 @@
                       <mat-divider></mat-divider>
                     </div>
                     <div class="flex justify-between py-2 px-3 rounded-lg mt-2"
-                      [class.bg-success-50]="next3MonthsPrediction.predictedSavings >= 0"
-                      [class.bg-error-50]="next3MonthsPrediction.predictedSavings < 0">
+                      [class.bg-success-100]="next3MonthsPrediction.predictedSavings >= 0"
+                      [class.bg-error-100]="next3MonthsPrediction.predictedSavings < 0">
                       <span class="text-sm font-medium"
                         [class.text-success-700]="next3MonthsPrediction.predictedSavings >= 0"
                         [class.text-error-700]="next3MonthsPrediction.predictedSavings < 0">
@@ -714,8 +712,8 @@
                       <mat-divider></mat-divider>
                     </div>
                     <div class="flex justify-between py-2 px-3 rounded-lg mt-2"
-                      [class.bg-success-50]="yearEndPrediction.predictedSavings >= 0"
-                      [class.bg-error-50]="yearEndPrediction.predictedSavings < 0">
+                      [class.bg-success-100]="yearEndPrediction.predictedSavings >= 0"
+                      [class.bg-error-100]="yearEndPrediction.predictedSavings < 0">
                       <span class="text-sm font-medium"
                         [class.text-success-700]="yearEndPrediction.predictedSavings >= 0"
                         [class.text-error-700]="yearEndPrediction.predictedSavings < 0">
@@ -762,7 +760,7 @@
                   <mat-list-item
                     class="!h-auto !py-2">
                     <div
-                      class="flex items-center justify-between w-full p-3 bg-warning-50 rounded-lg border border-warning-200">
+                      class="flex items-center justify-between w-full p-3 bg-warning-100 rounded-lg border border-warning-200">
                       <div class="flex items-center gap-3">
                         <mat-icon class="text-warning-500 !text-lg">trending_up
                         </mat-icon>

@@ -1,6 +1,4 @@
-@use '@angular/material' as mat;
-@use '../../../../styles/light-theme' as light;
-@use '../../../../styles/dark-theme' as dark;
+// Footer uses project standard CSS variables for theme-aware styling
 
 :host {
 	display: block;
@@ -9,30 +7,29 @@
 
 footer {
 	transition: background-color 0.2s ease, border-color 0.2s ease;
-	background-color: var(--surface-200) !important;
-	border-top: 1px solid var(--neutral-200);
+	background-color: var(--surface-100) !important;
+	border-top: 1px solid var(--surface-300);
 	position: relative;
 	z-index: 50;
-	// Removed backdrop-filter as it causes lag on mobile
 }
 
 .active-icon-box {
-	background-color: var(--primary-600);
-	color: var(--surface-50);
+	background-color: var(--primary-500);
+	color: var(--surface-50); // High contrast text on primary
 	will-change: background-color;
 
 	&:hover {
-		background-color: var(--primary-700);
+		background-color: var(--primary-600);
 	}
 }
 
 .inactive-icon-box {
-	background-color: var(--surface-100);
+	background-color: var(--surface-200);
 	color: var(--neutral-500);
 	will-change: background-color;
 
 	&:hover {
-		background-color: var(--surface-200);
+		background-color: var(--surface-300);
 	}
 }
 
@@ -45,7 +42,7 @@ footer {
 }
 
 .active-label {
-	color: var(--primary-600);
+	color: var(--primary-500);
 }
 
 .inactive-label {
@@ -68,13 +65,13 @@ footer {
 	color: var(--neutral-700);
 }
 
-// Dynamic FAB colours per page
+// Dynamic FAB colors per page
 .add-btn-green {
-	background-color: var(--primary-600);
+	background-color: var(--primary-500);
 }
 
 .add-btn-purple {
-	background-color: var(--primary-600);
+	background-color: var(--primary-500);
 }
 
 // Optimization for all footer buttons
@@ -125,14 +122,6 @@ button {
 
 button:has(.glow-animation) {
 	overflow: visible !important;
-}
-
-// Dark mode overrides
-:host-context(.dark-theme) {
-	footer {
-		background-color: #0f172a !important; // slate-900
-		border-color: #1e293b; // slate-800
-	}
 }
 
 // Accessibility
