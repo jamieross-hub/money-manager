@@ -297,3 +297,41 @@ mat-list-item {
                  }
             }
         }
+
+// ── Prediction Fallback Styles ──
+.prediction-fallback-container {
+  .insight-preview-card {
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.6);
+      border-color: rgba(255, 255, 255, 0.8);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  mat-progress-bar {
+    ::ng-deep {
+      .mdc-linear-progress__bar-inner {
+        border-color: var(--primary-500);
+      }
+      .mdc-linear-progress__track {
+        background-color: var(--surface-300);
+      }
+    }
+  }
+}
+
+// ── Animations ──
+@keyframes softPulse {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+.animate-soft-pulse {
+  animation: softPulse 4s ease-in-out infinite;
+}

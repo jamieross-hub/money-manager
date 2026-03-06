@@ -26,6 +26,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { CategorySummaryCardComponent } from '../../../../util/components/cards/category-summary-card/category-summary-card.component';
@@ -59,6 +60,7 @@ import { LocalIndexDBStorageService } from '../../../../util/service/indexdb-sto
         MatDividerModule,
         MatTooltipModule,
         MatIconModule,
+        MatButtonModule,
         MatSelectModule,
         MatFormFieldModule,
         CategorySummaryCardComponent,

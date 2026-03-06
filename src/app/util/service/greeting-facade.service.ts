@@ -1,41 +1,45 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { UserService } from './db/user.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GreetingFacadeService {
+  private readonly userService = inject(UserService);
+  private readonly translateService = inject(TranslateService);
+
   private hasGreeted = false;
   private seenMessages = new Set<string>();
   private chatPlaceholderIndex = 0;
   private loaderMessageIndex = 0;
 
-  private readonly loadingMessages: string[] = [
-    'Preparing your financial dashboard...',
-    'Gathering your latest transactions...',
-    'Calculating your wealth insights...',
-    'Organizing your budget categories...',
-    'Making things look beautiful for you...',
-    'Just a few more seconds...',
-    'Almost ready to crunch those numbers...',
-    'Ready when you are!'
-  ];
-
-  private readonly chatPlaceholders: string[] = [
-    'Spent ₹500 on dinner',
-    'Received ₹50000 Salary',
-    'What is my balance?',
-    'Highest expense this week?',
-    'Compare Food vs Fuel',
-    'Monthly spending report',
-    'Show my loan summary',
-    'Ask about finances...'
-  ];
-
-  constructor(private userService: UserService) { }
-
   public getChatPlaceholders(): string[] {
-    return this.chatPlaceholders;
+    const placeholders = this.translateService.instant('GREETINGS.CHAT_PLACEHOLDERS');
+    return Array.isArray(placeholders) ? placeholders : [
+      'Spent ₹500 on dinner',
+      'Received ₹50000 Salary',
+      'What is my balance?',
+      'Highest expense this week?',
+      'Compare Food vs Fuel',
+      'Monthly spending report',
+      'Show my loan summary',
+      'Ask about finances...'
+    ];
+  }
+
+  public getLoadingMessages(): string[] {
+    const messages = this.translateService.instant('GREETINGS.LOADING_MESSAGES');
+    return Array.isArray(messages) ? messages : [
+      'Preparing your financial dashboard...',
+      'Gathering your latest transactions...',
+      'Calculating your wealth insights...',
+      'Organizing your budget categories...',
+      'Making things look beautiful for you...',
+      'Just a few more seconds...',
+      'Almost ready to crunch those numbers...',
+      'Ready when you are!'
+    ];
   }
 
   public shouldGreet(): boolean {
@@ -93,10 +97,6 @@ export class GreetingFacadeService {
 
   public isLastIndex(index: number, totalItems: number): boolean {
     return index === totalItems - 1;
-  }
-
-  public getLoadingMessages(): string[] {
-    return this.loadingMessages;
   }
 
   public resetGreeting(): void {

@@ -476,5 +476,31 @@
         "CONTACT_RESPONSE": "Response Time:",
         "CONTACT_RESPONSE_TEXT": "We aim to respond to all privacy-related inquiries within 48 hours.",
         "FOOTER_TEXT": "This Privacy Policy is effective as of"
+    },
+    "GREETINGS": {
+        "GOOD_MORNING": "Good morning",
+        "GOOD_AFTERNOON": "Good afternoon",
+        "GOOD_EVENING": "Good evening",
+        "GOOD_NIGHT": "Good night",
+        "LOADING_MESSAGES": [
+            "Preparing your financial dashboard...",
+            "Gathering your latest transactions...",
+            "Calculating your wealth insights...",
+            "Organizing your budget categories...",
+            "Making things look beautiful for you...",
+            "Just a few more seconds...",
+            "Almost ready to crunch those numbers...",
+            "Ready when you are!"
+        ],
+        "CHAT_PLACEHOLDERS": [
+            "Spent ₹500 on dinner",
+            "Received ₹50000 Salary",
+            "What is my balance?",
+            "Highest expense this week?",
+            "Compare Food vs Fuel",
+            "Monthly spending report",
+            "Show my loan summary",
+            "Ask about finances..."
+        ]
     }
 }
