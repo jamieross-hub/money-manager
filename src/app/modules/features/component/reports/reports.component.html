@@ -243,16 +243,17 @@
                   </div>
                   <div class="flex items-center justify-between mb-4 flex-wrap gap-2 px-4">
                     <div class="flex items-center gap-1 w-full justify-between px-4">
-                      @if (selectedPeriod() === 'monthly' || selectedPeriod() === 'weekly') {
+                      @if (selectedPeriod() === 'monthly' || selectedPeriod() === 'weekly' || selectedPeriod() === 'yearly') {
                         <button
-                          (click)="selectedPeriod() === 'monthly' ? previousMonth() : previousWeek()"
-                          class="w-7 h-7 flex items-center justify-center rounded-full bg-surface-200 hover:bg-surface-300 transition-colors text-neutral-600 cursor-pointer border-none outline-none">
+                          (click)="selectedPeriod() === 'weekly' ? previousWeek() : previousMonth()"
+                          [disabled]="!canGoPrevious()"
+                          class="w-7 h-7 flex items-center justify-center rounded-full bg-surface-200 hover:bg-surface-300 transition-colors text-neutral-600 cursor-pointer border-none outline-none disabled:opacity-40 disabled:cursor-not-allowed">
                           <mat-icon class="!text-sm !w-auto !h-auto leading-none">chevron_left</mat-icon>
                         </button>
                       }
                       <span class="text-sm font-medium text-primary-600 flex items-center gap-2 mx-1 text-center">
-                        {{ (breakpointService.device.isMobile && (selectedPeriod() !== 'monthly' && selectedPeriod() !== 'weekly')) ? "" : getPeriodLabel('current') }}
-                        @if (breakpointService.device.isMobile && (selectedPeriod() !== 'monthly' && selectedPeriod() !== 'weekly')) {
+                        {{ getPeriodLabel('current') }}
+                        <!-- @if (breakpointService.device.isMobile && (selectedPeriod() !== 'monthly' && selectedPeriod() !== 'weekly')) {
                           <mat-form-field appearance="fill"
                             class="year-select-field !w-auto !text-primary-500 !bg-transparent !border-none mb-0">
                             <mat-select [value]="selectedYear()"
@@ -262,12 +263,13 @@
                               }
                             </mat-select>
                           </mat-form-field>
-                        }
+                        } -->
                       </span>
-                      @if (selectedPeriod() === 'monthly' || selectedPeriod() === 'weekly') {
+                      @if (selectedPeriod() === 'monthly' || selectedPeriod() === 'weekly' || selectedPeriod() === 'yearly') {
                         <button
-                          (click)="selectedPeriod() === 'monthly' ? nextMonth() : nextWeek()"
-                          class="w-7 h-7 flex items-center justify-center rounded-full bg-surface-200 hover:bg-surface-300 transition-colors text-neutral-600 cursor-pointer border-none outline-none">
+                          (click)="selectedPeriod() === 'weekly' ? nextWeek() : nextMonth()"
+                          [disabled]="!canGoNext()"
+                          class="w-7 h-7 flex items-center justify-center rounded-full bg-surface-200 hover:bg-surface-300 transition-colors text-neutral-600 cursor-pointer border-none outline-none disabled:opacity-40 disabled:cursor-not-allowed">
                           <mat-icon class="!text-sm !w-auto !h-auto leading-none">chevron_right</mat-icon>
                         </button>
                       }
@@ -550,12 +552,12 @@
                   </p>
                   <div class="flex items-center gap-3 p-4 rounded-lg"
                     [class.bg-error-100]="nextMonthPrediction.trend === 'increasing'"
-                    [class.bg-success-100]="nextMonthPrediction.trend === 'decreasing'"
+                    [class.bg-surface-200]="nextMonthPrediction.trend === 'decreasing'"
                     [class.bg-primary-100]="nextMonthPrediction.trend === 'stable'">
-                    <mat-icon class="!text-3xl"
+                    <!-- <mat-icon class="!text-3xl"
                       [class]="nextMonthPrediction.trend | trend:'color'">
                       {{ nextMonthPrediction.trend | trend:'icon' }}
-                    </mat-icon>
+                    </mat-icon> -->
                     <div>
                       <div class="font-semibold text-neutral-800">
                         Your spending is <span class="capitalize">{{

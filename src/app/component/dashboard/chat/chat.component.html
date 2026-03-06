@@ -118,44 +118,45 @@
       <!-- Standard Input Bar (Hidden during voice interaction) -->
       @if (!isRecording && !voiceBlob) {
         <div
-          class="flex items-center search-input-wrap border rounded-full px-2 py-1 focus-within:ring-2 focus-within:ring-primary-100 focus-within:border-primary-300 transition shadow-sm">
-          <!-- Attachment Button -->
+          class="flex items-center search-input-wrap rounded-full px-2 py-1.5 mx-auto max-w-4xl w-full">
+          <!-- Attachment or Mic Button -->
           <button (click)="breakpointService.device.isMobile ? onMicClick() : onAttachmentClick()"
-            class="p-2 text-gray-400 hover:text-primary-500 transition rounded-full hover:bg-gray-100 relative top-[6px]">
+            class="p-2.5 text-neutral-400 hover:text-primary-500 hover:bg-primary-50 transition rounded-full flex items-center justify-center">
             @if (!breakpointService.device.isMobile) {
-              <mat-icon class="material-icons-outlined text-[20px] leading-[20px] w-[20px] h-[20px]"
-              >add</mat-icon>
+              <mat-icon class="material-icons-outlined !text-[22px]">add</mat-icon>
             }
             @if (breakpointService.device.isMobile) {
-              <mat-icon class="material-icons-outlined text-[20px] leading-[20px] w-[20px] h-[20px]"
-              >mic</mat-icon>
+              <mat-icon class="material-icons-outlined !text-[22px]">mic</mat-icon>
             }
           </button>
-          <!-- Input Field with Autocomplete -->
-          <div class="flex-1 relative">
-            <!-- Suggestion Overlay -->
-            <div class="absolute inset-0 px-2 text-sm sm:text-base text-slate-400 opacity-40 flex items-center"
-              [class.pointer-events-none]="!suggestion" [class.cursor-pointer]="suggestion">
+
+          <!-- Input Field Area -->
+          <div class="flex-1 relative mx-1">
+            <!-- Suggestion Display -->
+            <div class="absolute inset-0 px-2 text-sm sm:text-base text-neutral-400 opacity-40 flex items-center pointer-events-none">
               <span class="invisible">{{chatInput.value}}</span><span>{{suggestion}}</span>
             </div>
-            <!-- Actual Input -->
+            <!-- Actual Chat Input -->
             <input #chatInput type="text" [placeholder]="currentAnimatedPlaceholder"
-              (keydown.enter)="sendMessage(chatInput)" (keydown)="onTabKey($event, chatInput)"
-              (input)="onInputChange(chatInput)" (click)="completeSuggestion(chatInput)"
-              class="w-full bg-transparent border-none focus:outline-none px-2 text-sm sm:text-base relative z-10">
+              (keydown.enter)="sendMessage(chatInput)" 
+              (keydown)="onTabKey($event, chatInput)"
+              (input)="onInputChange(chatInput)" 
+              (click)="completeSuggestion(chatInput)"
+              class="w-full bg-transparent border-none focus:outline-none px-2 text-sm sm:text-base relative z-10 text-neutral-800">
           </div>
-          <!-- Mic Button -->
+
+          <!-- Desktop Mic Button -->
           @if (!breakpointService.device.isMobile) {
             <button (click)="onMicClick()"
-              class="p-2 text-gray-400 hover:text-primary-500 transition rounded-full  mr-1 relative top-[6px]">
-              <mat-icon class="material-icons-outlined text-[20px] leading-[20px] w-[20px] h-[20px]">mic</mat-icon>
+              class="p-2.5 text-neutral-400 hover:text-primary-500 hover:bg-primary-50 transition rounded-full mr-1 flex items-center justify-center">
+              <mat-icon class="material-icons-outlined !text-[22px]">mic</mat-icon>
             </button>
           }
-          <!-- Send Button -->
+
+          <!-- Modern Send Button -->
           <button (click)="sendMessage(chatInput)"
-            class="bg-primary-800 hover:bg-primary-600 text-white p-2 rounded-full shadow-md transition flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 ">
-            <mat-icon
-            class="material-icons-outlined text-[18px] sm:text-[20px] leading-[18px] sm:leading-[20px] w-[18px] sm:w-[20px] h-[18px] sm:h-[20px] relative top-[3px] ml-[-1px]">arrow_upward</mat-icon>
+            class="bg-primary-600 hover:bg-primary-500 text-white p-2 rounded-full shadow-md hover:shadow-lg transition-all flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 shrink-0">
+            <mat-icon class="material-icons-outlined !text-[20px] sm:!text-[22px] !leading-none">arrow_upward</mat-icon>
           </button>
         </div>
       }

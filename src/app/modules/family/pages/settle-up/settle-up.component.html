@@ -2,204 +2,181 @@
 
   <!-- ═══════════ HEADER ═══════════ -->
   <header class="settle-header">
-    <div class="header-content !mb-0">
-      <div>
-        <!-- <p class="text-2xl font-bold m-0">Settle Up</p> -->
-        <div class="flex items-center gap-3 mt-1.5">
-          @if (family()?.icon; as icon) {
-            <div class="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center bg-white/20 shrink-0">
-              @if (icon.startsWith('data:')) {
-                <img [src]="icon" alt="group icon" class="w-full h-full object-cover" />
-              }
-              @if (!icon.startsWith('data:')) {
-                <mat-icon class="text-white text-[24px] w-[24px] h-[24px]">{{ icon }}</mat-icon>
-              }
-            </div>
-          }
-          <p class="!text-xl font-bold tracking-tight text-white !m-0">{{ family()?.name }}</p>
+    <div class="header-content">
+      <div class="flex items-center gap-4">
+        @if (family()?.icon; as icon) {
+          <div class="header-icon-box">
+            @if (icon.startsWith('data:')) {
+              <img [src]="icon" alt="group icon" class="w-full h-full object-cover rounded-xl" />
+            }
+            @if (!icon.startsWith('data:')) {
+              <mat-icon class="text-white !text-2xl">{{ icon }}</mat-icon>
+            }
+          </div>
+        }
+        <div>
+          <h1 class="text-2xl font-black text-white leading-tight mb-0">{{ family()?.name }}</h1>
+          <p class="text-[11px] font-bold uppercase tracking-wider text-white/70 flex items-center gap-1.5 mt-0.5">
+            <mat-icon class="!text-[14px] !w-3.5 !h-3.5 opacity-80">group</mat-icon>
+            {{ members().length }} member{{ members().length !== 1 ? 's' : '' }}
+          </p>
         </div>
-      </div>
-      <div class="h-10 w-10 flex items-center justify-center bg-white/10 rounded-xl hover:bg-white/20 transition-colors cursor-help"
-        matTooltip="View group settlement rules">
-        <mat-icon class="text-white !text-xl">handshake</mat-icon>
       </div>
     </div>
 
-    <!-- Summary Pills (Owe/Owed) -->
-    <div class="flex gap-2 flex-wrap">
+    <!-- Status Summary Pills -->
+    <div class="balance-pills-container">
       @if (totalOwedByMe() > 0) {
-        <div class="balance-pill debt">
-          <mat-icon class="!text-xs h-4 w-4">arrow_outward</mat-icon>
+        <div class="status-pill debt">
+          <mat-icon>arrow_outward</mat-icon>
           <span>You owe ₹{{ totalOwedByMe() | number:'1.0-0' }}</span>
         </div>
       }
       @if (totalOwedToMe() > 0) {
-        <div class="balance-pill credit">
-          <mat-icon class="!text-xs h-4 w-4">call_received</mat-icon>
+        <div class="status-pill credit">
+          <mat-icon>call_received</mat-icon>
           <span>₹{{ totalOwedToMe() | number:'1.0-0' }} owed to you</span>
         </div>
       }
-      @if (totalOwedByMe() === 0 && totalOwedToMe() === 0) {
-        <div class="balance-pill">
-          <mat-icon class="!text-xs h-4 w-4">verified</mat-icon>
-          <span>All settled up</span>
+      @if (totalOwedByMe() === 0 && totalOwedToMe() === 0 && balances().length > 0) {
+        <div class="status-pill">
+          <mat-icon>verified</mat-icon>
+          <span>You're all settled</span>
         </div>
       }
     </div>
   </header>
 
-  <!-- ═══════════ CONTENT ═══════════ -->
-  <main class="content-container mt-5">
+  <!-- ═══════════ MAIN CONTENT ═══════════ -->
+  <main class="content-container">
 
-    <!-- Content will show instantly from store -->
-
-    <ng-container>
-
-      <!-- ── Section: Your Balances ── -->
-      @if (myBalances().length > 0) {
-        <section>
-          <p class="section-label mb-3">Your Balances</p>
-          <div class="card-stack">
-            @for (b of myBalances(); track trackByEntry($index, b)) {
-              <div
-                class="balance-card !flex-row !items-center !gap-3 !px-3 !py-3"
-                [class.owe]="b | iOwe : currentUserId"
-                [class.receive]="b | owedToMe : currentUserId"
-                (click)="openSettleDialog(b)"
-                matRipple>
-                <!-- Lead: Avatar Pair -->
-                <div class="avatar-pair shrink-0">
-                  <div class="avatar" [style.background]="b.fromUserId | settleAvatarColor">
-                    <img [src]="b.fromPhotoURL" appImageFallback alt="avatar" />
-                  </div>
-                  <div class="connector"><mat-icon class="!text-[13px]">chevron_right</mat-icon></div>
-                  <div class="avatar" [style.background]="b.toUserId | settleAvatarColor">
-                    <img [src]="b.toPhotoURL" appImageFallback alt="avatar" />
-                  </div>
+    <!-- ── SECTION: YOUR PENDING BALANCES ── -->
+    @if (myBalances().length > 0) {
+      <section class="mb-2">
+        <h2 class="section-label">Your Active Balances</h2>
+        <div class="flex flex-col">
+          @for (b of myBalances(); track trackByEntry($index, b)) {
+            <div class="settle-card" 
+                 [class.owe-mode]="b | iOwe : currentUserId"
+                 [class.receive-mode]="b | owedToMe : currentUserId"
+                 (click)="openSettleDialog(b)" 
+                 matRipple>
+              
+              <!-- Avatar Display -->
+              <div class="avatar-stack shrink-0">
+                <div class="avatar-wrap" [style.background-color]="b.fromUserId | settleAvatarColor">
+                  <img [src]="b.fromPhotoURL" appImageFallback alt="from" />
                 </div>
-                <!-- Center: Name + Amount -->
-                <div class="flex-1 min-w-0 flex flex-col gap-0.5">
-                  <!-- Direction label + person name -->
-                  <p class="text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 leading-none mb-0 truncate">
-                    @if (b | iOwe : currentUserId) {
-                      You owe
-                    }
-                    @if (b | owedToMe : currentUserId) {
-                      Owes you
-                    }
-                  </p>
-                  <p class="text-[12px] font-bold text-neutral-800 dark:text-neutral-100 truncate leading-tight mb-0">
-                    @if (b | iOwe : currentUserId) {
-                      {{ b.toDisplayName | titlecase }}
-                    }
-                    @if (b | owedToMe : currentUserId) {
-                      {{ b.fromDisplayName | titlecase }}
-                    }
-                  </p>
-                  <!-- Amount -->
-                  <p class="text-sm font-black leading-tight mb-0"
-                    [class.text-red-500]="b | iOwe : currentUserId"
-                    [class.text-primary-600]="b | owedToMe : currentUserId">
-                    {{ b.amount | currency: 'INR':'symbol':'1.0-0' }}
-                  </p>
+                <div class="stack-connector">
+                  <mat-icon>chevron_right</mat-icon>
                 </div>
-                <!-- Trailing: Action Button -->
-                <div class="shrink-0">
-                  <button mat-stroked-button class="h-8 !px-3 !text-[12px] font-bold rounded-xl shrink-0 border-opacity-30"
-                    [class.pay]="b | iOwe : currentUserId"
-                    [class.get]="b | owedToMe : currentUserId"
-                    (click)="$event.stopPropagation(); openSettleDialog(b)">
-                    <mat-icon class="!text-[14px] !w-3.5 !h-3.5 !mr-1">{{ (b | iOwe : currentUserId) ? 'send' : 'login' }}</mat-icon>
-                    <span>{{ (b | iOwe : currentUserId) ? 'Pay' : 'Settle' }}</span>
-                  </button>
+                <div class="avatar-wrap" [style.background-color]="b.toUserId | settleAvatarColor">
+                  <img [src]="b.toPhotoURL" appImageFallback alt="to" />
                 </div>
               </div>
-            }
-          </div>
-        </section>
-      }
 
-      <!-- ── Section: Other Balances ── -->
-      @if (otherBalances().length > 0) {
-        <section>
-          <p class="section-label mb-3">Other Balances</p>
-          <div class="card-stack">
-            @for (b of otherBalances(); track trackByEntry($index, b)) {
-              <div
-                class="balance-card !flex-row !items-center !gap-3 !p-3 !py-2.5 opacity-80 cursor-default">
-                <!-- Lead: Visual Pair -->
-                <div class="avatar-pair shrink-0 scale-75 -ml-2">
-                  <div class="avatar" [style.background]="b.fromUserId | settleAvatarColor">
-                    <img [src]="b.fromPhotoURL" appImageFallback alt="avatar" />
-                  </div>
-                  <div class="connector"><mat-icon class="!text-[12px]">chevron_right</mat-icon></div>
-                  <div class="avatar" [style.background]="b.toUserId | settleAvatarColor">
-                    <img [src]="b.toPhotoURL" appImageFallback alt="avatar" />
-                  </div>
-                </div>
-                <!-- Content: Info -->
-                <div class="flex-1 min-w-0">
-                  <p class="text-[12px] font-bold text-neutral-800 dark:text-neutral-100 truncate mb-0.5">
-                    {{ b.fromDisplayName }} <span class="text-neutral-400 font-normal">→</span> {{ b.toDisplayName }}
-                  </p>
-                  <p class="text-[14px] font-bold text-neutral-500 leading-none">
-                    {{ b.amount | currency: 'INR':'symbol':'1.0-0' }}
-                  </p>
-                </div>
+              <!-- Content Info -->
+              <div class="card-info">
+                <p class="top-label">
+                  {{ (b | iOwe : currentUserId) ? 'Transfer to' : 'Receiving from' }}
+                </p>
+                <p class="name-label">
+                  {{ (b | iOwe : currentUserId) ? (b.toDisplayName | titlecase) : (b.fromDisplayName | titlecase) }}
+                </p>
+                <p class="amount-label" 
+                   [class.text-error-600]="b | iOwe : currentUserId"
+                   [class.text-success-600]="b | owedToMe : currentUserId">
+                  {{ b.amount | currency: 'INR':'symbol':'1.0-0' }}
+                </p>
               </div>
-            }
-          </div>
-        </section>
-      }
 
-      <!-- ── Section: Settlement History ── -->
-      @if (settlements().length > 0) {
-        <section>
-          <p class="section-label mb-3">Settlement History</p>
-          <div class="history-card">
-            @for (s of settlements(); track trackBySettlement($index, s); let last = $last) {
-              <div class="history-item">
-                <!-- <div class="method-icon" matTooltip="{{ s.method | methodLabel }}">
-                <mat-icon>{{ s.method | methodIcon }}</mat-icon>
+              <!-- Action button -->
+              <div class="shrink-0">
+                <button mat-stroked-button 
+                        class="btn-settle"
+                        [class.btn-pay]="b | iOwe : currentUserId"
+                        [class.btn-get]="b | owedToMe : currentUserId"
+                        (click)="$event.stopPropagation(); openSettleDialog(b)">
+                  <mat-icon class="!text-[16px] !mr-1">{{ (b | iOwe : currentUserId) ? 'send' : 'login' }}</mat-icon>
+                  <span>{{ (b | iOwe : currentUserId) ? 'Pay' : 'Settle' }}</span>
+                </button>
               </div>
-              -->
-              <div class="item-info">
-                <div class="flex flex-col gap-0.5">
-                  <div class="flex items-center">
-                    <div class="w-5 h-5 rounded-md overflow-hidden bg-neutral-100 mr-2 flex-shrink-0">
-                      <img [src]="s.fromPhotoURL" appImageFallback alt="avatar" class="w-full h-full object-cover" />
-                    </div>
-                    <span class="text-sm font-bold text-neutral-800 dark:text-neutral-100">{{ s.fromDisplayName }}</span>
-                  </div>
-                  <div class="text-[11px] text-neutral-500 dark:text-neutral-400 pl-7">
-                    to {{ s.toDisplayName }}
-                  </div>
-                </div>
-                <div class="meta-info pl-7">
-                  {{ s.settledAt | settleDate }} · {{ s.method | methodLabel }}
-                  @if (s.note) {
-                    <span> · "{{ s.note }}"</span>
-                  }
-                </div>
-              </div>
-              <div class="amount">₹{{ s.amount | number:'1.0-0' }}</div>
             </div>
           }
         </div>
       </section>
     }
 
-    <!-- ── Empty State: All Clear ── -->
-    @if (balances().length === 0) {
-      <section class="empty-state">
-        <div class="icon-box">
-          <mat-icon>check_circle</mat-icon>
+    <!-- ── SECTION: OTHER GROUP BALANCES ── -->
+    @if (otherBalances().length > 0) {
+      <section class="mb-5 opacity-70">
+        <h2 class="section-label">Other Pending Balances</h2>
+        <div class="flex flex-col">
+          @for (b of otherBalances(); track trackByEntry($index, b)) {
+            <div class="settle-card border-dashed">
+              <div class="avatar-stack scale-75 -ml-2 shrink-0">
+                <div class="avatar-wrap" [style.background-color]="b.fromUserId | settleAvatarColor">
+                  <img [src]="b.fromPhotoURL" appImageFallback alt="from" />
+                </div>
+                <div class="stack-connector">
+                  <mat-icon>chevron_right</mat-icon>
+                </div>
+                <div class="avatar-wrap" [style.background-color]="b.toUserId | settleAvatarColor">
+                  <img [src]="b.toPhotoURL" appImageFallback alt="to" />
+                </div>
+              </div>
+              <div class="card-info">
+                <p class="name-label !text-sm">
+                  {{ b.fromDisplayName }} <span class="text-neutral-400 font-normal">→</span> {{ b.toDisplayName }}
+                </p>
+                <p class="amount-label !text-sm text-neutral-500">
+                  {{ b.amount | currency: 'INR':'symbol':'1.0-0' }}
+                </p>
+              </div>
+            </div>
+          }
         </div>
-        <p class="!text-lg text-primary-500 !mb-0">Everything's Clear</p>
-        <p>No outstanding balances in this group. You're all square!</p>
       </section>
     }
 
-  </ng-container>
-</main>
+    <!-- ── SECTION: SETTLEMENT LOG ── -->
+    @if (settlements().length > 0) {
+      <section class="mb-6">
+        <h2 class="section-label">Settlement Archive</h2>
+        <div class="history-container shadow-sm">
+          @for (s of settlements(); track trackBySettlement($index, s)) {
+            <div class="history-row">
+              <div class="history-avatar" [style.background-color]="s.fromUserId | settleAvatarColor">
+                <img [src]="s.fromPhotoURL" appImageFallback alt="avatar" />
+              </div>
+              <div class="history-text">
+                <p class="history-title truncate">
+                  {{ s.fromDisplayName }} paid {{ s.toDisplayName }}
+                </p>
+                <p class="history-meta">
+                  {{ s.settledAt | settleDate }} · {{ s.method | methodLabel }}
+                  @if (s.note) { <span class="italic font-normal"> · "{{ s.note }}"</span> }
+                </p>
+              </div>
+              <div class="history-amount">
+                ₹{{ s.amount | number:'1.0-0' }}
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- ── EMPTY STATE ── -->
+    @if (balances().length === 0 && !loading()) {
+      <section class="empty-view">
+        <div class="empty-icon-wrap">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <h3 class="empty-title">All Square!</h3>
+        <p class="empty-desc">There are no outstanding balances in this group. Everyone is settled up.</p>
+      </section>
+    }
+
+  </main>
 </div>

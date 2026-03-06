@@ -1,56 +1,38 @@
-.account-summary-card {
-  transition: all 0.3s ease;
+.summary-card {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  background-color: var(--surface-200) !important;
+  border: 1px solid var(--surface-300);
+  cursor: pointer;
+  overflow: hidden;
 
-  background: var(--surface-200);
-
-
-}
-
-.summary-icon-wrap {
-  :host-context(.light-theme) & {
-    background-color: #f0f7ff;
-    color: #3b82f6;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    border-color: var(--primary-300);
   }
-
 }
 
-.balance-title {
-  :host-context(.light-theme) & { color: #1e293b; }
-
+.header-icon-wrap {
+  background-color: color-mix(in srgb, var(--primary-100), transparent 90%);
+  color: var(--primary-500);
 }
 
-.balance-subtitle, .balance-period, .breakdown-subtitle {
-  :host-context(.light-theme) & { color: #64748b; }
-
+.summary-title {
+  color: var(--neutral-900);
 }
 
-.card-divider {
-  border-top: 1px solid;
-  :host-context(.light-theme) & { border-color: #f1f5f9; }
-
+.income-icon-wrap {
+  background-color: color-mix(in srgb, var(--success-100), transparent 90%);
+  color: var(--success-600);
 }
 
-.breakdown-label {
-  font-weight: 500;
-  :host-context(.light-theme) & { color: #475569; }
-
+.expense-icon-wrap {
+  background-color: color-mix(in srgb, var(--error-100), transparent 90%);
+  color: var(--error-600);
 }
 
-.asset-icon-wrap {
-  :host-context(.light-theme) & {
-    background-color: #f0fdf4;
-    color: #22c55e;
+::ng-deep {
+  .mat-mdc-card {
+    transition: inherit;
   }
-
 }
-
-.liability-icon-wrap {
-  :host-context(.light-theme) & {
-    background-color: #fef2f2;
-    color: #ef4444;
-  }
-
-}
-
-// Ensure global currency color classes respect theme or are overridden
-// (Tailwind classes in HTML handle these now)

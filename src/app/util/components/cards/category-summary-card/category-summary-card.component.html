@@ -1,53 +1,52 @@
 @if (summary(); as summary) {
-  <mat-card
-    class="account-summary-card rounded-2xl shadow-sm p-5 w-full dark:bg-slate-900 dark:border-slate-800 dark:shadow-none"
+  <div
+    class="summary-card !rounded-2xl shadow-sm p-5 w-full border border-surface-300"
     routerLink="/dashboard/category">
+    
     <!-- Header -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2">
       <div class="flex items-center gap-3">
-        <div
-          class="summary-icon-wrap h-10 w-10 rounded-full flex items-center justify-center shrink-0 dark:bg-blue-900/20 dark:text-blue-400 bg-blue-50 text-blue-600">
-          <mat-icon aria-hidden="true" class="dark:text-blue-400">analytics</mat-icon>
+        <div class="header-icon-wrap h-10 w-10 rounded-full flex items-center justify-center shrink-0">
+          <mat-icon aria-hidden="true">analytics</mat-icon>
         </div>
         <div>
-          <p class="balance-title text-xl font-medium !m-0 dark:text-slate-100">
+          <p class="summary-title text-sm font-medium !m-0">
             Overview
           </p>
-          <div class="balance-subtitle text-xs dark:text-slate-400 text-neutral-500">
+          <div class="summary-subtitle text-xs text-neutral-500">
             {{ summary.expenseCount + summary.incomeCount }} categories
           </div>
         </div>
       </div>
       @if (!breakpointService.isMobile()) {
-        <div class="flex flex-col items-center w-full sm:items-end mt-3 sm:mt-0 min-w-0"
-          >
-          <span class="text-lg sm:text-xl font-semibold leading-none truncate"
+        <div class="flex flex-col items-center w-full sm:items-end mt-3 sm:mt-0 min-w-0">
+          <span class="text-md sm:text-sm font-semibold leading-none truncate"
             [class.text-success-600]="(summary.totalIncome - summary.totalExpense) >= 0"
             [class.text-error-600]="(summary.totalIncome - summary.totalExpense) < 0">
             {{ (summary.totalIncome - summary.totalExpense) | currency:{round:true} }}
           </span>
-          <span class="balance-period text-xs dark:text-slate-500 text-neutral-400">net flow</span>
+          <span class="text-xs text-neutral-400">net flow</span>
         </div>
       }
     </div>
+
     <!-- Divider -->
-    <div class="card-divider my-3 dark:border-slate-800 border-neutral-100 border-t"></div>
+    <div class="my-3 border-t border-surface-300"></div>
+
     <!-- Breakdown -->
     <div class="text-sm flex flex-col gap-4">
       <!-- Income Item -->
       <div class="flex items-center gap-3">
-        <div
-          class="asset-icon-wrap rounded-lg p-2 flex items-center justify-center dark:bg-green-900/20 dark:text-green-400 bg-green-50 text-green-600">
-          <mat-icon aria-hidden="true" class="dark:text-green-400">arrow_upward</mat-icon>
+        <div class="income-icon-wrap rounded-lg p-2 flex items-center justify-center">
+          <mat-icon aria-hidden="true">arrow_upward</mat-icon>
         </div>
         <div class="w-full">
           <div class="flex items-center justify-between">
-            <div class="breakdown-label dark:text-slate-300 font-medium">Income</div>
-            <div class="breakdown-subtitle text-xs dark:text-slate-400 text-neutral-500">{{
-            summary.incomeCount }} categories</div>
+            <div class="breakdown-label font-medium text-neutral-700">Income</div>
+            <div class="text-xs text-neutral-500">{{ summary.incomeCount }} categories</div>
           </div>
           <div class="flex items-center justify-between mt-1">
-            <div class="font-medium text-success-600 dark:text-green-400">
+            <div class="font-bold text-md text-success-600">
               {{ summary.totalIncome | currency:{round:true} }}
             </div>
             @if (summary.incomeChange !== 0) {
@@ -57,7 +56,8 @@
                   [class.text-error-600]="summary.incomeChange < 0">
                   {{ summary.incomeChange > 0 ? 'trending_up' : 'trending_down' }}
                 </mat-icon>
-                <span class="text-xs ml-1" [class.text-success-600]="summary.incomeChange > 0"
+                <span class="text-xs ml-1 font-medium" 
+                  [class.text-success-600]="summary.incomeChange > 0"
                   [class.text-error-600]="summary.incomeChange < 0">
                   {{ Math.abs(summary.incomeChange) | number:'1.0-1' }}%
                 </span>
@@ -66,20 +66,19 @@
           </div>
         </div>
       </div>
+
       <!-- Expense Item -->
       <div class="flex items-center gap-3">
-        <div
-          class="liability-icon-wrap rounded-lg p-2 flex items-center justify-center dark:bg-red-900/20 dark:text-red-400 bg-red-50 text-red-600">
-          <mat-icon aria-hidden="true" class="dark:text-red-400">arrow_downward</mat-icon>
+        <div class="expense-icon-wrap rounded-lg p-2 flex items-center justify-center">
+          <mat-icon aria-hidden="true">arrow_downward</mat-icon>
         </div>
         <div class="w-full">
           <div class="flex items-center justify-between">
-            <div class="breakdown-label dark:text-slate-300 font-medium">Expenses</div>
-            <div class="breakdown-subtitle text-xs dark:text-slate-400 text-neutral-500">{{
-            summary.expenseCount }} categories</div>
+            <div class="breakdown-label font-medium text-neutral-700">Expenses</div>
+            <div class="text-xs text-neutral-500">{{ summary.expenseCount }} categories</div>
           </div>
           <div class="flex items-center justify-between mt-1">
-            <div class="font-medium text-error-600 dark:text-red-400">
+            <div class="font-bold text-md text-error-600">
               {{ summary.totalExpense | currency:{round:true} }}
             </div>
             @if (summary.expenseChange !== 0) {
@@ -89,7 +88,8 @@
                   [class.text-success-600]="summary.expenseChange < 0">
                   {{ summary.expenseChange > 0 ? 'trending_up' : 'trending_down' }}
                 </mat-icon>
-                <span class="text-xs ml-1" [class.text-error-600]="summary.expenseChange > 0"
+                <span class="text-xs ml-1 font-medium" 
+                  [class.text-error-600]="summary.expenseChange > 0"
                   [class.text-success-600]="summary.expenseChange < 0">
                   {{ Math.abs(summary.expenseChange) | number:'1.0-1' }}%
                 </span>
@@ -99,16 +99,17 @@
         </div>
       </div>
     </div>
+
     <!-- View All Button -->
     @if (router.url !== '/dashboard/category') {
-      <div class="card-divider my-3 dark:border-slate-800 border-neutral-100 border-t"></div>
+      <div class="my-3 border-t border-surface-300"></div>
       <div class="flex justify-center mt-2">
-        <button mat-stroked-button color="primary" class="w-full !rounded-xl dark:!text-blue-400 dark:!border-slate-700"
+        <button mat-stroked-button color="primary" class="w-full !rounded-xl !py-5"
           routerLink="/dashboard/category">
           <mat-icon class="mr-1">visibility</mat-icon>
           View All Categories
         </button>
       </div>
     }
-  </mat-card>
+  </div>
 }

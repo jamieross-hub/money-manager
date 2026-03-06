@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject, signal, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject, signal, effect, computed } from '@angular/core';
 import { CommonModule, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { Subscription, take } from 'rxjs';
 import { Transaction } from '../../../../util/models/transaction.model';
@@ -10,7 +10,7 @@ import { UserService } from '../../../../util/service/db/user.service';
 import { CurrencyService } from '../../../../util/service/currency.service';
 import { DateService } from '../../../../util/service/date.service';
 import { AppViewService, AppView } from '../../../../util/service/app-view.service';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 import { ReportsProcessorService, MonthlySummary, CategoryBreakdownItem, PeriodSummary, Prediction } from '../../../../util/service/reports-processor.service';
 
 // Angular Material
@@ -133,6 +133,81 @@ export class ReportsComponent implements OnInit, OnDestroy {
     next3MonthsPredictionSignal = this.reportsProcessor.next3MonthsPrediction;
     yearEndPredictionSignal = this.reportsProcessor.yearEndPrediction;
     isProcessing = this.reportsProcessor.isProcessing;
+    
+    // Navigation Bounds (Signals)
+    readonly canGoPrevious = computed(() => {
+        const period = this.selectedPeriod();
+        const summaries = this.monthlySummariesSignal();
+        if (summaries.length === 0) return false;
+
+        const oldest = summaries[summaries.length - 1];
+
+        if (period === 'yearly') {
+            return this.selectedYear() > oldest.year;
+        }
+
+        if (period === 'monthly') {
+            const currentYear = this.selectedYear();
+            const currentMonth = this.selectedMonth() ?? (currentYear === new Date().getFullYear() ? new Date().getMonth() : 0);
+            return currentYear > oldest.year || (currentYear === oldest.year && currentMonth > oldest.month);
+        }
+
+        if (period === 'weekly') {
+            const txns = this.transactions();
+            if (!txns || txns.length === 0) return false;
+            let minTime = Infinity;
+            txns.forEach(t => {
+                const d = this.toDateHelper(t.date)?.getTime();
+                if (d && d < minTime) minTime = d;
+            });
+            const startOfOldestWeek = dayjs(minTime).startOf('week');
+            const currentWeekStart = dayjs().add(this.selectedWeekOffset(), 'week').startOf('week');
+            return currentWeekStart.isAfter(startOfOldestWeek);
+        }
+        return false;
+    });
+
+    readonly canGoNext = computed(() => {
+        const period = this.selectedPeriod();
+        const summaries = this.monthlySummariesSignal();
+        if (summaries.length === 0) return false;
+
+        const newest = summaries[0];
+
+        if (period === 'yearly') {
+            return this.selectedYear() < newest.year;
+        }
+
+        if (period === 'monthly') {
+            const currentYear = this.selectedYear();
+            const currentMonth = this.selectedMonth() ?? (currentYear === new Date().getFullYear() ? new Date().getMonth() : 0);
+            return currentYear < newest.year || (currentYear === newest.year && currentMonth < newest.month);
+        }
+
+        if (period === 'weekly') {
+            const txns = this.transactions();
+            if (!txns || txns.length === 0) return false;
+            let maxTime = -Infinity;
+            txns.forEach(t => {
+                const d = this.toDateHelper(t.date)?.getTime();
+                if (d && d > maxTime) maxTime = d;
+            });
+            const endOfNewestWeek = dayjs(maxTime).endOf('week');
+            const currentWeekEnd = dayjs().add(this.selectedWeekOffset(), 'week').endOf('week');
+            return currentWeekEnd.isBefore(endOfNewestWeek);
+        }
+        return false;
+    });
+
+    private toDateHelper(date: any): Date | null {
+        if (!date) return null;
+        if (date instanceof Date) return date;
+        if (typeof date === 'string') return new Date(date);
+        if (date && typeof date.toDate === 'function') return date.toDate();
+        if (date && date.seconds) return new Date(date.seconds * 1000);
+        if (typeof date === 'number') return new Date(date);
+        return null;
+    }
 
     // Backward compatibility getters
     get monthlySummaries() { return this.monthlySummariesSignal(); }
@@ -258,7 +333,10 @@ export class ReportsComponent implements OnInit, OnDestroy {
     computePeriodSummary(): void {}
     private buildAdhocSummary(txns: Transaction[]): MonthlySummary[] { return []; }
     private aggregatePeriod(months: MonthlySummary[], label: string): PeriodSummary | null { return null; }
-    public getPeriodLabel(which: 'current' | 'previous'): string { return ''; }
+    public getPeriodLabel(which: 'current' | 'previous'): string {
+        const summary = which === 'current' ? this.currentPeriodSummary : this.previousPeriodSummary;
+        return summary?.label || '';
+    }
     private computePredictions(): void {}
 
     private getNextMonthLabel(offset: number): string {
@@ -289,7 +367,14 @@ export class ReportsComponent implements OnInit, OnDestroy {
     }
 
     previousMonth(): void {
-        if (this.selectedPeriod() !== 'monthly') return;
+        if (!this.canGoPrevious()) return;
+        const period = this.selectedPeriod();
+        if (period === 'yearly') {
+            this.selectedYear.update(y => y - 1);
+            return;
+        }
+        if (period !== 'monthly') return;
+        
         if (this.selectedMonth() === null) {
             const now = new Date();
             this.selectedMonth.set(this.selectedYear() === now.getFullYear() ? now.getMonth() : 0);
@@ -304,7 +389,14 @@ export class ReportsComponent implements OnInit, OnDestroy {
     }
 
     nextMonth(): void {
+        if (!this.canGoNext()) return;
+        const period = this.selectedPeriod();
+        if (period === 'yearly') {
+            this.selectedYear.update(y => y + 1);
+            return;
+        }
         if (this.selectedPeriod() !== 'monthly') return;
+        
         if (this.selectedMonth() === null) {
             const now = new Date();
             this.selectedMonth.set(this.selectedYear() === now.getFullYear() ? now.getMonth() : 0);
@@ -319,11 +411,13 @@ export class ReportsComponent implements OnInit, OnDestroy {
     }
 
     previousWeek(): void {
+        if (!this.canGoPrevious()) return;
         if (this.selectedPeriod() !== 'weekly') return;
         this.selectedWeekOffset.update(o => o - 1);
     }
 
     nextWeek(): void {
+        if (!this.canGoNext()) return;
         if (this.selectedPeriod() !== 'weekly') return;
         this.selectedWeekOffset.update(o => o + 1);
     }

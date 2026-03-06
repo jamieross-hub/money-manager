@@ -1,132 +1,166 @@
 
 :host {
+  display: block;
   font-family: 'Inter', system-ui, sans-serif;
+  // min-height: 100vh;
 }
 
 /* ── Header ─────────────────────────── */
 .settle-header {
-   background: repeating-linear-gradient(
+  background: repeating-linear-gradient(
+    135deg,
+    var(--primary-800),
+    var(--primary-700) 4px,
+    var(--primary-800) 15px,
+    var(--primary-900) 13px);
+
+  :host-context(.dark-theme) & {
+    background: repeating-linear-gradient(
       135deg,
-      var(--primary-800),
-      var(--primary-600) 4px,
-      var(--primary-700) 15px,
-      var(--primary-800) 13px);
+      var(--surface-100),
+      color-mix(in srgb, var(--primary-900), transparent 50%) 4px,
+      var(--surface-100) 15px,
+      color-mix(in srgb, var(--primary-800), transparent 70%) 13px
+    );
+  }
   color: white;
-  padding: 14px 10px 22px;
-  border-bottom-left-radius: 24px;
-  border-bottom-right-radius: 24px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 20px 16px 32px;
+  border-bottom-left-radius: 32px;
+  border-bottom-right-radius: 32px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 10;
 
   .header-content {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-  }
-
-  h1 {
-    font-family: 'Poppins', sans-serif;
-    font-size: 24px;
-    font-weight: 800;
-    margin: 0;
-    letter-spacing: -0.02em;
-  }
-
-  p.\!text-xl {
-    font-family: 'Poppins', sans-serif !important;
-  }
-
-  .group-name {
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.8);
-    margin-top: 2px;
+    align-items: center;
+    margin-bottom: 20px;
   }
 }
 
-.balance-pill {
-  font-family: 'JetBrains Mono', monospace;
-  font-feature-settings: "tnum" on, "zero" on;
+.header-icon-box {
+  background-color: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+  }
+}
+
+.balance-pills-container {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.status-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  border-radius: 12px;
+  padding: 8px 14px;
+  border-radius: 14px;
   font-size: 13px;
   font-weight: 600;
-  background: var(--primary-500);
-  backdrop-filter: blur(8px);
-  margin-top: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  color: white;
   letter-spacing: -0.01em;
 
-  &.debt { background: var(--error-50); border-color: var(--error-50); color: var(--error-500); }
-  &.credit { background: var(--primary-50); border-color: var(--primary-50); color: var(--primary-500); }
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  &.debt {
+    background-color: color-mix(in srgb, var(--error-400), transparent 70%);
+    border-color: color-mix(in srgb, var(--error-400), transparent 80%);
+  }
+
+  &.credit {
+    background-color: color-mix(in srgb, var(--success-400), transparent 70%);
+    border-color: color-mix(in srgb, var(--success-400), transparent 80%);
+  }
 }
 
-/* ── Content Area ─────────────────────────── */
+/* ── Main Content ───────────────────── */
 .content-container {
-  padding: 5px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+  padding: 15px 0;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .section-label {
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  color: var(--secondary-500);
-  letter-spacing: 0.05em;
+  color: var(--neutral-500);
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
   padding-left: 4px;
+  opacity: 0.8;
 }
 
-/* ── Balance Cards ────────────────────────────── */
-.card-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.balance-card {
-  background: var(--surface-50);
+/* ── Settle Card (Premium Look) ─────── */
+.settle-card {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  background-color: var(--surface-200) !important;
+  border: 1px solid var(--surface-300);
   border-radius: 10px;
-  padding: 10px 15px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  border: 1px solid var(--border-subtle);
+  padding: 12px 14px;
+  margin-bottom: 12px;
   cursor: pointer;
-  transition: transform 0.2s, background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+  min-width: 0;
 
-  &:active {
-    transform: scale(0.98);
-    background-color: var(--primary-50);
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    border-color: var(--primary-300);
+    background-color: var(--surface-50) !important;
   }
 
-  &.owe { border-left: 4px solid var(--error-500); }
-  &.receive { border-left: 4px solid var(--primary-500); }
+  &.owe-mode {
+    border-left: 4px solid var(--error-500);
+  }
+
+  &.receive-mode {
+    border-left: 4px solid var(--success-500);
+  }
 }
 
-.avatar-pair {
+.avatar-stack {
   display: flex;
   align-items: center;
-  gap: 6px;
-  
-  .avatar {
+  gap: 2px;
+  flex-shrink: 0;
+
+  .avatar-wrap {
     width: 36px;
     height: 36px;
-    border-radius: 10px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
-    color: white;
-    font-size: 14px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.12);
     overflow: hidden;
+    background-color: var(--surface-300);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    border: 2px solid var(--surface-200);
+    flex-shrink: 0;
 
     img {
       width: 100%;
@@ -135,169 +169,201 @@
     }
   }
 
-  .connector {
-    color: var(--secondary-400);
-    mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  .stack-connector {
+    color: var(--neutral-400);
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
   }
 }
 
-/* ── Balance action buttons ─────────── */
-button[mat-stroked-button].pay {
-  color: var(--error-600) !important;
-  border-color: var(--error-300) !important;
-  background: var(--error-50) !important;
-}
-button[mat-stroked-button].get {
-  color: var(--primary-700) !important;
-  border-color: var(--primary-300) !important;
-  background: var(--primary-50) !important;
-}
-
-.detail-row {
+.card-info {
   flex: 1;
   min-width: 0;
 
-  .main-text {
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
+  .top-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--neutral-500);
+    letter-spacing: 0.02em;
     margin-bottom: 2px;
-    
-    .highlight-red { color: var(--error-600); }
-    .highlight-green { color: var(--primary-600); }
   }
 
-  .amount-text {
-    font-family: 'JetBrains Mono', monospace;
-    font-feature-settings: "tnum" on, "zero" on;
-    font-size: 20px;
+  .name-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--neutral-900);
+    margin-bottom: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    width: 100%;
+  }
+
+  .amount-label {
+    font-size: 14px;
     font-weight: 800;
-    letter-spacing: -0.01em;
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
   }
 }
 
-.settle-action-btn {
-  font-family: 'Inter', sans-serif;
-  background: var(--primary-50);
-  color: var(--primary-700);
-  border: none;
-  border-radius: 12px;
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
+/* ── History Structure ──────────────── */
+.history-container {
+  background-color: var(--surface-200);
+  border: 1px solid var(--surface-300);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.history-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  
-  &.pay { 
-    background: var(--error-50); 
-    color: var(--error-700);
-  }
-  &.get {
-    background: var(--success-50); 
-    color: var(--success-700);
+  gap: 16px;
+  padding: 16px;
+  border-bottom: 1px solid var(--surface-300);
+  transition: background-color 0.2s ease;
+
+  &:last-child {
+    border-bottom: none;
   }
 
-  margin-left: auto;
-  mat-icon { font-size: 18px; width: 18px; height: 18px; }
-}
+  &:hover {
+    background-color: var(--surface-100);
+  }
 
-/* ── History List ────────────────────────────── */
-.history-card {
-  // background: var(--surface-card-50);
-  border-radius: 16px;
-  border: 1px solid var(--secondary-500);
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.history-item {
-  display: flex;
-  align-items: start;
-  gap: 12px;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--secondary-500);
-  background: var(--surface-50);
-
-  &:last-child { border-bottom: none; }
-
-  .method-icon {
-    width: 36px;
-    height: 36px;
+  .history-avatar {
+    width: 38px;
+    height: 38px;
     border-radius: 10px;
-    background: var(--surface-50);
-    color: var(--primary-600);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    overflow: hidden;
+    background-color: var(--surface-300);
+    flex-shrink: 0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
   }
 
-  .item-info {
+  .history-text {
     flex: 1;
     min-width: 0;
-    
-    .payer-info {
+
+    .history-title {
       font-size: 14px;
-      font-weight: 600;
-      color: var(--text-primary);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      mat-icon { font-size: 12px; width: 12px; height: 12px; color: var(--text-tertiary); }
+      font-weight: 700;
+      color: var(--neutral-900);
+      margin-bottom: 2px;
     }
 
-    .meta-info {
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-top: 1px;
+    .history-meta {
+      font-size: 11px;
+      color: var(--neutral-500);
+      font-weight: 500;
     }
   }
 
-  .amount {
+  .history-amount {
     font-family: 'JetBrains Mono', monospace;
-    font-feature-settings: "tnum" on, "zero" on;
     font-size: 15px;
     font-weight: 700;
     color: var(--success-600);
-    letter-spacing: -0.02em;
+    text-align: right;
   }
 }
 
-/* ── Empty State ────────────────────────────── */
-.empty-state {
+/* ── Empty State ────────────────────── */
+.empty-view {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 80px 40px;
   text-align: center;
-  padding: 64px 32px;
 
-  .icon-box {
-    width: 72px;
-    height: 72px;
-    border-radius: 24px;
-    background: var(--success-50);
-    color: var(--success-500);
+  .empty-icon-wrap {
+    width: 80px;
+    height: 80px;
+    border-radius: 28px;
+    background-color: var(--success-100);
+    color: var(--success-600);
     display: flex;
     align-items: center;
     justify-content: center;
-    mat-icon { font-size: 32px; width: 32px; height: 32px; }
+    margin-bottom: 20px;
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--success-500), transparent 85%);
+
+    mat-icon {
+      font-size: 40px;
+      width: 40px;
+      height: 40px;
+    }
   }
 
-  h3 { 
-    font-family: 'Poppins', sans-serif;
-    font-size: 18px; 
-    font-weight: 800; 
-    margin-bottom: 4px; 
-    color: var(--primary-500); 
+  .empty-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--neutral-900);
+    margin-bottom: 8px;
   }
-  p { font-family: 'Inter', sans-serif; font-size: 14px; color: var(--secondary-500); }
+
+  .empty-desc {
+    font-size: 14px;
+    color: var(--neutral-500);
+    max-width: 260px;
+    line-height: 1.5;
+  }
+}
+
+/* ── Buttons ────────────────────────── */
+.btn-settle {
+  height: 32px !important;
+  min-width: 64px !important;
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: 0 10px !important;
+  flex-shrink: 0;
+
+  &.btn-pay {
+    color: var(--error-600) !important;
+    border-color: var(--error-200) !important;
+    background-color: color-mix(in srgb, var(--error-100), transparent 90%) !important;
+  }
+
+  &.btn-get {
+    color: var(--primary-600) !important;
+    border-color: var(--primary-200) !important;
+    background-color: color-mix(in srgb, var(--primary-100), transparent 90%) !important;
+  }
 }
 
 @media (max-width: 480px) {
-  .detail-row .amount-text { font-size: 18px; }
-  .settle-action-btn { padding: 10px 12px; font-size: 13px; }
+  .settle-header {
+    border-bottom-left-radius: 24px;
+    border-bottom-right-radius: 24px;
+    padding: 16px 12px 24px;
+  }
+
+  .settle-card {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .avatar-stack .avatar-wrap {
+    width: 32px;
+    height: 32px;
+  }
+
+  .card-info .name-label {
+    font-size: 12px;
+  }
 }
