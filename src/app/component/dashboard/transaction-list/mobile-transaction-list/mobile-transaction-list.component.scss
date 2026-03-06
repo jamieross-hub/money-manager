@@ -472,30 +472,46 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  background: var(--surface-100);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  padding: 8px 20px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--primary-200);
-  border-radius: 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  animation: fadeInDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 9999px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  animation: fadeInDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   color: var(--primary-700);
   pointer-events: none;
+  width: fit-content;
+
 
   mat-icon {
     font-size: 18px;
     width: 18px;
     height: 18px;
+    color: var(--primary-500);
   }
 
   span {
-    position: relative;
-    left: 43%;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 700;
     white-space: nowrap;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
+    color: var(--neutral-800);
+  }
+
+  [data-theme='dark'] & {
+    background: rgba(30, 41, 59, 0.85);
+    border-color: rgba(var(--primary-400-rgb), 0.2);
+    color: var(--primary-300);
+
+    span {
+      color: var(--neutral-100);
+    }
+    
+    mat-icon {
+      color: var(--primary-400);
+    }
   }
 }
 
@@ -611,32 +627,53 @@
 }
 
 // Date Grouping
-.date-group {
-  margin-bottom: 10px;
+.date-header-row {
+  display: flex;
+  justify-content: start;
+  pointer-events: none;
+  width: 100%;
+  margin-bottom: 4px;
+  margin-top: 4px;
 
-  &:last-child {
-    margin-bottom: 0;
+  &.sticky {
+    z-index: 20;
+    transition: all 0.2s ease;
+  }
+}
+
+.date-header-pill {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--primary-600);
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 9999px;
+  border: 1px solid rgba(var(--primary-600-rgb), 0.1);
+  // box-shadow: 0 1px 15px rgba(0, 0, 0, 0.08);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  pointer-events: auto;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  [data-theme='dark'] & {
+    background: rgba(15, 23, 42, 0.85);
+    color: var(--primary-400);
+    border-color: rgba(var(--primary-400-rgb), 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  }
+
+  &.active {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    border-color: var(--primary-500);
   }
 }
 
 .date-header {
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 11px;
-  color: var(--neutral-500);
-  padding: 6px 12px;
-  margin-bottom: 8px;
-  background: var(--surface-100);
-  border-radius: 8px;
-  letter-spacing: 0.8px;
-  display: inline-block;
-  font-weight: 700;
-  text-transform: uppercase;
-  transition: background-color 0.2s ease;
-
-  &.sticky {
-    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-    border-bottom: 1px solid var(--surface-300);
-  }
+  display: none; // Retired in favor of pill
 }
 
 // Transaction Cards
@@ -953,11 +990,11 @@
         margin-left: 8px;
         padding: 2px 6px;
         border-radius: 4px;
-        background: var(--primary-50);
+        border: 1px solid var(--primary-50);
         font-weight: 600;
 
         &.overdue {
-            background: var(--error-50);
+            border: 1px solid var(--error-50);
             color: var(--error-600);
         }
     }
@@ -983,11 +1020,11 @@
         border-radius: 6px;
         font-weight: 600;
         line-height: 1.4;
-        background: var(--primary-100);
+        border: 1px solid var(--primary-100);
         color: var(--primary-700);
         
         &.overdue {
-            background: var(--error-100);
+            border: 1px solid var(--error-100);
             color: var(--error-700);
         }
     }

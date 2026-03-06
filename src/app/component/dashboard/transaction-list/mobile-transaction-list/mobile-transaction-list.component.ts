@@ -200,6 +200,13 @@ export class MobileTransactionListComponent
   public selectedRange = signal<string | null>(null);
   private sessionStartTime = Date.now();
 
+  // Scroll tracking signals
+  public currentScrollHeader = signal<string>('');
+  public showScrollIndicator = signal<boolean>(false);
+  private scrollTimeout: any;
+
+  @ViewChild('scrollContainer') scrollContainer!: ElementRef;
+
   /** True when the user's preferences have isFamilyMode enabled */
   isFamilyMode = toSignal(
     this.store.select(ProfileSelectors.selectProfile).pipe(
@@ -857,5 +864,49 @@ export class MobileTransactionListComponent
   // Placeholder for missing chart methods
   renderChart() {
     // Chart rendering logic removed
+  }
+
+  onScroll(event: Event) {
+    const container = event.target as HTMLElement;
+    if (!container) return;
+
+    // Show indicator
+    this.showScrollIndicator.set(true);
+    
+    // Clear previous timeout
+    if (this.scrollTimeout) {
+      clearTimeout(this.scrollTimeout);
+    }
+
+    // Hide indicator after 1.5s of no scrolling
+    this.scrollTimeout = setTimeout(() => {
+      this.showScrollIndicator.set(false);
+      this.cdr.markForCheck();
+    }, 1500);
+
+    // Find the currently visible header
+    this.updateCurrentHeader(container);
+  }
+
+  private updateCurrentHeader(container: HTMLElement) {
+    const headers = container.querySelectorAll('.date-header-pill');
+    let activeHeader = '';
+    
+    // Simple logic: find the header closest to the top but not past it
+    for (let i = 0; i < headers.length; i++) {
+      const rect = headers[i].getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      
+      // If the header is near the top of the container
+      if (rect.top <= containerRect.top + 100) {
+        activeHeader = headers[i].getAttribute('data-header') || '';
+      } else {
+        break; 
+      }
+    }
+
+    if (activeHeader && activeHeader !== this.currentScrollHeader()) {
+      this.currentScrollHeader.set(activeHeader);
+    }
   }
 }

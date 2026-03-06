@@ -253,7 +253,9 @@
   }
 
   <!-- Transaction List -->
-  <div class="transaction-list-container" >
+  <div class="transaction-list-container" #scrollContainer (scroll)="onScroll($event)">
+    
+  
 
     <div class="transaction-scroll">
       <!-- Empty State -->
@@ -286,15 +288,14 @@
       }
 
       @for (item of flattenedTransactions(); track trackById($index, item)) {
-        <div  class="w-full px-2">
-          @if (item._isHeader) {
-            <div class="date-group mt-2">
-              <div class="date-header sticky top-0 z-10 py-1 mb-2 text-xs font-bold text-gray-400 bg-white dark:bg-slate-900 uppercase tracking-widest pl-1"
-                [attr.data-header]="item.dateHeader">
-                {{ item.dateHeader }}
-              </div>
+        @if (item._isHeader) {
+          <div class="date-header-row sticky top-0 z-20 w-full px-2 py-2 pointer-events-none">
+            <div class="date-header-pill" [attr.data-header]="item.dateHeader">
+              {{ item.dateHeader }}
             </div>
-          } @else {
+          </div>
+        } @else {
+          <div class="w-full px-2">
             <div class="transaction-card mb-2" #cardElement
               [@popIn]="item._popState"
               [class.selected]="selectedTx?.id === item.id"
@@ -544,10 +545,9 @@
               </div>
             }
           </div>
+          </div>
         }
-        </div>
       }
-   
     </div>
 
   </div>

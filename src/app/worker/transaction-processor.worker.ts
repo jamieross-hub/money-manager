@@ -262,8 +262,12 @@ addEventListener('message', ({ data }) => {
   const finalSortedTransactions = sortTransactions(mergedData, sort);
 
   // 6. Totals
-  const totalIncome = mergedData.filter((t: any) => t.type === 'income').reduce((sum: number, t: any) => sum + t.amount, 0);
-  const totalExpenses = mergedData.filter((t: any) => t.type === 'expense').reduce((sum: number, t: any) => sum + t.amount, 0);
+  const totalIncome = mergedData
+    .filter((t: any) => t.type === 'income' && !t.id?.startsWith('upcoming-'))
+    .reduce((sum: number, t: any) => sum + t.amount, 0);
+  const totalExpenses = mergedData
+    .filter((t: any) => t.type === 'expense' && !t.id?.startsWith('upcoming-'))
+    .reduce((sum: number, t: any) => sum + t.amount, 0);
 
   // 6. Grouping and View Models
   interface Group {
@@ -283,13 +287,6 @@ addEventListener('message', ({ data }) => {
     const txDate = toDate(tx.date);
     const dateObj = dayjs(txDate);
     
-    let dateKey: string;
-    if (range === 'this-year' || range === null) {
-      dateKey = dateObj.format('YYYY-MM');
-    } else {
-      dateKey = dateObj.format('YYYY-MM-DD');
-    }
-
     const category = categoryMap.get(tx.categoryId || '');
     const account = accountMap.get(tx.accountId || '');
 
@@ -330,6 +327,17 @@ addEventListener('message', ({ data }) => {
       _popState: (createdAtDate && createdAtDate.getTime() > sessionStartTime) ? 'new' : 'old'
     };
 
+    let dateKey: string;
+    if (txView._isUpcoming && txView._isOverdue) {
+      dateKey = 'overdue';
+    } else if (txView._isUpcoming && range !== 'upcoming') {
+      dateKey = 'upcoming';
+    } else if ((range === 'this-year' || range === null) && !dateObj.isSame(today, 'day') && !dateObj.isSame(yesterday, 'day')) {
+      dateKey = dateObj.format('YYYY-MM');
+    } else {
+      dateKey = dateObj.format('YYYY-MM-DD');
+    }
+
     if (isRecurringMode && txView._isUpcoming) {
       return; // Skip upcoming transactions when isRecurring is true
     }
@@ -338,18 +346,18 @@ addEventListener('message', ({ data }) => {
     if (!group) {
       let header = dateHeaderCache.get(dateKey);
       if (!header) {
-        if (txView._isUpcoming && txView._isOverdue) {
+        if (dateKey === 'overdue') {
           header = 'Overdue Recurring';
+        } else if (dateKey === 'upcoming') {
+          header = 'Upcoming';
+        } else if (dateObj.isSame(today, 'day')) {
+          header = 'Today';
+        } else if (dateObj.isSame(yesterday, 'day')) {
+          header = 'Yesterday';
         } else if (range === 'this-year' || range === null) {
           header = dateObj.format('MMMM YYYY');
         } else if (isDateSort) {
-          if (dateObj.isSame(today, 'day')) {
-            header = 'Today';
-          } else if (dateObj.isSame(yesterday, 'day')) {
-            header = 'Yesterday';
-          } else {
-            header = dateObj.format('dddd, DD MMM YYYY');
-          }
+          header = dateObj.format('dddd, DD MMM YYYY');
         } else {
           header = dateObj.format('DD MMM YYYY');
         }
@@ -365,8 +373,17 @@ addEventListener('message', ({ data }) => {
   let finalGroups = groups;
   if (isDateSort) {
     finalGroups = groups.sort((a, b) => {
-      if (a.dateHeader === 'Overdue Recurring') return -1;
-      if (b.dateHeader === 'Overdue Recurring') return 1;
+      // Priority headers at the top
+      if (a.dateHeader === 'Overdue Recurring' && b.dateHeader !== 'Overdue Recurring') return -1;
+      if (b.dateHeader === 'Overdue Recurring' && a.dateHeader !== 'Overdue Recurring') return 1;
+      if (a.dateHeader === 'Upcoming' && b.dateHeader !== 'Upcoming') {
+         // Upcoming is after Overdue but before others
+         return -1; 
+      }
+      if (b.dateHeader === 'Upcoming' && a.dateHeader !== 'Upcoming') {
+         return 1;
+      }
+
       return sort === 'date-asc'
         ? a.date.localeCompare(b.date)
         : b.date.localeCompare(a.date);
