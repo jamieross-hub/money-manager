@@ -165,6 +165,38 @@
   min-height: 200px;
 }
 
+/* --- Loading Message --- */
+.loader-message-container {
+  margin-top: 2rem;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.loader-message {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--neutral-600);
+  text-align: center;
+  margin: 0;
+  letter-spacing: 0.01em;
+  animation: messagePulse 2.5s ease-in-out infinite;
+}
+
+@keyframes messagePulse {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
 .widget-card {
   align-items: flex-start;
   min-height: 150px;
@@ -204,9 +236,9 @@
 }
 
 .app-shell-text-balance {
-  height: 40px;
+  height: 25px;
   width: 80%;
-  background: var(--error-50);
+  background: transparent;
   border-radius: 8px;
   margin-bottom: 1rem;
   animation: pulse 2s ease-in-out infinite;

@@ -1,5 +1,6 @@
 import { Component, Input, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { LoaderService } from '../../service/loader.service';
+import { GreetingFacadeService } from '../../service/greeting-facade.service';
 
 @Component({
   selector: 'app-loader',
@@ -16,28 +17,33 @@ export class LoaderComponent implements OnInit, OnDestroy {
   displayMessage: string = '';
 
   private loadingMessages: string[] = [
-    'Loading your data...',
-    'Just a moment...',
-    'Almost there...',
-    'Preparing everything...',
-    'Getting things ready...',
-    'Processing your request...',
-    'Hang tight...',
-    'Working on it...'
+    'Preparing your financial dashboard...',
+    'Gathering your latest transactions...',
+    'Calculating your wealth insights...',
+    'Organizing your budget categories...',
+    'Making things look beautiful for you...',
+    'Just a few more seconds...',
+    'Almost ready to crunch those numbers...'
   ];
 
   private currentMessageIndex: number = 0;
   private messageInterval?: number;
 
-  constructor(private loaderService: LoaderService) { }
+  constructor(
+    private loaderService: LoaderService,
+    private greetingFacade: GreetingFacadeService
+  ) { }
 
   ngOnInit(): void {
-    // If custom message is provided, use it; otherwise rotate through messages
+    // If custom message is provided, use it; otherwise start with a greeting
     if (this.message) {
       this.displayMessage = this.message;
     } else {
-      this.displayMessage = this.loadingMessages[0];
-      this.startMessageRotation();
+      this.displayMessage = this.greetingFacade.getPersonalizedGreeting();
+      // Start rotation after a short delay showing the greeting
+      setTimeout(() => {
+        this.startMessageRotation();
+      }, 2000);
     }
   }
 
@@ -46,9 +52,11 @@ export class LoaderComponent implements OnInit, OnDestroy {
   }
 
   private startMessageRotation(): void {
+    if (this.messageInterval) return;
+
     this.messageInterval = window.setInterval(() => {
-      this.currentMessageIndex = (this.currentMessageIndex + 1) % this.loadingMessages.length;
       this.displayMessage = this.loadingMessages[this.currentMessageIndex];
+      this.currentMessageIndex = (this.currentMessageIndex + 1) % this.loadingMessages.length;
     }, 3000); // Change message every 3 seconds
   }
 

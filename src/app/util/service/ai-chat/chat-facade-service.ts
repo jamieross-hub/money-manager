@@ -34,6 +34,8 @@ import { GeminiIntentHandler } from './handlers/intent-handler/gemini-intent-han
 import { INTENTS } from "./models/intent-config";
 import { UserService } from "../db/user.service";
 
+import { GreetingFacadeService } from "../greeting-facade.service";
+
 // Message type now imported from models/message.types.ts
 
 @Injectable()
@@ -67,7 +69,8 @@ export class ChatFacadeService implements OnDestroy {
         private loanReportHandler: LoanReportIntentHandler,
         private geminiHandler: GeminiIntentHandler,
         private userService: UserService,
-        private openaiService: OpenaiService
+        private openaiService: OpenaiService,
+        private greetingFacade: GreetingFacadeService
     ) {
         this.store.select(selectAllAccounts).pipe(
             takeUntil(this.destroy$),
@@ -132,7 +135,8 @@ export class ChatFacadeService implements OnDestroy {
         } else {
             this.pushBot(ResponseBuilder.create().uiElement(INTENTS.ACCOUNT_SUMMARY_CARD).build(), false, 0);
             // this.pushBot(ResponseBuilder.create().uiElement(INTENTS.RECENT_ACTIVITY_CARD).build(), false, 0);
-            this.pushBot(ResponseBuilder.create().html(CHAT_CONSTANTS.MSGS.GREETING).build(), false, 0);
+            const greeting = this.greetingFacade.getPersonalizedGreeting();
+            this.pushBot(ResponseBuilder.create().html(`🙂 ${greeting} I am your financial assistant. How can I help you today?`).build(), false, 0);
         }
     }
 

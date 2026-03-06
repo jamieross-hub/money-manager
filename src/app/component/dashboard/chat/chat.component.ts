@@ -37,6 +37,7 @@ import { BudgetCardIntentHandler } from 'src/app/util/service/ai-chat/handlers/i
 import { LoanReportIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/loan-report-intent-handler.service';
 import { GeminiIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/gemini-intent-handler.service';
 import { QueryIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/query-intent-handler.service';
+import { GreetingFacadeService } from 'src/app/util/service/greeting-facade.service';
 
 @Component({
   selector: 'app-chat',
@@ -118,10 +119,18 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
     private openAiHandler: OpenAiIntentHandler,
     private cdr: ChangeDetectorRef,
     private userService: UserService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private greetingFacade: GreetingFacadeService
   ) { }
 
   ngOnInit() {
+    // Set personalized greeting as the initial animated placeholder
+    const greeting = this.greetingFacade.getPersonalizedGreeting();
+    this.currentAnimatedPlaceholder = `${greeting}`;
+    
+    // Add greeting to the start of the rotation
+    this.placeholders.unshift(`${greeting}`);
+    
     this.animatePlaceholder();
   }
 
