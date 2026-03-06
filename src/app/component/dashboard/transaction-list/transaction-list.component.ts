@@ -35,6 +35,7 @@ import { RecurringInterval, SyncStatus, TransactionStatus, TransactionType } fro
 import { APP_CONFIG } from 'src/app/util/config/config';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { TransactionsService } from 'src/app/util/service/db/transactions.service';
+import { FamilyService } from 'src/app/modules/family/services/family.service';
 
 @Component({
   selector: 'transaction-list',
@@ -73,6 +74,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   private readonly userService = inject(UserService);
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly familyService = inject(FamilyService);
 
   // Signals from store
   transactions = this.store.selectSignal(TransactionsSelectors.selectAllTransactions);
@@ -306,6 +308,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
             createdBy: userId,
             updatedBy: userId,
             status: TransactionStatus.COMPLETED,
+            familyId: this.store.selectSignal(ProfileSelectors.selectIsFamilyMode)() ? (this.familyService.activeFamilyId() || undefined) : undefined,
           };
 
           this.store.dispatch(TransactionsActions.createTransaction({ userId, transaction: transactionData }));

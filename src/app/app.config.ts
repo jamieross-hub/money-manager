@@ -55,7 +55,7 @@ export const appConfig: ApplicationConfig = {
     provideNativeDateAdapter(),
     provideHttpClient(withInterceptors([securityInterceptor])),
     provideClientHydration(),
-    importProvidersFrom(ServiceWorkerModule.register('ngsw-worker.js', {
+    importProvidersFrom(ServiceWorkerModule.register('firebase-messaging-sw.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:3000'
     })),

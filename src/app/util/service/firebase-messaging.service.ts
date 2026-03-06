@@ -364,12 +364,10 @@ export class FirebaseMessagingService {
     try {
       if (!this.platformInfo.supportsServiceWorker) return;
       
-      console.log('Registering Firebase Service Worker manually...');
-      const registration = await navigator.serviceWorker.register(
-        './firebase-messaging-sw.js'
-      );
+      console.log('Waiting for Service Worker to be ready...');
+      const registration = await navigator.serviceWorker.ready;
       this.swRegistration = registration;
-      console.log('Firebase messaging service worker is ready:', this.swRegistration);
+      console.log('Service worker is ready for Firebase messaging:', this.swRegistration.scope);
       
     } catch (error) {
       console.error('Failed to get service worker registration:', error);
@@ -495,12 +493,10 @@ export class FirebaseMessagingService {
 
       let registration = this.swRegistration;
 
-      // Ensure service worker is registered
-      if (this.platformInfo.supportsServiceWorker) {
-        registration = await navigator.serviceWorker.register(
-          './firebase-messaging-sw.js'
-        );
-        this.swRegistration = registration;
+      // Ensure service worker is registered and ready
+      if (this.platformInfo.supportsServiceWorker && !this.swRegistration) {
+        this.swRegistration = await navigator.serviceWorker.ready;
+        registration = this.swRegistration; // Update local registration variable
       }
 
       if (this.swRegistration) {
@@ -561,12 +557,10 @@ export class FirebaseMessagingService {
 
       let registration = this.swRegistration;
 
-      if (this.platformInfo.supportsServiceWorker) {
-        registration = await navigator.serviceWorker.register(
-          './firebase-messaging-sw.js'
-        );
-        this.swRegistration = registration;
+      if (this.platformInfo.supportsServiceWorker && !this.swRegistration) {
+        this.swRegistration = await navigator.serviceWorker.ready;
       }
+      registration = this.swRegistration;
 
       // Force token refresh
       const token = await getToken(this.messaging, {
