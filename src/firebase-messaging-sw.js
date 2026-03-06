@@ -1,5 +1,9 @@
 // Import Angular Service Worker
-importScripts('./ngsw-worker.js');
+try {
+  importScripts('./ngsw-worker.js');
+} catch (e) {
+  console.log('Angular Service Worker not found, skipping import.');
+}
 
 // Firebase messaging service worker for background notifications
 importScripts('https://www.gstatic.com/firebasejs/11.5.0/firebase-app-compat.js');
