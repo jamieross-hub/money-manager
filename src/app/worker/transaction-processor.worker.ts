@@ -54,17 +54,17 @@ addEventListener('message', ({ data }) => {
 
   const calculateNextDate = (currentDate: Date, interval: string): Date => {
     const nextDate = new Date(currentDate);
-    switch (interval) {
-      case 'DAILY':
+    switch (interval?.toLowerCase()) {
+      case 'daily':
         nextDate.setDate(nextDate.getDate() + 1);
         break;
-      case 'WEEKLY':
+      case 'weekly':
         nextDate.setDate(nextDate.getDate() + 7);
         break;
-      case 'MONTHLY':
+      case 'monthly':
         nextDate.setMonth(nextDate.getMonth() + 1);
         break;
-      case 'YEARLY':
+      case 'yearly':
         nextDate.setFullYear(nextDate.getFullYear() + 1);
         break;
     }
@@ -74,11 +74,11 @@ addEventListener('message', ({ data }) => {
   const isSamePeriod = (date1: Date, date2: Date, interval: string): boolean => {
     const d1 = dayjs(date1).startOf('day');
     const d2 = dayjs(date2).startOf('day');
-    switch (interval) {
-      case 'DAILY': return d1.isSame(d2, 'day');
-      case 'WEEKLY': return d1.isSame(d2, 'week');
-      case 'MONTHLY': return d1.isSame(d2, 'month');
-      case 'YEARLY': return d1.isSame(d2, 'year');
+    switch (interval?.toLowerCase()) {
+      case 'daily': return d1.isSame(d2, 'day');
+      case 'weekly': return d1.isSame(d2, 'week');
+      case 'monthly': return d1.isSame(d2, 'month');
+      case 'yearly': return d1.isSame(d2, 'year');
       default: return false;
     }
   };
@@ -89,33 +89,64 @@ addEventListener('message', ({ data }) => {
       if (!rt.nextOccurrence || !rt.isRecurring) return;
       let nextDate = toDate(rt.nextOccurrence);
       if (!nextDate) return;
+      
       const baseTransaction = { ...rt };
-      while (nextDate <= endDate) {
-        if (nextDate >= startDate) {
-          const exists = allTxs.some(t => {
-            if (t.id?.startsWith('upcoming-')) return false;
-            if (t.id === rt.id && t.isPending) return false;
-            if (t.categoryId !== baseTransaction.categoryId) return false;
-            if (t.amount !== baseTransaction.amount) return false;
-            if (t.accountId !== baseTransaction.accountId) return false;
-            if (t.type !== baseTransaction.type) return false;
-            const txDate = toDate(t.date);
-            if (!txDate) return false;
-            return isSamePeriod(txDate, nextDate as Date, rt.recurringInterval);
-          });
-          if (!exists) {
-            upcoming.push({
-              ...baseTransaction,
-              id: `upcoming-${baseTransaction.id}-${nextDate.getTime()}`,
-              date: new Date(nextDate),
-              status: 'PENDING',
-              syncStatus: 'PENDING',
-              isPending: true
-            });
-            break;
-          }
+      
+      // Limit how many periods we look back/forward to prevent infinite loops or excessive processing
+      let safetyCounter = 0;
+      const MAX_ITERATIONS = 50;
+
+      while (nextDate <= endDate && safetyCounter < MAX_ITERATIONS) {
+        safetyCounter++;
+        
+        // 1. Check if a transaction for this period already exists
+        const exists = allTxs.some(t => {
+          if (t.id?.startsWith('upcoming-')) return false;
+          // The template itself shouldn't satisfy the check for future periods,
+          // but it should satisfy it for its own initial period if it's not pending.
+          if (t.id === rt.id && t.isPending) return false;
+          
+          if (t.categoryId !== baseTransaction.categoryId) return false;
+          if (t.amount !== baseTransaction.amount) return false;
+          if (t.accountId !== baseTransaction.accountId) return false;
+          if (t.type !== baseTransaction.type) return false;
+          
+          const tPayee = (t.payee || '').toLowerCase().trim();
+          const bPayee = (baseTransaction.payee || '').toLowerCase().trim();
+          if (tPayee !== bPayee) return false;
+
+          const txDate = toDate(t.date);
+          if (!txDate) return false;
+          return isSamePeriod(txDate, nextDate as Date, rt.recurringInterval);
+        });
+
+        if (exists) {
+          // This occurrence is already fulfilled, skip to next
+          nextDate = calculateNextDate(nextDate, rt.recurringInterval);
+          continue;
         }
-        nextDate = calculateNextDate(nextDate, rt.recurringInterval);
+
+        // 2. We found an unfulfilled occurrence! 
+        // Now check if it should be displayed.
+        // We show it if it's within the range [startDate, endDate].
+        // IMPORTANT: We also want to see it if it's in the past (Overdue), 
+        // but typically views have a startDate of 'today'.
+        
+        // If we found an unfulfilled occurrence, we stop looking for THIS template (one upcoming per template).
+        // But we only push it if it actually falls within the bounds we care about.
+        // We consider an occurrence relevant if it's <= endDate.
+        // If it's < startDate, it's overdue.
+        
+        upcoming.push({
+          ...baseTransaction,
+          id: `upcoming-${baseTransaction.id}-${nextDate.getTime()}`,
+          date: new Date(nextDate),
+          status: 'PENDING',
+          syncStatus: 'PENDING',
+          isPending: true
+        });
+        
+        break; // Only generate one occurrence per recurring transaction
       }
     });
     return upcoming;
