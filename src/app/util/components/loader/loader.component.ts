@@ -16,16 +16,6 @@ export class LoaderComponent implements OnInit, OnDestroy {
   isLoading = this.loaderService.isLoading;
   displayMessage: string = '';
 
-  private loadingMessages: string[] = [
-    'Preparing your financial dashboard...',
-    'Gathering your latest transactions...',
-    'Calculating your wealth insights...',
-    'Organizing your budget categories...',
-    'Making things look beautiful for you...',
-    'Just a few more seconds...',
-    'Almost ready to crunch those numbers...'
-  ];
-
   private currentMessageIndex: number = 0;
   private messageInterval?: number;
 
@@ -35,28 +25,51 @@ export class LoaderComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    // If custom message is provided, use it; otherwise start with a greeting
+    this.currentMessageIndex = this.greetingFacade.getLoaderMessageIndex();
+    const loadingMessages = this.greetingFacade.getLoadingMessages();
+
+    // If custom message is provided, use it; otherwise start with a greeting or first message
     if (this.message) {
       this.displayMessage = this.message;
-    } else {
+    } else if (this.greetingFacade.shouldGreet()) {
+      // First load of the session: show personalized greeting
       this.displayMessage = this.greetingFacade.getPersonalizedGreeting();
+      this.greetingFacade.markAsGreeted();
+      
       // Start rotation after a short delay showing the greeting
       setTimeout(() => {
         this.startMessageRotation();
       }, 2000);
+    } else {
+      // Not the first load: skip greeting and start rotation immediately
+      this.displayMessage = loadingMessages[this.currentMessageIndex];
+      this.startMessageRotation();
     }
   }
 
   ngOnDestroy(): void {
     this.stopMessageRotation();
+    // Cache current index for session survival
+    this.greetingFacade.setLoaderMessageIndex(this.currentMessageIndex);
   }
 
   private startMessageRotation(): void {
     if (this.messageInterval) return;
 
+    const loadingMessages = this.greetingFacade.getLoadingMessages();
+
     this.messageInterval = window.setInterval(() => {
-      this.displayMessage = this.loadingMessages[this.currentMessageIndex];
-      this.currentMessageIndex = (this.currentMessageIndex + 1) % this.loadingMessages.length;
+      this.displayMessage = loadingMessages[this.currentMessageIndex];
+      const nextIndex = this.greetingFacade.getProgressiveIndex(this.currentMessageIndex, loadingMessages.length, false);
+      
+      if (nextIndex === this.currentMessageIndex && this.greetingFacade.isLastIndex(this.currentMessageIndex, loadingMessages.length)) {
+        this.stopMessageRotation();
+        return;
+      }
+
+      this.currentMessageIndex = nextIndex;
+      // Immediately track back to facade
+      this.greetingFacade.setLoaderMessageIndex(this.currentMessageIndex);
     }, 3000); // Change message every 3 seconds
   }
 

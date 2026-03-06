@@ -87,16 +87,7 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
   @ViewChild('chatInput', { static: false }) ChatInput!: ElementRef<HTMLInputElement>;
 
   // Placeholder Animation State
-  placeholders: string[] = [
-    'Ask about your spending...',
-    'Enter: "Spent $50 on food"...',
-    'How much did I spend this month?',
-    'What is my highest expense?',
-    'Add $2000 as salary income...',
-    'Report of last month',
-    'Loan report',
-
-  ];
+  placeholders: string[] = [];
   currentAnimatedPlaceholder: string = 'Ask AI about your spending...';
   private currentPlaceholderIndex = 0;
   private currentCharIndex = 0;
@@ -124,12 +115,18 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    // Set personalized greeting as the initial animated placeholder
-    const greeting = this.greetingFacade.getPersonalizedGreeting();
-    this.currentAnimatedPlaceholder = `${greeting}`;
-    
-    // Add greeting to the start of the rotation
-    this.placeholders.unshift(`${greeting}`);
+    this.placeholders = [...this.greetingFacade.getChatPlaceholders()];
+    this.currentPlaceholderIndex = this.greetingFacade.getChatPlaceholderIndex();
+
+    // Check if we should still greet the user in this session
+    if (this.greetingFacade.shouldGreet()) {
+      const greeting = this.greetingFacade.getPersonalizedGreeting();
+      this.currentAnimatedPlaceholder = `${greeting}`;
+      this.placeholders.unshift(`${greeting}`);
+      this.greetingFacade.markAsGreeted();
+    } else {
+      this.currentAnimatedPlaceholder = 'How can I help you?';
+    }
     
     this.animatePlaceholder();
   }
@@ -138,10 +135,13 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
     if (this.typingTimeout) {
       clearTimeout(this.typingTimeout);
     }
+    // Store current index in facade for session persistence
+    this.greetingFacade.setChatPlaceholderIndex(this.currentPlaceholderIndex);
   }
 
   private animatePlaceholder() {
     const currentText = this.placeholders[this.currentPlaceholderIndex];
+    if (!currentText) return; // Guard against empty list
     
     if (this.isDeleting) {
       this.currentAnimatedPlaceholder = currentText.substring(0, this.currentCharIndex - 1);
@@ -156,11 +156,17 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
     let typeSpeed = this.isDeleting ? 30 : 60;
 
     if (!this.isDeleting && this.currentCharIndex === currentText.length) {
+      // If it's the last message, don't delete it - keep it fixed
+      if (this.greetingFacade.isLastIndex(this.currentPlaceholderIndex, this.placeholders.length)) {
+        return;
+      }
       typeSpeed = 2500; // Pause at the end before deleting
       this.isDeleting = true;
     } else if (this.isDeleting && this.currentCharIndex === 0) {
       this.isDeleting = false;
-      this.currentPlaceholderIndex = (this.currentPlaceholderIndex + 1) % this.placeholders.length;
+      this.currentPlaceholderIndex = this.greetingFacade.getProgressiveIndex(this.currentPlaceholderIndex, this.placeholders.length, false);
+      // Sync with facade
+      this.greetingFacade.setChatPlaceholderIndex(this.currentPlaceholderIndex);
       typeSpeed = 500; // Pause before typing the next phrase
     }
 
