@@ -511,10 +511,13 @@ export class FamilyService {
 
       // Also sync to user preferences
       const userId = this.userService.getCurrentUserId();
-      if (userId && userId !== 'offline-guest') {
+      if (userId) {
         this.store.dispatch(ProfileActions.updatePreferences({
           userId,
-          preferences: { activeFamilyId: id }
+          preferences: { 
+            activeFamilyId: id,
+            isFamilyMode: !!id 
+          }
         }));
       }
     } catch (e) {
