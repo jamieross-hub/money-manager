@@ -121,21 +121,25 @@ export class CategoryService {
                 const categories: Category[] = [];
                 querySnapshot.forEach((docSnap: any) => {
                     const data: any = docSnap.data();
-                    const category: Category = {
-                        id: docSnap.id,
-                        name: data?.name,
-                        type: data?.type,
-                        icon: data?.icon || 'category',
-                        color: data?.color || '#46777f',
-                        createdAt: data?.createdAt,
-                        budget: data?.budget || null,
-                        parentCategoryId: data?.parentCategoryId || null,
-                        isSubCategory: data?.isSubCategory || false,
-                        subCategories: data?.subCategories || [],
-                        group: data?.group,
-                        isSystem: data?.isSystem || false
-                    };
-                    categories.push(category);
+                    if (data && data.name) {
+                        const category: Category = {
+                            id: docSnap.id,
+                            name: data.name,
+                            type: data.type,
+                            icon: data.icon || 'category',
+                            color: data.color || '#46777f',
+                            createdAt: data.createdAt,
+                            budget: data.budget || null,
+                            parentCategoryId: data.parentCategoryId || null,
+                            isSubCategory: data.isSubCategory || false,
+                            subCategories: data.subCategories || [],
+                            group: data.group,
+                            isSystem: data.isSystem || false
+                        };
+                        categories.push(category);
+                    } else {
+                        console.warn('[CategoryService] Skipping invalid/empty category document:', docSnap.id);
+                    }
                 });
 
                 console.log(`[CategoryService] Pulled ${categories.length} categories from Firestore`);
