@@ -55,4 +55,34 @@ export abstract class BaseService {
     console.error(`Error in ${context}:`, error);
     return throwError(() => error);
   }
+
+  /**
+   * Recursively remove keys with undefined values from an object
+   */
+  protected scrubUndefined(obj: any): any {
+    if (obj === null || typeof obj !== 'object' || obj instanceof Date || obj instanceof Timestamp) {
+      return obj;
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.scrubUndefined(item));
+    }
+
+    const result: any = {};
+    let scrubbedCount = 0;
+    Object.keys(obj).forEach(key => {
+      const value = obj[key];
+      if (value !== undefined) {
+        result[key] = this.scrubUndefined(value);
+      } else {
+        scrubbedCount++;
+      }
+    });
+
+    if (scrubbedCount > 0) {
+      console.log(`[BaseService] Scrubbed ${scrubbedCount} undefined properties from object`, obj.id || '');
+    }
+
+    return result;
+  }
 }

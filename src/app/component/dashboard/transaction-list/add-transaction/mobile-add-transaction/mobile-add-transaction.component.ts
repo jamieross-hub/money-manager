@@ -728,7 +728,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           userPhotoURL: this.userProfile()?.photoURL || '',
           updatedBy: this.userId,
           updatedAt: new Date(),
-          familyId: this.isFamilyMode() ? (this.familyService.activeFamilyId() || undefined) : undefined,
+          familyId: this.isFamilyMode() ? (this.familyService.activeFamilyId() || '') : '',
         };
 
         if (this.adjustmentMode() && this.originalTransaction) {

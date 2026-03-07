@@ -67,7 +67,7 @@ export class TransactionsService extends BaseService {
         const transactionId = this.generateId();
         const now = new Date();
         const isOnline = this.commonSyncService.isCurrentlyOnline();
-        const transactionData: Transaction = {
+        const transactionData: Transaction = this.scrubUndefined({
             ...transaction,
             id: transactionId,
             date: this.dateService.toDate(transaction.date) || now,
@@ -76,7 +76,7 @@ export class TransactionsService extends BaseService {
             createdBy: userId,
             updatedBy: userId,
             syncStatus: isOnline ? SyncStatus.SYNCED : SyncStatus.PENDING
-        };
+        });
 
         if (this.isGuest()) {
             this.localStorageUtility.saveEntity('transactions', transactionData, 'id');
@@ -196,12 +196,12 @@ export class TransactionsService extends BaseService {
                     const cachedTransactions = this.getCachedTransactions(userId);
                     const oldTransaction = cachedTransactions.find(t => t.id === transactionId);
 
-                    const updateData = {
+                    const updateData = this.scrubUndefined({
                         ...updatedTransaction,
                         updatedAt: new Date(),
                         updatedBy: userId,
                         syncStatus: this.commonSyncService.isCurrentlyOnline() ? SyncStatus.SYNCED : SyncStatus.PENDING
-                    };
+                    });
 
                     const newTransaction = { ...oldTransaction, ...updateData } as Transaction;
 
@@ -311,7 +311,7 @@ export class TransactionsService extends BaseService {
             // 1. Optimistic updates
             handleBalanceDeletion();
             if (transactionToDelete) {
-                const transactionWithDeletedStatus = { ...transactionToDelete, status: TransactionStatus.DELETED, updatedAt: new Date() };
+                const transactionWithDeletedStatus = this.scrubUndefined({ ...transactionToDelete, status: TransactionStatus.DELETED, updatedAt: new Date() });
                 this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ 
                     transactionId, 
                     transaction: transactionWithDeletedStatus as Transaction 
@@ -947,7 +947,7 @@ export class TransactionsService extends BaseService {
      * Get the family ID for cache key (overridden in FamilyTransactionsService)
      */
     protected getFamilyId(): string | undefined {
-        return undefined;
+        return '';
     }
 
     /**

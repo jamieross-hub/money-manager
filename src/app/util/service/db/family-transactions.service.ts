@@ -58,6 +58,6 @@ export class FamilyTransactionsService extends TransactionsService {
     }
 
     protected override getFamilyId(): string | undefined {
-        return this.familyService.activeFamilyId() || undefined;
+        return this.familyService.activeFamilyId() || '';
     }
 }

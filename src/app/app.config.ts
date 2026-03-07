@@ -56,7 +56,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([securityInterceptor])),
     provideClientHydration(),
     importProvidersFrom(ServiceWorkerModule.register('firebase-messaging-sw.js', {
-      enabled: !isDevMode(),
+      enabled: true,
       registrationStrategy: 'registerWhenStable:3000'
     })),
     

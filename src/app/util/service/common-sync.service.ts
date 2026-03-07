@@ -640,7 +640,7 @@ export class CommonSyncService implements OnDestroy {
     const basePath = item.collectionPath || `users/${userId}/transactions`;
 
     // Ensure the transaction is updated as synced when pushing to Firestore
-    const dataToWrite = { ...item.data };
+    const dataToWrite = this.scrubUndefined({ ...item.data });
     if ('syncStatus' in dataToWrite && item.operation !== 'delete') {
       dataToWrite.syncStatus = 'synced';
       dataToWrite.lastSyncedAt = new Date();
@@ -710,11 +710,11 @@ export class CommonSyncService implements OnDestroy {
     switch (item.operation) {
       case 'create':
         const docRef = doc(budgetsRef);
-        batch.set(docRef, item.data);
+        batch.set(docRef, this.scrubUndefined(item.data));
         break;
       case 'update':
         const updateRef = doc(this.firestore, `users/${userId}/budgets/${item.data.id}`);
-        batch.set(updateRef, item.data, { merge: true });
+        batch.set(updateRef, this.scrubUndefined(item.data), { merge: true });
         break;
       case 'delete':
         const deleteRef = doc(this.firestore, `users/${userId}/budgets/${item.data.id}`);
@@ -732,11 +732,11 @@ export class CommonSyncService implements OnDestroy {
     switch (item.operation) {
       case 'create':
         const docRef = doc(accountsRef);
-        batch.set(docRef, item.data);
+        batch.set(docRef, this.scrubUndefined(item.data));
         break;
       case 'update':
         const updateRef = doc(this.firestore, `users/${userId}/accounts/${item.data.id}`);
-        batch.set(updateRef, item.data, { merge: true });
+        batch.set(updateRef, this.scrubUndefined(item.data), { merge: true });
         break;
       case 'delete':
         const deleteRef = doc(this.firestore, `users/${userId}/accounts/${item.data.id}`);
@@ -754,11 +754,11 @@ export class CommonSyncService implements OnDestroy {
     switch (item.operation) {
       case 'create':
         const docRef = doc(goalsRef);
-        batch.set(docRef, item.data);
+        batch.set(docRef, this.scrubUndefined(item.data));
         break;
       case 'update':
         const updateRef = doc(this.firestore, `users/${userId}/goals/${item.data.id}`);
-        batch.set(updateRef, item.data, { merge: true });
+        batch.set(updateRef, this.scrubUndefined(item.data), { merge: true });
         break;
       case 'delete':
         const deleteRef = doc(this.firestore, `users/${userId}/goals/${item.data.id}`);
@@ -1486,6 +1486,36 @@ export class CommonSyncService implements OnDestroy {
         }
       });
     }
+  }
+
+  /**
+   * Recursively remove keys with undefined values from an object
+   */
+  private scrubUndefined(obj: any): any {
+    if (obj === null || typeof obj !== 'object' || obj instanceof Date) {
+      return obj;
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.scrubUndefined(item));
+    }
+
+    const result: any = {};
+    let scrubbedCount = 0;
+    Object.keys(obj).forEach(key => {
+      const value = obj[key];
+      if (value !== undefined) {
+        result[key] = this.scrubUndefined(value);
+      } else {
+        scrubbedCount++;
+      }
+    });
+
+    if (scrubbedCount > 0) {
+      console.log(`[CommonSyncService] Scrubbed ${scrubbedCount} undefined properties from object`, obj.id || '');
+    }
+
+    return result;
   }
 
   ngOnDestroy(): void {

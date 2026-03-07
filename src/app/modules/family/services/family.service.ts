@@ -490,7 +490,7 @@ export class FamilyService {
 
   private getInitialActiveFamilyId(): string | null {
     try {
-      return this.storageService.getItem(ACTIVE_FAMILY_ID_KEY);
+      return this.storageService.getItem(ACTIVE_FAMILY_ID_KEY) || '';
     } catch {
       return null;
     }
