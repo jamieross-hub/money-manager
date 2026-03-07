@@ -154,6 +154,13 @@ export class LocalStorageKeyHelper {
     }
 
     /**
+     * Get individual transaction item key
+     */
+    static getTransactionItemKey(transactionId: string, familyId?: string): string {
+        return familyId ? `${familyId}_${transactionId}` : transactionId;
+    }
+
+    /**
      * Get categories cache key
      */
     static getCategoriesCacheKey(uid: string, familyId?: string): string {

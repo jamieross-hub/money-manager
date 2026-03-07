@@ -19,7 +19,7 @@ import { CommonSyncService, SyncItem } from '../common-sync.service';
 import { BaseService } from '../base.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { UserService } from './user.service';
-import { LocalStorageKeyHelper } from '../../models/local-storage.model';
+import { LocalStorageKey, LocalStorageKeyHelper } from '../../models/local-storage.model';
 import { CurrencyService } from '../currency.service';
 
 @Injectable({
@@ -439,7 +439,8 @@ export class TransactionsService extends BaseService {
                 ];
 
                 // Persist the merged list back to local cache.
-                this.cacheTransactions(userId, merged);
+                // Persist individual transactions to the new store logic
+                merged.forEach(tx => this.updateTransactionCache(userId, 'update', tx));
 
                 // Update the subject for active components
                 this.transactionsSubject.next(merged);
@@ -515,7 +516,8 @@ export class TransactionsService extends BaseService {
                     ];
 
                     // 1. Update cache
-                    this.cacheTransactions(userId, merged);
+                    // 1. Update cache with individual objects
+                    merged.forEach(tx => this.updateTransactionCache(userId, 'update', tx));
 
                     // 2. Update subject
                     this.transactionsSubject.next(merged);
@@ -951,28 +953,36 @@ export class TransactionsService extends BaseService {
     }
 
     /**
-     * Get cached transactions from localStorage
+     * Get cached transactions from IndexDB
      */
-    protected getCachedTransactions(userId: string): Transaction[] {
+    public getCachedTransactions(userId: string): Transaction[] {
         try {
-            const cachedData = this.localStorageUtility.getItem<Transaction[]>(this.getTransactionsCacheKey(userId));
-            if (cachedData) {
-                return cachedData.filter(t => t && t.id);
-            }
+            const familyId = this.getFamilyId();
+            const allTransactions = this.localStorageUtility.getAllTransactionsSync();
+            
+            const transactions: Transaction[] = allTransactions.filter(tx => {
+                if (familyId) {
+                    return tx.familyId === familyId;
+                } else {
+                    return !tx.familyId;
+                }
+            });
+            
+            // Sort by date descending
+            return transactions.sort((a, b) => {
+                const getTime = (date: any) => {
+                    if (!date) return 0;
+                    if (date instanceof Date) return date.getTime();
+                    if (typeof date === 'object' && typeof (date as any).toDate === 'function') {
+                        return (date as any).toDate().getTime();
+                    }
+                    return new Date(date).getTime();
+                };
+                return getTime(b.date) - getTime(a.date);
+            });
         } catch (error) {
-            console.error('Error loading cached transactions:', error);
-        }
-        return [];
-    }
-
-    /**
-     * Cache transactions to localStorage
-     */
-    protected cacheTransactions(userId: string, transactions: Transaction[]): void {
-        try {
-            this.localStorageUtility.setItem(this.getTransactionsCacheKey(userId), transactions);
-        } catch (error) {
-            console.error('Error caching transactions:', error);
+            console.error('Error getting cached transactions:', error);
+            return [];
         }
     }
 
@@ -981,33 +991,21 @@ export class TransactionsService extends BaseService {
      */
     protected updateTransactionCache(userId: string, operation: 'create' | 'update' | 'delete', transaction?: Transaction): void {
         try {
-            const cachedTransactions = this.getCachedTransactions(userId);
+            const familyId = this.getFamilyId();
+
+            if (!transaction || !transaction.id) return;
+            const itemKey = LocalStorageKeyHelper.getTransactionItemKey(transaction.id, familyId);
 
             switch (operation) {
                 case 'create':
-                    if (transaction) {
-                        cachedTransactions.push(transaction);
-                    }
-                    break;
                 case 'update':
-                    if (transaction) {
-                        const index = cachedTransactions.findIndex(t => t.id === transaction.id);
-                        if (index !== -1) {
-                            cachedTransactions[index] = { ...cachedTransactions[index], ...transaction };
-                        }
-                    }
+                    const existing = this.localStorageUtility.getItem<Transaction>(itemKey);
+                    this.localStorageUtility.setTransaction(itemKey, { ...existing, ...transaction });
                     break;
                 case 'delete':
-                    if (transaction) {
-                        const index = cachedTransactions.findIndex(t => t.id === transaction.id);
-                        if (index !== -1) {
-                            cachedTransactions.splice(index, 1);
-                        }
-                    }
+                    this.localStorageUtility.removeTransaction(itemKey);
                     break;
             }
-
-            this.cacheTransactions(userId, cachedTransactions);
         } catch (error) {
             console.error('Error updating transaction cache:', error);
         }

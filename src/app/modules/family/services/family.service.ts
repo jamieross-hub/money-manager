@@ -39,7 +39,7 @@ import { Transaction } from 'src/app/util/models/transaction.model';
 
 const ACTIVE_FAMILY_ID_KEY = 'active_family_id';
 import { NotificationService } from 'src/app/util/service/notification.service';
-import { LocalStorageKey } from 'src/app/util/models/local-storage.model';
+import { LocalStorageKey, LocalStorageKeyHelper } from 'src/app/util/models/local-storage.model';
 import * as FamilyActions from '../store/family.actions';
 import { TransactionType, AccountType, TransactionStatus } from 'src/app/util/config/enums';
 import { defaultCategoriesForNewUser } from 'src/app/util/config/config';
@@ -684,7 +684,8 @@ export class FamilyService {
   // ─── Transactions ─────────────────────────────────────────────────────────
 
   getTransactions(familyId: string): Observable<Transaction[]> {
-    const cacheKey = `family-transactions-${familyId}`;
+    const userId = this.userService.getCurrentUserId();
+    const cacheKey = LocalStorageKeyHelper.getTransactionsCacheKey(userId || 'unknown', familyId);
 
     return new Observable<Transaction[]>(observer => {
       // 1. Emit cached transactions immediately
@@ -701,9 +702,14 @@ export class FamilyService {
       const unsubscribe = onSnapshot(q, (snap) => {
         const transactions = snap.docs.map(d => ({ id: d.id, ...d.data() as any } as Transaction));
         
-        // 2. Cache the transactions
+        // 2. Cache only individual transactions
         try {
-          this.storageService.setItem(cacheKey, transactions);
+          transactions.forEach(tx => {
+            if (tx.id) {
+              const itemKey = LocalStorageKeyHelper.getTransactionItemKey(tx.id, familyId);
+              this.storageService.setTransaction(itemKey, tx);
+            }
+          });
         } catch (e) {
           console.error('Error caching family transactions:', e);
         }
@@ -718,8 +724,21 @@ export class FamilyService {
 
   getCachedTransactionsSync(familyId: string): Transaction[] {
     try {
-      const cached = this.storageService.getItem<Transaction[]>(`family-transactions-${familyId}`);
-      return (cached && Array.isArray(cached)) ? cached : [];
+      const allTransactions = this.storageService.getAllTransactionsSync();
+      
+      const transactions = allTransactions.filter(tx => tx && tx.familyId === familyId);
+      
+      return transactions.sort((a, b) => {
+        const getTime = (date: any) => {
+          if (!date) return 0;
+          if (date instanceof Date) return date.getTime();
+          if (typeof date === 'object' && typeof (date as any).toDate === 'function') {
+            return (date as any).toDate().getTime();
+          }
+          return new Date(date).getTime();
+        };
+        return getTime(b.date) - getTime(a.date);
+      });
     } catch {
       return [];
     }

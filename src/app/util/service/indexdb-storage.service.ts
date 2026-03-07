@@ -21,11 +21,13 @@ export class LocalIndexDBStorageService {
 
     private readonly DB_NAME = 'MoneyManagerDB';
     private readonly STORE_NAME = 'keyValueStore';
-    private readonly DB_VERSION = 1;
+    private readonly TRANSACTIONS_STORE = 'transactions';
+    private readonly DB_VERSION = 2;
     private db: IDBDatabase | null = null;
 
-    // In-memory cache for synchronous access
-    private cache = new Map<string, any>();
+    // In-memory caches for synchronous access
+    private keyValueCache = new Map<string, any>();
+    private transactionsCache = new Map<string, any>();
     private isInitialized = false;
 
     constructor() {
@@ -55,7 +57,11 @@ export class LocalIndexDBStorageService {
         try {
             await this.openDatabase();
             await this.loadCacheFromDb();
-            console.log(`✅ Storage initialized with ${this.cache.size} items in cache.`);
+            
+            // Post-initialization: Migrate transaction data if needed
+            await this.migrateIfNeeded();
+            
+            console.log(`✅ Storage initialized. KeyValue: ${this.keyValueCache.size}, Transactions: ${this.transactionsCache.size}`);
             this.isInitialized = true;
         } catch (error) {
             console.error('❌ Failed to initialize storage service:', error);
@@ -66,21 +72,55 @@ export class LocalIndexDBStorageService {
     /**
      * Set an item (Sync API, Async Persistence)
      */
-    setItem<T>(key: string, value: T): void {
-        // Update cache immediately
-        this.cache.set(key, value);
+    setItem<T>(key: string, value: T, storeName: string = this.STORE_NAME): void {
+        // Update correct cache immediately
+        if (storeName === this.TRANSACTIONS_STORE) {
+            this.transactionsCache.set(key, value);
+        } else {
+            this.keyValueCache.set(key, value);
+        }
 
         // Persist to DB asynchronously
-        this.persistItem(key, value).catch(err => {
-            console.error(`Error persisting key "${key}":`, err);
+        this.persistItem(key, value, storeName).catch(err => {
+            console.error(`Error persisting key "${key}" to store "${storeName}":`, err);
         });
+    }
+    
+    /**
+     * Set a transaction item (Convenience method)
+     */
+    setTransaction<T>(key: string, value: T): void {
+        this.setItem(key, value, this.TRANSACTIONS_STORE);
+    }
+
+    /**
+     * Get all transaction keys (synchronous)
+     */
+    getTransactionKeys(): string[] {
+        return Array.from(this.transactionsCache.keys());
+    }
+
+    /**
+     * Get all transactions (synchronous)
+     */
+    getAllTransactionsSync(): any[] {
+        return Array.from(this.transactionsCache.values());
+    }
+
+    /**
+     * Clear the in-memory caches
+     */
+    clearMemoryCache(): void {
+        this.keyValueCache.clear();
+        this.transactionsCache.clear();
     }
 
     /**
      * Get an item (Sync API, Read from Cache)
      */
-    getItem<T>(key: string): T | null {
-        const value = this.cache.get(key);
+    getItem<T>(key: string, storeName: string = this.STORE_NAME): T | null {
+        const cache = storeName === this.TRANSACTIONS_STORE ? this.transactionsCache : this.keyValueCache;
+        const value = cache.get(key);
 
         if (value === undefined || value === null) {
             return null;
@@ -93,19 +133,31 @@ export class LocalIndexDBStorageService {
     /**
      * Remove an item (Sync API, Async Persistence)
      */
-    removeItem(key: string): void {
-        this.cache.delete(key);
+    removeItem(key: string, storeName: string = this.STORE_NAME): void {
+        if (storeName === this.TRANSACTIONS_STORE) {
+            this.transactionsCache.delete(key);
+        } else {
+            this.keyValueCache.delete(key);
+        }
 
-        this.deleteItem(key).catch(err => {
-            console.error(`Error deleting key "${key}":`, err);
+        this.deleteItem(key, storeName).catch(err => {
+            console.error(`Error deleting key "${key}" from store "${storeName}":`, err);
         });
+    }
+    
+    /**
+     * Remove a transaction item
+     */
+    removeTransaction(key: string): void {
+        this.removeItem(key, this.TRANSACTIONS_STORE);
     }
 
     /**
      * Clear all data
      */
     clear(): void {
-        this.cache.clear();
+        this.keyValueCache.clear();
+        this.transactionsCache.clear();
 
         this.clearDb().catch(err => {
             console.error('Error clearing database:', err);
@@ -115,15 +167,16 @@ export class LocalIndexDBStorageService {
     /**
      * Check if item exists
      */
-    hasItem(key: string): boolean {
-        return this.cache.has(key);
+    hasItem(key: string, storeName: string = this.STORE_NAME): boolean {
+        const cache = storeName === this.TRANSACTIONS_STORE ? this.transactionsCache : this.keyValueCache;
+        return cache.has(key);
     }
 
     /**
      * Get all keys
      */
     getAllKeys(): string[] {
-        return Array.from(this.cache.keys());
+        return [...Array.from(this.keyValueCache.keys()), ...Array.from(this.transactionsCache.keys())];
     }
 
     // ==========================================
@@ -149,58 +202,138 @@ export class LocalIndexDBStorageService {
                 if (!db.objectStoreNames.contains(this.STORE_NAME)) {
                     db.createObjectStore(this.STORE_NAME);
                 }
+                if (!db.objectStoreNames.contains(this.TRANSACTIONS_STORE)) {
+                    db.createObjectStore(this.TRANSACTIONS_STORE);
+                }
                 // Migration logic could go here if we were migrating schema version
             };
         });
     }
 
     private loadCacheFromDb(): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             if (!this.db) {
                 return reject(new Error('Database not open'));
             }
 
-            const transaction = this.db.transaction([this.STORE_NAME], 'readonly');
-            const store = transaction.objectStore(this.STORE_NAME);
-            const countRequest = store.count();
+            try {
+                // Load from both stores
+                await this.loadStoreIntoCache(this.STORE_NAME);
+                await this.loadStoreIntoCache(this.TRANSACTIONS_STORE);
+                resolve();
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
 
-            countRequest.onsuccess = () => {
-                // Migrate from localStorage if DB is empty
-                if (countRequest.result === 0) {
-                    // Migration removed as per requirement to avoid duplicate data
-                    return resolve();
-                }
+    private loadStoreIntoCache(storeName: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (!this.db || !this.db.objectStoreNames.contains(storeName)) {
+                return resolve();
+            }
 
-                const request = store.openCursor();
+            const transaction = this.db.transaction([storeName], 'readonly');
+            const store = transaction.objectStore(storeName);
+            const request = store.openCursor();
 
-                request.onsuccess = (event: any) => {
-                    const cursor = event.target.result;
-                    if (cursor) {
-                        this.cache.set(cursor.key as string, cursor.value);
-                        cursor.continue();
+            request.onsuccess = (event: any) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    if (storeName === this.TRANSACTIONS_STORE) {
+                        this.transactionsCache.set(cursor.key as string, cursor.value);
                     } else {
-                        resolve();
+                        this.keyValueCache.set(cursor.key as string, cursor.value);
                     }
-                };
-
-                request.onerror = () => reject(request.error);
+                    cursor.continue();
+                } else {
+                    resolve();
+                }
             };
 
-            countRequest.onerror = () => reject(countRequest.error);
+            request.onerror = () => reject(request.error);
         });
+    }
+
+    private async migrateIfNeeded(): Promise<void> {
+        if (!this.db) return;
+
+        const txPrefix = 'tx_';
+        const txCacheKey = 'transactions-cache';
+        
+        // 1. Migrate anything that might still be in the flat keyValueCache to transactions store
+        const keysToMigrate = Array.from(this.keyValueCache.keys()).filter(key => 
+            key.startsWith(txPrefix)
+        );
+
+        if (keysToMigrate.length > 0) {
+            console.log(`📦 Migrating ${keysToMigrate.length} items to dedicated transaction store...`);
+            for (const oldKey of keysToMigrate) {
+                const value = this.keyValueCache.get(oldKey);
+                // Remove prefix for new store storage
+                const newKey = oldKey.startsWith(txPrefix) ? oldKey.substring(txPrefix.length) : oldKey;
+                
+                await this.deleteItem(oldKey, this.STORE_NAME);
+                
+                this.keyValueCache.delete(oldKey);
+                this.transactionsCache.set(newKey, value);
+                await this.persistItem(newKey, value, this.TRANSACTIONS_STORE);
+            }
+        }
+
+        // 2. "Unpack" any transactions-cache arrays into individual items and delete the array key
+        const collectionKeys = Array.from(this.keyValueCache.keys()).filter(key => 
+            key.includes(txCacheKey)
+        );
+
+        if (collectionKeys.length > 0) {
+            console.log(`📦 Unpacking ${collectionKeys.length} transaction collections...`);
+            for (const key of collectionKeys) {
+                const value = this.keyValueCache.get(key);
+                if (Array.isArray(value)) {
+                    // Extract familyId from key if present
+                    // Key format: transactions-cache-uid-familyId
+                    const parts = key.split('-');
+                    const familyId = parts.length > 3 ? parts[3] : undefined;
+                    
+                    for (const tx of value) {
+                        if (tx && tx.id) {
+                            const itemKey = familyId ? `${familyId}_${tx.id}` : tx.id;
+                            // Save as individual item in the transactions cache and store
+                            this.transactionsCache.set(itemKey, tx);
+                            await this.persistItem(itemKey, tx, this.TRANSACTIONS_STORE);
+                        }
+                    }
+                }
+                // Delete the collection key from wherever it might be
+                this.keyValueCache.delete(key);
+                this.transactionsCache.delete(key);
+                await this.deleteItem(key, this.STORE_NAME);
+                await this.deleteItem(key, this.TRANSACTIONS_STORE);
+            }
+            console.log('✅ Unpacking complete.');
+        }
+
+        if (keysToMigrate.length > 0 || collectionKeys.length > 0) {
+            console.log('✅ Overall transaction storage migration complete.');
+        }
     }
 
 
 
-    private persistItem(key: string, value: any): Promise<void> {
+    private persistItem(key: string, value: any, storeName: string): Promise<void> {
         return new Promise((resolve, reject) => {
             if (!this.db) {
                 // If DB failed to open, we just silently fail (cache works)
                 return resolve();
             }
 
-            const transaction = this.db.transaction([this.STORE_NAME], 'readwrite');
-            const store = transaction.objectStore(this.STORE_NAME);
+            if (!this.db.objectStoreNames.contains(storeName)) {
+                return reject(new Error(`Store "${storeName}" not found`));
+            }
+
+            const transaction = this.db.transaction([storeName], 'readwrite');
+            const store = transaction.objectStore(storeName);
             store.put(value, key);
 
             transaction.oncomplete = () => resolve();
@@ -208,12 +341,16 @@ export class LocalIndexDBStorageService {
         });
     }
 
-    private deleteItem(key: string): Promise<void> {
+    private deleteItem(key: string, storeName: string): Promise<void> {
         return new Promise((resolve, reject) => {
             if (!this.db) return resolve();
 
-            const transaction = this.db.transaction([this.STORE_NAME], 'readwrite');
-            const store = transaction.objectStore(this.STORE_NAME);
+            if (!this.db.objectStoreNames.contains(storeName)) {
+                return resolve();
+            }
+
+            const transaction = this.db.transaction([storeName], 'readwrite');
+            const store = transaction.objectStore(storeName);
             store.delete(key);
 
             transaction.oncomplete = () => resolve();

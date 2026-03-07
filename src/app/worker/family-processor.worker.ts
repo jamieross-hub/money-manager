@@ -191,8 +191,15 @@ function processActivities(
 
   const getTime = (val: any) => {
     if (!val) return 0;
-    // We can't use DateService here as it's a worker, using basic Date
-    return new Date(val).getTime();
+    
+    // Handle Firestore Timestamp
+    if (typeof val === 'object' && 'seconds' in val) {
+      return val.seconds * 1000;
+    }
+    
+    // Handle Date object or ISO string
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? 0 : d.getTime();
   };
 
   // 1. Transactions
