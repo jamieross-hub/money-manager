@@ -285,7 +285,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
                     categoryColorMap: colorMap
                 });
             }
-        }, { allowSignalWrites: true });
+        });
 
         // Effect to update category maps when allCategories signal changes
         this.updateCategoryMaps();

@@ -190,7 +190,7 @@ export class GroupSelectionComponent implements OnInit {
             });
         }
       });
-    }, { allowSignalWrites: true, injector: this.injector });
+    }, { injector: this.injector });
 
     effect(() => {
       const isLoading = this.loadState() === 'loading';
@@ -202,7 +202,7 @@ export class GroupSelectionComponent implements OnInit {
         this.isInstanceLoading = false;
         //this.loaderService.hide();
       }
-    }, { allowSignalWrites: true, injector: this.injector });
+    }, { injector: this.injector });
 
     this.destroyRef.onDestroy(() => {
       if (this.isInstanceLoading) {

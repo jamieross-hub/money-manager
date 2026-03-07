@@ -459,7 +459,7 @@ export class MobileTransactionListComponent
       if (this.isRecurring() || this.isFamilyMode()) {
         this.onDateRangeChange(null);
       }
-    }, { allowSignalWrites: true });
+    });
 
 
     // React to theme changes (e.g., for charts)

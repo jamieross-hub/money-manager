@@ -202,7 +202,7 @@ export class FamilyDashboardComponent implements OnInit {
       if (fam?.id) {
         this.store.dispatch(FamilyActions.loadSettlements({ familyId: fam.id }));
       }
-    }, { allowSignalWrites: true });
+    });
 
     effect(() => {
       const transactions = this.transactions();
@@ -219,7 +219,7 @@ export class FamilyDashboardComponent implements OnInit {
           sessionStartTime: this.sessionStartTime
         });
       }
-    }, { allowSignalWrites: true });
+    });
 
     effect(() => {
       const isLoading = this.loading() && !this.family();
@@ -230,7 +230,7 @@ export class FamilyDashboardComponent implements OnInit {
         this.isInstanceLoading = false;
         this.loaderService.hide();
       }
-    }, { allowSignalWrites: true });
+    });
 
     this.destroyRef.onDestroy(() => {
       if (this.isInstanceLoading) {

@@ -137,7 +137,7 @@ export class SettleUpComponent implements OnInit {
         this.store.dispatch(FamilyActions.loadTransactions({ familyId: fam.id }));
         this.store.dispatch(FamilyActions.loadSettlements({ familyId: fam.id }));
       }
-    }, { allowSignalWrites: true });
+    });
 
     effect(() => {
       const transactions = this.transactions();
@@ -154,7 +154,7 @@ export class SettleUpComponent implements OnInit {
           sessionStartTime: this.sessionStartTime
         });
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   ngOnInit() {
