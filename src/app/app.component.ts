@@ -11,7 +11,6 @@ import { FirebaseMessagingService } from './util/service/firebase-messaging.serv
 import { LanguageService } from './util/service/language.service';
 import { LocalIndexDBStorageService } from './util/service/indexdb-storage.service';
 import { LocalStorageKey } from './util/models/local-storage.model';
-import { UserTrackingService, ScreenTrackingService, Analytics, logEvent } from '@angular/fire/analytics';
 import { UserService } from './util/service/db/user.service';
 import { SecurityService } from './util/service/security.service';
 import { ActivatedRoute, NavigationEnd, NavigationStart, Router, RouterModule } from '@angular/router';
@@ -57,13 +56,10 @@ export class AppComponent implements OnInit, OnDestroy {
     public themeSwitchingService: ThemeSwitchingService,
     private languageService: LanguageService,
     private localStorageService: LocalIndexDBStorageService,
-    private userTrackingService: UserTrackingService,
-    private screenTrackingService: ScreenTrackingService,
     private userService: UserService,
     private securityService: SecurityService,
     private router: Router,
     private route: ActivatedRoute,
-    private analytics: Analytics,
     private swUpdate: SwUpdate,
     private dialog: MatDialog,
     private bottomSheet: MatBottomSheet,
@@ -85,15 +81,6 @@ export class AppComponent implements OnInit, OnDestroy {
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe((event) => {
         const pageTitle = this.getDeepestTitle(this.route) || document.title || 'Unknown';
-
-        if (!isDevMode()) {
-          logEvent(this.analytics, 'page_view', {
-            page_path: event.urlAfterRedirects,
-            page_location: window.location.href,
-            page_title: pageTitle,
-            screen_name: pageTitle
-          });
-        }
       });
   }
 
