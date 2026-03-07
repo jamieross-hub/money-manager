@@ -15,6 +15,9 @@ export const selectAllTransactions = createSelector(
   FamilySelectors.selectFamily,
   FamilySelectors.selectFamilyTransactions,
   (state, isFamilyMode, activeFamily, familyTransactions) => {
+    const templates = state.recurringTemplates || [];
+    let baseTransactions: Transaction[] = [];
+
     if (isFamilyMode && activeFamily) {
       // Include personal transactions that are explicitly linked to this family (like settlements)
       const personalLinkedTxs = state.ids
@@ -26,7 +29,7 @@ export const selectAllTransactions = createSelector(
       // De-duplicate if somehow same transaction is in both
       const seenIds = new Set();
       const seenSettlements = new Set();
-      return merged.filter(t => {
+      baseTransactions = merged.filter(t => {
         if (seenIds.has(t.id)) return false;
         seenIds.add(t.id);
         
@@ -37,8 +40,16 @@ export const selectAllTransactions = createSelector(
         
         return true;
       });
+    } else {
+      baseTransactions = state.ids.map(id => state.entities[id]).filter(Boolean).filter(t => t.status !== TransactionStatus.DELETED);
     }
-    return state.ids.map(id => state.entities[id]).filter(Boolean).filter(t => t.status !== TransactionStatus.DELETED);
+
+    // Merge in recurring templates
+    // De-duplicate if needed (though templates are now in a separate collection)
+    const seenIds = new Set(baseTransactions.map(t => t.id));
+    const uniqueTemplates = templates.filter(t => !seenIds.has(t.id));
+    
+    return [...baseTransactions, ...uniqueTemplates];
   }
 );
 
@@ -345,8 +356,23 @@ export const selectPendingTransactions = createSelector(
   (transactions) => transactions.filter(t => t.status === 'pending')
 );
 
-// Recurring transactions
+// Recurring templates
+export const selectRecurringTemplates = createSelector(
+  selectTransactionsState,
+  (state) => state.recurringTemplates || []
+);
+
+export const selectRecurringLoading = createSelector(
+  selectTransactionsState,
+  (state) => state.recurringLoading
+);
+
+// Combined Recurring transactions (template + any marked in regular tx)
 export const selectRecurringTransactions = createSelector(
   selectAllTransactions,
-  (transactions) => transactions.filter((t) => t.isRecurring === true)
+  selectRecurringTemplates,
+  (transactions, templates) => {
+    const fromTransactions = transactions.filter((t) => t.isRecurring === true);
+    return [...templates, ...fromTransactions];
+  }
 );

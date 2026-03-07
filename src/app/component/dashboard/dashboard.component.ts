@@ -15,7 +15,7 @@ import { loadAccounts } from 'src/app/store/accounts/accounts.actions';
 import { loadCategories } from 'src/app/store/categories/categories.actions';
 import { loadBudgets } from 'src/app/store/budgets/budgets.actions';
 import { loadGoals } from 'src/app/store/goals/goals.actions';
-import { loadTransactions } from 'src/app/store/transactions/transactions.actions';
+import { loadTransactions, loadRecurringTemplates } from 'src/app/store/transactions/transactions.actions';
 import { InvitationPopupService } from 'src/app/util/service/invitation-popup.service';
 import { RecurringTransactionService } from 'src/app/util/service/recurring-transaction.service';
 import { PwaSwService } from 'src/app/util/service/pwa-sw.service';
@@ -106,6 +106,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.store.dispatch(loadBudgets({ userId }));
       this.store.dispatch(loadGoals({ userId }));
       this.store.dispatch(loadTransactions({ userId }));
+      this.store.dispatch(loadRecurringTemplates({ userId }));
     }
   }
 

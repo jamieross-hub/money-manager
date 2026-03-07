@@ -64,6 +64,7 @@ import { AppViewService } from 'src/app/util/service/app-view.service';
 import { UserService } from 'src/app/util/service/db/user.service';
 
 import { TransactionsService } from 'src/app/util/service/db/transactions.service';
+import { RecurringService } from 'src/app/util/service/db/recurring.service';
 import { TransactionProcessorService } from 'src/app/util/service/transaction-processor.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, distinctUntilChanged } from 'rxjs/operators';
@@ -145,6 +146,7 @@ export class MobileTransactionListComponent
   private readonly currencyService = inject<CurrencyService>(CurrencyService);
   private readonly themeService = inject<ThemeSwitchingService>(ThemeSwitchingService);
   private readonly transactionsService = inject<TransactionsService>(TransactionsService);
+  private readonly recurringService = inject(RecurringService);
   private readonly processorService = inject(TransactionProcessorService);
   private readonly route = inject(Router);
   private readonly dialog = inject(MatDialog);
@@ -724,7 +726,7 @@ export class MobileTransactionListComponent
       if (!confirmedDate) return;
 
       this.subscription.add(
-        this.transactionsService.processRecurringTransaction(userId, originalTx, confirmedDate).subscribe(() => {
+        this.recurringService.processRecurringTransaction(userId, originalTx, confirmedDate).subscribe(() => {
           // Success handled by store update
         })
       );
@@ -745,7 +747,7 @@ export class MobileTransactionListComponent
        if (!skippedDate) return;
 
        this.subscription.add(
-        this.transactionsService.skipRecurringTransaction(userId, originalTx, skippedDate).subscribe(() => {
+        this.recurringService.skipRecurringTransaction(userId, originalTx, skippedDate).subscribe(() => {
           // Success handled by store update
         })
       );

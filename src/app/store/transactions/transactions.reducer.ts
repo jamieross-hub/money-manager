@@ -158,5 +158,55 @@ export const transactionsReducer = createReducer(
   })),
   
   // Clear State
-  on(TransactionsActions.clearTransactions, () => initialState)
+  on(TransactionsActions.clearTransactions, () => initialState),
+
+  // Load Recurring Templates
+  on(TransactionsActions.loadRecurringTemplates, (state) => ({
+    ...state,
+    recurringLoading: true,
+    error: null
+  })),
+
+  on(TransactionsActions.loadRecurringTemplatesSuccess, (state, { templates }) => ({
+    ...state,
+    recurringTemplates: templates,
+    recurringLoading: false,
+    error: null
+  })),
+
+  on(TransactionsActions.loadRecurringTemplatesFailure, (state, { error }) => ({
+    ...state,
+    recurringLoading: false,
+    error
+  })),
+
+  // Update Recurring Template
+  on(TransactionsActions.updateRecurringTemplateSuccess, (state, { template }) => ({
+    ...state,
+    recurringTemplates: state.recurringTemplates.map(t => 
+      t.id === template.id ? { ...t, ...template } : t
+    ),
+    recurringLoading: false,
+    error: null
+  })),
+
+  on(TransactionsActions.updateRecurringTemplateFailure, (state, { error }) => ({
+    ...state,
+    recurringLoading: false,
+    error
+  })),
+
+  // Delete Recurring Template
+  on(TransactionsActions.deleteRecurringTemplateSuccess, (state, { templateId }) => ({
+    ...state,
+    recurringTemplates: state.recurringTemplates.filter(t => t.id !== templateId),
+    recurringLoading: false,
+    error: null
+  })),
+
+  on(TransactionsActions.deleteRecurringTemplateFailure, (state, { error }) => ({
+    ...state,
+    recurringLoading: false,
+    error
+  }))
 ); 

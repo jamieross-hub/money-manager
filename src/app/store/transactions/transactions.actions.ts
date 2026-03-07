@@ -82,4 +82,53 @@ export const getTransactionFailure = createAction(
 );
 
 // Clear State
-export const clearTransactions = createAction('[Transactions] Clear Transactions'); 
+export const clearTransactions = createAction('[Transactions] Clear Transactions');
+
+// Load Recurring Templates
+export const loadRecurringTemplates = createAction(
+  '[Transactions] Load Recurring Templates',
+  props<{ userId: string }>()
+);
+
+export const loadRecurringTemplatesSuccess = createAction(
+  '[Transactions] Load Recurring Templates Success',
+  props<{ templates: Transaction[] }>()
+);
+
+export const loadRecurringTemplatesFailure = createAction(
+  '[Transactions] Load Recurring Templates Failure',
+  props<{ error: any }>()
+);
+
+// Update Recurring Template
+export const updateRecurringTemplate = createAction(
+  '[Transactions] Update Recurring Template',
+  props<{ userId: string; templateId: string; template: Partial<Transaction> }>()
+);
+
+export const updateRecurringTemplateSuccess = createAction(
+  '[Transactions] Update Recurring Template Success',
+  props<{ template: Transaction }>()
+);
+
+export const updateRecurringTemplateFailure = createAction(
+  '[Transactions] Update Recurring Template Failure',
+  props<{ error: any }>()
+);
+
+// Delete Recurring Template
+export const deleteRecurringTemplate = createAction(
+  '[Transactions] Delete Recurring Template',
+  props<{ userId: string; templateId: string }>()
+);
+
+export const deleteRecurringTemplateSuccess = createAction(
+  '[Transactions] Delete Recurring Template Success',
+  props<{ templateId: string }>()
+);
+
+export const deleteRecurringTemplateFailure = createAction(
+  '[Transactions] Delete Recurring Template Failure',
+  props<{ error: any }>()
+);
+ 

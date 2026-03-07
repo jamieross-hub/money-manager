@@ -59,6 +59,7 @@ import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button
 import { ImageFallbackDirective } from 'src/app/util/directives';
 import { APP_CONFIG } from 'src/app/util/config/config';
 import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
+import { RecurringService } from 'src/app/util/service/db/recurring.service';
 
 
 
@@ -190,7 +191,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     private currencyService: CurrencyService,
     private bottomSheet: MatBottomSheet,
     private cdr: ChangeDetectorRef,
-    private mobileBackButtonService: MobileBackButtonService
+    private mobileBackButtonService: MobileBackButtonService,
+    private recurringService: RecurringService
   ) {
     this.isGuestUser = this.userService.isGuestUser();
     const tomorrow = new Date();
@@ -788,30 +790,67 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           );
           this.notificationService.success('Adjustment recorded successfully');
         } else if (this.dialogData?.id) {
-          await this.store.dispatch(
-            TransactionsActions.updateTransaction({
-              userId: this.userId,
-              transactionId: this.dialogData.id,
-              transaction: transactionData,
-            })
-          );
-          this.notificationService.success('Transaction updated successfully');
+          if (this.dialogData.isRecurring) {
+            // Editing a recurring template
+            this.store.dispatch(
+              TransactionsActions.updateRecurringTemplate({
+                userId: this.userId,
+                templateId: this.dialogData.id,
+                template: transactionData,
+              })
+            );
+            this.notificationService.success('Recurring template updated successfully');
+          } else {
+            // Editing a regular transaction
+            await this.store.dispatch(
+              TransactionsActions.updateTransaction({
+                userId: this.userId,
+                transactionId: this.dialogData.id,
+                transaction: transactionData,
+              })
+            );
+            this.notificationService.success('Transaction updated successfully');
+          }
         } else {
-          // Always create a regular transaction first
-          const regularTransaction = await this.store.dispatch(
+          // 1. Create the regular transaction instance
+          const transactionToCreate = {
+            userId: this.userId,
+            ...transactionData,
+            isRecurring: false, // This specific record is an instance, not a template
+            nextOccurrence: null,
+            recurringInterval: null,
+            recurringEndDate: null,
+            syncStatus: SyncStatus.PENDING,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            createdBy: this.userId,
+            updatedBy: this.userId,
+          };
+
+          await this.store.dispatch(
             TransactionsActions.createTransaction({
               userId: this.userId,
-              transaction: {
-                userId: this.userId,
-                ...transactionData,
-                syncStatus: SyncStatus.PENDING,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                createdBy: this.userId,
-                updatedBy: this.userId,
-              },
+              transaction: transactionToCreate,
             })
           );
+
+          // 2. If it's recurring, ALSO create the template in the recurring collection
+          if (formData.isRecurring) {
+            const templateData = {
+              ...transactionData,
+              isRecurring: true,
+              userId: this.userId,
+              syncStatus: SyncStatus.SYNCED,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              createdBy: this.userId,
+              updatedBy: this.userId,
+            };
+            this.recurringService.createRecurringTemplate(this.userId, templateData).subscribe({
+              next: (id: string) => console.log('Recurring template created:', id),
+              error: (err: any) => this.notificationService.error('Failed to create recurring template')
+            });
+          }
 
           this.notificationService.success('Transaction added successfully');
           this.hapticFeedback.successVibration();

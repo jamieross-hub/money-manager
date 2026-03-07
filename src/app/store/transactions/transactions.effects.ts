@@ -4,8 +4,10 @@ import { of } from 'rxjs';
 import { map, mergeMap, catchError, switchMap } from 'rxjs/operators';
 import { TransactionsService } from '../../util/service/db/transactions.service';
 import * as TransactionsActions from './transactions.actions';
+import { RecurringService } from '../../util/service/db/recurring.service';
 import * as FamilyActions from '../../modules/family/store/family.actions';
 import { UserService } from '../../util/service/db/user.service';
+import { Transaction } from '../../util/models/transaction.model';
 
 @Injectable()
 export class TransactionsEffects {
@@ -91,9 +93,41 @@ export class TransactionsEffects {
         ))
   ));
 
+  loadRecurringTemplates$ = createEffect(() => this.actions$.pipe(
+    ofType(TransactionsActions.loadRecurringTemplates),
+    switchMap(({ userId }) => this.recurringService.getRecurringTemplates(userId)
+      .pipe(
+        map(templates => TransactionsActions.loadRecurringTemplatesSuccess({ templates })),
+        catchError(error => of(TransactionsActions.loadRecurringTemplatesFailure({ error })))
+      ))
+  ));
+
+  updateRecurringTemplate$ = createEffect(() => this.actions$.pipe(
+    ofType(TransactionsActions.updateRecurringTemplate),
+    mergeMap(({ userId, templateId, template }) => 
+      this.recurringService.updateRecurringTemplate(userId, templateId, template)
+        .pipe(
+          map(() => TransactionsActions.updateRecurringTemplateSuccess({ 
+            template: { ...template, id: templateId } as Transaction 
+          })),
+          catchError(error => of(TransactionsActions.updateRecurringTemplateFailure({ error })))
+        ))
+  ));
+
+  deleteRecurringTemplate$ = createEffect(() => this.actions$.pipe(
+    ofType(TransactionsActions.deleteRecurringTemplate),
+    mergeMap(({ userId, templateId }) => 
+      this.recurringService.deleteRecurringTemplate(userId, templateId)
+        .pipe(
+          map(() => TransactionsActions.deleteRecurringTemplateSuccess({ templateId })),
+          catchError(error => of(TransactionsActions.deleteRecurringTemplateFailure({ error })))
+        ))
+  ));
+
   constructor(
     private actions$: Actions,
     private transactionsService: TransactionsService,
+    private recurringService: RecurringService,
     private userService: UserService
   ) {}
 }

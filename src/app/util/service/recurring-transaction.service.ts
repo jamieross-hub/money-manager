@@ -3,6 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TransactionsService } from './db/transactions.service';
+import { RecurringService } from './db/recurring.service';
 import { UserService } from './db/user.service';
 import { DateService } from './date.service';
 import { NotificationService } from './notification.service';
@@ -15,6 +16,7 @@ export class RecurringTransactionService {
 
   constructor(
     private transactionsService: TransactionsService,
+    private recurringService: RecurringService,
     private userService: UserService,
     private dateService: DateService,
     private notificationService: NotificationService,
@@ -33,7 +35,7 @@ export class RecurringTransactionService {
    * Get all recurring transactions for a user
    */
   getRecurringTransactions(userId: string): Observable<Transaction[]> {
-    return this.transactionsService.getRecurringTransactions(userId);
+    return this.recurringService.getRecurringTemplates(userId);
   }
 
   /**
@@ -44,7 +46,7 @@ export class RecurringTransactionService {
     due: number;
     upcoming: number;
   }> {
-    return this.transactionsService.getRecurringTransactions(userId).pipe(
+    return this.recurringService.getRecurringTemplates(userId).pipe(
       map(transactions => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);

@@ -58,20 +58,4 @@ export class TransactionsFacadeService {
     forceSync(): Promise<void> {
         return this.activeService.forceSync();
     }
-
-    getRecurringTransactions(userId: string): Observable<Transaction[]> {
-        return this.activeService.getRecurringTransactions(userId);
-    }
-
-    getDueRecurringTransactions(userId: string): Observable<Transaction[]> {
-        return this.activeService.getDueRecurringTransactions(userId);
-    }
-
-    processRecurringTransaction(userId: string, transaction: Transaction, confirmedDate?: Date): Observable<void> {
-        return this.activeService.processRecurringTransaction(userId, transaction, confirmedDate);
-    }
-
-    skipRecurringTransaction(userId: string, transaction: Transaction, skippedDate?: Date): Observable<void> {
-        return this.activeService.skipRecurringTransaction(userId, transaction, skippedDate);
-    }
 }

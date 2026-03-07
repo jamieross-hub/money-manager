@@ -163,6 +163,13 @@ addEventListener('message', ({ data }) => {
     else if (appView === 'YEARLY') endDate = dayjs().add(1, 'year').endOf('day').toDate();
     else endDate = dayjs().add(1, 'month').endOf('day').toDate();
     sourceData = generateUpcomingTransactions(recurring, startDate, endDate, transactions);
+  } else {
+    // Separate blueprints (isRecurring: true) from actual occurrences (isRecurring: false or undefined)
+    if (isRecurringMode) {
+      sourceData = transactions.filter((t: any) => t.isRecurring === true);
+    } else {
+      sourceData = transactions.filter((t: any) => !t.isRecurring);
+    }
   }
 
   // 4. Filtering Logic

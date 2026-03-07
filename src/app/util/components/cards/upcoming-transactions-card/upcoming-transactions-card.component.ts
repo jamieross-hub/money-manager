@@ -150,7 +150,7 @@ export class UpcomingTransactionsCardComponent implements OnInit, OnDestroy {
         // Filter upcoming transactions
         const upcomingTransactions = transactions
           .filter(t => {
-            const txDate = this.convertToDate(t.date);
+            const txDate = this.convertToDate(t.date, t.nextOccurrence);
             const isUpcoming = txDate >= currentDate && txDate <= endDate;
             const isPending = t.status === TransactionStatus.PENDING;
             const isRecurring = t.isRecurring || false;
@@ -159,7 +159,7 @@ export class UpcomingTransactionsCardComponent implements OnInit, OnDestroy {
           })
           .map(t => {
             const category = categories.find(c => c.id === t.categoryId);
-            const txDate = this.convertToDate(t.date);
+            const txDate = this.convertToDate(t.date, t.nextOccurrence);
             const daysUntil = Math.ceil((txDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
 
             return {
@@ -191,6 +191,9 @@ export class UpcomingTransactionsCardComponent implements OnInit, OnDestroy {
         const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
         const monthlyTransactions = transactions.filter(t => {
+          // Exclude recurring templates from monthly summary as they are not realized transactions
+          if (t.isRecurring) return false;
+          
           const txDate = this.convertToDate(t.date);
           return txDate >= startOfMonth && txDate <= endOfMonth;
         });
@@ -213,10 +216,11 @@ export class UpcomingTransactionsCardComponent implements OnInit, OnDestroy {
     );
   }
 
-  private convertToDate(date: Date | any): Date {
-    if (date instanceof Date) return date;
-    if (date?.seconds) return new Date(date.seconds * 1000);
-    return new Date(date);
+  private convertToDate(date: Date | any, nextOccurrence?: Date | any): Date {
+    const finalDate = nextOccurrence || date;
+    if (finalDate instanceof Date) return finalDate;
+    if (finalDate?.seconds) return new Date(finalDate.seconds * 1000);
+    return new Date(finalDate);
   }
 
   get effectiveConfig(): UpcomingTransactionsConfig {

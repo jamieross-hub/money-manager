@@ -187,6 +187,15 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   async deleteTransaction(transaction: Transaction) {
     const userId = this.userService.getCurrentUserId();
     if (userId && transaction.id) {
+      if (transaction.isRecurring) {
+        this.store.dispatch(TransactionsActions.deleteRecurringTemplate({ 
+          userId, 
+          templateId: transaction.id 
+        }));
+        this.notificationService.success('Recurring template deleted');
+        return;
+      }
+
       const isFamily = !!transaction.familyId && !transaction.accountId;
       
       if (isFamily) {
@@ -201,8 +210,6 @@ export class TransactionListComponent implements OnInit, OnDestroy {
         }));
       }
       
-      // If it's a settlement, the Effects layer will cascade and show 'Settlement reverted'
-      // We shouldn't show a double toast here.
       if (!transaction.settlementId) {
         this.notificationService.success('Transaction deleted');
       }
