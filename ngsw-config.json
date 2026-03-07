@@ -63,7 +63,10 @@
     {
       "name": "api-cache",
       "urls": [
-        "/api/**"
+        "/api/**",
+        "https://firebase.googleapis.com/**",
+        "https://identitytoolkit.googleapis.com/**",
+        "https://firestore.googleapis.com/**"
       ],
       "cacheConfig": {
         "strategy": "performance",

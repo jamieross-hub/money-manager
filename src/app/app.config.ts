@@ -82,15 +82,6 @@ export const appConfig: ApplicationConfig = {
 
     // Firebase
     provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
-    provideAnalytics(() => {
-      const analytics = getAnalytics();
-      if (isDevMode()) {
-        setAnalyticsCollectionEnabled(analytics, false);
-      }
-      return analytics;
-    }),
-    UserTrackingService,
-    ScreenTrackingService,
 
     provideAuth(() => {
       const auth = getAuth();
