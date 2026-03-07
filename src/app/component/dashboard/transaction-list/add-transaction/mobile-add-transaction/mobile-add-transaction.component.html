@@ -538,10 +538,16 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Start Date
                     </label>
-                    <input type="date" formControlName="recurringStartDate" [min]="recurringMinDate"
-                      [max]="recurringMaxDate" [disabled]="viewMode()"
-                      class="w-full py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      [class.bg-gray-100]="viewMode()" />
+                    <div class="relative">
+                      <input type="date" formControlName="recurringStartDate" [min]="recurringMinDate"
+                        [max]="recurringMaxDate" [disabled]="viewMode()"
+                        class="w-full py-3 px-4 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [&::-webkit-calendar-picker-indicator]:bg-none [&::-webkit-calendar-picker-indicator]:bg-transparent [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:top-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        [class.bg-gray-100]="viewMode()" />
+                      <mat-icon
+                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+                        calendar_today
+                      </mat-icon>
+                    </div>
                   </div>
 
                   <!-- End Date -->
@@ -549,10 +555,16 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       End Date (Optional)
                     </label>
-                    <input type="date" formControlName="recurringEndDate" [min]="recurringMinDate"
-                      [max]="recurringMaxDate" [disabled]="viewMode()"
-                      class="w-full py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      [class.bg-gray-100]="viewMode()" />
+                    <div class="relative">
+                      <input type="date" formControlName="recurringEndDate" [min]="recurringMinDate"
+                        [max]="recurringMaxDate" [disabled]="viewMode()"
+                        class="w-full py-3 px-4 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [&::-webkit-calendar-picker-indicator]:bg-none [&::-webkit-calendar-picker-indicator]:bg-transparent [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:top-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        [class.bg-gray-100]="viewMode()" />
+                      <mat-icon
+                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+                        calendar_today
+                      </mat-icon>
+                    </div>
                     <p class="text-xs text-gray-500 mt-1">Leave empty for unlimited recurrence</p>
                   </div>
 

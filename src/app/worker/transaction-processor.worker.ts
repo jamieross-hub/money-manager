@@ -174,7 +174,8 @@ addEventListener('message', ({ data }) => {
     filtered = filtered.filter((t: any) =>
       t.payee?.toLowerCase().includes(searchLower) ||
       t.category?.toLowerCase().includes(searchLower) ||
-      t.notes?.toLowerCase().includes(searchLower)
+      t.notes?.toLowerCase().includes(searchLower) ||
+      t.amount?.toString().includes(searchLower)
     );
   }
 
