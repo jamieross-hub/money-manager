@@ -140,7 +140,12 @@ export class AccountsService {
             tap((querySnapshot: any) => {
                 const accounts: Account[] = [];
                 querySnapshot.forEach((docSnap: any) => {
-                    accounts.push(docSnap.data() as Account);
+                    const data = docSnap.data();
+                    if (data && data.accountId && data.name) {
+                        accounts.push(data as Account);
+                    } else {
+                        console.warn('[AccountsService] Skipping invalid/empty account document:', docSnap.id);
+                    }
                 });
 
                 console.log(`[AccountsService] Pulled ${accounts.length} accounts from Firestore`);
