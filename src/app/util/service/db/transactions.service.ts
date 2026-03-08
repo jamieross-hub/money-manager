@@ -63,8 +63,8 @@ export class TransactionsService extends BaseService {
     /**
      * Create a new transaction
      */
-    createTransaction(userId: string, transaction: Omit<Transaction, 'id'>): Observable<void> {
-        const transactionId = this.generateId();
+    createTransaction(userId: string, transaction: Transaction): Observable<void> {
+        const transactionId = transaction.id || this.generateId();
         const now = new Date();
         const isOnline = this.commonSyncService.isCurrentlyOnline();
         const transactionData: Transaction = this.scrubUndefined({

@@ -51,8 +51,8 @@ export class RecurringService extends BaseService {
   /**
    * Create a new recurring transaction template
    */
-  createRecurringTemplate(userId: string, template: Omit<RecurringTemplate, 'id'>): Observable<string> {
-    const templateId = this.generateId();
+  createRecurringTemplate(userId: string, template: Omit<RecurringTemplate, 'id'>, id?: string): Observable<string> {
+    const templateId = id || this.generateId();
     const now = new Date();
     
     // Calculate next occurrence if not provided
@@ -111,7 +111,7 @@ export class RecurringService extends BaseService {
       return of(undefined);
     }
 
-    return from(updateDoc(doc(this.firestore, this.getRecurringTemplatePath(userId, templateId)), updateData)).pipe(
+    return from(setDoc(doc(this.firestore, this.getRecurringTemplatePath(userId, templateId)), updateData, { merge: true })).pipe(
       catchError(err => this.handleError(err, 'updateRecurringTemplate'))
     );
   }

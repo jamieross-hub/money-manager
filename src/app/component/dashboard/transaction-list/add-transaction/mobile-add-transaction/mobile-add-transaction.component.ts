@@ -1,4 +1,5 @@
 import { Component, Inject, inject, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, ChangeDetectorRef } from '@angular/core';
+import dayjs from 'dayjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -694,18 +695,36 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           taxes: formData.taxes || [],
           paymentMethod: formData.paymentMethod || '',
           isRecurring: formData.isRecurring || false,
+          payee: formData.description || this.dialogData?.payee || '', // Carry over payee if available
           recurringInterval: formData.recurringInterval || RecurringInterval.MONTHLY,
           recurringEndDate: formData.recurringEndDate ? this.dateService.getLocalDateTimeFromForm(formData.recurringEndDate) : null,
           nextOccurrence: formData.isRecurring ? (() => {
             const startStr = formData.recurringStartDate || formData.date;
             const startDate = this.dateService.getLocalDateTimeFromForm(startStr);
             const transactionDate = this.dateService.getLocalDateTimeFromForm(formData.date);
+            
+            // For existing transactions being converted to recurring
+            const referenceDate = (this.dialogData?.id && this.dialogData.date) 
+              ? this.dateService.toDate(this.dialogData.date) 
+              : transactionDate;
 
-            // If start date is same or before transaction date, we need to calculate the NEXT occurrence
-            // because the current transaction IS the first occurrence
-            if (startDate.getTime() <= transactionDate.getTime()) {
-              const interval = formData.recurringInterval as RecurringInterval;
-              const nextDate = new Date(startDate);
+            const interval = formData.recurringInterval as RecurringInterval;
+            
+            // If the start date is on or before the reference (source) transaction date, 
+            // and they are in the same period, the NEXT one is truly the next one.
+            const nextDate = new Date(startDate);
+            
+            const isSamePeriod = (d1: Date, d2: Date, inv: RecurringInterval): boolean => {
+              const m1 = dayjs(d1);
+              const m2 = dayjs(d2);
+              if (inv === RecurringInterval.DAILY) return m1.isSame(m2, 'day');
+              if (inv === RecurringInterval.WEEKLY) return m1.isSame(m2, 'week');
+              if (inv === RecurringInterval.MONTHLY) return m1.isSame(m2, 'month');
+              if (inv === RecurringInterval.YEARLY) return m1.isSame(m2, 'year');
+              return false;
+            };
+
+            if (!referenceDate || startDate.getTime() <= referenceDate.getTime() || isSamePeriod(startDate, referenceDate, interval)) {
               switch (interval) {
                 case RecurringInterval.DAILY: nextDate.setDate(nextDate.getDate() + 1); break;
                 case RecurringInterval.WEEKLY: nextDate.setDate(nextDate.getDate() + 7); break;
@@ -716,7 +735,6 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
               return nextDate;
             }
 
-            // If start date is in the future, that IS the next occurrence
             return startDate;
           })() : null,
           status: TransactionStatus.COMPLETED,
@@ -792,8 +810,17 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           );
           this.notificationService.success('Adjustment recorded successfully');
         } else if (this.dialogData?.id) {
-          if (this.dialogData.isRecurring) {
-            // Editing a recurring template
+          // 1. Update the transaction instance
+          await this.store.dispatch(
+            TransactionsActions.updateTransaction({
+              userId: this.userId,
+              transactionId: this.dialogData.id,
+              transaction: transactionData,
+            })
+          );
+
+          // 2. Handle recurring template (create or update)
+          if (formData.isRecurring) {
             const templateUpdate: Partial<RecurringTemplate> = {
               ...transactionData,
               isActive: true,
@@ -807,21 +834,26 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
                 template: templateUpdate,
               })
             );
-            this.notificationService.success('Recurring template updated successfully');
+            this.notificationService.success('Transaction and recurring template updated');
           } else {
-            // Editing a regular transaction
-            await this.store.dispatch(
-              TransactionsActions.updateTransaction({
-                userId: this.userId,
-                transactionId: this.dialogData.id,
-                transaction: transactionData,
-              })
-            );
-            this.notificationService.success('Transaction updated successfully');
+            // If it WAS recurring but now it's NOT, delete the template
+            if (this.dialogData.isRecurring) {
+              this.store.dispatch(
+                TransactionsActions.deleteRecurringTemplate({
+                  userId: this.userId,
+                  templateId: this.dialogData.id
+                })
+              );
+              this.notificationService.success('Transaction updated and recurring deleted');
+            } else {
+              this.notificationService.success('Transaction updated successfully');
+            }
           }
         } else {
           // 1. Create the regular transaction instance
+          const transactionId = this.recurringService.generateId();
           const transactionToCreate = {
+            id: transactionId,
             userId: this.userId,
             ...transactionData,
             isRecurring: false, // This specific record is an instance, not a template
@@ -856,10 +888,13 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
               createdBy: this.userId,
               updatedBy: this.userId,
             };
-            this.recurringService.createRecurringTemplate(this.userId, templateData).subscribe({
-              next: (id: string) => console.log('Recurring template created:', id),
-              error: (err: any) => this.notificationService.error('Failed to create recurring template')
-            });
+            this.store.dispatch(
+              TransactionsActions.createRecurringTemplate({
+                userId: this.userId,
+                template: templateData,
+                id: transactionId
+              })
+            );
           }
 
           this.notificationService.success('Transaction added successfully');

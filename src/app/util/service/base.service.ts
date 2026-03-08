@@ -30,7 +30,7 @@ export abstract class BaseService {
   /**
    * Generate a unique ID (Firestore style)
    */
-  protected generateId(): string {
+  public generateId(): string {
     return doc(collection(this.firestore, '_')).id;
   }
 

@@ -103,6 +103,18 @@ export class TransactionsEffects {
       ))
   ));
 
+  createRecurringTemplate$ = createEffect(() => this.actions$.pipe(
+    ofType(TransactionsActions.createRecurringTemplate),
+    mergeMap(({ userId, template, id }) => 
+      this.recurringService.createRecurringTemplate(userId, template, id)
+        .pipe(
+          map(templateId => TransactionsActions.createRecurringTemplateSuccess({ 
+            template: { ...template, id: templateId } as RecurringTemplate 
+          })),
+          catchError(error => of(TransactionsActions.createRecurringTemplateFailure({ error })))
+        ))
+  ));
+
   updateRecurringTemplate$ = createEffect(() => this.actions$.pipe(
     ofType(TransactionsActions.updateRecurringTemplate),
     mergeMap(({ userId, templateId, template }) => 

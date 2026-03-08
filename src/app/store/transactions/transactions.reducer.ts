@@ -180,15 +180,26 @@ export const transactionsReducer = createReducer(
     error
   })),
 
-  // Update Recurring Template
-  on(TransactionsActions.updateRecurringTemplateSuccess, (state, { template }) => ({
+  // Create Recurring Template
+  on(TransactionsActions.createRecurringTemplateSuccess, (state, { template }) => ({
     ...state,
-    recurringTemplates: state.recurringTemplates.map(t => 
-      t.id === template.id ? { ...t, ...template } : t
-    ),
+    recurringTemplates: [...state.recurringTemplates, template],
     recurringLoading: false,
     error: null
   })),
+
+  // Update Recurring Template
+  on(TransactionsActions.updateRecurringTemplateSuccess, (state, { template }) => {
+    const exists = state.recurringTemplates.some(t => t.id === template.id);
+    return {
+      ...state,
+      recurringTemplates: exists 
+        ? state.recurringTemplates.map(t => t.id === template.id ? { ...t, ...template } : t)
+        : [...state.recurringTemplates, template],
+      recurringLoading: false,
+      error: null
+    };
+  }),
 
   on(TransactionsActions.updateRecurringTemplateFailure, (state, { error }) => ({
     ...state,

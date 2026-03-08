@@ -21,7 +21,7 @@ export const loadTransactionsFailure = createAction(
 // Create Transaction
 export const createTransaction = createAction(
   '[Transactions] Create Transaction',
-  props<{ userId: string; transaction: Omit<Transaction, 'id'> }>()
+  props<{ userId: string; transaction: Transaction }>()
 );
 
 export const createTransactionSuccess = createAction(
@@ -98,6 +98,22 @@ export const loadRecurringTemplatesSuccess = createAction(
 
 export const loadRecurringTemplatesFailure = createAction(
   '[Transactions] Load Recurring Templates Failure',
+  props<{ error: any }>()
+);
+
+// Create Recurring Template
+export const createRecurringTemplate = createAction(
+  '[Transactions] Create Recurring Template',
+  props<{ userId: string; template: Omit<RecurringTemplate, 'id'>, id?: string }>()
+);
+
+export const createRecurringTemplateSuccess = createAction(
+  '[Transactions] Create Recurring Template Success',
+  props<{ template: RecurringTemplate }>()
+);
+
+export const createRecurringTemplateFailure = createAction(
+  '[Transactions] Create Recurring Template Failure',
   props<{ error: any }>()
 );
 

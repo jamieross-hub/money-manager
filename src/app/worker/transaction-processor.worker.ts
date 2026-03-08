@@ -114,7 +114,7 @@ addEventListener('message', ({ data }) => {
           
           const tPayee = (t.payee || '').toLowerCase().trim();
           const bPayee = (baseTransaction.payee || '').toLowerCase().trim();
-          if (tPayee !== bPayee) return false;
+          if (tPayee && bPayee && tPayee !== bPayee) return false;
 
           const txDate = toDate(t.date);
           if (!txDate) return false;
