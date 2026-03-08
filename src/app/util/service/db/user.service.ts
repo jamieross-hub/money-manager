@@ -30,7 +30,8 @@ import {
   where,
   getDocs,
   limit,
-  deleteDoc
+  deleteDoc,
+  onSnapshot
 } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, throwError, timer, firstValueFrom, of, from, Subject } from 'rxjs';
@@ -107,6 +108,7 @@ export class UserService implements OnDestroy {
   private readonly destroy$ = new Subject<void>();
   private readonly intervals: any[] = [];
   private authUnsubscribe?: () => void;
+  private profileUnsubscribe?: () => void;
 
   /**
    * Synchronous snapshot of the current user — kept in sync whenever we
@@ -154,6 +156,9 @@ export class UserService implements OnDestroy {
     this.intervals.forEach(id => clearInterval(id));
     if (this.authUnsubscribe) {
       this.authUnsubscribe();
+    }
+    if (this.profileUnsubscribe) {
+      this.profileUnsubscribe();
     }
   }
 
@@ -231,7 +236,34 @@ export class UserService implements OnDestroy {
         this.openaiService.initialize(userData);
       //  this.geminiService.initialize(userData);
 
-        this.ensureUserDataCached(user.uid);
+
+        // 🚀 Set up real-time profile listener
+        if (this.profileUnsubscribe) {
+          this.profileUnsubscribe();
+        }
+
+        const userRef = doc(this.firestore, `users/${user.uid}`);
+        this.profileUnsubscribe = onSnapshot(userRef, (docSnap) => {
+          if (docSnap.exists()) {
+            let userData = docSnap.data() as User;
+            // Sync display info from Auth
+            if (!userData.photoURL && user.photoURL) userData.photoURL = user.photoURL;
+            if (!userData.displayName && user.displayName) userData.displayName = user.displayName;
+
+            console.log('👤 Profile updated in real-time');
+            this.store.dispatch(ProfileActions.setProfile({ profile: userData }));
+            
+            if (userData.preferences?.language) {
+              this.translationService.setLanguage(userData.preferences.language as Language);
+            }
+            
+            this._currentUser = userData;
+            this.ensureUserDataCached(user.uid);
+          }
+        }, (error) => {
+          console.error('❌ Profile listener failed:', error);
+        });
+
         this.logAuditEvent('USER_LOGIN', user.uid, {
           email: user.email,
           provider: user.providerData[0]?.providerId
@@ -240,6 +272,11 @@ export class UserService implements OnDestroy {
         // Check for suspicious activity
         this.detectSuspiciousActivity(user);
       } else {
+        // Log out logic...
+        if (this.profileUnsubscribe) {
+          this.profileUnsubscribe();
+          this.profileUnsubscribe = undefined;
+        }
         // Firebase emits null both for genuine logouts AND transiently during
         // network loss. Debounce the clear by 5 s so a momentary disconnect
         // does not wipe the profile from the store.
@@ -1263,29 +1300,24 @@ export class UserService implements OnDestroy {
    * Get current user data from cache or Firestore
    */
   async getCurrentUser(): Promise<User | null> {
+    // 1. Prefer existing memory snapshot (kept in sync by real-time listener)
+    if (this._currentUser) {
+      return this._currentUser;
+    }
+
     if (this.isGuestUser()) {
       return this._currentUser;
     }
+
     const currentUser = this.auth.currentUser;
     if (!currentUser) return null;
 
     try {
-      // 1. Try cache first
-      const cachedUserData = this.storageService.getItem<User>(
-        `user-data-${currentUser.uid}`
-      );
+      // 2. Try cache first
+      const cachedUserData = this.storageService.getItem<User>(`user-data-${currentUser.uid}`);
       if (cachedUserData) {
-        // If we have cached data, return it immediately for fast UI
-        const clonedData = { ...cachedUserData };
-        if (!clonedData.photoURL && currentUser.photoURL) clonedData.photoURL = currentUser.photoURL;
-        if (!clonedData.displayName && currentUser.displayName) clonedData.displayName = currentUser.displayName;
-        return clonedData;
-      }
-
-      // 2. Check if we're offline
-      if (!navigator.onLine) {
-        console.log('[UserService] Offline mode - no cache found, returning null');
-        return null;
+        this._currentUser = cachedUserData;
+        return cachedUserData;
       }
 
       // 3. Fallback to Firestore
@@ -1296,19 +1328,17 @@ export class UserService implements OnDestroy {
         const userData = userSnap.data() as User;
         if (!userData.photoURL && currentUser.photoURL) userData.photoURL = currentUser.photoURL;
         if (!userData.displayName && currentUser.displayName) userData.displayName = currentUser.displayName;
-        this.storageService.setItem(
-          `user-data-${currentUser.uid}`,
-          userData
-        );
+        
+        console.log('[UserService] Profile fetched from Firestore via fallback');
+        this.storageService.setItem(`user-data-${currentUser.uid}`, userData);
+        this._currentUser = userData;
+        this.store.dispatch(ProfileActions.setProfile({ profile: userData }));
         return userData;
       }
 
       return null;
     } catch (error) {
-      console.error('Error getting current user:', error);
-      // ... error logging ...
-
-      // Try one last time to return whatever is in cache
+      console.error('❌ [UserService] Error getting current user fallback:', error);
       return this.storageService.getItem<User>(`user-data-${currentUser.uid}`);
     }
   }

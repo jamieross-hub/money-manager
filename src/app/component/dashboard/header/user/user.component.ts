@@ -92,11 +92,13 @@ export class UserComponent {
     if (this.isGuest()) {
       return { displayName: 'Guest User', photoURL: 'assets/images/profile.png', firstName: undefined as string | undefined };
     }
-    const u = this.userAuth() as any;
+    const profile = this.userProfile();
+    const auth = this.userAuth() as any;
+    
     return {
-      displayName: u?.displayName as string,
-      photoURL:    u?.photoURL    as string,
-      firstName:   u?.firstName   as string | undefined,
+      displayName: profile?.displayName || auth?.displayName || 'User',
+      photoURL:    profile?.photoURL || auth?.photoURL || 'assets/images/profile.png',
+      firstName:   profile?.firstName || (auth?.displayName?.split(' ')[0]) || undefined as string | undefined,
     };
   });
 
@@ -179,8 +181,9 @@ export class UserComponent {
     this.isOpen.update(v => !v);
   }
 
-  close(): void {
+  close(event?: Event): void {
     this.isOpen.set(false);
+    event?.stopPropagation();
   }
 
   toggleTheme(event?: Event): void {

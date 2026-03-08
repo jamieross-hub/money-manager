@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, writeBatch, onSnapshot } from '@angular/fire/firestore';
+import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, writeBatch, onSnapshot, query, orderBy } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 import { Account, CreateAccountRequest, UpdateAccountRequest } from '../../models/account.model';
@@ -107,25 +107,73 @@ export class AccountsService {
     }
 
     /**
-     * Get all accounts for a user (Local-Only)
+     * Get all accounts for a user with real-time sync.
+     * Reacts automatically to changes in the user's family mode preference.
      */
     getAccounts(userId: string): Observable<Account[]> {
         if (this.isGuest()) {
             return of(this.localStorageUtility.getEntities<Account>('accounts'));
         }
 
+        // Use a combined trigger for mode and family changes
+        const trigger$ = this.userService.userAuth$.pipe(
+            map(user => ({
+                isFamilyMode: user?.preferences?.isFamilyMode || false,
+                activeFamilyId: user?.preferences?.activeFamilyId || ''
+            })),
+            distinctUntilChanged((prev, curr) => 
+                prev.isFamilyMode === curr.isFamilyMode && 
+                prev.activeFamilyId === curr.activeFamilyId
+            )
+        );
+
         return this.localStorageUtility.isReady$.pipe(
-        switchMap(() => {
-            try {
-                const cachedAccounts = (this.localStorageUtility.getItem<Account[]>(this.getAccountsCacheKey(userId)) || [])
-                    .filter(a => !!(a && a.accountId));
-                return of(cachedAccounts);
-            } catch (error) {
-                console.warn('[AccountsService] Failed to load cached accounts:', error);
-                return of([]);
-            }
-        })
-    );
+            switchMap(() => trigger$),
+            switchMap(() => {
+                return new Observable<Account[]>(observer => {
+                    const currentPath = this.getAccountsPath(userId);
+                    const cacheKey = this.getAccountsCacheKey(userId);
+                    
+                    console.log(`[AccountsService] 🔌 Setting up real-time listener for path: ${currentPath}`);
+
+                    // 1. Emit cached accounts immediately from the current context (family vs personal)
+                    const cachedAccounts = (this.localStorageUtility.getItem<Account[]>(cacheKey) || [])
+                        .filter(a => !!(a && a.accountId));
+                    observer.next(cachedAccounts);
+
+                    // 2. Start real-time listener
+                    const accountsRef = query(
+                        collection(this.firestore, currentPath),
+                        orderBy('name', 'asc')
+                    );
+
+                    const unsubscribe = onSnapshot(accountsRef,
+                        (querySnapshot) => {
+                            const firestoreAccounts: Account[] = [];
+                            querySnapshot.forEach((docSnap) => {
+                                const data = docSnap.data();
+                                if (data && (data['name'] !== undefined || docSnap.id)) {
+                                    firestoreAccounts.push({ accountId: docSnap.id, ...data } as Account);
+                                }
+                            });
+                            
+                            this.localStorageUtility.setItem(cacheKey, firestoreAccounts);
+                            this.store.dispatch(AccountsActions.loadAccountsSuccess({ accounts: firestoreAccounts }));
+                            observer.next(firestoreAccounts);
+                        },
+                        (error) => {
+                            console.error(`[AccountsService] ❌ Real-time listener failed for ${currentPath}:`, error);
+                            observer.next(cachedAccounts);
+                        }
+                    );
+
+                    return () => {
+                        console.log(`[AccountsService] 🔌 Tearing down listener for: ${currentPath}`);
+                        unsubscribe();
+                    };
+                });
+            })
+        );
     }
 
     /**

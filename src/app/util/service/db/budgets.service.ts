@@ -9,11 +9,15 @@ import {
   deleteDoc, 
   getDoc, 
   getDocs, 
-  Timestamp 
+  Timestamp,
+  onSnapshot,
+  query,
+  orderBy,
+  where
 } from '@angular/fire/firestore';
 import { Store } from '@ngrx/store';
 import { Observable, of, from } from 'rxjs';
-import { map, catchError, tap, timeout } from 'rxjs/operators';
+import { map, catchError, tap, timeout, switchMap } from 'rxjs/operators';
 import { CommonSyncService, SyncItem } from '../common-sync.service';
 
 import { AppState } from 'src/app/store/app.state';
@@ -57,16 +61,44 @@ export class BudgetsService {
   // ==========================================
 
   /**
-   * Retrieves all budgets for a user.
-   * For guests, it reads from IndexedDB.
-   * For authenticated users, it selects from the NgRx Store.
+   * Retrieves all budgets for a user with real-time sync.
    */
   getBudgets(userId: string): Observable<Budget[]> {
     if (this.isGuest(userId)) {
       const budgets = this.localStorageUtility.getEntities<Budget>(this.COLLECTION_NAME);
       return of(budgets);
     }
-    return this.store.select(BudgetsSelectors.selectAllBudgets);
+
+    return this.localStorageUtility.isReady$.pipe(
+      switchMap(() => {
+        return new Observable<Budget[]>(observer => {
+          // 1. Try cache first
+          const cacheKey = LocalStorageKeyHelper.getBudgetsCacheKey(userId);
+          const cachedBudgets = this.localStorageUtility.getItem<Budget[]>(cacheKey) || [];
+          observer.next(cachedBudgets);
+
+          // 2. Setup real-time listener
+          const budgetsRef = query(
+            collection(this.firestore, `users/${userId}/${this.COLLECTION_NAME}`),
+            orderBy('category', 'asc')
+          );
+
+          const unsubscribe = onSnapshot(budgetsRef, (snap) => {
+            const budgets: Budget[] = [];
+            snap.forEach(docSnap => budgets.push(docSnap.data() as Budget));
+
+            this.localStorageUtility.setItem(cacheKey, budgets);
+            this.store.dispatch(BudgetsActions.loadBudgetsSuccess({ budgets }));
+            observer.next(budgets);
+          }, (error) => {
+            console.error('[BudgetsService] Real-time listener failed:', error);
+            observer.next(cachedBudgets);
+          });
+
+          return () => unsubscribe();
+        });
+      })
+    );
   }
 
   /**

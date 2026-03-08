@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
-import { Action } from '@ngrx/store';
+import { Action, Store } from '@ngrx/store';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of, from } from 'rxjs';
-import { map, mergeMap, catchError, concatMap } from 'rxjs/operators';
+import { map, mergeMap, catchError, concatMap, withLatestFrom } from 'rxjs/operators';
 import { UserService } from '../../util/service/db/user.service';
 import * as ProfileActions from './profile.actions';
+import * as ProfileSelectors from './profile.selectors';
+import { AppState } from '../app.state';
 
 @Injectable()
 export class ProfileEffects {
@@ -52,32 +54,29 @@ export class ProfileEffects {
 
   updatePreferences$ = createEffect(() => this.actions$.pipe(
     ofType(ProfileActions.updatePreferences),
-    concatMap(({ userId, preferences }) => {
-      // Get current user and update preferences
-      return from(this.userService.getCurrentUser()).pipe(
-        mergeMap(currentUser => {
-          if (currentUser) {
-            const updatedUser = { 
-              ...currentUser, 
-              preferences: {
-                ...currentUser.preferences,
-                ...preferences
-              } 
-            };
-            return from(this.userService.createOrUpdateUser(updatedUser)).pipe(
-              map(() => ProfileActions.updatePreferencesSuccess({ profile: updatedUser }))
-            );
-          } else {
-            throw new Error('User not found');
-          }
-        }),
-        catchError(error => of(ProfileActions.updatePreferencesFailure({ error })))
-      );
+    withLatestFrom(this.store.select(ProfileSelectors.selectProfile)),
+    concatMap(([{ userId, preferences }, currentUser]) => {
+      if (currentUser) {
+        const updatedUser = { 
+          ...currentUser, 
+          preferences: {
+            ...currentUser.preferences,
+            ...preferences
+          } 
+        };
+        return from(this.userService.createOrUpdateUser(updatedUser)).pipe(
+          map(() => ProfileActions.updatePreferencesSuccess({ profile: updatedUser })),
+          catchError(error => of(ProfileActions.updatePreferencesFailure({ error })))
+        );
+      } else {
+        return of(ProfileActions.updatePreferencesFailure({ error: new Error('User not found') }));
+      }
     })
   ));
 
   constructor(
     private actions$: Actions,
-    private userService: UserService
+    private userService: UserService,
+    private store: Store<AppState>
   ) {}
 } 
