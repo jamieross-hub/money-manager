@@ -33,7 +33,7 @@ import { FamilyModeToggleComponent } from 'src/app/util/components/family-mode-t
 import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 import { FamilyService } from 'src/app/modules/family/services/family.service';
 import { FamilyMember } from 'src/app/util/models/family.model';
-import { map, switchMap, of } from 'rxjs';
+import { map, switchMap, of, combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-user',
@@ -119,8 +119,11 @@ export class UserComponent {
   // ── Writable signals ───────────────────────────────────────────────────────
   readonly isOpen        = signal(false);
   
-  private readonly members$ = toObservable(this.familyService.activeFamilyId).pipe(
-    switchMap(id => (this.isFamilyMode() && id) ? this.familyService.getMembers(id) : of([] as FamilyMember[]))
+  private readonly members$ = combineLatest([
+    toObservable(this.familyService.activeFamilyId),
+    toObservable(this.isFamilyMode)
+  ]).pipe(
+    switchMap(([id, mode]) => (mode && id) ? this.familyService.getMembers(id) : of([] as FamilyMember[]))
   );
 
   readonly familyMembers = toSignal(this.members$, { initialValue: [] as FamilyMember[] });

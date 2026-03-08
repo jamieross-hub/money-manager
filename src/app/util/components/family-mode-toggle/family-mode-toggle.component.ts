@@ -4,6 +4,7 @@ import { Component, OnInit, ChangeDetectionStrategy, signal, inject, Input, inpu
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslateModule } from '@ngx-translate/core';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -27,7 +28,7 @@ import { filter, take, delay } from 'rxjs';
 @Component({
   selector: 'app-family-mode-toggle',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatSlideToggleModule, TranslateModule],
+  imports: [CommonModule, MatIconModule, MatSlideToggleModule, MatProgressSpinnerModule, TranslateModule],
   templateUrl: './family-mode-toggle.component.html',
   styleUrl: './family-mode-toggle.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -86,24 +87,10 @@ export class FamilyModeToggleComponent implements OnInit {
     this.pendingState.set(enabled);
 
     try {
-      // Clear all stores for personal/family switch to avoid data mixing
-      // We do this immediately to show empty state while loading
-      this.store.dispatch(TransactionsActions.clearTransactions());
-      this.store.dispatch(AccountsActions.clearAccounts());
-      this.store.dispatch(CategoriesActions.clearCategories());
-      this.store.dispatch(BudgetsActions.clearBudgets());
-      this.store.dispatch(GoalsActions.clearGoals());
-
-      // Special handling for the success filter - it needs to match whatever we actually sent
-      const expectedFilter = (action: any) => {
-        const actionPrefs = action.profile.preferences;
-        return actionPrefs?.isFamilyMode === enabled;
-      };
-
-      // Listen for success or failure BEFORE dispatching
+      // 1. Prepare subscriptions BEFORE dispatching to avoid race conditions
       const success$ = this.actions$.pipe(
         ofType(ProfileActions.updatePreferencesSuccess),
-        filter(expectedFilter),
+        filter((action: any) => action.profile.preferences?.isFamilyMode === enabled),
         take(1)
       );
 
@@ -112,11 +99,59 @@ export class FamilyModeToggleComponent implements OnInit {
         take(1)
       );
 
+      // 2. Set up safety timeout
+      const timeoutTimer = setTimeout(() => {
+          this.isUpdating.set(false);
+          this.pendingState.set(null);
+          console.warn('Family mode toggle timed out');
+      }, 10000); // 10s fallback
+
+      // 3. Handle success
+      success$.subscribe(() => {
+        clearTimeout(timeoutTimer);
+        this.notificationService.success(`Family mode ${enabled ? 'enabled' : 'disabled'}`);
+        
+        // Clear all stores for personal/family switch to avoid data mixing
+        // We do this on SUCCESS to ensure we don't clear if update fails
+        this.store.dispatch(TransactionsActions.clearTransactions());
+        this.store.dispatch(AccountsActions.clearAccounts());
+        this.store.dispatch(CategoriesActions.clearCategories());
+        this.store.dispatch(BudgetsActions.clearBudgets());
+        this.store.dispatch(GoalsActions.clearGoals());
+
+        // Re-load data for the new mode
+        const userId = profile.uid;
+        this.store.dispatch(TransactionsActions.loadTransactions({ userId }));
+        this.store.dispatch(AccountsActions.loadAccounts({ userId }));
+        this.store.dispatch(CategoriesActions.loadCategories({ userId }));
+        this.store.dispatch(BudgetsActions.loadBudgets({ userId }));
+        this.store.dispatch(GoalsActions.loadGoals({ userId }));
+
+        // Give store a moment to propagate state before clearing loader/pending UI
+        setTimeout(() => {
+            this.isUpdating.set(false);
+            this.pendingState.set(null);
+            this.router.navigate(['/dashboard/home']);
+        }, 100);
+      });
+
+      // 4. Handle failure
+      failure$.subscribe((error) => {
+        clearTimeout(timeoutTimer);
+        console.error('Failed to update family mode preference:', error);
+        this.notificationService.error('Failed to update family mode preference');
+        this.isUpdating.set(false);
+        this.pendingState.set(null);
+        if (profile.uid) {
+           this.store.dispatch(ProfileActions.loadProfile({ userId: profile.uid }));
+        }
+      });
+
+      // 5. Determine changes
       let changes: Partial<UserPreferences> = {
         isFamilyMode: enabled,
       };
 
-      // If enabling and no active family is set, try to pick one from cache
       if (enabled && !profile.preferences?.activeFamilyId) {
         const families = this.familyService.getCachedFamiliesSync();
         if (families && families.length > 0) {
@@ -127,36 +162,8 @@ export class FamilyModeToggleComponent implements OnInit {
         }
       }
 
-      await this.applyPreferenceChanges(changes);
-
-      // Subscribe to the result
-      success$.subscribe(() => {
-        this.notificationService.success(`Family mode ${enabled ? 'enabled' : 'disabled'}`);
-        this.isUpdating.set(false);
-        this.pendingState.set(null);
-        
-        // Re-load data for the new mode
-        const userId = profile.uid;
-        this.store.dispatch(TransactionsActions.loadTransactions({ userId }));
-        this.store.dispatch(AccountsActions.loadAccounts({ userId }));
-        this.store.dispatch(CategoriesActions.loadCategories({ userId }));
-        this.store.dispatch(BudgetsActions.loadBudgets({ userId }));
-        this.store.dispatch(GoalsActions.loadGoals({ userId }));
-
-        // Navigation - reload the dashboard home
-        this.router.navigate(['/dashboard/home']);
-      });
-
-      failure$.subscribe((error) => {
-        console.error('Failed to update family mode preference:', error);
-        this.notificationService.error('Failed to update family mode preference');
-        this.isUpdating.set(false);
-        this.pendingState.set(null);
-        // Refresh profile to restore correct state in UI
-        if (profile.uid) {
-           this.store.dispatch(ProfileActions.loadProfile({ userId: profile.uid }));
-        }
-      });
+      // 6. Finally dispatch
+      this.applyPreferenceChanges(changes);
 
     } catch (error) {
       console.error('Error toggling family mode:', error);
@@ -166,7 +173,7 @@ export class FamilyModeToggleComponent implements OnInit {
     }
   }
 
-  private async applyPreferenceChanges(changes: Partial<UserPreferences>): Promise<void> {
+  private applyPreferenceChanges(changes: Partial<UserPreferences>): void {
     const profile = this.userProfile();
     if (!profile) return;
 

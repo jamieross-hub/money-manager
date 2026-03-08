@@ -17,14 +17,19 @@
             </span>
         </div>
         <div [class.scale-90]="!isFlat()" [class.origin-right]="!isFlat()" [class.translate-y-[1px]]="!isFlat()"
-             [class.flex]="isFlat()" [class.items-center]="isFlat()" [class.gap-3]="isFlat()">
-            <mat-slide-toggle 
-                color="primary" 
-                class="family-toggle" 
-                [checked]="displayFamilyMode()" 
-                [disabled]="isUpdating()"
-                (change)="toggleFamilyMode($event.checked)">
-            </mat-slide-toggle>
+             [class.flex]="isFlat()" [class.items-center]="isFlat()" [class.gap-3]="isFlat()"
+             class="flex items-center justify-center min-w-[40px]">
+            @if (isUpdating()) {
+                <mat-spinner diameter="16" strokeWidth="2" color="primary" class="opacity-80"></mat-spinner>
+            } @else {
+                <mat-slide-toggle 
+                    color="primary" 
+                    class="family-toggle" 
+                    [checked]="displayFamilyMode()" 
+                    [disabled]="isUpdating()"
+                    (change)="toggleFamilyMode($event.checked)">
+                </mat-slide-toggle>
+            }
         </div>
     </div>
 }
