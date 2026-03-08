@@ -143,7 +143,7 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
-    this.pwaNavigationService.destroy();
+    this.pwaNavigationService.ngOnDestroy();
   }
 
   private initializePwaFeatures(): void {
