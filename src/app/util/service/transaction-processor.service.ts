@@ -1,5 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { Transaction } from '../models/transaction.model';
+import { RecurringTemplate } from '../models/recurring.model';
 import { Category, Account } from '../models';
 
 export interface ProcessorOutput {
@@ -60,6 +61,7 @@ export class TransactionProcessorService {
    */
   process(data: {
     transactions: Transaction[];
+    recurringTemplates: RecurringTemplate[];
     categories: Category[];
     accounts: Account[];
     filters: any;

@@ -1,7 +1,7 @@
 import { Injectable, Inject, PLATFORM_ID, Injector, signal, OnDestroy, computed, Signal } from '@angular/core';
 import { BehaviorSubject, Observable, fromEvent, interval, from, of, Subject, combineLatest, merge, forkJoin, Subscription } from 'rxjs';
 import { map, switchMap, catchError, tap, take, filter, distinctUntilChanged, takeUntil, delay, startWith, timeout } from 'rxjs/operators';
-import { Firestore, collection, doc, writeBatch } from '@angular/fire/firestore';
+import { Firestore, collection, doc, writeBatch, serverTimestamp } from '@angular/fire/firestore';
 import { Auth, getAuth } from '@angular/fire/auth';
 import { SwUpdate } from '@angular/service-worker';
 import { isPlatformServer } from '@angular/common';
@@ -41,7 +41,7 @@ export interface NetworkStatus {
 
 export interface SyncItem {
   id: string;
-  type: 'transaction' | 'budget' | 'account' | 'goal';
+  type: 'transaction' | 'budget' | 'account' | 'goal' | 'category' | 'user';
   operation: 'create' | 'update' | 'delete';
   data: any;
   timestamp: number;
@@ -587,6 +587,12 @@ export class CommonSyncService implements OnDestroy {
           case 'goal':
             await this.processGoalSync(item, batch, userId);
             break;
+          case 'category':
+            await this.processCategorySync(item, batch, userId);
+            break;
+          case 'user':
+            await this.processUserSync(item, batch, userId);
+            break;
         }
 
         processedItems.push(item.id);
@@ -740,6 +746,28 @@ export class CommonSyncService implements OnDestroy {
         break;
       case 'delete':
         const deleteRef = doc(this.firestore, `users/${userId}/accounts/${item.data.id}`);
+        batch.delete(deleteRef);
+        break;
+    }
+  }
+
+  /**
+   * Process category sync operations
+   */
+  private async processCategorySync(item: SyncItem, batch: any, userId: string): Promise<void> {
+    const basePath = item.collectionPath || `users/${userId}/categories`;
+
+    switch (item.operation) {
+      case 'create':
+        const categoryRef = doc(this.firestore, `${basePath}/${item.data.id}`);
+        batch.set(categoryRef, this.scrubUndefined(item.data));
+        break;
+      case 'update':
+        const updateRef = doc(this.firestore, `${basePath}/${item.data.id}`);
+        batch.set(updateRef, this.scrubUndefined(item.data), { merge: true });
+        break;
+      case 'delete':
+        const deleteRef = doc(this.firestore, `${basePath}/${item.data.id}`);
         batch.delete(deleteRef);
         break;
     }
@@ -1522,5 +1550,22 @@ export class CommonSyncService implements OnDestroy {
     this.stopSync();
     this.destroy$.next();
     this.destroy$.complete();
+  }
+  /**
+   * Process user profile sync
+   */
+  private async processUserSync(item: SyncItem, batch: any, userId: string): Promise<void> {
+    const userRef = doc(this.firestore, `users/${userId}`);
+    const data = { ...item.data };
+    delete data.uid; // Already in path
+
+    if (item.operation === 'update' || item.operation === 'create') {
+      batch.set(userRef, {
+        ...data,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    } else if (item.operation === 'delete') {
+      batch.delete(userRef);
+    }
   }
 }

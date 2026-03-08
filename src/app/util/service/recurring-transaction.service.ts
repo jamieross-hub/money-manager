@@ -8,6 +8,7 @@ import { UserService } from './db/user.service';
 import { DateService } from './date.service';
 import { NotificationService } from './notification.service';
 import { Transaction } from '../models/transaction.model';
+import { RecurringTemplate } from '../models/recurring.model';
 
 @Injectable({
   providedIn: 'root'
@@ -34,7 +35,7 @@ export class RecurringTransactionService {
   /**
    * Get all recurring transactions for a user
    */
-  getRecurringTransactions(userId: string): Observable<Transaction[]> {
+  getRecurringTransactions(userId: string): Observable<RecurringTemplate[]> {
     return this.recurringService.getRecurringTemplates(userId);
   }
 
@@ -52,7 +53,7 @@ export class RecurringTransactionService {
         today.setHours(0, 0, 0, 0);
 
         const dueCount = transactions.filter(t => {
-          if (!t.isRecurring || !t.nextOccurrence) return false;
+          if (!t.nextOccurrence) return false;
           const nextOccurrence = this.dateService.toDate(t.nextOccurrence);
           if (!nextOccurrence) return false;
           
@@ -62,7 +63,7 @@ export class RecurringTransactionService {
         }).length;
 
         const upcomingCount = transactions.filter(t => {
-          if (!t.isRecurring || !t.nextOccurrence) return false;
+          if (!t.nextOccurrence) return false;
           const nextOccurrence = this.dateService.toDate(t.nextOccurrence);
           if (!nextOccurrence) return false;
           

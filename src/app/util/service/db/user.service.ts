@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import {
   Auth,
   signInWithEmailAndPassword,
@@ -59,6 +59,7 @@ import { CurrencyDetectionUtil } from '../../helpers/currency-detection.util';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { LocalStorageKey } from '../../models/local-storage.model';
 import { OpenaiService } from '../ai-chat/openai.service';
+import { CommonSyncService } from '../common-sync.service';
 // import { GeminiService } from '../ai-chat/gemini.service';
 
 /**
@@ -128,6 +129,7 @@ export class UserService {
     public readonly storageService: LocalIndexDBStorageService,
     private readonly translationService: TranslationService,
     private readonly openaiService: OpenaiService,
+    private readonly injector: Injector
   ) {
     // Expose the NgRx profile slice as userAuth$ so existing subscribers keep working.
     this.userAuth$ = this.store.select(selectProfile);
@@ -1149,21 +1151,27 @@ export class UserService {
   /**
    * Create or update user in Firestore
    */
+  /**
+   * Create or update user in Firestore
+   */
   async createOrUpdateUser(user: User): Promise<void> {
     try {
-      if (this.isGuestUser()) {
-        this.storageService.setItem(`user-data-${user.uid}`, user);
-        this.store.dispatch(ProfileActions.setProfile({ profile: user }));
-        return;
-      }
-      const userRef = doc(this.firestore, `users/${user.uid}`);
-      await setDoc(userRef, {
-        ...user,
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-
+      // 1. Optimistic Update (Cache & NgRx)
       this.storageService.setItem(`user-data-${user.uid}`, user);
       this.store.dispatch(ProfileActions.setProfile({ profile: user }));
+
+      if (this.isGuestUser()) return;
+
+      // 2. Queue for Sync
+      const commonSyncService = this.injector.get(CommonSyncService);
+      await commonSyncService.registerSyncItem({
+        id: user.uid,
+        type: 'user',
+        operation: 'update',
+        data: user,
+        maxRetries: 3,
+        collectionPath: 'users'
+      });
 
       this.logAuditEvent('USER_UPDATED', user.uid, {
         timestamp: new Date().toISOString()
@@ -1457,18 +1465,35 @@ export class UserService {
    * Update FCM Token
    */
   async updateFcmToken(token: string): Promise<void> {
-    if (this.isGuestUser()) return;
-    const currentUser = this.auth.currentUser;
-    if (!currentUser) return;
-    try {
-      const userRef = doc(this.firestore, `users/${currentUser.uid}`);
-      await updateDoc(userRef, {
+    const uid = this.getCurrentUserId();
+    if (!uid || this.isGuestUser()) return;
+
+    // 1. Update local state/cache (Internal preferences)
+    const currentUser = this.getCurrentUserSnapshot();
+    if (currentUser) {
+      const updatedUser = {
+        ...currentUser,
         fcmToken: token,
-        updatedAt: serverTimestamp()
+        updatedAt: new Date()
+      };
+      this.storageService.setItem(`user-data-${uid}`, updatedUser);
+      this.store.dispatch(ProfileActions.setProfile({ profile: updatedUser }));
+    }
+
+    // 2. Queue for Sync
+    try {
+      const commonSyncService = this.injector.get(CommonSyncService);
+      await commonSyncService.registerSyncItem({
+        id: uid,
+        type: 'user',
+        operation: 'update',
+        data: { fcmToken: token },
+        maxRetries: 3,
+        collectionPath: 'users'
       });
-      console.log('✅ FCM token updated in Firestore');
+      console.log('✅ FCM token queued for sync');
     } catch (error) {
-      console.error('❌ Error updating FCM token:', error);
+      console.error('❌ Error queuing FCM token sync:', error);
     }
   }
 

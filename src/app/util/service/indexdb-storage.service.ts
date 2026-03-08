@@ -404,6 +404,11 @@ export class LocalIndexDBStorageService {
         entity: T,
         idField: keyof T = 'id' as keyof T
     ): void {
+        if (entity[idField] === undefined || entity[idField] === null) {
+            console.warn(`[LocalIndexDBStorageService] Skipping saveEntity for collection "${collection}": Missing ID field "${String(idField)}"`);
+            return;
+        }
+
         const entities = [...this.getEntities<T>(collection)];
         const id = entity[idField];
         const index = entities.findIndex(e => e[idField] === id);
@@ -411,7 +416,7 @@ export class LocalIndexDBStorageService {
         if (index !== -1) {
             entities[index] = { ...entity };
         } else {
-            entities.push(entity); // 
+            entities.push(entity);
         }
 
         this.saveEntities(collection, entities);

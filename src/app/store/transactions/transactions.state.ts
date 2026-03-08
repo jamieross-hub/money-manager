@@ -1,9 +1,10 @@
 import { Transaction } from '../../util/models/transaction.model';
+import { RecurringTemplate } from '../../util/models/recurring.model';
 
 export interface TransactionsState {
   entities: { [id: string]: Transaction };
   ids: string[];
-  recurringTemplates: Transaction[];
+  recurringTemplates: RecurringTemplate[];
   loading: boolean;
   recurringLoading: boolean;
   error: any;

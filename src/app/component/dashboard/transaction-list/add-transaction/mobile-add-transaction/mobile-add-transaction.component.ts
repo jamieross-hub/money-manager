@@ -40,6 +40,7 @@ import { BreakpointObserver } from '@angular/cdk/layout';
 import { filter, map, Observable, take, combineLatest } from 'rxjs';
 import { selectLatestCompletedTransaction } from 'src/app/store/transactions/transactions.selectors';
 import { Transaction, CategorySplit } from 'src/app/util/models/transaction.model';
+import { RecurringTemplate } from 'src/app/util/models/recurring.model';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { CategorySplitDialogComponent } from 'src/app/util/components/category-split-dialog/category-split-dialog.component';
 import { FormControl } from '@angular/forms';
@@ -684,6 +685,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           amount: parseFloat(formData.amount),
           category: formData.categoryName,
           categoryId: formData.categoryId,
+          categoryType: formData.categoryType as TransactionType,
           type: formData.categoryType as TransactionType,
           date: this.dateService.getLocalDateTimeFromForm(formData.date, true),
           notes: formData.description,
@@ -792,11 +794,17 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         } else if (this.dialogData?.id) {
           if (this.dialogData.isRecurring) {
             // Editing a recurring template
+            const templateUpdate: Partial<RecurringTemplate> = {
+              ...transactionData,
+              isActive: true,
+              isRecurring: true,
+              nextOccurrence: transactionData.nextOccurrence || new Date()
+            };
             this.store.dispatch(
               TransactionsActions.updateRecurringTemplate({
                 userId: this.userId,
                 templateId: this.dialogData.id,
-                template: transactionData,
+                template: templateUpdate,
               })
             );
             this.notificationService.success('Recurring template updated successfully');
@@ -836,10 +844,12 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
           // 2. If it's recurring, ALSO create the template in the recurring collection
           if (formData.isRecurring) {
-            const templateData = {
+            const templateData: Omit<RecurringTemplate, 'id'> = {
               ...transactionData,
-              isRecurring: true,
               userId: this.userId,
+              isActive: true,
+              isRecurring: true,
+              nextOccurrence: transactionData.nextOccurrence || new Date(),
               syncStatus: SyncStatus.SYNCED,
               createdAt: new Date(),
               updatedAt: new Date(),

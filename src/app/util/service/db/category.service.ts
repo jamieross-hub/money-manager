@@ -12,9 +12,11 @@ import { MatDialog } from '@angular/material/dialog';
 import { ParentCategorySelectorDialogComponent, ParentCategorySelectorData } from 'src/app/component/dashboard/category/parent-category-selector-dialog/parent-category-selector-dialog.component';
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
 import { NotificationService } from '../notification.service';
+import { CommonSyncService, SyncItem } from '../common-sync.service';
 import { HapticFeedbackService } from '../haptic-feedback.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { UserService } from './user.service';
+import { FamilyService } from 'src/app/modules/family/services/family.service';
 import { LocalStorageKeyHelper } from '../../models/local-storage.model';
 import { of, map, from, catchError, tap, timeout, switchMap } from 'rxjs';
 
@@ -31,7 +33,9 @@ export class CategoryService {
         private notificationService: NotificationService,
         private hapticFeedback: HapticFeedbackService,
         private localStorageUtility: LocalIndexDBStorageService,
-        protected userService: UserService
+        protected userService: UserService,
+        private commonSyncService: CommonSyncService,
+        private familyService: FamilyService
     ) {
         this.store.select(CategoriesSelectors.selectAllCategories).subscribe(categories => {
             categories.forEach((category: Category) => {
@@ -46,6 +50,10 @@ export class CategoryService {
      * Get the categories collection path
      */
     protected getCategoriesPath(userId: string): string {
+        const familyId = this.getFamilyId();
+        if (familyId) {
+            return `family-groups/${familyId}/categories`;
+        }
         return `users/${userId}/categories`;
     }
 
@@ -68,10 +76,12 @@ export class CategoryService {
     }
 
     /**
-     * Get the family ID for cache key (overridden in FamilyCategoryService)
+     * Get the family ID for cache key
      */
     protected getFamilyId(): string | undefined {
-        return undefined;
+        const profile = this.userService.getCurrentUserSnapshot();
+        const isFamilyMode = profile?.preferences?.isFamilyMode || false;
+        return isFamilyMode ? (this.familyService.activeFamilyId() || undefined) : undefined;
     }
 
     private getUserCategoriesCollection(userId: string) {
@@ -121,24 +131,22 @@ export class CategoryService {
                 const categories: Category[] = [];
                 querySnapshot.forEach((docSnap: any) => {
                     const data: any = docSnap.data();
-                    if (data && data.name) {
+                    if (data && (data.name || docSnap.id)) {
                         const category: Category = {
                             id: docSnap.id,
-                            name: data.name,
-                            type: data.type,
-                            icon: data.icon || 'category',
-                            color: data.color || '#46777f',
-                            createdAt: data.createdAt,
-                            budget: data.budget || null,
-                            parentCategoryId: data.parentCategoryId || null,
-                            isSubCategory: data.isSubCategory || false,
-                            subCategories: data.subCategories || [],
-                            group: data.group,
-                            isSystem: data.isSystem || false
+                            name: data?.name,
+                            type: data?.type,
+                            icon: data?.icon || 'category',
+                            color: data?.color || '#46777f',
+                            createdAt: data?.createdAt,
+                            budget: data?.budget || null,
+                            parentCategoryId: data?.parentCategoryId || null,
+                            isSubCategory: data?.isSubCategory || false,
+                            subCategories: data?.subCategories || [],
+                            group: data?.group,
+                            isSystem: data?.isSystem || false
                         };
                         categories.push(category);
-                    } else {
-                        console.warn('[CategoryService] Skipping invalid/empty category document:', docSnap.id);
                     }
                 });
 
@@ -244,18 +252,9 @@ export class CategoryService {
             observer.next(categoryId);
             observer.complete();
 
-            // 4. Perform Firestore operation in background
-            setDoc(categoryRef, {
-                name,
-                type,
-                icon,
-                color,
-                group: group || null,
-                isSystem,
-                createdAt: Date.now()
-            }).catch(error => {
-                console.error(`Error creating category for ${userId} in Firestore:`, error);
-                // In a full implementation, we might want to rollback or mark as "sync failed"
+            // 4. Always add to sync queue
+            this.addToSyncQueue('create', categoryData, userId).catch(error => {
+                console.error(`Error adding category to sync queue for ${userId}:`, error);
             });
         });
     }
@@ -334,9 +333,10 @@ export class CategoryService {
             observer.next();
             observer.complete();
 
-            // 4. Perform Firestore operation in background
-            const updateFirestore = async () => {
+            // 4. Perform Sync operations in background
+            const syncUpdates = async () => {
                 try {
+                    // 1. Sync the category itself
                     const updateData: any = {
                         name,
                         type,
@@ -350,21 +350,15 @@ export class CategoryService {
 
                     if (parentCategoryId !== undefined) {
                         if (parentCategoryId === null) {
-                            updateData.parentCategoryId = deleteField();
+                            updateData.parentCategoryId = null; // Use null to clear in sync service
                             updateData.isSubCategory = false;
 
                             if (currentCategory?.parentCategoryId) {
-                                const oldParentRef = doc(this.firestore, this.getCategoryPath(userId, currentCategory.parentCategoryId));
-                                const parentDoc = await getDoc(oldParentRef);
-                                if (parentDoc.exists()) {
-                                    const parentData = parentDoc.data() as Category;
-                                    const updatedSubCategories = (parentData.subCategories || []).filter(id => id !== categoryId);
-                                    await updateDoc(oldParentRef, { subCategories: updatedSubCategories });
-                                    
-                                    // Also update local store for the parent
-                                    this.store.dispatch(CategoriesActions.updateCategorySuccess({ 
-                                        category: { ...parentData, id: parentDoc.id, subCategories: updatedSubCategories } as Category 
-                                    }));
+                                // Update old parent's subCategories
+                                const parent = this.categories[currentCategory.parentCategoryId];
+                                if (parent) {
+                                    const updatedSubCats = (parent.subCategories || []).filter(id => id !== categoryId);
+                                    await this.addToSyncQueue('update', { id: parent.id, subCategories: updatedSubCats }, userId);
                                 }
                             }
                         } else {
@@ -372,29 +366,21 @@ export class CategoryService {
                             updateData.isSubCategory = true;
 
                             if (currentCategory?.parentCategoryId && currentCategory.parentCategoryId !== parentCategoryId) {
-                                const oldParentRef = doc(this.firestore, this.getCategoryPath(userId, currentCategory.parentCategoryId));
-                                const parentDoc = await getDoc(oldParentRef);
-                                if (parentDoc.exists()) {
-                                    const parentData = parentDoc.data() as Category;
-                                    const updatedSubCategories = (parentData.subCategories || []).filter(id => id !== categoryId);
-                                    await updateDoc(oldParentRef, { subCategories: updatedSubCategories });
-                                    this.store.dispatch(CategoriesActions.updateCategorySuccess({ 
-                                        category: { ...parentData, id: parentDoc.id, subCategories: updatedSubCategories } as Category 
-                                    }));
+                                // Update old parent
+                                const oldParent = this.categories[currentCategory.parentCategoryId];
+                                if (oldParent) {
+                                    const updatedSubCats = (oldParent.subCategories || []).filter(id => id !== categoryId);
+                                    await this.addToSyncQueue('update', { id: oldParent.id, subCategories: updatedSubCats }, userId);
                                 }
                             }
 
-                            const newParentRef = doc(this.firestore, this.getCategoryPath(userId, parentCategoryId));
-                            const parentDoc = await getDoc(newParentRef);
-                            if (parentDoc.exists()) {
-                                const parentData = parentDoc.data() as Category;
-                                const subCats = parentData.subCategories || [];
+                            // Update new parent
+                            const newParent = this.categories[parentCategoryId];
+                            if (newParent) {
+                                const subCats = newParent.subCategories || [];
                                 if (!subCats.includes(categoryId)) {
-                                    const updatedSubCategories = [...subCats, categoryId];
-                                    await updateDoc(newParentRef, { subCategories: updatedSubCategories });
-                                    this.store.dispatch(CategoriesActions.updateCategorySuccess({ 
-                                        category: { ...parentData, id: parentDoc.id, subCategories: updatedSubCategories } as Category 
-                                    }));
+                                    const updatedSubCats = [...subCats, categoryId];
+                                    await this.addToSyncQueue('update', { id: newParent.id, subCategories: updatedSubCats }, userId);
                                 }
                             }
                         }
@@ -402,13 +388,13 @@ export class CategoryService {
                         updateData.isSubCategory = isSubCategory;
                     }
 
-                    await updateDoc(categoryRef, updateData);
+                    await this.addToSyncQueue('update', { id: categoryId, ...updateData }, userId);
                 } catch (error) {
-                    console.error('Failed to update category online:', error);
+                    console.error('Failed to queue category sync updates:', error);
                 }
             };
 
-            updateFirestore();
+            syncUpdates();
         });
     }
 
@@ -472,40 +458,31 @@ export class CategoryService {
             observer.next();
             observer.complete();
 
-            // 4. Perform Firestore operation in background
-            const deleteFirestore = async () => {
+            // 4. Perform Sync operations in background
+            const syncDelete = async () => {
                 try {
-                    const categoryRef = doc(this.firestore, this.getCategoryPath(userId, categoryId));
-                    // Fetch data to be sure (since background)
-                    const categoryDoc = await getDoc(categoryRef);
-                    if (!categoryDoc.exists()) return;
-                    
-                    const data = categoryDoc.data() as Category;
-
-                    if (data.isSubCategory && data.parentCategoryId) {
-                        const parentRef = doc(this.firestore, this.getCategoryPath(userId, data.parentCategoryId));
-                        const parentDoc = await getDoc(parentRef);
-                        if (parentDoc.exists()) {
-                            const parentData = parentDoc.data() as Category;
-                            const updatedSubCategories = (parentData.subCategories || []).filter(id => id !== categoryId);
-                            await updateDoc(parentRef, { subCategories: updatedSubCategories });
+                    if (categoryData) {
+                        if (categoryData.isSubCategory && categoryData.parentCategoryId) {
+                            const parent = this.categories[categoryData.parentCategoryId];
+                            if (parent) {
+                                const updatedSubCats = (parent.subCategories || []).filter(id => id !== categoryId);
+                                await this.addToSyncQueue('update', { id: parent.id, subCategories: updatedSubCats }, userId);
+                            }
+                        } else if (categoryData.subCategories && categoryData.subCategories.length > 0) {
+                            // Sub-categories will be deleted by the cloud function/backend if implemented, 
+                            // but here we queue explicit deletes for each.
+                            for (const subId of categoryData.subCategories) {
+                                await this.addToSyncQueue('delete', { id: subId }, userId);
+                            }
                         }
-                        await deleteDoc(categoryRef);
-                    } else if (data.subCategories && data.subCategories.length > 0) {
-                        const deletePromises = data.subCategories.map(subId =>
-                            deleteDoc(doc(this.firestore, this.getCategoryPath(userId, subId)))
-                        );
-                        await Promise.all(deletePromises);
-                        await deleteDoc(categoryRef);
-                    } else {
-                        await deleteDoc(categoryRef);
                     }
+                    await this.addToSyncQueue('delete', { id: categoryId }, userId);
                 } catch (error) {
-                    console.error('Failed to delete category online:', error);
+                    console.error('Failed to queue category delete sync:', error);
                 }
             };
 
-            deleteFirestore();
+            syncDelete();
         });
     }
 
@@ -522,57 +499,42 @@ export class CategoryService {
 
     /** Remove a category from its parent (convert to main category) */
     removeFromParentCategory(userId: string, categoryId: string): Observable<void> {
+        const currentCategory = this.categories[categoryId];
+        if (!currentCategory || !currentCategory.parentCategoryId) return of(undefined);
+
         return new Observable<void>(observer => {
-            const categoryRef = doc(this.firestore, this.getCategoryPath(userId, categoryId));
+            // Optimistic update
+            const updatedCategory = { ...currentCategory, parentCategoryId: undefined, isSubCategory: false };
+            this.updateCategoryCache(userId, 'update', updatedCategory);
+            this.store.dispatch(CategoriesActions.updateCategorySuccess({ category: updatedCategory }));
 
-            getDoc(categoryRef).then((categoryDoc) => {
-                if (categoryDoc.exists()) {
-                    const currentCategory = categoryDoc.data() as Category;
+            const parentCategory = this.categories[currentCategory.parentCategoryId!];
+            if (parentCategory) {
+                const updatedSubCats = (parentCategory.subCategories || []).filter(id => id !== categoryId);
+                const updatedParent = { ...parentCategory, subCategories: updatedSubCats };
+                this.updateCategoryCache(userId, 'update', updatedParent);
+                this.store.dispatch(CategoriesActions.updateCategorySuccess({ category: updatedParent }));
+            }
 
+            observer.next();
+            observer.complete();
+
+            // Sync
+            const syncRemove = async () => {
+                try {
                     if (currentCategory.parentCategoryId) {
-                        // Remove from parent's subCategories array
-                        const parentCategory = this.categories[currentCategory.parentCategoryId];
-                        if (parentCategory && parentCategory.subCategories) {
-                            const updatedSubCategories = parentCategory.subCategories.filter(id => id !== categoryId);
-                            updateDoc(doc(this.firestore, this.getCategoryPath(userId, currentCategory.parentCategoryId)), {
-                                subCategories: updatedSubCategories
-                            }).then(() => {
-                                // Update the category to remove parent reference
-                                updateDoc(categoryRef, {
-                                    parentCategoryId: deleteField(),
-                                    isSubCategory: false
-                                }).then(() => {
-                                    observer.next();
-                                    observer.complete();
-                                }).catch(error => {
-                                    observer.error(error);
-                                });
-                            }).catch(error => {
-                                observer.error(error);
-                            });
-                        } else {
-                            // Parent category not found, just update the category
-                            updateDoc(categoryRef, {
-                                parentCategoryId: deleteField(),
-                                isSubCategory: false
-                            }).then(() => {
-                                observer.next();
-                                observer.complete();
-                            }).catch(error => {
-                                observer.error(error);
-                            });
+                        const parent = this.categories[currentCategory.parentCategoryId];
+                        if (parent) {
+                            const updatedSubCats = (parent.subCategories || []).filter(id => id !== categoryId);
+                            await this.addToSyncQueue('update', { id: parent.id, subCategories: updatedSubCats }, userId);
                         }
-                    } else {
-                        // Category is already a main category
-                        observer.next();
-                        observer.complete();
                     }
-                } else {
-                    observer.error(new Error('Category not found'));
+                    await this.addToSyncQueue('update', { id: categoryId, parentCategoryId: null, isSubCategory: false }, userId);
+                } catch (error) {
+                    console.error('Failed to sync removeFromParentCategory:', error);
                 }
-            }).catch(error => {
-                observer.error(error);
-            });
+            };
+            syncRemove();
         });
     }
 
@@ -635,6 +597,25 @@ export class CategoryService {
     }
 
     /**
+     * Add category to sync queue
+     */
+    private async addToSyncQueue(operation: 'create' | 'update' | 'delete', data: any, userId: string): Promise<void> {
+        const syncItem: Omit<SyncItem, 'timestamp' | 'retryCount'> = {
+            id: data.id || this.generateCategoryId(),
+            type: 'category',
+            operation: operation,
+            data: data,
+            maxRetries: 3,
+            collectionPath: this.getCategoriesPath(userId)
+        };
+
+        const result = await this.commonSyncService.registerSyncItem(syncItem);
+        if (!result.success) {
+            console.error('Failed to register category for sync:', result.errors);
+        }
+    }
+
+    /**
      * Generate a unique category ID
      */
     private generateCategoryId(): string {
@@ -647,24 +628,31 @@ export class CategoryService {
     protected updateCategoryCache(userId: string, operation: 'create' | 'update' | 'delete', category?: Category): void {
         try {
             const cacheKey = this.getCategoriesCacheKey(userId);
-            const cachedCategories = this.localStorageUtility.getItem<Category[]>(cacheKey) || [];
+            const cachedCategories = (this.localStorageUtility.getItem<Category[]>(cacheKey) || [])
+                .filter(c => !!(c && (c.id || c.name)));
+
+            if (!category || (!category.id && !category.name)) {
+                if (operation !== 'delete') return;
+            }
 
             switch (operation) {
                 case 'create':
-                    if (category) {
+                    if (category && (category.id || category.name)) {
                         cachedCategories.push(category);
                     }
                     break;
                 case 'update':
-                    if (category) {
+                    if (category && category.id) {
                         const index = cachedCategories.findIndex(c => c.id === category.id);
                         if (index !== -1) {
                             cachedCategories[index] = { ...cachedCategories[index], ...category };
+                        } else {
+                            cachedCategories.push(category);
                         }
                     }
                     break;
                 case 'delete':
-                    if (category) {
+                    if (category && category.id) {
                         const index = cachedCategories.findIndex(c => c.id === category.id);
                         if (index !== -1) {
                             cachedCategories.splice(index, 1);

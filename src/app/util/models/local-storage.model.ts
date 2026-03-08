@@ -63,6 +63,7 @@ export enum LocalStorageKey {
     GOALS_CACHE = 'goals-cache',
     GOOGLE_SHEETS_CACHE = 'google-sheets-cache',
     FAMILIES_CACHE = 'families-cache',
+    RECURRING_CACHE = 'recurring-cache',
 }
 
 /**
@@ -158,6 +159,13 @@ export class LocalStorageKeyHelper {
      */
     static getTransactionItemKey(transactionId: string, familyId?: string): string {
         return familyId ? `${familyId}_${transactionId}` : transactionId;
+    }
+
+    /**
+     * Get recurring cache key
+     */
+    static getRecurringCacheKey(uid: string): string {
+        return `${LocalStorageKey.RECURRING_CACHE}-${uid}`;
     }
 
     /**

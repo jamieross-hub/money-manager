@@ -10,6 +10,7 @@ dayjs.extend(weekOfYear);
 addEventListener('message', ({ data }) => {
   const { 
     transactions, 
+    recurringTemplates,
     categories, 
     accounts, 
     filters, 
@@ -155,20 +156,19 @@ addEventListener('message', ({ data }) => {
   // 3. Logic: Determine Source Data
   let sourceData = transactions;
   if (range === 'upcoming') {
-    const recurring = transactions.filter((t: any) => t.isRecurring);
+    const templates = recurringTemplates || [];
     const today = dayjs().startOf('day').toDate();
     let startDate = today;
     let endDate;
     if (appView === 'WEEKLY') endDate = dayjs().add(1, 'week').endOf('day').toDate();
     else if (appView === 'YEARLY') endDate = dayjs().add(1, 'year').endOf('day').toDate();
     else endDate = dayjs().add(1, 'month').endOf('day').toDate();
-    sourceData = generateUpcomingTransactions(recurring, startDate, endDate, transactions);
+    sourceData = generateUpcomingTransactions(templates.map((t: any) => ({ ...t, isRecurring: true })), startDate, endDate, transactions);
   } else {
-    // Separate blueprints (isRecurring: true) from actual occurrences (isRecurring: false or undefined)
     if (isRecurringMode) {
-      sourceData = transactions.filter((t: any) => t.isRecurring === true);
+      sourceData = recurringTemplates || [];
     } else {
-      sourceData = transactions.filter((t: any) => !t.isRecurring);
+      sourceData = transactions; // SelectAllTransactions already filtered for !isDeleted
     }
   }
 
@@ -223,8 +223,8 @@ addEventListener('message', ({ data }) => {
   let mergedData = filtered;
   if (range !== 'upcoming' && range !== null && !isRecurringMode && !isDeletedMode) {
     const endOfCheck = dayjs().add(3, 'day').endOf('day').toDate();
-    const recurring = transactions.filter((t: any) => t.isRecurring);
-    const dueSoon = generateUpcomingTransactions(recurring, dayjs().subtract(1, 'year').toDate(), endOfCheck, transactions);
+    const templates = (recurringTemplates || []).map((t: any) => ({ ...t, isRecurring: true }));
+    const dueSoon = generateUpcomingTransactions(templates, dayjs().subtract(1, 'year').toDate(), endOfCheck, transactions);
 
     const actualData = filtered.filter((t: any) => {
       if (t.isPending && t.isRecurring && !t.id?.startsWith('upcoming-')) {

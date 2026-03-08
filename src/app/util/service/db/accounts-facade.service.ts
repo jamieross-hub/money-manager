@@ -2,8 +2,6 @@ import { Injectable, InjectionToken, Inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Account, CreateAccountRequest, UpdateAccountRequest } from '../../models/account.model';
 import { AccountsService } from './accounts.service';
-import { FamilyAccountsService } from './family-accounts.service';
-import { UserService } from './user.service';
 import { Transaction } from '../../models/transaction.model';
 
 export const PERSONAL_ACCOUNTS_SERVICE = new InjectionToken<AccountsService>('PersonalAccountsService');
@@ -13,39 +11,31 @@ export const PERSONAL_ACCOUNTS_SERVICE = new InjectionToken<AccountsService>('Pe
 })
 export class AccountsFacadeService {
     constructor(
-        @Inject(PERSONAL_ACCOUNTS_SERVICE) private personalService: AccountsService,
-        private familyService: FamilyAccountsService,
-        private userService: UserService
+        @Inject(PERSONAL_ACCOUNTS_SERVICE) private accountsService: AccountsService
     ) {}
 
-    private get activeService(): AccountsService {
-        const profile = this.userService.getCurrentUserSnapshot();
-        const isFamilyMode = profile?.preferences?.isFamilyMode || false;
-        return isFamilyMode ? this.familyService : this.personalService;
-    }
-
     createAccount(userId: string, accountData: CreateAccountRequest): Observable<string> {
-        return this.activeService.createAccount(userId, accountData);
+        return this.accountsService.createAccount(userId, accountData);
     }
 
     getAccounts(userId: string): Observable<Account[]> {
-        return this.activeService.getAccounts(userId);
+        return this.accountsService.getAccounts(userId);
     }
 
     pullFromFirestore(userId: string): Observable<void> {
-        return this.activeService.pullFromFirestore(userId);
+        return this.accountsService.pullFromFirestore(userId);
     }
 
     getAccount(userId: string, accountId: string): Observable<Account | undefined> {
-        return this.activeService.getAccount(userId, accountId);
+        return this.accountsService.getAccount(userId, accountId);
     }
 
     updateAccount(userId: string, accountId: string, accountData: UpdateAccountRequest): Observable<void> {
-        return this.activeService.updateAccount(userId, accountId, accountData);
+        return this.accountsService.updateAccount(userId, accountId, accountData);
     }
 
     deleteAccount(userId: string, accountId: string): Observable<void> {
-        return this.activeService.deleteAccount(userId, accountId);
+        return this.accountsService.deleteAccount(userId, accountId);
     }
 
     updateAccountBalanceForTransaction(
@@ -55,14 +45,14 @@ export class AccountsFacadeService {
         oldTransaction?: Transaction,
         newTransaction?: Transaction
     ): Observable<number> {
-        return this.activeService.updateAccountBalanceForTransaction(userId, accountId, transactionType, oldTransaction, newTransaction);
+        return this.accountsService.updateAccountBalanceForTransaction(userId, accountId, transactionType, oldTransaction, newTransaction);
     }
 
     updateAccountBalanceForTransactions(
         userId: string,
         transactions: { accountId: string; type: 'income' | 'expense'; amount: number }[]
     ): Observable<void> {
-        return this.activeService.updateAccountBalanceForTransactions(userId, transactions);
+        return this.accountsService.updateAccountBalanceForTransactions(userId, transactions);
     }
 
     updateAccountBalanceForAccountTransfer(
@@ -71,6 +61,6 @@ export class AccountsFacadeService {
         newAccountId: string,
         transaction: Transaction
     ): Observable<void> {
-        return this.activeService.updateAccountBalanceForAccountTransfer(userId, oldAccountId, newAccountId, transaction);
+        return this.accountsService.updateAccountBalanceForAccountTransfer(userId, oldAccountId, newAccountId, transaction);
     }
 }

@@ -1,5 +1,6 @@
 import { createAction, props } from '@ngrx/store';
 import { Transaction } from 'src/app/util/models/transaction.model';
+import { RecurringTemplate } from 'src/app/util/models/recurring.model';
 
 // Load Transactions
 export const loadTransactions = createAction(
@@ -92,7 +93,7 @@ export const loadRecurringTemplates = createAction(
 
 export const loadRecurringTemplatesSuccess = createAction(
   '[Transactions] Load Recurring Templates Success',
-  props<{ templates: Transaction[] }>()
+  props<{ templates: RecurringTemplate[] }>()
 );
 
 export const loadRecurringTemplatesFailure = createAction(
@@ -103,12 +104,12 @@ export const loadRecurringTemplatesFailure = createAction(
 // Update Recurring Template
 export const updateRecurringTemplate = createAction(
   '[Transactions] Update Recurring Template',
-  props<{ userId: string; templateId: string; template: Partial<Transaction> }>()
+  props<{ userId: string; templateId: string; template: Partial<RecurringTemplate> }>()
 );
 
 export const updateRecurringTemplateSuccess = createAction(
   '[Transactions] Update Recurring Template Success',
-  props<{ template: Transaction }>()
+  props<{ template: RecurringTemplate }>()
 );
 
 export const updateRecurringTemplateFailure = createAction(

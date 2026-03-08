@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, doc, updateDoc, deleteDoc, getDoc, addDoc, onSnapshot, setDoc, query, orderBy, getDocs } from '@angular/fire/firestore';
+import { Firestore, collection, doc, updateDoc, deleteDoc, getDoc, addDoc, onSnapshot, setDoc, query, orderBy, getDocs, Timestamp } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { Observable, from, of, BehaviorSubject } from 'rxjs';
 import { map, tap, catchError, timeout, switchMap } from 'rxjs/operators';
@@ -7,6 +7,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import { BaseService } from '../base.service';
 import { Transaction } from '../../models/transaction.model';
+import { RecurringTemplate } from '../../models/recurring.model';
 import { RecurringInterval, SyncStatus, TransactionStatus } from '../../config/enums';
 import { DateService } from '../date.service';
 import { CurrencyService } from '../currency.service';
@@ -14,14 +15,12 @@ import { TransactionsService } from './transactions.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { UserService } from './user.service';
 import { LocalStorageKeyHelper } from '../../models/local-storage.model';
-import * as TransactionsActions from '../../../store/transactions/transactions.actions';
-import * as TransactionsSelectors from '../../../store/transactions/transactions.selectors';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RecurringService extends BaseService {
-  private recurringTemplatesSubject = new BehaviorSubject<Transaction[]>([]);
+  private recurringTemplatesSubject = new BehaviorSubject<RecurringTemplate[]>([]);
   public recurringTemplates$ = this.recurringTemplatesSubject.asObservable();
 
   constructor(
@@ -52,18 +51,18 @@ export class RecurringService extends BaseService {
   /**
    * Create a new recurring transaction template
    */
-  createRecurringTemplate(userId: string, template: Omit<Transaction, 'id'>): Observable<string> {
+  createRecurringTemplate(userId: string, template: Omit<RecurringTemplate, 'id'>): Observable<string> {
     const templateId = this.generateId();
     const now = new Date();
     
     // Calculate next occurrence if not provided
     let nextOccurrence = template.nextOccurrence;
     if (!nextOccurrence && template.recurringInterval) {
-      const baseDate = (template.date ? this.dateService.toDate(template.date) : now) || now;
+      const baseDate = this.dateService.toDate(now) || now;
       nextOccurrence = this.calculateNextOccurrence(template.recurringInterval, baseDate);
     }
 
-    const templateData: Transaction = this.scrubUndefined({
+    const templateData: RecurringTemplate = this.scrubUndefined({
       ...template,
       id: templateId,
       nextOccurrence,
@@ -71,15 +70,15 @@ export class RecurringService extends BaseService {
       updatedAt: now,
       createdBy: userId,
       updatedBy: userId,
-      isRecurring: true,
-      syncStatus: SyncStatus.SYNCED // Templates are primarily server-side for now
+      isActive: template.isActive !== undefined ? template.isActive : true
     });
 
     if (this.isGuest()) {
-      const templates = this.localStorageUtility.getItem<Transaction[]>(LocalStorageKeyHelper.getTransactionsCacheKey(userId)) || [];
+      const cacheKey = LocalStorageKeyHelper.getRecurringCacheKey(userId);
+      const templates = this.localStorageUtility.getItem<RecurringTemplate[]>(cacheKey) || [];
       templates.push(templateData);
-      this.localStorageUtility.setItem(LocalStorageKeyHelper.getTransactionsCacheKey(userId), templates);
-      this.recurringTemplatesSubject.next(templates.filter(t => t.isRecurring));
+      this.localStorageUtility.setItem(cacheKey, templates);
+      this.recurringTemplatesSubject.next(templates);
       return of(templateId);
     }
 
@@ -92,7 +91,7 @@ export class RecurringService extends BaseService {
   /**
    * Update a recurring transaction template
    */
-  updateRecurringTemplate(userId: string, templateId: string, updates: Partial<Transaction>): Observable<void> {
+  updateRecurringTemplate(userId: string, templateId: string, updates: Partial<RecurringTemplate>): Observable<void> {
     const now = new Date();
     const updateData = this.scrubUndefined({
       ...updates,
@@ -101,12 +100,13 @@ export class RecurringService extends BaseService {
     });
 
     if (this.isGuest()) {
-      const templates = this.localStorageUtility.getItem<Transaction[]>(LocalStorageKeyHelper.getTransactionsCacheKey(userId)) || [];
+      const cacheKey = LocalStorageKeyHelper.getRecurringCacheKey(userId);
+      const templates = this.localStorageUtility.getItem<RecurringTemplate[]>(cacheKey) || [];
       const index = templates.findIndex(t => t.id === templateId);
       if (index !== -1) {
         templates[index] = { ...templates[index], ...updateData };
-        this.localStorageUtility.setItem(LocalStorageKeyHelper.getTransactionsCacheKey(userId), templates);
-        this.recurringTemplatesSubject.next(templates.filter(t => t.isRecurring));
+        this.localStorageUtility.setItem(cacheKey, templates);
+        this.recurringTemplatesSubject.next(templates);
       }
       return of(undefined);
     }
@@ -121,10 +121,11 @@ export class RecurringService extends BaseService {
    */
   deleteRecurringTemplate(userId: string, templateId: string): Observable<void> {
     if (this.isGuest()) {
-      const templates = this.localStorageUtility.getItem<Transaction[]>(LocalStorageKeyHelper.getTransactionsCacheKey(userId)) || [];
+      const cacheKey = LocalStorageKeyHelper.getRecurringCacheKey(userId);
+      const templates = this.localStorageUtility.getItem<RecurringTemplate[]>(cacheKey) || [];
       const filtered = templates.filter(t => t.id !== templateId);
-      this.localStorageUtility.setItem(LocalStorageKeyHelper.getTransactionsCacheKey(userId), filtered);
-      this.recurringTemplatesSubject.next(filtered.filter(t => t.isRecurring));
+      this.localStorageUtility.setItem(cacheKey, filtered);
+      this.recurringTemplatesSubject.next(filtered);
       return of(undefined);
     }
 
@@ -136,17 +137,19 @@ export class RecurringService extends BaseService {
   /**
    * Fetch all recurring templates for a user
    */
-  getRecurringTemplates(userId: string): Observable<Transaction[]> {
+  getRecurringTemplates(userId: string): Observable<RecurringTemplate[]> {
     if (this.isGuest()) {
-      const templates = this.localStorageUtility.getItem<Transaction[]>(LocalStorageKeyHelper.getTransactionsCacheKey(userId)) || [];
-      return of(templates.filter(t => t.isRecurring));
+      const cacheKey = LocalStorageKeyHelper.getRecurringCacheKey(userId);
+      const templates = this.localStorageUtility.getItem<RecurringTemplate[]>(cacheKey) || [];
+      this.recurringTemplatesSubject.next(templates);
+      return of(templates);
     }
 
     const recurringRef = query(collection(this.firestore, this.getRecurringPath(userId)));
     return from(getDocs(recurringRef)).pipe(
       map(snapshot => {
-        const templates: Transaction[] = [];
-        snapshot.forEach(doc => templates.push({ id: doc.id, ...doc.data() } as Transaction));
+        const templates: RecurringTemplate[] = [];
+        snapshot.forEach(doc => templates.push({ id: doc.id, ...doc.data() } as RecurringTemplate));
         this.recurringTemplatesSubject.next(templates);
         return templates;
       }),
@@ -155,75 +158,85 @@ export class RecurringService extends BaseService {
   }
 
   /**
-   * Process a recurring transaction (Moved from TransactionsService)
+   * Process a recurring transaction
    */
-  processRecurringTransaction(userId: string, template: Transaction, confirmedDate?: Date): Observable<void> {
+  processRecurringTransaction(userId: string, template: RecurringTemplate, confirmedDate?: Date): Observable<void> {
     const creationDate = confirmedDate || new Date();
     
-    // 1. Create the concrete transaction in /transactions
-    const newTransaction: Omit<Transaction, 'id'> = {
-      ...template,
-      date: creationDate,
-      nextOccurrence: null,
-      isRecurring: false,
-      recurringInterval: null,
-      recurringEndDate: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      createdBy: userId,
-      updatedBy: userId,
-      syncStatus: SyncStatus.SYNCED,
-      isPending: false,
-      lastSyncedAt: new Date(),
-      status: TransactionStatus.COMPLETED
-    };
+    // 1. Map template to concrete transaction
+    const newTransaction = this.mapTemplateToTransaction(userId, template, creationDate);
 
     return this.transactionsService.createTransaction(userId, newTransaction).pipe(
       switchMap(() => {
         // 2. Update the template's next occurrence
-        if (template.recurringInterval) {
-          const nextOccurrence = this.calculateNextOccurrence(template.recurringInterval, creationDate);
-          const updates: Partial<Transaction> = {
-            nextOccurrence,
-            updatedAt: new Date(),
-            updatedBy: userId
-          };
+        const nextOccurrence = this.calculateNextOccurrence(template.recurringInterval, creationDate);
+        const updates: Partial<RecurringTemplate> = {
+          nextOccurrence,
+          lastProcessedAt: new Date(),
+          updatedAt: new Date(),
+          updatedBy: userId
+        };
 
-          if (template.recurringEndDate && nextOccurrence > this.dateService.toDate(template.recurringEndDate)!) {
-             // If we've reached the end date, we could delete or deactivate the template
-             return this.deleteRecurringTemplate(userId, template.id!);
-          }
-
-          return this.updateRecurringTemplate(userId, template.id!, updates);
+        if (template.recurringEndDate && nextOccurrence > this.dateService.toDate(template.recurringEndDate)!) {
+           // If we've reached the end date, deactivate the template
+           return this.updateRecurringTemplate(userId, template.id!, { ...updates, isActive: false });
         }
-        return of(undefined);
+
+        return this.updateRecurringTemplate(userId, template.id!, updates);
       })
     );
   }
 
   /**
-   * Skip an occurrence (Moved from TransactionsService)
+   * Skip an occurrence
    */
-  skipRecurringTransaction(userId: string, template: Transaction, skippedDate?: Date): Observable<void> {
-    if (!template.recurringInterval) return of(undefined);
-
+  skipRecurringTransaction(userId: string, template: RecurringTemplate, skippedDate?: Date): Observable<void> {
     const baseDate = skippedDate || (template.nextOccurrence 
         ? this.dateService.toDate(template.nextOccurrence)
         : new Date());
     
     const nextOccurrence = this.calculateNextOccurrence(template.recurringInterval, baseDate || new Date());
 
-    const updates: Partial<Transaction> = {
+    const updates: Partial<RecurringTemplate> = {
       nextOccurrence,
       updatedAt: new Date(),
       updatedBy: userId
     };
 
     if (template.recurringEndDate && nextOccurrence > this.dateService.toDate(template.recurringEndDate)!) {
-        return this.deleteRecurringTemplate(userId, template.id!);
+        return this.updateRecurringTemplate(userId, template.id!, { ...updates, isActive: false });
     }
 
     return this.updateRecurringTemplate(userId, template.id!, updates);
+  }
+
+  /**
+   * Helper to map a RecurringTemplate to a concrete Transaction
+   */
+  private mapTemplateToTransaction(userId: string, template: RecurringTemplate, date: Date): Omit<Transaction, 'id'> {
+    const now = new Date();
+    return {
+      userId,
+      accountId: template.accountId,
+      categoryId: template.categoryId,
+      category: template.category,
+      payee: template.payee,
+      amount: template.amount,
+      type: template.type,
+      date: date,
+      notes: template.notes,
+      paymentMethod: template.paymentMethod,
+      tags: template.tags,
+      status: TransactionStatus.COMPLETED,
+      syncStatus: SyncStatus.SYNCED,
+      createdAt: now,
+      updatedAt: now,
+      createdBy: userId,
+      updatedBy: userId,
+      familyId: template.familyId,
+      // Metadata to track its origin
+      isRecurring: false // The concrete transaction itself is not recurring
+    };
   }
 
   private calculateNextOccurrence(interval: RecurringInterval, baseDate: Date): Date {

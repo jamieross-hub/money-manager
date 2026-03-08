@@ -11,6 +11,10 @@ import { of, map, from, catchError, tap, timeout } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import * as AccountsActions from 'src/app/store/accounts/accounts.actions';
+import { CommonSyncService, SyncItem } from '../common-sync.service';
+import { FamilyService } from 'src/app/modules/family/services/family.service';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { switchMap, distinctUntilChanged } from 'rxjs/operators';
 
 @Injectable({
     providedIn: 'root'
@@ -21,13 +25,19 @@ export class AccountsService {
         private auth: Auth,
         private localStorageUtility: LocalIndexDBStorageService,
         protected userService: UserService,
-        protected store: Store<AppState>
+        protected store: Store<AppState>,
+        private commonSyncService: CommonSyncService,
+        private familyService: FamilyService
     ) { }
 
     /**
      * Get the accounts collection path
      */
     protected getAccountsPath(userId: string): string {
+        const familyId = this.getFamilyId();
+        if (familyId) {
+            return `family-groups/${familyId}/accounts`;
+        }
         return `users/${userId}/accounts`;
     }
 
@@ -50,10 +60,12 @@ export class AccountsService {
     }
 
     /**
-     * Get the family ID for cache key (overridden in FamilyAccountsService)
+     * Get the family ID for cache key
      */
     protected getFamilyId(): string | undefined {
-        return undefined;
+        const profile = this.userService.getCurrentUserSnapshot();
+        const isFamilyMode = profile?.preferences?.isFamilyMode || false;
+        return isFamilyMode ? (this.familyService.activeFamilyId() || undefined) : undefined;
     }
 
     // 🔹 Create a new account for the logged-in user
@@ -87,9 +99,9 @@ export class AccountsService {
             observer.next(accountId);
             observer.complete();
 
-            // 4. Perform Firestore operation in background
-            setDoc(accountRef, account).catch(error => {
-                console.error(`Error creating account for ${userId}:`, error);
+            // 4. Always add to sync queue (it handles online/offline internally)
+            this.addToSyncQueue('create', account, userId).catch(error => {
+                console.error('Failed to add account to sync queue:', error);
             });
         });
     }
@@ -104,12 +116,9 @@ export class AccountsService {
 
         return new Observable<Account[]>(observer => {
             try {
-                const cachedAccounts = this.localStorageUtility.getItem<Account[]>(this.getAccountsCacheKey(userId));
-                if (cachedAccounts) {
-                    observer.next(cachedAccounts);
-                } else {
-                    observer.next([]);
-                }
+                const cachedAccounts = (this.localStorageUtility.getItem<Account[]>(this.getAccountsCacheKey(userId)) || [])
+                    .filter(a => !!(a && a.accountId));
+                observer.next(cachedAccounts);
             } catch (error) {
                 console.warn('[AccountsService] Failed to load cached accounts:', error);
                 observer.next([]);
@@ -176,16 +185,51 @@ export class AccountsService {
         }
 
         return new Observable<Account | undefined>(observer => {
+            // Reads from IndexedDB first
+            const cacheKey = this.getAccountsCacheKey(userId);
+            const cachedAccounts = this.localStorageUtility.getItem<Account[]>(cacheKey) || [];
+            const cached = cachedAccounts.find(a => a.accountId === accountId);
+
+            if (cached) {
+                observer.next(cached);
+                observer.complete();
+                return;
+            }
+
+            // Fallback: If not found in cache, pull once from Firestore
             const accountRef = doc(this.firestore, this.getAccountPath(userId, accountId));
             getDoc(accountRef).then(accountSnap => {
                 if (accountSnap.exists()) {
-                    observer.next(accountSnap.data() as Account);
+                    const data = accountSnap.data() as any;
+                    const account: Account = {
+                        accountId: accountSnap.id || data.accountId,
+                        userId: data.userId,
+                        name: data.name || '',
+                        type: data.type,
+                        balance: Number(data.balance) || 0,
+                        createdAt: data.createdAt,
+                        updatedAt: data.updatedAt || null,
+                        description: data.description || '',
+                        accountNumber: data.accountNumber || '',
+                        institution: data.institution || '',
+                        currency: data.currency || 'USD',
+                        isActive: data.isActive !== undefined ? data.isActive : true,
+                        lastSyncAt: data.lastSyncAt || null,
+                        syncStatus: data.syncStatus,
+                        loanDetails: data.loanDetails || null,
+                        creditCardDetails: data.creditCardDetails || null
+                    };
+                    // Update cache
+                    this.updateAccountCache(userId, 'update', account);
+                    observer.next(account);
                 } else {
                     observer.next(undefined);
                 }
                 observer.complete();
             }).catch(error => {
-                observer.error(error);
+                // Fail gracefully
+                observer.next(undefined);
+                observer.complete();
             });
         });
     }
@@ -226,9 +270,9 @@ export class AccountsService {
             observer.next();
             observer.complete();
 
-            // 4. Perform Firestore operation in background
-            updateDoc(accountRef, updateData).catch(error => {
-                console.error(`Error updating account for ${userId}:`, error);
+            // 4. Always add to sync queue (it handles online/offline internally)
+            this.addToSyncQueue('update', { accountId, ...updateData }, userId).catch(error => {
+                console.error('Failed to add account update to sync queue:', error);
             });
         });
     }
@@ -254,9 +298,9 @@ export class AccountsService {
             observer.next();
             observer.complete();
 
-            // 4. Perform Firestore operation in background
-            deleteDoc(accountRef).catch(error => {
-                console.error(`Error deleting account for ${userId}:`, error);
+            // 4. Always add to sync queue (it handles online/offline internally)
+            this.addToSyncQueue('delete', { accountId }, userId).catch(error => {
+                console.error('Failed to add account deletion to sync queue:', error);
             });
         });
     }
@@ -270,6 +314,7 @@ export class AccountsService {
         newTransaction?: Transaction
     ): Observable<number> {
         let optimisticBalance = 0;
+        let updateDataToSync: any = null;
         
         // 1. Optimistic Update
         const isGuest = userId === 'offline-guest';
@@ -319,6 +364,14 @@ export class AccountsService {
             }
             account.updatedAt = new Date() as any;
             optimisticBalance = account.balance;
+
+            updateDataToSync = {
+                balance: account.balance,
+                updatedAt: account.updatedAt
+            };
+            if (account.type === 'loan' && account.loanDetails) {
+                updateDataToSync.loanDetails = account.loanDetails;
+            }
             
             if (isGuest) {
                 this.localStorageUtility.saveEntities('accounts', accounts);
@@ -337,61 +390,11 @@ export class AccountsService {
             observer.next(optimisticBalance);
             observer.complete();
 
-            // 3. Background DB Update
-            const updateBalanceAsync = async () => {
-                try {
-                    const accountRef = doc(this.firestore, this.getAccountPath(userId, accountId));
-                    const accountSnap = await getDoc(accountRef);
-
-                    if (!accountSnap.exists()) {
-                        return;
-                    }
-
-                    const account = accountSnap.data() as Account;
-                    let balanceChange = 0;
-                    let loanRemainingBalanceChange = 0;
-
-                    const getEffect = (t: Transaction) => {
-                    // ONLY COMPLETED transactions should affect the current balance.
-                    if ((t as any).isPending || t.status === 'pending') return 0;
-                    const amount = Number(t.amount) || 0;
-                    return t.type === 'income' ? amount : -amount;
-                };
-                const getLoanEffect = (t: Transaction) => {
-                    // ONLY COMPLETED transactions should affect the remaining balance.
-                    if ((t as any).isPending || t.status === 'pending') return 0;
-                    const amount = Number(t.amount) || 0;
-                    return t.type === 'expense' ? -amount : 0;
-                };
-
-                    if (transactionType === 'create' && newTransaction) {
-                        balanceChange = getEffect(newTransaction);
-                        if (account.type === 'loan') loanRemainingBalanceChange = getLoanEffect(newTransaction);
-                    } else if (transactionType === 'update' && oldTransaction && newTransaction) {
-                        balanceChange = getEffect(newTransaction) - getEffect(oldTransaction);
-                        if (account.type === 'loan') loanRemainingBalanceChange = getLoanEffect(newTransaction) - getLoanEffect(oldTransaction);
-                    } else if (transactionType === 'delete' && oldTransaction) {
-                        balanceChange = -getEffect(oldTransaction);
-                        if (account.type === 'loan') loanRemainingBalanceChange = -getLoanEffect(oldTransaction);
-                    }
-
-                    const newBalance = (Number(account.balance) || 0) + balanceChange;
-                    const updateData: any = {
-                        balance: newBalance,
-                        updatedAt: new Date() as any
-                    };
-
-                    if (account.type === 'loan' && account.loanDetails) {
-                        updateData['loanDetails.remainingBalance'] = (Number(account.loanDetails.remainingBalance) || 0) + loanRemainingBalanceChange;
-                    }
-
-
-                    await updateDoc(accountRef, updateData);
-                } catch (error) {
-                    console.error('Error updating account balance:', error);
-                }
-            };
-            updateBalanceAsync();
+            if (updateDataToSync) {
+                this.addToSyncQueue('update', { accountId, ...updateDataToSync }, userId).catch(error => {
+                    console.error('Error syncing account balance:', error);
+                });
+            }
         });
     }
 
@@ -404,6 +407,7 @@ export class AccountsService {
         const isGuest = userId === 'offline-guest';
         let accounts: Account[] = [];
         const cacheKey = LocalStorageKeyHelper.getAccountsCacheKey(userId);
+        const updatedAccountsMap = new Map<string, any>();
 
         if (isGuest) {
             accounts = this.localStorageUtility.getEntities<Account>('accounts');
@@ -425,6 +429,12 @@ export class AccountsService {
                 }
                 account.updatedAt = new Date() as any;
                 this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...account } as any }));
+                
+                updatedAccountsMap.set(account.accountId, {
+                    balance: account.balance,
+                    updatedAt: account.updatedAt,
+                    loanDetails: account.type === 'loan' ? account.loanDetails : undefined
+                });
             }
         }
     });
@@ -442,59 +452,13 @@ export class AccountsService {
         return new Observable<void>(observer => {
             observer.next();
             observer.complete();
-            const updateBalancesAsync = async () => {
-                try {
-                    const batch = writeBatch(this.firestore);
-                    const accountBalanceChanges = new Map<string, number>();
-                    const accountLoanChanges = new Map<string, number>();
 
-                    // Calculate balance changes for each account
-                transactions.forEach((transaction: any) => {
-                    // ONLY COMPLETED transactions should affect the current balance.
-                    if (transaction.isPending || transaction.status === 'pending') return;
-
-                    const currentChange = accountBalanceChanges.get(transaction.accountId) || 0;
-                        const amount = Number(transaction.amount) || 0;
-                        const transactionChange = transaction.type === 'income' ? amount : -amount;
-                        accountBalanceChanges.set(transaction.accountId, currentChange + transactionChange);
-
-                        // Track loan changes for expense transactions
-                        if (transaction.type === 'expense') {
-                            const currentLoanChange = accountLoanChanges.get(transaction.accountId) || 0;
-                            accountLoanChanges.set(transaction.accountId, currentLoanChange + amount);
-                        }
-                    });
-
-                    // Update each account's balance
-                    for (const [accountId, balanceChange] of accountBalanceChanges) {
-                        const accountRef = doc(this.firestore, this.getAccountPath(userId, accountId));
-                        const accountSnap = await getDoc(accountRef);
-
-                        if (accountSnap.exists()) {
-                            const account = accountSnap.data() as Account;
-                            const newBalance = (Number(account.balance) || 0) + balanceChange;
-                            const updateData: any = {
-                                balance: newBalance,
-                                updatedAt: new Date() as any
-                            };
-
-                            const loanChange = accountLoanChanges.get(accountId) || 0;
-                            if (account.type === 'loan' && account.loanDetails && loanChange !== 0) {
-                                updateData['loanDetails.remainingBalance'] = (Number(account.loanDetails.remainingBalance) || 0) - loanChange;
-                            }
-
-
-                            batch.update(accountRef, updateData);
-                        }
-                    }
-
-                    await batch.commit();
-                } catch (error) {
-                    console.error('Error batch updating account balances:', error);
-                }
-            };
-
-            updateBalancesAsync();
+            // Register sync items for each updated account
+            for (const [accountId, updateData] of updatedAccountsMap.entries()) {
+                this.addToSyncQueue('update', { accountId, ...updateData }, userId).catch(error => {
+                    console.error(`Error syncing account balance for ${accountId}:`, error);
+                });
+            }
         });
     }
 
@@ -509,6 +473,7 @@ export class AccountsService {
         const isGuest = userId === 'offline-guest';
         let accounts: Account[] = [];
         const cacheKey = LocalStorageKeyHelper.getAccountsCacheKey(userId);
+        const updatesToSync: any[] = [];
 
         if (isGuest) {
             accounts = this.localStorageUtility.getEntities<Account>('accounts');
@@ -547,6 +512,19 @@ export class AccountsService {
             }
             this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...oldAccount } as any }));
             this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...newAccount } as any }));
+
+            updatesToSync.push({ 
+                accountId: oldAccountId, 
+                balance: oldAccount.balance, 
+                updatedAt: oldAccount.updatedAt,
+                loanDetails: oldAccount.type === 'loan' ? oldAccount.loanDetails : undefined
+            });
+            updatesToSync.push({ 
+                accountId: newAccountId, 
+                balance: newAccount.balance, 
+                updatedAt: newAccount.updatedAt,
+                loanDetails: newAccount.type === 'loan' ? newAccount.loanDetails : undefined
+            });
         }
         
         if (this.isGuest()) {
@@ -556,66 +534,35 @@ export class AccountsService {
         return new Observable<void>(observer => {
             observer.next();
             observer.complete();
-            const updateBalancesAsync = async () => {
-                try {
-                    const batch = writeBatch(this.firestore);
 
-                    // Get both accounts
-                    const oldAccountRef = doc(this.firestore, this.getAccountPath(userId, oldAccountId));
-                    const newAccountRef = doc(this.firestore, this.getAccountPath(userId, newAccountId));
-
-                    const [oldAccountSnap, newAccountSnap] = await Promise.all([
-                        getDoc(oldAccountRef),
-                        getDoc(newAccountRef)
-                    ]);
-
-                    if (!oldAccountSnap.exists() || !newAccountSnap.exists()) {
-                        return;
-                    }
-
-                    const oldAccount = oldAccountSnap.data() as Account;
-                    const newAccount = newAccountSnap.data() as Account;
-
-                    // Calculate the transaction effect
-                    const amount = Number(transaction.amount) || 0;
-                    const transactionEffect = transaction.type === 'income' ? amount : -amount;
-
-                    // Prepare update data for old account
-                    const oldAccountUpdateData: any = {
-                        balance: (Number(oldAccount.balance) || 0) - transactionEffect,
-                        updatedAt: new Date() as any
-                    };
-
-                    // Prepare update data for new account
-                    const newAccountUpdateData: any = {
-                        balance: (Number(newAccount.balance) || 0) + transactionEffect,
-                        updatedAt: new Date() as any
-                    };
-
-                    if (transaction.type === 'expense') {
-                        if (oldAccount.type === 'loan' && oldAccount.loanDetails) {
-                            oldAccountUpdateData['loanDetails.remainingBalance'] = (Number(oldAccount.loanDetails.remainingBalance) || 0) + amount;
-                        }
-                        if (newAccount.type === 'loan' && newAccount.loanDetails) {
-                            newAccountUpdateData['loanDetails.remainingBalance'] = (Number(newAccount.loanDetails.remainingBalance) || 0) - amount;
-                        }
-                    }
-
-                    // Update both accounts
-                    batch.update(oldAccountRef, oldAccountUpdateData);
-                    batch.update(newAccountRef, newAccountUpdateData);
-
-                    await batch.commit();
-                } catch (error) {
-                    console.error('Error translating transfer updates online:', error);
-                }
-            };
-
-            updateBalancesAsync();
+            updatesToSync.forEach(update => {
+                this.addToSyncQueue('update', update, userId).catch(error => {
+                    console.error(`Error syncing transfer update for ${update.accountId}:`, error);
+                });
+            });
         });
     }
 
 
+
+    /**
+     * Add account to sync queue
+     */
+    private async addToSyncQueue(operation: 'create' | 'update' | 'delete', data: any, userId: string): Promise<void> {
+        const syncItem: Omit<SyncItem, 'timestamp' | 'retryCount'> = {
+            id: data.accountId || this.generateAccountId(),
+            type: 'account',
+            operation: operation,
+            data: data,
+            maxRetries: 3,
+            collectionPath: this.getAccountsPath(userId)
+        };
+
+        const result = await this.commonSyncService.registerSyncItem(syncItem);
+        if (!result.success) {
+            console.error('Failed to register account for sync:', result.errors);
+        }
+    }
 
     // 🔹 Generate a unique account ID
     private generateAccountId(): string {
@@ -628,24 +575,31 @@ export class AccountsService {
     protected updateAccountCache(userId: string, operation: 'create' | 'update' | 'delete', account?: Account): void {
         try {
             const cacheKey = this.getAccountsCacheKey(userId);
-            const cachedAccounts = this.localStorageUtility.getItem<Account[]>(cacheKey) || [];
+            const cachedAccounts = (this.localStorageUtility.getItem<Account[]>(cacheKey) || [])
+                .filter(a => !!(a && a.accountId));
+
+            if (!account || !account.accountId) {
+                if (operation !== 'delete') return;
+            }
 
             switch (operation) {
                 case 'create':
-                    if (account) {
+                    if (account && account.accountId) {
                         cachedAccounts.push(account);
                     }
                     break;
                 case 'update':
-                    if (account) {
+                    if (account && account.accountId) {
                         const index = cachedAccounts.findIndex(a => a.accountId === account.accountId);
                         if (index !== -1) {
                             cachedAccounts[index] = { ...cachedAccounts[index], ...account };
+                        } else {
+                            cachedAccounts.push(account);
                         }
                     }
                     break;
                 case 'delete':
-                    if (account) {
+                    if (account && account.accountId) {
                         const index = cachedAccounts.findIndex(a => a.accountId === account.accountId);
                         if (index !== -1) {
                             cachedAccounts.splice(index, 1);

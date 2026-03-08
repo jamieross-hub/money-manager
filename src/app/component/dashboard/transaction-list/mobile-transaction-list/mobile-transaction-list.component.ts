@@ -51,7 +51,7 @@ import {
 } from '../../../../util/components/custom-date-range-dialog';
 import { DateService } from 'src/app/util/service/date.service';
 import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
-import { selectSortedAllTransactions, selectSortedDeletedTransactions } from 'src/app/store/transactions/transactions.selectors';
+import { selectSortedAllTransactions, selectSortedDeletedTransactions, selectRecurringTemplates } from 'src/app/store/transactions/transactions.selectors';
 import { AppState } from 'src/app/store/app.state';
 import { Store } from '@ngrx/store';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
@@ -72,6 +72,7 @@ import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import * as FamilySelectors from 'src/app/modules/family/store/family.selectors';
 import { FamilyMember, Family } from 'src/app/util/models/family.model';
 import { AppView } from 'src/app/util/service/app-view.service';
+import { RecurringTemplate } from 'src/app/util/models/recurring.model';
 
 dayjs.extend(weekOfYear);
 
@@ -178,6 +179,7 @@ export class MobileTransactionListComponent
   // Base signals from Store
   allActiveTransactions = this.store.selectSignal<Transaction[]>(selectSortedAllTransactions);
   deletedTransactions = this.store.selectSignal<Transaction[]>(selectSortedDeletedTransactions);
+  recurringTemplates = this.store.selectSignal<RecurringTemplate[]>(selectRecurringTemplates);
   
   allTransactions = computed(() => {
     if (this.selectedRange() === 'deleted') {
@@ -417,9 +419,9 @@ export class MobileTransactionListComponent
 
 
   constructor() {
-    // Web Worker Effect
     effect(() => {
       const transactions = this.allTransactions();
+      const recurringTemplates = this.recurringTemplates();
       const categories = this.categories();
       const accounts = this.accounts();
       const searchTerm = this.searchTerm();
@@ -436,6 +438,7 @@ export class MobileTransactionListComponent
 
       this.processorService.process({
         transactions,
+        recurringTemplates,
         categories,
         accounts,
         filters: {
@@ -719,14 +722,14 @@ export class MobileTransactionListComponent
     const parts = tx.id?.split('-');
     if (!parts || parts.length < 3) return;
     const originalId = parts.slice(1, -1).join('-');
-    const originalTx = this.allTransactions().find(t => t.id === originalId);
+    const originalTemplate = this.recurringTemplates().find(t => t.id === originalId);
 
-    if (originalTx) {
+    if (originalTemplate) {
       const confirmedDate = this.dateService.toDate(tx.date);
       if (!confirmedDate) return;
 
       this.subscription.add(
-        this.recurringService.processRecurringTransaction(userId, originalTx, confirmedDate).subscribe(() => {
+        this.recurringService.processRecurringTransaction(userId, originalTemplate, confirmedDate).subscribe(() => {
           // Success handled by store update
         })
       );
@@ -740,14 +743,14 @@ export class MobileTransactionListComponent
     const parts = tx.id?.split('-');
     if (!parts || parts.length < 3) return;
     const originalId = parts.slice(1, -1).join('-');
-    const originalTx = this.allTransactions().find(t => t.id === originalId);
+    const originalTemplate = this.recurringTemplates().find(t => t.id === originalId);
 
-    if (originalTx) {
+    if (originalTemplate) {
        const skippedDate = this.dateService.toDate(tx.date);
        if (!skippedDate) return;
 
        this.subscription.add(
-        this.recurringService.skipRecurringTransaction(userId, originalTx, skippedDate).subscribe(() => {
+        this.recurringService.skipRecurringTransaction(userId, originalTemplate, skippedDate).subscribe(() => {
           // Success handled by store update
         })
       );

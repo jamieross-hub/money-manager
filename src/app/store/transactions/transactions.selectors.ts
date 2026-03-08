@@ -5,6 +5,7 @@ import { TransactionType, TransactionStatus } from '../../util/config/enums';
 import * as ProfileSelectors from '../profile/profile.selectors';
 import * as FamilySelectors from '../../modules/family/store/family.selectors';
 import { Transaction } from '../../util/models/transaction.model';
+import { RecurringTemplate } from '../../util/models/recurring.model';
 
 export const selectTransactionsState = createFeatureSelector<TransactionsState>('transactions');
 
@@ -15,7 +16,6 @@ export const selectAllTransactions = createSelector(
   FamilySelectors.selectFamily,
   FamilySelectors.selectFamilyTransactions,
   (state, isFamilyMode, activeFamily, familyTransactions) => {
-    const templates = state.recurringTemplates || [];
     let baseTransactions: Transaction[] = [];
 
     if (isFamilyMode && activeFamily) {
@@ -43,13 +43,8 @@ export const selectAllTransactions = createSelector(
     } else {
       baseTransactions = state.ids.map(id => state.entities[id]).filter(Boolean).filter(t => t.status !== TransactionStatus.DELETED);
     }
-
-    // Merge in recurring templates
-    // De-duplicate if needed (though templates are now in a separate collection)
-    const seenIds = new Set(baseTransactions.map(t => t.id));
-    const uniqueTemplates = templates.filter(t => !seenIds.has(t.id));
     
-    return [...baseTransactions, ...uniqueTemplates];
+    return baseTransactions;
   }
 );
 
@@ -369,10 +364,8 @@ export const selectRecurringLoading = createSelector(
 
 // Combined Recurring transactions (template + any marked in regular tx)
 export const selectRecurringTransactions = createSelector(
-  selectAllTransactions,
   selectRecurringTemplates,
-  (transactions, templates) => {
-    const fromTransactions = transactions.filter((t) => t.isRecurring === true);
-    return [...templates, ...fromTransactions];
+  (templates) => {
+    return templates;
   }
 );

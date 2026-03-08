@@ -8,6 +8,7 @@ import { RecurringService } from '../../util/service/db/recurring.service';
 import * as FamilyActions from '../../modules/family/store/family.actions';
 import { UserService } from '../../util/service/db/user.service';
 import { Transaction } from '../../util/models/transaction.model';
+import { RecurringTemplate } from '../../util/models/recurring.model';
 
 @Injectable()
 export class TransactionsEffects {
@@ -108,7 +109,7 @@ export class TransactionsEffects {
       this.recurringService.updateRecurringTemplate(userId, templateId, template)
         .pipe(
           map(() => TransactionsActions.updateRecurringTemplateSuccess({ 
-            template: { ...template, id: templateId } as Transaction 
+            template: { ...template, id: templateId } as RecurringTemplate 
           })),
           catchError(error => of(TransactionsActions.updateRecurringTemplateFailure({ error })))
         ))

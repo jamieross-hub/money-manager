@@ -3,6 +3,7 @@ import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDo
 import { Auth } from '@angular/fire/auth';
 import { Observable, of, from } from 'rxjs';
 import { map, catchError, tap, timeout } from 'rxjs/operators';
+import { CommonSyncService, SyncItem } from '../common-sync.service';
 import { DateService } from '../date.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { LocalStorageKeyHelper } from '../../models/local-storage.model';
@@ -30,25 +31,33 @@ export class GoalsService {
         private auth: Auth,
         private dateService: DateService,
         private localStorageUtility: LocalIndexDBStorageService,
-        private store: Store<AppState>
+        private store: Store<AppState>,
+        private commonSyncService: CommonSyncService
     ) { }
 
-    // 🔹 Create a new goal
     async createGoal(userId: string, goal: Goal): Promise<void> {
-        if (userId === 'offline-guest') {
-            this.localStorageUtility.saveEntity('goals', {
-                ...goal,
-                currentAmount: 0
-            }, 'goalId');
-            return;
+        const isGuest = userId === 'offline-guest';
+        const newGoal = { ...goal, currentAmount: 0 };
+
+        // 1. Optimistic Update (Cache & NgRx)
+        if (isGuest) {
+            this.localStorageUtility.saveEntity('goals', newGoal, 'goalId');
+        } else {
+            const cacheKey = LocalStorageKeyHelper.getGoalsCacheKey(userId);
+            const goals = this.localStorageUtility.getItem<Goal[]>(cacheKey) || [];
+            goals.push(newGoal);
+            this.localStorageUtility.setItem(cacheKey, goals);
         }
 
-        const goalRef = doc(this.firestore, `users/${userId}/goals/${goal.goalId}`);
-        await setDoc(goalRef, {
-            ...goal,
-            deadline: this.dateService.toTimestamp(goal.deadline),
-            currentAmount: 0, // Initialize currentAmount to 0
-        });
+        this.store.dispatch(GoalsActions.createGoalSuccess({ goal: newGoal }));
+
+        if (isGuest) return;
+
+        // 2. Queue for Sync
+        await this.addToSyncQueue('create', {
+            ...newGoal,
+            deadline: this.dateService.toTimestamp(newGoal.deadline)?.toMillis() ?? Date.now(),
+        }, userId);
     }
 
     /** Get all goals (Store-based) */
@@ -81,7 +90,10 @@ export class GoalsService {
             tap((querySnapshot: any) => {
                 const goals: Goal[] = [];
                 querySnapshot.forEach((docSnap: any) => {
-                    goals.push(docSnap.data() as Goal);
+                    const data = docSnap.data();
+                    if (data && (data['goalId'] || docSnap.id)) {
+                        goals.push({ goalId: docSnap.id, ...data } as Goal);
+                    }
                 });
 
                 console.log(`[GoalsService] Pulled ${goals.length} goals from Firestore`);
@@ -104,67 +116,159 @@ export class GoalsService {
         );
     }
 
-    // 🔹 Get a single goal by its ID
     async getGoal(userId: string, goalId: string): Promise<Goal | undefined> {
-        if (userId === 'offline-guest') {
-            const goals = this.localStorageUtility.getEntities<Goal>('goals');
-            return goals.find(g => g.goalId === goalId);
+        const isGuest = userId === 'offline-guest';
+        const cacheKey = LocalStorageKeyHelper.getGoalsCacheKey(userId);
+
+        // 1. Try reading from local cache first
+        let cachedGoals: Goal[] = [];
+        if (isGuest) {
+            cachedGoals = this.localStorageUtility.getEntities<Goal>('goals');
+        } else {
+            cachedGoals = this.localStorageUtility.getItem<Goal[]>(cacheKey) || [];
         }
 
-        const goalRef = doc(this.firestore, `users/${userId}/goals/${goalId}`);
-        const goalSnap = await getDoc(goalRef);
-        if (goalSnap.exists()) {
-            return goalSnap.data() as Goal;
+        const cachedGoal = cachedGoals.find(g => g.goalId === goalId);
+        if (cachedGoal) return cachedGoal;
+
+        if (isGuest) return undefined;
+
+        // 2. Fallback to Firestore
+        try {
+            const goalRef = doc(this.firestore, `users/${userId}/goals/${goalId}`);
+            const goalSnap = await getDoc(goalRef);
+            if (goalSnap.exists()) {
+                const data = goalSnap.data();
+                if (data && (data['goalId'] || goalSnap.id)) {
+                    const goal = { goalId: goalSnap.id, ...data } as Goal;
+                    // Update cache
+                    cachedGoals.push(goal);
+                    this.localStorageUtility.setItem(cacheKey, cachedGoals);
+                    return goal;
+                }
+            }
+        } catch (error) {
+            console.error('[GoalsService] Error fetching goal from Firestore:', error);
         }
+        
         return undefined;
     }
 
-    // 🔹 Update an existing goal
     async updateGoal(userId: string, goalId: string, updatedGoal: Partial<Goal>): Promise<void> {
-        if (userId === 'offline-guest') {
+        const isGuest = userId === 'offline-guest';
+        let currentGoal: Goal | undefined;
+
+        // 1. Optimistic Update
+        if (isGuest) {
             const goals = this.localStorageUtility.getEntities<Goal>('goals');
             const index = goals.findIndex(g => g.goalId === goalId);
             if (index !== -1) {
                 goals[index] = { ...goals[index], ...updatedGoal };
+                currentGoal = goals[index];
                 this.localStorageUtility.saveEntities('goals', goals);
             }
-            return;
+        } else {
+            const cacheKey = LocalStorageKeyHelper.getGoalsCacheKey(userId);
+            const goals = this.localStorageUtility.getItem<Goal[]>(cacheKey) || [];
+            const index = goals.findIndex(g => g.goalId === goalId);
+            if (index !== -1) {
+                goals[index] = { ...goals[index], ...updatedGoal };
+                currentGoal = goals[index];
+                this.localStorageUtility.setItem(cacheKey, goals);
+            }
         }
 
-        const goalRef = doc(this.firestore, `users/${userId}/goals/${goalId}`);
-        await updateDoc(goalRef, updatedGoal);
+        if (currentGoal) {
+            this.store.dispatch(GoalsActions.updateGoalSuccess({ goal: currentGoal }));
+        }
+
+        if (isGuest) return;
+
+        // 2. Queue for Sync
+        const syncData: any = { goalId, ...updatedGoal };
+        if (updatedGoal.deadline) {
+            syncData.deadline = this.dateService.toTimestamp(updatedGoal.deadline)?.toMillis();
+        }
+
+        await this.addToSyncQueue('update', syncData, userId);
     }
 
-    // 🔹 Delete a goal
     async deleteGoal(userId: string, goalId: string): Promise<void> {
-        if (userId === 'offline-guest') {
+        const isGuest = userId === 'offline-guest';
+
+        // 1. Optimistic Update
+        if (isGuest) {
             this.localStorageUtility.deleteEntity('goals', goalId, 'goalId');
-            return;
+        } else {
+            const cacheKey = LocalStorageKeyHelper.getGoalsCacheKey(userId);
+            const goals = this.localStorageUtility.getItem<Goal[]>(cacheKey) || [];
+            const filtered = goals.filter(g => g.goalId !== goalId);
+            this.localStorageUtility.setItem(cacheKey, filtered);
         }
 
-        const goalRef = doc(this.firestore, `users/${userId}/goals/${goalId}`);
-        await deleteDoc(goalRef);
+        this.store.dispatch(GoalsActions.deleteGoalSuccess({ goalId }));
+
+        if (isGuest) return;
+
+        // 2. Queue for Sync
+        await this.addToSyncQueue('delete', { goalId }, userId);
     }
 
-    // 🔹 Update the current amount for a goal
     async updateCurrentAmount(userId: string, goalId: string, amount: number): Promise<void> {
-        if (userId === 'offline-guest') {
+        const isGuest = userId === 'offline-guest';
+        let newAmount = 0;
+        let goalToUpdate: Goal | undefined;
+
+        // 1. Optimistic Update
+        if (isGuest) {
             const goals = this.localStorageUtility.getEntities<Goal>('goals');
             const index = goals.findIndex(g => g.goalId === goalId);
             if (index !== -1) {
                 const currentAmount = goals[index].currentAmount || 0;
                 goals[index].currentAmount = currentAmount + amount;
+                newAmount = goals[index].currentAmount;
+                goalToUpdate = goals[index];
                 this.localStorageUtility.saveEntities('goals', goals);
             }
-            return;
+        } else {
+            const cacheKey = LocalStorageKeyHelper.getGoalsCacheKey(userId);
+            const goals = this.localStorageUtility.getItem<Goal[]>(cacheKey) || [];
+            const index = goals.findIndex(g => g.goalId === goalId);
+            if (index !== -1) {
+                const currentAmount = goals[index].currentAmount || 0;
+                goals[index].currentAmount = currentAmount + amount;
+                newAmount = goals[index].currentAmount;
+                goalToUpdate = goals[index];
+                this.localStorageUtility.setItem(cacheKey, goals);
+            }
         }
 
-        const goalRef = doc(this.firestore, `users/${userId}/goals/${goalId}`);
-        const goalSnap = await getDoc(goalRef);
-        if (goalSnap.exists()) {
-            const currentAmount = goalSnap.data()?.['currentAmount'] || 0;
-            const newAmount = currentAmount + amount;
-            await updateDoc(goalRef, { currentAmount: newAmount });
+        if (goalToUpdate) {
+            this.store.dispatch(GoalsActions.updateGoalSuccess({ goal: goalToUpdate }));
+        }
+
+        if (isGuest) return;
+
+        // 2. Queue for Sync
+        await this.addToSyncQueue('update', { goalId, currentAmount: newAmount }, userId);
+    }
+
+    /**
+     * Add goal to sync queue
+     */
+    private async addToSyncQueue(operation: 'create' | 'update' | 'delete', data: any, userId: string): Promise<void> {
+        const syncItem: Omit<SyncItem, 'timestamp' | 'retryCount'> = {
+            id: data.goalId,
+            type: 'goal',
+            operation: operation,
+            data: data,
+            maxRetries: 3,
+            collectionPath: `users/${userId}/goals`
+        };
+
+        const result = await this.commonSyncService.registerSyncItem(syncItem);
+        if (!result.success) {
+            console.error('Failed to register goal for sync:', result.errors);
         }
     }
 }

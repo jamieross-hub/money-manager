@@ -277,27 +277,6 @@ export interface TransactionTrend {
   transactionCount: number;
 }
 
-/**
- * Recurring transaction template
- */
-export interface RecurringTransactionTemplate extends Timestamped {
-  id: string;
-  userId: string;
-  accountId: string;
-  categoryId: string;
-  payee?: string;
-  amount: number;
-  type: TransactionType;
-  interval: RecurringInterval;
-  startDate: Timestamp;
-  endDate?: Timestamp;
-  isActive: boolean;
-  lastProcessed?: Timestamp;
-  nextOccurrence: Timestamp;
-  notes?: string;
-  paymentMethod?: PaymentMethod;
-  tags?: string[];
-}
 
 /**
  * Bulk transaction import result

@@ -2,8 +2,6 @@ import { Injectable, InjectionToken, Inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Category } from 'src/app/util/models';
 import { CategoryService } from './category.service';
-import { FamilyCategoryService } from './family-category.service';
-import { UserService } from './user.service';
 import { TransactionType } from '../../config/enums';
 
 export const PERSONAL_CATEGORY_SERVICE = new InjectionToken<CategoryService>('PersonalCategoryService');
@@ -13,23 +11,15 @@ export const PERSONAL_CATEGORY_SERVICE = new InjectionToken<CategoryService>('Pe
 })
 export class CategoryFacadeService {
     constructor(
-        @Inject(PERSONAL_CATEGORY_SERVICE) private personalService: CategoryService,
-        private familyService: FamilyCategoryService,
-        private userService: UserService
+        @Inject(PERSONAL_CATEGORY_SERVICE) private categoryService: CategoryService
     ) {}
 
-    private get activeService(): CategoryService {
-        const profile = this.userService.getCurrentUserSnapshot();
-        const isFamilyMode = profile?.preferences?.isFamilyMode || false;
-        return isFamilyMode ? this.familyService : this.personalService;
-    }
-
     getCategories(userId: string): Observable<Category[]> {
-        return this.activeService.getCategories(userId);
+        return this.categoryService.getCategories(userId);
     }
 
     pullFromFirestore(userId: string): Observable<void> {
-        return this.activeService.pullFromFirestore(userId);
+        return this.categoryService.pullFromFirestore(userId);
     }
 
     findOrCreateSystemCategory(
@@ -39,50 +29,50 @@ export class CategoryFacadeService {
         icon: string,
         color: string
     ): Observable<string> {
-        return this.activeService.findOrCreateSystemCategory(userId, categoryName, type, icon, color);
+        return this.categoryService.findOrCreateSystemCategory(userId, categoryName, type, icon, color);
     }
 
     createCategory(userId: string, name: string, type: TransactionType, icon: string, color: string, group?: string, isSystem: boolean = false): Observable<string> {
-        return this.activeService.createCategory(userId, name, type, icon, color, group, isSystem);
+        return this.categoryService.createCategory(userId, name, type, icon, color, group, isSystem);
     }
 
     updateCategory(userId: string, categoryId: string, name: string, type: TransactionType, icon: string, color: string, budgetData?: any, parentCategoryId?: string | null, isSubCategory?: boolean, group?: string, isSystem?: boolean): Observable<void> {
-        return this.activeService.updateCategory(userId, categoryId, name, type, icon, color, budgetData, parentCategoryId, isSubCategory, group, isSystem);
+        return this.categoryService.updateCategory(userId, categoryId, name, type, icon, color, budgetData, parentCategoryId, isSubCategory, group, isSystem);
     }
 
     deleteCategory(userId: string, categoryId: string): Observable<void> {
-        return this.activeService.deleteCategory(userId, categoryId);
+        return this.categoryService.deleteCategory(userId, categoryId);
     }
 
     getCategoryNameById(categoryId: string): string {
-        return this.activeService.getCategoryNameById(categoryId);
+        return this.categoryService.getCategoryNameById(categoryId);
     }
 
     getCachedCategories(type?: TransactionType): Category[] {
-        return this.activeService.getCachedCategories(type);
+        return this.categoryService.getCachedCategories(type);
     }
 
     removeFromParentCategory(userId: string, categoryId: string): Observable<void> {
-        return this.activeService.removeFromParentCategory(userId, categoryId);
+        return this.categoryService.removeFromParentCategory(userId, categoryId);
     }
 
     getCategoryWithSubCategories(userId: string, categoryId: string): Observable<Category | null> {
-        return this.activeService.getCategoryWithSubCategories(userId, categoryId);
+        return this.categoryService.getCategoryWithSubCategories(userId, categoryId);
     }
 
     hasSubCategories(categoryId: string): boolean {
-        return this.activeService.hasSubCategories(categoryId);
+        return this.categoryService.hasSubCategories(categoryId);
     }
 
     getSubCategoriesCount(categoryId: string): number {
-        return this.activeService.getSubCategoriesCount(categoryId);
+        return this.categoryService.getSubCategoriesCount(categoryId);
     }
 
     openParentCategorySelectorDialog(category: Category): Observable<Category | null> {
-        return this.activeService.openParentCategorySelectorDialog(category);
+        return this.categoryService.openParentCategorySelectorDialog(category);
     }
 
     performDelete(category: Category, userId: string): void {
-        this.activeService.performDelete(category, userId);
+        this.categoryService.performDelete(category, userId);
     }
 }

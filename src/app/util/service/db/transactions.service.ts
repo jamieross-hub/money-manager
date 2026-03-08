@@ -120,24 +120,8 @@ export class TransactionsService extends BaseService {
                     observer.next();
                     observer.complete();
 
-                    // 4. Perform Firestore operation in background
-                    if (this.commonSyncService.isCurrentlyOnline()) {
-                        try {
-                            const transactionRef = doc(this.firestore, this.getTransactionPath(userId, transactionId));
-                            
-                            const firestoreTask = setDoc(transactionRef, transactionData);
-
-
-
-                            await firestoreTask;
-                        } catch (error) {
-                            console.warn('⚠️ Failed to create transaction online, moving to sync queue:', error);
-                            await this.addToSyncQueue('create', transactionData, userId);
-                        }
-                    } else {
-                        // Store offline
-                        await this.addToSyncQueue('create', transactionData, userId);
-                    }
+                    // 4. Always add to sync queue (it handles online/offline internally)
+                    await this.addToSyncQueue('create', transactionData, userId);
                 } catch (error) {
                     console.error('Error in createTransaction:', error);
                     // Even if error occurs, we already completed observer to prevent UI hang
@@ -242,18 +226,8 @@ export class TransactionsService extends BaseService {
                     observer.next();
                     observer.complete();
 
-                    // 4. Background update
-                    if (this.commonSyncService.isCurrentlyOnline()) {
-                        try {
-                            const transactionRef = doc(this.firestore, this.getTransactionPath(userId, transactionId));
-                            await updateDoc(transactionRef, updateData);
-                        } catch (error) {
-                            console.warn('⚠️ Failed to update transaction online, moving to sync queue:', error);
-                            await this.addToSyncQueue('update', { id: transactionId, ...updateData }, userId);
-                        }
-                    } else {
-                        await this.addToSyncQueue('update', { id: transactionId, ...updateData }, userId);
-                    }
+                    // 4. Always add to sync queue (it handles online/offline internally)
+                    await this.addToSyncQueue('update', { id: transactionId, ...updateData }, userId);
                 } catch (error) {
                     console.error('Error in updateTransaction:', error);
                 }
@@ -327,20 +301,10 @@ export class TransactionsService extends BaseService {
             observer.next();
             observer.complete();
 
-            // 4. Background operation
-            const transactionRef = doc(this.firestore, this.getTransactionPath(userId, transactionId));
-
-            if (this.commonSyncService.isCurrentlyOnline()) {
-                updateDoc(transactionRef, { status: TransactionStatus.DELETED, updatedAt: new Date() }).catch(error => {
-                    console.warn('⚠️ Failed to soft delete transaction online, moving to sync queue:', error);
-                    this.addToSyncQueue('update', { id: transactionId, status: TransactionStatus.DELETED, updatedAt: new Date() }, userId);
-                });
-            } else {
-                // Offline mode - add to sync queue
-                this.addToSyncQueue('update', { id: transactionId, status: TransactionStatus.DELETED, updatedAt: new Date() }, userId).catch(error => {
-                    console.error('Failed to add to sync queue:', error);
-                });
-            }
+            // 4. Always add to sync queue (it handles online/offline internally)
+            this.addToSyncQueue('update', { id: transactionId, status: TransactionStatus.DELETED, updatedAt: new Date() }, userId).catch(error => {
+                console.error('Failed to add to sync queue:', error);
+            });
         });
     }
 
@@ -389,7 +353,10 @@ export class TransactionsService extends BaseService {
             tap((querySnapshot: any) => {
                 const firestoreTransactions: Transaction[] = [];
                 querySnapshot.forEach((docSnap: any) => {
-                    firestoreTransactions.push({ id: docSnap.id, ...docSnap.data() } as Transaction);
+                    const data = docSnap.data();
+                    if (data && (data['amount'] !== undefined || docSnap.id)) {
+                        firestoreTransactions.push({ id: docSnap.id, ...data } as Transaction);
+                    }
                 });
 
                 console.log(`[TransactionsService] Pulled ${firestoreTransactions.length} transactions from Firestore`);
@@ -486,7 +453,10 @@ export class TransactionsService extends BaseService {
                 (querySnapshot) => {
                     const firestoreTransactions: Transaction[] = [];
                     querySnapshot.forEach((docSnap) => {
-                        firestoreTransactions.push({ id: docSnap.id, ...docSnap.data() } as Transaction);
+                        const data = docSnap.data();
+                        if (data && (data['amount'] !== undefined || docSnap.id)) {
+                            firestoreTransactions.push({ id: docSnap.id, ...data } as Transaction);
+                        }
                     });
 
                     console.log(`[TransactionsService] Real-time update: ${firestoreTransactions.length} transactions`);
@@ -550,6 +520,17 @@ export class TransactionsService extends BaseService {
         }
 
         return new Observable<Transaction | undefined>(observer => {
+            // Reads from IndexedDB first
+            const cachedTransactions = this.getCachedTransactions(userId);
+            const cached = cachedTransactions.find(t => t.id === transactionId);
+            
+            if (cached) {
+                observer.next(cached);
+                observer.complete();
+                return;
+            }
+
+            // Fallback: If not found in cache, pull once from Firestore
             const getTransactionAsync = async () => {
                 try {
                     const transactionRef = doc(this.firestore, this.getTransactionPath(userId, transactionId));
@@ -557,13 +538,17 @@ export class TransactionsService extends BaseService {
 
                     if (transactionDoc.exists()) {
                         const transaction = { id: transactionDoc.id, ...transactionDoc.data() } as Transaction;
+                        // Update cache
+                        this.updateTransactionCache(userId, 'update', transaction);
                         observer.next(transaction);
                     } else {
                         observer.next(undefined);
                     }
                     observer.complete();
                 } catch (error) {
-                    observer.error(error);
+                    // Fail gracefully
+                    observer.next(undefined);
+                    observer.complete();
                 }
             };
 
@@ -630,13 +615,15 @@ export class TransactionsService extends BaseService {
             const familyId = this.getFamilyId();
             const allTransactions = this.localStorageUtility.getAllTransactionsSync();
             
-            const transactions: Transaction[] = allTransactions.filter(tx => {
-                if (familyId) {
-                    return tx.familyId === familyId;
-                } else {
-                    return !tx.familyId;
-                }
-            });
+            const transactions: Transaction[] = allTransactions
+                .filter(tx => !!(tx && tx.id))
+                .filter(tx => {
+                    if (familyId) {
+                        return tx.familyId === familyId;
+                    } else {
+                        return !tx.familyId;
+                    }
+                });
             
             // Sort by date descending
             return transactions.sort((a, b) => {
@@ -669,11 +656,15 @@ export class TransactionsService extends BaseService {
             switch (operation) {
                 case 'create':
                 case 'update':
-                    const existing = this.localStorageUtility.getItem<Transaction>(itemKey);
-                    this.localStorageUtility.setTransaction(itemKey, { ...existing, ...transaction });
+                    if (transaction && transaction.id) {
+                        const existing = this.localStorageUtility.getItem<Transaction>(itemKey);
+                        this.localStorageUtility.setTransaction(itemKey, { ...existing, ...transaction });
+                    }
                     break;
                 case 'delete':
-                    this.localStorageUtility.removeTransaction(itemKey);
+                    if (transaction && transaction.id) {
+                        this.localStorageUtility.removeTransaction(itemKey);
+                    }
                     break;
             }
         } catch (error) {

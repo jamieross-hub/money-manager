@@ -23,10 +23,8 @@ import { CommonSyncService } from './util/service/common-sync.service';
 import { FamilyTransactionsService } from './util/service/db/family-transactions.service';
 import { TransactionsFacadeService, PERSONAL_TRANSACTIONS_SERVICE } from './util/service/db/transactions-facade.service';
 import { TransactionsService } from './util/service/db/transactions.service';
-import { FamilyAccountsService } from './util/service/db/family-accounts.service';
 import { AccountsFacadeService, PERSONAL_ACCOUNTS_SERVICE } from './util/service/db/accounts-facade.service';
 import { AccountsService } from './util/service/db/accounts.service';
-import { FamilyCategoryService } from './util/service/db/family-category.service';
 import { CategoryFacadeService, PERSONAL_CATEGORY_SERVICE } from './util/service/db/category-facade.service';
 import { CategoryService } from './util/service/db/category.service';
 
@@ -131,7 +129,6 @@ export const appConfig: ApplicationConfig = {
       useExisting: TransactionsFacadeService
     },
 
-    FamilyAccountsService,
     AccountsFacadeService,
     {
       provide: PERSONAL_ACCOUNTS_SERVICE,
@@ -142,7 +139,6 @@ export const appConfig: ApplicationConfig = {
       useExisting: AccountsFacadeService
     },
 
-    FamilyCategoryService,
     CategoryFacadeService,
     {
       provide: PERSONAL_CATEGORY_SERVICE,
