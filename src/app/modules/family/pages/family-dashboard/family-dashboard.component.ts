@@ -1,4 +1,3 @@
-// Angular core
 import {
   Component,
   inject,
@@ -10,6 +9,7 @@ import {
   Input,
   Output,
   EventEmitter,
+  signal,
 } from '@angular/core';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -166,6 +166,10 @@ export class FamilyDashboardComponent implements OnInit {
   readonly settleBalances   = this.familyProcessor.balances;
   readonly stats            = computed(() => this.familyProcessor.stats());
 
+  // ─── Pagination Signals ──────────────────────────────────────────────────────
+  readonly activityLimit = signal(5);
+  readonly displayedActivities = computed(() => this.recentActivities().slice(0, this.activityLimit()));
+
   /**
    * Combines all store slices into ONE computed signal so Effect 2 fires
    * only once per batch instead of once per individual signal change.
@@ -318,6 +322,10 @@ export class FamilyDashboardComponent implements OnInit {
 
   addTransaction(): void {
     // TODO: implement transaction addition logic
+  }
+
+  loadMoreActivities(): void {
+    this.activityLimit.update(l => l + 5);
   }
 
   copyCode(code: string): void {
