@@ -14,7 +14,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatRippleModule } from '@angular/material/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { take, switchMap, map, distinctUntilChanged } from 'rxjs/operators';
+import { take, switchMap, map, distinctUntilChanged, debounceTime } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   SettleAvatarPipe, SettleAvatarColorPipe,
@@ -71,9 +71,9 @@ export class SettleUpComponent implements OnInit {
   private sessionStartTime = Date.now();
 
   family = toSignal(this.store.select(FamilySelectors.selectFamily).pipe(distinctUntilChanged()), { initialValue: null });
-  members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as FamilyMember[] });
-  transactions = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as Transaction[] });
-  settlements = toSignal(this.store.select(FamilySelectors.selectSettlements).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as Settlement[] });
+  members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as FamilyMember[] });
+  transactions = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length && a[0]?.id === b[0]?.id && (a[0] as any)?.updatedAt === (b[0] as any)?.updatedAt)), { initialValue: [] as Transaction[] });
+  settlements = toSignal(this.store.select(FamilySelectors.selectSettlements).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as Settlement[] });
   loading = toSignal(this.store.select(TransactionsSelectors.selectTransactionsLoading).pipe(distinctUntilChanged()), { initialValue: true });
   settlementsLoading = toSignal(this.store.select(FamilySelectors.selectSettlementsLoading).pipe(distinctUntilChanged()), { initialValue: false });
 
@@ -106,6 +106,22 @@ export class SettleUpComponent implements OnInit {
 
   /** All outstanding balances (from owes to) */
   balances = this.familyProcessor.balances;
+
+  /**
+   * Combines all data into ONE signal to gate processing.
+   */
+  private readonly processorInput = computed(() => {
+    const txs     = this.transactions();
+    const mem     = this.members();
+    const set     = this.settlements();
+    const famId   = this.familyId();
+    const sLdg    = this.settlementsLoading();
+    const ldg     = this.loading();
+
+    const isReady = !!famId && !sLdg && !ldg && mem.length > 0;
+
+    return { transactions: txs, members: mem, settlements: set, ready: isReady };
+  });
 
   /**
    * Optimized: Single pass over the balances array to categorize data for the UI.
@@ -161,17 +177,15 @@ export class SettleUpComponent implements OnInit {
     });
 
     effect(() => {
-      const transactions = this.transactions();
-      const members = this.members();
-      const settlements = this.settlements();
+      const input = this.processorInput();
       const currentUserId = this.currentUserId();
 
-      if (transactions && members) {
+      if (input.ready) {
         untracked(() => {
           this.familyProcessor.process({
-            transactions,
-            members,
-            settlements,
+            transactions:     input.transactions,
+            members:          input.members,
+            settlements:      input.settlements,
             currentUserId,
             sessionStartTime: this.sessionStartTime
           });
