@@ -1,4 +1,6 @@
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { Transaction } from '../../models/transaction.model';
 import { TransactionsService } from './transactions.service';
 import { Firestore } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
@@ -59,5 +61,18 @@ export class FamilyTransactionsService extends TransactionsService {
 
     protected override getFamilyId(): string | undefined {
         return this.familyService.activeFamilyId() || '';
+    }
+
+    /**
+     * Override createTransaction to ensure familyId is always set
+     */
+    override createTransaction(userId: string, transaction: Transaction): Observable<void> {
+        const familyId = transaction.familyId || this.getFamilyId();
+        const transactionWithFamily = { 
+            ...transaction, 
+            familyId 
+        } as Transaction;
+        
+        return super.createTransaction(userId, transactionWithFamily);
     }
 }

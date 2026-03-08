@@ -36,19 +36,27 @@ export class TransactionsFacadeService {
     }
 
     getTransactions(userId: string): Observable<Transaction[]> {
-        return this.activeService.getTransactions(userId);
+        const profile = this.userService.getCurrentUserSnapshot();
+        const familyId = profile?.preferences?.isFamilyMode ? profile?.preferences?.activeFamilyId : undefined;
+        return this.activeService.getTransactions(userId, familyId || undefined);
     }
 
     pullFromFirestore(userId: string): Observable<void> {
-        return this.activeService.pullFromFirestore(userId);
+        const profile = this.userService.getCurrentUserSnapshot();
+        const familyId = profile?.preferences?.isFamilyMode ? profile?.preferences?.activeFamilyId : undefined;
+        return this.activeService.pullFromFirestore(userId, familyId || undefined);
     }
 
     listenToTransactions(userId: string): Observable<void> {
-        return this.activeService.listenToTransactions(userId);
+        const profile = this.userService.getCurrentUserSnapshot();
+        const familyId = profile?.preferences?.isFamilyMode ? profile?.preferences?.activeFamilyId : undefined;
+        return this.activeService.listenToTransactions(userId, familyId || undefined);
     }
 
     getTransaction(userId: string, transactionId: string): Observable<Transaction | undefined> {
-        return this.activeService.getTransaction(userId, transactionId);
+        const profile = this.userService.getCurrentUserSnapshot();
+        const familyId = profile?.preferences?.isFamilyMode ? profile?.preferences?.activeFamilyId : undefined;
+        return this.activeService.getTransaction(userId, transactionId, familyId || undefined);
     }
 
     getSyncStatus(): { count: number; hasPendingOperations: boolean } {

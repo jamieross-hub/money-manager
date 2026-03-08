@@ -15,8 +15,6 @@ import { FamilyService } from './services/family.service';
 @NgModule({
   imports: [
     FamilyRoutingModule,
-    StoreModule.forFeature('family', familyReducer),
-    EffectsModule.forFeature([FamilyEffects]),
   ],
   providers: [FamilyService],
 })

@@ -50,6 +50,10 @@ export class TransactionsService extends BaseService {
      * Get the transactions collection path
      */
     protected getTransactionsPath(userId: string, familyId?: string): string {
+        const isFamilyMode = this.userService.getCurrentUserSnapshot()?.preferences?.isFamilyMode;
+        if (isFamilyMode && familyId) {
+            return `family-groups/${familyId}/transactions`;
+        }
         return `users/${userId}/transactions`;
     }
 
@@ -389,7 +393,7 @@ export class TransactionsService extends BaseService {
     /**
      * Pull transactions from Firestore once and update local cache
      */
-    pullFromFirestore(userId: string): Observable<void> {
+    pullFromFirestore(userId: string, familyId?: string): Observable<void> {
         if (this.isGuest()) return of(undefined);
 
         // Ensure we have an active auth user before attempting pull
@@ -400,7 +404,7 @@ export class TransactionsService extends BaseService {
         }
 
         const transactionsRef = query(
-            collection(this.firestore, this.getTransactionsPath(userId)),
+            collection(this.firestore, this.getTransactionsPath(userId, familyId)),
             orderBy('date', 'desc')
         );
 
@@ -428,7 +432,7 @@ export class TransactionsService extends BaseService {
                 // receive Firestore data before the write has been committed.
                 // We protect local-pending transactions by merging instead of replacing.
 
-                const localTransactions = this.getCachedTransactions(userId);
+                const localTransactions = this.getCachedTransactions(userId, familyId);
 
                 // Build a map of Firestore transactions by ID for O(1) lookup.
                 const firestoreMap = new Map<string, Transaction>(
@@ -491,7 +495,7 @@ export class TransactionsService extends BaseService {
     /**
      * Set up a real-time listener for transactions
      */
-    listenToTransactions(userId: string): Observable<void> {
+    listenToTransactions(userId: string, familyId?: string): Observable<void> {
         if (this.isGuest()) return of(undefined);
 
         const currentUser = this.auth.currentUser;
@@ -501,7 +505,7 @@ export class TransactionsService extends BaseService {
         }
 
         const transactionsRef = query(
-            collection(this.firestore, this.getTransactionsPath(userId)),
+            collection(this.firestore, this.getTransactionsPath(userId, familyId)),
             orderBy('date', 'desc')
         );
 
@@ -523,7 +527,7 @@ export class TransactionsService extends BaseService {
                     // ── Same merge logic as pullFromFirestore.
                     // onSnapshot fires when coming back online and may not yet contain
                     // transactions that were pushed by the sync queue in the same moment.
-                    const localTransactions = this.getCachedTransactions(userId);
+                    const localTransactions = this.getCachedTransactions(userId, familyId);
                     const firestoreMap = new Map<string, Transaction>(
                         firestoreTransactions.map(t => [t.id!, t])
                     );
@@ -572,7 +576,7 @@ export class TransactionsService extends BaseService {
     /**
      * Get a specific transaction
      */
-    getTransaction(userId: string, transactionId: string): Observable<Transaction | undefined> {
+    getTransaction(userId: string, transactionId: string, familyId?: string): Observable<Transaction | undefined> {
         if (this.isGuest()) {
             const transactions = this.localStorageUtility.getEntities<Transaction>('transactions');
             return of(transactions.find(t => t.id === transactionId));
@@ -580,7 +584,7 @@ export class TransactionsService extends BaseService {
 
         return new Observable<Transaction | undefined>(observer => {
             // Reads from IndexedDB first
-            const cachedTransactions = this.getCachedTransactions(userId);
+            const cachedTransactions = this.getCachedTransactions(userId, familyId);
             const cached = cachedTransactions.find(t => t.id === transactionId);
             
             if (cached) {
@@ -592,7 +596,7 @@ export class TransactionsService extends BaseService {
             // Fallback: If not found in cache, pull once from Firestore
             const getTransactionAsync = async () => {
                 try {
-                    const transactionRef = doc(this.firestore, this.getTransactionPath(userId, transactionId));
+                    const transactionRef = doc(this.firestore, this.getTransactionPath(userId, transactionId, familyId));
                     const transactionDoc = await getDoc(transactionRef);
 
                     if (transactionDoc.exists()) {
@@ -656,8 +660,12 @@ export class TransactionsService extends BaseService {
      * Get the cache key for transactions
      */
     protected getTransactionsCacheKey(userId: string, familyId?: string): string {
-        const fId = familyId !== undefined ? familyId : this.getFamilyId();
-        return LocalStorageKeyHelper.getTransactionsCacheKey(userId, fId);
+        const isFamilyMode = this.userService.getCurrentUserSnapshot()?.preferences?.isFamilyMode;
+        const id = isFamilyMode ? (familyId || this.getFamilyId()) : '';
+        if (id) {
+            return `family-transactions-${id}`;
+        }
+        return `transactions-${userId}`;
     }
 
     /**
@@ -672,7 +680,8 @@ export class TransactionsService extends BaseService {
      */
     public getCachedTransactions(userId: string, familyId?: string): Transaction[] {
         try {
-            const effectiveFamilyId = familyId !== undefined ? familyId : this.getFamilyId();
+            const isFamilyMode = this.userService.getCurrentUserSnapshot()?.preferences?.isFamilyMode;
+            const effectiveFamilyId = isFamilyMode ? (familyId !== undefined ? familyId : this.getFamilyId()) : '';
             const allTransactions = this.localStorageUtility.getAllTransactionsSync();
             
             const transactions: Transaction[] = allTransactions
@@ -708,7 +717,7 @@ export class TransactionsService extends BaseService {
      */
     protected updateTransactionCache(userId: string, operation: 'create' | 'update' | 'delete', transaction?: Transaction): void {
         try {
-            const familyId = this.getFamilyId();
+            const familyId = transaction?.familyId || this.getFamilyId();
 
             if (!transaction || !transaction.id) return;
             const itemKey = LocalStorageKeyHelper.getTransactionItemKey(transaction.id, familyId);
