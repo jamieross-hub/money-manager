@@ -20,12 +20,14 @@ export abstract class BaseService {
     protected readonly currencyService: CurrencyService
   ) { }
 
-  /**
-   * Get current user ID
-   */
-  protected getCurrentUserId(): string | null {
-    return this.auth.currentUser?.uid || null;
-  }
+    /**
+     * Get the current user ID - ⚠️ SLOW VERSION
+     * @deprecated Use UserService.getCurrentUserId() for faster, context-aware access.
+     * This method relies on Firebase Auth which may not be initialized immediately on startup.
+     */
+    protected getCurrentUserId(): string | null {
+        return this.auth.currentUser?.uid || null;
+    }
 
   /**
    * Generate a unique ID (Firestore style)

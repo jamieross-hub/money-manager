@@ -28,6 +28,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 
 import { FamilyService } from '../../services/family.service';
+import { FamilyTransactionsService } from 'src/app/util/service/db/family-transactions.service';
+import { UserService } from 'src/app/util/service/db/user.service';
+import { Transaction } from 'src/app/util/models/transaction.model';
 import { FamilyCreateDialogComponent } from '../../dialogs/family-create-dialog/family-create-dialog.component';
 import { FamilyJoinDialogComponent } from '../../dialogs/family-join-dialog/family-join-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
@@ -141,6 +144,8 @@ export class GroupSelectionComponent implements OnInit {
   deletedRawFamilies = signal<Family[]>([]);
 
   private storageService = inject(LocalIndexDBStorageService);
+  private familyTransactionsService = inject(FamilyTransactionsService);
+  private userService = inject(UserService);
   private injector = inject(Injector);
   private destroyRef = inject(DestroyRef);
 
@@ -175,16 +180,17 @@ export class GroupSelectionComponent implements OnInit {
              this.groupSpends.update(spends => ({ ...spends, [f.id as string]: 0 }));
           }
 
-          this.familyService.getTransactions(f.id)
+          const userId = this.userService.getCurrentUserId() || '';
+          this.familyTransactionsService.getTransactions(userId)
             .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(txs => {
+            .subscribe((txs: Transaction[]) => {
               const expense = txs
-                .filter(t =>
+                .filter((t: Transaction) =>
                   t.type === 'expense' &&
                   t.status !== TransactionStatus.DELETED &&
                   t.category !== 'Settlement'
                 )
-                .reduce((sum, t) => sum + t.amount, 0);
+                .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
               this.groupSpends.update(spends => ({ ...spends, [f.id as string]: expense }));
               this.storageService.setItem(cacheKey, expense);
             });

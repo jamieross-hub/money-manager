@@ -56,6 +56,7 @@ const MONTHS = [
 addEventListener('message', ({ data }) => {
     const { 
         transactions, 
+        currentUserId,
         selectedPeriod, 
         selectedYear, 
         selectedMonth, 

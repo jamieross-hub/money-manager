@@ -8,6 +8,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { AppState } from 'src/app/store/app.state';
 import * as FamilySelectors from '../../store/family.selectors';
+import * as TransactionsSelectors from 'src/app/store/transactions/transactions.selectors';
 import { FamilyMember, FamilyStats } from 'src/app/util/models/family.model';
 import { Transaction } from 'src/app/util/models/transaction.model';
 import { FamilyService } from '../../services/family.service';
@@ -68,8 +69,8 @@ export class FamilyReportsComponent implements OnInit {
   private memberColors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
 
   ngOnInit() {
-    this.store.select(FamilySelectors.selectFamilyLoading).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(l => this.loading.set(l));
-    this.store.select(FamilySelectors.selectFamilyTransactions).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(t => this.transactions.set(t));
+    this.store.select(TransactionsSelectors.selectTransactionsLoading).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(l => this.loading.set(l));
+    this.store.select(TransactionsSelectors.selectAllTransactions).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(t => this.transactions.set(t));
     this.store.select(FamilySelectors.selectFamilyMembers).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(m => this.members.set(m));
   }
 

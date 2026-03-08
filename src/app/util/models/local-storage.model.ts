@@ -14,6 +14,7 @@ export enum LocalStorageKey {
     USER_DATA_GUEST = 'user-data-offline-guest',
     USER_DATA_PREFIX = 'user-data-',
     LAST_LOGIN_PREFIX = 'last-login-',
+    LAST_ACTIVE_UID = 'last-active-uid',
 
     // Guest Collections (prefixed with guest_)
     GUEST_ACCOUNTS = 'guest_accounts',
@@ -159,6 +160,27 @@ export class LocalStorageKeyHelper {
      */
     static getTransactionItemKey(transactionId: string, familyId?: string): string {
         return familyId ? `${familyId}_${transactionId}` : transactionId;
+    }
+
+    /**
+     * Get settlements cache key
+     */
+    static getSettlementsCacheKey(familyId: string): string {
+        return `family-settlements-${familyId}`;
+    }
+
+    /**
+     * Get members cache key
+     */
+    static getMembersCacheKey(familyId: string): string {
+        return `family-members-${familyId}`;
+    }
+
+    /**
+     * Get family cache key
+     */
+    static getFamilyCacheKey(familyId: string): string {
+        return `family-${familyId}`;
     }
 
     /**

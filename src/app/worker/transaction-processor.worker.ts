@@ -20,7 +20,8 @@ addEventListener('message', ({ data }) => {
     appView,
     isRecurringMode,
     isFamilyMode,
-    isDeletedMode
+    isDeletedMode,
+    currentUserId
   } = data;
 
   if (!transactions) {
@@ -316,7 +317,13 @@ addEventListener('message', ({ data }) => {
       _syncStatusIcon: tx.syncStatus === 'failed' ? 'error' : (tx.syncStatus === 'pending' ? 'schedule' : 'check_circle'),
       _syncStatusInfo: tx.syncStatus === 'failed' ? 'Sync failed' : (tx.syncStatus === 'pending' ? 'Pending sync' : 'Synced'),
       _recurringInfo: tx.isRecurring ? `Repeats ${tx.recurringInterval?.toLowerCase()}` : '',
-      _isIncome: tx.type === 'income',
+      _isIncome: (() => {
+        if (tx.settlementId) {
+          if (currentUserId === tx.settlementToUserId) return true;
+          if (currentUserId === tx.settlementFromUserId) return false;
+        }
+        return tx.type === 'income';
+      })(),
       _categoryBgColor: (category?.color || '#46777f') + '20',
       _createdAtDisplay: tx.createdAt ? dayjs(toDate(tx.createdAt)).format('DD MMM YYYY, hh:mm a') : 'N/A',
       _updatedAtDisplay: tx.updatedAt ? dayjs(toDate(tx.updatedAt)).format('DD MMM YYYY, hh:mm a') : 

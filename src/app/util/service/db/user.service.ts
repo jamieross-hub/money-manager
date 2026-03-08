@@ -137,8 +137,30 @@ export class UserService {
     this.userAuth$.subscribe(u => (this._currentUser = u));
 
     this.initializeAuthState();
+    this.optimisticLoadProfile();
     this.startSecurityMonitoring();
     this.startTokenRefresh();
+  }
+
+  /**
+   * Optimistically load the user profile from cache on startup
+   * before Firebase Auth initializes. This provides immediate user context.
+   */
+  private optimisticLoadProfile(): void {
+    this.storageService.isReady$.subscribe(() => {
+      const lastUid = this.storageService.getItem<string>(LocalStorageKey.LAST_ACTIVE_UID);
+      if (!lastUid) return;
+
+      console.log(`🚀 Optimistically loading profile for: ${lastUid}`);
+      const cachedUser = this.storageService.getItem<User>(`user-data-${lastUid}`);
+      if (cachedUser) {
+        this.store.dispatch(ProfileActions.setProfile({ profile: cachedUser }));
+        
+        if (cachedUser.preferences?.language) {
+          this.translationService.setLanguage(cachedUser.preferences.language as Language);
+        }
+      }
+    });
   }
 
   /**
@@ -244,6 +266,7 @@ export class UserService {
     }
 
     this.storageService.setItem(LocalStorageKey.GUEST_MODE, 'true');
+    this.storageService.setItem(LocalStorageKey.LAST_ACTIVE_UID, 'offline-guest');
     this.store.dispatch(ProfileActions.setProfile({ profile: guestUser }));
 
     // Sync language for guest
@@ -738,6 +761,8 @@ export class UserService {
         await this.ensureUserDataCached(userCredential.user.uid);
 
 
+        this.storageService.setItem(LocalStorageKey.LAST_ACTIVE_UID, userCredential.user.uid);
+
         this.logAuditEvent('LOGIN_SUCCESS', userCredential.user.uid, {
           email,
           timestamp: new Date().toISOString()
@@ -903,6 +928,7 @@ export class UserService {
         console.log('✅ Google Access Token captured');
       }
 
+      this.storageService.setItem(LocalStorageKey.LAST_ACTIVE_UID, result.user.uid);
       await this.handleGoogleSignInResult(result);
 
       this.logAuditEvent('GOOGLE_LOGIN_SUCCESS', result.user.uid, {
@@ -1020,6 +1046,8 @@ export class UserService {
       `user-data-${firebaseUser.uid}`,
       userData
     );
+
+    this.storageService.setItem(LocalStorageKey.LAST_ACTIVE_UID, firebaseUser.uid);
   }
 
   /**

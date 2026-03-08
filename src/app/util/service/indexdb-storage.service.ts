@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { LocalStorageKey, LocalStorageKeyHelper } from '../models/local-storage.model';
+import { BehaviorSubject } from 'rxjs';
+import { filter, take } from 'rxjs/operators';
 
 /**
  * Hybrid LocalStorage Service (IndexedDB + In-Memory Cache)
@@ -30,6 +32,11 @@ export class LocalIndexDBStorageService {
     private transactionsCache = new Map<string, any>();
     private isInitialized = false;
     private isCleaningUp = false;
+    private readonly initializedSubject = new BehaviorSubject<boolean>(false);
+    public readonly isReady$ = this.initializedSubject.asObservable().pipe(
+        filter(ready => ready),
+        take(1)
+    );
 
     constructor() {
         LocalIndexDBStorageService.instance = this;
@@ -65,6 +72,7 @@ export class LocalIndexDBStorageService {
             console.log(`✅ Storage initialized. KeyValue: ${this.keyValueCache.size}, Transactions: ${this.transactionsCache.size}`);
             this.isInitialized = true;
             this.isCleaningUp = false;
+            this.initializedSubject.next(true);
         } catch (error) {
             console.error('❌ Failed to initialize storage service:', error);
             // Fallback: try to load what we can or operate in memory-only mode if DB fails

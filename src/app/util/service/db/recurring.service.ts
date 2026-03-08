@@ -138,23 +138,27 @@ export class RecurringService extends BaseService {
    * Fetch all recurring templates for a user
    */
   getRecurringTemplates(userId: string): Observable<RecurringTemplate[]> {
-    if (this.isGuest()) {
-      const cacheKey = LocalStorageKeyHelper.getRecurringCacheKey(userId);
-      const templates = this.localStorageUtility.getItem<RecurringTemplate[]>(cacheKey) || [];
-      this.recurringTemplatesSubject.next(templates);
-      return of(templates);
-    }
-
-    const recurringRef = query(collection(this.firestore, this.getRecurringPath(userId)));
-    return from(getDocs(recurringRef)).pipe(
-      map(snapshot => {
-        const templates: RecurringTemplate[] = [];
-        snapshot.forEach(doc => templates.push({ id: doc.id, ...doc.data() } as RecurringTemplate));
+  return this.localStorageUtility.isReady$.pipe(
+    switchMap(() => {
+      if (this.isGuest()) {
+        const cacheKey = LocalStorageKeyHelper.getRecurringCacheKey(userId);
+        const templates = this.localStorageUtility.getItem<RecurringTemplate[]>(cacheKey) || [];
         this.recurringTemplatesSubject.next(templates);
-        return templates;
-      }),
-      catchError(err => this.handleError(err, 'getRecurringTemplates'))
-    );
+        return of(templates);
+      }
+
+      const recurringRef = query(collection(this.firestore, this.getRecurringPath(userId)));
+      return from(getDocs(recurringRef)).pipe(
+        map(snapshot => {
+          const templates: RecurringTemplate[] = [];
+          snapshot.forEach(doc => templates.push({ id: doc.id, ...doc.data() } as RecurringTemplate));
+          this.recurringTemplatesSubject.next(templates);
+          return templates;
+        }),
+        catchError(err => this.handleError(err, 'getRecurringTemplates'))
+      );
+    })
+  );
   }
 
   /**

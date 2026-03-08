@@ -238,6 +238,7 @@ function processActivities(
       payerName,
       payerPhoto,
       payerLabel: payerId === currentUid ? 'You' : payerName,
+      _isIncome: tx.type === TransactionType.INCOME,
       _sortTime: sortTime,
       _createdTime: createdTime,
       _trackId: tx.id || `tx_${Math.random()}_${sortTime}`,
@@ -251,6 +252,11 @@ function processActivities(
     const sortTime = getTime(date);
     const createdTime = getTime(set.createdAt);
     
+    let _isIncome = false;
+    if (currentUid === set.toUserId) _isIncome = true;
+    else if (currentUid === set.fromUserId) _isIncome = false;
+    else _isIncome = (set as any).type === 'income';
+
     allActivities.push({
       ...set,
       id: set.id || `set_${createdTime}`,
@@ -265,6 +271,7 @@ function processActivities(
       recipientName: set.toDisplayName,
       recipientPhoto: set.toPhotoURL,
       note: set.note || 'Settlement',
+      _isIncome,
       _sortTime: sortTime,
       _createdTime: createdTime,
       _trackId: set.id || `set_${Math.random()}_${sortTime}`,

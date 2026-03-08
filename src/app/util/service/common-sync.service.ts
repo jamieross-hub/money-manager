@@ -1158,7 +1158,7 @@ export class CommonSyncService implements OnDestroy {
    * Get current user ID
    */
   private getCurrentUserId(): string | null {
-    return this.auth.currentUser?.uid || null;
+    return this.userService.getCurrentUserId();
   }
 
   /**

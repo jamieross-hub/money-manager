@@ -8,6 +8,11 @@ export const selectProfile = createSelector(
   (state: ProfileState) => state.profile
 );
 
+export const selectUserId = createSelector(
+  selectProfile,
+  (profile) => profile?.uid || null
+);
+
 export const selectProfileLoading = createSelector(
   selectProfileState,
   (state: ProfileState) => state.loading

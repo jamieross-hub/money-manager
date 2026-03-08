@@ -27,6 +27,7 @@ import * as FamilyActions from '../../store/family.actions';
 import * as FamilySelectors from '../../store/family.selectors';
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import * as TransactionsActions from 'src/app/store/transactions/transactions.actions';
+import * as TransactionsSelectors from 'src/app/store/transactions/transactions.selectors';
 import { FamilyService } from '../../services/family.service';
 import { CategoryService } from 'src/app/util/service/db/category.service';
 import {
@@ -71,9 +72,9 @@ export class SettleUpComponent implements OnInit {
 
   family = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null });
   members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers), { initialValue: [] as FamilyMember[] });
-  transactions = toSignal(this.store.select(FamilySelectors.selectFamilyTransactions), { initialValue: [] as Transaction[] });
+  transactions = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions), { initialValue: [] as Transaction[] });
   settlements = toSignal(this.store.select(FamilySelectors.selectSettlements), { initialValue: [] as Settlement[] });
-  loading = toSignal(this.store.select(FamilySelectors.selectFamilyLoading), { initialValue: true });
+  loading = toSignal(this.store.select(TransactionsSelectors.selectTransactionsLoading), { initialValue: true });
   settlementsLoading = toSignal(this.store.select(FamilySelectors.selectSettlementsLoading), { initialValue: false });
 
   /** Current user's UID from AppState.profile */

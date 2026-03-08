@@ -114,17 +114,18 @@ export class AccountsService {
             return of(this.localStorageUtility.getEntities<Account>('accounts'));
         }
 
-        return new Observable<Account[]>(observer => {
+        return this.localStorageUtility.isReady$.pipe(
+        switchMap(() => {
             try {
                 const cachedAccounts = (this.localStorageUtility.getItem<Account[]>(this.getAccountsCacheKey(userId)) || [])
                     .filter(a => !!(a && a.accountId));
-                observer.next(cachedAccounts);
+                return of(cachedAccounts);
             } catch (error) {
                 console.warn('[AccountsService] Failed to load cached accounts:', error);
-                observer.next([]);
+                return of([]);
             }
-            observer.complete();
-        });
+        })
+    );
     }
 
     /**

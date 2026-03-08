@@ -277,6 +277,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
                 this.reportsProcessor.process({
                     transactions: txns,
+                    currentUserId: this.userService.getCurrentUserId(),
                     selectedPeriod: period,
                     selectedYear: year,
                     selectedMonth: month,

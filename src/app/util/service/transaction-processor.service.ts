@@ -72,6 +72,7 @@ export class TransactionProcessorService {
     isRecurringMode: boolean;
     isFamilyMode: boolean;
     isDeletedMode?: boolean;
+    currentUserId?: string;
   }) {
     if (!this.worker) {
       console.warn('Worker not initialized, processing skipped.');

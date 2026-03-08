@@ -116,17 +116,19 @@ export class ReportsProcessorService {
 
     process(data: {
         transactions: Transaction[];
+        currentUserId: string | null;
         selectedPeriod: 'weekly' | 'monthly' | 'yearly';
         selectedYear: number;
         selectedMonth: number | null;
         selectedWeekOffset: number;
-        categoryIconMap: { [key: string]: string };
-        categoryColorMap: { [key: string]: string };
-    }) {
+        categoryIconMap: Record<string, string>;
+        categoryColorMap: Record<string, string>;
+    }): void {
         if (!this.worker) {
             console.warn('Worker not initialized, processing skipped.');
             return;
         }
+        if (!data.transactions) return;
 
         this.isProcessing.set(true);
         this.worker.postMessage(data);

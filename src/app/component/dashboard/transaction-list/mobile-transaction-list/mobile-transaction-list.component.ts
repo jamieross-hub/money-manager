@@ -455,7 +455,8 @@ export class MobileTransactionListComponent
         appView,
         isRecurringMode,
         isFamilyMode,
-        isDeletedMode: selectedRange === 'deleted'
+        isDeletedMode: selectedRange === 'deleted',
+        currentUserId: this.currentUserId
       });
     });
 

@@ -4,9 +4,12 @@ import { from, of } from 'rxjs';
 import { switchMap, map, catchError, mergeMap } from 'rxjs/operators';
 import { FamilyService } from '../services/family.service';
 import * as FamilyActions from './family.actions';
+import { UserService } from 'src/app/util/service/db/user.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import * as ProfileActions from 'src/app/store/profile/profile.actions';
 import { filter } from 'rxjs';
+import { TransactionsFacadeService } from 'src/app/util/service/db/transactions-facade.service';
+import { SyncStatus } from 'src/app/util/config/enums';
 
 @Injectable()
 export class FamilyEffects {
@@ -14,6 +17,8 @@ export class FamilyEffects {
   constructor(
     private actions$: Actions,
     private familyService: FamilyService,
+    private userService: UserService,
+    private transactionsFacade: TransactionsFacadeService,
     private notificationService: NotificationService,
   ) {}
 
@@ -181,38 +186,51 @@ export class FamilyEffects {
   loadTransactions$ = createEffect(() =>
     this.actions$.pipe(
       ofType(FamilyActions.loadTransactions),
-      switchMap(({ familyId }) =>
-        this.familyService.getTransactions(familyId).pipe(
+      switchMap(({ familyId }) => {
+        const userId = this.userService.getCurrentUserId() || '';
+        // TransactionsFacadeService.getTransactions handles familyId internally via activeService
+        return this.transactionsFacade.getTransactions(userId).pipe(
           map(transactions => FamilyActions.loadTransactionsSuccess({ transactions })),
           catchError(() => of(FamilyActions.loadTransactionsSuccess({ transactions: [] })))
-        )
-      )
+        );
+      })
     )
   );
 
   addTransaction$ = createEffect(() =>
     this.actions$.pipe(
       ofType(FamilyActions.addTransaction),
-      mergeMap(({ request }) =>
-        from(this.familyService.addTransaction(request)).pipe(
-          map(transaction => {
+      mergeMap(({ request }) => {
+        const userId = this.userService.getCurrentUserId() || '';
+        const transaction: any = {
+           ...request,
+           userId: userId,
+           familyId: request.familyId,
+           syncStatus: SyncStatus.PENDING
+        };
+        return this.transactionsFacade.createTransaction(userId, transaction).pipe(
+          map(() => {
             this.notificationService.success('Transaction added');
-            return FamilyActions.addTransactionSuccess({ transaction });
+            // TransactionsService creates its own ID, so we might not have it here 
+            // but the real-time listener will pick it up.
+            // For the action, we can use the optimistic one or just success.
+            return FamilyActions.addTransactionSuccess({ transaction: transaction as any });
           }),
           catchError(err => {
             this.notificationService.error('Failed to add transaction');
             return of(FamilyActions.clearError());
           })
-        )
-      )
+        );
+      })
     )
   );
 
   updateTransaction$ = createEffect(() =>
     this.actions$.pipe(
       ofType(FamilyActions.updateTransaction),
-      mergeMap(({ familyId, txId, request }) =>
-        from(this.familyService.updateTransaction(familyId, txId, request)).pipe(
+      mergeMap(({ familyId, txId, request }) => {
+        const userId = this.userService.getCurrentUserId() || '';
+        return this.transactionsFacade.updateTransaction(userId, txId, request).pipe(
           map(() => {
             this.notificationService.success('Transaction updated');
             return FamilyActions.updateTransactionSuccess({ txId, request });
@@ -221,28 +239,35 @@ export class FamilyEffects {
             this.notificationService.error('Failed to update transaction');
             return of(FamilyActions.clearError());
           })
-        )
-      )
+        );
+      })
     )
   );
 
   deleteTransaction$ = createEffect(() =>
     this.actions$.pipe(
       ofType(FamilyActions.deleteTransaction),
-      mergeMap(({ familyId, txId }) =>
-        from(this.familyService.deleteTransaction(familyId, txId)).pipe(
-          map((transaction) => {
-            if (!transaction.settlementId) {
-              this.notificationService.success('Transaction deleted');
-            }
-            return FamilyActions.deleteTransactionSuccess({ txId, transaction });
+      mergeMap(({ familyId, txId }) => {
+        const userId = this.userService.getCurrentUserId() || '';
+        // We need the transaction for cascade settlement logic
+        return this.transactionsFacade.getTransaction(userId, txId).pipe(
+          switchMap(transaction => {
+            if (!transaction) throw new Error('Transaction not found');
+            return this.transactionsFacade.deleteTransaction(userId, txId).pipe(
+              map(() => {
+                if (!transaction.settlementId) {
+                  this.notificationService.success('Transaction deleted');
+                }
+                return FamilyActions.deleteTransactionSuccess({ txId, transaction });
+              })
+            );
           }),
           catchError(err => {
             this.notificationService.error('Failed to delete transaction');
             return of(FamilyActions.clearError());
           })
-        )
-      )
+        );
+      })
     )
   );
 

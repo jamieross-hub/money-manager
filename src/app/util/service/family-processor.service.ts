@@ -51,17 +51,39 @@ export class FamilyProcessorService {
     }
   }
 
+  private debounceTimer: any;
+
+  private lastInputStr = '';
+
   process(input: FamilyProcessorInput) {
     if (!this.worker) {
       console.warn('Worker not initialized, cannot process family data.');
       return;
     }
 
-    this.isProcessing.set(true);
-    this.worker.postMessage({
-      type: 'PROCESS_FAMILY_DATA',
-      payload: input
+    // Quick check to skip if data is exactly same
+    const currentInputStr = JSON.stringify({
+      tCount: input.transactions.length,
+      mCount: input.members.length,
+      sCount: input.settlements.length,
+      uid: input.currentUserId
     });
+    
+    if (this.lastInputStr === currentInputStr) return;
+    this.lastInputStr = currentInputStr;
+
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+    }
+
+    this.debounceTimer = setTimeout(() => {
+      this.isProcessing.set(true);
+      this.worker?.postMessage({
+        type: 'PROCESS_FAMILY_DATA',
+        payload: input
+      });
+      this.debounceTimer = null;
+    }, 100); // 100ms debounce
   }
 
   terminate() {

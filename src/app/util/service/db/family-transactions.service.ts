@@ -42,19 +42,19 @@ export class FamilyTransactionsService extends TransactionsService {
         );
     }
 
-    protected override getTransactionsPath(userId: string): string {
-        const familyId = this.getFamilyId();
+    protected override getTransactionsPath(userId: string, familyId?: string): string {
+        const fId = familyId !== undefined ? familyId : this.getFamilyId();
         
-        if (!familyId) {
+        if (!fId) {
             console.warn('[FamilyTransactionsService] No familyId found, falling back to personal transactions');
             return super.getTransactionsPath(userId);
         }
         
-        return `family-groups/${familyId}/transactions`;
+        return `family-groups/${fId}/transactions`;
     }
 
-    protected override getTransactionPath(userId: string, transactionId: string): string {
-        return `${this.getTransactionsPath(userId)}/${transactionId}`;
+    protected override getTransactionPath(userId: string, transactionId: string, familyId?: string): string {
+        return `${this.getTransactionsPath(userId, familyId)}/${transactionId}`;
     }
 
     protected override getFamilyId(): string | undefined {

@@ -7,7 +7,7 @@ export const selectFamilyState = createFeatureSelector<FamilyState>('family');
 export const selectFamily = createSelector(selectFamilyState, s => s?.family || null);
 export const selectFamilyMembers = createSelector(selectFamilyState, s => s?.members || []);
 export const selectFamilyTransactions = createSelector(
-  selectFamilyState, 
+  selectFamilyState,
   s => (s?.transactions || []).filter(tx => tx.status !== TransactionStatus.DELETED)
 );
 export const selectRawFamilyTransactions = createSelector(
@@ -24,7 +24,5 @@ export const selectUserFamiliesLoaded = createSelector(selectFamilyState, s => s
 export const selectSettlements = createSelector(selectFamilyState, s => s?.settlements || []);
 export const selectSettlementsLoading = createSelector(selectFamilyState, s => s?.settlementsLoading || false);
 
-export const selectRecentTransactions = createSelector(
-  selectFamilyTransactions,
-  txs => txs ? txs.slice(0, 5) : []
-);
+// NOTE: selectRecentTransactions has been removed — use TransactionsSelectors.selectRecentTransactions(n)
+// which is family-mode aware via selectAllTransactions.

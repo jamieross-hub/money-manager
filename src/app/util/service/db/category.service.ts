@@ -94,20 +94,17 @@ export class CategoryService {
             return of(this.localStorageUtility.getEntities<Category>('categories'));
         }
 
-        return new Observable<Category[]>(observer => {
+        return this.localStorageUtility.isReady$.pipe(
+        switchMap(() => {
             try {
                 const cachedCategories = this.localStorageUtility.getItem<Category[]>(this.getCategoriesCacheKey(userId));
-                if (cachedCategories) {
-                    observer.next(cachedCategories);
-                } else {
-                    observer.next([]);
-                }
+                return of(cachedCategories || []);
             } catch (error) {
                 console.warn('[CategoryService] Failed to load cached categories:', error);
-                observer.next([]);
+                return of([]);
             }
-            observer.complete();
-        });
+        })
+    );
     }
 
     /** Pull categories from Firestore once and update local cache */

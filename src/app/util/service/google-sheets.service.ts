@@ -9,6 +9,7 @@ import { LocalIndexDBStorageService } from './indexdb-storage.service';
 import { LocalStorageKeyHelper } from '../models/local-storage.model';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
+import { UserService } from './db/user.service';
 
 export interface GoogleSheetsConfig {
   spreadsheetId: string;
@@ -38,7 +39,8 @@ export class GoogleSheetsService extends BaseService {
     protected override readonly auth: Auth,
     protected override readonly currencyService: CurrencyService,
     private readonly storageService: LocalIndexDBStorageService,
-    private readonly store: Store<AppState>
+    private readonly store: Store<AppState>,
+    private readonly userService: UserService
   ) {
     super(firestore, auth, currencyService);
   }
@@ -75,7 +77,7 @@ export class GoogleSheetsService extends BaseService {
    * Get all Google Sheets connections for the current user (Local-Only)
    */
   getConnections(): Observable<GoogleSheetsConnection[]> {
-    const userId = this.getCurrentUserId();
+    const userId = this.userService.getCurrentUserId();
     if (!userId) return of([]);
 
     return new Observable<GoogleSheetsConnection[]>(observer => {
