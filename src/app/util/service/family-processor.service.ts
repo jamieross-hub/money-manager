@@ -1,6 +1,7 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { Transaction } from '../models/transaction.model';
 import { FamilyMember, FamilyStats, Settlement, BalanceEntry } from '../models/family.model';
+import { LocalIndexDBStorageService } from './indexdb-storage.service';
 
 export interface FamilyProcessorInput {
   transactions: Transaction[];
@@ -19,11 +20,22 @@ export interface FamilyProcessorOutput {
 @Injectable({ providedIn: 'root' })
 export class FamilyProcessorService {
   private worker: Worker | null = null;
+  private storageService = inject(LocalIndexDBStorageService);
+  private currentCacheKey: string | null = null;
+
+  private getInitialData(): FamilyProcessorOutput | null {
+    const keys = this.storageService.getAllKeys();
+    const cacheKey = keys.find(k => k.startsWith('family_processed_data')) || 'family_processed_data';
+    this.currentCacheKey = cacheKey;
+    return this.storageService.getItem<FamilyProcessorOutput>(cacheKey);
+  }
+
+  private initialData = this.getInitialData();
   
   // Output Signals
-  readonly stats = signal<FamilyStats | null>(null);
-  readonly balances = signal<BalanceEntry[]>([]);
-  readonly activities = signal<any[]>([]);
+  readonly stats = signal<FamilyStats | null>(this.initialData?.stats || null);
+  readonly balances = signal<BalanceEntry[]>(this.initialData?.balances || []);
+  readonly activities = signal<any[]>(this.initialData?.activities || []);
   readonly isProcessing = signal<boolean>(false);
 
   constructor() {
@@ -40,6 +52,10 @@ export class FamilyProcessorService {
           this.balances.set(payload.balances);
           this.activities.set(payload.activities);
           this.isProcessing.set(false);
+          
+          if (this.currentCacheKey) {
+            this.storageService.setItem(this.currentCacheKey, payload);
+          }
         }
       };
       this.worker.onerror = (err) => {
@@ -59,6 +75,19 @@ export class FamilyProcessorService {
     if (!this.worker) {
       console.warn('Worker not initialized, cannot process family data.');
       return;
+    }
+
+    const cacheKey = input.currentUserId ? `family_processed_data_${input.currentUserId}` : 'family_processed_data';
+    
+    // Seed from cache when user changes or first load
+    if (this.currentCacheKey !== cacheKey) {
+      this.currentCacheKey = cacheKey;
+      const cached = this.storageService.getItem<FamilyProcessorOutput>(cacheKey);
+      if (cached) {
+        this.stats.set(cached.stats);
+        this.balances.set(cached.balances);
+        this.activities.set(cached.activities);
+      }
     }
 
     // Quick check to skip if data is exactly same
