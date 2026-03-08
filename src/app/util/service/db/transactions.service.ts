@@ -717,7 +717,7 @@ export class TransactionsService extends BaseService {
                 case 'create':
                 case 'update':
                     if (transaction && transaction.id) {
-                        const existing = this.localStorageUtility.getItem<Transaction>(itemKey);
+                        const existing = this.localStorageUtility.getItem<Transaction>(itemKey, 'transactions');
                         this.localStorageUtility.setTransaction(itemKey, { ...existing, ...transaction });
                     }
                     break;

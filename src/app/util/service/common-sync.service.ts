@@ -673,11 +673,32 @@ export class CommonSyncService implements OnDestroy {
     }
   }
 
-  private async updateTransactionSyncStatus(transaction: any, status: 'synced' | 'failed', collectionPath?: string): Promise<void> {
-    const transactionId = transaction?.id;
+  private async updateTransactionSyncStatus(transactionOrId: any, status: 'synced' | 'failed', collectionPath?: string): Promise<void> {
+    let transaction: any;
+    let transactionId: string;
+
+    if (typeof transactionOrId === 'string') {
+      transactionId = transactionOrId;
+      // Search for transaction in all transactions cache to find its full data/context
+      const allTx = this.storageService.getAllTransactionsSync();
+      transaction = allTx.find(t => t.id === transactionId);
+      
+      if (!transaction) {
+        console.warn(`[CommonSyncService] Could not find transaction ${transactionId} in cache to update status`);
+        return;
+      }
+    } else {
+      transaction = transactionOrId;
+      transactionId = transaction?.id;
+    }
+
     if (!transactionId) return;
 
     try {
+      // Determine if it's a family transaction and get familyId
+      const isFamily = collectionPath ? collectionPath.includes('family-groups') : !!transaction.familyId;
+      const familyId = isFamily ? (transaction.familyId || (collectionPath?.split('/')[1])) : undefined;
+
       // Update in store - include all data to allow reducers to correctly filter familyTransactions
       this.store.dispatch(TransactionsActions.updateTransactionSuccess({
         transaction: {
@@ -687,24 +708,18 @@ export class CommonSyncService implements OnDestroy {
         } as Transaction
       }));
 
-      // Update the status in Local IndexedDB Cache
-      const userId = this.getCurrentUserId();
-      if (userId) {
-        const isFamily = collectionPath ? collectionPath.includes('family-groups') : !!transaction.familyId;
-        const cacheKey = LocalStorageKeyHelper.getTransactionsCacheKey(userId, isFamily ? transaction.familyId : undefined);
-        const cachedTransactions = this.storageService.getItem<Transaction[]>(cacheKey) || [];
-        const index = cachedTransactions.findIndex((t: Transaction) => t.id === transactionId);
-        if (index !== -1) {
-          cachedTransactions[index] = {
-            ...cachedTransactions[index],
-            syncStatus: status as any,
-            lastSyncedAt: new Date()
-          };
-          this.storageService.setItem(cacheKey, cachedTransactions);
-        }
-      }
+      // Update the status in Local IndexedDB Cache (Individual Transaction Store)
+      // This is the source of truth for TransactionsService.getCachedTransactions()
+      const itemKey = LocalStorageKeyHelper.getTransactionItemKey(transactionId, familyId);
+      const existing = this.storageService.getItem<Transaction>(itemKey, 'transactions');
+      
+      this.storageService.setItem(itemKey, {
+        ...(existing || transaction),
+        syncStatus: status as any,
+        lastSyncedAt: new Date()
+      }, 'transactions');
 
-      console.log(`Transaction ${transactionId} sync status updated to: ${status}`);
+      console.log(`Transaction ${transactionId} sync status updated to: ${status} [isFamily: ${isFamily}]`);
     } catch (error) {
       console.error('Failed to update transaction sync status:', error);
     }

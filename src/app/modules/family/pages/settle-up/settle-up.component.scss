@@ -291,13 +291,13 @@
     width: 80px;
     height: 80px;
     border-radius: 28px;
-    background-color: var(--success-100);
-    color: var(--success-600);
+    background-color: var(--primary-500);
+    color: var(--primary-50);
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 20px;
-    box-shadow: 0 8px 24px color-mix(in srgb, var(--success-500), transparent 85%);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--primary-500), transparent 85%);
 
     mat-icon {
       font-size: 40px;
