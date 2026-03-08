@@ -8,7 +8,7 @@ addEventListener('message', ({ data }) => {
   const { type, payload } = data;
 
   if (type === 'PROCESS_FAMILY_DATA') {
-    const { transactions, members, settlements, currentUserId, sessionStartTime } = payload;
+    const { transactions, members, settlements, currentUserId, sessionStartTime, fingerprint } = payload;
     
     const stats = computeStats(transactions, members);
     const balances = computeBalances(transactions, members, settlements);
@@ -16,7 +16,7 @@ addEventListener('message', ({ data }) => {
 
     postMessage({
       type: 'FAMILY_DATA_PROCESSED',
-      payload: { stats, balances, activities }
+      payload: { stats, balances, activities, fingerprint }
     });
   }
 });

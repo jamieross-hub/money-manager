@@ -15,6 +15,7 @@ export interface FamilyProcessorOutput {
   stats: FamilyStats | null;
   balances: BalanceEntry[];
   activities: any[];
+  fingerprint?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -69,6 +70,16 @@ export class FamilyProcessorService {
 
   private debounceTimer: any;
 
+  private generateFingerprint(input: FamilyProcessorInput): string {
+    const lastTx = input.transactions[0];
+    return JSON.stringify({
+      tFingerprint: input.transactions.length > 0 ? `${input.transactions.length}_${lastTx?.id}_${lastTx?.updatedAt}` : 'empty',
+      mCount: input.members.length,
+      sCount: input.settlements.length,
+      uid: input.currentUserId
+    });
+  }
+
   private lastInputStr = '';
 
   process(input: FamilyProcessorInput) {
@@ -77,6 +88,7 @@ export class FamilyProcessorService {
       return;
     }
 
+    const currentFingerprint = this.generateFingerprint(input);
     const cacheKey = input.currentUserId ? `family_processed_data_${input.currentUserId}` : 'family_processed_data';
     
     // Seed from cache when user changes or first load
@@ -87,19 +99,19 @@ export class FamilyProcessorService {
         this.stats.set(cached.stats);
         this.balances.set(cached.balances);
         this.activities.set(cached.activities);
+
+        // EXTRA OPTIMIZATION: If cache is already perfect for this input, we skip the worker entirely
+        if (cached.fingerprint === currentFingerprint) {
+          this.lastInputStr = currentFingerprint;
+          this.isProcessing.set(false);
+          return;
+        }
       }
     }
 
-    // Quick check to skip if data is exactly same
-    const currentInputStr = JSON.stringify({
-      tCount: input.transactions.length,
-      mCount: input.members.length,
-      sCount: input.settlements.length,
-      uid: input.currentUserId
-    });
-    
-    if (this.lastInputStr === currentInputStr) return;
-    this.lastInputStr = currentInputStr;
+    // Quick check to skip if data is exactly same as what's already active or pending
+    if (this.lastInputStr === currentFingerprint) return;
+    this.lastInputStr = currentFingerprint;
 
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
@@ -109,7 +121,7 @@ export class FamilyProcessorService {
       this.isProcessing.set(true);
       this.worker?.postMessage({
         type: 'PROCESS_FAMILY_DATA',
-        payload: input
+        payload: { ...input, fingerprint: currentFingerprint }
       });
       this.debounceTimer = null;
     }, 100); // 100ms debounce

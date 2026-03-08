@@ -1,6 +1,6 @@
 import {
   Component, inject, OnInit, ChangeDetectionStrategy,
-  computed, effect, DestroyRef
+  computed, effect, DestroyRef, untracked
 } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Actions, ofType } from '@ngrx/effects';
@@ -14,7 +14,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatRippleModule } from '@angular/material/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { take, switchMap, map } from 'rxjs/operators';
+import { take, switchMap, map, distinctUntilChanged } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   SettleAvatarPipe, SettleAvatarColorPipe,
@@ -70,16 +70,16 @@ export class SettleUpComponent implements OnInit {
   private familyProcessor = inject(FamilyProcessorService);
   private sessionStartTime = Date.now();
 
-  family = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null });
-  members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers), { initialValue: [] as FamilyMember[] });
-  transactions = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions), { initialValue: [] as Transaction[] });
-  settlements = toSignal(this.store.select(FamilySelectors.selectSettlements), { initialValue: [] as Settlement[] });
-  loading = toSignal(this.store.select(TransactionsSelectors.selectTransactionsLoading), { initialValue: true });
-  settlementsLoading = toSignal(this.store.select(FamilySelectors.selectSettlementsLoading), { initialValue: false });
+  family = toSignal(this.store.select(FamilySelectors.selectFamily).pipe(distinctUntilChanged()), { initialValue: null });
+  members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as FamilyMember[] });
+  transactions = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as Transaction[] });
+  settlements = toSignal(this.store.select(FamilySelectors.selectSettlements).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as Settlement[] });
+  loading = toSignal(this.store.select(TransactionsSelectors.selectTransactionsLoading).pipe(distinctUntilChanged()), { initialValue: true });
+  settlementsLoading = toSignal(this.store.select(FamilySelectors.selectSettlementsLoading).pipe(distinctUntilChanged()), { initialValue: false });
 
   /** Current user's UID from AppState.profile */
   private readonly profile = this.store.selectSignal(ProfileSelectors.selectProfile);
-  get currentUserId(): string { return this.profile()?.uid ?? ''; }
+  readonly currentUserId = computed(() => this.profile()?.uid ?? '');
 
   private storageService = inject(LocalIndexDBStorageService);
 
@@ -107,36 +107,56 @@ export class SettleUpComponent implements OnInit {
   /** All outstanding balances (from owes to) */
   balances = this.familyProcessor.balances;
 
-  /** Balances involving the current user (highlighted) */
-  myBalances = computed<BalanceEntry[]>(() => {
-    const uid = this.currentUserId;
-    return this.balances().filter(b => b.fromUserId === uid || b.toUserId === uid);
+  /**
+   * Optimized: Single pass over the balances array to categorize data for the UI.
+   * Prevents downstream updates if the relevant values haven't changed.
+   */
+  private readonly processedData = computed(() => {
+    const raw = this.balances();
+    const uid = this.currentUserId();
+    
+    const my: BalanceEntry[] = [];
+    const others: BalanceEntry[] = [];
+    let owedByMe = 0;
+    let owedToMe = 0;
+
+    for (const b of raw) {
+      if (b.fromUserId === uid || b.toUserId === uid) {
+        my.push(b);
+        if (b.fromUserId === uid) owedByMe += b.amount;
+        if (b.toUserId === uid) owedToMe += b.amount;
+      } else {
+        others.push(b);
+      }
+    }
+
+    return { my, others, owedByMe, owedToMe };
+  }, {
+    equal: (a, b) => (
+      a.owedByMe === b.owedByMe &&
+      a.owedToMe === b.owedToMe &&
+      a.my.length === b.my.length &&
+      a.others.length === b.others.length
+    )
   });
 
-  /** Other balances (not involving current user) */
-  otherBalances = computed<BalanceEntry[]>(() => {
-    const uid = this.currentUserId;
-    return this.balances().filter(b => b.fromUserId !== uid && b.toUserId !== uid);
-  });
+  myBalances = computed(() => this.processedData().my);
+  otherBalances = computed(() => this.processedData().others);
+  totalOwedByMe = computed(() => this.processedData().owedByMe);
+  totalOwedToMe = computed(() => this.processedData().owedToMe);
 
-  totalOwedByMe = computed<number>(() => {
-    const uid = this.currentUserId;
-    return this.myBalances().filter(b => b.fromUserId === uid).reduce((s, b) => s + b.amount, 0);
-  });
-
-  totalOwedToMe = computed<number>(() => {
-    const uid = this.currentUserId;
-    return this.myBalances().filter(b => b.toUserId === uid).reduce((s, b) => s + b.amount, 0);
-  });
+  readonly familyId = computed(() => this.family()?.id);
 
   constructor() {
-    // When family loads, fetch members, transactions, and settlements
+    // When family ID changes, fetch its relevant sub-collections
     effect(() => {
-      const fam = this.family();
-      if (fam?.id) {
-        this.store.dispatch(FamilyActions.loadMembers({ familyId: fam.id }));
-        this.store.dispatch(FamilyActions.loadTransactions({ familyId: fam.id }));
-        this.store.dispatch(FamilyActions.loadSettlements({ familyId: fam.id }));
+      const id = this.familyId();
+      if (id) {
+        untracked(() => {
+          this.store.dispatch(FamilyActions.loadMembers({ familyId: id }));
+          this.store.dispatch(FamilyActions.loadTransactions({ familyId: id }));
+          this.store.dispatch(FamilyActions.loadSettlements({ familyId: id }));
+        });
       }
     });
 
@@ -144,15 +164,17 @@ export class SettleUpComponent implements OnInit {
       const transactions = this.transactions();
       const members = this.members();
       const settlements = this.settlements();
-      const currentUserId = this.currentUserId;
+      const currentUserId = this.currentUserId();
 
       if (transactions && members) {
-        this.familyProcessor.process({
-          transactions,
-          members,
-          settlements,
-          currentUserId,
-          sessionStartTime: this.sessionStartTime
+        untracked(() => {
+          this.familyProcessor.process({
+            transactions,
+            members,
+            settlements,
+            currentUserId,
+            sessionStartTime: this.sessionStartTime
+          });
         });
       }
     });
@@ -186,7 +208,7 @@ export class SettleUpComponent implements OnInit {
           take(1),
           switchMap(({ settlement }: { settlement: Settlement }) => {
             return this.categoryService.findOrCreateSystemCategory(
-              this.currentUserId, // <--- Securely always fetch/create on current user's DB
+              this.currentUserId(), // <--- Securely always fetch/create on current user's DB
               'Settlement',
               TransactionType.TRANSFER,
               'handshake',
@@ -196,7 +218,7 @@ export class SettleUpComponent implements OnInit {
             );
           })
         ).subscribe(({ settlement, categoryId }) => {
-          const userId = this.currentUserId; // <--- Securely log personal tx under current user
+          const userId = this.currentUserId(); // <--- Securely log personal tx under current user
           const amIPaying = userId === req.fromUserId;
           const payee = amIPaying ? req.toDisplayName : req.fromDisplayName;
 

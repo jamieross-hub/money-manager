@@ -57,8 +57,8 @@
         <div class="flex flex-col">
           @for (b of myBalances(); track trackByEntry($index, b)) {
             <div class="settle-card" 
-                 [class.owe-mode]="b | iOwe : currentUserId"
-                 [class.receive-mode]="b | owedToMe : currentUserId"
+                 [class.owe-mode]="b | iOwe : currentUserId()"
+                 [class.receive-mode]="b | owedToMe : currentUserId()"
                  (click)="openSettleDialog(b)" 
                  matRipple>
               
@@ -78,14 +78,14 @@
               <!-- Content Info -->
               <div class="card-info">
                 <p class="top-label">
-                  {{ (b | iOwe : currentUserId) ? 'Transfer to' : 'Receiving from' }}
+                  {{ (b | iOwe : currentUserId()) ? 'Transfer to' : 'Receiving from' }}
                 </p>
                 <p class="name-label">
-                  {{ (b | iOwe : currentUserId) ? (b.toDisplayName | titlecase) : (b.fromDisplayName | titlecase) }}
+                  {{ (b | iOwe : currentUserId()) ? (b.toDisplayName | titlecase) : (b.fromDisplayName | titlecase) }}
                 </p>
                 <p class="amount-label" 
-                   [class.text-error-600]="b | iOwe : currentUserId"
-                   [class.text-success-600]="b | owedToMe : currentUserId">
+                   [class.text-error-600]="b | iOwe : currentUserId()"
+                   [class.text-success-600]="b | owedToMe : currentUserId()">
                   {{ b.amount | currency: 'INR':'symbol':'1.0-0' }}
                 </p>
               </div>
@@ -94,11 +94,11 @@
               <div class="shrink-0">
                 <button mat-stroked-button 
                         class="btn-settle"
-                        [class.btn-pay]="b | iOwe : currentUserId"
-                        [class.btn-get]="b | owedToMe : currentUserId"
+                        [class.btn-pay]="b | iOwe : currentUserId()"
+                        [class.btn-get]="b | owedToMe : currentUserId()"
                         (click)="$event.stopPropagation(); openSettleDialog(b)">
-                  <mat-icon class="!text-[16px] !mr-1">{{ (b | iOwe : currentUserId) ? 'send' : 'login' }}</mat-icon>
-                  <span>{{ (b | iOwe : currentUserId) ? 'Pay' : 'Settle' }}</span>
+                  <mat-icon class="!text-[16px] !mr-1">{{ (b | iOwe : currentUserId()) ? 'send' : 'login' }}</mat-icon>
+                  <span>{{ (b | iOwe : currentUserId()) ? 'Pay' : 'Settle' }}</span>
                 </button>
               </div>
             </div>

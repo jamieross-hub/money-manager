@@ -104,9 +104,9 @@
 
           <button mat-menu-item (click)="deleteFamily()">
             <div class="flex items-center text-red-500">
-              <mat-icon class="!mr-3 text-red-500">{{ family()?.ownerUserId === currentUserId ? 'delete_outline' : 'logout'
+              <mat-icon class="!mr-3 text-red-500">{{ family()?.ownerUserId === currentUserId() ? 'delete_outline' : 'logout'
               }}</mat-icon>
-              <span class="font-medium">{{ family()?.ownerUserId === currentUserId ? 'Delete Family' : 'Leave Family'
+              <span class="font-medium">{{ family()?.ownerUserId === currentUserId() ? 'Delete Family' : 'Leave Family'
               }}</span>
             </div>
           </button>
@@ -328,7 +328,7 @@
                       <span class="font-medium text-primary-600 dark:text-primary-400">
                         {{ tx.payerLabel }} <mat-icon
                       class="!text-[10px] !w-2.5 !h-2.5 mx-0.5 align-middle">arrow_forward</mat-icon> {{
-                      tx.recipientId === currentUserId ? 'You' : tx.recipientName }}
+                      tx.recipientId === currentUserId() ? 'You' : tx.recipientName }}
                     </span>
                   }
                   @if (tx.category !== 'Settlement' && tx.category !== 'MemberActivity') {

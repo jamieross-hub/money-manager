@@ -10,9 +10,11 @@ import {
   Output,
   EventEmitter,
   signal,
+  untracked,
 } from '@angular/core';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { distinctUntilChanged } from 'rxjs/operators';
 
 // Angular animations
 import { trigger, transition, style, animate } from '@angular/animations';
@@ -38,6 +40,7 @@ import { AppState } from 'src/app/store/app.state';
 import * as FamilyActions from '../../store/family.actions';
 import * as FamilySelectors from '../../store/family.selectors';
 import * as TransactionsSelectors from 'src/app/store/transactions/transactions.selectors';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import * as ProfileActions from 'src/app/store/profile/profile.actions';
 
 // Models
@@ -150,16 +153,17 @@ export class FamilyDashboardComponent implements OnInit {
   private isInstanceLoading = false;
 
   // ─── Store Signals (raw) ─────────────────────────────────────────────────────
-  private readonly storeFamily  = toSignal(this.store.select(FamilySelectors.selectFamily),           { initialValue: null });
-  private readonly allFamilies  = toSignal(this.store.select(FamilySelectors.selectUserFamilies),     { initialValue: [] });
+  private readonly storeFamily  = toSignal(this.store.select(FamilySelectors.selectFamily).pipe(distinctUntilChanged()), { initialValue: null });
+  private readonly allFamilies  = toSignal(this.store.select(FamilySelectors.selectUserFamilies).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] });
 
   // ─── Public Signals (from store) ─────────────────────────────────────────────
-  readonly members           = toSignal(this.store.select(FamilySelectors.selectFamilyMembers),              { initialValue: [] as FamilyMember[] });
-  readonly transactions      = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions),      { initialValue: [] as Transaction[] });
-  readonly recentTxns        = toSignal(this.store.select(TransactionsSelectors.selectRecentTransactions(5)), { initialValue: [] as Transaction[] });
-  readonly settlements       = toSignal(this.store.select(FamilySelectors.selectSettlements),               { initialValue: [] as Settlement[] });
-  readonly loading           = toSignal(this.store.select(TransactionsSelectors.selectTransactionsLoading),  { initialValue: true });
-  private readonly settlementsLoading = toSignal(this.store.select(FamilySelectors.selectSettlementsLoading), { initialValue: false });
+  readonly currentUserId     = toSignal(this.store.select(ProfileSelectors.selectUserId), { initialValue: undefined });
+  readonly members           = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as FamilyMember[] });
+  readonly transactions      = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as Transaction[] });
+  readonly recentTxns        = toSignal(this.store.select(TransactionsSelectors.selectRecentTransactions(5)).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as Transaction[] });
+  readonly settlements       = toSignal(this.store.select(FamilySelectors.selectSettlements).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as Settlement[] });
+  readonly loading           = toSignal(this.store.select(TransactionsSelectors.selectTransactionsLoading).pipe(distinctUntilChanged()), { initialValue: true });
+  private readonly settlementsLoading = toSignal(this.store.select(FamilySelectors.selectSettlementsLoading).pipe(distinctUntilChanged()), { initialValue: false });
 
   // ─── Processor Signals ───────────────────────────────────────────────────────
   readonly recentActivities = this.familyProcessor.activities;
@@ -205,8 +209,9 @@ export class FamilyDashboardComponent implements OnInit {
 
   readonly currentUserExpense = computed(() => {
     const s = this.stats();
-    if (!s || !this.currentUserId) return 0;
-    return s.memberBreakdown.find(m => m.userId === this.currentUserId)?.totalExpense ?? 0;
+    const uid = this.currentUserId();
+    if (!s || !uid) return 0;
+    return s.memberBreakdown.find(m => m.userId === uid)?.totalExpense ?? 0;
   });
 
   readonly currentUserSharePercentage = computed(() => {
@@ -216,39 +221,48 @@ export class FamilyDashboardComponent implements OnInit {
   });
 
   readonly myNetSettleBalance = computed(() => {
-    const uid = this.currentUserId;
+    const uid = this.currentUserId();
     if (!uid) return 0;
     const balances = this.settleBalances();
-    const owedByMe = balances.filter(b => b.fromUserId === uid).reduce((s, b) => s + b.amount, 0);
-    const owedToMe = balances.filter(b => b.toUserId === uid).reduce((s, b) => s + b.amount, 0);
+    
+    let owedByMe = 0;
+    let owedToMe = 0;
+
+    for (const b of balances) {
+      if (b.fromUserId === uid) owedByMe += b.amount;
+      if (b.toUserId === uid) owedToMe += b.amount;
+    }
+    
     return owedToMe - owedByMe;
   });
 
   readonly currentUserPaid = computed(() => {
     const txs = this.transactions();
-    const uid = this.currentUserId;
+    const uid = this.currentUserId();
     if (!txs || !uid) return 0;
 
-    return txs.reduce((sum, tx) => {
-      if (tx.status === TransactionStatus.DELETED || tx.category === 'Settlement') return sum;
-      if (tx.type !== 'expense') return sum;
+    let total = 0;
+    for (const tx of txs) {
+      if (tx.status === TransactionStatus.DELETED || tx.category === 'Settlement') continue;
+      if (tx.type !== 'expense') continue;
 
       if (tx.splitData) {
         if (tx.splitData.paidByUserId === 'multiple') {
           const myPayment = tx.splitData.paidBy?.find(p => p.userId === uid);
-          return sum + (myPayment?.amount ?? 0);
+          total += (myPayment?.amount ?? 0);
+        } else if (tx.splitData.paidByUserId === uid) {
+          total += tx.amount;
         }
-        return sum + (tx.splitData.paidByUserId === uid ? tx.amount : 0);
+      } else if (tx.userId === uid) {
+        // Simple mode: creator is the payer
+        total += tx.amount;
       }
-      // Simple mode: creator is the payer
-      return sum + (tx.userId === uid ? tx.amount : 0);
-    }, 0);
+    }
+    return total;
   });
 
   // ─── Getters ─────────────────────────────────────────────────────────────────
-  get currentUserId(): string | undefined {
-    return this.auth.currentUser?.uid;
-  }
+  // No longer needed: using signal currentUserId instead
 
   // ─── Lifecycle ───────────────────────────────────────────────────────────────
   constructor() {
@@ -258,32 +272,38 @@ export class FamilyDashboardComponent implements OnInit {
       const isLoading = this.loading() && !fam;
 
       if (fam?.id) {
-        this.store.dispatch(FamilyActions.loadSettlements({ familyId: fam.id }));
+        untracked(() => {
+          this.store.dispatch(FamilyActions.loadSettlements({ familyId: fam.id! }));
+        });
       }
 
       if (isLoading && !this.isInstanceLoading) {
-        this.isInstanceLoading = true;
-        this.loaderService.show();
+        untracked(() => {
+          this.isInstanceLoading = true;
+          this.loaderService.show();
+        });
       } else if (!isLoading && this.isInstanceLoading) {
-        this.isInstanceLoading = false;
-        this.loaderService.hide();
+        untracked(() => {
+          this.isInstanceLoading = false;
+          this.loaderService.hide();
+        });
       }
     });
 
-    // Effect 2: Process family data ONLY after:
-    //   • Family has resolved (familyId is set — settlements load was dispatched)
-    //   • Settlements fetch is complete (not mid-flight)
-    //   • Transactions and members are non-empty
+    // Effect 2: Process family data
     effect(() => {
       const { transactions, members, settlements, familyId, settlementsReady } = this.processorInput();
+      const uid = this.currentUserId();
 
       if (familyId && settlementsReady && transactions.length > 0 && members.length > 0) {
-        this.familyProcessor.process({
-          transactions,
-          members,
-          settlements,
-          currentUserId:    this.currentUserId,
-          sessionStartTime: this.sessionStartTime,
+        untracked(() => {
+          this.familyProcessor.process({
+            transactions,
+            members,
+            settlements,
+            currentUserId:    uid || undefined,
+            sessionStartTime: this.sessionStartTime,
+          });
         });
       }
     });
@@ -432,9 +452,10 @@ export class FamilyDashboardComponent implements OnInit {
   deleteFamily(): void {
     const fam      = this.family();
     const familyId = fam?.id;
-    if (!familyId) return;
+    if (!familyId || !this.currentUserId()) return;
 
-    const isOwner = fam.ownerUserId === this.currentUserId;
+
+    const isOwner = fam.ownerUserId === this.currentUserId();
     const title   = isOwner ? 'Delete Family' : 'Leave Family';
     const message = isOwner
       ? 'Are you sure you want to delete this family? This action cannot be undone and all data will be lost for all members.'
@@ -450,7 +471,7 @@ export class FamilyDashboardComponent implements OnInit {
         } else {
           await this.familyService.leaveFamily(familyId);
           this.store.dispatch(ProfileActions.updatePreferences({
-            userId:      this.currentUserId!,
+            userId:      this.currentUserId()!,
             preferences: { activeFamilyId: null, isFamilyMode: false },
           }));
         }
