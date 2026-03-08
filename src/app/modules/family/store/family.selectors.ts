@@ -6,13 +6,16 @@ export const selectFamilyState = createFeatureSelector<FamilyState>('family');
 
 export const selectFamily = createSelector(selectFamilyState, s => s?.family || null);
 export const selectFamilyMembers = createSelector(selectFamilyState, s => s?.members || []);
+export const selectRawTransactions = createSelector(selectFamilyState, s => s?.transactions || []);
+
 export const selectFamilyTransactions = createSelector(
-  selectFamilyState,
-  s => (s?.transactions || []).filter(tx => tx.status !== TransactionStatus.DELETED)
+  selectRawTransactions,
+  txs => txs.filter(tx => tx.status !== TransactionStatus.DELETED)
 );
+
 export const selectRawFamilyTransactions = createSelector(
-  selectFamilyState,
-  s => s?.transactions || []
+  selectRawTransactions,
+  txs => txs
 );
 export const selectFamilyLoading = createSelector(selectFamilyState, s => s?.loading || false);
 export const selectFamilyError = createSelector(selectFamilyState, s => s?.error || null);

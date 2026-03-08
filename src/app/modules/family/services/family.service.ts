@@ -718,6 +718,7 @@ export class FamilyService {
         photoURL: m.photoURL,
         totalIncome: 0,
         totalExpense: 0,
+        totalPaid: 0,
         netBalance: 0,
         transactionCount: 0,
         isActive: m.isActive,
@@ -738,6 +739,24 @@ export class FamilyService {
         totalIncome += tx.amount;
       } else {
         totalExpense += tx.amount;
+      }
+
+      // Track actual contributions (totalPaid)
+      if (tx.type === 'expense') {
+        if (tx.splitData) {
+          if (tx.splitData.paidByUserId === 'multiple' && tx.splitData.paidBy) {
+            tx.splitData.paidBy.forEach(p => {
+              const mStats = memberMap.get(p.userId);
+              if (mStats) mStats.totalPaid += p.amount;
+            });
+          } else if (tx.splitData.paidByUserId) {
+            const mStats = memberMap.get(tx.splitData.paidByUserId);
+            if (mStats) mStats.totalPaid += tx.amount;
+          }
+        } else {
+          const mStats = memberMap.get(tx.userId);
+          if (mStats) mStats.totalPaid += tx.amount;
+        }
       }
 
       if (tx.splitData?.splitBetween && tx.splitData.splitBetween.length > 0) {

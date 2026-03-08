@@ -14,7 +14,7 @@ import {
 } from '@angular/core';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { distinctUntilChanged } from 'rxjs/operators';
+import { distinctUntilChanged, debounceTime } from 'rxjs/operators';
 
 // Angular animations
 import { trigger, transition, style, animate } from '@angular/animations';
@@ -158,10 +158,10 @@ export class FamilyDashboardComponent implements OnInit {
 
   // ─── Public Signals (from store) ─────────────────────────────────────────────
   readonly currentUserId     = toSignal(this.store.select(ProfileSelectors.selectUserId), { initialValue: undefined });
-  readonly members           = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as FamilyMember[] });
-  readonly transactions      = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as Transaction[] });
-  readonly recentTxns        = toSignal(this.store.select(TransactionsSelectors.selectRecentTransactions(5)).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as Transaction[] });
-  readonly settlements       = toSignal(this.store.select(FamilySelectors.selectSettlements).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as Settlement[] });
+  readonly members           = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as FamilyMember[] });
+  readonly transactions      = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length && a[0]?.id === b[0]?.id && (a[0] as any)?.updatedAt === (b[0] as any)?.updatedAt)), { initialValue: [] as Transaction[] });
+  readonly recentTxns        = toSignal(this.store.select(TransactionsSelectors.selectRecentTransactions(5)).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as Transaction[] });
+  readonly settlements       = toSignal(this.store.select(FamilySelectors.selectSettlements).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as Settlement[] });
   readonly loading           = toSignal(this.store.select(TransactionsSelectors.selectTransactionsLoading).pipe(distinctUntilChanged()), { initialValue: true });
   private readonly settlementsLoading = toSignal(this.store.select(FamilySelectors.selectSettlementsLoading).pipe(distinctUntilChanged()), { initialValue: false });
 
@@ -182,13 +182,27 @@ export class FamilyDashboardComponent implements OnInit {
    * server and becomes true only after the fetch completes — preventing the
    * worker from receiving an incomplete dataset.
    */
-  private readonly processorInput = computed(() => ({
-    transactions:     this.transactions(),
-    members:          this.members(),
-    settlements:      this.settlements(),
-    familyId:         this.family()?.id,           // ensures family has resolved
-    settlementsReady: !this.settlementsLoading(),  // true only after fetch completes
-  }));
+  private readonly processorInput = computed(() => {
+    const txs              = this.transactions();
+    const mem              = this.members();
+    const set              = this.settlements();
+    const famId            = this.family()?.id;
+    const sLdg             = this.settlementsLoading();
+    const ldg              = this.loading();
+
+    // Data is ready to process if we have a familyId, no active loading, 
+    // and basic data exists (members are required, transactions optional but common)
+    const settlementsReady = !sLdg;
+    const isReady          = !!famId && settlementsReady && !ldg && mem.length > 0;
+
+    return {
+      transactions: txs,
+      members:      mem,
+      settlements:  set,
+      familyId:     famId,
+      ready:        isReady,
+    };
+  });
 
   // ─── Derived / Computed Signals ──────────────────────────────────────────────
   readonly family = computed(() => {
@@ -237,28 +251,10 @@ export class FamilyDashboardComponent implements OnInit {
   });
 
   readonly currentUserPaid = computed(() => {
-    const txs = this.transactions();
+    const s = this.stats();
     const uid = this.currentUserId();
-    if (!txs || !uid) return 0;
-
-    let total = 0;
-    for (const tx of txs) {
-      if (tx.status === TransactionStatus.DELETED || tx.category === 'Settlement') continue;
-      if (tx.type !== 'expense') continue;
-
-      if (tx.splitData) {
-        if (tx.splitData.paidByUserId === 'multiple') {
-          const myPayment = tx.splitData.paidBy?.find(p => p.userId === uid);
-          total += (myPayment?.amount ?? 0);
-        } else if (tx.splitData.paidByUserId === uid) {
-          total += tx.amount;
-        }
-      } else if (tx.userId === uid) {
-        // Simple mode: creator is the payer
-        total += tx.amount;
-      }
-    }
-    return total;
+    if (!s || !uid) return 0;
+    return s.memberBreakdown.find(m => m.userId === uid)?.totalPaid ?? 0;
   });
 
   // ─── Getters ─────────────────────────────────────────────────────────────────
@@ -292,15 +288,15 @@ export class FamilyDashboardComponent implements OnInit {
 
     // Effect 2: Process family data
     effect(() => {
-      const { transactions, members, settlements, familyId, settlementsReady } = this.processorInput();
-      const uid = this.currentUserId();
+      const input = this.processorInput();
+      const uid   = this.currentUserId();
 
-      if (familyId && settlementsReady && transactions.length > 0 && members.length > 0) {
+      if (input.ready) {
         untracked(() => {
           this.familyProcessor.process({
-            transactions,
-            members,
-            settlements,
+            transactions:     input.transactions,
+            members:          input.members,
+            settlements:      input.settlements,
             currentUserId:    uid || undefined,
             sessionStartTime: this.sessionStartTime,
           });

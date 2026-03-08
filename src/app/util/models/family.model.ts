@@ -52,6 +52,7 @@ export interface FamilyMemberStats {
   photoURL?: string;
   totalIncome: number;
   totalExpense: number;
+  totalPaid: number;
   netBalance: number;
   transactionCount: number;
   isActive: boolean;
