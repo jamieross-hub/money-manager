@@ -299,10 +299,8 @@ export class UserComponent {
       dialogRef.afterClosed().subscribe(async (result) => {
         if (result) {
           try {
-            await this.localStorageService.clear();
             await this.userService.signOut();
             this.notificationService.success('Signed out and guest data cleared');
-            this.router.navigate(['/sign-in']);
             this.close();
           } catch (error) {
             console.error('Error signing out guest:', error);
@@ -314,7 +312,6 @@ export class UserComponent {
       try {
         await this.userService.signOut();
         this.notificationService.success('Signed out successfully');
-        this.router.navigate(['/sign-in']);
         this.close();
       } catch (error) {
         console.error('Error signing out:', error);

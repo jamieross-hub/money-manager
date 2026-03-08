@@ -29,6 +29,7 @@ export class LocalIndexDBStorageService {
     private keyValueCache = new Map<string, any>();
     private transactionsCache = new Map<string, any>();
     private isInitialized = false;
+    private isCleaningUp = false;
 
     constructor() {
         LocalIndexDBStorageService.instance = this;
@@ -63,6 +64,7 @@ export class LocalIndexDBStorageService {
             
             console.log(`✅ Storage initialized. KeyValue: ${this.keyValueCache.size}, Transactions: ${this.transactionsCache.size}`);
             this.isInitialized = true;
+            this.isCleaningUp = false;
         } catch (error) {
             console.error('❌ Failed to initialize storage service:', error);
             // Fallback: try to load what we can or operate in memory-only mode if DB fails
@@ -73,6 +75,11 @@ export class LocalIndexDBStorageService {
      * Set an item (Sync API, Async Persistence)
      */
     setItem<T>(key: string, value: T, storeName: string = this.STORE_NAME): void {
+        if (this.isCleaningUp) {
+            console.warn(`⚠️ Blocked write to ${storeName} for key "${key}" - Service is cleaning up.`);
+            return;
+        }
+
         // Update correct cache immediately
         if (storeName === this.TRANSACTIONS_STORE) {
             this.transactionsCache.set(key, value);
@@ -134,6 +141,11 @@ export class LocalIndexDBStorageService {
      * Remove an item (Sync API, Async Persistence)
      */
     removeItem(key: string, storeName: string = this.STORE_NAME): void {
+        if (this.isCleaningUp) {
+            console.warn(`⚠️ Blocked remove from ${storeName} for key "${key}" - Service is cleaning up.`);
+            return;
+        }
+
         if (storeName === this.TRANSACTIONS_STORE) {
             this.transactionsCache.delete(key);
         } else {
@@ -155,13 +167,20 @@ export class LocalIndexDBStorageService {
     /**
      * Clear all data
      */
-    clear(): void {
+    async clear(): Promise<void> {
+        this.isCleaningUp = true;
         this.keyValueCache.clear();
         this.transactionsCache.clear();
 
-        this.clearDb().catch(err => {
+        try {
+            await this.clearDb();
+            // We keep isCleaningUp = true until next initialization
+            console.log('🧹 Storage service cleared and writes blocked.');
+        } catch (err) {
             console.error('Error clearing database:', err);
-        });
+            // Allow retry of clear, but keep blocking writes
+            throw err;
+        }
     }
 
     /**
@@ -322,6 +341,8 @@ export class LocalIndexDBStorageService {
 
 
     private persistItem(key: string, value: any, storeName: string): Promise<void> {
+        if (this.isCleaningUp) return Promise.resolve();
+
         return new Promise((resolve, reject) => {
             if (!this.db) {
                 // If DB failed to open, we just silently fail (cache works)
@@ -342,6 +363,8 @@ export class LocalIndexDBStorageService {
     }
 
     private deleteItem(key: string, storeName: string): Promise<void> {
+        if (this.isCleaningUp) return Promise.resolve();
+
         return new Promise((resolve, reject) => {
             if (!this.db) return resolve();
 
@@ -362,12 +385,33 @@ export class LocalIndexDBStorageService {
         return new Promise((resolve, reject) => {
             if (!this.db) return resolve();
 
-            const transaction = this.db.transaction([this.STORE_NAME], 'readwrite');
-            const store = transaction.objectStore(this.STORE_NAME);
-            store.clear();
+            try {
+                // Get all existing store names to clear everything
+                const storesToClear = Array.from(this.db.objectStoreNames);
 
-            transaction.oncomplete = () => resolve();
-            transaction.onerror = () => reject(transaction.error);
+                if (storesToClear.length === 0) {
+                    return resolve();
+                }
+
+                console.log(`🧹 Clearing ${storesToClear.length} stores: ${storesToClear.join(', ')}`);
+                const transaction = this.db.transaction(storesToClear, 'readwrite');
+                
+                storesToClear.forEach(storeName => {
+                    transaction.objectStore(storeName).clear();
+                });
+
+                transaction.oncomplete = () => {
+                    console.log('✅ All object stores cleared successfully');
+                    resolve();
+                };
+                transaction.onerror = (event) => {
+                    console.error('❌ Error clearing object stores:', transaction.error);
+                    reject(transaction.error);
+                };
+            } catch (error) {
+                console.error('❌ Failed to start clear database transaction:', error);
+                reject(error);
+            }
         });
     }
 

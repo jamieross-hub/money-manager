@@ -761,6 +761,18 @@ export class UserService {
   async signOut(): Promise<void> {
     try {
       const currentUser = this.auth.currentUser;
+      
+      // 1. Immediately clear profile in store to stop observers
+      this.store.dispatch(ProfileActions.clearProfile());
+
+      // 2. Stop Sync Service to prevent background writes
+      try {
+        const syncService = this.injector.get(CommonSyncService);
+        syncService.stopSync();
+      } catch (e) {
+        console.warn('Could not stop sync service during sign out', e);
+      }
+
       if (currentUser) {
         // Log the sign out event
         this.logAuditEvent('USER_LOGOUT', currentUser.uid, {
@@ -777,6 +789,9 @@ export class UserService {
 
       // Clear guest mode flag
       this.storageService.removeItem(LocalStorageKey.GUEST_MODE);
+      
+      // Clear the entire database on sign out (Wait for it to finish)
+      await this.storageService.clear();
 
       await signOut(this.auth);
       console.log('User signed out');
