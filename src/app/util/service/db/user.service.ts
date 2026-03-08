@@ -732,6 +732,9 @@ export class UserService {
         // Record successful login
         this.recordLoginAttempt(email, true);
 
+        // Ensure storage is not in "cleaning up" mode before attempting to write user data
+        await this.storageService.initialize();
+
         await this.ensureUserDataCached(userCredential.user.uid);
 
 

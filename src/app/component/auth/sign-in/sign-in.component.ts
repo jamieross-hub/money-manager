@@ -17,6 +17,7 @@ import { UserService } from 'src/app/util/service/db/user.service';
 import { SecurityService, SecurityEventType, SecurityLevel } from 'src/app/util/service/security.service';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
+import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
@@ -467,6 +468,10 @@ export class SignInComponent implements OnInit, OnDestroy {
    */
   private async loadUserData(specificUserId?: string): Promise<void> {
     try {
+      // Re-initialize storage in case it was in "cleaning up" mode from a previous logout
+      const storageService = LocalIndexDBStorageService.getInstance();
+      await storageService.initialize();
+
       const uid = specificUserId || this.userService.getCurrentUserId();
 
       if (!uid) {
@@ -500,8 +505,10 @@ export class SignInComponent implements OnInit, OnDestroy {
         )
       );
 
+      const isFamilyMode = profile?.preferences?.isFamilyMode ?? false;
       const activeFamilyId = profile?.preferences?.activeFamilyId;
-      if (activeFamilyId) {
+
+      if (isFamilyMode && activeFamilyId) {
         this.router.navigate([`/dashboard/family/dashboard/${activeFamilyId}`]);
       } else {
         this.router.navigate(['/dashboard/home']);

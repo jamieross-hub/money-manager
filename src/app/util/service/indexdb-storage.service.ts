@@ -51,7 +51,7 @@ export class LocalIndexDBStorageService {
      * Called during APP_INITIALIZER
      */
     async initialize(): Promise<void> {
-        if (this.isInitialized) return;
+        if (this.isInitialized && !this.isCleaningUp) return;
 
         console.log('📦 Initializing Hybrid Storage Service...');
 

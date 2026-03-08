@@ -410,6 +410,7 @@ export class TransactionsService extends BaseService {
                 merged.forEach(tx => this.updateTransactionCache(userId, 'update', tx));
 
                 // Update the subject for active components
+                console.log(`[TransactionsService] Dispatching ${merged.length} merged transactions to store`);
                 this.transactionsSubject.next(merged);
 
                 // Update NgRx state via success action

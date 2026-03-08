@@ -117,7 +117,7 @@ export class GreetingFacadeService {
     } else if (hour >= 17 && hour < 20) {
       greeting = 'Good evening';
     } else {
-      greeting = 'Ready for today\'s financial recap';
+      greeting = 'Let\'s review your day';
     }
 
     const user = this.userService.getCurrentUserSnapshot();

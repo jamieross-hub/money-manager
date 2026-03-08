@@ -385,6 +385,10 @@ export class CommonSyncService implements OnDestroy {
    */
   syncAll() {
     const userId = this.userService.getCurrentUserId();
+    const isFamilyMode = this.userService.getCurrentUserSnapshot()?.preferences?.isFamilyMode ?? false;
+
+    console.log(`[CommonSyncService] syncAll started. UserId: ${userId}, Mode: ${isFamilyMode ? 'Family' : 'Personal'}`);
+
 
     // 1. Handle Guest Mode
     if (userId === 'offline-guest') {
@@ -443,6 +447,7 @@ export class CommonSyncService implements OnDestroy {
         );
       }),
       tap(() => {
+        console.log('[CommonSyncService] syncAll: Pull complete for all services');
         console.log('✅ Sync completed successfully');
       }),
       catchError(error => {
