@@ -57,9 +57,6 @@ export const VALIDATION_CONSTANTS = {
 
   // Transaction validations
   TRANSACTION: {
-    PAYEE: {
-      MAX_LENGTH: 45
-    },
     AMOUNT: {
       MIN: 0.01
     },
@@ -193,12 +190,6 @@ export class ValidationService implements IValidationService {
   /**
    * Transaction validation methods
    */
-  getTransactionPayeeValidators() {
-    return [
-      Validators.required,
-      Validators.maxLength(VALIDATION_CONSTANTS.TRANSACTION.PAYEE.MAX_LENGTH)
-    ];
-  }
 
   getTransactionAmountValidators() {
     return [
@@ -372,15 +363,6 @@ export class ValidationService implements IValidationService {
     return '';
   }
 
-  getTransactionPayeeError(control: AbstractControl): string {
-    if (control?.hasError('required')) {
-      return 'Description is required';
-    }
-    if (control?.hasError('maxlength')) {
-      return `Description must be no more than ${VALIDATION_CONSTANTS.TRANSACTION.PAYEE.MAX_LENGTH} characters`;
-    }
-    return '';
-  }
 
   getProfileNameError(control: AbstractControl): string {
     if (control?.hasError('required')) {
@@ -602,8 +584,12 @@ export class ValidationService implements IValidationService {
   /**
    * Validate string length
    */
-  validateLength(value: string, min: number, max: number): boolean {
-    if (!value || typeof value !== 'string') {
+  validateLength(value: string | null | undefined, min: number, max: number): boolean {
+    if (value === null || value === undefined) {
+      return min === 0;
+    }
+
+    if (typeof value !== 'string') {
       return false;
     }
 
@@ -857,10 +843,6 @@ export class ValidationService implements IValidationService {
       errors.push(ERROR_MESSAGES.VALIDATION.INVALID_DATE);
     }
 
-    // Validate payee length if present
-    if (data.payee !== undefined && !this.validateLength(data.payee, 1, 100)) {
-      errors.push('Payee name must be between 1 and 100 characters');
-    }
 
     // Validate notes length if present
     if (data.notes !== undefined && !this.validateLength(data.notes, 0, 500)) {
