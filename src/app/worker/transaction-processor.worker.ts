@@ -87,58 +87,44 @@ addEventListener('message', ({ data }) => {
 
   const generateUpcomingTransactions = (recurringTransactions: any[], startDate: Date, endDate: Date, allTxs: any[]): any[] => {
     const upcoming: any[] = [];
+    
+    // Optimization: Pre-process existing transactions into a lookup map for faster collision detection
+    // Key: categoryId|amount|accountId|type
+    const existMap = new Map<string, Date[]>();
+    allTxs.forEach(t => {
+      if (t.id?.startsWith('upcoming-') || (t.id === t.templateId && t.isPending)) return;
+      
+      const key = `${t.categoryId}|${t.amount}|${t.accountId}|${t.type}`;
+      const tDate = toDate(t.date);
+      if (!tDate) return;
+      
+      if (!existMap.has(key)) existMap.set(key, []);
+      existMap.get(key)!.push(tDate);
+    });
+
     recurringTransactions.forEach(rt => {
       if (!rt.nextOccurrence || !rt.isRecurring) return;
       let nextDate = toDate(rt.nextOccurrence);
       if (!nextDate) return;
       
       const baseTransaction = { ...rt };
+      const key = `${rt.categoryId}|${rt.amount}|${rt.accountId}|${rt.type}`;
+      const relevantDates = existMap.get(key) || [];
       
-      // Limit how many periods we look back/forward to prevent infinite loops or excessive processing
       let safetyCounter = 0;
       const MAX_ITERATIONS = 50;
 
       while (nextDate <= endDate && safetyCounter < MAX_ITERATIONS) {
         safetyCounter++;
         
-        // 1. Check if a transaction for this period already exists
-        const exists = allTxs.some(t => {
-          if (t.id?.startsWith('upcoming-')) return false;
-          // The template itself shouldn't satisfy the check for future periods,
-          // but it should satisfy it for its own initial period if it's not pending.
-          if (t.id === rt.id && t.isPending) return false;
-          
-          if (t.categoryId !== baseTransaction.categoryId) return false;
-          if (t.amount !== baseTransaction.amount) return false;
-          if (t.accountId !== baseTransaction.accountId) return false;
-          if (t.type !== baseTransaction.type) return false;
-          
-          const tPayee = (t.payee || '').toLowerCase().trim();
-          const bPayee = (baseTransaction.payee || '').toLowerCase().trim();
-          if (tPayee && bPayee && tPayee !== bPayee) return false;
-
-          const txDate = toDate(t.date);
-          if (!txDate) return false;
-          return isSamePeriod(txDate, nextDate as Date, rt.recurringInterval);
-        });
+        // Use the map to quickly check for existing transactions in same period
+        const exists = relevantDates.some(txDate => isSamePeriod(txDate, nextDate as Date, rt.recurringInterval));
 
         if (exists) {
-          // This occurrence is already fulfilled, skip to next
           nextDate = calculateNextDate(nextDate, rt.recurringInterval);
           continue;
         }
 
-        // 2. We found an unfulfilled occurrence! 
-        // Now check if it should be displayed.
-        // We show it if it's within the range [startDate, endDate].
-        // IMPORTANT: We also want to see it if it's in the past (Overdue), 
-        // but typically views have a startDate of 'today'.
-        
-        // If we found an unfulfilled occurrence, we stop looking for THIS template (one upcoming per template).
-        // But we only push it if it actually falls within the bounds we care about.
-        // We consider an occurrence relevant if it's <= endDate.
-        // If it's < startDate, it's overdue.
-        
         upcoming.push({
           ...baseTransaction,
           id: `upcoming-${baseTransaction.id}-${nextDate.getTime()}`,
@@ -286,7 +272,7 @@ addEventListener('message', ({ data }) => {
     isUpcomingGroup?: boolean;
   }
 
-  const groups: Group[] = [];
+  const groupsMap = new Map<string, Group>();
   const dateHeaderCache = new Map<string, string>();
   const today = dayjs().startOf('day');
   const yesterday = dayjs().subtract(1, 'day').startOf('day');
@@ -302,7 +288,6 @@ addEventListener('message', ({ data }) => {
     const createdAt = tx.createdAt || tx.date;
     const createdAtDate = toDate(createdAt);
 
-    // Build txView (Full set of view properties to avoid template errors)
     const txView = {
       ...tx,
       _categoryColor: category?.color || '#46777f',
@@ -354,35 +339,29 @@ addEventListener('message', ({ data }) => {
     }
 
     if (isRecurringMode && txView._isUpcoming) {
-      return; // Skip upcoming transactions when isRecurring is true
+      return; 
     }
 
-    let group = groups.find(g => g.date === dateKey);
+    let group = groupsMap.get(dateKey);
     if (!group) {
       let header = dateHeaderCache.get(dateKey);
       if (!header) {
-        if (dateKey === 'overdue') {
-          header = 'Overdue Recurring';
-        } else if (dateKey === 'upcoming') {
-          header = 'Upcoming';
-        } else if (dateObj.isSame(today, 'day')) {
-          header = 'Today';
-        } else if (dateObj.isSame(yesterday, 'day')) {
-          header = 'Yesterday';
-        } else if (range === 'this-year' || range === null) {
-          header = dateObj.format('MMMM YYYY');
-        } else if (isDateSort) {
-          header = dateObj.format('dddd, DD MMM YYYY');
-        } else {
-          header = dateObj.format('DD MMM YYYY');
-        }
+        if (dateKey === 'overdue') header = 'Overdue Recurring';
+        else if (dateKey === 'upcoming') header = 'Upcoming';
+        else if (dateObj.isSame(today, 'day')) header = 'Today';
+        else if (dateObj.isSame(yesterday, 'day')) header = 'Yesterday';
+        else if (range === 'this-year' || range === null) header = dateObj.format('MMMM YYYY');
+        else if (isDateSort) header = dateObj.format('dddd, DD MMM YYYY');
+        else header = dateObj.format('DD MMM YYYY');
         dateHeaderCache.set(dateKey, header);
       }
       group = { date: dateKey, dateHeader: header, transactions: [], isUpcomingGroup: txView._isUpcoming };
-      groups.push(group);
+      groupsMap.set(dateKey, group);
     }
     group.transactions.push(txView);
   });
+
+  const groups = Array.from(groupsMap.values());
 
   // Re-order groups if needed
   let finalGroups = groups;

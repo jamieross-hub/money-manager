@@ -15,7 +15,8 @@ import {
   inject,
   ViewChild,
   ElementRef,
-  AfterViewInit
+  AfterViewInit,
+  DestroyRef
 } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
@@ -73,6 +74,7 @@ import * as FamilySelectors from 'src/app/modules/family/store/family.selectors'
 import { FamilyMember, Family } from 'src/app/util/models/family.model';
 import { AppView } from 'src/app/util/service/app-view.service';
 import { RecurringTemplate } from 'src/app/util/models/recurring.model';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 dayjs.extend(weekOfYear);
 
@@ -153,6 +155,7 @@ export class MobileTransactionListComponent
   private readonly dialog = inject(MatDialog);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly auth = inject(Auth);
+  private readonly destroyRef = inject(DestroyRef);
 
   isRecurring = input<boolean>(false);
 
@@ -172,9 +175,6 @@ export class MobileTransactionListComponent
 
   showChart: boolean = false;
   // private chartRoot: am5.Root | null = null;
-
-  private subscription = new Subscription();
-  destroy$: Subject<void> = new Subject<void>();
   
   // Base signals from Store
   allActiveTransactions = this.store.selectSignal<Transaction[]>(selectSortedAllTransactions);
@@ -221,10 +221,7 @@ export class MobileTransactionListComponent
 
   appView = toSignal(this.appViewService.appView$, { initialValue: 'MONTHLY' as AppView });
 
-  /** Current active family */
   activeFamily = this.store.selectSignal<Family | null>(FamilySelectors.selectFamily);
-
-  /** True when the current family is in 'split' mode */
   isSplitMode = computed(() => this.activeFamily()?.mode === 'split');
 
   categoryMap = computed(() => {
@@ -320,14 +317,6 @@ export class MobileTransactionListComponent
 
   totalCount = computed(() => this.allTransactions().length);
 
-  /** True when the user's preferences have isFamilyMode enabled */
-  // isFamilyMode = toSignal(...) // Moved up
-
-  /** Current active family */
-  // activeFamily = this.store.selectSignal(FamilySelectors.selectFamily); // Moved up
-
-  /** True when the current family is in 'split' mode */
-  // isSplitMode = computed(() => this.activeFamily()?.mode === 'split'); // Moved up
 
   /** Current user's UID */
   private readonly currentUserProfile = this.store.selectSignal<User | null>(ProfileSelectors.selectProfile);
@@ -483,34 +472,24 @@ export class MobileTransactionListComponent
     }
 
     // Set initial date range based on App View preference and Family Mode
-    this.subscription.add(
-      this.store.select(ProfileSelectors.selectProfile).pipe(
-        map(profile => ({
-          view: profile?.preferences?.appView || 'MONTHLY',
-          isFamilyMode: profile?.preferences?.isFamilyMode ?? false
-        })),
-        distinctUntilChanged((prev, curr) => prev.view === curr.view && prev.isFamilyMode === curr.isFamilyMode)
-      ).subscribe(({ view, isFamilyMode }) => {
-        if (this.isRecurring() || isFamilyMode) {
-          this.onDateRangeChange(null);
-        } else {
-          let range = 'this-month';
-          if (view === 'WEEKLY') {
-            range = 'this-week';
-          } else if (view === 'YEARLY') {
-            range = 'this-year';
-          }
-          this.onDateRangeChange(range);
-        }
-      })
-    );
+    this.store.select(ProfileSelectors.selectProfile).pipe(
+      map(profile => ({
+        view: profile?.preferences?.appView || 'MONTHLY',
+        isFamilyMode: profile?.preferences?.isFamilyMode ?? false
+      })),
+      distinctUntilChanged((prev, curr) => prev.view === curr.view && prev.isFamilyMode === curr.isFamilyMode),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(({ view, isFamilyMode }) => {
+      if (this.isRecurring() || isFamilyMode) {
+        this.onDateRangeChange(null);
+      } else {
+        const ranges: Record<string, string> = { 'WEEKLY': 'this-week', 'YEARLY': 'this-year' };
+        this.onDateRangeChange(ranges[view] || 'this-month');
+      }
+    });
   }
 
-  ngOnDestroy() {
-    this.subscription.unsubscribe();
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
+  ngOnDestroy() {}
 
 
   onCategoryChange(category: string) {
@@ -556,59 +535,25 @@ export class MobileTransactionListComponent
 
     let startDate: Date;
     let endDate: Date;
-    this.selectedRange.set(range);
 
     if (range === 'upcoming') {
-      const recurring = this.allTransactions().filter(t => t.isRecurring);
       const appView = this.appViewService.appView;
-      const today = dayjs().startOf('day').toDate();
+      startDate = dayjs().startOf('day').toDate();
+      const unit = appView === 'WEEKLY' ? 'week' : (appView === 'YEARLY' ? 'year' : 'month');
+      endDate = dayjs().add(1, unit).endOf('day').toDate();
+    } else {
+      const ranges: Record<string, () => [Date, Date]> = {
+        'today': () => [dayjs().startOf('day').toDate(), dayjs().endOf('day').toDate()],
+        'yesterday': () => [dayjs().subtract(1, 'day').startOf('day').toDate(), dayjs().subtract(1, 'day').endOf('day').toDate()],
+        'this-week': () => [dayjs().startOf('week').toDate(), dayjs().endOf('week').toDate()],
+        'last-week': () => [dayjs().subtract(1, 'week').startOf('week').toDate(), dayjs().subtract(1, 'week').endOf('week').toDate()],
+        'this-month': () => [dayjs().startOf('month').toDate(), dayjs().endOf('month').toDate()],
+        'last-month': () => [dayjs().subtract(1, 'month').startOf('month').toDate(), dayjs().subtract(1, 'month').endOf('month').toDate()],
+        'this-year': () => [dayjs().startOf('year').toDate(), dayjs().endOf('year').toDate()],
+      };
 
-      if (appView === 'WEEKLY') {
-        startDate = today;
-        endDate = dayjs().add(1, 'week').endOf('day').toDate();
-      } else if (appView === 'YEARLY') {
-        startDate = today;
-        endDate = dayjs().add(1, 'year').endOf('day').toDate();
-      } else {
-        startDate = today;
-        endDate = dayjs().add(1, 'month').endOf('day').toDate();
-      }
-
-      this.filterService.setSelectedDateRange(startDate, endDate);
-      return;
-    }
-
-    switch (range) {
-      case 'today':
-        startDate = dayjs().startOf('day').toDate();
-        endDate = dayjs().endOf('day').toDate();
-        break;
-      case 'yesterday':
-        startDate = dayjs().subtract(1, 'day').startOf('day').toDate();
-        endDate = dayjs().subtract(1, 'day').endOf('day').toDate();
-        break;
-      case 'this-week':
-        startDate = dayjs().startOf('week').toDate();
-        endDate = dayjs().endOf('week').toDate();
-        break;
-      case 'last-week':
-        startDate = dayjs().subtract(1, 'week').startOf('week').toDate();
-        endDate = dayjs().subtract(1, 'week').endOf('week').toDate();
-        break;
-      case 'this-month':
-        startDate = dayjs().startOf('month').toDate();
-        endDate = dayjs().endOf('month').toDate();
-        break;
-      case 'last-month':
-        startDate = dayjs().subtract(1, 'month').startOf('month').toDate();
-        endDate = dayjs().subtract(1, 'month').endOf('month').toDate();
-        break;
-      case 'this-year':
-        startDate = dayjs().startOf('year').toDate();
-        endDate = dayjs().endOf('year').toDate();
-        break;
-      default:
-        return;
+      if (!ranges[range]) return;
+      [startDate, endDate] = ranges[range]();
     }
 
     this.filterService.setSelectedDateRange(startDate, endDate);
@@ -651,22 +596,6 @@ export class MobileTransactionListComponent
 
   hasActiveFilters(): boolean {
     return this.filterService.hasActiveFilters();
-  }
-
-  getCurrentSortLabel(): string {
-    return this.currentSortLabel();
-  }
-
-  getCurrentTypeLabel(): string {
-    return this.currentTypeLabel();
-  }
-
-  getCurrentCategoryLabel(): string {
-    return this.currentCategoryLabel();
-  }
-
-  getCurrentDateLabel(): string {
-    return this.currentDateLabel();
   }
 
   onLongPress(transaction: Transaction, element: HTMLElement) {
@@ -729,11 +658,11 @@ export class MobileTransactionListComponent
       const confirmedDate = this.dateService.toDate(tx.date);
       if (!confirmedDate) return;
 
-      this.subscription.add(
-        this.recurringService.processRecurringTransaction(userId, originalTemplate, confirmedDate).subscribe(() => {
+      this.recurringService.processRecurringTransaction(userId, originalTemplate, confirmedDate)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => {
           // Success handled by store update
-        })
-      );
+        });
     }
   }
 
@@ -750,11 +679,11 @@ export class MobileTransactionListComponent
        const skippedDate = this.dateService.toDate(tx.date);
        if (!skippedDate) return;
 
-       this.subscription.add(
-        this.recurringService.skipRecurringTransaction(userId, originalTemplate, skippedDate).subscribe(() => {
+       this.recurringService.skipRecurringTransaction(userId, originalTemplate, skippedDate)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => {
           // Success handled by store update
-        })
-      );
+        });
     }
   }
 
@@ -764,10 +693,6 @@ export class MobileTransactionListComponent
 
   onImportTransactions() {
     this.importTransactions.emit();
-  }
-
-  getCategoriesList(): (Category & { id: string })[] {
-    return this.availableCategories();
   }
 
   getCurrentYear(): number {

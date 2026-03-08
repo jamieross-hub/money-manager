@@ -137,7 +137,7 @@
             }
           </button>
           <mat-divider></mat-divider>
-          @for (category of getCategoriesList(); track category.id) {
+          @for (category of availableCategories(); track category.id) {
             <button mat-menu-item [class.active-menu-item]="(selectedCategory() | includes:category.id)"
               (click)="onCategoryChange(category.id); $event.stopPropagation()">
               <mat-icon>{{ category.icon }}</mat-icon>

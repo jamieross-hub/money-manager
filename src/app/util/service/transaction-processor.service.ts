@@ -56,9 +56,38 @@ export class TransactionProcessorService {
     }
   }
 
+  private lastInputFingerprint = '';
+  private debounceTimer: any;
+
   /**
-   * Post a processing task to the worker
+   * Generates a stable fingerprint for the input to avoid redundant processing.
    */
+  private generateFingerprint(data: any): string {
+    const lastTx = data.transactions?.[0];
+    const filters = data.filters || {};
+    
+    return JSON.stringify({
+      tCount: data.transactions?.length,
+      lastTxId: lastTx?.id,
+      lastTxUpdated: lastTx?.updatedAt || lastTx?.date,
+      rtCount: data.recurringTemplates?.length,
+      cCount: data.categories?.length,
+      aCount: data.accounts?.length,
+      search: filters.searchTerm,
+      cat: filters.selectedCategory?.join(','),
+      type: filters.selectedType,
+      date: filters.selectedDate,
+      range: filters.selectedDateRange,
+      sort: data.sort,
+      mode: data.range,
+      view: data.appView,
+      isRec: data.isRecurringMode,
+      isFam: data.isFamilyMode,
+      isDel: data.isDeletedMode,
+      uid: data.currentUserId
+    });
+  }
+
   process(data: {
     transactions: Transaction[];
     recurringTemplates: RecurringTemplate[];
@@ -79,8 +108,21 @@ export class TransactionProcessorService {
       return;
     }
 
-    this.isProcessing.set(true);
-    this.worker.postMessage(data);
+    const fingerprint = this.generateFingerprint(data);
+    if (this.lastInputFingerprint === fingerprint) {
+      return; // Skip if input hasn't changed
+    }
+    this.lastInputFingerprint = fingerprint;
+
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+    }
+
+    this.debounceTimer = setTimeout(() => {
+      this.isProcessing.set(true);
+      this.worker?.postMessage(data);
+      this.debounceTimer = null;
+    }, 50); // 50ms debounce for rapid signal updates
   }
 
   destroy() {
