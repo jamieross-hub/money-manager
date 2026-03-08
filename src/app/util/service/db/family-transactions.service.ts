@@ -48,8 +48,8 @@ export class FamilyTransactionsService extends TransactionsService {
         const fId = familyId !== undefined ? familyId : this.getFamilyId();
         
         if (!fId) {
-            console.warn('[FamilyTransactionsService] No familyId found, falling back to personal transactions');
-            return super.getTransactionsPath(userId);
+            console.warn('[FamilyTransactionsService] No familyId found, returning invalid path for safety');
+            return `family-groups/none/transactions`;
         }
         
         return `family-groups/${fId}/transactions`;

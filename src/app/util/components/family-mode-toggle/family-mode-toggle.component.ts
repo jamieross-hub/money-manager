@@ -9,12 +9,12 @@ import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AppState } from '../../../store/app.state';
 import * as ProfileSelectors from '../../../store/profile/profile.selectors';
+import * as BudgetsActions from '../../../store/budgets/budgets.actions';
+import * as GoalsActions from '../../../store/goals/goals.actions';
 import * as ProfileActions from '../../../store/profile/profile.actions';
 import * as TransactionsActions from '../../../store/transactions/transactions.actions';
 import * as AccountsActions from '../../../store/accounts/accounts.actions';
 import * as CategoriesActions from '../../../store/categories/categories.actions';
-import * as BudgetsActions from '../../../store/budgets/budgets.actions';
-import * as GoalsActions from '../../../store/goals/goals.actions';
 import { UserService } from '../../service/db/user.service';
 import { FamilyService } from 'src/app/modules/family/services/family.service';
 import { BreakpointService } from '../../service/breakpoint.service';
@@ -52,7 +52,14 @@ export class FamilyModeToggleComponent implements OnInit {
   readonly isGuestMode = computed(() => this.userService.isGuestUser());
 
   readonly familyGroup = signal<Family | null>(null);
-  private ignoreLoader = false;
+  readonly isUpdating = signal(false);
+  private readonly pendingState = signal<boolean | null>(null);
+
+  // Optimistic UI state
+  readonly displayFamilyMode = computed(() => {
+    const pending = this.pendingState();
+    return pending !== null ? pending : this.isFamilyMode();
+  });
 
   ngOnInit() {
     if (!this.userService.isGuestUser()) {
@@ -72,32 +79,90 @@ export class FamilyModeToggleComponent implements OnInit {
 
   async toggleFamilyMode(enabled: boolean): Promise<void> {
     const profile = this.userProfile();
-    if (!profile) return;
+    if (!profile || this.isUpdating()) return;
+
+    // Optimistic update
+    this.isUpdating.set(true);
+    this.pendingState.set(enabled);
 
     try {
-      await this.applyPreferenceChanges({
-        isFamilyMode: enabled,
-      });
-
-      this.notificationService.success(`Family mode ${enabled ? 'enabled' : 'disabled'}`);
-
       // Clear all stores for personal/family switch to avoid data mixing
+      // We do this immediately to show empty state while loading
       this.store.dispatch(TransactionsActions.clearTransactions());
       this.store.dispatch(AccountsActions.clearAccounts());
       this.store.dispatch(CategoriesActions.clearCategories());
       this.store.dispatch(BudgetsActions.clearBudgets());
       this.store.dispatch(GoalsActions.clearGoals());
 
-      this.actions$.pipe(
+      // Special handling for the success filter - it needs to match whatever we actually sent
+      const expectedFilter = (action: any) => {
+        const actionPrefs = action.profile.preferences;
+        return actionPrefs?.isFamilyMode === enabled;
+      };
+
+      // Listen for success or failure BEFORE dispatching
+      const success$ = this.actions$.pipe(
         ofType(ProfileActions.updatePreferencesSuccess),
-        filter((action: any) => action.profile.preferences?.isFamilyMode === enabled),
-        take(1),
-      ).subscribe(() => {
+        filter(expectedFilter),
+        take(1)
+      );
+
+      const failure$ = this.actions$.pipe(
+        ofType(ProfileActions.updatePreferencesFailure),
+        take(1)
+      );
+
+      let changes: Partial<UserPreferences> = {
+        isFamilyMode: enabled,
+      };
+
+      // If enabling and no active family is set, try to pick one from cache
+      if (enabled && !profile.preferences?.activeFamilyId) {
+        const families = this.familyService.getCachedFamiliesSync();
+        if (families && families.length > 0) {
+          changes = {
+            ...changes,
+            activeFamilyId: families[0].id
+          };
+        }
+      }
+
+      await this.applyPreferenceChanges(changes);
+
+      // Subscribe to the result
+      success$.subscribe(() => {
+        this.notificationService.success(`Family mode ${enabled ? 'enabled' : 'disabled'}`);
+        this.isUpdating.set(false);
+        this.pendingState.set(null);
+        
+        // Re-load data for the new mode
+        const userId = profile.uid;
+        this.store.dispatch(TransactionsActions.loadTransactions({ userId }));
+        this.store.dispatch(AccountsActions.loadAccounts({ userId }));
+        this.store.dispatch(CategoriesActions.loadCategories({ userId }));
+        this.store.dispatch(BudgetsActions.loadBudgets({ userId }));
+        this.store.dispatch(GoalsActions.loadGoals({ userId }));
+
+        // Navigation - reload the dashboard home
         this.router.navigate(['/dashboard/home']);
       });
+
+      failure$.subscribe((error) => {
+        console.error('Failed to update family mode preference:', error);
+        this.notificationService.error('Failed to update family mode preference');
+        this.isUpdating.set(false);
+        this.pendingState.set(null);
+        // Refresh profile to restore correct state in UI
+        if (profile.uid) {
+           this.store.dispatch(ProfileActions.loadProfile({ userId: profile.uid }));
+        }
+      });
+
     } catch (error) {
       console.error('Error toggling family mode:', error);
       this.notificationService.error('Failed to toggle family mode');
+      this.isUpdating.set(false);
+      this.pendingState.set(null);
     }
   }
 
