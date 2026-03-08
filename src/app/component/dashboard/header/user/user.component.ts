@@ -5,6 +5,7 @@ import {
   inject,
   signal,
   effect,
+  DestroyRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -73,6 +74,7 @@ export class UserComponent {
   private readonly familyService       = inject(FamilyService);
   private readonly store               = inject(Store<AppState>);
   private readonly swUpdate            = inject(SwUpdate);
+  private readonly destroyRef          = inject(DestroyRef);
 
   // ── Observables → signals ──────────────────────────────────────────────────
   private readonly userAuth    = toSignal(this.userService.userAuth$);
@@ -127,6 +129,7 @@ export class UserComponent {
   private readonly photoURLOverride = signal<string | null>(null);
 
   readonly updateAvailable = signal(false);
+  private updateInterval?: any;
 
   constructor() {
     if (this.swUpdate.isEnabled) {
@@ -135,12 +138,18 @@ export class UserComponent {
           this.updateAvailable.set(true);
         }
       });
-
+  
       // Poll for updates every 15 minutes
-      setInterval(() => {
+      this.updateInterval = setInterval(() => {
         this.swUpdate.checkForUpdate();
       }, 15 * 60 * 1000);
     }
+  
+    this.destroyRef.onDestroy(() => {
+      if (this.updateInterval) {
+        clearInterval(this.updateInterval);
+      }
+    });
   }
 
   readonly sortedMembers = computed(() => {

@@ -153,8 +153,6 @@ export class SignInComponent implements OnInit, OnDestroy {
     }
 
     this.setupFormValidation();
-    this.checkSecurityStatus();
-    this.startSecurityMonitoring();
 
     // Show security notice after main form is loaded for better LCP
     setTimeout(() => {
@@ -227,31 +225,7 @@ export class SignInComponent implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Check current security status
-   */
-  private checkSecurityStatus(): void {
-    const securityStatus = this.userService.getSecurityStatus();
-    if (securityStatus) {
-      this.isAccountLocked.set(securityStatus.isLocked);
-      this.loginAttempts.set(securityStatus.loginAttempts);
-      this.maxLoginAttempts.set(securityStatus.remainingAttempts + securityStatus.loginAttempts);
 
-      if (this.isAccountLocked()) {
-        this.calculateLockoutTime();
-      }
-    }
-  }
-
-  /**
-   * Start security monitoring
-   */
-  private startSecurityMonitoring(): void {
-    // Monitor for suspicious activity
-    setInterval(() => {
-      this.checkSecurityStatus();
-    }, 10000); // Check every 10 seconds
-  }
 
   /**
    * Enhanced sign-in with security validation
@@ -666,16 +640,7 @@ export class SignInComponent implements OnInit, OnDestroy {
     return false;
   }
 
-  /**
-   * Calculate lockout time remaining
-   */
-  private calculateLockoutTime(): void {
-    const securityStatus = this.userService.getSecurityStatus();
-    if (securityStatus && securityStatus.lockoutTime) {
-      const now = Date.now();
-      this.lockoutTimeRemaining.set(Math.max(0, securityStatus.lockoutTime - now));
-    }
-  }
+
 
   /**
    * Calculate password strength (0-4)

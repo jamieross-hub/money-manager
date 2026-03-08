@@ -1,4 +1,4 @@
-import { Injectable, Injector } from '@angular/core';
+import { Injectable, Injector, OnDestroy } from '@angular/core';
 import {
   Auth,
   signInWithEmailAndPassword,
@@ -33,8 +33,8 @@ import {
   deleteDoc
 } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, throwError, timer, firstValueFrom, of, from } from 'rxjs';
-import { catchError, retry, timeout, map, switchMap, tap, distinctUntilChanged } from 'rxjs/operators';
+import { BehaviorSubject, Observable, throwError, timer, firstValueFrom, of, from, Subject } from 'rxjs';
+import { catchError, retry, timeout, map, switchMap, tap, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { authState } from '@angular/fire/auth';
 
 import { defaultBankAccounts } from 'src/app/component/auth/registration/registration.component';
@@ -100,9 +100,13 @@ interface RateLimitEntry {
 @Injectable({
   providedIn: 'root',
 })
-export class UserService {
+export class UserService implements OnDestroy {
   /** Re-exported store slice — single source of truth for user profile. */
   public readonly userAuth$: Observable<User | null>;
+
+  private readonly destroy$ = new Subject<void>();
+  private readonly intervals: any[] = [];
+  private authUnsubscribe?: () => void;
 
   /**
    * Synchronous snapshot of the current user — kept in sync whenever we
@@ -134,7 +138,9 @@ export class UserService {
     // Expose the NgRx profile slice as userAuth$ so existing subscribers keep working.
     this.userAuth$ = this.store.select(selectProfile);
     // Keep _currentUser snapshot in sync for synchronous consumers.
-    this.userAuth$.subscribe(u => (this._currentUser = u));
+    this.userAuth$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((u: User | null) => (this._currentUser = u));
 
     this.initializeAuthState();
     this.optimisticLoadProfile();
@@ -142,12 +148,23 @@ export class UserService {
     this.startTokenRefresh();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.intervals.forEach(id => clearInterval(id));
+    if (this.authUnsubscribe) {
+      this.authUnsubscribe();
+    }
+  }
+
   /**
    * Optimistically load the user profile from cache on startup
    * before Firebase Auth initializes. This provides immediate user context.
    */
   private optimisticLoadProfile(): void {
-    this.storageService.isReady$.subscribe(() => {
+    this.storageService.isReady$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
       const lastUid = this.storageService.getItem<string>(LocalStorageKey.LAST_ACTIVE_UID);
       if (!lastUid) return;
 
@@ -171,7 +188,7 @@ export class UserService {
     // (common during network loss/recovery) don't wipe the profile store.
     let clearProfileTimer: ReturnType<typeof setTimeout> | null = null;
 
-    onAuthStateChanged(this.auth, async (user: any) => {
+    this.authUnsubscribe = onAuthStateChanged(this.auth, async (user: any) => {
       // Check for guest mode
       const isGuest = this.storageService.getItem(LocalStorageKey.GUEST_MODE) === 'true';
 
@@ -426,6 +443,7 @@ export class UserService {
 
     authState(this.auth)
       .pipe(
+        takeUntil(this.destroy$),
         // Only act when the UID actually changes (ignore reconnect re-emissions).
         map(user => user?.uid ?? null),
         distinctUntilChanged(),
@@ -452,10 +470,9 @@ export class UserService {
       )
       .subscribe({
         next: token => token && console.log('🔄 Token refreshed successfully')
-      });
+    });
 
-    // Re-run the refresh every 55 minutes (tokens expire after 60 min)
-    setInterval(() => {
+    const refreshInterval = setInterval(() => {
       const currentUser = this.auth.currentUser;
       if (currentUser) {
         currentUser.getIdToken(true)
@@ -472,6 +489,7 @@ export class UserService {
           });
       }
     }, 55 * 60 * 1000); // 55 minutes
+    this.intervals.push(refreshInterval);
   }
 
   /**
@@ -479,14 +497,16 @@ export class UserService {
    */
   private startSecurityMonitoring(): void {
     // Monitor for rate limit violations
-    setInterval(() => {
+    const rateLimitInterval = setInterval(() => {
       this.cleanupRateLimits();
     }, USER_SECURITY_CONFIG.RATE_LIMIT_WINDOW);
+    this.intervals.push(rateLimitInterval);
 
     // Monitor for locked accounts
-    setInterval(() => {
+    const lockedAccountsInterval = setInterval(() => {
       this.cleanupLockedAccounts();
     }, 60000); // Every minute
+    this.intervals.push(lockedAccountsInterval);
   }
 
   /**
@@ -506,10 +526,18 @@ export class UserService {
    */
   private cleanupLockedAccounts(): void {
     const now = Date.now();
-    for (const [email, attempt] of this.loginAttempts.entries()) {
+    // Use spread to avoid modification issues while iterating
+    for (const [email, attempt] of [...this.loginAttempts.entries()]) {
+      // 1. Clear expired locks
       if (attempt.lockedUntil && now > attempt.lockedUntil) {
         this.loginAttempts.delete(email);
         this.logAuditEvent('ACCOUNT_UNLOCKED', undefined, { email });
+        continue;
+      }
+      
+      // 2. Clear stale failed attempts (older than 30 mins) even if not locked
+      if (!attempt.lockedUntil && now - attempt.lastAttempt > 30 * 60 * 1000) {
+        this.loginAttempts.delete(email);
       }
     }
   }

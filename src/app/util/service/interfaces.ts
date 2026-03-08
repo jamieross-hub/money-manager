@@ -183,17 +183,7 @@ export interface IAnalyticsService {
   setUserProperties(properties: any): void;
 }
 
-/**
- * Security service interface
- */
-export interface ISecurityService {
-  encryptData(data: any): string;
-  decryptData(encryptedData: string): any;
-  hashPassword(password: string): string;
-  validatePassword(password: string): boolean;
-  generateSecureToken(): string;
-  validateToken(token: string): boolean;
-}
+
 
 
 
