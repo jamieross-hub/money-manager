@@ -6,58 +6,33 @@
   display: flex;
   flex-direction: column;
   @include mixins.dialog-host-responsive;
-}
-
-/* Dark theme background overhaul */
-:host-context(.dark-theme) {
-  background-color: mat.get-theme-color(dark.$dark-theme, neutral, 6);
-}
-
-.bg-white,
-:host-context(.dark-theme) .bg-gray-800 {
-  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
-  will-change: transform;
-
-  :host-context(.dark-theme) & {
-    background-color: mat.get-theme-color(dark.$dark-theme, neutral, 10) !important;
+  
+  // Desktop refinement
+  @media (min-width: 1024px) {
+    max-width: 700px;
+    margin: 0 auto;
+    border-radius: 24px;
+    overflow: hidden;
   }
+}
 
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-
-    :host-context(.dark-theme) & {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+/* Base layout adjustments */
+.space-y-6, .space-y-7 {
+  & > * {
+    animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    
+    @for $i from 1 through 10 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{$i * 0.05}s;
+      }
     }
   }
 }
 
-/* Fix for dark:bg-gray-850 not being standard */
-.dark-theme-card {
-   :host-context(.dark-theme) & {
-      background-color: #1e293b !important;
-   }
-}
-
-/* Responsive Grid Adjustments */
-@media (max-width: 480px) {
-  .stats-compact-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* Custom Emerald Tokens for Dark Mode */
-.dark-theme {
-  .text-emerald-450 { color: #34d399; }
-  .text-red-450 { color: #f87171; }
-  .text-blue-450 { color: #60a5fa; }
-}
-
-/* Animations */
-@keyframes slideUpFade {
+@keyframes slide-up {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -65,27 +40,61 @@
   }
 }
 
-.bg-white, .stats-compact-grid, .space-y-4 > div {
-  animation: slideUpFade 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) both;
+/* Premium Card Interaction */
+.group {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   
-  &:nth-child(1) { animation-delay: 0.05s; }
-  &:nth-child(2) { animation-delay: 0.1s; }
-  &:nth-child(3) { animation-delay: 0.15s; }
-  &:nth-child(4) { animation-delay: 0.2s; }
-  &:nth-child(5) { animation-delay: 0.25s; }
+  &:hover {
+    @media (min-width: 640px) {
+      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05);
+      transform: translateY(-2px);
+    }
+  }
 }
 
-/* Overwrite Material Spinner */
-::ng-deep .mat-mdc-progress-spinner {
-  --mdc-circular-progress-active-indicator-color: #10b981;
+/* Dark Theme Overrides */
+:host-context(.dark-theme) {
+  .bg-white\/60 {
+    background-color: rgba(mat.get-theme-color(dark.$dark-theme, neutral, 12), 0.4);
+  }
+
+  .border-white\/40 {
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .backdrop-blur-sm {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
 }
 
-/* Reduced motion preference */
+/* Custom Scrollbar for better UX */
+::ng-deep .mdc-dialog__content {
+  scrollbar-width: thin;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    
+    :host-context(.dark-theme) & {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-    transform: none !important;
+  .space-y-7 > *, .space-y-6 > * {
+    animation: none !important;
+    transition: none !important;
   }
 }
  
