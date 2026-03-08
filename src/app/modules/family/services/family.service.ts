@@ -1,7 +1,7 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, OnDestroy } from '@angular/core';
 import { QuickAction, QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
-import { Observable, from, of, firstValueFrom } from 'rxjs';
-import { map, catchError, filter, take, switchMap } from 'rxjs/operators';
+import { Observable, from, of, firstValueFrom, Subject } from 'rxjs';
+import { map, catchError, filter, take, switchMap, takeUntil } from 'rxjs/operators';
 import {
   Firestore,
   collection,
@@ -56,7 +56,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 
 @Injectable({ providedIn: 'root' })
-export class FamilyService {
+export class FamilyService implements OnDestroy {
+  private readonly destroy$ = new Subject<void>();
 
   private readonly FAMILIES_COL = 'family-groups';
 
@@ -79,38 +80,47 @@ export class FamilyService {
 
   private syncActiveFamilyWithProfile(): void {
     // 1. Initial load from storage when ready
-    this.storageService.isReady$.subscribe(() => {
-      const storedId = this.getInitialActiveFamilyId();
-      if (storedId) {
-        this.activeFamilyId.set(storedId);
-      }
-    });
+    this.storageService.isReady$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        const storedId = this.getInitialActiveFamilyId();
+        if (storedId) {
+          this.activeFamilyId.set(storedId);
+        }
+      });
 
     // 2. Sync the signal with store preferences when they change
-    this.store.select(fromProfile.selectUserPreferences).subscribe(prefs => {
-      if (prefs && prefs.activeFamilyId !== undefined) {
-        if (this.isTransitioning) {
-          if (prefs.activeFamilyId === this.activeFamilyId()) {
-            this.isTransitioning = false;
-          }
-          return;
-        }
-
-        if (prefs.activeFamilyId !== this.activeFamilyId()) {
-          this.activeFamilyId.set(prefs.activeFamilyId);
-          // Also sync to persistent storage for immediate availability on next boot
-          try {
-            if (prefs.activeFamilyId) {
-              this.storageService.setItem(ACTIVE_FAMILY_ID_KEY, prefs.activeFamilyId);
-            } else {
-              this.storageService.removeItem(ACTIVE_FAMILY_ID_KEY);
+    this.store.select(fromProfile.selectUserPreferences)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(prefs => {
+        if (prefs && prefs.activeFamilyId !== undefined) {
+          if (this.isTransitioning) {
+            if (prefs.activeFamilyId === this.activeFamilyId()) {
+              this.isTransitioning = false;
             }
-          } catch (e) {
-            console.error('Error persisting active family id to storage:', e);
+            return;
+          }
+
+          if (prefs.activeFamilyId !== this.activeFamilyId()) {
+            this.activeFamilyId.set(prefs.activeFamilyId);
+            // Also sync to persistent storage for immediate availability on next boot
+            try {
+              if (prefs.activeFamilyId) {
+                this.storageService.setItem(ACTIVE_FAMILY_ID_KEY, prefs.activeFamilyId);
+              } else {
+                this.storageService.removeItem(ACTIVE_FAMILY_ID_KEY);
+              }
+            } catch (e) {
+              console.error('Error persisting active family id to storage:', e);
+            }
           }
         }
-      }
-    });
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
 

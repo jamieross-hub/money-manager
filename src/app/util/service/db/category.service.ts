@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { Firestore, collection, addDoc, doc, updateDoc, deleteDoc, collectionData, getDocs, getDoc, deleteField, setDoc, onSnapshot, query, orderBy } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
-import { Observable } from 'rxjs';
+import { Observable, Subject, takeUntil } from 'rxjs';
 import { Category } from 'src/app/util/models';
 import { TransactionType } from '../../config/enums';
 import { AppState } from 'src/app/store/app.state';
@@ -23,7 +23,8 @@ import { of, map, from, catchError, tap, timeout, switchMap, distinctUntilChange
 @Injectable({
     providedIn: 'root'
 })
-export class CategoryService {
+export class CategoryService implements OnDestroy {
+    private readonly destroy$ = new Subject<void>();
     private categories: { [key: string]: Category } = {};
     constructor(
         private firestore: Firestore,
@@ -37,7 +38,9 @@ export class CategoryService {
         private commonSyncService: CommonSyncService,
         private familyService: FamilyService
     ) {
-        this.store.select(CategoriesSelectors.selectAllCategories).subscribe(categories => {
+        this.store.select(CategoriesSelectors.selectAllCategories)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(categories => {
             categories.forEach((category: Category) => {
                 if (category.id) {
                     this.categories[category.id] = category;
@@ -55,6 +58,11 @@ export class CategoryService {
             return `family-groups/${familyId}/categories`;
         }
         return `users/${userId}/categories`;
+    }
+
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 
     /**

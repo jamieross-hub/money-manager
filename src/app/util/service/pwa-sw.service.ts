@@ -1,7 +1,7 @@
-import { Injectable, signal, Signal } from '@angular/core';
+import { Injectable, signal, Signal, OnDestroy } from '@angular/core';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
-import { filter, map } from 'rxjs/operators';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { filter, map, takeUntil } from 'rxjs/operators';
+import { BehaviorSubject, Observable, Subject, fromEvent } from 'rxjs';
 import { APP_CONFIG } from '../config/config';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 import { LocalStorageKey } from 'src/app/util/models/local-storage.model';
@@ -17,7 +17,9 @@ export interface PwaUpdateInfo {
 @Injectable({
   providedIn: 'root'
 })
-export class PwaSwService {
+export class PwaSwService implements OnDestroy {
+  private readonly destroy$ = new Subject<void>();
+  private updateCheckIntervalId: any;
   private updateInfoSignal = signal<PwaUpdateInfo>({
     available: false,
     currentVersion: '',
@@ -46,7 +48,8 @@ export class PwaSwService {
       // Listen for version ready events
       this.swUpdate.versionUpdates
         .pipe(
-          filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY')
+          filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY'),
+          takeUntil(this.destroy$)
         )
         .subscribe(evt => {
           console.log('New version ready:', evt);
@@ -54,24 +57,36 @@ export class PwaSwService {
         });
 
       // Listen for unrecoverable errors
-      this.swUpdate.unrecoverable.subscribe(event => {
-        console.error('Unrecoverable service worker error:', event);
-        this.handleUnrecoverableError(event);
-      });
+      this.swUpdate.unrecoverable
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(event => {
+          console.error('Unrecoverable service worker error:', event);
+          this.handleUnrecoverableError(event);
+        });
 
       // Set up periodic update checks based on configuration
       const updateInterval = APP_CONFIG.PWA.UPDATE_CHECK_INTERVAL;
-      setInterval(() => {
+      this.updateCheckIntervalId = setInterval(() => {
         this.checkForUpdates();
       }, updateInterval);
 
       // Check for updates when app becomes visible
-      document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-          this.checkForUpdates();
-        }
-      });
+      fromEvent(document, 'visibilitychange')
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          if (!document.hidden) {
+            this.checkForUpdates();
+          }
+        });
     }
+  }
+
+  ngOnDestroy(): void {
+    if (this.updateCheckIntervalId) {
+      clearInterval(this.updateCheckIntervalId);
+    }
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private checkForUpdates(): void {
@@ -176,27 +191,29 @@ export class PwaSwService {
   // Method to register custom service worker event handlers
   public registerCustomHandlers(): void {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data && event.data.type) {
-          switch (event.data.type) {
-            case 'NAVIGATION':
-              this.handleNavigationEvent(event.data);
-              break;
-            case 'CACHE_UPDATED':
-              console.log('Cache updated:', event.data);
-              break;
-            case 'OFFLINE_MODE':
-              console.log('Offline mode activated');
-              break;
-            case 'BACKGROUND_SYNC':
-              console.log('Background sync event received from SW:', event.data);
-              this.backgroundSyncSignal.set(true);
-              break;
-            default:
-              console.log('Unknown service worker message:', event.data);
+      fromEvent(navigator.serviceWorker, 'message')
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((event: any) => {
+          if (event.data && event.data.type) {
+            switch (event.data.type) {
+              case 'NAVIGATION':
+                this.handleNavigationEvent(event.data);
+                break;
+              case 'CACHE_UPDATED':
+                console.log('Cache updated:', event.data);
+                break;
+              case 'OFFLINE_MODE':
+                console.log('Offline mode activated');
+                break;
+              case 'BACKGROUND_SYNC':
+                console.log('Background sync event received from SW:', event.data);
+                this.backgroundSyncSignal.set(true);
+                break;
+              default:
+                console.log('Unknown service worker message:', event.data);
+            }
           }
-        }
-      });
+        });
     }
   }
 

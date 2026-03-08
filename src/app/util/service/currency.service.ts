@@ -1,5 +1,7 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, OnDestroy } from '@angular/core';
 import { CurrencyDetectionUtil } from '../helpers/currency-detection.util';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { APP_CONFIG } from '../config/config';
 import { DEFAULT_CURRENCY } from '../models/currency.model';
 import { UserService } from './db/user.service';
@@ -19,7 +21,8 @@ export interface CurrencyFormatOptions {
 @Injectable({
   providedIn: 'root'
 })
-export class CurrencyService {
+export class CurrencyService implements OnDestroy {
+  private readonly destroy$ = new Subject<void>();
   private currencySignal = signal<string>(CurrencyDetectionUtil.detectCurrency());
   public readonly currentCurrency = this.currencySignal.asReadonly();
 
@@ -31,7 +34,9 @@ export class CurrencyService {
   }
 
   private initializeCurrency(): void {
-    this.userService.userAuth$.subscribe(user => {
+    this.userService.userAuth$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(user => {
       // Prioritize country-based settings if country is set in preferences
       if (user?.preferences?.country) {
         const country = APP_CONFIG.REGIONAL.COUNTRY_MAPPING[user.preferences.country as keyof typeof APP_CONFIG.REGIONAL.COUNTRY_MAPPING];
@@ -59,6 +64,11 @@ export class CurrencyService {
     if (this.currencySignal() !== currencyCode) {
       this.currencySignal.set(currencyCode);
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   getCurrentLanguage(): string {

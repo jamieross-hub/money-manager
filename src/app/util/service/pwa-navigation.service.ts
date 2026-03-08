@@ -1,4 +1,4 @@
-import { Injectable, NgZone, Inject, PLATFORM_ID } from '@angular/core';
+import { Injectable, NgZone, Inject, PLATFORM_ID, OnDestroy } from '@angular/core';
 import { Location } from '@angular/common';
 import { Router, NavigationEnd, NavigationStart, Event as RouterEvent } from '@angular/router';
 import { BehaviorSubject, Observable, filter, takeUntil, Subject, map } from 'rxjs';
@@ -17,7 +17,7 @@ export interface NavigationState {
 @Injectable({
   providedIn: 'root'
 })
-export class PwaNavigationService {
+export class PwaNavigationService implements OnDestroy {
   private navigationStateSubject = new BehaviorSubject<NavigationState>({
     canGoBack: false,
     currentRoute: '',
@@ -382,7 +382,7 @@ export class PwaNavigationService {
     this.navigationStateSubject.next(newState);
   }
 
-  public destroy(): void {
+  ngOnDestroy(): void {
     // Clean up all event listeners and subscriptions
     this.destroy$.next();
     this.destroy$.complete();

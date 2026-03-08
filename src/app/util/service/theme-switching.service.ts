@@ -1,14 +1,17 @@
 import { DOCUMENT } from '@angular/common';
-import { Inject, Injectable, Renderer2, RendererFactory2, signal } from '@angular/core';
+import { Inject, Injectable, Renderer2, RendererFactory2, signal, OnDestroy } from '@angular/core';
 import { ThemeType } from '../models/theme.model';
 import { SsrService } from './ssr.service';
 import { Meta } from '@angular/platform-browser';
 import { UserService } from './db/user.service';
+import { Subject, fromEvent } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ThemeSwitchingService {
+export class ThemeSwitchingService implements OnDestroy {
+  private readonly destroy$ = new Subject<void>();
   private renderer: Renderer2;
   private body: HTMLElement;
 
@@ -49,11 +52,13 @@ export class ThemeSwitchingService {
       }
 
       // 2. Subscribe to user preferences to sync if they log in from another device
-      this.userService.userAuth$.subscribe(user => {
-        if (user && user.preferences && user.preferences.theme) {
-          this.setTheme(user.preferences.theme as ThemeType);
-        }
-      });
+      this.userService.userAuth$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(user => {
+          if (user && user.preferences && user.preferences.theme) {
+            this.setTheme(user.preferences.theme as ThemeType);
+          }
+        });
     });
   }
 
@@ -76,16 +81,25 @@ export class ThemeSwitchingService {
     };
 
     // Modern browsers
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', handler);
+    if (typeof mediaQuery.addEventListener === 'function') {
+      fromEvent(mediaQuery, 'change')
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => handler());
     }
     // Older Android / WebView
     else if ((mediaQuery as any).addListener) {
-      (mediaQuery as any).addListener(handler);
+      const boundHandler = () => handler();
+      (mediaQuery as any).addListener(boundHandler);
+      this.destroy$.subscribe(() => (mediaQuery as any).removeListener(boundHandler));
     }
 
     // Also sync once more after load (important for PWA)
     setTimeout(handler, 0);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private getSystemTheme(): ThemeType {

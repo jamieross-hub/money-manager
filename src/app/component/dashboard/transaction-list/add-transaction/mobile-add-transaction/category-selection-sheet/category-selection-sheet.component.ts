@@ -49,8 +49,8 @@ export class CategorySelectionSheetComponent implements OnInit {
     ) {
         this.categories$ = this.store.select(selectAllCategories).pipe(
             map(categories => {
-                const reservedNames = APP_CONFIG.VALIDATION.RESERVED_CATEGORY_NAMES;
-                return categories.filter(c => !(c.name.trim().toLowerCase() in reservedNames));
+                const reservedNames = Object.keys(APP_CONFIG.VALIDATION.RESERVED_CATEGORY_NAMES).map(n => n.toLowerCase());
+                return categories.filter(c => !reservedNames.includes(c.name.trim().toLowerCase()));
             })
         );
         this.transactions$ = this.store.select(selectAllTransactions);
@@ -83,10 +83,8 @@ export class CategorySelectionSheetComponent implements OnInit {
                 });
 
                 // Show all categories regardless of type, but hide system categories
-                let filtered = categories.filter(c => 
-                    !c.isSystem && 
-                    !(c.name.toLowerCase() === 'loan payment' && c.type === TransactionType.INCOME)
-                );
+                // Base categories$ is already filtered for reserved names
+                let filtered = categories.filter(c => !c.isSystem);
 
                 if (search) {
                     filtered = filtered.filter(c => c.name.toLowerCase().includes(search));

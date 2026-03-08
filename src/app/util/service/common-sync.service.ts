@@ -169,7 +169,10 @@ export class CommonSyncService implements OnDestroy {
 
     // Combine online/offline events with initial state
     merge(online$, offline$)
-      .pipe(startWith(navigator.onLine))
+      .pipe(
+        startWith(navigator.onLine),
+        takeUntil(this.destroy$)
+      )
       .subscribe(online => {
         this.updateNetworkStatus({ online });
         this.handleNetworkChange(online);
@@ -179,15 +182,17 @@ export class CommonSyncService implements OnDestroy {
     if ('connection' in navigator) {
       const connection = (navigator as any).connection;
       if (connection) {
-        connection.addEventListener('change', () => {
-          this.updateNetworkStatus({
-            online: navigator.onLine,
-            connectionType: connection.effectiveType,
-            effectiveType: connection.effectiveType,
-            downlink: connection.downlink,
-            rtt: connection.rtt
+        fromEvent(connection, 'change')
+          .pipe(takeUntil(this.destroy$))
+          .subscribe(() => {
+            this.updateNetworkStatus({
+              online: navigator.onLine,
+              connectionType: connection.effectiveType,
+              effectiveType: connection.effectiveType,
+              downlink: connection.downlink,
+              rtt: connection.rtt
+            });
           });
-        });
       }
     }
   }
@@ -1522,17 +1527,19 @@ export class CommonSyncService implements OnDestroy {
    */
   private setupServiceWorkerSyncListener(): void {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'SYNC_COMPLETED') {
-          const { transactionId, success } = event.data;
-          if (transactionId) {
-            this.updateTransactionSyncStatus(
-              transactionId,
-              success ? 'synced' : 'failed'
-            );
+      fromEvent(navigator.serviceWorker, 'message')
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((event: any) => {
+          if (event && event.data && event.data.type === 'SYNC_COMPLETED') {
+            const { transactionId, success } = event.data;
+            if (transactionId) {
+              this.updateTransactionSyncStatus(
+                transactionId,
+                success ? 'synced' : 'failed'
+              );
+            }
           }
-        }
-      });
+        });
     }
   }
 

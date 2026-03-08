@@ -1,4 +1,6 @@
-import { Injectable, signal, effect, inject } from '@angular/core';
+import { Injectable, signal, effect, inject, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { APP_CONFIG } from '../config/config';
 import { UserService } from './db/user.service';
 import { TranslationService } from './translation.service';
@@ -7,7 +9,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 @Injectable({
     providedIn: 'root'
 })
-export class LanguageService {
+export class LanguageService implements OnDestroy {
+    private readonly destroy$ = new Subject<void>();
     private readonly translationService = inject(TranslationService);
     private readonly userService = inject(UserService);
 
@@ -19,11 +22,13 @@ export class LanguageService {
     }
 
     private syncWithUserPreferences(): void {
-        this.userService.userAuth$.subscribe(user => {
-            if (user?.preferences?.language) {
-                this.translationService.setLanguage(user.preferences.language);
-            }
-        });
+        this.userService.userAuth$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(user => {
+                if (user?.preferences?.language) {
+                    this.translationService.setLanguage(user.preferences.language);
+                }
+            });
 
         // Sync local languageSignal with TranslationService
         effect(() => {
@@ -34,6 +39,11 @@ export class LanguageService {
                 document.documentElement.lang = lang;
             }
         });
+    }
+
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 
     setLanguage(lang: string) {
