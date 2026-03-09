@@ -22,6 +22,7 @@ import * as FamilyActions from 'src/app/modules/family/store/family.actions';
 import { InvitationPopupService } from 'src/app/util/service/invitation-popup.service';
 import { RecurringTransactionService } from 'src/app/util/service/recurring-transaction.service';
 import { PwaSwService } from 'src/app/util/service/pwa-sw.service';
+import { TransactionsFacadeService } from 'src/app/util/service/db/transactions-facade.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -46,7 +47,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private recurringTransactionService: RecurringTransactionService,
     private cdr: ChangeDetectorRef,
     private pwaSwService: PwaSwService,
-    private transactionsService: TransactionsService
+    private transactionsService: TransactionsService,
+    private transactionsFacade: TransactionsFacadeService
   ) { }
 
   ngOnInit() {

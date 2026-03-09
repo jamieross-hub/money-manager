@@ -21,7 +21,8 @@ addEventListener('message', ({ data }) => {
     isRecurringMode,
     isFamilyMode,
     isDeletedMode,
-    currentUserId
+    currentUserId,
+    fingerprint
   } = data;
 
   if (!transactions) {
@@ -405,6 +406,8 @@ addEventListener('message', ({ data }) => {
     flattenedTransactions: flattened,
     totalIncome,
     totalExpenses,
-    filteredCount
+    filteredCount,
+    fingerprint,
+    currentUserId
   });
 });

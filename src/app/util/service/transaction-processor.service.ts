@@ -1,7 +1,9 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { Transaction } from '../models/transaction.model';
 import { RecurringTemplate } from '../models/recurring.model';
 import { Category, Account } from '../models';
+import { LocalIndexDBStorageService } from './indexdb-storage.service';
+import { UserService } from './db/user.service';
 
 export interface ProcessorOutput {
   filteredTransactions: Transaction[];
@@ -16,6 +18,8 @@ export interface ProcessorOutput {
 })
 export class TransactionProcessorService {
   private worker: Worker | null = null;
+  private readonly localStorageUtility = inject(LocalIndexDBStorageService);
+  private readonly userService = inject(UserService);
   
   // Output Signals
   private _output = signal<ProcessorOutput>({
@@ -26,12 +30,14 @@ export class TransactionProcessorService {
     filteredCount: 0
   });
 
+  private readonly _isProcessing = signal<boolean>(false);
+
   public filteredTransactions = computed(() => this._output().filteredTransactions);
   public flattenedTransactions = computed(() => this._output().flattenedTransactions);
   public totalIncome = computed(() => this._output().totalIncome);
   public totalExpenses = computed(() => this._output().totalExpenses);
   public filteredCount = computed(() => this._output().filteredCount);
-  public isProcessing = signal<boolean>(false);
+  public isProcessing = computed(() => this._isProcessing());
 
   constructor() {
     this.initWorker();
@@ -43,13 +49,36 @@ export class TransactionProcessorService {
       this.worker = new Worker(new URL('../../worker/transaction-processor.worker', import.meta.url));
       
       this.worker.onmessage = ({ data }) => {
-        this._output.set(data);
-        this.isProcessing.set(false);
+        const { fingerprint, currentUserId, ...output } = data;
+        const uid = currentUserId || this.userService.getCurrentUserId() || 'guest';
+        
+        console.log(`[TransactionProcessor] Worker finished for UID: ${uid}, FP: ${fingerprint?.substring(0, 15)}...`);
+        this._output.set(output);
+        this._isProcessing.set(false);
+
+        // Save to IndexDB for persistence
+        if (fingerprint) {
+          const cacheKey = `tx_proc_cache_${uid}`;
+          console.log(`[TransactionProcessor] SETTING cache to key: ${cacheKey}`);
+          this.localStorageUtility.setItem(cacheKey, {
+            ...output,
+            fingerprint,
+            updatedAt: Date.now()
+          });
+          
+          // Verify it was set immediately (sync test)
+          const verify = this.localStorageUtility.getItem(cacheKey);
+          if (!verify) {
+            console.warn(`[TransactionProcessor] ⚠️ Sync verification FAILED for key: ${cacheKey}. It was set but couldn't be retrieved immediately.`);
+          } else {
+            console.log(`[TransactionProcessor] ✅ Sync verification SUCCESS for key: ${cacheKey}`);
+          }
+        }
       };
 
       this.worker.onerror = (err) => {
         console.error('Transaction Processor Worker Error:', err);
-        this.isProcessing.set(false);
+        this._isProcessing.set(false);
       };
     } else {
       console.warn('Web Workers are not supported in this environment.');
@@ -66,6 +95,7 @@ export class TransactionProcessorService {
     const lastTx = data.transactions?.[0];
     const filters = data.filters || {};
     
+    // 💡 REMOVE dynamic fields like sessionStartTime to allow cross-session hits
     return JSON.stringify({
       tCount: data.transactions?.length,
       lastTxId: lastTx?.id,
@@ -84,9 +114,46 @@ export class TransactionProcessorService {
       isRec: data.isRecurringMode,
       isFam: data.isFamilyMode,
       isDel: data.isDeletedMode,
-      uid: data.currentUserId,
-      sessionStart: data.sessionStartTime
+      uid: data.currentUserId || this.userService.getCurrentUserId() || 'guest'
     });
+  }
+
+  /**
+   * Attempts to load filtered results from IndexedDB cache
+   */
+  private loadFromCache(userId: string | undefined, fingerprint: string): boolean {
+    const isReady = this.localStorageUtility.isReady;
+    const uid = userId || this.userService.getCurrentUserId() || 'guest';
+    const cacheKey = `tx_proc_cache_${uid}`;
+    
+    console.log(`[TransactionProcessor] Attempting CACHE LOAD (Storage Ready: ${isReady}) for key: ${cacheKey}`);
+    
+    if (!isReady) {
+      console.warn(`[TransactionProcessor] ⏳ Cache lookup skipped: Storage is not yet ready.`);
+      return false;
+    }
+
+    const cached = this.localStorageUtility.getItem<any>(cacheKey);
+
+    if (cached) {
+      if (cached.fingerprint === fingerprint) {
+        console.log(`[TransactionProcessor] ✅ Cache HIT for key: ${cacheKey}`);
+        this._output.set({
+          filteredTransactions: cached.filteredTransactions,
+          flattenedTransactions: cached.flattenedTransactions,
+          totalIncome: cached.totalIncome,
+          totalExpenses: cached.totalExpenses,
+          filteredCount: cached.filteredCount
+        });
+        this._isProcessing.set(false);
+        return true;
+      } else {
+        console.log(`[TransactionProcessor] ❌ Cache Fingerprint MISMATCH for key: ${cacheKey}`);
+      }
+    } else {
+      console.log(`[TransactionProcessor] ❓ Cache MISS (null) for key: ${cacheKey}`);
+    }
+    return false;
   }
 
   process(data: {
@@ -119,9 +186,17 @@ export class TransactionProcessorService {
       clearTimeout(this.debounceTimer);
     }
 
+    // Ensure we have a valid UID for the worker and cache
+    const effectiveUserId = data.currentUserId || this.userService.getCurrentUserId() || 'guest';
+
+    // Attempt to load from cache immediately to skip worker
+    if (this.loadFromCache(effectiveUserId, fingerprint)) {
+      return;
+    }
+
     this.debounceTimer = setTimeout(() => {
-      this.isProcessing.set(true);
-      this.worker?.postMessage(data);
+      this._isProcessing.set(true);
+      this.worker?.postMessage({ ...data, fingerprint, currentUserId: effectiveUserId });
       this.debounceTimer = null;
     }, 50); // 50ms debounce for rapid signal updates
   }

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Firestore, collection, doc, updateDoc, deleteDoc, getDoc, addDoc, onSnapshot, setDoc } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { Observable, BehaviorSubject, from, of } from 'rxjs';
-import { map, switchMap, tap, catchError, timeout } from 'rxjs/operators';
+import { map, switchMap, tap, catchError, timeout, startWith } from 'rxjs/operators';
 import { orderBy, query, Timestamp, getDocs } from '@angular/fire/firestore';
 import { DateService } from '../date.service';
 import { Transaction } from '../../models/transaction.model';
@@ -11,6 +11,7 @@ import { AppState } from 'src/app/store/app.state';
 import { Store } from '@ngrx/store';
 import * as CategoriesActions from '../../../store/categories/categories.actions';
 import * as TransactionsActions from '../../../store/transactions/transactions.actions';
+import * as FamilyActions from '../../../modules/family/store/family.actions';
 import { AccountsService } from './accounts.service';
 import * as AccountsActions from '../../../store/accounts/accounts.actions';
 import * as TransactionsSelectors from '../../../store/transactions/transactions.selectors';
@@ -339,16 +340,23 @@ export class TransactionsService extends BaseService {
          * Instead, they subscribe to this.transactionsSubject which is kept updated by 
          * the central background sync listener (CommonSyncService -> listenToTransactions).
          */
+        /**
+         * ⚠️ ARCHITECTURE ALIGNMENT: Source of Truth = IndexedDB
+         */
+        const cached = this.getCachedTransactions(userId);
+        if (cached.length > 0) {
+            this.transactionsSubject.next(cached);
+            // Hydrate personal store immediately
+            this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: cached }));
+        }
+
         return this.localStorageUtility.isReady$.pipe(
             switchMap(() => {
-                // 1. Always emit cached transactions immediately for a snappy UI
-                const cached = this.getCachedTransactions(userId);
-                this.transactionsSubject.next(cached);
-
-                // 2. Return the subject's observable. The global background listener 
-                // captures Firebase updates and pushes them into this subject.
+                const refreshed = this.getCachedTransactions(userId);
+                this.transactionsSubject.next(refreshed);
                 return this.transactionsSubject.asObservable();
-            })
+            }),
+            startWith(this.transactionsSubject.value)
         );
     }
 
@@ -365,16 +373,23 @@ export class TransactionsService extends BaseService {
          * global background sync listener managed by CommonSyncService to provide 
          * updates via transactionsSubject.
          */
+        /**
+         * ⚠️ ARCHITECTURE ALIGNMENT: IndexedDB as Source of Truth
+         */
+        const cached = this.getCachedTransactions(userId, familyId);
+        if (cached.length > 0) {
+            this.transactionsSubject.next(cached);
+            // Hydrate family store immediately to prevent selector delays
+            this.store.dispatch(FamilyActions.loadTransactionsSuccess({ transactions: cached }));
+        }
+
         return this.localStorageUtility.isReady$.pipe(
             switchMap(() => {
-                // 1. Pull current state from IndexedDB immediately
-                const cached = this.getCachedTransactions(userId, familyId);
-                this.transactionsSubject.next(cached);
-
-                // 2. Return reactive subject. Updates will be pushed here by 
-                // listenToTransactions() when the background sync detects changes.
+                const refreshed = this.getCachedTransactions(userId, familyId);
+                this.transactionsSubject.next(refreshed);
                 return this.transactionsSubject.asObservable();
-            })
+            }),
+            startWith(this.transactionsSubject.value)
         );
     }
 

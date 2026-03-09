@@ -23,6 +23,7 @@ import { FamilyNotificationService } from './modules/family/services/family-noti
 import { PwaInstallPromptComponent } from './util/components/pwa-install-prompt/pwa-install-prompt.component';
 import { LoaderComponent } from './util/components/loader/loader.component';
 import { PinLockComponent } from './util/components/pin-lock/pin-lock.component';
+import { TransactionProcessorService } from './util/service/transaction-processor.service';
 
 
 @Component({
@@ -65,7 +66,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private bottomSheet: MatBottomSheet,
     private overlayContainer: OverlayContainer,
     private mobileBackButtonService: MobileBackButtonService,
-    private familyNotificationService: FamilyNotificationService
+    private familyNotificationService: FamilyNotificationService,
+    private transactionProcessorService: TransactionProcessorService
   ) {
     this.navigationState = {
       canGoBack: false,

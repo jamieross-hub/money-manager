@@ -8,7 +8,7 @@ addEventListener('message', ({ data }) => {
   const { type, payload } = data;
 
   if (type === 'PROCESS_FAMILY_DATA') {
-    const { transactions, members, settlements, currentUserId, sessionStartTime, fingerprint } = payload;
+    const { transactions, members, settlements, currentUserId, sessionStartTime, fingerprint, fid } = payload;
     
     const stats = computeStats(transactions, members);
     const balances = computeBalances(transactions, members, settlements);
@@ -16,7 +16,7 @@ addEventListener('message', ({ data }) => {
 
     postMessage({
       type: 'FAMILY_DATA_PROCESSED',
-      payload: { stats, balances, activities, fingerprint }
+      payload: { stats, balances, activities, fingerprint, fid }
     });
   }
 });
@@ -25,6 +25,7 @@ function computeStats(transactions: Transaction[], members: FamilyMember[]): Fam
   let totalIncome = 0;
   let totalExpense = 0;
   const memberMap = new Map<string, FamilyMemberStats>();
+  const categoryMap = new Map<string, number>();
 
   // Init member breakdown
   members.forEach(m => {
@@ -51,6 +52,7 @@ function computeStats(transactions: Transaction[], members: FamilyMember[]): Fam
       totalIncome += tx.amount;
     } else {
       totalExpense += tx.amount;
+      categoryMap.set(tx.category, (categoryMap.get(tx.category) || 0) + tx.amount);
     }
 
     // Calculation of ACTUAL payment (how much this person contributed)
@@ -96,12 +98,21 @@ function computeStats(transactions: Transaction[], members: FamilyMember[]): Fam
     netBalance: m.totalIncome - m.totalExpense
   }));
 
+  const categoryBreakdown = Array.from(categoryMap.entries())
+    .map(([category, amount]) => ({
+      category,
+      amount,
+      percentage: totalExpense > 0 ? (amount / totalExpense) * 100 : 0
+    }))
+    .sort((a, b) => b.amount - a.amount);
+
   return {
     totalIncome,
     totalExpense,
     netBalance: totalIncome - totalExpense,
     transactionCount,
     memberBreakdown,
+    categoryBreakdown,
   };
 }
 

@@ -43,6 +43,10 @@ export class LocalIndexDBStorageService {
         take(1)
     );
 
+    public get isReady(): boolean {
+        return this.isInitialized;
+    }
+
     constructor() {
         LocalIndexDBStorageService.instance = this;
     }

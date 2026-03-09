@@ -68,7 +68,6 @@ export class SettleUpComponent implements OnInit {
   private actions$ = inject(Actions);
   private commonSyncService = inject(CommonSyncService);
   private familyProcessor = inject(FamilyProcessorService);
-  private sessionStartTime = Date.now();
 
   family = toSignal(this.store.select(FamilySelectors.selectFamily).pipe(distinctUntilChanged()), { initialValue: null });
   members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as FamilyMember[] });
@@ -107,21 +106,6 @@ export class SettleUpComponent implements OnInit {
   /** All outstanding balances (from owes to) */
   balances = this.familyProcessor.balances;
 
-  /**
-   * Combines all data into ONE signal to gate processing.
-   */
-  private readonly processorInput = computed(() => {
-    const txs     = this.transactions();
-    const mem     = this.members();
-    const set     = this.settlements();
-    const famId   = this.familyId();
-    const sLdg    = this.settlementsLoading();
-    const ldg     = this.loading();
-
-    const isReady = !!famId && !sLdg && !ldg && mem.length > 0;
-
-    return { transactions: txs, members: mem, settlements: set, familyId: famId, ready: isReady };
-  });
 
   /**
    * Optimized: Single pass over the balances array to categorize data for the UI.
@@ -176,24 +160,6 @@ export class SettleUpComponent implements OnInit {
       }
     });
 
-    effect(() => {
-      const input = this.processorInput();
-      const currentUserId = this.currentUserId();
-
-      if (input.ready && input.familyId && input.transactions.length > 0) {
-        untracked(() => {
-          console.log('Processing family data -----', input);
-          this.familyProcessor.process({
-            transactions:     input.transactions,
-            members:          input.members,
-            settlements:      input.settlements,
-            familyId:         input.familyId!,
-            currentUserId,
-            sessionStartTime: this.sessionStartTime
-          });
-        });
-      }
-    });
   }
 
   ngOnInit() {

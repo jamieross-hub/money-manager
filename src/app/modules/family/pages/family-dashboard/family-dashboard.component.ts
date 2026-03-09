@@ -149,7 +149,6 @@ export class FamilyDashboardComponent implements OnInit {
   private readonly userService              = inject(UserService);
 
   // ─── Private State ───────────────────────────────────────────────────────────
-  private readonly sessionStartTime = Date.now();
   private isInstanceLoading = false;
 
   // ─── Store Signals (raw) ─────────────────────────────────────────────────────
@@ -174,35 +173,6 @@ export class FamilyDashboardComponent implements OnInit {
   readonly activityLimit = signal(5);
   readonly displayedActivities = computed(() => this.recentActivities().slice(0, this.activityLimit()));
 
-  /**
-   * Combines all store slices into ONE computed signal so Effect 2 fires
-   * only once per batch instead of once per individual signal change.
-   *
-   * `settlementsReady` is false while settlements are being fetched from the
-   * server and becomes true only after the fetch completes — preventing the
-   * worker from receiving an incomplete dataset.
-   */
-  private readonly processorInput = computed(() => {
-    const txs              = this.transactions();
-    const mem              = this.members();
-    const set              = this.settlements();
-    const famId            = this.family()?.id;
-    const sLdg             = this.settlementsLoading();
-    const ldg              = this.loading();
-
-    // Data is ready to process if we have a familyId, no active loading, 
-    // and basic data exists (members are required, transactions optional but common)
-    const settlementsReady = !sLdg;
-    const isReady          = !!famId && settlementsReady && !ldg && mem.length > 0;
-
-    return {
-      transactions: txs,
-      members:      mem,
-      settlements:  set,
-      familyId:     famId,
-      ready:        isReady,
-    };
-  });
 
   // ─── Derived / Computed Signals ──────────────────────────────────────────────
   readonly family = computed(() => {
@@ -286,24 +256,6 @@ export class FamilyDashboardComponent implements OnInit {
       }
     });
 
-    // Effect 2: Process family data
-    effect(() => {
-      const input = this.processorInput();
-      const uid   = this.currentUserId();
-
-      if (input.ready && input.familyId && input.transactions.length > 0) {
-        untracked(() => {
-          this.familyProcessor.process({
-            transactions:     input.transactions,
-            members:          input.members,
-            settlements:      input.settlements,
-            familyId:         input.familyId!,
-            currentUserId:    uid || undefined,
-            sessionStartTime: this.sessionStartTime,
-          });
-        });
-      }
-    });
 
     this.destroyRef.onDestroy(() => {
       if (this.isInstanceLoading) this.loaderService.hide();

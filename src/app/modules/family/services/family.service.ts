@@ -719,6 +719,7 @@ export class FamilyService implements OnDestroy {
     let totalIncome = 0;
     let totalExpense = 0;
     const memberMap = new Map<string, FamilyMemberStats>();
+    const categoryMap = new Map<string, number>();
 
     // Init member breakdown
     members.forEach(m => {
@@ -749,6 +750,7 @@ export class FamilyService implements OnDestroy {
         totalIncome += tx.amount;
       } else {
         totalExpense += tx.amount;
+        categoryMap.set(tx.category, (categoryMap.get(tx.category) || 0) + tx.amount);
       }
 
       // Track actual contributions (totalPaid)
@@ -807,12 +809,21 @@ export class FamilyService implements OnDestroy {
       netBalance: m.totalIncome - m.totalExpense
     }));
 
+    const categoryBreakdown = Array.from(categoryMap.entries())
+      .map(([category, amount]) => ({
+        category,
+        amount,
+        percentage: totalExpense > 0 ? (amount / totalExpense) * 100 : 0
+      }))
+      .sort((a, b) => b.amount - a.amount);
+
     return {
       totalIncome,
       totalExpense,
       netBalance: totalIncome - totalExpense,
       transactionCount,
       memberBreakdown,
+      categoryBreakdown,
     };
   }
 

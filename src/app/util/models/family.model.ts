@@ -58,12 +58,19 @@ export interface FamilyMemberStats {
   isActive: boolean;
 }
 
+export interface CategoryBreakdownItem {
+  category: string;
+  amount: number;
+  percentage: number;
+}
+
 export interface FamilyStats {
   totalIncome: number;
   totalExpense: number;
   netBalance: number;
   transactionCount: number;
   memberBreakdown: FamilyMemberStats[];
+  categoryBreakdown: CategoryBreakdownItem[];
 }
 
 // ─── Requests ──────────────────────────────────────────────────────────────

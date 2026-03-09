@@ -14,7 +14,7 @@ import * as TransactionsSelectors from 'src/app/store/transactions/transactions.
 import { FamilyMember, FamilyStats } from 'src/app/util/models/family.model';
 import { Transaction } from 'src/app/util/models/transaction.model';
 import { FamilyService } from '../../services/family.service';
-import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
+import { FamilyProcessorService } from 'src/app/util/service/family-processor.service';
 
 @Component({
   selector: 'app-family-reports',
@@ -28,44 +28,16 @@ export class FamilyReportsComponent implements OnInit {
   private store = inject(Store<AppState>);
   private familyService = inject(FamilyService);
   private destroyRef = inject(DestroyRef);
+  private familyProcessor = inject(FamilyProcessorService);
 
   members      = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as FamilyMember[] });
   transactions = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length && a[0]?.id === b[0]?.id && (a[0] as any)?.updatedAt === (b[0] as any)?.updatedAt)), { initialValue: [] as Transaction[] });
   loading      = toSignal(this.store.select(TransactionsSelectors.selectTransactionsLoading).pipe(distinctUntilChanged()), { initialValue: true });
 
-  private storageService = inject(LocalIndexDBStorageService);
-
-  stats = computed(() => {
-    const mems = this.members();
-    const trans = this.transactions();
-    
-    const familyId = this.familyService.activeFamilyId();
-    if (!familyId) return null;
-
-    const cacheKey = `stats_${familyId}`;
-
-    if (mems.length === 0) {
-      const cachedStats = this.storageService.getItem<FamilyStats>(cacheKey);
-      if (cachedStats) {
-        return cachedStats;
-      }
-    }
-
-    if (!trans.length && !mems.length) return null;
-    
-    const calculatedStats = this.familyService.computeStats(trans, mems);
-    this.storageService.setItem(cacheKey, calculatedStats);
-    return calculatedStats;
-  });
+  stats = this.familyProcessor.stats;
 
   categoryBreakdown = computed(() => {
-    const expenses = this.transactions().filter(t => t.type === 'expense');
-    const total = expenses.reduce((s, t) => s + t.amount, 0);
-    const map = new Map<string, number>();
-    expenses.forEach(t => map.set(t.category, (map.get(t.category) || 0) + t.amount));
-    return Array.from(map.entries())
-      .map(([category, amount]) => ({ category, amount, percentage: total > 0 ? (amount / total) * 100 : 0 }))
-      .sort((a, b) => b.amount - a.amount);
+    return this.stats()?.categoryBreakdown || [];
   });
 
   private memberColors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
