@@ -10,7 +10,7 @@
         <div class="flex items-center">
             <mat-icon class="mode-icon !w-4 !h-4 !text-[18px] transition-all duration-300"
                     [class.mr-3]="isFlat()" [class.mr-2]="!isFlat()">family_restroom</mat-icon>
-            <span class="text-left truncate flex-1 max-w-[150px]"
+            <span class="text-left truncate flex-1 max-w-[130px]"
                 [class.hidden]="!isFlat()" [class.sm:inline]="!isFlat()">
                 @if (displayFamilyMode() && familyGroup()) {
                     {{ familyGroup()?.name }}
