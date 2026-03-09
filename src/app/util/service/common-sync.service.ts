@@ -326,7 +326,8 @@ export class CommonSyncService implements OnDestroy {
       tap(([user, familyId]) => console.log(`🔄 Sync context changed for user: ${user.uid}, Mode: ${user.preferences?.isFamilyMode ? 'Family' : 'Personal'}, FamilyId: ${familyId}`)),
       switchMap(([user, familyId]) => {
         // 1. Initial full sync (already has internal network check)
-        const initialSync$ = this.syncAll();
+        // Pass familyId explicitly to ensure syncAll pulls for the new context
+        const initialSync$ = this.syncAll(familyId);
         
         // 2. Start real-time sync listeners reactively based on network
         // We add a delay to ensure app startup always starts with IndexedDB
@@ -399,11 +400,16 @@ export class CommonSyncService implements OnDestroy {
   /**
    * Perform a full sync (Push pending changes + Pull from Firestore)
    */
-  syncAll() {
+  syncAll(forcedFamilyId?: string | null) {
     const userId = this.userService.getCurrentUserId();
-    const isFamilyMode = this.store.selectSignal(ProfileSelectors.selectProfile)()?.preferences?.isFamilyMode ?? false;
+    const effectiveFamilyId = forcedFamilyId !== undefined 
+          ? (forcedFamilyId || undefined) 
+          : (this.store.selectSignal(ProfileSelectors.selectProfile)()?.preferences?.activeFamilyId || undefined);
+    const isFamilyMode = forcedFamilyId !== undefined 
+          ? !!forcedFamilyId 
+          : (this.store.selectSignal(ProfileSelectors.selectProfile)()?.preferences?.isFamilyMode ?? false);
 
-    console.log(`[CommonSyncService] syncAll started. UserId: ${userId}, Mode: ${isFamilyMode ? 'Family' : 'Personal'}`);
+    console.log(`[CommonSyncService] syncAll started. UserId: ${userId}, Mode: ${isFamilyMode ? 'Family' : 'Personal'}, FamilyId: ${effectiveFamilyId}`);
 
 
     // 1. Handle Guest Mode
@@ -448,7 +454,7 @@ export class CommonSyncService implements OnDestroy {
       // 2. Pull changes from all collections
       switchMap(() => {
         return forkJoin([
-          transactionsService.pullFromFirestore(userId),
+          transactionsService.pullFromFirestore(userId, effectiveFamilyId),
           accountsService.pullFromFirestore(userId),
           categoryService.pullFromFirestore(userId),
           budgetsService.pullFromFirestore(userId),

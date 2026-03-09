@@ -45,6 +45,7 @@ import { QuickActionsFabComponent, QuickAction, QuickActionsFabConfig } from 'sr
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 import { LoaderService } from 'src/app/util/service/loader.service';
 import { TransactionStatus } from 'src/app/util/config/enums';
+import { CurrencyPipe } from 'src/app/util/pipes';
 // ─── View Model ──────────────────────────────────────────────────────────────
 
 export type GroupType = 'family' | 'trip' | 'work' | 'other';
@@ -122,7 +123,8 @@ type LoadState = 'loading' | 'loaded' | 'empty' | 'error';
     MatListModule,
     MatTooltipModule,
     QuickActionsFabComponent,
-    ImageFallbackDirective
+    ImageFallbackDirective,
+    CurrencyPipe
 ],
   templateUrl: './group-selection.component.html',
   styleUrls: ['./group-selection.component.scss'],
@@ -138,6 +140,14 @@ export class GroupSelectionComponent implements OnInit {
   private autoOpened = false;
   groupSpends = signal<Record<string, number>>({});
   private isInstanceLoading = false;
+
+  /** Current user UID from AppState.profile */
+  private readonly profile = this.store.selectSignal(ProfileSelectors.selectProfile);
+  get currentUserId(): string { return this.profile()?.uid ?? ''; }
+
+  /** User's preferred currency */
+  userCurrency = computed(() => this.profile()?.preferences?.defaultCurrency || 'INR');
+
   private deletedFamiliesSubscription?: Subscription;
 
   // Signal holding raw deleted (isActive=false) families
@@ -181,11 +191,12 @@ export class GroupSelectionComponent implements OnInit {
           }
 
           const userId = this.userService.getCurrentUserId() || '';
-          this.familyTransactionsService.getTransactions(userId)
+          this.familyTransactionsService.getTransactions(userId, f.id)
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe((txs: Transaction[]) => {
               const expense = txs
                 .filter((t: Transaction) =>
+                  t.familyId === f.id &&
                   t.type === 'expense' &&
                   t.status !== TransactionStatus.DELETED &&
                   t.category !== 'Settlement'
@@ -368,10 +379,6 @@ export class GroupSelectionComponent implements OnInit {
   groupModeIcon = GROUP_MODE_ICON;
   groupModeLabel = GROUP_MODE_LABEL;
 
-  /** Current user UID from AppState.profile */
-  private readonly profile = this.store.selectSignal(ProfileSelectors.selectProfile);
-  get currentUserId(): string { return this.profile()?.uid ?? ''; }
-
 
 
   loadGroups(): void {
@@ -529,13 +536,7 @@ export class GroupSelectionComponent implements OnInit {
     return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
   }
 
-  formatCurrency(amount: number, currency: string): string {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: currency || 'INR',
-      maximumFractionDigits: 0,
-    }).format(amount);
-  }
+ 
 
   avatarInitials(name: string): string {
     return name

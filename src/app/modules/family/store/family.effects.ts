@@ -1,13 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { from, of } from 'rxjs';
-import { switchMap, map, catchError, mergeMap } from 'rxjs/operators';
+import { Observable, from, of, forkJoin } from 'rxjs';
+import { switchMap, map, catchError, mergeMap, filter } from 'rxjs/operators';
 import { FamilyService } from '../services/family.service';
 import * as FamilyActions from './family.actions';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import * as ProfileActions from 'src/app/store/profile/profile.actions';
-import { filter } from 'rxjs';
 import { TransactionsFacadeService } from 'src/app/util/service/db/transactions-facade.service';
 import { SyncStatus } from 'src/app/util/config/enums';
 
@@ -43,6 +42,42 @@ export class FamilyEffects {
           catchError(err => of(FamilyActions.loadMyFamilyFailure({ error: err.message })))
         )
       )
+    )
+  );
+
+  /**
+   * Automatically trigger member/transaction/settlement loads once a family object is resolved.
+   * This ensures switching groups in the UI re-hydrates all relevant data slices.
+   */
+  loadRelatedFamilyData$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(FamilyActions.loadMyFamilySuccess),
+      filter(({ family }) => !!family && !!family.id),
+      mergeMap(({ family }) => [
+        FamilyActions.loadMembers({ familyId: family!.id! }),
+        FamilyActions.loadTransactions({ familyId: family!.id! }),
+        FamilyActions.loadSettlements({ familyId: family!.id! }),
+        FamilyActions.triggerFamilyRefresh({ familyId: family!.id! })
+      ])
+    )
+  );
+
+  /**
+   * Forced background pull when switching groups to ensure latest data from cloud.
+   */
+  triggerFamilyRefresh$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(FamilyActions.triggerFamilyRefresh),
+      mergeMap(({ familyId }) => {
+        const userId = this.userService.getCurrentUserId() || '';
+        return forkJoin([
+          this.transactionsFacade.pullFromFirestore(userId, familyId),
+          this.familyService.pullFromFirestore(userId) // Pulls families, members, settlements
+        ]).pipe(
+          map(() => ({ type: '[Family] Forced Pull Complete' })),
+          catchError(() => of({ type: '[Family] Forced Pull Failed' }))
+        );
+      })
     )
   );
 

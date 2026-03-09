@@ -92,7 +92,7 @@
             <div class="gs-active-card__activity">
               <mat-icon class="gs-meta-icon"> money</mat-icon>
               <span class="gs-meta-text">
-                {{ formatCurrency(active.totalSpend || 0, 'INR') }}
+                {{ active.totalSpend | currency }}
               </span>
             </div>
             <button mat-button color="primary" class="gs-open-btn" (click)="$event.stopPropagation(); openGroup(active)">
@@ -143,7 +143,7 @@
             <div class="gs-list-card__footer">
               <div class="gs-list-card__activity">
                 <mat-icon class="gs-meta-icon">money</mat-icon>
-                <span class="gs-meta-text">{{ formatCurrency(group.totalSpend || 0, 'INR') }}</span>
+                <span class="gs-meta-text">{{ group.totalSpend | currency }}</span>
               </div>
               <div class="gs-list-card__actions" style="display: flex; gap: 4px;">
                 @if (group.role !== 'admin') {

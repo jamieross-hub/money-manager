@@ -438,6 +438,9 @@ export class TransactionsService extends BaseService {
 
         console.log(`[TransactionsService] Pulling transactions for user: ${userId}`);
 
+        const isFamilyMode = this.store.selectSignal(ProfileSelectors.selectProfile)()?.preferences?.isFamilyMode;
+        const effectiveFamilyId = familyId || (isFamilyMode ? this.getFamilyId() : undefined);
+
         return from(getDocs(transactionsRef)).pipe(
             timeout(20000), // Timeout after 20s for larger datasets
             tap((querySnapshot: any) => {
@@ -445,7 +448,13 @@ export class TransactionsService extends BaseService {
                 querySnapshot.forEach((docSnap: any) => {
                     const data = docSnap.data();
                     if (data && (data['amount'] !== undefined || docSnap.id)) {
-                        firestoreTransactions.push({ id: docSnap.id, ...data } as Transaction);
+                        const tx = { id: docSnap.id, ...data } as Transaction;
+                        // ── Indexing Protection: Family transactions MUST have familyId field
+                        // even if it's not present in the Firestore document itself.
+                        if (effectiveFamilyId && !tx.familyId) {
+                            tx.familyId = effectiveFamilyId;
+                        }
+                        firestoreTransactions.push(tx);
                     }
                 });
 
@@ -473,7 +482,12 @@ export class TransactionsService extends BaseService {
                 // 3. Update subject and NgRx state
                 console.log(`[TransactionsService] Dispatching ${updatedFromCache.length} transactions from cache to store`);
                 this.transactionsSubject.next(updatedFromCache);
-                this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: updatedFromCache }));
+                
+                if (effectiveFamilyId) {
+                  this.store.dispatch(FamilyActions.loadTransactionsSuccess({ transactions: updatedFromCache }));
+                } else {
+                  this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: updatedFromCache }));
+                }
             }),
             map(() => undefined),
             catchError(error => {
@@ -508,6 +522,9 @@ export class TransactionsService extends BaseService {
 
         console.log(`[TransactionsService] Starting real-time listener for user: ${userId}`);
 
+        const isFamilyMode = this.store.selectSignal(ProfileSelectors.selectProfile)()?.preferences?.isFamilyMode;
+        const effectiveFamilyId = familyId || (isFamilyMode ? this.getFamilyId() : undefined);
+
         return new Observable<void>(observer => {
             const unsubscribe = onSnapshot(transactionsRef,
                 (querySnapshot) => {
@@ -515,7 +532,12 @@ export class TransactionsService extends BaseService {
                     querySnapshot.forEach((docSnap) => {
                         const data = docSnap.data();
                         if (data && (data['amount'] !== undefined || docSnap.id)) {
-                            firestoreTransactions.push({ id: docSnap.id, ...data } as Transaction);
+                            const tx = { id: docSnap.id, ...data } as Transaction;
+                            // Inject familyId to ensure indexing works correctly in IndexedDB
+                            if (effectiveFamilyId && !tx.familyId) {
+                                tx.familyId = effectiveFamilyId;
+                            }
+                            firestoreTransactions.push(tx);
                         }
                     });
 
@@ -535,7 +557,11 @@ export class TransactionsService extends BaseService {
 
                     // 3. Update subject and NgRx state
                     this.transactionsSubject.next(updatedFromCache);
-                    this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: updatedFromCache }));
+                    if (effectiveFamilyId) {
+                        this.store.dispatch(FamilyActions.loadTransactionsSuccess({ transactions: updatedFromCache }));
+                    } else {
+                        this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: updatedFromCache }));
+                    }
 
                     observer.next();
                 },
@@ -687,10 +713,12 @@ export class TransactionsService extends BaseService {
             const getTime = (date: any) => {
                 if (!date) return 0;
                 if (date instanceof Date) return date.getTime();
-                if (typeof date === 'object' && typeof (date as any).toDate === 'function') {
-                    return (date as any).toDate().getTime();
+                if (typeof date === 'object') {
+                    if (typeof (date as any).toDate === 'function') return (date as any).toDate().getTime();
+                    if ('seconds' in date) return (date as any).seconds * 1000;
                 }
-                return new Date(date).getTime();
+                const d = new Date(date);
+                return isNaN(d.getTime()) ? 0 : d.getTime();
             };
             return getTime(b.date) - getTime(a.date);
         });

@@ -234,6 +234,41 @@ export class DateService {
   }
 
   /**
+   * Check if a date is within a range
+   * @param dateValue - Date to check
+   * @param startDate - Range start
+   * @param endDate - Range end
+   * @returns True if within range
+   */
+  isInRange(dateValue: any, startDate: any, endDate: any): boolean {
+    const date = this.toDate(dateValue);
+    const start = this.toDate(startDate);
+    const end = this.toDate(endDate);
+
+    if (!date) return false;
+    if (!start && !end) return true;
+
+    if (start && end) return date >= start && date <= end;
+    if (start) return date >= start;
+    if (end) return date <= end;
+
+    return true;
+  }
+
+  /**
+   * Check if a date is in a specific month and year
+   * @param dateValue - Date to check
+   * @param month - Month (0-11)
+   * @param year - Year (YYYY)
+   * @returns True if in month
+   */
+  isInMonth(dateValue: any, month: number, year: number): boolean {
+    const date = this.toDate(dateValue);
+    if (!date) return false;
+    return date.getMonth() === month && date.getFullYear() === year;
+  }
+
+  /**
    * Format date for display
    * @param dateValue - Date value to format
    * @param format - Format string (default: 'MM/DD/YYYY')

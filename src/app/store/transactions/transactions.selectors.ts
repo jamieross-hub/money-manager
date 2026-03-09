@@ -6,6 +6,9 @@ import * as ProfileSelectors from '../profile/profile.selectors';
 import * as FamilySelectors from '../../modules/family/store/family.selectors';
 import { Transaction } from '../../util/models/transaction.model';
 import { RecurringTemplate } from '../../util/models/recurring.model';
+import { DateService } from '../../util/service/date.service';
+
+const dateService = new DateService();
 
 export const selectTransactionsState = createFeatureSelector<TransactionsState>('transactions');
 
@@ -14,8 +17,9 @@ export const selectAllTransactions = createSelector(
   selectTransactionsState,
   ProfileSelectors.selectIsFamilyMode,
   FamilySelectors.selectFamilyTransactions,
-  (state, isFamilyMode, familyTransactions) => {
-    if (isFamilyMode) {
+  FamilySelectors.selectFamily,
+  (state, isFamilyMode, familyTransactions, activeFamily) => {
+    if (isFamilyMode || !!activeFamily) {
       // In family mode, we trust the familyTransactions slice which is populated 
       // via the efficient familyId index in the service layer.
       const seenSettlements = new Set();
@@ -40,8 +44,9 @@ export const selectDeletedTransactions = createSelector(
   selectTransactionsState,
   ProfileSelectors.selectIsFamilyMode,
   FamilySelectors.selectRawFamilyTransactions,
-  (state, isFamilyMode, familyTransactions) => {
-    if (isFamilyMode) {
+  FamilySelectors.selectFamily,
+  (state, isFamilyMode, familyTransactions, activeFamily) => {
+    if (isFamilyMode || !!activeFamily) {
       return (familyTransactions || []).filter(t => t.status === TransactionStatus.DELETED);
     }
     
@@ -54,24 +59,12 @@ export const selectDeletedTransactions = createSelector(
 
 export const selectSortedDeletedTransactions = createSelector(
   selectDeletedTransactions,
-  (transactions) => {
-    return [...transactions].sort((a, b) => {
-      const dateA = a.date ? convertToDate(a.date) : new Date(0);
-      const dateB = b.date ? convertToDate(b.date) : new Date(0);
-      return dateB.getTime() - dateA.getTime();
-    });
-  }
+  (transactions) => dateService.sortByDate(transactions, 'date', false)
 );
 
 export const selectSortedAllTransactions = createSelector(
   selectAllTransactions,
-  (transactions) => {
-    return [...transactions].sort((a, b) => {
-      const dateA = a.date ? convertToDate(a.date) : new Date(0);
-      const dateB = b.date ? convertToDate(b.date) : new Date(0);
-      return dateB.getTime() - dateA.getTime();
-    });
-  }
+  (transactions) => dateService.sortByDate(transactions, 'date', false)
 );
 
 export const selectTransactionsLoading = createSelector(
@@ -105,25 +98,18 @@ export const selectTransactionById = (transactionId: string) => createSelector(
 );
 
 // Helper function to convert Timestamp to Date
-const convertToDate = (date: Date | Timestamp): Date => {
-  if (date instanceof Timestamp) {
-    return new Date(date.seconds * 1000);
-  }
-  return date instanceof Date ? date : new Date(date);
+const convertToDate = (date: any): Date => {
+  return dateService.toDate(date) || new Date(0);
 };
 
 // Helper function to check if date is within range
 const isDateInRange = (transactionDate: Date | Timestamp, startDate: Date | Timestamp, endDate: Date | Timestamp): boolean => {
-  const txDate = convertToDate(transactionDate);
-  const start = convertToDate(startDate);
-  const end = convertToDate(endDate);
-  return txDate >= start && txDate <= end;
+  return dateService.isInRange(transactionDate, startDate, endDate);
 };
 
 // Helper function to check if date is in specific month/year
 const isDateInMonth = (transactionDate: Date | Timestamp, month: number, year: number): boolean => {
-  const txDate = convertToDate(transactionDate);
-  return txDate.getMonth() === month && txDate.getFullYear() === year;
+  return dateService.isInMonth(transactionDate, month, year);
 };
 
 // Filtered selectors with proper typing
@@ -214,15 +200,8 @@ export const selectNetBalanceByMonth = (month: number, year: number) => createSe
 export const selectLatestCompletedTransaction = createSelector(
   selectAllTransactions,
   (transactions) => {
-    if (!transactions.length) return null;
-    
-    return transactions
-      .filter(t => t.date && t.status === TransactionStatus.COMPLETED)
-      .sort((a, b) => {
-        const dateA = convertToDate(a.date!);
-        const dateB = convertToDate(b.date!);
-        return dateB.getTime() - dateA.getTime(); // Latest first
-      })[0] || null;
+    const completed = transactions.filter(t => t.date && t.status === TransactionStatus.COMPLETED);
+    return dateService.sortByDate(completed, 'date', false)[0] || null;
   }
 );
 
@@ -230,15 +209,8 @@ export const selectLatestCompletedTransaction = createSelector(
 export const selectLatestTransaction = createSelector(
   selectAllTransactions,
   (transactions) => {
-    if (!transactions.length) return null;
-    
-    return transactions
-      .filter(t => t.date)
-      .sort((a, b) => {
-        const dateA = convertToDate(a.date!);
-        const dateB = convertToDate(b.date!);
-        return dateB.getTime() - dateA.getTime(); // Latest first
-      })[0] || null;
+    const withDate = transactions.filter(t => t.date);
+    return dateService.sortByDate(withDate, 'date', false)[0] || null;
   }
 );
 
@@ -249,13 +221,8 @@ export const selectRecentTransactions = (days: number = 30) => createSelector(
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
     
-    return transactions
-      .filter(t => t.date && convertToDate(t.date) >= cutoffDate)
-      .sort((a, b) => {
-        const dateA = convertToDate(a.date!);
-        const dateB = convertToDate(b.date!);
-        return dateB.getTime() - dateA.getTime();
-      });
+    const recent = transactions.filter(t => t.date && convertToDate(t.date) >= cutoffDate);
+    return dateService.sortByDate(recent, 'date', false);
   }
 );
 

@@ -71,3 +71,4 @@ export const addSettlementSuccess = createAction('[Family] Add Settlement Succes
 export const addSettlementFailure = createAction('[Family] Add Settlement Failure', props<{ error: string }>());
 export const deleteSettlement = createAction('[Family] Delete Settlement', props<{ familyId: string; settlementId: string }>());
 export const deleteSettlementSuccess = createAction('[Family] Delete Settlement Success', props<{ settlementId: string; deletedTxIds?: string[] }>());
+export const triggerFamilyRefresh = createAction('[Family] Trigger Family Refresh', props<{ familyId: string }>());

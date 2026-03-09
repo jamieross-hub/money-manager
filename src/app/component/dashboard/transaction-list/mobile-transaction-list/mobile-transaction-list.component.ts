@@ -425,6 +425,8 @@ export class MobileTransactionListComponent
       const isRecurringMode = this.isRecurring();
       const isFamilyMode = this.isFamilyMode();
 
+      console.log('transactions list ---->', transactions);
+
       this.processorService.process({
         transactions,
         recurringTemplates,

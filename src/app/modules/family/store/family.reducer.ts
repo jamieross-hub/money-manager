@@ -8,8 +8,25 @@ export const familyReducer = createReducer(
   initialFamilyState,
 
   // Load my family
-  on(FamilyActions.loadMyFamily, state => ({ ...state, loading: true, error: null })),
-  on(FamilyActions.loadFamily, state => ({ ...state, loading: true, error: null })),
+  on(FamilyActions.loadMyFamily, state => ({ 
+    ...state, 
+    loading: true, 
+    error: null,
+    transactions: [],
+    members: [],
+    settlements: []
+  })),
+  on(FamilyActions.loadFamily, (state, { familyId }) => ({ 
+    ...state, 
+    loading: true, 
+    error: null,
+    // Clear stale data if switching to a different family
+    ...(state.family?.id !== familyId ? {
+      transactions: [],
+      members: [],
+      settlements: []
+    } : {})
+  })),
   on(FamilyActions.loadMyFamilySuccess, (state, { family }) => ({ ...state, loading: false, family })),
   on(FamilyActions.loadMyFamilyFailure, (state, { error }) => ({ ...state, loading: false, error })),
   on(FamilyActions.updateFamilyBannerSuccess, (state, { banner }) => ({

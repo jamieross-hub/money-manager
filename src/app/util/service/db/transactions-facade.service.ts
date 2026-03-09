@@ -19,46 +19,48 @@ export class TransactionsFacadeService {
         private store: Store<AppState>
     ) {}
 
-    private get activeService(): TransactionsService {
+    private getServiceForContext(familyId?: string): TransactionsService {
+        if (familyId) return this.familyService;
+        
         const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
         const isFamilyMode = profile?.preferences?.isFamilyMode || false;
         return isFamilyMode ? this.familyService : this.personalService;
     }
 
     createTransaction(userId: string, transaction: Omit<Transaction, 'id'>): Observable<void> {
-        return this.activeService.createTransaction(userId, transaction);
+        return this.getServiceForContext(transaction.familyId).createTransaction(userId, transaction);
     }
 
-    updateTransaction(userId: string, transactionId: string, updatedTransaction: Partial<Transaction>): Observable<void> {
-        return this.activeService.updateTransaction(userId, transactionId, updatedTransaction);
+    updateTransaction(userId: string, transactionId: string, updatedTransaction: Partial<Transaction>, familyId?: string): Observable<void> {
+        return this.getServiceForContext(familyId || (updatedTransaction as any).familyId).updateTransaction(userId, transactionId, updatedTransaction);
     }
 
-    deleteTransaction(userId: string, transactionId: string): Observable<void> {
-        return this.activeService.deleteTransaction(userId, transactionId);
+    deleteTransaction(userId: string, transactionId: string, familyId?: string): Observable<void> {
+        return this.getServiceForContext(familyId).deleteTransaction(userId, transactionId);
     }
 
     getTransactions(userId: string, familyId?: string): Observable<Transaction[]> {
         const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
         const effectiveFamilyId = familyId || (profile?.preferences?.isFamilyMode ? profile?.preferences?.activeFamilyId : undefined);
-        return this.activeService.getTransactions(userId, effectiveFamilyId || undefined);
+        return this.getServiceForContext(effectiveFamilyId || undefined).getTransactions(userId, effectiveFamilyId || undefined);
     }
 
     pullFromFirestore(userId: string, familyId?: string): Observable<void> {
         const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
         const effectiveFamilyId = familyId || (profile?.preferences?.isFamilyMode ? profile?.preferences?.activeFamilyId : undefined);
-        return this.activeService.pullFromFirestore(userId, effectiveFamilyId || undefined);
+        return this.getServiceForContext(effectiveFamilyId || undefined).pullFromFirestore(userId, effectiveFamilyId || undefined);
     }
 
     listenToTransactions(userId: string, familyId?: string): Observable<void> {
         const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
         const effectiveFamilyId = familyId || (profile?.preferences?.isFamilyMode ? profile?.preferences?.activeFamilyId : undefined);
-        return this.activeService.listenToTransactions(userId, effectiveFamilyId || undefined);
+        return this.getServiceForContext(effectiveFamilyId || undefined).listenToTransactions(userId, effectiveFamilyId || undefined);
     }
 
     getTransaction(userId: string, transactionId: string, familyId?: string): Observable<Transaction | undefined> {
         const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
         const effectiveFamilyId = familyId || (profile?.preferences?.isFamilyMode ? profile?.preferences?.activeFamilyId : undefined);
-        return this.activeService.getTransaction(userId, transactionId, effectiveFamilyId || undefined);
+        return this.getServiceForContext(effectiveFamilyId || undefined).getTransaction(userId, transactionId, effectiveFamilyId || undefined);
     }
 
     /**
@@ -67,14 +69,14 @@ export class TransactionsFacadeService {
     getCachedTransactions(userId: string, familyId?: string): Transaction[] {
         const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
         const effectiveFamilyId = familyId || (profile?.preferences?.isFamilyMode ? profile?.preferences?.activeFamilyId : undefined);
-        return this.activeService.getCachedTransactions(userId, effectiveFamilyId || undefined);
+        return this.getServiceForContext(effectiveFamilyId || undefined).getCachedTransactions(userId, effectiveFamilyId || undefined);
     }
 
-    getSyncStatus(): { count: number; hasPendingOperations: boolean } {
-        return this.activeService.getSyncStatus();
+    getSyncStatus(familyId?: string): { count: number; hasPendingOperations: boolean } {
+        return this.getServiceForContext(familyId || undefined).getSyncStatus();
     }
 
-    forceSync(): Promise<void> {
-        return this.activeService.forceSync();
+    forceSync(familyId?: string): Promise<void> {
+        return this.getServiceForContext(familyId || undefined).forceSync();
     }
 }
