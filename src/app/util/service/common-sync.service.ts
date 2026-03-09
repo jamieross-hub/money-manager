@@ -338,12 +338,12 @@ export class CommonSyncService implements OnDestroy {
         const goalsService = this.injector.get<GoalsService>(GoalsService);
 
         const realTimeSync$ = this.isOnline$.pipe(
-          delay(5000), // Delay to ensure startup completes with local data
+          delay(10000), // Delay to ensure startup completes with local data
           switchMap(online => {
             if (online) {
               console.log('🌐 Online: Enabling real-time sync listeners (Full Set)');
               return merge(
-                  transactionsService.listenToTransactions(user.uid, familyId || undefined).pipe(catchError(() => of(null))),
+                  transactionsService.listenToTransactions(user.uid).pipe(catchError(() => of(null))),
                   accountsService.listenToAccounts(user.uid).pipe(catchError(() => of(null))),
                   categoryService.listenToCategories(user.uid).pipe(catchError(() => of(null))),
                   budgetsService.listenToBudgets(user.uid).pipe(catchError(() => of(null))),
