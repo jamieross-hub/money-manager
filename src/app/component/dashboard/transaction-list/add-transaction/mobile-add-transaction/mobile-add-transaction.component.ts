@@ -378,6 +378,12 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       data.paidBy = paidBy;
     } else {
       data.paidByPhotoURL = paidByMember?.photoURL || '';
+      data.paidBy = [{
+        userId: paidByUserId,
+        displayName: paidByMember?.displayName || paidByUserId,
+        photoURL: paidByMember?.photoURL || '',
+        amount: parseFloat(this.transactionForm.get('amount')?.value || 0)
+      }];
     }
 
     return data;
