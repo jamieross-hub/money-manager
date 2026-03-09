@@ -16,7 +16,7 @@ import {
   where
 } from '@angular/fire/firestore';
 import { Store } from '@ngrx/store';
-import { Observable, of, from } from 'rxjs';
+import { Observable, of, from, BehaviorSubject } from 'rxjs';
 import { map, catchError, tap, timeout, switchMap } from 'rxjs/operators';
 import { CommonSyncService, SyncItem } from '../common-sync.service';
 
@@ -46,6 +46,7 @@ export interface Budget {
 export class BudgetsService {
   private readonly GUEST_USER_ID = 'offline-guest';
   private readonly COLLECTION_NAME = 'budgets';
+  private budgetsSubject = new BehaviorSubject<Budget[]>([]);
 
   constructor(
     private readonly firestore: Firestore,
@@ -66,39 +67,60 @@ export class BudgetsService {
   getBudgets(userId: string): Observable<Budget[]> {
     if (this.isGuest(userId)) {
       const budgets = this.localStorageUtility.getEntities<Budget>(this.COLLECTION_NAME);
+      this.budgetsSubject.next(budgets);
       return of(budgets);
     }
 
+    /**
+     * ⚠️ ARCHITECTURE ALIGNMENT: IndexedDB as Source of Truth
+     */
     return this.localStorageUtility.isReady$.pipe(
       switchMap(() => {
-        return new Observable<Budget[]>(observer => {
-          // 1. Try cache first
-          const cacheKey = LocalStorageKeyHelper.getBudgetsCacheKey(userId);
-          const cachedBudgets = this.localStorageUtility.getItem<Budget[]>(cacheKey) || [];
-          observer.next(cachedBudgets);
+        // 1. Emit cached budgets immediately
+        const cacheKey = LocalStorageKeyHelper.getBudgetsCacheKey(userId);
+        const cachedBudgets = this.localStorageUtility.getItem<Budget[]>(cacheKey) || [];
+        
+        if (cachedBudgets.length > 0) {
+          this.budgetsSubject.next(cachedBudgets);
+        }
 
-          // 2. Setup real-time listener
-          const budgetsRef = query(
-            collection(this.firestore, `users/${userId}/${this.COLLECTION_NAME}`),
-            orderBy('category', 'asc')
-          );
-
-          const unsubscribe = onSnapshot(budgetsRef, (snap) => {
-            const budgets: Budget[] = [];
-            snap.forEach(docSnap => budgets.push(docSnap.data() as Budget));
-
-            this.localStorageUtility.setItem(cacheKey, budgets);
-            this.store.dispatch(BudgetsActions.loadBudgetsSuccess({ budgets }));
-            observer.next(budgets);
-          }, (error) => {
-            console.error('[BudgetsService] Real-time listener failed:', error);
-            observer.next(cachedBudgets);
-          });
-
-          return () => unsubscribe();
-        });
+        // 2. Return reactive subject
+        return this.budgetsSubject.asObservable();
       })
     );
+  }
+
+  /**
+   * Set up a real-time listener for budgets
+   */
+  listenToBudgets(userId: string): Observable<void> {
+    if (this.isGuest(userId)) return of(undefined);
+
+    return new Observable<void>(observer => {
+      const budgetsRef = query(
+        collection(this.firestore, `users/${userId}/${this.COLLECTION_NAME}`),
+        orderBy('category', 'asc')
+      );
+
+      console.log(`[BudgetsService] 🔌 Starting real-time listener for user: ${userId}`);
+
+      const unsubscribe = onSnapshot(budgetsRef, (snap) => {
+        const budgets: Budget[] = [];
+        snap.forEach(docSnap => budgets.push(docSnap.data() as Budget));
+
+        const cacheKey = LocalStorageKeyHelper.getBudgetsCacheKey(userId);
+        this.localStorageUtility.setItem(cacheKey, budgets);
+        this.budgetsSubject.next(budgets);
+        this.store.dispatch(BudgetsActions.loadBudgetsSuccess({ budgets }));
+        
+        observer.next();
+      }, (error) => {
+        console.error('[BudgetsService] Real-time listener failed:', error);
+        observer.error(error);
+      });
+
+      return () => unsubscribe();
+    });
   }
 
   /**

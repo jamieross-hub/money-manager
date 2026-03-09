@@ -120,7 +120,7 @@ export class SettleUpComponent implements OnInit {
 
     const isReady = !!famId && !sLdg && !ldg && mem.length > 0;
 
-    return { transactions: txs, members: mem, settlements: set, ready: isReady };
+    return { transactions: txs, members: mem, settlements: set, familyId: famId, ready: isReady };
   });
 
   /**
@@ -180,12 +180,14 @@ export class SettleUpComponent implements OnInit {
       const input = this.processorInput();
       const currentUserId = this.currentUserId();
 
-      if (input.ready) {
+      if (input.ready && input.familyId && input.transactions.length > 0) {
         untracked(() => {
+          console.log('Processing family data -----', input);
           this.familyProcessor.process({
             transactions:     input.transactions,
             members:          input.members,
             settlements:      input.settlements,
+            familyId:         input.familyId!,
             currentUserId,
             sessionStartTime: this.sessionStartTime
           });

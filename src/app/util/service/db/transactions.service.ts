@@ -52,8 +52,10 @@ export class TransactionsService extends BaseService {
      */
     protected getTransactionsPath(userId: string, familyId?: string): string {
         const isFamilyMode = this.store.selectSignal(ProfileSelectors.selectProfile)()?.preferences?.isFamilyMode;
-        if (isFamilyMode && familyId) {
-            return `family-groups/${familyId}/transactions`;
+        const effectiveFamilyId = familyId || (isFamilyMode ? this.getFamilyId() : undefined);
+        
+        if (effectiveFamilyId) {
+            return `family-groups/${effectiveFamilyId}/transactions`;
         }
         return `users/${userId}/transactions`;
     }
@@ -232,7 +234,7 @@ export class TransactionsService extends BaseService {
                     observer.complete();
 
                     // 4. Always add to sync queue (it handles online/offline internally)
-                    await this.addToSyncQueue('update', { id: transactionId, ...updateData }, userId);
+                    await this.addToSyncQueue('update', newTransaction, userId);
                 } catch (error) {
                     console.error('Error in updateTransaction:', error);
                 }
@@ -307,88 +309,98 @@ export class TransactionsService extends BaseService {
             observer.complete();
 
             // 4. Always add to sync queue (it handles online/offline internally)
-            this.addToSyncQueue('update', { id: transactionId, status: TransactionStatus.DELETED, updatedAt: new Date() }, userId).catch(error => {
+            this.addToSyncQueue('update', { id: transactionId, status: TransactionStatus.DELETED, updatedAt: new Date(), familyId: transactionToDelete?.familyId }, userId).catch(error => {
                 console.error('Failed to add to sync queue:', error);
             });
         });
     }
 
     /**
-     * Get all transactions for a user (Local-Only)
+     * Get all transactions for a user
      */
     getTransactions(userId: string, familyId?: string): Observable<Transaction[]> {
+        const isFamilyMode = this.store.selectSignal(ProfileSelectors.selectProfile)()?.preferences?.isFamilyMode;
+        const effectiveFamilyId = familyId || (isFamilyMode ? this.getFamilyId() : undefined);
+
+        if (effectiveFamilyId) {
+            return this.getFamilyTransactions(userId, effectiveFamilyId);
+        }
+
         if (this.isGuest()) {
             const transactions = this.localStorageUtility.getEntities<Transaction>('transactions').filter(t => t.status !== TransactionStatus.DELETED);
             this.transactionsSubject.next(transactions);
             return of(transactions);
         }
 
+        /**
+         * ⚠️ ARCHITECTURE ALIGNMENT: Source of Truth = IndexedDB
+         * 
+         * Components should not have a direct connection to Firebase. 
+         * Instead, they subscribe to this.transactionsSubject which is kept updated by 
+         * the central background sync listener (CommonSyncService -> listenToTransactions).
+         */
         return this.localStorageUtility.isReady$.pipe(
             switchMap(() => {
-                return new Observable<Transaction[]>(observer => {
-                    // 1. Emit cached transactions immediately
-                    const cached = this.getCachedTransactions(userId, familyId);
-                    observer.next(cached);
-                    this.transactionsSubject.next(cached);
+                // 1. Always emit cached transactions immediately for a snappy UI
+                const cached = this.getCachedTransactions(userId);
+                this.transactionsSubject.next(cached);
 
-                    // 2. Start real-time listener
-                    const transactionsRef = query(
-                        collection(this.firestore, this.getTransactionsPath(userId, familyId)),
-                        orderBy('date', 'desc')
-                    );
-
-                    const unsubscribe = onSnapshot(transactionsRef,
-                        (querySnapshot) => {
-                            const firestoreTransactions: Transaction[] = [];
-                            querySnapshot.forEach((docSnap) => {
-                                const data = docSnap.data();
-                                if (data && (data['amount'] !== undefined || docSnap.id)) {
-                                    firestoreTransactions.push({ id: docSnap.id, ...data } as Transaction);
-                                }
-                            });
-
-                            const localTransactions = this.getCachedTransactions(userId, familyId);
-                            const firestoreMap = new Map<string, Transaction>(
-                                firestoreTransactions.map(t => [t.id!, t])
-                            );
-
-                            const pendingLocal = localTransactions.filter(localTx => {
-                                if (!localTx.id) return false;
-                                const inFirestore = firestoreMap.has(localTx.id);
-                                const isPending = localTx.syncStatus === SyncStatus.PENDING;
-                                return !inFirestore || isPending;
-                            });
-
-                            const pendingLocalMap = new Map<string, Transaction>(
-                                pendingLocal.map(t => [t.id!, t])
-                            );
-
-                            const merged: Transaction[] = [
-                                ...firestoreTransactions.map(t => pendingLocalMap.get(t.id!) ?? t),
-                                ...pendingLocal.filter(t => !firestoreMap.has(t.id!))
-                            ];
-
-                            // Update cache
-                            merged.forEach(tx => this.updateTransactionCache(userId, 'update', tx));
-
-                            // Update subject and observer
-                            this.transactionsSubject.next(merged);
-                            observer.next(merged);
-
-                            // Optional: Update NgRx state here if we want to bypass effects for real-time updates
-                            // but usually effects handle it. However, FamilyService logic also did this.
-                            this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: merged }));
-                        },
-                        (error) => {
-                            console.error('[TransactionsService] Real-time listener failed:', error);
-                            observer.error(error);
-                        }
-                    );
-
-                    return () => unsubscribe();
-                });
+                // 2. Return the subject's observable. The global background listener 
+                // captures Firebase updates and pushes them into this subject.
+                return this.transactionsSubject.asObservable();
             })
         );
+    }
+
+    /**
+     * Get all family transactions (Optimized via IndexedDB Index)
+     */
+    getFamilyTransactions(userId: string, familyId: string): Observable<Transaction[]> {
+        if (this.isGuest()) return of([]);
+
+        /**
+         * ⚠️ ARCHITECTURE ALIGNMENT: IndexedDB as Source of Truth
+         * 
+         * This method emits initially from the local cache and then relies on the 
+         * global background sync listener managed by CommonSyncService to provide 
+         * updates via transactionsSubject.
+         */
+        return this.localStorageUtility.isReady$.pipe(
+            switchMap(() => {
+                // 1. Pull current state from IndexedDB immediately
+                const cached = this.getCachedTransactions(userId, familyId);
+                this.transactionsSubject.next(cached);
+
+                // 2. Return reactive subject. Updates will be pushed here by 
+                // listenToTransactions() when the background sync detects changes.
+                return this.transactionsSubject.asObservable();
+            })
+        );
+    }
+
+    /**
+     * Helper to merge Firestore transactions with pending local changes
+     */
+    private mergeFirestoreAndLocal(firestoreTransactions: Transaction[], localTransactions: Transaction[]): Transaction[] {
+        const firestoreMap = new Map<string, Transaction>(
+            firestoreTransactions.map(t => [t.id!, t])
+        );
+
+        const pendingLocal = localTransactions.filter(localTx => {
+            if (!localTx.id) return false;
+            const inFirestore = firestoreMap.has(localTx.id);
+            const isPending = localTx.syncStatus === SyncStatus.PENDING;
+            return !inFirestore || isPending;
+        });
+
+        const pendingLocalMap = new Map<string, Transaction>(
+            pendingLocal.map(t => [t.id!, t])
+        );
+
+        return [
+            ...firestoreTransactions.map(t => pendingLocalMap.get(t.id!) ?? t),
+            ...pendingLocal.filter(t => !firestoreMap.has(t.id!))
+        ];
     }
 
     /**
@@ -434,50 +446,19 @@ export class TransactionsService extends BaseService {
                 // We protect local-pending transactions by merging instead of replacing.
 
                 const localTransactions = this.getCachedTransactions(userId, familyId);
-
-                // Build a map of Firestore transactions by ID for O(1) lookup.
-                const firestoreMap = new Map<string, Transaction>(
-                    firestoreTransactions.map(t => [t.id!, t])
-                );
-
-                // Collect local-pending transactions — those that exist locally but
-                // either are not in Firestore yet or have a PENDING sync status.
-                const pendingLocal = localTransactions.filter(localTx => {
-                    if (!localTx.id) return false;
-                    const inFirestore = firestoreMap.has(localTx.id);
-                    const isPending = localTx.syncStatus === SyncStatus.PENDING;
-                    // Keep if: (a) not in Firestore yet (offline-created, not pushed yet)
-                    //          (b) or explicitly marked PENDING (offline-updated)
-                    return !inFirestore || isPending;
-                });
-
-                if (pendingLocal.length > 0) {
-                    console.log(`[TransactionsService] Preserving ${pendingLocal.length} pending-local transaction(s) through pull`);
-                }
-
-                // Merge: Firestore data is the source of truth EXCEPT for pending local items.
-                // Pending local items overwrite any Firestore version for the same ID.
-                const pendingLocalMap = new Map<string, Transaction>(
-                    pendingLocal.map(t => [t.id!, t])
-                );
-
-                const merged: Transaction[] = [
-                    // Start with Firestore transactions, overriding with pending-local if present.
-                    ...firestoreTransactions.map(t => pendingLocalMap.get(t.id!) ?? t),
-                    // Append pending-local transactions that don't appear in Firestore at all.
-                    ...pendingLocal.filter(t => !firestoreMap.has(t.id!))
-                ];
+                const merged = this.mergeFirestoreAndLocal(firestoreTransactions, localTransactions);
 
                 // Persist the merged list back to local cache.
-                // Persist individual transactions to the new store logic
+                // 1. Update cache with individual objects
                 merged.forEach(tx => this.updateTransactionCache(userId, 'update', tx));
 
-                // Update the subject for active components
-                console.log(`[TransactionsService] Dispatching ${merged.length} merged transactions to store`);
-                this.transactionsSubject.next(merged);
+                // 2. Re-read from IndexedDB cache (Source of Truth)
+                const updatedFromCache = this.getCachedTransactions(userId, familyId);
 
-                // Update NgRx state via success action
-                this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: merged }));
+                // 3. Update subject and NgRx state
+                console.log(`[TransactionsService] Dispatching ${updatedFromCache.length} transactions from cache to store`);
+                this.transactionsSubject.next(updatedFromCache);
+                this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: updatedFromCache }));
             }),
             map(() => undefined),
             catchError(error => {
@@ -529,35 +510,17 @@ export class TransactionsService extends BaseService {
                     // onSnapshot fires when coming back online and may not yet contain
                     // transactions that were pushed by the sync queue in the same moment.
                     const localTransactions = this.getCachedTransactions(userId, familyId);
-                    const firestoreMap = new Map<string, Transaction>(
-                        firestoreTransactions.map(t => [t.id!, t])
-                    );
+                    const merged = this.mergeFirestoreAndLocal(firestoreTransactions, localTransactions);
 
-                    const pendingLocal = localTransactions.filter(localTx => {
-                        if (!localTx.id) return false;
-                        const inFirestore = firestoreMap.has(localTx.id);
-                        const isPending = localTx.syncStatus === SyncStatus.PENDING;
-                        return !inFirestore || isPending;
-                    });
-
-                    const pendingLocalMap = new Map<string, Transaction>(
-                        pendingLocal.map(t => [t.id!, t])
-                    );
-
-                    const merged: Transaction[] = [
-                        ...firestoreTransactions.map(t => pendingLocalMap.get(t.id!) ?? t),
-                        ...pendingLocal.filter(t => !firestoreMap.has(t.id!))
-                    ];
-
-                    // 1. Update cache
                     // 1. Update cache with individual objects
                     merged.forEach(tx => this.updateTransactionCache(userId, 'update', tx));
 
-                    // 2. Update subject
-                    this.transactionsSubject.next(merged);
+                    // 2. Re-read from IndexedDB cache (Source of Truth)
+                    const updatedFromCache = this.getCachedTransactions(userId, familyId);
 
-                    // 3. Update NgRx state
-                    this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: merged }));
+                    // 3. Update subject and NgRx state
+                    this.transactionsSubject.next(updatedFromCache);
+                    this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: updatedFromCache }));
 
                     observer.next();
                 },
@@ -584,9 +547,9 @@ export class TransactionsService extends BaseService {
         }
 
         return new Observable<Transaction | undefined>(observer => {
-            // Reads from IndexedDB first
-            const cachedTransactions = this.getCachedTransactions(userId, familyId);
-            const cached = cachedTransactions.find(t => t.id === transactionId);
+            // Reads from IndexedDB first (O(1) lookup since we re-keyed to transactionId only)
+            const itemKey = LocalStorageKeyHelper.getTransactionItemKey(transactionId, familyId);
+            const cached = this.localStorageUtility.getItem<Transaction>(itemKey, 'transactions');
             
             if (cached) {
                 observer.next(cached);
@@ -648,7 +611,7 @@ export class TransactionsService extends BaseService {
             operation: operation,
             data: data,
             maxRetries: 3,
-            collectionPath: this.getTransactionsPath(userId)
+            collectionPath: this.getTransactionsPath(userId, data.familyId)
         };
 
         const result = await this.commonSyncService.registerSyncItem(syncItem);
@@ -681,32 +644,20 @@ export class TransactionsService extends BaseService {
      */
     public getCachedTransactions(userId: string, familyId?: string): Transaction[] {
         try {
-                const isFamilyMode = this.store.selectSignal(ProfileSelectors.selectProfile)()?.preferences?.isFamilyMode;
-            const effectiveFamilyId = isFamilyMode ? (familyId !== undefined ? familyId : this.getFamilyId()) : '';
-            const allTransactions = this.localStorageUtility.getAllTransactionsSync();
+            const isFamilyMode = this.store.selectSignal(ProfileSelectors.selectProfile)()?.preferences?.isFamilyMode;
+            const effectiveFamilyId = familyId || (isFamilyMode ? this.getFamilyId() : '');
             
-            const transactions: Transaction[] = allTransactions
-                .filter(tx => !!(tx && tx.id))
-                .filter(tx => {
-                    if (effectiveFamilyId) {
-                        return tx.familyId === effectiveFamilyId;
-                    } else {
-                        return !tx.familyId;
-                    }
-                });
+            let transactions: Transaction[];
             
-            // Sort by date descending
-            return transactions.sort((a, b) => {
-                const getTime = (date: any) => {
-                    if (!date) return 0;
-                    if (date instanceof Date) return date.getTime();
-                    if (typeof date === 'object' && typeof (date as any).toDate === 'function') {
-                        return (date as any).toDate().getTime();
-                    }
-                    return new Date(date).getTime();
-                };
-                return getTime(b.date) - getTime(a.date);
-            });
+            if (effectiveFamilyId) {
+                // Optimized: Use the new familyId index filtering
+                transactions = this.localStorageUtility.getTransactionsByFamilyIdSync(effectiveFamilyId);
+            } else {
+                // Personal mode: Use userId index to filter (ensures isolation)
+                transactions = this.localStorageUtility.getTransactionsByUserIdSync(userId);
+            }
+            
+            return this.sortTransactions(transactions);
         } catch (error) {
             console.error('Error getting cached transactions:', error);
             return [];
@@ -714,14 +665,29 @@ export class TransactionsService extends BaseService {
     }
 
     /**
+     * Helper to sort transactions by date descending
+     */
+    protected sortTransactions(transactions: any[]): Transaction[] {
+        return transactions.sort((a, b) => {
+            const getTime = (date: any) => {
+                if (!date) return 0;
+                if (date instanceof Date) return date.getTime();
+                if (typeof date === 'object' && typeof (date as any).toDate === 'function') {
+                    return (date as any).toDate().getTime();
+                }
+                return new Date(date).getTime();
+            };
+            return getTime(b.date) - getTime(a.date);
+        });
+    }
+
+    /**
      * Update transaction cache when transactions are created, updated, or deleted
      */
     protected updateTransactionCache(userId: string, operation: 'create' | 'update' | 'delete', transaction?: Transaction): void {
         try {
-            const familyId = transaction?.familyId || this.getFamilyId();
-
             if (!transaction || !transaction.id) return;
-            const itemKey = LocalStorageKeyHelper.getTransactionItemKey(transaction.id, familyId);
+            const itemKey = LocalStorageKeyHelper.getTransactionItemKey(transaction.id, transaction.familyId);
 
             switch (operation) {
                 case 'create':

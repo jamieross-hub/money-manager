@@ -13,62 +13,42 @@ export const selectTransactionsState = createFeatureSelector<TransactionsState>(
 export const selectAllTransactions = createSelector(
   selectTransactionsState,
   ProfileSelectors.selectIsFamilyMode,
-  FamilySelectors.selectFamily,
   FamilySelectors.selectFamilyTransactions,
-  (state, isFamilyMode, activeFamily, familyTransactions) => {
-    let baseTransactions: Transaction[] = [];
-
-    if (isFamilyMode && activeFamily) {
-      // Include personal transactions that are explicitly linked to this family (like settlements)
-      const personalLinkedTxs = state.ids
-        .map(id => state.entities[id])
-        .filter(Boolean)
-        .filter(t => t.status !== TransactionStatus.DELETED && (t.familyId == activeFamily.id || t.settlementFamilyId == activeFamily.id));
-
-      const merged = [...(familyTransactions || []), ...personalLinkedTxs];
-      // De-duplicate if somehow same transaction is in both
-      const seenIds = new Set();
+  (state, isFamilyMode, familyTransactions) => {
+    if (isFamilyMode) {
+      // In family mode, we trust the familyTransactions slice which is populated 
+      // via the efficient familyId index in the service layer.
       const seenSettlements = new Set();
-      baseTransactions = merged.filter(t => {
-        if (seenIds.has(t.id)) return false;
-        seenIds.add(t.id);
-        
+      return (familyTransactions || []).filter(t => {
         if (t.settlementId) {
           if (seenSettlements.has(t.settlementId)) return false;
           seenSettlements.add(t.settlementId);
         }
-        
         return true;
       });
-    } else {
-      baseTransactions = state.ids.map(id => state.entities[id]).filter(Boolean).filter(t => t.status !== TransactionStatus.DELETED);
     }
-    
-    return baseTransactions;
+
+    // Personal mode: Return personal entities (already userId-filtered by service)
+    return state.ids
+      .map(id => state.entities[id])
+      .filter(Boolean)
+      .filter(t => t.status !== TransactionStatus.DELETED);
   }
 );
 
 export const selectDeletedTransactions = createSelector(
   selectTransactionsState,
   ProfileSelectors.selectIsFamilyMode,
-  FamilySelectors.selectFamily,
   FamilySelectors.selectRawFamilyTransactions,
-  (state, isFamilyMode, activeFamily, familyTransactions) => {
-    if (isFamilyMode && activeFamily) {
-      const personalLinkedTxs = state.ids
-        .map(id => state.entities[id])
-        .filter(Boolean)
-        .filter(t => t.status === TransactionStatus.DELETED && (t.familyId == activeFamily.id || t.settlementFamilyId == activeFamily.id));
-
-      const merged = [...(familyTransactions || []).filter(t => t.status === TransactionStatus.DELETED), ...personalLinkedTxs];
-      const seenIds = new Set();
-      return merged.filter(t => {
-        if (seenIds.has(t.id)) return false;
-        seenIds.add(t.id);
-        return true;
-      });
+  (state, isFamilyMode, familyTransactions) => {
+    if (isFamilyMode) {
+      return (familyTransactions || []).filter(t => t.status === TransactionStatus.DELETED);
     }
-    return state.ids.map(id => state.entities[id]).filter(Boolean).filter(t => t.status === TransactionStatus.DELETED);
+    
+    return state.ids
+      .map(id => state.entities[id])
+      .filter(Boolean)
+      .filter(t => t.status === TransactionStatus.DELETED);
   }
 );
 

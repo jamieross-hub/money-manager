@@ -7,7 +7,7 @@ import { Transaction } from '../../models/transaction.model';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { LocalStorageKeyHelper } from '../../models/local-storage.model';
 import { UserService } from './user.service';
-import { of, map, from, catchError, tap, timeout } from 'rxjs';
+import { of, map, from, catchError, tap, timeout, BehaviorSubject } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import * as AccountsActions from 'src/app/store/accounts/accounts.actions';
@@ -21,6 +21,8 @@ import { switchMap, distinctUntilChanged } from 'rxjs/operators';
     providedIn: 'root'
 })
 export class AccountsService {
+    private accountsSubject = new BehaviorSubject<Account[]>([]);
+    
     constructor(
         private firestore: Firestore,
         private auth: Auth,
@@ -113,68 +115,84 @@ export class AccountsService {
      */
     getAccounts(userId: string): Observable<Account[]> {
         if (this.isGuest()) {
-            return of(this.localStorageUtility.getEntities<Account>('accounts'));
+            const accounts = this.localStorageUtility.getEntities<Account>('accounts');
+            this.accountsSubject.next(accounts);
+            return of(accounts);
         }
 
-        // Use a combined trigger for mode and family changes
-        const trigger$ = this.userService.userAuth$.pipe(
-            map(user => ({
-                isFamilyMode: user?.preferences?.isFamilyMode || false,
-                activeFamilyId: user?.preferences?.activeFamilyId || ''
-            })),
-            distinctUntilChanged((prev, curr) => 
-                prev.isFamilyMode === curr.isFamilyMode && 
-                prev.activeFamilyId === curr.activeFamilyId
-            )
-        );
-
+        /**
+         * ⚠️ ARCHITECTURE ALIGNMENT: Source of Truth = IndexedDB
+         * 
+         * Components should not have a direct connection to Firebase. 
+         * Instead, they subscribe to this.accountsSubject which is kept updated by 
+         * the central background sync listener (CommonSyncService -> listenToAccounts).
+         */
         return this.localStorageUtility.isReady$.pipe(
-            switchMap(() => trigger$),
             switchMap(() => {
-                return new Observable<Account[]>(observer => {
-                    const currentPath = this.getAccountsPath(userId);
-                    const cacheKey = this.getAccountsCacheKey(userId);
-                    
-                    console.log(`[AccountsService] 🔌 Setting up real-time listener for path: ${currentPath}`);
+                // 1. Emit cached accounts immediately from the current context (family vs personal)
+                const cacheKey = this.getAccountsCacheKey(userId);
+                const cachedAccounts = (this.localStorageUtility.getItem<Account[]>(cacheKey) || [])
+                    .filter(a => !!(a && a.accountId));
+                
+                if (cachedAccounts.length > 0) {
+                    this.accountsSubject.next(cachedAccounts);
+                }
 
-                    // 1. Emit cached accounts immediately from the current context (family vs personal)
-                    const cachedAccounts = (this.localStorageUtility.getItem<Account[]>(cacheKey) || [])
-                        .filter(a => !!(a && a.accountId));
-                    observer.next(cachedAccounts);
-
-                    // 2. Start real-time listener
-                    const accountsRef = query(
-                        collection(this.firestore, currentPath),
-                        orderBy('name', 'asc')
-                    );
-
-                    const unsubscribe = onSnapshot(accountsRef,
-                        (querySnapshot) => {
-                            const firestoreAccounts: Account[] = [];
-                            querySnapshot.forEach((docSnap) => {
-                                const data = docSnap.data();
-                                if (data && (data['name'] !== undefined || docSnap.id)) {
-                                    firestoreAccounts.push({ accountId: docSnap.id, ...data } as Account);
-                                }
-                            });
-                            
-                            this.localStorageUtility.setItem(cacheKey, firestoreAccounts);
-                            this.store.dispatch(AccountsActions.loadAccountsSuccess({ accounts: firestoreAccounts }));
-                            observer.next(firestoreAccounts);
-                        },
-                        (error) => {
-                            console.error(`[AccountsService] ❌ Real-time listener failed for ${currentPath}:`, error);
-                            observer.next(cachedAccounts);
-                        }
-                    );
-
-                    return () => {
-                        console.log(`[AccountsService] 🔌 Tearing down listener for: ${currentPath}`);
-                        unsubscribe();
-                    };
-                });
+                // 2. Return reactive subject. Updates will be pushed here by 
+                // listenToAccounts() when the background sync detects changes.
+                return this.accountsSubject.asObservable();
             })
         );
+    }
+
+    /**
+     * Set up a real-time listener for accounts
+     * Typically managed by CommonSyncService
+     */
+    listenToAccounts(userId: string): Observable<void> {
+        if (this.isGuest()) return of(undefined);
+
+        return new Observable<void>(observer => {
+            const currentPath = this.getAccountsPath(userId);
+            const cacheKey = this.getAccountsCacheKey(userId);
+            
+            console.log(`[AccountsService] 🔌 Starting real-time listener for path: ${currentPath}`);
+
+            const accountsRef = query(
+                collection(this.firestore, currentPath),
+                orderBy('name', 'asc')
+            );
+
+            const unsubscribe = onSnapshot(accountsRef,
+                (querySnapshot) => {
+                    const firestoreAccounts: Account[] = [];
+                    querySnapshot.forEach((docSnap) => {
+                        const data = docSnap.data();
+                        if (data && (data['name'] !== undefined || docSnap.id)) {
+                            firestoreAccounts.push({ accountId: docSnap.id, ...data } as Account);
+                        }
+                    });
+                    
+                    // Update cache
+                    this.localStorageUtility.setItem(cacheKey, firestoreAccounts);
+                    
+                    // Update subject and Store
+                    this.accountsSubject.next(firestoreAccounts);
+                    this.store.dispatch(AccountsActions.loadAccountsSuccess({ accounts: firestoreAccounts }));
+                    
+                    observer.next();
+                },
+                (error) => {
+                    console.error(`[AccountsService] ❌ Real-time listener failed for ${currentPath}:`, error);
+                    observer.error(error);
+                }
+            );
+
+            return () => {
+                console.log(`[AccountsService] 🔌 Stopping listener for: ${currentPath}`);
+                unsubscribe();
+            };
+        });
     }
 
     /**

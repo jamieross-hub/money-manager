@@ -285,8 +285,8 @@ addEventListener('message', ({ data }) => {
     const category = categoryMap.get(tx.categoryId || '');
     const account = accountMap.get(tx.accountId || '');
 
-    const createdAt = tx.createdAt || tx.date;
-    const createdAtDate = toDate(createdAt);
+    const createdAt = tx.createdAt; // DON'T fallback to tx.date for "is new" check
+    const createdAtDate = createdAt ? toDate(createdAt) : null;
 
     const txView = {
       ...tx,

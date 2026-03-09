@@ -24,12 +24,17 @@ export class LocalIndexDBStorageService {
     private readonly DB_NAME = 'MoneyManagerDB';
     private readonly STORE_NAME = 'keyValueStore';
     private readonly TRANSACTIONS_STORE = 'transactions';
-    private readonly DB_VERSION = 2;
+    private readonly DB_VERSION = 4;
     private db: IDBDatabase | null = null;
 
     // In-memory caches for synchronous access
     private keyValueCache = new Map<string, any>();
     private transactionsCache = new Map<string, any>();
+    
+    // Secondary in-memory indices for O(1) synchronous lookups
+    private familyIdIndex = new Map<string, Set<string>>(); // familyId -> Set of transaction keys
+    private userIdIndex = new Map<string, Set<string>>();   // userId -> Set of transaction keys
+    private accountIdIndex = new Map<string, Set<string>>(); // accountId -> Set of transaction keys
     private isInitialized = false;
     private isCleaningUp = false;
     private readonly initializedSubject = new BehaviorSubject<boolean>(false);
@@ -90,7 +95,9 @@ export class LocalIndexDBStorageService {
 
         // Update correct cache immediately
         if (storeName === this.TRANSACTIONS_STORE) {
+            const oldValue = this.transactionsCache.get(key);
             this.transactionsCache.set(key, value);
+            this.updateSecondaryIndices(key, value, oldValue);
         } else {
             this.keyValueCache.set(key, value);
         }
@@ -120,6 +127,99 @@ export class LocalIndexDBStorageService {
      */
     getAllTransactionsSync(): any[] {
         return Array.from(this.transactionsCache.values());
+    }
+
+    /**
+     * Get transactions by familyId (Sync via Cache)
+     */
+    getTransactionsByFamilyIdSync(familyId: string): any[] {
+        const keys = this.familyIdIndex.get(familyId);
+        if (!keys) return [];
+        return Array.from(keys).map(key => this.transactionsCache.get(key)).filter(Boolean);
+    }
+
+    /**
+     * Get transactions by userId (Sync via Cache)
+     */
+    getTransactionsByUserIdSync(userId: string): any[] {
+        const keys = this.userIdIndex.get(userId);
+        if (!keys) return [];
+        // Personal mode: Filter out family transactions (Set logic ensures O(1) lookup vs linear filter)
+        return Array.from(keys)
+            .map(key => this.transactionsCache.get(key))
+            .filter(tx => tx && tx.userId === userId && !tx.familyId);
+    }
+
+    /**
+     * Get transactions by accountId (Sync via Cache)
+     */
+    getTransactionsByAccountIdSync(accountId: string): any[] {
+        const keys = this.accountIdIndex.get(accountId);
+        if (!keys) return [];
+        return Array.from(keys).map(key => this.transactionsCache.get(key)).filter(Boolean);
+    }
+
+    /**
+     * Get transactions by userId (Async via IndexedDB Index)
+     */
+    async getTransactionsByUserId(userId: string): Promise<any[]> {
+        if (!this.db) {
+            return this.getTransactionsByUserIdSync(userId);
+        }
+
+        return this.queryIndex('userId', userId);
+    }
+
+    /**
+     * Helper to query any index
+     */
+    private async queryIndex(indexName: string, value: any): Promise<any[]> {
+        if (!this.db) return [];
+
+        return new Promise((resolve) => {
+            try {
+                const transaction = this.db!.transaction([this.TRANSACTIONS_STORE], 'readonly');
+                const store = transaction.objectStore(this.TRANSACTIONS_STORE);
+                const index = store.index(indexName);
+                const request = index.getAll(value);
+
+                request.onsuccess = () => resolve(request.result || []);
+                request.onerror = () => {
+                    console.error(`IndexedDB Index Error (${indexName}):`, request.error);
+                    resolve([]);
+                };
+            } catch (error) {
+                console.error(`Error querying ${indexName} index:`, error);
+                resolve([]);
+            }
+        });
+    }
+
+    /**
+     * Get transactions by familyId (Async via IndexedDB Index)
+     */
+    async getTransactionsByFamilyId(familyId: string): Promise<any[]> {
+        if (!this.db) {
+            return this.getTransactionsByFamilyIdSync(familyId);
+        }
+
+        return new Promise((resolve) => {
+            try {
+                const transaction = this.db!.transaction([this.TRANSACTIONS_STORE], 'readonly');
+                const store = transaction.objectStore(this.TRANSACTIONS_STORE);
+                const index = store.index('familyId');
+                const request = index.getAll(familyId);
+
+                request.onsuccess = () => resolve(request.result || []);
+                request.onerror = () => {
+                    console.error('IndexedDB Index Error:', request.error);
+                    resolve(this.getTransactionsByFamilyIdSync(familyId));
+                };
+            } catch (error) {
+                console.error('Error querying familyId index:', error);
+                resolve(this.getTransactionsByFamilyIdSync(familyId));
+            }
+        });
     }
 
     /**
@@ -155,7 +255,9 @@ export class LocalIndexDBStorageService {
         }
 
         if (storeName === this.TRANSACTIONS_STORE) {
+            const oldValue = this.transactionsCache.get(key);
             this.transactionsCache.delete(key);
+            if (oldValue) this.updateSecondaryIndices(key, null, oldValue);
         } else {
             this.keyValueCache.delete(key);
         }
@@ -179,6 +281,9 @@ export class LocalIndexDBStorageService {
         this.isCleaningUp = true;
         this.keyValueCache.clear();
         this.transactionsCache.clear();
+        this.familyIdIndex.clear();
+        this.userIdIndex.clear();
+        this.accountIdIndex.clear();
 
         try {
             await this.clearDb();
@@ -224,15 +329,44 @@ export class LocalIndexDBStorageService {
                 resolve();
             };
 
-            request.onupgradeneeded = (event: any) => {
+            request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
                 const db = request.result;
                 if (!db.objectStoreNames.contains(this.STORE_NAME)) {
                     db.createObjectStore(this.STORE_NAME);
                 }
+                
+                let transactionStore: IDBObjectStore;
                 if (!db.objectStoreNames.contains(this.TRANSACTIONS_STORE)) {
-                    db.createObjectStore(this.TRANSACTIONS_STORE);
+                    transactionStore = db.createObjectStore(this.TRANSACTIONS_STORE);
+                } else {
+                    transactionStore = request.transaction!.objectStore(this.TRANSACTIONS_STORE);
                 }
-                // Migration logic could go here if we were migrating schema version
+
+                // Create familyId index for efficient filtering
+                if (!transactionStore.indexNames.contains('familyId')) {
+                    transactionStore.createIndex('familyId', 'familyId', { unique: false });
+                    console.log('📦 Created familyId index on transactions store');
+                }
+
+                // Create userId index for multi-user support
+                if (!transactionStore.indexNames.contains('userId')) {
+                    transactionStore.createIndex('userId', 'userId', { unique: false });
+                    console.log('📦 Created userId index on transactions store');
+                }
+
+                // Create date index for efficient sorting
+                if (!transactionStore.indexNames.contains('date')) {
+                    transactionStore.createIndex('date', 'date', { unique: false });
+                    console.log('📦 Created date index on transactions store');
+                }
+
+                // Create accountId/categoryId indices for reporting/filtering
+                if (!transactionStore.indexNames.contains('accountId')) {
+                    transactionStore.createIndex('accountId', 'accountId', { unique: false });
+                }
+                if (!transactionStore.indexNames.contains('categoryId')) {
+                    transactionStore.createIndex('categoryId', 'categoryId', { unique: false });
+                }
             };
         });
     }
@@ -269,6 +403,7 @@ export class LocalIndexDBStorageService {
                 if (cursor) {
                     if (storeName === this.TRANSACTIONS_STORE) {
                         this.transactionsCache.set(cursor.key as string, cursor.value);
+                        this.updateSecondaryIndices(cursor.key as string, cursor.value);
                     } else {
                         this.keyValueCache.set(cursor.key as string, cursor.value);
                     }
@@ -325,7 +460,7 @@ export class LocalIndexDBStorageService {
                     
                     for (const tx of value) {
                         if (tx && tx.id) {
-                            const itemKey = familyId ? `${familyId}_${tx.id}` : tx.id;
+                            const itemKey = tx.id;
                             // Save as individual item in the transactions cache and store
                             this.transactionsCache.set(itemKey, tx);
                             await this.persistItem(itemKey, tx, this.TRANSACTIONS_STORE);
@@ -341,8 +476,65 @@ export class LocalIndexDBStorageService {
             console.log('✅ Unpacking complete.');
         }
 
-        if (keysToMigrate.length > 0 || collectionKeys.length > 0) {
+        // 3. Re-key existing family transactions that use the familyId_prefix
+        const prefixedKeys = Array.from(this.transactionsCache.keys()).filter(key => 
+            key.includes('_') && !key.startsWith(txPrefix)
+        );
+
+        if (prefixedKeys.length > 0) {
+            console.log(`📦 Re-keying ${prefixedKeys.length} prefixed transactions...`);
+            for (const oldKey of prefixedKeys) {
+                const value = this.transactionsCache.get(oldKey);
+                if (!value) continue;
+                
+                const newKey = value.id;
+                
+                if (newKey && newKey !== oldKey) {
+                    await this.deleteItem(oldKey, this.TRANSACTIONS_STORE);
+                    this.transactionsCache.delete(oldKey);
+                    
+                    this.transactionsCache.set(newKey, value);
+                    await this.persistItem(newKey, value, this.TRANSACTIONS_STORE);
+                }
+            }
+        }
+
+        if (keysToMigrate.length > 0 || collectionKeys.length > 0 || prefixedKeys.length > 0) {
             console.log('✅ Overall transaction storage migration complete.');
+        }
+    }
+
+    /**
+     * Update secondary in-memory indices for transactions
+     */
+    private updateSecondaryIndices(key: string, newValue: any, oldValue?: any): void {
+        const removeFromIndex = (index: Map<string, Set<string>>, id: string | undefined) => {
+            if (!id) return;
+            const set = index.get(id);
+            if (set) {
+                set.delete(key);
+                if (set.size === 0) index.delete(id);
+            }
+        };
+
+        const addToIndex = (index: Map<string, Set<string>>, id: string | undefined) => {
+            if (!id) return;
+            if (!index.has(id)) index.set(id, new Set());
+            index.get(id)!.add(key);
+        };
+
+        // Handle removals from old indices if updating or deleting
+        if (oldValue) {
+            removeFromIndex(this.familyIdIndex, oldValue.familyId);
+            removeFromIndex(this.userIdIndex, oldValue.userId);
+            removeFromIndex(this.accountIdIndex, oldValue.accountId);
+        }
+
+        // Handle additions to new indices if creating or updating
+        if (newValue) {
+            addToIndex(this.familyIdIndex, newValue.familyId);
+            addToIndex(this.userIdIndex, newValue.userId);
+            addToIndex(this.accountIdIndex, newValue.accountId);
         }
     }
 

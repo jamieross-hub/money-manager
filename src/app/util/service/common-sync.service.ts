@@ -10,6 +10,9 @@ import { ValidationService } from './validation.service';
 import { Store } from '@ngrx/store';
 import { AppState } from '../../store/app.state';
 import * as TransactionsActions from '../../store/transactions/transactions.actions';
+import * as BudgetsActions from '../../store/budgets/budgets.actions';
+import * as AccountsActions from '../../store/accounts/accounts.actions';
+import * as GoalsActions from '../../store/goals/goals.actions';
 import { Transaction } from '../models/transaction.model';
 import { APP_CONFIG } from '../config/config';
 import { LocalIndexDBStorageService } from './indexdb-storage.service';
@@ -20,6 +23,7 @@ import { AccountsService } from './db/accounts.service';
 import { CategoryService } from './db/category.service';
 import { AccountsFacadeService } from './db/accounts-facade.service';
 import { CategoryFacadeService } from './db/category-facade.service';
+import { TransactionsFacadeService } from './db/transactions-facade.service';
 import { BudgetsService } from './db/budgets.service';
 import { GoalsService } from './db/goals.service';
 import { UserService } from './db/user.service';
@@ -324,19 +328,25 @@ export class CommonSyncService implements OnDestroy {
         // 1. Initial full sync (already has internal network check)
         const initialSync$ = this.syncAll();
         
-        // 2. Start real-time transaction listener reactively based on network
+        // 2. Start real-time sync listeners reactively based on network
         // We add a delay to ensure app startup always starts with IndexedDB
-        const transactionsService = this.injector.get(TransactionsService);
+        const transactionsService = this.injector.get(TransactionsFacadeService);
+        const accountsService = this.injector.get(AccountsFacadeService);
+        const categoryService = this.injector.get(CategoryFacadeService);
+        const budgetsService = this.injector.get<BudgetsService>(BudgetsService);
+        const goalsService = this.injector.get<GoalsService>(GoalsService);
+
         const realTimeSync$ = this.isOnline$.pipe(
           delay(10000), // Delay to ensure startup completes with local data
           switchMap(online => {
             if (online) {
-              console.log('🌐 Online: Enabling real-time transaction listener');
-              return transactionsService.listenToTransactions(user.uid).pipe(
-                catchError(error => {
-                  console.error('❌ Real-time transaction listener failed:', error);
-                  return of(null);
-                })
+              console.log('🌐 Online: Enabling real-time sync listeners (Full Set)');
+              return merge(
+                  transactionsService.listenToTransactions(user.uid).pipe(catchError(() => of(null))),
+                  accountsService.listenToAccounts(user.uid).pipe(catchError(() => of(null))),
+                  categoryService.listenToCategories(user.uid).pipe(catchError(() => of(null))),
+                  budgetsService.listenToBudgets(user.uid).pipe(catchError(() => of(null))),
+                  goalsService.listenToGoals(user.uid).pipe(catchError(() => of(null)))
               );
             } else {
               console.log('📴 Offline: Real-time sync disabled (using IndexedDB)');
@@ -416,7 +426,7 @@ export class CommonSyncService implements OnDestroy {
 
     // Resolve services lazily to avoid circular dependencies
     // Using Facades ensures we pull from the correct source (Personal vs Family)
-    const transactionsService = this.injector.get(TransactionsService);
+    const transactionsService = this.injector.get(TransactionsFacadeService);
     const accountsService = this.injector.get(AccountsFacadeService);
     const categoryService = this.injector.get(CategoryFacadeService);
     const budgetsService = this.injector.get(BudgetsService);
@@ -425,6 +435,7 @@ export class CommonSyncService implements OnDestroy {
     const subscriptionService = this.injector.get(SubscriptionService);
     const feedbackService = this.injector.get(FeedbackService);
     const contactService = this.injector.get(ContactService);
+    const familyService = this.injector.get(FamilyService); // For family members and settlements
 
     // 1. Push pending changes first
     return from(this.manualSync()).pipe(
@@ -510,10 +521,11 @@ export class CommonSyncService implements OnDestroy {
       // Optimization: If a sync item for this specific record already exists in the queue,
       // merge it instead of adding a new one. This prevents redundant Firestore operations
       // and keeps the queue minimal.
+      const syncItemRecordId = this.getRecordId(syncItem);
       const existingIndex = this.syncQueue.findIndex(qItem => 
         qItem.type === syncItem.type && 
-        qItem.data?.id === syncItem.data?.id &&
-        qItem.data?.id !== undefined
+        this.getRecordId(qItem) === syncItemRecordId &&
+        syncItemRecordId !== undefined
       );
 
       if (existingIndex > -1) {
@@ -608,20 +620,16 @@ export class CommonSyncService implements OnDestroy {
 
         processedItems.push(item.id);
 
-        // Update sync status for successful transactions
-        if (item.type === 'transaction') {
-          await this.updateTransactionSyncStatus(item.data, 'synced', item.collectionPath);
-        }
+        // Update sync status for the record in store and cache
+        await this.updateItemSyncStatus(item, 'synced');
       } catch (error) {
         console.error(`Failed to process sync item ${item.id}:`, error);
 
         item.retryCount++;
         if (item.retryCount >= (item.maxRetries || 3)) {
           failedItems.push(item.id);
-          // Update sync status to failed for transactions
-          if (item.type === 'transaction') {
-            await this.updateTransactionSyncStatus(item.data, 'failed', item.collectionPath);
-          }
+          // Update sync status to failed
+          await this.updateItemSyncStatus(item, 'failed');
         }
       }
     }
@@ -655,6 +663,12 @@ export class CommonSyncService implements OnDestroy {
    */
   private async processTransactionSync(item: SyncItem, batch: any, userId: string): Promise<void> {
     const basePath = item.collectionPath || `users/${userId}/transactions`;
+    const recordId = this.getRecordId(item);
+
+    if (!recordId) {
+      console.error('[CommonSyncService] Cannot process transaction sync: missing ID', item);
+      throw new Error('Missing transaction ID');
+    }
 
     // Ensure the transaction is updated as synced when pushing to Firestore
     const dataToWrite = this.scrubUndefined({ ...item.data });
@@ -663,116 +677,151 @@ export class CommonSyncService implements OnDestroy {
       dataToWrite.lastSyncedAt = new Date();
     }
 
+    const transactionRef = doc(this.firestore, `${basePath}/${recordId}`);
+
     switch (item.operation) {
       case 'create':
-        const transactionRef = doc(this.firestore, `${basePath}/${item.data.id}`);
-        batch.set(transactionRef, dataToWrite);
-        break;
       case 'update':
-        const updateRef = doc(this.firestore, `${basePath}/${item.data.id}`);
-        batch.set(updateRef, dataToWrite, { merge: true });
+        batch.set(transactionRef, dataToWrite, { merge: true });
         break;
       case 'delete':
-        const deleteRef = doc(this.firestore, `${basePath}/${item.data.id}`);
-        batch.delete(deleteRef);
+        batch.delete(transactionRef);
         break;
     }
   }
 
-  private async updateTransactionSyncStatus(transactionOrId: any, status: 'synced' | 'failed', collectionPath?: string): Promise<void> {
-    let transaction: any;
-    let transactionId: string;
-
-    if (typeof transactionOrId === 'string') {
-      transactionId = transactionOrId;
-      // Search for transaction in all transactions cache to find its full data/context
-      const allTx = this.storageService.getAllTransactionsSync();
-      transaction = allTx.find(t => t.id === transactionId);
-      
-      if (!transaction) {
-        console.warn(`[CommonSyncService] Could not find transaction ${transactionId} in cache to update status`);
-        return;
-      }
-    } else {
-      transaction = transactionOrId;
-      transactionId = transaction?.id;
+  /**
+   * Helper to get the correct ID field for a sync item based on its type
+   */
+  private getRecordId(item: SyncItem): string | undefined {
+    if (!item || !item.data) return undefined;
+    
+    switch (item.type) {
+      case 'transaction':
+      case 'budget':
+      case 'category':
+        return item.data.id || item.data.budgetId; // Handle both 'id' and 'budgetId' compatibility
+      case 'account':
+        return item.data.accountId;
+      case 'goal':
+        return item.data.goalId;
+      case 'user':
+        return item.data.uid;
+      default:
+        return item.data.id;
     }
+  }
 
-    if (!transactionId) return;
+  /**
+   * Universal helper to update sync status for any item in store and cache
+   */
+  private async updateItemSyncStatus(item: SyncItem, status: 'synced' | 'failed'): Promise<void> {
+    if (item.operation === 'delete') return; // No need to update status for deletions
+    
+    const recordId = this.getRecordId(item);
+    if (!recordId) return;
 
     try {
-      // Determine if it's a family transaction and get familyId
-      const isFamily = collectionPath ? collectionPath.includes('family-groups') : !!transaction.familyId;
-      const familyId = isFamily ? (transaction.familyId || (collectionPath?.split('/')[1])) : undefined;
+      const isFamily = item.collectionPath ? item.collectionPath.includes('family-groups') : !!item.data.familyId;
+      const familyId = isFamily ? (item.data.familyId || (item.collectionPath?.split('/')[1])) : undefined;
 
-      // Update in store - include all data to allow reducers to correctly filter familyTransactions
-      this.store.dispatch(TransactionsActions.updateTransactionSuccess({
-        transaction: {
-          ...transaction,
-          syncStatus: status,
+      // 1. Transaction-specific logic (most critical)
+      if (item.type === 'transaction') {
+        this.store.dispatch(TransactionsActions.updateTransactionSuccess({
+          transaction: {
+            ...item.data,
+            syncStatus: status,
+            lastSyncedAt: new Date()
+          } as Transaction
+        }));
+
+        const itemKey = LocalStorageKeyHelper.getTransactionItemKey(recordId, familyId);
+        const existing = this.storageService.getItem<Transaction>(itemKey, 'transactions');
+        
+        this.storageService.setItem(itemKey, {
+          ...(existing || item.data),
+          syncStatus: status as any,
           lastSyncedAt: new Date()
-        } as Transaction
-      }));
-
-      // Update the status in Local IndexedDB Cache (Individual Transaction Store)
-      // This is the source of truth for TransactionsService.getCachedTransactions()
-      const itemKey = LocalStorageKeyHelper.getTransactionItemKey(transactionId, familyId);
-      const existing = this.storageService.getItem<Transaction>(itemKey, 'transactions');
+        }, 'transactions');
+      } 
+      // 2. Budget status update
+      else if (item.type === 'budget') {
+        const budget = { ...item.data, syncStatus: status, lastSyncedAt: new Date() };
+        this.store.dispatch(BudgetsActions.updateBudgetSuccess({ budget }));
+        
+        const cacheKey = LocalStorageKeyHelper.getBudgetsCacheKey(this.getCurrentUserId() || '', familyId);
+        const budgets = this.storageService.getItem<any[]>(cacheKey) || [];
+        const index = budgets.findIndex(b => b.budgetId === recordId || b.id === recordId);
+        if (index !== -1) {
+          budgets[index] = { ...budgets[index], ...budget };
+          this.storageService.setItem(cacheKey, budgets);
+        }
+      }
+      // 3. Account status update
+      else if (item.type === 'account') {
+        const account = { ...item.data, syncStatus: status, lastSyncAt: new Date() };
+        this.store.dispatch(AccountsActions.updateAccountSuccess({ account }));
+        
+        const cacheKey = LocalStorageKeyHelper.getAccountsCacheKey(this.getCurrentUserId() || '', familyId);
+        const accounts = this.storageService.getItem<any[]>(cacheKey) || [];
+        const index = accounts.findIndex(a => a.accountId === recordId);
+        if (index !== -1) {
+          accounts[index] = { ...accounts[index], ...account };
+          this.storageService.setItem(cacheKey, accounts);
+        }
+      }
+      // 4. Goal status update
+      else if (item.type === 'goal') {
+        const goal = { ...item.data, syncStatus: status, lastSyncedAt: new Date() };
+        this.store.dispatch(GoalsActions.updateGoalSuccess({ goal }));
+        
+        const cacheKey = LocalStorageKeyHelper.getGoalsCacheKey(this.getCurrentUserId() || '');
+        const goals = this.storageService.getItem<any[]>(cacheKey) || [];
+        const index = goals.findIndex(g => g.goalId === recordId);
+        if (index !== -1) {
+          goals[index] = { ...goals[index], ...goal };
+          this.storageService.setItem(cacheKey, goals);
+        }
+      }
       
-      this.storageService.setItem(itemKey, {
-        ...(existing || transaction),
-        syncStatus: status as any,
-        lastSyncedAt: new Date()
-      }, 'transactions');
-
-      console.log(`Transaction ${transactionId} sync status updated to: ${status} [isFamily: ${isFamily}]`);
+      console.log(`[CommonSyncService] ${item.type} ${recordId} sync status updated to: ${status}`);
     } catch (error) {
-      console.error('Failed to update transaction sync status:', error);
+      console.error(`Failed to update ${item.type} sync status:`, error);
     }
   }
 
 
 
-  /**
-   * Process budget sync operations
-   */
   private async processBudgetSync(item: SyncItem, batch: any, userId: string): Promise<void> {
-    const budgetsRef = collection(this.firestore, `users/${userId}/budgets`);
+    const recordId = this.getRecordId(item);
+    if (!recordId) return;
+    
+    const budgetRef = doc(this.firestore, `users/${userId}/budgets/${recordId}`);
 
     switch (item.operation) {
       case 'create':
-        const docRef = doc(budgetsRef);
-        batch.set(docRef, this.scrubUndefined(item.data));
-        break;
       case 'update':
-        const updateRef = doc(this.firestore, `users/${userId}/budgets/${item.data.id}`);
-        batch.set(updateRef, this.scrubUndefined(item.data), { merge: true });
+        batch.set(budgetRef, this.scrubUndefined(item.data), { merge: true });
         break;
       case 'delete':
-        const deleteRef = doc(this.firestore, `users/${userId}/budgets/${item.data.id}`);
-        batch.delete(deleteRef);
+        batch.delete(budgetRef);
         break;
     }
   }
 
-  /**
-   * Process account sync operations
-   */
   private async processAccountSync(item: SyncItem, batch: any, userId: string): Promise<void> {
-    const accountsRef = collection(this.firestore, `users/${userId}/accounts`);
+    const recordId = this.getRecordId(item);
+    if (!recordId) return;
+    
+    const accountRef = doc(this.firestore, `users/${userId}/accounts/${recordId}`);
 
     switch (item.operation) {
       case 'create':
-        const docRef = doc(accountsRef);
-        batch.set(docRef, this.scrubUndefined(item.data));
-        break;
       case 'update':
-        const updateRef = doc(this.firestore, `users/${userId}/accounts/${item.data.id}`);
-        batch.set(updateRef, this.scrubUndefined(item.data), { merge: true });
+        batch.set(accountRef, this.scrubUndefined(item.data), { merge: true });
         break;
       case 'delete':
-        const deleteRef = doc(this.firestore, `users/${userId}/accounts/${item.data.id}`);
-        batch.delete(deleteRef);
+        batch.delete(accountRef);
         break;
     }
   }
@@ -799,24 +848,19 @@ export class CommonSyncService implements OnDestroy {
     }
   }
 
-  /**
-   * Process goal sync operations
-   */
   private async processGoalSync(item: SyncItem, batch: any, userId: string): Promise<void> {
-    const goalsRef = collection(this.firestore, `users/${userId}/goals`);
+    const recordId = this.getRecordId(item);
+    if (!recordId) return;
+    
+    const goalRef = doc(this.firestore, `users/${userId}/goals/${recordId}`);
 
     switch (item.operation) {
       case 'create':
-        const docRef = doc(goalsRef);
-        batch.set(docRef, this.scrubUndefined(item.data));
-        break;
       case 'update':
-        const updateRef = doc(this.firestore, `users/${userId}/goals/${item.data.id}`);
-        batch.set(updateRef, this.scrubUndefined(item.data), { merge: true });
+        batch.set(goalRef, this.scrubUndefined(item.data), { merge: true });
         break;
       case 'delete':
-        const deleteRef = doc(this.firestore, `users/${userId}/goals/${item.data.id}`);
-        batch.delete(deleteRef);
+        batch.delete(goalRef);
         break;
     }
   }
@@ -1533,12 +1577,19 @@ export class CommonSyncService implements OnDestroy {
         .subscribe((event: any) => {
           if (event && event.data && event.data.type === 'SYNC_COMPLETED') {
             const { transactionId, success } = event.data;
-            if (transactionId) {
-              this.updateTransactionSyncStatus(
-                transactionId,
-                success ? 'synced' : 'failed'
-              );
-            }
+      if (transactionId) {
+        // High-performance O(1) lookup using the dedicated transactions store index
+        const transaction = this.storageService.getItem<Transaction>(transactionId, 'transactions');
+        
+        if (transaction) {
+          this.updateItemSyncStatus({
+            type: 'transaction',
+            data: transaction,
+            operation: 'update',
+            id: 'legacy-sw-sync'
+          } as any, success ? 'synced' : 'failed');
+        }
+      }
           }
         });
     }

@@ -1,4 +1,6 @@
 import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, DestroyRef } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { distinctUntilChanged, debounceTime } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -27,9 +29,9 @@ export class FamilyReportsComponent implements OnInit {
   private familyService = inject(FamilyService);
   private destroyRef = inject(DestroyRef);
 
-  members = signal<FamilyMember[]>([]);
-  transactions = signal<Transaction[]>([]);
-  loading = signal(true);
+  members      = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as FamilyMember[] });
+  transactions = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length && a[0]?.id === b[0]?.id && (a[0] as any)?.updatedAt === (b[0] as any)?.updatedAt)), { initialValue: [] as Transaction[] });
+  loading      = toSignal(this.store.select(TransactionsSelectors.selectTransactionsLoading).pipe(distinctUntilChanged()), { initialValue: true });
 
   private storageService = inject(LocalIndexDBStorageService);
 
@@ -69,9 +71,7 @@ export class FamilyReportsComponent implements OnInit {
   private memberColors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
 
   ngOnInit() {
-    this.store.select(TransactionsSelectors.selectTransactionsLoading).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(l => this.loading.set(l));
-    this.store.select(TransactionsSelectors.selectAllTransactions).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(t => this.transactions.set(t));
-    this.store.select(FamilySelectors.selectFamilyMembers).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(m => this.members.set(m));
+    // Parent handles store dispatches or routing params handle them
   }
 
   memberColor(userId: string): string {

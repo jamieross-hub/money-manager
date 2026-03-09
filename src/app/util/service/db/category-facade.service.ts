@@ -75,4 +75,12 @@ export class CategoryFacadeService {
     performDelete(category: Category, userId: string): void {
         this.categoryService.performDelete(category, userId);
     }
+
+    /**
+     * Set up a real-time listener for categories
+     * Typically managed by CommonSyncService
+     */
+    listenToCategories(userId: string): Observable<void> {
+        return (this.categoryService as any).listenToCategories(userId);
+    }
 }

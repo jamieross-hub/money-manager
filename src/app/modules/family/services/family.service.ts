@@ -1,7 +1,7 @@
 import { Injectable, inject, signal, OnDestroy } from '@angular/core';
 import { QuickAction, QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
-import { Observable, from, of, firstValueFrom, Subject } from 'rxjs';
-import { map, catchError, filter, take, switchMap, takeUntil } from 'rxjs/operators';
+import { Observable, from, of, firstValueFrom, Subject, forkJoin } from 'rxjs';
+import { map, catchError, filter, take, switchMap, takeUntil, tap } from 'rxjs/operators';
 import {
   Firestore,
   collection,
@@ -1076,13 +1076,53 @@ export class FamilyService implements OnDestroy {
       })
     );
 
-    // 2. If an active family exists, also trigger its components pull (via actions for now)
+    // 2. If an active family exists, pull its members and settlements as well
     if (familyId) {
-      this.store.dispatch(FamilyActions.loadFamily({ familyId }));
-      this.store.dispatch(FamilyActions.loadMembers({ familyId }));
-      this.store.dispatch(FamilyActions.loadTransactions({ familyId }));
+       console.log(`[FamilyService] Active family detected (${familyId}), pulling members and settlements...`);
+       
+       const pullMembers$ = from(getDocs(this.getMembersCol(familyId))).pipe(
+         tap(snap => {
+           const members = snap.docs.map(d => ({ id: d.id, ...d.data() as any } as FamilyMember));
+           const cacheKey = LocalStorageKeyHelper.getMembersCacheKey(familyId);
+           this.storageService.setItem(cacheKey, members);
+           this.store.dispatch(FamilyActions.loadMembersSuccess({ members }));
+         }),
+         map(() => void 0),
+         catchError(() => of(void 0))
+       );
+
+       const pullSettlements$ = this.pullSettlementsFromFirestore(familyId);
+
+       // 3. Combine everyone - Note: Transactions are pulled by TransactionsService independently
+       return forkJoin([pullFamilies$, pullMembers$, pullSettlements$]).pipe(
+         map(() => void 0)
+       );
     }
 
     return pullFamilies$;
+  }
+
+  /**
+   * Pull settlements from Firestore and update local cache/Store
+   */
+  pullSettlementsFromFirestore(familyId: string): Observable<void> {
+    const settlementsRef = query(
+      this.getSettlementsCol(familyId), 
+      orderBy('settledAt', 'desc')
+    );
+
+    return from(getDocs(settlementsRef)).pipe(
+      tap(snap => {
+        const settlements = snap.docs.map(d => ({ id: d.id, ...d.data() as any } as Settlement));
+        const cacheKey = LocalStorageKeyHelper.getSettlementsCacheKey(familyId);
+        this.storageService.setItem(cacheKey, settlements);
+        this.store.dispatch(FamilyActions.loadSettlementsSuccess({ settlements }));
+      }),
+      map(() => void 0),
+      catchError(err => {
+        console.error(`[FamilyService] Failed to pull settlements for ${familyId}:`, err);
+        return of(void 0);
+      })
+    );
   }
 }

@@ -188,8 +188,8 @@ export class FamilyEffects {
       ofType(FamilyActions.loadTransactions),
       switchMap(({ familyId }) => {
         const userId = this.userService.getCurrentUserId() || '';
-        // TransactionsFacadeService.getTransactions handles familyId internally via activeService
-        return this.transactionsFacade.getTransactions(userId).pipe(
+        // Pass explicit familyId to facade to ensure correct path regardless of current global mode
+        return this.transactionsFacade.getTransactions(userId, familyId).pipe(
           map(transactions => FamilyActions.loadTransactionsSuccess({ transactions })),
           catchError(() => of(FamilyActions.loadTransactionsSuccess({ transactions: [] })))
         );

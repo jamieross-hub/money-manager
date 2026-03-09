@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { Firestore, collection, addDoc, doc, updateDoc, deleteDoc, collectionData, getDocs, getDoc, deleteField, setDoc, onSnapshot, query, orderBy } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
-import { Observable, Subject, takeUntil } from 'rxjs';
+import { Observable, Subject, takeUntil, BehaviorSubject } from 'rxjs';
 import { Category } from 'src/app/util/models';
 import { TransactionType } from '../../config/enums';
 import { AppState } from 'src/app/store/app.state';
@@ -27,6 +27,8 @@ import { of, map, from, catchError, tap, timeout, switchMap, distinctUntilChange
 export class CategoryService implements OnDestroy {
     private readonly destroy$ = new Subject<void>();
     private categories: { [key: string]: Category } = {};
+    private categoriesSubject = new BehaviorSubject<Category[]>([]);
+
     constructor(
         private firestore: Firestore,
         private auth: Auth,
@@ -103,76 +105,88 @@ export class CategoryService implements OnDestroy {
      */
     getCategories(userId: string): Observable<Category[]> {
         if (this.isGuest()) {
-            return of(this.localStorageUtility.getEntities<Category>('categories'));
+            const categories = this.localStorageUtility.getEntities<Category>('categories');
+            this.categoriesSubject.next(categories);
+            return of(categories);
         }
 
-        // Use a combined trigger for mode and family changes
-        const trigger$ = this.userService.userAuth$.pipe(
-            map(user => ({
-                isFamilyMode: user?.preferences?.isFamilyMode || false,
-                activeFamilyId: user?.preferences?.activeFamilyId || ''
-            })),
-            distinctUntilChanged((prev, curr) => 
-                prev.isFamilyMode === curr.isFamilyMode && 
-                prev.activeFamilyId === curr.activeFamilyId
-            )
-        );
-
+        /**
+         * ⚠️ ARCHITECTURE ALIGNMENT: IndexedDB as Source of Truth
+         * 
+         * Components subscribe to categoriesSubject which is updated by the 
+         * central background sync listener.
+         */
         return this.localStorageUtility.isReady$.pipe(
-            switchMap(() => trigger$),
             switchMap(() => {
-                return new Observable<Category[]>(observer => {
-                    const currentPath = this.getCategoriesPath(userId);
-                    const cacheKey = this.getCategoriesCacheKey(userId);
-                    
-                    console.log(`[CategoryService] 🔌 Setting up real-time listener for path: ${currentPath}`);
+                // 1. Emit cached categories immediately
+                const cacheKey = this.getCategoriesCacheKey(userId);
+                const cachedCategories = this.localStorageUtility.getItem<Category[]>(cacheKey) || [];
+                
+                if (cachedCategories.length > 0) {
+                    this.categoriesSubject.next(cachedCategories);
+                }
 
-                    // 1. Emit cached categories immediately from the current context
-                    const cachedCategories = this.localStorageUtility.getItem<Category[]>(cacheKey) || [];
-                    observer.next(cachedCategories);
-
-                    // 2. Start real-time listener
-                    const categoriesRef = query(
-                        collection(this.firestore, currentPath),
-                        orderBy('name', 'asc')
-                    );
-
-                    const unsubscribe = onSnapshot(categoriesRef,
-                        (querySnapshot) => {
-                            const firestoreCategories: Category[] = [];
-                            querySnapshot.forEach((docSnap) => {
-                                const data: any = docSnap.data();
-                                if (data && (data.name || docSnap.id)) {
-                                    const category: Category = {
-                                        id: docSnap.id,
-                                        ...data
-                                    };
-                                    firestoreCategories.push(category);
-                                }
-                            });
-
-                            // Update internal categories map
-                            firestoreCategories.forEach(cat => {
-                                if (cat.id) this.categories[cat.id] = cat;
-                            });
-
-                            this.localStorageUtility.setItem(cacheKey, firestoreCategories);
-                            this.store.dispatch(CategoriesActions.loadCategoriesSuccess({ categories: firestoreCategories }));
-                            observer.next(firestoreCategories);
-                        },
-                        (error) => {
-                            console.error(`[CategoryService] ❌ Real-time listener failed for ${currentPath}:`, error);
-                            observer.next(cachedCategories);
-                        }
-                    );
-
-                    return () => {
-                        console.log(`[CategoryService] 🔌 Tearing down listener for: ${currentPath}`);
-                        unsubscribe();
-                    };
-                });
+                // 2. Return reactive subject
+                return this.categoriesSubject.asObservable();
             })
         );
+    }
+
+    /**
+     * Set up a real-time listener for categories
+     * Managed by CommonSyncService
+     */
+    listenToCategories(userId: string): Observable<void> {
+        if (this.isGuest()) return of(undefined);
+
+        return new Observable<void>(observer => {
+            const currentPath = this.getCategoriesPath(userId);
+            const cacheKey = this.getCategoriesCacheKey(userId);
+            
+            console.log(`[CategoryService] 🔌 Starting real-time listener for path: ${currentPath}`);
+
+            const categoriesRef = query(
+                collection(this.firestore, currentPath),
+                orderBy('name', 'asc')
+            );
+
+            const unsubscribe = onSnapshot(categoriesRef,
+                (querySnapshot) => {
+                    const firestoreCategories: Category[] = [];
+                    querySnapshot.forEach((docSnap) => {
+                        const data: any = docSnap.data();
+                        if (data && (data.name || docSnap.id)) {
+                            const category: Category = {
+                                id: docSnap.id,
+                                ...data
+                            };
+                            firestoreCategories.push(category);
+                        }
+                    });
+
+                    // Update internal categories map
+                    firestoreCategories.forEach(cat => {
+                        if (cat.id) this.categories[cat.id] = cat;
+                    });
+
+                    // Update cache, subject and Store
+                    this.localStorageUtility.setItem(cacheKey, firestoreCategories);
+                    this.categoriesSubject.next(firestoreCategories);
+                    this.store.dispatch(CategoriesActions.loadCategoriesSuccess({ categories: firestoreCategories }));
+                    
+                    observer.next();
+                },
+                (error) => {
+                    console.error(`[CategoryService] ❌ Real-time listener failed for ${currentPath}:`, error);
+                    observer.error(error);
+                }
+            );
+
+            return () => {
+                console.log(`[CategoryService] 🔌 Stopping listener for: ${currentPath}`);
+                unsubscribe();
+            };
+        });
     }
 
     /** Pull categories from Firestore once and update local cache */

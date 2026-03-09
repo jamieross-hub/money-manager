@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, Timestamp, onSnapshot, query, orderBy } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
-import { Observable, of, from } from 'rxjs';
+import { Observable, of, from, BehaviorSubject } from 'rxjs';
 import { map, catchError, tap, timeout, switchMap } from 'rxjs/operators';
 import { CommonSyncService, SyncItem } from '../common-sync.service';
 import { DateService } from '../date.service';
@@ -25,6 +25,7 @@ export interface Goal {
     providedIn: 'root'
 })
 export class GoalsService {
+    private goalsSubject = new BehaviorSubject<Goal[]>([]);
 
     constructor(
         private firestore: Firestore,
@@ -64,44 +65,65 @@ export class GoalsService {
     getGoals(userId: string): Observable<Goal[]> {
         if (userId === 'offline-guest') {
             const localGoals = this.localStorageUtility.getEntities<Goal>('goals');
+            this.goalsSubject.next(localGoals);
             return of(localGoals);
         }
 
+        /**
+         * ⚠️ ARCHITECTURE ALIGNMENT: IndexedDB as Source of Truth
+         */
         return this.localStorageUtility.isReady$.pipe(
             switchMap(() => {
-                return new Observable<Goal[]>(observer => {
-                    // 1. Try cache first
-                    const cacheKey = LocalStorageKeyHelper.getGoalsCacheKey(userId);
-                    const cachedGoals = this.localStorageUtility.getItem<Goal[]>(cacheKey) || [];
-                    observer.next(cachedGoals);
+                // 1. Emit cached goals immediately
+                const cacheKey = LocalStorageKeyHelper.getGoalsCacheKey(userId);
+                const cachedGoals = this.localStorageUtility.getItem<Goal[]>(cacheKey) || [];
+                
+                if (cachedGoals.length > 0) {
+                    this.goalsSubject.next(cachedGoals);
+                }
 
-                    // 2. Setup real-time listener
-                    const goalsRef = query(
-                        collection(this.firestore, `users/${userId}/goals`),
-                        orderBy('title', 'asc')
-                    );
-
-                    const unsubscribe = onSnapshot(goalsRef, (snap) => {
-                        const goals: Goal[] = [];
-                        snap.forEach(docSnap => {
-                            const data = docSnap.data();
-                            if (data && (data['goalId'] || docSnap.id)) {
-                                goals.push({ goalId: docSnap.id, ...data } as Goal);
-                            }
-                        });
-
-                        this.localStorageUtility.setItem(cacheKey, goals);
-                        this.store.dispatch(GoalsActions.loadGoalsSuccess({ goals }));
-                        observer.next(goals);
-                    }, (error) => {
-                        console.error('[GoalsService] Real-time listener failed:', error);
-                        observer.next(cachedGoals);
-                    });
-
-                    return () => unsubscribe();
-                });
+                // 2. Return reactive subject
+                return this.goalsSubject.asObservable();
             })
         );
+    }
+
+    /**
+     * Set up a real-time listener for goals
+     */
+    listenToGoals(userId: string): Observable<void> {
+        if (userId === 'offline-guest') return of(undefined);
+
+        return new Observable<void>(observer => {
+            const goalsRef = query(
+                collection(this.firestore, `users/${userId}/goals`),
+                orderBy('title', 'asc')
+            );
+
+            console.log(`[GoalsService] 🔌 Starting real-time listener for user: ${userId}`);
+
+            const unsubscribe = onSnapshot(goalsRef, (snap) => {
+                const goals: Goal[] = [];
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data && (data['goalId'] || docSnap.id)) {
+                        goals.push({ goalId: docSnap.id, ...data } as Goal);
+                    }
+                });
+
+                const cacheKey = LocalStorageKeyHelper.getGoalsCacheKey(userId);
+                this.localStorageUtility.setItem(cacheKey, goals);
+                this.goalsSubject.next(goals);
+                this.store.dispatch(GoalsActions.loadGoalsSuccess({ goals }));
+                
+                observer.next();
+            }, (error) => {
+                console.error('[GoalsService] Real-time listener failed:', error);
+                observer.error(error);
+            });
+
+            return () => unsubscribe();
+        });
     }
 
     /** Pull goals from Firestore and update local cache */

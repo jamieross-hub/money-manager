@@ -159,7 +159,7 @@ export class LocalStorageKeyHelper {
      * Get individual transaction item key
      */
     static getTransactionItemKey(transactionId: string, familyId?: string): string {
-        return familyId ? `${familyId}_${transactionId}` : transactionId;
+        return transactionId;
     }
 
     /**

@@ -1,4 +1,6 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, DestroyRef } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, DestroyRef, effect, untracked } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { distinctUntilChanged } from 'rxjs/operators';
 import { Location } from '@angular/common';
 import { Store } from '@ngrx/store';
 
@@ -49,29 +51,36 @@ export class FamilyMembersComponent implements OnInit {
   private location = inject(Location);
   readonly breakpointService = inject(BreakpointService);
 
-  family = signal<any>(null);
-  members = signal<FamilyMember[]>([]);
-  loading = signal(true);
+  family  = toSignal(this.store.select(FamilySelectors.selectFamily).pipe(distinctUntilChanged()), { initialValue: null as any });
+  members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as FamilyMember[] });
+  loading = toSignal(this.store.select(FamilySelectors.selectFamilyLoading).pipe(distinctUntilChanged()), { initialValue: true });
 
   /** Current user UID from AppState.profile */
   private readonly profile = this.store.selectSignal(ProfileSelectors.selectProfile);
   get currentUserId(): string | undefined { return this.profile()?.uid ?? undefined; }
-  isAdmin = signal(false);
+  isAdmin = computed(() => {
+    const m = this.members();
+    const uid = this.currentUserId;
+    const me = m.find(x => x.userId === uid);
+    return me?.role === 'admin';
+  });
   private destroyRef = inject(DestroyRef);
 
   private memberColors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
 
+  constructor() {
+    effect(() => {
+      const f = this.family();
+      if (f?.id) {
+        untracked(() => {
+          this.store.dispatch(FamilyActions.loadMembers({ familyId: f.id! }));
+        });
+      }
+    });
+  }
+
   ngOnInit() {
-    this.store.select(FamilySelectors.selectFamilyLoading).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(l => this.loading.set(l));
-    this.store.select(FamilySelectors.selectFamily).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(f => {
-      this.family.set(f);
-      if (f?.id) this.store.dispatch(FamilyActions.loadMembers({ familyId: f.id }));
-    });
-    this.store.select(FamilySelectors.selectFamilyMembers).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(m => {
-      this.members.set(m);
-      const me = m.find(x => x.userId === this.currentUserId);
-      this.isAdmin.set(me?.role === 'admin');
-    });
+    // Standard initialization
   }
 
   removeMember(member: FamilyMember) {

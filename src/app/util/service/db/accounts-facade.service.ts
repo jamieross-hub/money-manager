@@ -63,4 +63,12 @@ export class AccountsFacadeService {
     ): Observable<void> {
         return this.accountsService.updateAccountBalanceForAccountTransfer(userId, oldAccountId, newAccountId, transaction);
     }
+
+    /**
+     * Set up a real-time listener for accounts
+     * Typically managed by CommonSyncService
+     */
+    listenToAccounts(userId: string): Observable<void> {
+        return (this.accountsService as any).listenToAccounts(userId);
+    }
 }

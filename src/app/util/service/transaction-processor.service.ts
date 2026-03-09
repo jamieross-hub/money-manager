@@ -84,7 +84,8 @@ export class TransactionProcessorService {
       isRec: data.isRecurringMode,
       isFam: data.isFamilyMode,
       isDel: data.isDeletedMode,
-      uid: data.currentUserId
+      uid: data.currentUserId,
+      sessionStart: data.sessionStartTime
     });
   }
 

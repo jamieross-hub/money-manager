@@ -291,12 +291,13 @@ export class FamilyDashboardComponent implements OnInit {
       const input = this.processorInput();
       const uid   = this.currentUserId();
 
-      if (input.ready) {
+      if (input.ready && input.familyId && input.transactions.length > 0) {
         untracked(() => {
           this.familyProcessor.process({
             transactions:     input.transactions,
             members:          input.members,
             settlements:      input.settlements,
+            familyId:         input.familyId!,
             currentUserId:    uid || undefined,
             sessionStartTime: this.sessionStartTime,
           });
