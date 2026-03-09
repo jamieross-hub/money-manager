@@ -109,6 +109,8 @@ export class UserService implements OnDestroy {
   private readonly intervals: any[] = [];
   private authUnsubscribe?: () => void;
   private profileUnsubscribe?: () => void;
+  private activeFamilyUnsubscribe?: () => void;
+  private currentMonitoredFamilyId: string | null = null;
 
   /**
    * Synchronous snapshot of the current user — kept in sync whenever we
@@ -159,6 +161,9 @@ export class UserService implements OnDestroy {
     }
     if (this.profileUnsubscribe) {
       this.profileUnsubscribe();
+    }
+    if (this.activeFamilyUnsubscribe) {
+      this.activeFamilyUnsubscribe();
     }
   }
 
@@ -260,6 +265,9 @@ export class UserService implements OnDestroy {
             
             this._currentUser = userData;
             this.ensureUserDataCached(user.uid);
+            
+            // Monitor active family status
+            this.monitorActiveFamily(userData.preferences?.activeFamilyId || null);
           }
         }, (error) => {
           console.error('❌ Profile listener failed:', error);
@@ -278,6 +286,7 @@ export class UserService implements OnDestroy {
           this.profileUnsubscribe();
           this.profileUnsubscribe = undefined;
         }
+        this.monitorActiveFamily(null);
         // Firebase emits null both for genuine logouts AND transiently during
         // network loss. Debounce the clear by 5 s so a momentary disconnect
         // does not wipe the profile from the store.
@@ -858,6 +867,7 @@ export class UserService implements OnDestroy {
    */
   async signOut(): Promise<void> {
     try {
+      this.monitorActiveFamily(null);
       const currentUser = this.auth.currentUser;
       
       // 1. Immediately clear profile in store to stop observers
@@ -1782,6 +1792,84 @@ export class UserService implements OnDestroy {
     } catch (error) {
       console.error('Error deleting user:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Monitor the status of the active family group
+   */
+  private monitorActiveFamily(familyId: string | null): void {
+    // Only restart listener if the family ID has actually changed
+    if (this.currentMonitoredFamilyId === familyId) return;
+    
+    // Stop previous listener if it exists
+    if (this.activeFamilyUnsubscribe) {
+      this.activeFamilyUnsubscribe();
+      this.activeFamilyUnsubscribe = undefined;
+    }
+
+    this.currentMonitoredFamilyId = familyId;
+
+    // We only need to monitor if there's an active group and user is not a guest
+    if (!familyId || this.isGuestUser()) return;
+
+    console.log(`[UserService] Starting monitor for active family: ${familyId}`);
+    
+    const familyRef = doc(this.firestore, `family-groups/${familyId}`);
+    this.activeFamilyUnsubscribe = onSnapshot(familyRef, (docSnap) => {
+      // If document is missing or isActive is false, it means the group was deleted or deactivated
+      if (!docSnap.exists() || docSnap.data()['isActive'] === false) {
+        console.warn(`[UserService] Active family ${familyId} is no longer available. Leaving group...`);
+        this.leaveDeletedGroup(familyId);
+      }
+    }, (error) => {
+      // Common if user was removed from the group and no longer has read permission
+      if (error.code === 'permission-denied') {
+        console.warn(`[UserService] Permission denied for active family ${familyId}. Likely removed. Leaving group...`);
+        this.leaveDeletedGroup(familyId);
+      } else {
+        console.error(`[UserService] Active family listener error for ${familyId}:`, error);
+      }
+    });
+  }
+
+  /**
+   * Leave a group that has been deleted or where the user no longer has access
+   */
+  private async leaveDeletedGroup(familyId: string): Promise<void> {
+    const user = this._currentUser;
+    if (!user || user.preferences?.activeFamilyId !== familyId) return;
+
+    try {
+      console.log(`[UserService] Clearing active family ${familyId} from user ${user.uid} preferences`);
+      
+      const updatedPreferences = {
+        ...user.preferences,
+        activeFamilyId: null,
+        isFamilyMode: false
+      };
+
+      // 1. Update Firestore first (Source of Truth)
+      const userRef = doc(this.firestore, `users/${user.uid}`);
+      await updateDoc(userRef, {
+        'preferences.activeFamilyId': null,
+        'preferences.isFamilyMode': false,
+        updatedAt: serverTimestamp()
+      });
+
+      // 2. Local cleanup for immediate consistency
+      if (this.activeFamilyUnsubscribe) {
+        this.activeFamilyUnsubscribe();
+        this.activeFamilyUnsubscribe = undefined;
+      }
+      this.currentMonitoredFamilyId = null;
+
+      // 3. Notify user
+      this.notificationService.warning('Your active group has been deleted or is no longer available.');
+      this.logAuditEvent('ACTIVE_GROUP_REMOVED', user.uid, { familyId, reason: 'group_deleted_or_permission_denied' });
+      
+    } catch (error) {
+      console.error('[UserService] Error during leaveDeletedGroup:', error);
     }
   }
 }
