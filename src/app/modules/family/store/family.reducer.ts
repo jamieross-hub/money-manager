@@ -12,9 +12,6 @@ export const familyReducer = createReducer(
     ...state, 
     loading: true, 
     error: null,
-    transactions: [],
-    members: [],
-    settlements: []
   })),
   on(FamilyActions.loadFamily, (state, { familyId }) => ({ 
     ...state, 

@@ -49,7 +49,7 @@
   gap: 20px;
   padding: 16px;
   flex: 1;
-  padding-bottom: 100px; // room for bottom bar
+  // padding-bottom: 100px; // room for bottom bar
 }
 
 .gs-section {
@@ -66,6 +66,18 @@
   color: var(--neutral-400);
   padding-left: 4px;
   margin: 0;
+}
+
+.gs-collapse-btn {
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  color: var(--neutral-400) !important;
+
+  mat-icon {
+    font-size: 20px !important;
+    margin-left: -4px;
+  }
 }
 
 // ─── Avatars ───────────────────────────────────────────────────────────────
@@ -125,32 +137,45 @@
   &__meta {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 0;
     flex-wrap: wrap;
+    margin-top: 4px;
   }
 }
 
 .gs-meta-icon {
-  font-size: 13px !important;
-  height: 13px !important;
-  width: 13px !important;
+  font-size: 14px !important;
+  height: 14px !important;
+  width: 14px !important;
   color: var(--neutral-400);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 3px;
 }
 
 .gs-meta-text {
   font-size: 12px;
   color: var(--neutral-400);
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
 
   &--with-icon {
     display: inline-flex;
     align-items: center;
-    gap: 2px;
   }
 }
 
 .gs-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
   font-size: 12px;
-  color: var(--neutral-200);
+  color: var(--neutral-300);
+  opacity: 0.6;
+  user-select: none;
 }
 
 // ─── Badges ────────────────────────────────────────────────────────────────
@@ -213,6 +238,22 @@
 
   &:hover {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  &.gs-card--has-banner {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border: none;
+
+    .gs-info__name { color: #fff; }
+    .gs-meta-text { color: rgba(255, 255, 255, 0.9); }
+    .gs-meta-icon { color: rgba(255, 255, 255, 0.8); }
+    .gs-dot { color: rgba(255, 255, 255, 0.4); }
+    .gs-active-card__activity .gs-meta-text { color: rgba(255, 255, 255, 0.9); }
+    .gs-active-card__activity .gs-meta-icon { color: rgba(255, 255, 255, 0.8); }
+    .gs-active-card__footer { border-top-color: rgba(255, 255, 255, 0.15); }
+    .gs-open-btn { color: #fff !important; }
   }
 
   &__accent {
@@ -340,6 +381,22 @@
 
   &:hover {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  &.gs-card--has-banner {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border: none;
+
+    .gs-info__name { color: #fff; }
+    .gs-meta-text { color: rgba(255, 255, 255, 0.9); }
+    .gs-meta-icon { color: rgba(255, 255, 255, 0.8); }
+    .gs-dot { color: rgba(255, 255, 255, 0.4); }
+    .gs-list-card__activity .gs-meta-text { color: rgba(255, 255, 255, 0.9); }
+    .gs-list-card__activity .gs-meta-icon { color: rgba(255, 255, 255, 0.8); }
+    .gs-list-card__footer { border-top-color: rgba(255, 255, 255, 0.15); }
+    .gs-list-card__actions button { color: #fff !important; }
   }
 
   &__body {
@@ -604,6 +661,19 @@
   border-radius: 12px !important;
   height: 44px !important;
   font-size: 0.875rem !important;
+}
+
+.gs-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%);
+  z-index: 0;
+}
+
+// Ensure content stays above overlay
+.gs-active-card__body, .gs-active-card__footer, .gs-list-card__body, .gs-list-card__footer, .gs-active-card__accent {
+  position: relative;
+  z-index: 1;
 }
 
 // ─── Confirmation Overlay ─────────────────────────────────────────────────

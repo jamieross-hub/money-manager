@@ -27,5 +27,7 @@ export const selectUserFamiliesLoaded = createSelector(selectFamilyState, s => s
 export const selectSettlements = createSelector(selectFamilyState, s => s?.settlements || []);
 export const selectSettlementsLoading = createSelector(selectFamilyState, s => s?.settlementsLoading || false);
 
-// NOTE: selectRecentTransactions has been removed — use TransactionsSelectors.selectRecentTransactions(n)
-// which is family-mode aware via selectAllTransactions.
+export const selectUserFamiliesWithMembers = createSelector(
+  selectUserFamilies,
+  families => families.filter(f => f.memberIds && f.memberIds.length > 0)
+);

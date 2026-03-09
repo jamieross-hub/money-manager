@@ -73,27 +73,6 @@ import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.d
   selector: 'app-family-dashboard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [
-    trigger('popIn', [
-      transition('void => new', [
-        style({
-          opacity: 0,
-          height: 0,
-          marginBottom: 0,
-          transform: 'scale(0.92) translateY(15px)',
-          overflow: 'hidden'
-        }),
-        animate('350ms cubic-bezier(0.4, 0, 0.2, 1)', style({
-          height: '*',
-          marginBottom: '8px'
-        })),
-        animate('650ms cubic-bezier(0.175, 0.885, 0.32, 1.275)', style({
-          opacity: 1,
-          transform: 'scale(1) translateY(0)'
-        }))
-      ])
-    ])
-  ],
   imports: [
     // Angular
     CommonModule,
@@ -152,15 +131,15 @@ export class FamilyDashboardComponent implements OnInit {
   private isInstanceLoading = false;
 
   // ─── Store Signals (raw) ─────────────────────────────────────────────────────
-  private readonly storeFamily  = toSignal(this.store.select(FamilySelectors.selectFamily).pipe(distinctUntilChanged()), { initialValue: null });
-  private readonly allFamilies  = toSignal(this.store.select(FamilySelectors.selectUserFamilies).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] });
+  private readonly storeFamily  = toSignal(this.store.select(FamilySelectors.selectFamily).pipe(distinctUntilChanged((a, b) => a?.id === b?.id && (a as any)?.updatedAt === (b as any)?.updatedAt)), { initialValue: null });
+  private readonly allFamilies  = toSignal(this.store.select(FamilySelectors.selectUserFamilies).pipe(distinctUntilChanged((a, b) => a.length === b.length && a[0]?.id === b[0]?.id)), { initialValue: [] });
 
   // ─── Public Signals (from store) ─────────────────────────────────────────────
   readonly currentUserId     = toSignal(this.store.select(ProfileSelectors.selectUserId), { initialValue: undefined });
-  readonly members           = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as FamilyMember[] });
-  readonly transactions      = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length && a[0]?.id === b[0]?.id && (a[0] as any)?.updatedAt === (b[0] as any)?.updatedAt)), { initialValue: [] as Transaction[] });
-  readonly recentTxns        = toSignal(this.store.select(TransactionsSelectors.selectRecentTransactions(5)).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as Transaction[] });
-  readonly settlements       = toSignal(this.store.select(FamilySelectors.selectSettlements).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as Settlement[] });
+  readonly members           = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(distinctUntilChanged((a, b) => a.length === b.length && a[0]?.userId === b[0]?.userId && (a[0] as any)?.isActive === (b[0] as any)?.isActive)), { initialValue: [] as FamilyMember[] });
+  readonly transactions      = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions).pipe(distinctUntilChanged((a, b) => a.length === b.length && a[0]?.id === b[0]?.id && (a[0] as any)?.updatedAt === (b[0] as any)?.updatedAt && a[0]?.familyId === b[0]?.familyId)), { initialValue: [] as Transaction[] });
+  readonly recentTxns        = toSignal(this.store.select(TransactionsSelectors.selectRecentTransactions(5)).pipe(distinctUntilChanged((a, b) => a.length === b.length && a[0]?.id === b[0]?.id && (a[0] as any)?.updatedAt === (b[0] as any)?.updatedAt)), { initialValue: [] as Transaction[] });
+  readonly settlements       = toSignal(this.store.select(FamilySelectors.selectSettlements).pipe(distinctUntilChanged((a, b) => a.length === b.length && a[0]?.id === b[0]?.id && (a[0] as any)?.createdAt === (b[0] as any)?.createdAt)), { initialValue: [] as Settlement[] });
   readonly loading           = toSignal(this.store.select(TransactionsSelectors.selectTransactionsLoading).pipe(distinctUntilChanged()), { initialValue: true });
   private readonly settlementsLoading = toSignal(this.store.select(FamilySelectors.selectSettlementsLoading).pipe(distinctUntilChanged()), { initialValue: false });
 

@@ -43,10 +43,9 @@ export class FamilyProcessorService {
 
   // ─── Input Selectors ─────────────────────────────────────────────────────────
   private readonly family = toSignal(this.store.select(FamilySelectors.selectFamily).pipe(distinctUntilChanged()), { initialValue: null as any });
-  private readonly members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as FamilyMember[] });
+  private readonly members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(distinctUntilChanged((a, b) => a.length === b.length && a[0] === b[0])), { initialValue: [] as FamilyMember[] });
   private readonly transactions = toSignal(
     this.store.select(TransactionsSelectors.selectAllTransactions).pipe(
-      debounceTime(50), 
       distinctUntilChanged((a, b) => {
         if (a.length !== b.length) return false;
         if (a.length === 0) return true;
@@ -60,7 +59,7 @@ export class FamilyProcessorService {
     ), 
     { initialValue: [] as Transaction[] }
   );
-  private readonly settlements = toSignal(this.store.select(FamilySelectors.selectSettlements).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as Settlement[] });
+  private readonly settlements = toSignal(this.store.select(FamilySelectors.selectSettlements).pipe(distinctUntilChanged((a, b) => a.length === b.length && a[0] === b[0])), { initialValue: [] as Settlement[] });
   private readonly loading = toSignal(this.store.select(TransactionsSelectors.selectTransactionsLoading).pipe(distinctUntilChanged()), { initialValue: true });
   private readonly settlementsLoading = toSignal(this.store.select(FamilySelectors.selectSettlementsLoading).pipe(distinctUntilChanged()), { initialValue: false });
   private readonly profile = this.store.selectSignal(ProfileSelectors.selectProfile);

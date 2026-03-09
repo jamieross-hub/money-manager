@@ -271,8 +271,8 @@ function processActivities(
       _isIncome: tx.type === TransactionType.INCOME,
       _sortTime: sortTime,
       _createdTime: createdTime,
-      _trackId: tx.id || `tx_${Math.random()}_${sortTime}`,
-      _popState: (createdTime > sessionStartTime) ? 'new' : 'old'
+      _trackId: tx.id || `tx_${payerId}_${sortTime}`,
+      _popState: (createdTime > sessionStartTime && (Date.now() - createdTime) < 10000) ? 'new' : 'old'
     });
   }
 
@@ -287,9 +287,11 @@ function processActivities(
     else if (currentUid === set.fromUserId) _isIncome = false;
     else _isIncome = (set as any).type === 'income';
 
+    const settlementId = set.id || `set_${set.fromUserId}_${set.toUserId}_${sortTime}`;
+
     allActivities.push({
       ...set,
-      id: set.id || `set_${createdTime}`,
+      id: settlementId,
       category: 'Settlement',
       type: 'settlement',
       date,
@@ -304,8 +306,8 @@ function processActivities(
       _isIncome,
       _sortTime: sortTime,
       _createdTime: createdTime,
-      _trackId: set.id || `set_${Math.random()}_${sortTime}`,
-      _popState: (createdTime > sessionStartTime) ? 'new' : 'old'
+      _trackId: settlementId,
+      _popState: (createdTime > sessionStartTime && (Date.now() - createdTime) < 10000) ? 'new' : 'old'
     });
   }
 
@@ -331,6 +333,7 @@ function processActivities(
       _popState: (createdTime > sessionStartTime) ? 'new' : 'old'
     });
   }
+
 
   return allActivities.sort((a, b) => {
     if (b._sortTime !== a._sortTime) return b._sortTime - a._sortTime;

@@ -584,17 +584,18 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           splitGroupId: transaction?.splitGroupId || '',
         });
 
-        // Determine the default category (excluding system categories)
+        // Determine the default category (excluding system/reserved categories)
         this.categoryList$.pipe(
           filter(cats => cats && cats.length > 0),
           take(1)
         ).subscribe(categories => {
-          const nonSystemCategories = categories.filter(c => !c.isSystem);
+          const reservedNames = Object.keys(APP_CONFIG.VALIDATION.RESERVED_CATEGORY_NAMES).map(n => n.toLowerCase());
+          const nonSystemCategories = categories.filter(c => !c.isSystem && !reservedNames.includes(c.name.trim().toLowerCase()));
           
           let categoryIdToSet = '';
           if (transaction?.categoryId) {
-            const isSystem = categories.find(c => c.id === transaction.categoryId)?.isSystem;
-            if (!isSystem) {
+            const cat = categories.find(c => c.id === transaction.categoryId);
+            if (cat && !cat.isSystem && !reservedNames.includes(cat.name.trim().toLowerCase())) {
               categoryIdToSet = transaction.categoryId;
             }
           }
@@ -1001,8 +1002,14 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   onCategoryChange(categoryOrId: any): void {
     if (!categoryOrId) return;
 
+    const reservedNames = Object.keys(APP_CONFIG.VALIDATION.RESERVED_CATEGORY_NAMES).map(n => n.toLowerCase());
+    const isReserved = (cat: Category) => {
+       return cat.isSystem || reservedNames.includes(cat.name?.trim()?.toLowerCase());
+    };
+
     // Direct object handling (from sheet or initialization)
     if (typeof categoryOrId === 'object' && categoryOrId.id) {
+      if (isReserved(categoryOrId)) return;
       this._applyCategoryData(categoryOrId);
       return;
     }
@@ -1014,7 +1021,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       map((categories: Category[]) => categories.find(c => c.id === categoryId)),
       take(1)
     ).subscribe((category: Category | undefined) => {
-      if (category) {
+      if (category && !isReserved(category)) {
         this._applyCategoryData(category);
       } else {
         // Fallback for reserved categories or manual input if ID not in store
@@ -1026,6 +1033,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       }
     });
   }
+
 
   private _applyCategoryData(category: Category): void {
     this.currentCategoryIcon.set(category.icon);

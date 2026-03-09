@@ -45,7 +45,7 @@ import { QuickActionsFabComponent, QuickAction, QuickActionsFabConfig } from 'sr
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 import { LoaderService } from 'src/app/util/service/loader.service';
 import { TransactionStatus } from 'src/app/util/config/enums';
-import { CurrencyPipe } from 'src/app/util/pipes';
+import { CurrencyPipe, AppDatePipe } from 'src/app/util/pipes';
 // ─── View Model ──────────────────────────────────────────────────────────────
 
 export type GroupType = 'family' | 'trip' | 'work' | 'other';
@@ -61,10 +61,12 @@ export interface UserGroup {
   balance?: number;
   totalSpend?: number;
   lastActivityAt?: Date;
+  createdAt: Date;
   isActive: boolean;
   isDeleted: boolean;
   inviteCode: string;
   ownerUserId: string;
+  banner?: string;
 }
 
 // ─── Helper: detect group type from name ─────────────────────────────────────
@@ -124,7 +126,8 @@ type LoadState = 'loading' | 'loaded' | 'empty' | 'error';
     MatTooltipModule,
     QuickActionsFabComponent,
     ImageFallbackDirective,
-    CurrencyPipe
+    CurrencyPipe,
+    AppDatePipe
 ],
   templateUrl: './group-selection.component.html',
   styleUrls: ['./group-selection.component.scss'],
@@ -137,6 +140,7 @@ export class GroupSelectionComponent implements OnInit {
   private store = inject(Store<AppState>);
   private loaderService = inject(LoaderService);
   public selectedGroup = signal<UserGroup | null>(null);
+  public showDeleted = signal<boolean>(false);
   private autoOpened = false;
   groupSpends = signal<Record<string, number>>({});
   private isInstanceLoading = false;
@@ -175,24 +179,35 @@ export class GroupSelectionComponent implements OnInit {
     this.loadDeletedGroups();
   }
 
+  private subscriptionsMap = new Map<string, Subscription>();
+
   private initializeEffects(): void {
+    // Cleanup on destroy
+    this.destroyRef.onDestroy(() => {
+      this.subscriptionsMap.forEach(sub => sub.unsubscribe());
+      this.subscriptionsMap.clear();
+      if (this.isInstanceLoading) {
+        //this.loaderService.hide();
+       }
+    });
+
     effect(() => {
-      const families = this.rawFamilies() || [];
-      families.forEach(f => {
-        if (f.id && this.groupSpends()[f.id] === undefined) {
+      const families = (this.rawFamilies() || []) as Family[];
+      const userId = this.currentUserId;
+      if (!userId) return;
+
+      families.forEach((f: Family) => {
+        if (f.id && !this.subscriptionsMap.has(f.id)) {
+          console.log(`[GroupSelection] Setting up spend listener for family: ${f.name} (${f.id})`);
+          
+          // Seed from cache immediately if available
           const cacheKey = `groupSpends_${f.id}`;
           const cachedSpend = this.storageService.getItem<number>(cacheKey);
-
           if (cachedSpend !== null) {
             this.groupSpends.update(spends => ({ ...spends, [f.id as string]: cachedSpend }));
-          } else {
-             // Initialize to 0 so we only fetch once per group
-             this.groupSpends.update(spends => ({ ...spends, [f.id as string]: 0 }));
           }
 
-          const userId = this.userService.getCurrentUserId() || '';
-          this.familyTransactionsService.getTransactions(userId, f.id)
-            .pipe(takeUntilDestroyed(this.destroyRef))
+          const subscription = this.familyTransactionsService.getTransactions(userId, f.id)
             .subscribe((txs: Transaction[]) => {
               const expense = txs
                 .filter((t: Transaction) =>
@@ -202,9 +217,21 @@ export class GroupSelectionComponent implements OnInit {
                   t.category !== 'Settlement'
                 )
                 .reduce((sum: number, t: Transaction) => sum + t.amount, 0);
+              
               this.groupSpends.update(spends => ({ ...spends, [f.id as string]: expense }));
               this.storageService.setItem(cacheKey, expense);
             });
+          
+          this.subscriptionsMap.set(f.id, subscription);
+        }
+      });
+      
+      // Optional: Cleanup subscriptions for families that no longer exist in the rawFamilies list
+      const currentIds = new Set(families.map(f => f.id));
+      this.subscriptionsMap.forEach((sub, id) => {
+        if (!currentIds.has(id)) {
+          sub.unsubscribe();
+          this.subscriptionsMap.delete(id);
         }
       });
     }, { injector: this.injector });
@@ -214,29 +241,13 @@ export class GroupSelectionComponent implements OnInit {
                        
       if (isLoading && !this.isInstanceLoading) {
         this.isInstanceLoading = true;
-        //this.loaderService.show();
       } else if (!isLoading && this.isInstanceLoading) {
         this.isInstanceLoading = false;
-        //this.loaderService.hide();
       }
     }, { injector: this.injector });
-
-    this.destroyRef.onDestroy(() => {
-      if (this.isInstanceLoading) {
-       //this.loaderService.hide();
-      }
-    });
-
-    // effect(() => {
-    //   const active = this.activeGroup();
-    //   if (active && (!this.autoOpened || (this.selectedGroup()?.id !== active.id))) {
-    //     this.autoOpened = true;
-    //     this.openGroup(active);
-    //   }
-    // }, { allowSignalWrites: true, injector: this.injector });
   }
 
-  rawFamilies = this.store.selectSignal(selectUserFamilies);
+  rawFamilies = this.store.selectSignal(FamilySelectors.selectUserFamiliesWithMembers);
   userFamiliesLoading = this.store.selectSignal(selectUserFamiliesLoading);
   userFamiliesLoaded = this.store.selectSignal(selectUserFamiliesLoaded);
   familyError = this.store.selectSignal(selectFamilyError);
@@ -244,10 +255,10 @@ export class GroupSelectionComponent implements OnInit {
   readonly activeGroupId = this.familyService.activeFamilyId;
 
   groups = computed<UserGroup[]>(() => {
-    const families = this.rawFamilies() || [];
+    const families = (this.rawFamilies() || []) as Family[];
     const activeId = this.activeGroupId();
 
-    return families.map(f => ({
+    return families.map((f: Family) => ({
       id: f.id!,
       name: f.name,
       type: inferGroupType(f.name),
@@ -266,6 +277,12 @@ export class GroupSelectionComponent implements OnInit {
           ? new Date((f.updatedAt as any).seconds * 1000)
           : new Date(f.updatedAt as any))
         : undefined,
+      createdAt: f.createdAt
+        ? ((f.createdAt as any)?.seconds
+          ? new Date((f.createdAt as any).seconds * 1000)
+          : new Date(f.createdAt as any))
+        : new Date(),
+      banner: f.banner,
     }));
   });
 
@@ -351,7 +368,8 @@ export class GroupSelectionComponent implements OnInit {
 
   deletedGroups = computed<UserGroup[]>(() => {
     const currentUserId = this.currentUserId;
-    return this.deletedRawFamilies().map(f => ({
+    const families = (this.deletedRawFamilies() || []) as Family[];
+    return families.map((f: Family) => ({
       id: f.id!,
       name: f.name,
       type: inferGroupType(f.name),
@@ -369,6 +387,12 @@ export class GroupSelectionComponent implements OnInit {
           ? new Date((f.updatedAt as any).seconds * 1000)
           : new Date(f.updatedAt as any))
         : undefined,
+      createdAt: f.createdAt
+        ? ((f.createdAt as any)?.seconds
+          ? new Date((f.createdAt as any).seconds * 1000)
+          : new Date(f.createdAt as any))
+        : new Date(),
+      banner: f.banner,
     }));
   });
 
