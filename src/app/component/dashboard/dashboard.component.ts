@@ -112,8 +112,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.store.dispatch(loadGoals({ userId }));
       const profile = this.userService.getCurrentUserSnapshot();
       if (profile?.preferences?.isFamilyMode && profile?.preferences?.activeFamilyId) {
-        this.store.dispatch(FamilyActions.loadTransactions({ familyId: profile.preferences.activeFamilyId }));
-        this.store.dispatch(FamilyActions.loadSettlements({ familyId: profile.preferences.activeFamilyId }));
+        // Dispatching loadFamily which will trigger transactions, members, and settlements loads via effects
+        this.store.dispatch(FamilyActions.loadFamily({ familyId: profile.preferences.activeFamilyId }));
       } else {
         this.store.dispatch(loadTransactions({ userId }));
       }

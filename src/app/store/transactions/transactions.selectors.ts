@@ -19,7 +19,7 @@ export const selectAllTransactions = createSelector(
   FamilySelectors.selectFamilyTransactions,
   FamilySelectors.selectFamily,
   (state, isFamilyMode, familyTransactions, activeFamily) => {
-    if (isFamilyMode && !!activeFamily) {
+    if (isFamilyMode) {
       // In family mode, we trust the familyTransactions slice which is populated 
       // via the efficient familyId index in the service layer.
       const seenSettlements = new Set();
@@ -46,7 +46,7 @@ export const selectDeletedTransactions = createSelector(
   FamilySelectors.selectRawFamilyTransactions,
   FamilySelectors.selectFamily,
   (state, isFamilyMode, familyTransactions, activeFamily) => {
-    if (isFamilyMode && !!activeFamily) {
+    if (isFamilyMode) {
       return (familyTransactions || []).filter(t => t.status === TransactionStatus.DELETED);
     }
     
