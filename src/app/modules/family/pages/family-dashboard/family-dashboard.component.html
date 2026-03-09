@@ -338,18 +338,19 @@
                  
                  
                 </span>
-                  <span class="text-[11px] font-medium text-gray-400 mt-0.5">{{ tx.date | appDate:'short-time' }}</span>
+                  @if (tx.category !== 'MemberActivity') {
+                    <span class="text-[14px] font-bold" [class.text-green-600]="tx.type === 'income'"
+                      [class.dark:text-green-400]="tx.type === 'income'" [class.text-gray-900]="tx.type !== 'income'"
+                      [class.dark:text-white]="tx.type !== 'income'">
+                      {{ tx.amount | currency }}
+                    </span>
+                  }
               </div>
             </div>
-            <!-- Amount and Date -->
-            <div class="flex flex-col items-end">
-              @if (tx.category !== 'MemberActivity') {
-                <span class="text-[14px] font-bold" [class.text-green-600]="tx.type === 'income'"
-                  [class.dark:text-green-400]="tx.type === 'income'" [class.text-gray-900]="tx.type !== 'income'"
-                  [class.dark:text-white]="tx.type !== 'income'">
-                  {{ tx.amount | currency }}
-                </span>
-              }
+            <!-- Compact Date & Time -->
+            <div class="flex flex-col items-end shrink-0">
+              <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tighter leading-tight">{{ tx.date | appDate:'dd MMM' }}</span>
+              <span class="text-[10px] font-medium text-gray-400 leading-tight">{{ tx.date | appDate:'time-only' }}</span>
             </div>
           </div>
         }
