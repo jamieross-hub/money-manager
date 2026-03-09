@@ -1,13 +1,42 @@
-import { Injectable, inject } from '@angular/core';
-import { UserService } from './db/user.service';
+import { Injectable, inject, computed } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
+import { Store } from '@ngrx/store';
+import { AppState } from 'src/app/store/app.state';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
+import { UserService } from './db/user.service';
+import { User } from '../models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GreetingFacadeService {
-  private readonly userService = inject(UserService);
   private readonly translateService = inject(TranslateService);
+  private readonly store = inject(Store<AppState>);
+  private readonly userService = inject(UserService);
+
+  /**
+   * Reactive greeting signal that updates automatically when the profile changes.
+   */
+  public readonly personalizedGreeting = computed(() => {
+    const hour = new Date().getHours();
+    let greeting = '';
+
+    if (hour >= 5 && hour < 12) {
+      greeting = 'Good morning';
+    } else if (hour >= 12 && hour < 17) {
+      greeting = 'Good afternoon';
+    } else if (hour >= 17 && hour < 20) {
+      greeting = 'Good evening';
+    } else {
+      greeting = 'Let\'s review your day';
+    }
+
+    // Attempt to get from Store signal, but fallback to UserService snapshot for instant app-start availability
+    const user: User | null = (this.store.selectSignal(ProfileSelectors.selectProfile)() as User | null) || this.userService.getCurrentUserSnapshot();
+    const name = user?.firstName || user?.displayName || 'there';
+
+    return `${greeting}, ${name}!`;
+  });
 
   private hasGreeted = false;
   private seenMessages = new Set<string>();
@@ -107,22 +136,6 @@ export class GreetingFacadeService {
   }
 
   public getPersonalizedGreeting(): string {
-    const hour = new Date().getHours();
-    let greeting = '';
-
-    if (hour >= 5 && hour < 12) {
-      greeting = 'Good morning';
-    } else if (hour >= 12 && hour < 17) {
-      greeting = 'Good afternoon';
-    } else if (hour >= 17 && hour < 20) {
-      greeting = 'Good evening';
-    } else {
-      greeting = 'Let\'s review your day';
-    }
-
-    const user = this.userService.getCurrentUserSnapshot();
-    const name = user?.firstName || user?.displayName || 'there';
-
-    return `${greeting}, ${name}!`;
+    return this.personalizedGreeting();
   }
 }

@@ -21,6 +21,7 @@ import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { UserService } from './user.service';
 import { LocalStorageKey, LocalStorageKeyHelper } from '../../models/local-storage.model';
 import { CurrencyService } from '../currency.service';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 
 @Injectable({
     providedIn: 'root'
@@ -50,7 +51,7 @@ export class TransactionsService extends BaseService {
      * Get the transactions collection path
      */
     protected getTransactionsPath(userId: string, familyId?: string): string {
-        const isFamilyMode = this.userService.getCurrentUserSnapshot()?.preferences?.isFamilyMode;
+        const isFamilyMode = this.store.selectSignal(ProfileSelectors.selectProfile)()?.preferences?.isFamilyMode;
         if (isFamilyMode && familyId) {
             return `family-groups/${familyId}/transactions`;
         }
@@ -660,7 +661,7 @@ export class TransactionsService extends BaseService {
      * Get the cache key for transactions
      */
     protected getTransactionsCacheKey(userId: string, familyId?: string): string {
-        const isFamilyMode = this.userService.getCurrentUserSnapshot()?.preferences?.isFamilyMode;
+            const isFamilyMode = this.store.selectSignal(ProfileSelectors.selectProfile)()?.preferences?.isFamilyMode;
         const id = isFamilyMode ? (familyId || this.getFamilyId()) : '';
         if (id) {
             return `family-transactions-${id}`;
@@ -680,7 +681,7 @@ export class TransactionsService extends BaseService {
      */
     public getCachedTransactions(userId: string, familyId?: string): Transaction[] {
         try {
-            const isFamilyMode = this.userService.getCurrentUserSnapshot()?.preferences?.isFamilyMode;
+                const isFamilyMode = this.store.selectSignal(ProfileSelectors.selectProfile)()?.preferences?.isFamilyMode;
             const effectiveFamilyId = isFamilyMode ? (familyId !== undefined ? familyId : this.getFamilyId()) : '';
             const allTransactions = this.localStorageUtility.getAllTransactionsSync();
             

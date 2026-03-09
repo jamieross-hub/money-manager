@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy } from "@angular/core";
+import { Component, OnInit, ChangeDetectionStrategy, inject } from "@angular/core";
 import { FormBuilder, FormGroup, Validators, FormArray, FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
 import { NotificationService } from "src/app/util/service/notification.service";
@@ -35,6 +35,7 @@ import { MatTabsModule } from "@angular/material/tabs";
 import { MatTooltipModule } from "@angular/material/tooltip";
 import { TranslateModule } from "@ngx-translate/core";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 
 interface BankAccount {
 	id?: string;
@@ -89,6 +90,16 @@ export const defaultBankAccounts: BankAccount[] = [
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RegistrationComponent implements OnInit {
+	private readonly fb = inject(FormBuilder);
+	private readonly router = inject(Router);
+	private readonly userService = inject(UserService);
+	private readonly notificationService = inject(NotificationService);
+	private readonly validationService = inject(ValidationService);
+	private readonly store = inject(Store<AppState>);
+
+	// Use signal for reactive profile access
+	private readonly profile = this.store.selectSignal(ProfileSelectors.selectProfile);
+
 	registrationForm: FormGroup;
 	isLoading = false;
 	currentStep = 1;
@@ -103,15 +114,7 @@ export class RegistrationComponent implements OnInit {
 
 	currencies: any = [];
 
-	constructor(
-		private fb: FormBuilder,
-		private router: Router,
-		private userService: UserService,
-		private notificationService: NotificationService,
-		private validationService: ValidationService,
-		private store: Store<AppState>
-
-	) {
+	constructor() {
 		this.registrationForm = this.fb.group({
 			// Step 1: Basic Profile
 			profile: this.fb.group(
@@ -149,8 +152,8 @@ export class RegistrationComponent implements OnInit {
 	}
 
 	private initializeDefaultData() {
-		//get from googgle token
-		this.currentUser = this.userService.getCurrentUserSnapshot();
+		//get from store
+		this.currentUser = this.profile();
 		if (this.currentUser) {
 			this.registrationForm.get("profile.email")?.setValue(this.currentUser?.email);
 			this.registrationForm.get("profile.firstName")?.setValue(this.currentUser?.displayName);

@@ -8,6 +8,7 @@ import { AppState } from 'src/app/store/app.state';
 import { Store } from '@ngrx/store';
 import * as CategoriesActions from 'src/app/store/categories/categories.actions';
 import * as CategoriesSelectors from 'src/app/store/categories/categories.selectors';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import { MatDialog } from '@angular/material/dialog';
 import { ParentCategorySelectorDialogComponent, ParentCategorySelectorData } from 'src/app/component/dashboard/category/parent-category-selector-dialog/parent-category-selector-dialog.component';
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
@@ -87,7 +88,7 @@ export class CategoryService implements OnDestroy {
      * Get the family ID for cache key
      */
     protected getFamilyId(): string | undefined {
-        const profile = this.userService.getCurrentUserSnapshot();
+        const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
         const isFamilyMode = profile?.preferences?.isFamilyMode || false;
         return isFamilyMode ? (this.familyService.activeFamilyId() || undefined) : undefined;
     }

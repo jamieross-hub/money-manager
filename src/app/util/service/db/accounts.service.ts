@@ -11,6 +11,7 @@ import { of, map, from, catchError, tap, timeout } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import * as AccountsActions from 'src/app/store/accounts/accounts.actions';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import { CommonSyncService, SyncItem } from '../common-sync.service';
 import { FamilyService } from 'src/app/modules/family/services/family.service';
 import { toObservable } from '@angular/core/rxjs-interop';
@@ -63,7 +64,7 @@ export class AccountsService {
      * Get the family ID for cache key
      */
     protected getFamilyId(): string | undefined {
-        const profile = this.userService.getCurrentUserSnapshot();
+        const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
         const isFamilyMode = profile?.preferences?.isFamilyMode || false;
         return isFamilyMode ? (this.familyService.activeFamilyId() || undefined) : undefined;
     }

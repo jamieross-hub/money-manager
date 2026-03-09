@@ -23,6 +23,7 @@ import { CategoryFacadeService } from './db/category-facade.service';
 import { BudgetsService } from './db/budgets.service';
 import { GoalsService } from './db/goals.service';
 import { UserService } from './db/user.service';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import { FamilyService } from '../../modules/family/services/family.service';
 import { PwaSwService } from './pwa-sw.service';
 import { GoogleSheetsService } from './google-sheets.service';
@@ -390,7 +391,7 @@ export class CommonSyncService implements OnDestroy {
    */
   syncAll() {
     const userId = this.userService.getCurrentUserId();
-    const isFamilyMode = this.userService.getCurrentUserSnapshot()?.preferences?.isFamilyMode ?? false;
+    const isFamilyMode = this.store.selectSignal(ProfileSelectors.selectProfile)()?.preferences?.isFamilyMode ?? false;
 
     console.log(`[CommonSyncService] syncAll started. UserId: ${userId}, Mode: ${isFamilyMode ? 'Family' : 'Personal'}`);
 

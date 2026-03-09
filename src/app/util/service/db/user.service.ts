@@ -145,7 +145,7 @@ export class UserService implements OnDestroy {
       .subscribe((u: User | null) => (this._currentUser = u));
 
     this.initializeAuthState();
-    this.optimisticLoadProfile();
+  
     this.startSecurityMonitoring();
     this.startTokenRefresh();
   }
@@ -163,26 +163,24 @@ export class UserService implements OnDestroy {
   }
 
   /**
-   * Optimistically load the user profile from cache on startup
-   * before Firebase Auth initializes. This provides immediate user context.
+   * Optimistically load the user profile from cache on startup.
+   * Since this is called during APP_INITIALIZER, we can read synchronously
+   * from the storage service cache.
    */
-  private optimisticLoadProfile(): void {
-    this.storageService.isReady$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-      const lastUid = this.storageService.getItem<string>(LocalStorageKey.LAST_ACTIVE_UID);
-      if (!lastUid) return;
+  public optimisticLoadProfile(): void {
+    const lastUid = this.storageService.getItem<string>(LocalStorageKey.LAST_ACTIVE_UID);
+    if (!lastUid) return;
 
-      console.log(`🚀 Optimistically loading profile for: ${lastUid}`);
-      const cachedUser = this.storageService.getItem<User>(`user-data-${lastUid}`);
-      if (cachedUser) {
-        this.store.dispatch(ProfileActions.setProfile({ profile: cachedUser }));
-        
-        if (cachedUser.preferences?.language) {
-          this.translationService.setLanguage(cachedUser.preferences.language as Language);
-        }
+    console.log(`🚀 Synchronously loading profile for: ${lastUid}`);
+    const cachedUser = this.storageService.getItem<User>(`user-data-${lastUid}`);
+    if (cachedUser) {
+      this._currentUser = cachedUser;
+      this.store.dispatch(ProfileActions.setProfile({ profile: cachedUser }));
+      
+      if (cachedUser.preferences?.language) {
+        this.translationService.setLanguage(cachedUser.preferences.language as Language);
       }
-    });
+    }
   }
 
   /**
@@ -215,6 +213,9 @@ export class UserService implements OnDestroy {
           clearTimeout(clearProfileTimer);
           clearProfileTimer = null;
         }
+
+        // Set last active UID for optimistic loading on next refresh
+        this.storageService.setItem(LocalStorageKey.LAST_ACTIVE_UID, user.uid);
 
         let userData = await this.getCurrentUser();
 
@@ -743,6 +744,7 @@ export class UserService implements OnDestroy {
         };
 
         await this.createUserInFirestore(userCredential.user.uid, newUser);
+        this.storageService.setItem(LocalStorageKey.LAST_ACTIVE_UID, userCredential.user.uid);
 
         // Send email verification
         if (userCredential.user.email) {
@@ -823,7 +825,10 @@ export class UserService implements OnDestroy {
         // Ensure storage is not in "cleaning up" mode before attempting to write user data
         await this.storageService.initialize();
 
-        await this.ensureUserDataCached(userCredential.user.uid);
+        // 🛡️ Always force a fresh fetch from Firestore on sign-in to ensure IndexedDB is up-to-date
+        // This fulfills the "store profile in indexdb once user sign in" requirement
+        await this.ensureUserDataCached(userCredential.user.uid, true);
+
 
 
         this.storageService.setItem(LocalStorageKey.LAST_ACTIVE_UID, userCredential.user.uid);
@@ -1107,12 +1112,11 @@ export class UserService implements OnDestroy {
     }
 
 
-    this.storageService.setItem(
-      `user-data-${firebaseUser.uid}`,
-      userData
-    );
+    // 🛡️ Always force a fresh fetch or merge from Firestore on sign-in
+    await this.ensureUserDataCached(firebaseUser.uid, true);
 
     this.storageService.setItem(LocalStorageKey.LAST_ACTIVE_UID, firebaseUser.uid);
+
   }
 
   /**
@@ -1299,49 +1303,64 @@ export class UserService implements OnDestroy {
   /**
    * Get current user data from cache or Firestore
    */
-  async getCurrentUser(): Promise<User | null> {
-    // 1. Prefer existing memory snapshot (kept in sync by real-time listener)
-    if (this._currentUser) {
-      return this._currentUser;
-    }
-
-    if (this.isGuestUser()) {
+  /**
+   * Get current user data from cache or Firestore.
+   * Prioritizes IndexedDB (instant performance) and only falls back to Firestore if necessary.
+   */
+  async getCurrentUser(forceNetwork: boolean = false): Promise<User | null> {
+    // 1. Prefer existing memory snapshot (instant)
+    if (this._currentUser && !forceNetwork) {
       return this._currentUser;
     }
 
     const currentUser = this.auth.currentUser;
+    const isGuest = this.storageService.getItem(LocalStorageKey.GUEST_MODE) === 'true' || this.getCurrentUserId() === 'offline-guest';
+
+    if (isGuest) {
+      const cachedGuestData = this.storageService.getItem<User>('user-data-offline-guest');
+      if (cachedGuestData) {
+        this._currentUser = cachedGuestData;
+        return cachedGuestData;
+      }
+    }
+
     if (!currentUser) return null;
 
     try {
-      // 2. Try cache first
+      // 2. Try IndexedDB cache second (instant performance)
       const cachedUserData = this.storageService.getItem<User>(`user-data-${currentUser.uid}`);
-      if (cachedUserData) {
+      if (cachedUserData && !forceNetwork) {
         this._currentUser = cachedUserData;
+        // Lazily update store if missing
+        this.store.dispatch(ProfileActions.setProfile({ profile: cachedUserData }));
         return cachedUserData;
       }
 
-      // 3. Fallback to Firestore
-      const userRef = doc(this.firestore, `users/${currentUser.uid}`);
-      const userSnap = await getDoc(userRef);
+      // 3. Fallback to Firestore only if forceNetwork or cache miss
+      if (navigator.onLine) {
+        const userRef = doc(this.firestore, `users/${currentUser.uid}`);
+        const userSnap = await getDoc(userRef);
 
-      if (userSnap.exists()) {
-        const userData = userSnap.data() as User;
-        if (!userData.photoURL && currentUser.photoURL) userData.photoURL = currentUser.photoURL;
-        if (!userData.displayName && currentUser.displayName) userData.displayName = currentUser.displayName;
-        
-        console.log('[UserService] Profile fetched from Firestore via fallback');
-        this.storageService.setItem(`user-data-${currentUser.uid}`, userData);
-        this._currentUser = userData;
-        this.store.dispatch(ProfileActions.setProfile({ profile: userData }));
-        return userData;
+        if (userSnap.exists()) {
+          const userData = userSnap.data() as User;
+          if (!userData.photoURL && currentUser.photoURL) userData.photoURL = currentUser.photoURL;
+          if (!userData.displayName && currentUser.displayName) userData.displayName = currentUser.displayName;
+          
+          console.log('[UserService] Profile fetched from Firestore');
+          this.storageService.setItem(`user-data-${currentUser.uid}`, userData);
+          this._currentUser = userData;
+          this.store.dispatch(ProfileActions.setProfile({ profile: userData }));
+          return userData;
+        }
       }
 
-      return null;
+      return cachedUserData || null;
     } catch (error) {
-      console.error('❌ [UserService] Error getting current user fallback:', error);
-      return this.storageService.getItem<User>(`user-data-${currentUser.uid}`);
+      console.error('❌ [UserService] Error getting current user:', error);
+      return this.storageService.getItem<User>(`user-data-${currentUser.uid}`) || null;
     }
   }
+
 
   /**
    * Pull user data from Firestore and update local cache and store.
@@ -1438,17 +1457,40 @@ export class UserService implements OnDestroy {
   /**
    * Cache user data for offline access
    */
-  private async ensureUserDataCached(uid: string): Promise<void> {
+  /**
+   * Cache user data for offline access.
+   * If forceRefresh is true, it always pulls from Firestore regardless of cache state.
+   */
+  public async ensureUserDataCached(uid: string, forceRefresh: boolean = false): Promise<void> {
     try {
-      // Check if we already have it in cache to avoid redundant network call on every startup
+      if (uid === 'offline-guest') {
+         const guestData = this.storageService.getItem<User>('user-data-offline-guest');
+         if (guestData) {
+            this._currentUser = guestData;
+            this.store.dispatch(ProfileActions.setProfile({ profile: guestData }));
+         }
+         return;
+      }
+
+      // Check if we already have it in cache to avoid redundant network call
       const cachedData = this.storageService.getItem<User>(`user-data-${uid}`);
-      if (cachedData) {
+      if (cachedData && !forceRefresh) {
         console.log('[UserService] User data already cached, skipping redundant fetch');
+        // Ensure store and internal snapshot are updated with cached data
+        this._currentUser = cachedData;
+        this.store.dispatch(ProfileActions.setProfile({ profile: cachedData }));
         return;
       }
 
-      if (!navigator.onLine) return;
+      if (!navigator.onLine) {
+        if (cachedData) {
+          this._currentUser = cachedData;
+          this.store.dispatch(ProfileActions.setProfile({ profile: cachedData }));
+        }
+        return;
+      }
 
+      console.log(`[UserService] ${forceRefresh ? 'Force' : ''} Fetching user data for cache: ${uid}`);
       const userRef = doc(this.firestore, `users/${uid}`);
       const userSnap = await getDoc(userRef);
 
@@ -1462,13 +1504,22 @@ export class UserService implements OnDestroy {
           if (!userData.displayName && currentUser.displayName) userData.displayName = currentUser.displayName;
         }
 
+        // 1. Update IndexedDB Cache
         this.storageService.setItem(`user-data-${uid}`, userData);
+        
+        // 2. Update memory snapshot
+        this._currentUser = userData;
+        
+        // 3. Update NgRx Store (instant performance for the rest of the app)
+        this.store.dispatch(ProfileActions.setProfile({ profile: userData }));
+        
         console.log('[UserService] User data successfully cached from network');
       }
     } catch (error) {
       console.error('Error ensuring user data is cached:', error);
     }
   }
+
 
   /**
    * Log audit events for security monitoring

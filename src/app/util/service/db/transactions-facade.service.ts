@@ -3,7 +3,9 @@ import { Observable } from 'rxjs';
 import { Transaction } from '../../models/transaction.model';
 import { TransactionsService } from './transactions.service';
 import { FamilyTransactionsService } from './family-transactions.service';
-import { UserService } from './user.service';
+import { Store } from '@ngrx/store';
+import { AppState } from 'src/app/store/app.state';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 
 export const PERSONAL_TRANSACTIONS_SERVICE = new InjectionToken<TransactionsService>('PersonalTransactionsService');
 
@@ -14,11 +16,11 @@ export class TransactionsFacadeService {
     constructor(
         @Inject(PERSONAL_TRANSACTIONS_SERVICE) private personalService: TransactionsService,
         private familyService: FamilyTransactionsService,
-        private userService: UserService
+        private store: Store<AppState>
     ) {}
 
     private get activeService(): TransactionsService {
-        const profile = this.userService.getCurrentUserSnapshot();
+        const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
         const isFamilyMode = profile?.preferences?.isFamilyMode || false;
         return isFamilyMode ? this.familyService : this.personalService;
     }
@@ -36,25 +38,25 @@ export class TransactionsFacadeService {
     }
 
     getTransactions(userId: string): Observable<Transaction[]> {
-        const profile = this.userService.getCurrentUserSnapshot();
+        const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
         const familyId = profile?.preferences?.isFamilyMode ? profile?.preferences?.activeFamilyId : undefined;
         return this.activeService.getTransactions(userId, familyId || undefined);
     }
 
     pullFromFirestore(userId: string): Observable<void> {
-        const profile = this.userService.getCurrentUserSnapshot();
+        const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
         const familyId = profile?.preferences?.isFamilyMode ? profile?.preferences?.activeFamilyId : undefined;
         return this.activeService.pullFromFirestore(userId, familyId || undefined);
     }
 
     listenToTransactions(userId: string): Observable<void> {
-        const profile = this.userService.getCurrentUserSnapshot();
+        const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
         const familyId = profile?.preferences?.isFamilyMode ? profile?.preferences?.activeFamilyId : undefined;
         return this.activeService.listenToTransactions(userId, familyId || undefined);
     }
 
     getTransaction(userId: string, transactionId: string): Observable<Transaction | undefined> {
-        const profile = this.userService.getCurrentUserSnapshot();
+        const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
         const familyId = profile?.preferences?.isFamilyMode ? profile?.preferences?.activeFamilyId : undefined;
         return this.activeService.getTransaction(userId, transactionId, familyId || undefined);
     }

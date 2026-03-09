@@ -1,4 +1,4 @@
-import { Component, OnInit , ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit , ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { UserService } from 'src/app/util/service/db/user.service';
@@ -9,9 +9,9 @@ import { updatePreferences } from 'src/app/store/profile/profile.actions';
 import { User } from '../../../../util/models';
 import { GeminiService } from '../../../../util/service/ai-chat/gemini.service';
 import { environment } from '@env/environment';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 
 import { SharedModule } from '../../../../modules/shared/shared.module';
-
 
 @Component({
   selector: 'app-openai-interaction',
@@ -22,6 +22,17 @@ import { SharedModule } from '../../../../modules/shared/shared.module';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OpenaiInteractionComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly notificationService = inject(NotificationService);
+  private readonly userService = inject(UserService);
+  private readonly openaiService = inject(OpenaiService);
+  private readonly geminiService = inject(GeminiService);
+  private readonly store = inject(Store<AppState>);
+  private readonly cdr = inject(ChangeDetectorRef);
+
+  // Use signal for reactive profile access
+  private readonly profile = this.store.selectSignal(ProfileSelectors.selectProfile);
+
   // Provider Selection
   selectedProvider: 'openai' | 'gemini' = 'openai';
 
@@ -44,15 +55,7 @@ export class OpenaiInteractionComponent implements OnInit {
 
   apiKeyForm: FormGroup;
 
-  constructor(
-    private fb: FormBuilder,
-    private notificationService: NotificationService,
-    private userService: UserService,
-    private openaiService: OpenaiService,
-    private geminiService: GeminiService,
-    private store: Store<AppState>,
-    private cdr: ChangeDetectorRef
-  ) {
+  constructor() {
     this.apiKeyForm = this.fb.group({
       apiKey: ['', [Validators.required, Validators.minLength(20)]]
     });
@@ -62,9 +65,9 @@ export class OpenaiInteractionComponent implements OnInit {
     this.loadApiKeys();
   }
 
-  async loadApiKeys(): Promise<void> {
+  loadApiKeys(): void {
     try {
-      const currentUser = await this.userService.getCurrentUser();
+      const currentUser = this.profile();
       
       // Load OpenAI Key
       const openaiKey = this.openaiService.getApiKey(currentUser);
@@ -111,7 +114,7 @@ export class OpenaiInteractionComponent implements OnInit {
       state.isSaving = true;
       try {
         const apiKey = this.apiKeyForm.get('apiKey')?.value;
-        const currentUser = await this.userService.getCurrentUser();
+        const currentUser = this.profile();
 
         if (!currentUser) throw new Error('User not found');
 
@@ -150,7 +153,7 @@ export class OpenaiInteractionComponent implements OnInit {
   async removeApiKey(): Promise<void> {
     const state = this.currentState;
     try {
-      const currentUser = await this.userService.getCurrentUser();
+      const currentUser = this.profile();
       if (!currentUser) throw new Error('User not found');
 
       const updatedPreferences = {
@@ -248,4 +251,5 @@ export class OpenaiInteractionComponent implements OnInit {
       this.notificationService.warning('Please enter a valid API key');
     }
   }
-} 
+}
+ 

@@ -4,6 +4,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { SecurityService } from 'src/app/util/service/security.service';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { SsrService } from 'src/app/util/service/ssr.service';
+import { Store } from '@ngrx/store';
+import { AppState } from 'src/app/store/app.state';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 
 @Component({
   selector: 'app-pin-lock',
@@ -16,10 +19,14 @@ export class PinLockComponent {
   private readonly securityService = inject(SecurityService);
   private readonly userService = inject(UserService);
   private readonly ssrService = inject(SsrService);
+  private readonly store = inject(Store<AppState>);
 
   readonly isLocked = this.securityService.isLocked;
   enteredPin = '';
   pinError = '';
+
+  // Use signal for reactive profile access
+  private readonly profile = this.store.selectSignal(ProfileSelectors.selectProfile);
 
   constructor() {
     effect(() => {
@@ -57,7 +64,7 @@ export class PinLockComponent {
   }
 
   private async verifyEnteredPin(): Promise<void> {
-    const user = this.userService.getCurrentUserSnapshot();
+    const user = this.profile();
     if (user?.preferences?.pinHash) {
       const success = await this.securityService.verifyPin(this.enteredPin, user.preferences.pinHash);
       if (!success) {

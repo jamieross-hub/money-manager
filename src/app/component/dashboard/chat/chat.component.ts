@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, ChangeDetectorRef, AfterViewInit, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ElementRef, ViewChild, ChangeDetectorRef, AfterViewInit, OnInit, OnDestroy, ChangeDetectionStrategy, inject } from '@angular/core';
 import { TransactionType } from 'src/app/util/config/enums';
 import { Category } from 'src/app/util/models';
 import { ChatFacadeService } from 'src/app/util/service/ai-chat/chat-facade-service';
@@ -38,6 +38,9 @@ import { LoanReportIntentHandler } from 'src/app/util/service/ai-chat/handlers/i
 import { GeminiIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/gemini-intent-handler.service';
 import { QueryIntentHandler } from 'src/app/util/service/ai-chat/handlers/intent-handler/query-intent-handler.service';
 import { GreetingFacadeService } from 'src/app/util/service/greeting-facade.service';
+import { Store } from '@ngrx/store';
+import { AppState } from 'src/app/store/app.state';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 
 @Component({
   selector: 'app-chat',
@@ -80,6 +83,18 @@ import { GreetingFacadeService } from 'src/app/util/service/greeting-facade.serv
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
+  public readonly chatFacadeService = inject(ChatFacadeService);
+  public readonly breakpointService = inject(BreakpointService);
+  private readonly audioRecordingService = inject(AudioRecordingService);
+  private readonly openAiHandler = inject(OpenAiIntentHandler);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly userService = inject(UserService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly greetingFacade = inject(GreetingFacadeService);
+  private readonly store = inject(Store<AppState>);
+
+  // Use signal for reactive profile access
+  private readonly profile = this.store.selectSignal(ProfileSelectors.selectProfile);
 
   visible: boolean = false;
   suggestion: string = '';
@@ -103,16 +118,7 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
 
   @ViewChild('scrollContainer') chatScrollContainer!: ElementRef<HTMLElement>;
 
-  constructor(
-    public chatFacadeService: ChatFacadeService,
-    public breakpointService: BreakpointService,
-    private audioRecordingService: AudioRecordingService,
-    private openAiHandler: OpenAiIntentHandler,
-    private cdr: ChangeDetectorRef,
-    private userService: UserService,
-    private notificationService: NotificationService,
-    private greetingFacade: GreetingFacadeService
-  ) { }
+  constructor() { }
 
   ngOnInit() {
     this.placeholders = [...this.greetingFacade.getChatPlaceholders()];
@@ -254,7 +260,7 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
 
   async onMicClick() {
     // Check for API key first
-    const user = await this.userService.getCurrentUser();
+    const user = this.profile();
     // if (!user?.preferences?.openaiApiKey ) {
     //   this.notificationService.error('OpenAI API key not found. Please connect your API key in Settings > OpenAI Integration.');
     //   return;

@@ -4,6 +4,7 @@ import { AccountsState } from './accounts/accounts.state';
 import { BudgetsState } from './budgets/budgets.state';
 import { GoalsState } from './goals/goals.state';
 import { ProfileState } from './profile/profile.state';
+import { FamilyState } from '../modules/family/store/family.state';
 
 export interface AppState {
   transactions: TransactionsState;
@@ -12,4 +13,5 @@ export interface AppState {
   budgets: BudgetsState;
   goals: GoalsState;
   profile: ProfileState;
+  family: FamilyState;
 } 

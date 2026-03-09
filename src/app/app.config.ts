@@ -27,6 +27,7 @@ import { AccountsFacadeService, PERSONAL_ACCOUNTS_SERVICE } from './util/service
 import { AccountsService } from './util/service/db/accounts.service';
 import { CategoryFacadeService, PERSONAL_CATEGORY_SERVICE } from './util/service/db/category-facade.service';
 import { CategoryService } from './util/service/db/category.service';
+import { UserService } from './util/service/db/user.service';
 
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
@@ -35,8 +36,14 @@ import { HttpClient } from '@angular/common/http';
 // Store
 import { AppStoreModule } from './store';
 
-export function initializeLocalStorage(localStorageService: LocalIndexDBStorageService) {
-  return () => localStorageService.initialize();
+export function initializeApplicationData(localStorageService: LocalIndexDBStorageService, userService: UserService) {
+  return async () => {
+    // 1. First initialize the base storage/cache (Async loading from IndexedDB)
+    await localStorageService.initialize();
+    
+    // 2. Once cache is hot, synchronously load the cached user profile into store
+    userService.optimisticLoadProfile();
+  };
 }
 
 export const appConfig: ApplicationConfig = {
@@ -73,8 +80,8 @@ export const appConfig: ApplicationConfig = {
     LocalIndexDBStorageService,
     {
       provide: APP_INITIALIZER,
-      useFactory: initializeLocalStorage,
-      deps: [LocalIndexDBStorageService],
+      useFactory: initializeApplicationData,
+      deps: [LocalIndexDBStorageService, UserService],
       multi: true
     },
 

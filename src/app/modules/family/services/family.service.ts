@@ -409,7 +409,7 @@ export class FamilyService implements OnDestroy {
   }
 
   getMyFamilies(): Observable<Family[]> {
-    const syncUser = this.userService.getCurrentUserSnapshot();
+    const syncUser = this.store.selectSignal(fromProfile.selectProfile)();
     
     // If we have a user now, start the stream immediately
     if (syncUser) {
@@ -472,7 +472,7 @@ export class FamilyService implements OnDestroy {
    * Useful for seeding the store during component initialization.
    */
   getCachedFamiliesSync(): Family[] {
-    const user = this.userService.getCurrentUserSnapshot();
+    const user = this.store.selectSignal(fromProfile.selectProfile)();
     if (!user) return [];
     
     const cacheKey = `${LocalStorageKey.FAMILIES_CACHE}-${user.uid}`;
@@ -490,7 +490,7 @@ export class FamilyService implements OnDestroy {
    * Members can still VIEW these groups but cannot perform any actions.
    */
   getDeletedFamilies(): Observable<Family[]> {
-    const user = this.userService.getCurrentUserSnapshot();
+    const user = this.store.selectSignal(fromProfile.selectProfile)();
     if (!user) return of([]);
 
     return new Observable<Family[]>(observer => {
