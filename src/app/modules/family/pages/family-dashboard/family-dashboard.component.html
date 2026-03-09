@@ -293,10 +293,10 @@
           @for (tx of displayedActivities(); track tx._trackId) {
             <div 
               class="bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
-              <div class="flex items-center gap-3">
+              <div class="flex-1 min-w-0 flex items-center gap-3">
                 <!-- User Avatars -->
                 @if (tx.category === 'Settlement') {
-                  <div class="flex items-center -space-x-1">
+                  <div class="flex items-center -space-x-1 shrink-0">
                     <div
                       class="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 overflow-hidden relative z-10"
                       [style.background]="memberColor(tx.payerId)" [matTooltip]="tx.payerName">
@@ -321,7 +321,7 @@
                   </div>
                 }
                 <!-- Activity Info -->
-                <div class="flex flex-col">
+                <div class="flex flex-col min-w-0">
                   <span class="text-[14px] font-bold text-secondary-500 break-words" *ngIf="tx.note">{{ tx.note}}</span>
                   <span class="text-[12px] text-gray-500 dark:text-gray-400 break-words">
                     @if (tx.category === 'Settlement') {
