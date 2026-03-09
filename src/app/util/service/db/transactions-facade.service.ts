@@ -35,7 +35,7 @@ export class TransactionsFacadeService {
         return this.getServiceForContext(familyId || (updatedTransaction as any).familyId).updateTransaction(userId, transactionId, updatedTransaction);
     }
 
-    deleteTransaction(userId: string, transactionId: string, familyId?: string): Observable<void> {
+    deleteTransaction(userId: string, transactionId: string, familyId?: string): Observable<Transaction | void> {
         return this.getServiceForContext(familyId).deleteTransaction(userId, transactionId);
     }
 

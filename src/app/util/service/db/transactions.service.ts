@@ -247,8 +247,9 @@ export class TransactionsService extends BaseService {
 
     /**
      * Delete a transaction (Soft Delete)
+     * Performs a local-first delete (IndexedDB + Store) then registers for background sync.
      */
-    deleteTransaction(userId: string, transactionId: string): Observable<void> {
+    deleteTransaction(userId: string, transactionId: string): Observable<Transaction | void> {
         if (this.isGuest()) {
             const transactions = this.localStorageUtility.getEntities<Transaction>('transactions');
             const transactionToDelete = transactions.find(t => t.id === transactionId);
@@ -270,11 +271,12 @@ export class TransactionsService extends BaseService {
                         oldTransaction: transactionToDelete
                     }));
                 }
+                return of(updatedTx as Transaction);
             }
             return of(undefined);
         }
 
-        return new Observable<void>(observer => {
+        return new Observable<Transaction | undefined>(observer => {
             // Get transaction data for balance update first from cache
             const cachedTransactions = this.getCachedTransactions(userId);
             const transactionToDelete = cachedTransactions.find(t => t.id === transactionId);
@@ -292,27 +294,40 @@ export class TransactionsService extends BaseService {
 
             // 1. Optimistic updates
             handleBalanceDeletion();
+            
+            let transactionWithDeletedStatus: Transaction | undefined;
             if (transactionToDelete) {
-                const transactionWithDeletedStatus = this.scrubUndefined({ ...transactionToDelete, status: TransactionStatus.DELETED, updatedAt: new Date() });
+                transactionWithDeletedStatus = this.scrubUndefined({ ...transactionToDelete, status: TransactionStatus.DELETED, updatedAt: new Date() }) as Transaction;
+                
                 this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ 
                     transactionId, 
-                    transaction: transactionWithDeletedStatus as Transaction 
+                    transaction: transactionWithDeletedStatus 
                 }));
+                
+                // 2. Update cache immediately (IndexedDB)
+                this.updateTransactionCache(userId, 'update', transactionWithDeletedStatus);
             }
             
-            // 2. Update cache immediately
-            if (transactionToDelete) {
-                this.updateTransactionCache(userId, 'update', { ...transactionToDelete, status: TransactionStatus.DELETED, updatedAt: new Date() } as Transaction);
+            // 3. Complete observer immediately with the deleted transaction data
+            // This ensures downstream effects have the data they need without extra lookups.
+            if (transactionWithDeletedStatus) {
+                observer.next(transactionWithDeletedStatus);
+            } else {
+                observer.next(undefined);
             }
-
-            // 3. Complete observer immediately
-            observer.next();
             observer.complete();
 
             // 4. Always add to sync queue (it handles online/offline internally)
-            this.addToSyncQueue('update', { id: transactionId, status: TransactionStatus.DELETED, updatedAt: new Date(), familyId: transactionToDelete?.familyId }, userId).catch(error => {
-                console.error('Failed to add to sync queue:', error);
-            });
+            if (transactionId) {
+                this.addToSyncQueue('update', { 
+                  id: transactionId, 
+                  status: TransactionStatus.DELETED, 
+                  updatedAt: new Date(), 
+                  familyId: transactionToDelete?.familyId 
+                }, userId).catch(error => {
+                    console.error('Failed to add to sync queue:', error);
+                });
+            }
         });
     }
 

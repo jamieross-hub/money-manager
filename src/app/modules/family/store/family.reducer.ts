@@ -71,14 +71,25 @@ export const familyReducer = createReducer(
   // Transactions
   on(FamilyActions.loadTransactions, state => ({ ...state, loading: true })),
   on(FamilyActions.loadTransactionsSuccess, (state, { transactions }) => ({ ...state, loading: false, transactions })),
-  on(FamilyActions.addTransactionSuccess, (state, { transaction }) => ({
-    ...state,
-    transactions: [transaction, ...state.transactions]
-  })),
+  on(FamilyActions.addTransactionSuccess, (state, { transaction }) => {
+    if (!transaction.id) return state;
+    const exists = state.transactions.some(tx => tx.id === transaction.id);
+    if (exists) return state;
+    return {
+      ...state,
+      transactions: [transaction, ...state.transactions]
+    };
+  }),
   on(FamilyActions.updateTransactionSuccess, (state, { txId, request }) => ({
     ...state,
     transactions: state.transactions.map(tx =>
       tx.id === txId ? { ...tx, ...request, updatedAt: new Date() } : tx
+    )
+  })),
+  on(FamilyActions.deleteTransaction, (state, { txId }) => ({
+    ...state,
+    transactions: state.transactions.map(tx =>
+      tx.id === txId ? { ...tx, status: TransactionStatus.DELETED, updatedAt: new Date() } : tx
     )
   })),
   on(FamilyActions.deleteTransactionSuccess, (state, { txId, transaction }) => ({

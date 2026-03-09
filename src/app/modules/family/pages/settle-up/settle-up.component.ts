@@ -14,11 +14,11 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatRippleModule } from '@angular/material/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { take, switchMap, map, distinctUntilChanged, debounceTime } from 'rxjs/operators';
+import { distinctUntilChanged, debounceTime } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
-  SettleAvatarPipe, SettleAvatarColorPipe,
-  MethodIconPipe, MethodLabelPipe,
+  SettleAvatarColorPipe,
+  MethodLabelPipe,
   SettleDatePipe, IOWEPipe, OwedToMePipe
 } from './settle-up.pipes';
 
@@ -26,7 +26,6 @@ import { AppState } from 'src/app/store/app.state';
 import * as FamilyActions from '../../store/family.actions';
 import * as FamilySelectors from '../../store/family.selectors';
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
-import * as TransactionsActions from 'src/app/store/transactions/transactions.actions';
 import * as TransactionsSelectors from 'src/app/store/transactions/transactions.selectors';
 import { FamilyService } from '../../services/family.service';
 import { CategoryService } from 'src/app/util/service/db/category.service';
@@ -35,12 +34,13 @@ import {
 } from 'src/app/util/models/family.model';
 import { SettleDialogComponent, SettleDialogData } from './settle-dialog/settle-dialog.component';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
-import { TransactionType, SyncStatus, TransactionStatus, AccountType } from 'src/app/util/config/enums';
+import { TransactionType, AccountType } from 'src/app/util/config/enums';
 import { Transaction } from 'src/app/util/models/transaction.model';
 import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
 import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 import { CommonSyncService } from 'src/app/util/service/common-sync.service';
 import { FamilyProcessorService } from 'src/app/util/service/family-processor.service';
+
 @Component({
   selector: 'app-settle-up',
   standalone: true,
@@ -182,73 +182,8 @@ export class SettleUpComponent implements OnInit {
 
     ref.afterClosed().subscribe((req: AddSettlementRequest | undefined) => {
       if (req) {
-        const famId = this.family()?.id;
-
-        // 1. Subscribe to the successful settlement action BEFORE dispatching it
-        const sub = this.actions$.pipe(
-          ofType(FamilyActions.addSettlementSuccess),
-          take(1),
-          switchMap(({ settlement }: { settlement: Settlement }) => {
-            return this.categoryService.findOrCreateSystemCategory(
-              this.currentUserId(), // <--- Securely always fetch/create on current user's DB
-              'Settlement',
-              TransactionType.TRANSFER,
-              'handshake',
-              '#10b981'
-            ).pipe(
-              map((categoryId: string) => ({ settlement, categoryId }))
-            );
-          })
-        ).subscribe(({ settlement, categoryId }) => {
-          const userId = this.currentUserId(); // <--- Securely log personal tx under current user
-          const amIPaying = userId === req.fromUserId;
-          const payee = amIPaying ? req.toDisplayName : req.fromDisplayName;
-
-          const now = new Date();
-          const methodLabel = req.method === 'cash' ? 'Cash'
-            : req.method === 'upi' ? 'UPI'
-            : 'Bank Transfer';
-
-          const transferTx: Omit<Transaction, 'id'> = {
-            userId,
-            accountId: this.getDefaultAccountId(),
-            categoryId: categoryId,
-            category: 'Settlement',
-            payee: payee,
-            amount: req.amount,
-            type: amIPaying ? TransactionType.EXPENSE : TransactionType.INCOME, // Personal ledger reflects net flow
-            date: now,
-            notes: `Settlement: ${req.fromDisplayName} \u2192 ${req.toDisplayName} via ${methodLabel}${req.note ? ' | ' + req.note : ''}`,
-            status: TransactionStatus.COMPLETED,
-            syncStatus: this.commonSyncService.isCurrentlyOnline() ? SyncStatus.SYNCED : SyncStatus.PENDING,
-            createdAt: now,
-            updatedAt: now,
-            createdBy: userId,
-            updatedBy: userId,
-            settlementId: settlement.id,
-            settlementFamilyId: famId,
-            settlementFromUserId: req.fromUserId,
-            settlementToUserId: req.toUserId,
-            familyId: famId // Also tag personal record with familyId for easier filtering
-          };
-
-          const familyTxRequest = {
-            ...transferTx,
-            type: TransactionType.TRANSFER, // Keep external family perspective as a neutral Transfer
-            familyId: famId!,
-            userDisplayName: this.profile()?.displayName || '',
-            userPhotoURL: this.profile()?.photoURL || ''
-          };
-
-          // 1. Record in personal transactions (for account balance)
-          this.store.dispatch(TransactionsActions.createTransaction({ userId, transaction: transferTx }));
-          
-          // 2. Record in family transactions (for shared visibility)
-          this.store.dispatch(FamilyActions.addTransaction({ request: familyTxRequest as any }));
-        });
-
-        // 2. Dispatch the settlement ONLY AFTER the listener is set up
-        this.store.dispatch(FamilyActions.addSettlement({ request: req }));
+        // Consolidated settlement and transaction creation to avoid loop loops
+        this.familyService.recordSettlement(req);
       }
     });
   }

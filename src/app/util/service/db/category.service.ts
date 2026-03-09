@@ -19,7 +19,7 @@ import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { UserService } from './user.service';
 import { FamilyService } from 'src/app/modules/family/services/family.service';
 import { LocalStorageKeyHelper } from '../../models/local-storage.model';
-import { of, map, from, catchError, tap, timeout, switchMap, distinctUntilChanged } from 'rxjs';
+import { of, map, from, catchError, tap, timeout, switchMap, distinctUntilChanged, take } from 'rxjs';
 
 @Injectable({
     providedIn: 'root'
@@ -257,6 +257,7 @@ export class CategoryService implements OnDestroy {
         color: string
     ): Observable<string> {
         return this.getCategories(userId).pipe(
+            take(1),
             switchMap(categories => {
                 // Try to find by flag first
                 let existing = categories.find(c => c.isSystem && c.type === type && c.name?.toLowerCase() === categoryName.toLowerCase());

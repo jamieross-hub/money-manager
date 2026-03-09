@@ -99,11 +99,24 @@ export const transactionsReducer = createReducer(
   })),
   
   // Delete Transaction
-  on(TransactionsActions.deleteTransaction, (state) => ({
-    ...state,
-    loading: true,
-    error: null
-  })),
+  on(TransactionsActions.deleteTransaction, (state, { transactionId }) => {
+    const transaction = state.entities[transactionId];
+    if (!transaction) return state;
+
+    return {
+      ...state,
+      entities: {
+        ...state.entities,
+        [transactionId]: {
+          ...transaction,
+          status: TransactionStatus.DELETED,
+          updatedAt: new Date()
+        }
+      },
+      loading: false,
+      error: null
+    };
+  }),
   
   on(TransactionsActions.deleteTransactionSuccess, (state, { transactionId, transaction }) => {
     return {

@@ -1,14 +1,21 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { Observable, from, of, forkJoin } from 'rxjs';
-import { switchMap, map, catchError, mergeMap, filter } from 'rxjs/operators';
+import { from, of, forkJoin } from 'rxjs';
+import { switchMap, map, catchError, mergeMap, filter, take } from 'rxjs/operators';
 import { FamilyService } from '../services/family.service';
 import * as FamilyActions from './family.actions';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import * as ProfileActions from 'src/app/store/profile/profile.actions';
 import { TransactionsFacadeService } from 'src/app/util/service/db/transactions-facade.service';
-import { SyncStatus } from 'src/app/util/config/enums';
+import { SyncStatus, TransactionType, TransactionStatus, AccountType } from 'src/app/util/config/enums';
+import { Transaction } from 'src/app/util/models/transaction.model';
+import { Store } from '@ngrx/store';
+import { AppState } from 'src/app/store/app.state';
+import { CategoryService } from 'src/app/util/service/db/category.service';
+import { CommonSyncService } from 'src/app/util/service/common-sync.service';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
+import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
 
 @Injectable()
 export class FamilyEffects {
@@ -19,6 +26,9 @@ export class FamilyEffects {
     private userService: UserService,
     private transactionsFacade: TransactionsFacadeService,
     private notificationService: NotificationService,
+    private categoryService: CategoryService,
+    private commonSyncService: CommonSyncService,
+    private store: Store<AppState>
   ) {}
 
   loadMyFamily$ = createEffect(() =>
@@ -284,18 +294,16 @@ export class FamilyEffects {
       ofType(FamilyActions.deleteTransaction),
       mergeMap(({ familyId, txId }) => {
         const userId = this.userService.getCurrentUserId() || '';
-        // We need the transaction for cascade settlement logic
-        return this.transactionsFacade.getTransaction(userId, txId).pipe(
-          switchMap(transaction => {
-            if (!transaction) throw new Error('Transaction not found');
-            return this.transactionsFacade.deleteTransaction(userId, txId).pipe(
-              map(() => {
-                if (!transaction.settlementId) {
-                  this.notificationService.success('Transaction deleted');
-                }
-                return FamilyActions.deleteTransactionSuccess({ txId, transaction });
-              })
-            );
+        return this.transactionsFacade.deleteTransaction(userId, txId, familyId).pipe(
+          map(transaction => {
+            if (transaction && (transaction as Transaction).id) {
+              const tx = transaction as Transaction;
+              if (!tx.settlementId) {
+                this.notificationService.success('Transaction deleted');
+              }
+              return FamilyActions.deleteTransactionSuccess({ txId, transaction: tx });
+            }
+            return FamilyActions.clearError();
           }),
           catchError(err => {
             this.notificationService.error('Failed to delete transaction');
@@ -317,25 +325,7 @@ export class FamilyEffects {
       )
     )
   );
-
-  addSettlement$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(FamilyActions.addSettlement),
-      mergeMap(({ request }) =>
-        from(this.familyService.addSettlement(request)).pipe(
-          map(settlement => {
-            this.notificationService.success('Settlement recorded ✔️');
-            return FamilyActions.addSettlementSuccess({ settlement });
-          }),
-          catchError(err => {
-            this.notificationService.error('Failed to record settlement');
-            return of(FamilyActions.addSettlementFailure({ error: err.message }));
-          })
-        )
-      )
-    )
-  );
-
+  
   deleteSettlement$ = createEffect(() =>
     this.actions$.pipe(
       ofType(FamilyActions.deleteSettlement),

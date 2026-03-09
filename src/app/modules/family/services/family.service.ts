@@ -1,4 +1,4 @@
-import { Injectable, inject, signal, OnDestroy } from '@angular/core';
+import { Injectable, inject, signal, OnDestroy, Injector } from '@angular/core';
 import { QuickAction, QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { Observable, from, of, firstValueFrom, Subject, forkJoin } from 'rxjs';
 import { map, catchError, filter, take, switchMap, takeUntil, tap } from 'rxjs/operators';
@@ -55,6 +55,12 @@ import { selectUserFamilies } from '../store/family.selectors';
 import { MatDialog } from '@angular/material/dialog';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 
+import { CategoryFacadeService } from 'src/app/util/service/db/category-facade.service';
+import { TransactionsFacadeService } from 'src/app/util/service/db/transactions-facade.service';
+import { CommonSyncService } from 'src/app/util/service/common-sync.service';
+import { SyncStatus } from 'src/app/util/config/enums';
+import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
+
 @Injectable({ providedIn: 'root' })
 export class FamilyService implements OnDestroy {
   private readonly destroy$ = new Subject<void>();
@@ -71,7 +77,8 @@ export class FamilyService implements OnDestroy {
     private store: Store<AppState>,
     private userService: UserService,
     private storageService: LocalIndexDBStorageService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private injector: Injector
   ) {
     this.syncActiveFamilyWithProfile();
   }
@@ -900,7 +907,90 @@ export class FamilyService implements OnDestroy {
     };
 
     const ref = await addDoc(this.getSettlementsCol(request.familyId), data);
-    return { id: ref.id, ...data };
+    const settlement = { id: ref.id, ...data };
+    
+    // Dispatch success to update store
+    this.store.dispatch(FamilyActions.addSettlementSuccess({ settlement }));
+    
+    return settlement;
+  }
+
+  /**
+   * Orchestrates creating a settlement record AND its corresponding transaction record.
+   * This logic is consolidated here to avoid complex NgRx effect loops.
+   */
+  async recordSettlement(request: AddSettlementRequest): Promise<void> {
+    const categoryFacade = this.injector.get(CategoryFacadeService);
+    const commonSyncService = this.injector.get(CommonSyncService);
+
+    try {
+      const userId = this.userService.getCurrentUserId();
+      if (!userId || userId === 'offline-guest') {
+        throw new Error('Valid user session required for settlement');
+      }
+
+      // 1. Create the Settlement record
+      const settlement = await this.addSettlement(request);
+
+      // 2. Resolve Category for 'Settlement'
+      const categoryId = await firstValueFrom(
+        categoryFacade.findOrCreateSystemCategory(
+          userId,
+          'Settlement',
+          TransactionType.TRANSFER,
+          'handshake',
+          '#10b981'
+        ).pipe(take(1))
+      );
+
+      // 3. Resolve Default Account
+      const accounts = await firstValueFrom(this.store.select(selectAllAccounts).pipe(take(1)));
+      const defaultAcc = accounts.find(a => a.type === AccountType.BANK) || accounts[0];
+      const accountId = defaultAcc?.accountId || 'settlement';
+
+      // 4. Prepare Transaction
+      const now = new Date();
+      const amIPaying = userId === settlement.fromUserId;
+      const payee = amIPaying ? settlement.toDisplayName : settlement.fromDisplayName;
+
+      const transferTx: AddFamilyTransactionRequest = {
+        accountId,
+        familyId: settlement.familyId,
+        categoryId,
+        category: 'Settlement',
+        payee,
+        amount: settlement.amount,
+        type: amIPaying ? TransactionType.EXPENSE : TransactionType.INCOME,
+        date: now,
+        notes: `Settlement: ${settlement.fromDisplayName} \u2192 ${settlement.toDisplayName}${settlement.note ? ' | ' + settlement.note : ''}`,
+        settlementId: settlement.id,
+        settlementFamilyId: settlement.familyId,
+        settlementFromUserId: settlement.fromUserId,
+        settlementToUserId: settlement.toUserId,
+        userDisplayName: settlement.fromDisplayName,
+        userPhotoURL: settlement.fromPhotoURL || ''
+      };
+
+      // 5. Create Transaction (This will trigger the addTransaction$ effect)
+      this.store.dispatch(FamilyActions.addTransaction({ request: transferTx }));
+      
+      this.notificationService.success('Settlement & Transaction recorded ✔️');
+    } catch (error) {
+      console.error('Failed to record settlement/transaction:', error);
+      this.notificationService.error('Error recording settlement');
+      throw error;
+    }
+  }
+
+  async deleteSettlementAndNotify(familyId: string, settlementId: string): Promise<void> {
+    try {
+      const deletedTxIds = await this.deleteSettlement(familyId, settlementId);
+      this.store.dispatch(FamilyActions.deleteSettlementSuccess({ settlementId, deletedTxIds }));
+      this.notificationService.success('Settlement reverted');
+    } catch (error) {
+      console.error('Failed to revert settlement:', error);
+      this.notificationService.error('Failed to revert settlement');
+    }
   }
 
   async deleteSettlement(familyId: string, settlementId: string): Promise<string[]> {
