@@ -87,6 +87,11 @@ export interface CreateFamilyRequest {
 /** @deprecated Use CreateTransactionRequest from transaction.model instead */
 export interface AddFamilyTransactionRequest extends TransactionBaseRequest {
   familyId: string;
+  status: TransactionStatus;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string;
+  updatedBy: string;
 }
 
 /** @deprecated Use UpdateTransactionRequest from transaction.model instead */

@@ -962,13 +962,18 @@ export class FamilyService implements OnDestroy {
         amount: settlement.amount,
         type: amIPaying ? TransactionType.EXPENSE : TransactionType.INCOME,
         date: now,
+        status: TransactionStatus.COMPLETED,
         notes: `Settlement: ${settlement.fromDisplayName} \u2192 ${settlement.toDisplayName}${settlement.note ? ' | ' + settlement.note : ''}`,
         settlementId: settlement.id,
         settlementFamilyId: settlement.familyId,
         settlementFromUserId: settlement.fromUserId,
         settlementToUserId: settlement.toUserId,
-        userDisplayName: settlement.fromDisplayName,
-        userPhotoURL: settlement.fromPhotoURL || ''
+        userDisplayName: amIPaying ? settlement.fromDisplayName : settlement.toDisplayName,
+        userPhotoURL: (amIPaying ? settlement.fromPhotoURL : settlement.toPhotoURL) || '',
+        createdAt: now,
+        updatedAt: now,
+        createdBy: userId,
+        updatedBy: userId
       };
 
       // 5. Create Transaction (This will trigger the addTransaction$ effect)

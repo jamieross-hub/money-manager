@@ -476,15 +476,24 @@ export class TransactionsService extends BaseService {
                 console.log(`[TransactionsService] Pulled ${firestoreTransactions.length} transactions from Firestore`);
 
                 // ── Offline-created transactions must survive the pull.
-                // When the user adds a transaction while offline it is:
-                //   1. Written to the local IndexedDB cache immediately.
-                //   2. Added to the CommonSyncService sync queue (syncStatus = PENDING).
-                //   3. Pushed to Firestore by manualSync() when coming online.
-                // BUT the subsequent pullFromFirestore fires concurrently and may
-                // receive Firestore data before the write has been committed.
-                // We protect local-pending transactions by merging instead of replacing.
-
                 const localTransactions = this.getCachedTransactions(userId, familyId);
+                const firestoreIds = new Set(firestoreTransactions.map(tx => tx.id));
+
+                // Identify items that were deleted in Firestore but still exist locally
+                // ONLY remove them if they are not currently in a PENDING sync state
+                localTransactions.forEach(localTx => {
+                    if (localTx.id && !firestoreIds.has(localTx.id)) {
+                        // If it matches SYNCED but is missing in remote, it was deleted in remote
+                        // We also check !localTx.syncStatus to handle legacy data without status
+                        const isSyncedLocally = localTx.syncStatus === SyncStatus.SYNCED || !localTx.syncStatus;
+                        
+                        if (isSyncedLocally) {
+                            console.log(`[TransactionsService] Removing stale local transaction (deleted in remote): ${localTx.id}`);
+                            this.updateTransactionCache(userId, 'delete', localTx);
+                        }
+                    }
+                });
+
                 const merged = this.mergeFirestoreAndLocal(firestoreTransactions, localTransactions);
 
                 // Persist the merged list back to local cache.
@@ -543,31 +552,28 @@ export class TransactionsService extends BaseService {
         return new Observable<void>(observer => {
             const unsubscribe = onSnapshot(transactionsRef,
                 (querySnapshot) => {
-                    const firestoreTransactions: Transaction[] = [];
-                    querySnapshot.forEach((docSnap) => {
-                        const data = docSnap.data();
-                        if (data && (data['amount'] !== undefined || docSnap.id)) {
-                            const tx = { id: docSnap.id, ...data } as Transaction;
+                    console.log(`[TransactionsService] Real-time update: ${querySnapshot.size} transactions in snapshot, ${querySnapshot.docChanges().length} changes`);
+
+                    // 1. Process changes granularly
+                    querySnapshot.docChanges().forEach((change) => {
+                        const data = change.doc.data();
+                        const txId = change.doc.id;
+
+                        if (change.type === 'removed') {
+                            console.log(`[TransactionsService] Real-time DELETE: ${txId}`);
+                            this.updateTransactionCache(userId, 'delete', { id: txId } as any);
+                        } else {
+                            const tx = { id: txId, ...data } as Transaction;
                             // Inject familyId to ensure indexing works correctly in IndexedDB
                             if (effectiveFamilyId && !tx.familyId) {
                                 tx.familyId = effectiveFamilyId;
                             }
-                            firestoreTransactions.push(tx);
+                            console.log(`[TransactionsService] Real-time ${change.type.toUpperCase()}: ${txId}`);
+                            this.updateTransactionCache(userId, 'update', tx);
                         }
                     });
 
-                    console.log(`[TransactionsService] Real-time update: ${firestoreTransactions.length} transactions`);
-
-                    // ── Same merge logic as pullFromFirestore.
-                    // onSnapshot fires when coming back online and may not yet contain
-                    // transactions that were pushed by the sync queue in the same moment.
-                    const localTransactions = this.getCachedTransactions(userId, familyId);
-                    const merged = this.mergeFirestoreAndLocal(firestoreTransactions, localTransactions);
-
-                    // 1. Update cache with individual objects
-                    merged.forEach(tx => this.updateTransactionCache(userId, 'update', tx));
-
-                    // 2. Re-read from IndexedDB cache (Source of Truth)
+                    // 2. Re-read from IndexedDB cache (Source of Truth) to get the final state
                     const updatedFromCache = this.getCachedTransactions(userId, familyId);
 
                     // 3. Update subject and NgRx state
