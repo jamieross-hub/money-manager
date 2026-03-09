@@ -44,7 +44,22 @@ export class FamilyProcessorService {
   // ─── Input Selectors ─────────────────────────────────────────────────────────
   private readonly family = toSignal(this.store.select(FamilySelectors.selectFamily).pipe(distinctUntilChanged()), { initialValue: null as any });
   private readonly members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as FamilyMember[] });
-  private readonly transactions = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length && a[0]?.id === b[0]?.id && (a[0] as any)?.updatedAt === (b[0] as any)?.updatedAt)), { initialValue: [] as Transaction[] });
+  private readonly transactions = toSignal(
+    this.store.select(TransactionsSelectors.selectAllTransactions).pipe(
+      debounceTime(50), 
+      distinctUntilChanged((a, b) => {
+        if (a.length !== b.length) return false;
+        if (a.length === 0) return true;
+        
+        // Include familyId check to ensure we trigger on group change 
+        // even if transaction counts/first IDs happen to match.
+        return a[0]?.id === b[0]?.id && 
+               (a[0] as any)?.updatedAt === (b[0] as any)?.updatedAt &&
+               a[0]?.familyId === b[0]?.familyId;
+      })
+    ), 
+    { initialValue: [] as Transaction[] }
+  );
   private readonly settlements = toSignal(this.store.select(FamilySelectors.selectSettlements).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as Settlement[] });
   private readonly loading = toSignal(this.store.select(TransactionsSelectors.selectTransactionsLoading).pipe(distinctUntilChanged()), { initialValue: true });
   private readonly settlementsLoading = toSignal(this.store.select(FamilySelectors.selectSettlementsLoading).pipe(distinctUntilChanged()), { initialValue: false });
@@ -89,19 +104,27 @@ export class FamilyProcessorService {
       }
     }, { allowSignalWrites: true });
 
-    // 2. Full Processing: Triggers when all dependencies are ready
+    // 2. Cleanup & Processing: Triggers when all dependencies are ready
+    // We explicitly track the familyId to ensure group changes are handled cleanly.
     effect(() => {
       const input = this.connector();
-      if (input.ready && input.familyId) {
+      const familyId = input.familyId;
+      
+      if (familyId) {
+        // When group changes, we might want to clear or reset things before new processing finishes
+        const isReady = input.ready;
+        
         untracked(() => {
-          this.process({
-            transactions: input.transactions,
-            members: input.members,
-            settlements: input.settlements,
-            familyId: input.familyId!,
-            currentUserId: input.currentUserId || undefined,
-            sessionStartTime: this.sessionStartTime
-          });
+          if (isReady) {
+            this.process({
+              transactions: input.transactions,
+              members: input.members,
+              settlements: input.settlements,
+              familyId: familyId,
+              currentUserId: input.currentUserId || undefined,
+              sessionStartTime: this.sessionStartTime
+            });
+          }
         });
       }
     }, { allowSignalWrites: true });

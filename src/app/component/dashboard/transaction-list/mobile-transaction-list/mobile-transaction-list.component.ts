@@ -424,6 +424,7 @@ export class MobileTransactionListComponent
       const appView = this.appView();
       const isRecurringMode = this.isRecurring();
       const isFamilyMode = this.isFamilyMode();
+      const activeFamilyId = this.activeFamily()?.id;
 
       console.log('transactions list ---->', transactions);
 
@@ -447,9 +448,10 @@ export class MobileTransactionListComponent
         isRecurringMode,
         isFamilyMode,
         isDeletedMode: selectedRange === 'deleted',
-        currentUserId: this.currentUserId
+        currentUserId: this.currentUserId,
+        familyId: activeFamilyId
       });
-    });
+    }, { allowSignalWrites: true });
 
     // Watch for Input changes and hook into filterService
     effect(() => {

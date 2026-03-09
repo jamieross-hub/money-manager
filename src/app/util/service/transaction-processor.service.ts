@@ -49,7 +49,7 @@ export class TransactionProcessorService {
       this.worker = new Worker(new URL('../../worker/transaction-processor.worker', import.meta.url));
       
       this.worker.onmessage = ({ data }) => {
-        const { fingerprint, currentUserId, ...output } = data;
+        const { fingerprint, currentUserId, isFamilyMode, familyId, ...output } = data;
         const uid = currentUserId || this.userService.getCurrentUserId() || 'guest';
         
         console.log(`[TransactionProcessor] Worker finished for UID: ${uid}, FP: ${fingerprint?.substring(0, 15)}...`);
@@ -58,7 +58,7 @@ export class TransactionProcessorService {
 
         // Save to IndexDB for persistence
         if (fingerprint) {
-          const cacheKey = `tx_proc_cache_${uid}`;
+          const cacheKey = `tx_proc_cache_${uid}_${isFamilyMode ? 'fam_' + familyId : 'personal'}`;
           console.log(`[TransactionProcessor] SETTING cache to key: ${cacheKey}`);
           this.localStorageUtility.setItem(cacheKey, {
             ...output,
@@ -87,6 +87,8 @@ export class TransactionProcessorService {
 
   private lastInputFingerprint = '';
   private debounceTimer: any;
+  private lastFamilyMode: boolean | null = null;
+  private lastFamilyId: string | undefined = undefined;
 
   /**
    * Generates a stable fingerprint for the input to avoid redundant processing.
@@ -113,6 +115,7 @@ export class TransactionProcessorService {
       view: data.appView,
       isRec: data.isRecurringMode,
       isFam: data.isFamilyMode,
+      fid: data.familyId,
       isDel: data.isDeletedMode,
       uid: data.currentUserId || this.userService.getCurrentUserId() || 'guest'
     });
@@ -121,10 +124,10 @@ export class TransactionProcessorService {
   /**
    * Attempts to load filtered results from IndexedDB cache
    */
-  private loadFromCache(userId: string | undefined, fingerprint: string): boolean {
+  private loadFromCache(userId: string | undefined, fingerprint: string, isFamilyMode: boolean, familyId?: string): boolean {
     const isReady = this.localStorageUtility.isReady;
     const uid = userId || this.userService.getCurrentUserId() || 'guest';
-    const cacheKey = `tx_proc_cache_${uid}`;
+    const cacheKey = `tx_proc_cache_${uid}_${isFamilyMode ? 'fam_' + familyId : 'personal'}`;
     
     console.log(`[TransactionProcessor] Attempting CACHE LOAD (Storage Ready: ${isReady}) for key: ${cacheKey}`);
     
@@ -170,6 +173,7 @@ export class TransactionProcessorService {
     isFamilyMode: boolean;
     isDeletedMode?: boolean;
     currentUserId?: string;
+    familyId?: string;
   }) {
     if (!this.worker) {
       console.warn('Worker not initialized, processing skipped.');
@@ -189,8 +193,23 @@ export class TransactionProcessorService {
     // Ensure we have a valid UID for the worker and cache
     const effectiveUserId = data.currentUserId || this.userService.getCurrentUserId() || 'guest';
 
+    // Clear stale output if major context drastically changed
+    const contextChanged = this.lastFamilyMode !== data.isFamilyMode || this.lastFamilyId !== data.familyId;
+    this.lastFamilyMode = data.isFamilyMode;
+    this.lastFamilyId = data.familyId;
+
+    if (contextChanged) {
+      this._output.set({
+        filteredTransactions: [],
+        flattenedTransactions: [],
+        totalIncome: 0,
+        totalExpenses: 0,
+        filteredCount: 0
+      });
+    }
+
     // Attempt to load from cache immediately to skip worker
-    if (this.loadFromCache(effectiveUserId, fingerprint)) {
+    if (this.loadFromCache(effectiveUserId, fingerprint, data.isFamilyMode, data.familyId)) {
       return;
     }
 

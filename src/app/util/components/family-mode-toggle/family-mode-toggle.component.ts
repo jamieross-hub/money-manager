@@ -13,6 +13,7 @@ import * as ProfileSelectors from '../../../store/profile/profile.selectors';
 import * as BudgetsActions from '../../../store/budgets/budgets.actions';
 import * as GoalsActions from '../../../store/goals/goals.actions';
 import * as ProfileActions from '../../../store/profile/profile.actions';
+import * as FamilySelectors from '../../../modules/family/store/family.selectors';
 import * as TransactionsActions from '../../../store/transactions/transactions.actions';
 import * as AccountsActions from '../../../store/accounts/accounts.actions';
 import * as CategoriesActions from '../../../store/categories/categories.actions';
@@ -52,7 +53,7 @@ export class FamilyModeToggleComponent implements OnInit {
   readonly isFamilyMode = computed(() => this.userProfile()?.preferences?.isFamilyMode || false);
   readonly isGuestMode = computed(() => this.userService.isGuestUser());
 
-  readonly familyGroup = signal<Family | null>(null);
+  readonly familyGroup = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null });
   readonly isUpdating = signal(false);
   private readonly pendingState = signal<boolean | null>(null);
 
@@ -63,17 +64,14 @@ export class FamilyModeToggleComponent implements OnInit {
   });
 
   ngOnInit() {
-    if (!this.userService.isGuestUser()) {
-      this.loadFamily();
+    // Optionally trigger an initial load if needed, but standard logic 
+    // usually preloads this upon login/startup if family mode is active.
+    if (!this.userService.isGuestUser() && this.isFamilyMode() && !this.familyGroup()) {
+       const userProfile = this.userProfile();
+       if (userProfile?.preferences?.activeFamilyId) {
+           this.familyService.getMyFamily(); // Warms up store if missing
+       }
     }
-  }
-
-  private loadFamily(): void {
-    this.familyService.getMyFamily().then(family => {
-      this.familyGroup.set(family);
-    }).catch(() => {
-      this.familyGroup.set(null);
-    });
   }
 
   private readonly router = inject(Router);
