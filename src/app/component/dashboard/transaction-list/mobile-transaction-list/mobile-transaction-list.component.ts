@@ -210,6 +210,8 @@ export class MobileTransactionListComponent
   selectedSort = signal<string>('date-desc');
   showActiveFilterDetails = signal<boolean>(false);
   public selectedRange = signal<string | null>(null);
+  /** null = All Members; a userId string = filter to that member */
+  public selectedMember = signal<string | null>(null);
   private sessionStartTime = Date.now();
 
   // Scroll tracking signals
@@ -392,6 +394,15 @@ export class MobileTransactionListComponent
     }
   });
 
+  currentMemberLabel = computed(() => {
+    const memberId = this.selectedMember();
+    if (!memberId) return 'All Members';
+    const member = this.familyMembers().find(m => m.userId === memberId);
+    if (!member) return 'All Members';
+    // Show "You" for the current user
+    return member.userId === this.currentUserId ? 'You' : member.displayName;
+  });
+
   currentCategoryLabel = computed(() => {
     const cats = this.selectedCategory();
     if (cats.includes('all')) return 'All Categories';
@@ -431,6 +442,7 @@ export class MobileTransactionListComponent
       const isRecurringFilter = this.isRecurringFilter();
       const selectedSort = this.selectedSort();
       const selectedRange = this.selectedRange();
+      const selectedMember = this.selectedMember();
       const appView = this.appView();
       const isRecurringMode = this.isRecurring();
       const isFamilyMode = this.isFamilyMode();
@@ -447,7 +459,8 @@ export class MobileTransactionListComponent
           selectedType,
           selectedDate,
           selectedDateRange,
-          isRecurring: isRecurringFilter
+          isRecurring: isRecurringFilter,
+          selectedMember
         },
         sort: selectedSort,
         range: selectedRange,
@@ -536,6 +549,10 @@ export class MobileTransactionListComponent
 
   onTypeChange(type: string) {
     this.filterService.setSelectedType(type);
+  }
+
+  onMemberChange(userId: string | null) {
+    this.selectedMember.set(userId);
   }
 
   onDateRangeChange(range: string | null) {

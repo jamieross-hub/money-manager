@@ -208,6 +208,11 @@ addEventListener('message', ({ data }) => {
     filtered = filtered.filter((t: any) => !!t.isRecurring === filters.isRecurring);
   }
 
+  // Member filter (family split mode)
+  if (filters.selectedMember) {
+    filtered = filtered.filter((t: any) => t.userId === filters.selectedMember || t.createdBy === filters.selectedMember);
+  }
+
   // Merging Logic (Ported from component)
   let mergedData = filtered;
   if (range !== 'upcoming' && range !== null && !isRecurringMode && !isDeletedMode) {

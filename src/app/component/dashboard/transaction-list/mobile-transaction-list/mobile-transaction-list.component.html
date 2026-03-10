@@ -88,38 +88,80 @@
             </button>
           }
         </mat-menu>
-        <!-- Type Menu -->
-        <button mat-icon-button class="filter-menu-btn" [ngClass]="{'active': selectedType() !== 'all'}"
-          [matMenuTriggerFor]="typeMenu" matTooltip="{{ currentTypeLabel() }}"
-          aria-label="Filter by transaction type">
-          <mat-icon>account_balance_wallet</mat-icon>
-          <span class="filter-btn-text">{{ currentTypeLabel() }}</span>
-        </button>
-        <mat-menu #typeMenu="matMenu" class="filter-menu">
-          <button mat-menu-item [class.active-menu-item]="selectedType() === 'all'" (click)="onTypeChange('all')">
-            <mat-icon>list</mat-icon>
-            <span>All Types</span>
-            @if (selectedType() === 'all') {
-              <mat-icon class="check-icon">check</mat-icon>
-            }
+        <!-- Type Menu (hidden in family split mode) -->
+        @if (!(isFamilyMode() && isSplitMode())) {
+          <button mat-icon-button class="filter-menu-btn" [ngClass]="{'active': selectedType() !== 'all'}"
+            [matMenuTriggerFor]="typeMenu" matTooltip="{{ currentTypeLabel() }}"
+            aria-label="Filter by transaction type">
+            <mat-icon>account_balance_wallet</mat-icon>
+            <span class="filter-btn-text">{{ currentTypeLabel() }}</span>
           </button>
-          <button mat-menu-item [class.active-menu-item]="selectedType() === 'income'"
-            (click)="onTypeChange('income')">
-            <mat-icon class="income-icon">trending_up</mat-icon>
-            <span>Income</span>
-            @if (selectedType() === 'income') {
-              <mat-icon class="check-icon">check</mat-icon>
-            }
+          <mat-menu #typeMenu="matMenu" class="filter-menu">
+            <button mat-menu-item [class.active-menu-item]="selectedType() === 'all'" (click)="onTypeChange('all')">
+              <mat-icon>list</mat-icon>
+              <span>All Types</span>
+              @if (selectedType() === 'all') {
+                <mat-icon class="check-icon">check</mat-icon>
+              }
+            </button>
+            <button mat-menu-item [class.active-menu-item]="selectedType() === 'income'"
+              (click)="onTypeChange('income')">
+              <mat-icon class="income-icon">trending_up</mat-icon>
+              <span>Income</span>
+              @if (selectedType() === 'income') {
+                <mat-icon class="check-icon">check</mat-icon>
+              }
+            </button>
+            <button mat-menu-item [class.active-menu-item]="selectedType() === 'expense'"
+              (click)="onTypeChange('expense')">
+              <mat-icon class="expense-icon">trending_down</mat-icon>
+              <span>Expense</span>
+              @if (selectedType() === 'expense') {
+                <mat-icon class="check-icon">check</mat-icon>
+              }
+            </button>
+          </mat-menu>
+        }
+        <!-- Member Menu (family split mode only) -->
+        @if (isFamilyMode() && isSplitMode()) {
+          <button mat-icon-button class="filter-menu-btn" [ngClass]="{'active': selectedMember() !== null}"
+            [matMenuTriggerFor]="memberMenu" matTooltip="{{ currentMemberLabel() }}"
+            aria-label="Filter by member">
+            <mat-icon>group</mat-icon>
+            <span class="filter-btn-text">{{ currentMemberLabel() }}</span>
           </button>
-          <button mat-menu-item [class.active-menu-item]="selectedType() === 'expense'"
-            (click)="onTypeChange('expense')">
-            <mat-icon class="expense-icon">trending_down</mat-icon>
-            <span>Expense</span>
-            @if (selectedType() === 'expense') {
-              <mat-icon class="check-icon">check</mat-icon>
+          <mat-menu #memberMenu="matMenu" class="filter-menu">
+            <button mat-menu-item [class.active-menu-item]="selectedMember() === null"
+              (click)="onMemberChange(null)">
+              <mat-icon>groups</mat-icon>
+              <span>All Members</span>
+              @if (selectedMember() === null) {
+                <mat-icon class="check-icon">check</mat-icon>
+              }
+            </button>
+            <mat-divider></mat-divider>
+            @for (member of familyMembers(); track member.userId) {
+              @if (member.isActive) {
+                <button mat-menu-item [class.active-menu-item]="selectedMember() === member.userId"
+                  (click)="onMemberChange(member.userId)">
+                  <div class="member-menu-item">
+                    @if (member.photoURL) {
+                      <img [src]="member.photoURL" appImageFallback class="member-menu-avatar" alt="Member">
+                    } @else {
+                      <div class="member-menu-avatar member-menu-avatar--fallback">
+                        {{ member.displayName.charAt(0).toUpperCase() }}
+                      </div>
+                    }
+                    <span>{{ member.userId === currentUserId ? member.displayName + ' (You)' : member.displayName }}</span>
+                  </div>
+                  @if (selectedMember() === member.userId) {
+                    <mat-icon class="check-icon">check</mat-icon>
+                  }
+                </button>
+              }
             }
-          </button>
-        </mat-menu>
+          </mat-menu>
+        }
         <!-- Category Menu -->
         <button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="categoryMenu"
           matTooltip="{{ currentCategoryLabel() }}" aria-label="Filter by category"
