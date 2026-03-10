@@ -64,6 +64,7 @@ export interface SyncStatus {
   pendingItems: number;
   lastSyncTime: number | null;
   isSyncing: boolean;
+  isFullSyncing: boolean;
   failedItems: number;
   invalidItems: number;
 }
@@ -119,6 +120,7 @@ export class CommonSyncService implements OnDestroy {
     pendingItems: 0,
     lastSyncTime: null,
     isSyncing: false,
+    isFullSyncing: false,
     failedItems: 0,
     invalidItems: 0
   });
@@ -428,6 +430,7 @@ export class CommonSyncService implements OnDestroy {
     }
 
     console.log('🔄 Performing full sync...');
+    this.updateSyncStatus({ isFullSyncing: true });
 
     // Resolve services lazily to avoid circular dependencies
     const transactionsService = this.injector.get(TransactionsFacadeService);
@@ -465,6 +468,7 @@ export class CommonSyncService implements OnDestroy {
       tap(() => {
         console.log('[CommonSyncService] syncAll: Pull complete for all services');
         console.log('✅ Sync completed successfully');
+        this.updateSyncStatus({ isFullSyncing: false });
       }),
       catchError(error => {
         if (error.name === 'TimeoutError') {
@@ -474,6 +478,7 @@ export class CommonSyncService implements OnDestroy {
         } else {
           console.error('❌ Sync failed:', error);
         }
+        this.updateSyncStatus({ isFullSyncing: false });
         return of(null);
       })
     );

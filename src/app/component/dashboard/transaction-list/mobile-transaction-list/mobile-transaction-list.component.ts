@@ -185,6 +185,7 @@ export class MobileTransactionListComponent
   isLoadingTransactions = this.store.selectSignal<boolean>(selectTransactionsLoading);
   syncStatus = toSignal(this.syncService.syncStatus$, { initialValue: this.syncService.syncStatus });
   isSyncing = computed(() => this.syncStatus().isSyncing);
+  isFullSyncing = computed(() => this.syncStatus().isFullSyncing);
 
   isLoading = computed(() => this.isLoadingTransactions() || this.isProcessing() || (this.isSyncing() && this.allTransactions().length === 0));
   
@@ -215,6 +216,13 @@ export class MobileTransactionListComponent
   public currentScrollHeader = signal<string>('');
   public showScrollIndicator = signal<boolean>(false);
   private scrollTimeout: any;
+
+  // Pull to refresh signals
+  public pullDistance = signal<number>(0);
+  public isPulling = signal<boolean>(false);
+  private startY = 0;
+  public readonly REFRESH_THRESHOLD = 80;
+  public readonly MAX_PULL = 150;
 
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
 
@@ -848,5 +856,49 @@ export class MobileTransactionListComponent
     if (activeHeader && activeHeader !== this.currentScrollHeader()) {
       this.currentScrollHeader.set(activeHeader);
     }
+  }
+
+  // Pull to refresh handlers
+  onTouchStart(event: TouchEvent) {
+    if (this.scrollContainer.nativeElement.scrollTop === 0) {
+      this.startY = event.touches[0].pageY;
+      this.isPulling.set(true);
+    }
+  }
+
+  onTouchMove(event: TouchEvent) {
+    if (!this.isPulling()) return;
+
+    const currentY = event.touches[0].pageY;
+    const diff = currentY - this.startY;
+
+    if (diff > 0 && this.scrollContainer.nativeElement.scrollTop === 0) {
+      // Apply some resistance (damping)
+      const easedDiff = Math.min(this.MAX_PULL, diff * 0.4);
+      this.pullDistance.set(easedDiff);
+      
+      // Prevent default scroll when pulling down at the top
+      if (this.pullDistance() > 5) {
+        if (event.cancelable) event.preventDefault();
+      }
+    } else {
+      this.isPulling.set(false);
+      this.pullDistance.set(0);
+    }
+  }
+
+  onTouchEnd() {
+    if (!this.isPulling()) return;
+
+    if (this.pullDistance() >= this.REFRESH_THRESHOLD) {
+      this.refreshData();
+    }
+
+    this.isPulling.set(false);
+    this.pullDistance.set(0);
+  }
+
+  refreshData() {
+    this.syncService.syncAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
   }
 }

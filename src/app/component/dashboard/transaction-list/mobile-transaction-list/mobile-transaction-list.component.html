@@ -253,11 +253,23 @@
   }
 
   <!-- Transaction List -->
-  <div class="transaction-list-container" #scrollContainer (scroll)="onScroll($event)">
-    
-  
-
-    @if (isSyncing() && flattenedTransactions().length > 0) {
+  <div class="transaction-list-container" #scrollContainer 
+    (scroll)="onScroll($event)"
+    (touchstart)="onTouchStart($event)"
+    (touchmove)="onTouchMove($event)"
+    (touchend)="onTouchEnd()">
+    <!-- Pull to Refresh Indicator -->
+    @if (pullDistance() > 0) {
+      <div class="pull-refresh-indicator" [style.height.px]="pullDistance()">
+        <div class="indicator-content" [class.ready]="pullDistance() >= REFRESH_THRESHOLD">
+          <mat-icon [style.transform]="'rotate(' + (pullDistance() * 2) + 'deg)'">
+            {{ pullDistance() >= REFRESH_THRESHOLD ? 'arrow_downward' : 'sync' }}
+          </mat-icon>
+          <span>{{ pullDistance() >= REFRESH_THRESHOLD ? 'Release to Refresh' : 'Pull Down to Refresh' }}</span>
+        </div>
+      </div>
+    }
+    @if (isFullSyncing() && flattenedTransactions().length > 0) {
       <div class="sync-indicator-floating">
         <mat-icon class="spin-animation">sync</mat-icon>
         <span>Refreshing...</span>
