@@ -16,7 +16,24 @@ import { AccountsService } from '../service/db/accounts.service';
 import { CategoryService } from '../service/db/category.service';
 import { UserService } from '../service/db/user.service';
 import { SubscriptionService } from '../service/subscription.service';
-import { of } from 'rxjs';
+import { CurrencyService } from '../service/currency.service';
+import { SecurityService } from '../service/security.service';
+import { LanguageService } from '../service/language.service';
+import { LocalIndexDBStorageService } from '../service/indexdb-storage.service';
+import { SwUpdate } from '@angular/service-worker';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
+import { OverlayContainer } from '@angular/cdk/overlay';
+import { MobileBackButtonService } from '../service/mobile-back-button.service';
+import { FamilyNotificationService } from '../../modules/family/services/family-notification.service';
+import { TransactionProcessorService } from '../service/transaction-processor.service';
+import { SsrService } from '../service/ssr.service';
+import { PwaNavigationService } from '../service/pwa-navigation.service';
+import { ThemeSwitchingService } from '../service/theme-switching.service';
+import { environment } from '../../../environments/environment';
+import { TranslateModule } from '@ngx-translate/core';
+import { signal } from '@angular/core';
+import { of, BehaviorSubject } from 'rxjs';
+// No top-level TEST_IMPORTS here to avoid conflicts with test-config.ts
 
 export class TestSetup {
   static getMockAuth() {
@@ -43,10 +60,10 @@ export class TestSetup {
   }
 
   static getMockStore() {
-    return jasmine.createSpyObj('Store', ['dispatch', 'select'], {
-      select: of([]),
-      dispatch: jasmine.createSpy('dispatch')
-    });
+    const mock = jasmine.createSpyObj('Store', ['dispatch', 'select', 'selectSignal']);
+    mock.select.and.returnValue(of([]));
+    mock.selectSignal.and.returnValue(() => []);
+    return mock;
   }
 
   static getMockMatDialog() {
@@ -77,9 +94,9 @@ export class TestSetup {
   }
 
   static getMockBreakpointObserver() {
-    return jasmine.createSpyObj('BreakpointObserver', ['observe'], {
-      observe: of({ matches: false })
-    });
+    const mock = jasmine.createSpyObj('BreakpointObserver', ['observe']);
+    mock.observe.and.returnValue(of({ matches: false, breakpoints: {} }));
+    return mock;
   }
 
   static getMockNotificationService() {
@@ -187,10 +204,12 @@ export class TestSetup {
   static getMockUserService() {
     return jasmine.createSpyObj('UserService', [
       'getCurrentUser',
+      'getCurrentUserId',
       'updateProfile',
       'deleteAccount'
     ], {
       getCurrentUser: of({}),
+      getCurrentUserId: 'test-user-id',
       updateProfile: Promise.resolve(),
       deleteAccount: Promise.resolve()
     });
@@ -205,6 +224,79 @@ export class TestSetup {
       getSubscription: of({}),
       createSubscription: Promise.resolve(),
       cancelSubscription: Promise.resolve()
+    });
+  }
+
+  static getMockLanguageService() {
+    return jasmine.createSpyObj('LanguageService', ['setLanguage', 'getCurrentLanguage']);
+  }
+
+  static getMockSecurityService() {
+    return {
+      isLocked: signal(false),
+      setPinVerified: jasmine.createSpy('setPinVerified')
+    };
+  }
+
+  static getMockLocalStorageService() {
+    return jasmine.createSpyObj('LocalIndexDBStorageService', ['initialize', 'setItem', 'getItem', 'removeItem', 'clear', 'getEntities', 'saveEntity', 'saveEntities'], {
+      isReady$: of(true)
+    });
+  }
+
+  static getMockSwUpdate() {
+    return {
+      isEnabled: false,
+      versionUpdates: of({ type: 'NO_NEW_VERSION_DETECTED' })
+    };
+  }
+
+  static getMockMobileBackButtonService() {
+    return jasmine.createSpyObj('MobileBackButtonService', ['hasOpenModals', 'popModal']);
+  }
+
+  static getMockSsrService() {
+    return jasmine.createSpyObj('SsrService', ['isClientSide'], {
+      isClientSide: () => true
+    });
+  }
+
+  static getMockPwaNavigationService() {
+    return jasmine.createSpyObj('PwaNavigationService', ['ngOnDestroy', 'goBack', 'goForward', 'navigateTo'], {
+      navigationState$: of({
+        canGoBack: false,
+        currentRoute: '',
+        previousRoute: '',
+        navigationStack: [],
+        isStandalone: false,
+        isMobile: false
+      })
+    });
+  }
+
+  static getMockThemeSwitchingService() {
+    return jasmine.createSpyObj('ThemeSwitchingService', ['initTheme']);
+  }
+
+  static getMockFamilyNotificationService() {
+    return jasmine.createSpyObj('FamilyNotificationService', ['success', 'error']);
+  }
+
+  static getMockTransactionProcessorService() {
+    return jasmine.createSpyObj('TransactionProcessorService', ['processTransactions']);
+  }
+
+  static getMockCurrencyService() {
+    return jasmine.createSpyObj('CurrencyService', [
+      'formatAmount',
+      'getCurrencySymbol',
+      'getCurrencyCode',
+      'setCurrency'
+    ], {
+      currency$: of('INR'),
+      formatAmount: (amount: number) => `₹${amount}`,
+      getCurrencySymbol: () => '₹',
+      getCurrencyCode: () => 'INR'
     });
   }
 
@@ -226,15 +318,66 @@ export class TestSetup {
       { provide: AccountsService, useValue: TestSetup.getMockAccountsService() },
       { provide: CategoryService, useValue: TestSetup.getMockCategoryService() },
       { provide: UserService, useValue: TestSetup.getMockUserService() },
-      { provide: SubscriptionService, useValue: TestSetup.getMockSubscriptionService() }
+      { provide: SubscriptionService, useValue: TestSetup.getMockSubscriptionService() },
+      { provide: CurrencyService, useValue: TestSetup.getMockCurrencyService() },
+      { provide: LanguageService, useValue: TestSetup.getMockLanguageService() },
+      { provide: SecurityService, useValue: TestSetup.getMockSecurityService() },
+      { provide: LocalIndexDBStorageService, useValue: TestSetup.getMockLocalStorageService() },
+      { provide: SwUpdate, useValue: TestSetup.getMockSwUpdate() },
+      { provide: MobileBackButtonService, useValue: TestSetup.getMockMobileBackButtonService() },
+      { provide: SsrService, useValue: TestSetup.getMockSsrService() },
+      { provide: PwaNavigationService, useValue: TestSetup.getMockPwaNavigationService() },
+      { provide: ThemeSwitchingService, useValue: TestSetup.getMockThemeSwitchingService() },
+      { provide: FamilyNotificationService, useValue: TestSetup.getMockFamilyNotificationService() },
+      { provide: TransactionProcessorService, useValue: TestSetup.getMockTransactionProcessorService() },
+      { provide: MatBottomSheet, useValue: {} },
+      { provide: OverlayContainer, useValue: { getContainerElement: () => document.createElement('div') } }
     ];
   }
 
-  static configureTestingModule(declarations: any[] = [], imports: any[] = [], providers: any[] = []) {
+  static getFirebaseProviders() {
+    return [];
+    /*
+    return [
+      provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
+      provideAuth(() => getAuth()),
+      provideFirestore(() => getFirestore())
+    ];
+    */
+  }
+
+  static configureTestingModule(declarations: any[] = [], imports: any[] = [], providers: any[] = [], useActualFirebase: boolean = false) {
+    const isStandalone = (d: any) => {
+      if (!d) return false;
+      // Robust check for standalone flag in various Angular internal properties
+      const standalone = d.ɵcmp?.standalone || d.ɵdir?.standalone || d.ɵpipe?.standalone || d.standalone === true;
+      return !!standalone;
+    };
+
+    const standaloneComponents = declarations.filter(isStandalone);
+    const regularDeclarations = declarations.filter(d => d && !isStandalone(d));
+
+    const commonProviders = TestSetup.getCommonProviders();
+    // Filter out undefined imports to prevent "Unexpected value 'undefined' imported by the module 'DynamicTestModule'"
+    const allImports = [...imports, ...standaloneComponents].filter(i => !!i);
+
+    if (useActualFirebase) {
+      const filteredProviders = commonProviders.filter(p => p.provide !== Auth && p.provide !== Firestore);
+      return TestBed.configureTestingModule({
+        declarations: regularDeclarations,
+        imports: allImports,
+        providers: [
+          ...filteredProviders, 
+          ...providers,
+          ...TestSetup.getFirebaseProviders()
+        ]
+      });
+    }
+
     return TestBed.configureTestingModule({
-      declarations,
-      imports,
-      providers: [...TestSetup.getCommonProviders(), ...providers]
+      declarations: regularDeclarations,
+      imports: allImports,
+      providers: [...commonProviders, ...providers]
     });
   }
-} 
+}

@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestSetup } from '../util/testing/test-setup';
 
 import { AppShellComponent } from './app-shell.component';
 
@@ -7,10 +8,7 @@ describe('AppShellComponent', () => {
   let fixture: ComponentFixture<AppShellComponent>;
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      declarations: [AppShellComponent]
-    })
-    .compileComponents();
+    await TestSetup.configureTestingModule([AppShellComponent]).compileComponents();
 
     fixture = TestBed.createComponent(AppShellComponent);
     component = fixture.componentInstance;

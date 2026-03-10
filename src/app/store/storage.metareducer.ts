@@ -22,7 +22,7 @@ export function storageMetaReducer(reducer: ActionReducer<any>): ActionReducer<a
                     // Merge initial state with stored state to handle new properties/features
                     return reducer(parsedState, action);
                 } catch (e) {
-                    console.error('Failed to parse stored state', e);
+                    console.warn('Metadata: Failed to parse stored state (this is expected if storage is corrupted or in tests)', e);
                     storageService.removeItem(LocalStorageKey.APP_STATE);
                 }
             }

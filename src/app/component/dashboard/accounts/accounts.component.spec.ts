@@ -12,6 +12,9 @@ import { of } from 'rxjs';
 import { Account, LoanDetails } from 'src/app/util/models/account.model';
 import { AccountType } from 'src/app/util/config/enums';
 import * as AccountsActions from '../../../store/accounts/accounts.actions';
+import * as AccountsSelectors from '../../../store/accounts/accounts.selectors';
+import { TestSetup } from 'src/app/util/testing/test-setup';
+import { TEST_IMPORTS } from 'src/app/util/testing/test-config';
 
 describe('AccountsComponent', () => {
   let component: AccountsComponent;
@@ -89,66 +92,48 @@ describe('AccountsComponent', () => {
   ];
 
   beforeEach(async () => {
-    const authSpy = jasmine.createSpyObj('Auth', [], { currentUser: mockUser });
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
-    const dialogSpy = jasmine.createSpyObj('MatDialog', ['open']);
-    const breakpointSpy = jasmine.createSpyObj('BreakpointObserver', ['observe']);
-    const notificationSpy = jasmine.createSpyObj('NotificationService', ['success', 'error']);
-    const storeSpy = jasmine.createSpyObj('Store', ['dispatch', 'select']);
-    const dateSpy = jasmine.createSpyObj('DateService', ['toDate', 'now']);
-    const breakpointServiceSpy = jasmine.createSpyObj('BreakpointService', [], {
-      device: {
-        isMobile: false,
-        isTablet: false,
-        isDesktop: true
-      },
-      isMobile: false,
-      isTablet: false,
-      isDesktop: true
-    });
-
-    await TestBed.configureTestingModule({
-      declarations: [AccountsComponent],
-      providers: [
-        { provide: Auth, useValue: authSpy },
-        { provide: Router, useValue: routerSpy },
-        { provide: MatDialog, useValue: dialogSpy },
-        { provide: BreakpointObserver, useValue: breakpointSpy },
-        { provide: NotificationService, useValue: notificationSpy },
-        { provide: Store, useValue: storeSpy },
-        { provide: DateService, useValue: dateSpy },
-        { provide: BreakpointService, useValue: breakpointServiceSpy }
-      ]
-    }).compileComponents();
-
-    mockAuth = TestBed.inject(Auth) as jasmine.SpyObj<Auth>;
-    mockRouter = TestBed.inject(Router) as jasmine.SpyObj<Router>;
-    mockDialog = TestBed.inject(MatDialog) as jasmine.SpyObj<MatDialog>;
-    mockBreakpointObserver = TestBed.inject(BreakpointObserver) as jasmine.SpyObj<BreakpointObserver>;
-    mockNotificationService = TestBed.inject(NotificationService) as jasmine.SpyObj<NotificationService>;
-    mockStore = TestBed.inject(Store) as jasmine.SpyObj<Store>;
-    mockDateService = TestBed.inject(DateService) as jasmine.SpyObj<DateService>;
-    mockBreakpointService = TestBed.inject(BreakpointService) as jasmine.SpyObj<BreakpointService>;
+    mockAuth = TestSetup.getMockAuth();
+    mockRouter = TestSetup.getMockRouter();
+    mockDialog = TestSetup.getMockMatDialog();
+    mockBreakpointObserver = TestSetup.getMockBreakpointObserver();
+    mockNotificationService = TestSetup.getMockNotificationService();
+    mockStore = TestSetup.getMockStore();
+    mockDateService = TestSetup.getMockDateService();
+    mockBreakpointService = TestSetup.getMockBreakpointService();
 
     // Setup store selectors
-    mockStore.select.and.returnValues(
-      of(mockAccounts), // accounts$
-      of(false), // isLoading$
-      of(null), // error$
-      of(1000) // totalBalance$
-    );
+    mockStore.select.and.callFake((selector: any) => {
+      if (selector === AccountsSelectors.selectAllAccounts) return of(mockAccounts);
+      if (selector === AccountsSelectors.selectAccountsLoading) return of(false);
+      if (selector === AccountsSelectors.selectAccountsError) return of(null);
+      if (selector === AccountsSelectors.selectTotalBalance) return of(1000);
+      return of([]); // Default for all other selectors
+    });
 
-    // Setup breakpoint observer
-    mockBreakpointObserver.observe.and.returnValue(of({ matches: false, breakpoints: {} }));
+    await TestSetup.configureTestingModule(
+      [AccountsComponent],
+      [TEST_IMPORTS],
+      [
+        { provide: Auth, useValue: mockAuth },
+        { provide: Router, useValue: mockRouter },
+        { provide: MatDialog, useValue: mockDialog },
+        { provide: BreakpointObserver, useValue: mockBreakpointObserver },
+        { provide: NotificationService, useValue: mockNotificationService },
+        { provide: Store, useValue: mockStore },
+        { provide: DateService, useValue: mockDateService },
+        { provide: BreakpointService, useValue: mockBreakpointService }
+      ]
+    ).compileComponents();
 
-    // Setup date service
-    mockDateService.toDate.and.returnValue(new Date());
-    mockDateService.now.and.returnValue({ toDate: () => new Date() } as any);
-  });
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(AccountsComponent);
     component = fixture.componentInstance;
+    
+    // Setup mocks that need method calls
+    mockBreakpointObserver.observe.and.returnValue(of({ matches: false, breakpoints: {} }));
+    mockDateService.toDate.and.returnValue(new Date());
+    mockDateService.now.and.returnValue({ toDate: () => new Date() } as any);
+
+    fixture.detectChanges();
   });
 
   it('should create', () => {

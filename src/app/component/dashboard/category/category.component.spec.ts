@@ -131,8 +131,8 @@ describe('CategoryComponent', () => {
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
     await TestBed.configureTestingModule({
-      declarations: [CategoryComponent],
       imports: [
+        CategoryComponent,
         CommonModule,
         MatIconModule,
         NoopAnimationsModule
@@ -274,79 +274,8 @@ describe('CategoryComponent', () => {
     });
   });
 
-  describe('Budget Calculations', () => {
-    beforeEach(() => {
-      // component.categories = mockCategories;
-      // component.transactions = mockTransactions;
-    });
 
-/*
-    it('should calculate budget progress percentage', () => {
-      const result = component.calculateBudgetProgressPercentage(mockCategories[0]);
-      expect(typeof result).toBe('number');
-    });
 
-    it('should calculate budget remaining', () => {
-      const result = component.calculateBudgetRemaining(mockCategories[0]);
-      expect(typeof result).toBe('number');
-    });
-
-    it('should calculate budget spent', () => {
-      const result = component.calculateBudgetSpent(mockCategories[0]);
-      expect(typeof result).toBe('number');
-    });
-
-    it('should get budget progress color', () => {
-      const result = component.getBudgetProgressColor(mockCategories[0]);
-      expect(typeof result).toBe('string');
-    });
-
-    it('should get budget status class', () => {
-      const result = component.getBudgetStatusClass(mockCategories[0]);
-      expect(typeof result).toBe('string');
-    });
-*/
-  });
-
-  describe('Transaction Operations', () => {
-    beforeEach(() => {
-      // component.categories = mockCategories;
-      // component.transactions = mockTransactions;
-    });
-
-/*
-    it('should get recent transactions for a category', () => {
-      const result = component.getRecentTransactions(mockCategories[0]);
-      expect(Array.isArray(result)).toBe(true);
-    });
-*/
-
-/*
-    it('should calculate total spent per month for a category', () => {
-      const result = component.calculateTotalSpentPerMonth(mockCategories[0]);
-      expect(typeof result).toBe('number');
-    });
-
-    it('should calculate total income per month for a category', () => {
-      const result = component.calculateTotalIncomePerMonth(mockCategories[0]);
-      expect(typeof result).toBe('number');
-    });
-*/
-  });
-
-  describe('UI State Management', () => {
-/*
-    it('should format budget period correctly', () => {
-      const result = component.formatBudgetPeriod('monthly');
-      expect(result).toBe('Monthly');
-    });
-
-    it('should get remaining budget class', () => {
-      const result = component.getRemainingBudgetClass(mockCategories[0]);
-      expect(typeof result).toBe('string');
-    });
-*/
-  });
 
   describe('Component Lifecycle', () => {
     it('should cleanup on destroy', () => {

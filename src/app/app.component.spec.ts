@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-import { RouterModule } from '@angular/router';
-import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { AppComponent } from './app.component';
+import { TestSetup } from './util/testing/test-setup';
+import { TEST_IMPORTS } from './util/testing/test-config';
 import { ThemeSwitchingService } from './util/service/theme-switching.service';
 import { Location } from '@angular/common';
 import { LoaderService } from './util/service/loader.service';
@@ -21,46 +21,19 @@ describe('AppComponent', () => {
   let mockFirebaseMessagingService: jasmine.SpyObj<FirebaseMessagingService>;
 
   beforeEach(async () => {
-    const themeSpy = jasmine.createSpyObj('ThemeSwitchingService', ['initTheme']);
-    const locationSpy = jasmine.createSpyObj('Location', ['back', 'forward']);
-    const loaderSpy = jasmine.createSpyObj('LoaderService', ['show', 'hide']);
-    const pwaSpy = jasmine.createSpyObj('PwaNavigationService', ['destroy', 'goBack', 'goForward'], {
-      navigationState$: of({
-        canGoBack: false,
-        currentRoute: '',
-        previousRoute: '',
-        navigationStack: [],
-        isStandalone: false,
-        isMobile: false
-      })
-    });
-    const syncSpy = jasmine.createSpyObj('CommonSyncService', [], {
-      isOnline$: of(true)
-    });
-    const ssrSpy = jasmine.createSpyObj('SsrService', ['isClientSide']);
-    const firebaseSpy = jasmine.createSpyObj('FirebaseMessagingService', ['listenForMessages']);
+    // We can still create custom spies if we want specifically controlled behavior,
+    // but TestSetup.configureTestingModule will provide default mocks for anything missing.
+    const firebaseSpy = jasmine.createSpyObj('FirebaseMessagingService', ['listenForMessages', 'refreshToken']);
+    firebaseSpy.refreshToken.and.returnValue(Promise.resolve('mock-token'));
 
-    // Setup SSR service to return false for client-side checks
-    ssrSpy.isClientSide.and.returnValue(false);
-
-    await TestBed.configureTestingModule({
-      imports: [
-        RouterModule.forRoot([])
-      ],
-      declarations: [
-        AppComponent
-      ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA],
-      providers: [
-        { provide: ThemeSwitchingService, useValue: themeSpy },
-        { provide: Location, useValue: locationSpy },
-        { provide: LoaderService, useValue: loaderSpy },
-        { provide: PwaNavigationService, useValue: pwaSpy },
-        { provide: CommonSyncService, useValue: syncSpy },
-        { provide: SsrService, useValue: ssrSpy },
+    await TestSetup.configureTestingModule(
+      [AppComponent],
+      TEST_IMPORTS,
+      [
         { provide: FirebaseMessagingService, useValue: firebaseSpy }
-      ]
-    }).compileComponents();
+      ],
+      false // useActualFirebase = false for now to keep unit tests isolated, unless the user specifically wants them live.
+    ).compileComponents();
 
     mockThemeSwitchingService = TestBed.inject(ThemeSwitchingService) as jasmine.SpyObj<ThemeSwitchingService>;
     mockLocation = TestBed.inject(Location) as jasmine.SpyObj<Location>;
@@ -109,6 +82,6 @@ describe('AppComponent', () => {
     
     app.ngOnDestroy();
     
-    expect(mockPwaNavigationService.destroy).toHaveBeenCalled();
+    expect(mockPwaNavigationService.ngOnDestroy).toHaveBeenCalled();
   });
 });

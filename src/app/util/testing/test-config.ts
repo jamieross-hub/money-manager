@@ -34,6 +34,7 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { MatTreeModule } from '@angular/material/tree';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { TranslateModule } from '@ngx-translate/core';
 
 @NgModule({
   imports: [
@@ -72,7 +73,8 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
     MatStepperModule,
     MatTreeModule,
     RouterTestingModule,
-    NoopAnimationsModule
+    NoopAnimationsModule,
+    TranslateModule
   ],
   exports: [
     CommonModule,
@@ -110,12 +112,13 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
     MatStepperModule,
     MatTreeModule,
     RouterTestingModule,
-    NoopAnimationsModule
+    NoopAnimationsModule,
+    TranslateModule
   ]
 })
 export class TestConfigModule { }
 
-export const TEST_IMPORTS = [
+export const TEST_IMPORTS: any[] = [
   CommonModule,
   FormsModule,
   ReactiveFormsModule,
@@ -151,5 +154,6 @@ export const TEST_IMPORTS = [
   MatStepperModule,
   MatTreeModule,
   RouterTestingModule,
-  NoopAnimationsModule
+  NoopAnimationsModule,
+  TranslateModule
 ]; 

@@ -3,6 +3,7 @@ import { storageMetaReducer } from './storage.metareducer';
 import { Timestamp } from '@angular/fire/firestore';
 import { LocalIndexDBStorageService } from '../util/service/indexdb-storage.service';
 import { LocalStorageKey } from '../util/models/local-storage.model';
+import { fakeAsync, tick } from '@angular/core/testing';
 
 describe('storageMetaReducer', () => {
     let reducer: ActionReducer<any>;
@@ -20,11 +21,20 @@ describe('storageMetaReducer', () => {
         metaReducer = storageMetaReducer(reducer);
     });
 
-    it('should save state to storage using LocalStorageKey.APP_STATE', () => {
-        const state = { foo: 'bar' };
-        metaReducer(state, { type: 'SOME_ACTION' });
-        expect(storageServiceMock.setItem).toHaveBeenCalledWith(LocalStorageKey.APP_STATE, state);
-    });
+    it('should save state to storage using LocalStorageKey.APP_STATE', fakeAsync(() => {
+        const initialState = { foo: 'old' };
+        const nextState = { foo: 'bar' };
+        
+        // Setup reducer to return nextState
+        (reducer as jasmine.Spy).and.returnValue(nextState);
+        
+        metaReducer(initialState, { type: 'SOME_ACTION' });
+        
+        // Advance time by 1 second to trigger debounce
+        tick(1000);
+        
+        expect(storageServiceMock.setItem).toHaveBeenCalledWith(LocalStorageKey.APP_STATE, nextState);
+    }));
 
     it('should restore state from storage on init', () => {
         const storedState = { foo: 'baz' };

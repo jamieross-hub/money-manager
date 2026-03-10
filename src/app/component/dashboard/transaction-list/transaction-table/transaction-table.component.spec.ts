@@ -68,10 +68,7 @@ describe('TransactionTableComponent', () => {
     });
 
     // Setup store selectors with returnValues
-    mockStore.select.and.returnValues([
-      of(mockTransactions), // transactions$
-      of(mockCategories) // categories
-    ]);
+    mockStore.select.and.callFake(() => of(mockTransactions));
 
     await TestSetup.configureTestingModule(
       [TransactionTableComponent], // declarations
