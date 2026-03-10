@@ -40,6 +40,7 @@ import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
 import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 import { CommonSyncService } from 'src/app/util/service/common-sync.service';
 import { FamilyProcessorService } from 'src/app/util/service/family-processor.service';
+import { CurrencyPipe } from 'src/app/util/pipes';
 
 @Component({
   selector: 'app-settle-up',
@@ -55,6 +56,7 @@ import { FamilyProcessorService } from 'src/app/util/service/family-processor.se
     MethodLabelPipe,
     SettleDatePipe, IOWEPipe, OwedToMePipe,
     ImageFallbackDirective,
+    CurrencyPipe
   ],
   templateUrl: './settle-up.component.html',
   styleUrls: ['./settle-up.component.scss'],
