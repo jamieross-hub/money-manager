@@ -8,6 +8,8 @@ export interface SidebarNavChild {
   externalUrl?: string;
   /** If true, only show this item when the user has family mode active */
   familyOnly?: boolean;
+  /** If true, hide this item when the user has family mode active */
+  hideInFamily?: boolean;
 }
 
 export interface SidebarNavParent {
@@ -27,11 +29,12 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
     isExpanded: true,
     isCollapsible: true,
     children: [
-      {
-        label: 'NAVIGATION.DASHBOARD',
-        route: '/dashboard/home',
-        icon: 'dashboard',
-        order: 1
+       {
+        label: 'NAVIGATION.GROUP_SELECTION',
+        route: '/dashboard/family/groups',
+        icon: 'group',
+        order: 1,
+        familyOnly: true
       },
       {
         label: 'NAVIGATION.ACCOUNTS',
@@ -39,50 +42,40 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         icon: 'account_balance',
         order: 2
       },
-      {
-        label: 'NAVIGATION.TRANSACTIONS',
-        route: '/dashboard/transactions',
-        icon: 'receipt_long',
+       {
+        label: 'NAVIGATION.CATEGORIES',
+        route: '/dashboard/category',
+        icon: 'category',
         order: 3
       },
-      {
-        label: 'NAVIGATION.GROUP_SELECTION',
-        route: '/dashboard/family/groups',
-        icon: 'group',
-        order: 4,
-        familyOnly: true
+        {
+        label: 'NAVIGATION.REPORTS',
+        route: '/dashboard/reports',
+        icon: 'analytics',
+        order: 4
       },
+      // {
+      //   label: 'NAVIGATION.TRANSACTIONS',
+      //   route: '/dashboard/transactions',
+      //   icon: 'receipt_long',
+      //   order: 3
+      // },
+     
       {
         label: 'NAVIGATION.RECURRING',
         route: '/dashboard/transactions',
         queryParams: { tab: 'recurring' },
         icon: 'repeat',
-        order: 4
-      },
-      {
-        label: 'NAVIGATION.CATEGORIES',
-        route: '/dashboard/category',
-        icon: 'category',
         order: 5
       },
+     
       {
         label: 'NAVIGATION.BUDGETS',
         route: '/dashboard/budgets',
         icon: 'pie_chart',
         order: 6
       },
-      {
-        label: 'NAVIGATION.REPORTS',
-        route: '/dashboard/reports',
-        icon: 'analytics',
-        order: 7
-      },
-      {
-        label: 'NAVIGATION.BACKUP_RESTORE',
-        route: '/dashboard/backup-restore',
-        icon: 'settings_backup_restore',
-        order: 5
-      }
+    
     ]
   },
   {
@@ -93,16 +86,24 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
     isCollapsible: true,
     children: [
       {
+        label: 'NAVIGATION.BACKUP_RESTORE',
+        route: '/dashboard/backup-restore',
+        icon: 'settings_backup_restore',
+        order: 1
+      },
+      {
         label: 'NAVIGATION.TAX',
         route: '/dashboard/tax',
         icon: 'calculate',
-        order: 3,
-        isPremium: false
+        order: 2,
+        isPremium: false,
+        hideInFamily: true
       },
       {
-        label: 'Family Tracker',
+        label: 'Family Groups',
         route: '/dashboard/family',
         icon: 'family_restroom',
+        hideInFamily: true,
         order: 3
       },
       {
@@ -110,19 +111,22 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         route: '/dashboard/google-sheets',
         icon: 'table_chart',
         order: 5,
-        isPremium: false
+        isPremium: false,
+        hideInFamily: true
       },
       {
         label: 'Connect AI Models',
         route: '/dashboard/openai-interaction',
         icon: 'smart_toy',
         order: 6,
+        hideInFamily: true,
         isPremium: false
       },
       {
         label: 'NAVIGATION.LOAN_CALCULATOR',
         route: '/dashboard/loan-calculator',
         icon: 'calculate',
+        hideInFamily: true,
         order: 7
       }
     ]

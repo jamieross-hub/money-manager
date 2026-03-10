@@ -12,7 +12,7 @@
 
 // Mobile Filter Header
 .mobile-filter-header {
-  background: var(--surface-200);
+  background: var(--surface-100);
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
   padding: 12px;
@@ -175,7 +175,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  background: var(--surface-100);
+  background: var(--surface-50);
   border: 1px solid var(--surface-300);
   border-radius: 12px;
   padding: 0 12px;
@@ -431,7 +431,7 @@
 
 // Transaction Summary
 .transaction-summary {
-  background: var(--surface-200);
+  background: var(--surface-100);
   // border-bottom: 1px solid #e2e8f0;
   padding-bottom: 5px;
 

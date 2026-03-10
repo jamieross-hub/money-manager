@@ -159,6 +159,12 @@ export class ProfileComponent {
     return activeFamily && user && activeFamily.ownerUserId === user.uid;
   });
 
+  readonly activeFamilyName = computed(() => {
+    const activeId = this.activeFamilyId();
+    const family = this.familyGroups().find(f => f.id === activeId);
+    return family ? family.name : null;
+  });
+
   // ─── Reactive Form ────────────────────────────────────────────────
   readonly profileForm: FormGroup;
 

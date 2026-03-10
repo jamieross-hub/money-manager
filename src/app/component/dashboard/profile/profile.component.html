@@ -31,8 +31,16 @@
         <div class="flex flex-col user-info">
           <p class="text-xl font-bold text-gray-900 dark:text-white !mb-0 break-words">{{ fullName() }}</p>
           <p class="text-sm text-gray-500 dark:text-gray-400 m-0 mt-0.5 break-all">{{ userProfile()?.email }}</p>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ 'PROFILE.MEMBER_SINCE' | translate }} {{
-          getFormattedDate(userProfile()?.createdAt) }}</p>
+          @if (isFamilyMode() && activeFamilyName()) {
+            <div class="flex items-center gap-1.5 mt-1.5">
+              <span class="px-2 py-0.5 rounded-md bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-[10px] font-bold uppercase tracking-wider border border-primary-100 dark:border-primary-800 flex items-center gap-1">
+                <mat-icon class="!w-3 !h-3 !text-[12px]">family_restroom</mat-icon>
+                {{ activeFamilyName() }}
+              </span>
+            </div>
+          }
+          <!-- <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ 'PROFILE.MEMBER_SINCE' | translate }} {{
+          getFormattedDate(userProfile()?.createdAt) }}</p> -->
         </div>
       </div>
 
