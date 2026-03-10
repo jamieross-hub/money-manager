@@ -2,10 +2,10 @@
   <div class="flex flex-col  ">
 
 
-    <div #scrollContainer class="flex-1 overflow-y-auto px-4 space-y-4 pt-4 pb-28 md:pb-4 flex"
+    <div #scrollContainer class="flex-1 chat-container px-4 space-y-2 pt-4 pb-28 md:pb-4 flex"
       [ngStyle]="{'max-height': breakpointService.device.isMobile ? 'calc(78dvh - 100px)' : '70vh'}">
       <div class="max-w-screen-xl mx-auto w-full">
-        @for (msg of chatFacadeService.messages; track msg) {
+        @for (msg of chatFacadeService.messages(); track msg.id) {
           <div class="flex fade-in"
             [ngClass]="msg.sender === 'user' ? 'justify-end' : 'justify-start'">
             <!-- Text/HTML Messages -->

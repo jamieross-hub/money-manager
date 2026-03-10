@@ -3,28 +3,32 @@
  * This ensures compile-time type checking and better IDE support.
  */
 
-export interface HtmlMessage {
+export interface BaseMessage {
+    id?: string;
+}
+
+export interface HtmlMessage extends BaseMessage {
     sender: 'bot' | 'user';
     type: 'html';
     text: string;
     data?: never;
 }
 
-export interface TextMessage {
+export interface TextMessage extends BaseMessage {
     sender: 'bot' | 'user';
     type: 'text';
     text: string;
     data?: never;
 }
 
-export interface UIElementMessage {
+export interface UIElementMessage extends BaseMessage {
     sender: 'bot';
     type: 'UI-ELEMENT';
     text: string; // Element identifier (e.g., 'categoryDropdown', 'ACCOUNT_SUMMARY_CARD')
     data?: UIElementData;
 }
 
-export interface CommandMessage {
+export interface CommandMessage extends BaseMessage {
     sender: 'bot';
     type: 'command';
     text: string; // JSON string of the command

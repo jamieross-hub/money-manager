@@ -1,4 +1,4 @@
-import { Injectable, OnDestroy } from "@angular/core";
+import { Injectable, OnDestroy, signal } from "@angular/core";
 import { ChatIntentService } from "./chat-intent-service";
 import { ChatFlowService } from "./chat-flow.service";
 import { EntityExtractorService } from "./extractors/entity-extractor.service";
@@ -40,7 +40,7 @@ import { GreetingFacadeService } from "../greeting-facade.service";
 
 @Injectable()
 export class ChatFacadeService implements OnDestroy {
-    messages: Message[] = [];
+    messages = signal<Message[]>([]);
     isTyping = false;
     private destroy$ = new Subject<void>();
     defaultBankAccount: Account | null = null;
@@ -140,9 +140,16 @@ export class ChatFacadeService implements OnDestroy {
         }
     }
 
-    startBotReply(userText: string) {
+    public pushUser(text: string, type: 'text' | 'html' = 'html') {
+        const message: Message = { sender: 'user', text, type, id: this.generateId() };
+        this.messages.update((msgs: Message[]) => [...msgs, message]);
+        this.limitHistory();
         this.scrollToBottom();
+    }
+
+    startBotReply(userText: string) {
         this.isTyping = true;
+        this.scrollToBottom();
         const userId = this.userService.getCurrentUserId();
 
         if (userId) {
@@ -219,12 +226,12 @@ export class ChatFacadeService implements OnDestroy {
             intent,
             lowerText: userText.toLowerCase(),
             extractedInfo,
-            history: this.messages
+            history: this.messages()
         };
 
         // Special handling for CLEAR_DATA - need to clear messages array
         if (intent === INTENTS.CLEAR_DATA) {
-            this.messages = [];
+            this.messages.set([]);
         }
 
         // Get handler from registry
@@ -301,6 +308,8 @@ export class ChatFacadeService implements OnDestroy {
     }
 
     private pushBot(message: Message, pushAtTop: boolean = false, delay: number = 600) {
+        if (!message.id) message.id = this.generateId();
+        
         if (delay > 0) {
             this.isTyping = true;
             this.scrollToBottom();
@@ -308,29 +317,39 @@ export class ChatFacadeService implements OnDestroy {
 
         setTimeout(() => {
             if (pushAtTop) {
-                this.messages.unshift(message);
+                this.messages.update((msgs: Message[]) => [message, ...msgs]);
             } else {
-                this.messages.push(message);
+                this.messages.update((msgs: Message[]) => [...msgs, message]);
             }
 
-            // Limit message history to prevent memory leaks
-            if (this.messages.length > 50) {
-                if (!pushAtTop) {
-                    this.messages.shift();
-                } else {
-                    this.messages.pop(); // If unshifting to top, remove from bottom
-                }
-            }
-
+            this.limitHistory(pushAtTop);
             this.isTyping = false;
             this.scrollToBottom();
         }, delay);
     }
 
+    private generateId(): string {
+        return Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+    }
+
+    private limitHistory(pushedAtTop: boolean = false) {
+        // Limit message history to prevent memory leaks and maintain performance
+        if (this.messages().length > 50) {
+            this.messages.update((msgs: Message[]) => {
+                if (!pushedAtTop) {
+                    return msgs.slice(1);
+                } else {
+                    return msgs.slice(0, -1);
+                }
+            });
+        }
+    }
+
     private scrollToBottom() {
+        // Debounce or slightly delay scroll to ensure DOM has updated
         setTimeout(() => {
             this.scrollToTop.next();
-        }, 100);
+        }, 50);
     }
 
     // Called by UI dropdown or text input

@@ -181,10 +181,12 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
 
   ngAfterViewInit() {
     this.chatFacadeService.scrollToTop.subscribe(() => {
-      this.cdr.detectChanges();
       if (this.chatScrollContainer) {
-        // it is scroll to bottom
-        this.chatScrollContainer.nativeElement.scrollTop = this.chatScrollContainer.nativeElement.scrollHeight;
+        const nativeElement = this.chatScrollContainer.nativeElement;
+        nativeElement.scrollTo({
+          top: nativeElement.scrollHeight,
+          behavior: 'smooth'
+        });
       }
     });
 
@@ -202,17 +204,17 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   processUserMessage(text: string, isVoiceMessage: boolean = false) {
-    this.chatFacadeService.messages.push({ sender: 'user', text, type: 'html' });
+    this.chatFacadeService.pushUser(text);
 
     // If it's a voice message, we want to play the response as audio
     this.chatFacadeService.startBotReply(text);
 
     // We listen for the next bot message to play TTS if it was a voice message
     if (isVoiceMessage) {
-      const currentLength = this.chatFacadeService.messages.length;
+      const currentLength = this.chatFacadeService.messages().length;
       const checkInterval = setInterval(() => {
-        if (this.chatFacadeService.messages.length > currentLength) {
-          const lastMsg = this.chatFacadeService.messages[this.chatFacadeService.messages.length - 1];
+        if (this.chatFacadeService.messages().length > currentLength) {
+          const lastMsg = this.chatFacadeService.messages()[this.chatFacadeService.messages().length - 1];
           if (lastMsg.sender === 'bot') {
             this.playTts(lastMsg.text);
             clearInterval(checkInterval);
@@ -245,7 +247,7 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   onChatCategorySelected(event: { selectedCategory: Category; account: any; amount: number; txType: TransactionType }) {
-    this.chatFacadeService.messages.pop();
+    this.chatFacadeService.messages.update(msgs => msgs.slice(0, -1));
     this.chatFacadeService.handleCategorySelection(event.selectedCategory, event.account, event.amount, event.txType);
   }
 
