@@ -1,7 +1,7 @@
-<div class="min-h-screen bg-white dark:bg-gray-900 overflow-hidden flex flex-col">
+<div [class.min-h-screen]="!isBottomSheet()" class="bg-white dark:bg-gray-900 overflow-hidden flex flex-col h-full">
   <!-- Header -->
   <app-common-header
-    title="Family Members"
+    [title]="family()?.name + ' (' + members().length + ' members)' || 'Family Members'"
     [showCloseButton]="true"
     (closeButtonClick)="goBack()"
     closeButtonTooltip="Go Back">
@@ -12,37 +12,44 @@
   <app-common-body-content class="flex-1 overflow-y-auto">
 
 
-    <div class="max-w-screen-md mx-auto px-4 pb-24">
+    <div class="max-w-screen-md mx-auto pb-40 px-4">
 
-      <!-- Member Count and Description -->
-      <div class="py-4">
-        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-          {{ members().length }} members in your family
-        </p>
-      </div>
-
-      <!-- Invite Code Banner (Premium Look) -->
-      @if (family()) {
-        <div
-          class="mb-6 bg-gradient-to-br from-primary-50 to-white dark:from-primary-900/20 dark:to-gray-800 rounded-2xl p-5 border border-primary-100 dark:border-primary-800 shadow-sm relative overflow-hidden">
-          <!-- Subtle background icon -->
-          <mat-icon class="absolute -right-4 -bottom-4 !text-8xl opacity-5 text-primary-600 dark:text-primary-400">share</mat-icon>
-          <div class="relative z-10">
-            <h3 class="text-sm font-semibold text-primary-900 dark:text-primary-100 mb-1">Invite Family Members</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Share this code with your family to join this wallet</p>
-            <div class="flex items-center justify-between bg-white/60 dark:bg-black/20 rounded-xl p-3 border border-primary-100 dark:border-primary-700">
-              <span class="text-2xl font-black tracking-widest text-primary-700 dark:text-primary-300">
-                {{ family().inviteCode }}
-              </span>
-              <button mat-flat-button color="primary" class="!rounded-lg !px-4 !h-10" (click)="copyCode()">
-                <mat-icon class="!text-lg mr-1">content_copy</mat-icon>
-                Copy
-              </button>
+      <!-- Add Member Section (Admin Only) -->
+      @if (isAdmin()) {
+        <div class="mb-8 bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm transition-all">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-900/40 flex items-center justify-center">
+              <mat-icon class="text-primary-600 dark:text-primary-400">person_add</mat-icon>
             </div>
+            <div>
+              <h3 class="text-base font-bold text-gray-900 dark:text-gray-100">Add Member</h3>
+              <p class="text-xs text-gray-400 dark:text-gray-500">Invite someone using their registration email</p>
+            </div>
+          </div>
+          
+          <div class="flex flex-col gap-2">
+            <mat-form-field appearance="fill" class="flex-1 !pb-0 app-mat-form-field-dense">
+              <mat-label>Email Address</mat-label>
+              <input matInput type="email" [(ngModel)]="emailToAdd" placeholder="e.g. name@example.com" 
+                (keyup.enter)="addMember()" [disabled]="isAdding()">
+              <mat-icon matPrefix class="mr-2 text-gray-400">mail_outline</mat-icon>
+            </mat-form-field>
+            
+            <button mat-flat-button color="primary" 
+              class="!h-[48px] !rounded-xl !px-6 font-bold shadow-sm shadow-primary-200 dark:shadow-none transition-all active:scale-95 disabled:grayscale"
+              (click)="addMember()" [disabled]="!emailToAdd() || isAdding()">
+              @if (isAdding()) {
+                <mat-spinner diameter="20" class="mr-2"></mat-spinner>
+              } @else {
+                Add
+              }
+            </button>
           </div>
         </div>
       }
 
+
+     
       <!-- Members List -->
       <div class="space-y-3">
         @for (member of members(); track member) {

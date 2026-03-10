@@ -1,8 +1,9 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, DestroyRef, effect, untracked } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, DestroyRef, effect, untracked, Optional } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { distinctUntilChanged } from 'rxjs/operators';
 import { Location } from '@angular/common';
 import { Store } from '@ngrx/store';
+import { MatBottomSheetRef } from '@angular/material/bottom-sheet';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -24,6 +25,10 @@ import { NotificationService } from 'src/app/util/service/notification.service';
 import { CommonHeaderComponent } from 'src/app/util/components/dialog/common-header/common-header.component';
 import { CommonBodyContentComponent } from 'src/app/util/components/dialog/common-body-content/common-body-content.component';
 import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
+import { FamilyService } from '../../services/family.service';
+import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-family-members',
@@ -39,7 +44,10 @@ import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.d
     MatTooltipModule,
     CommonHeaderComponent,
     CommonBodyContentComponent,
-    ImageFallbackDirective
+    ImageFallbackDirective,
+    FormsModule,
+    MatFormFieldModule,
+    MatInputModule
 ],
   templateUrl: './family-members.component.html',
   styleUrls: ['./family-members.component.scss']
@@ -49,7 +57,10 @@ export class FamilyMembersComponent implements OnInit {
   private dialog = inject(MatDialog);
   private notificationService = inject(NotificationService);
   private location = inject(Location);
+  private familyService = inject(FamilyService);
   readonly breakpointService = inject(BreakpointService);
+  private bottomSheetRef = inject(MatBottomSheetRef<FamilyMembersComponent>, { optional: true });
+  readonly isBottomSheet = signal(!!this.bottomSheetRef);
 
   family  = toSignal(this.store.select(FamilySelectors.selectFamily).pipe(distinctUntilChanged()), { initialValue: null as any });
   members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as FamilyMember[] });
@@ -67,6 +78,9 @@ export class FamilyMembersComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   private memberColors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
+
+  emailToAdd = signal('');
+  isAdding = signal(false);
 
   constructor() {
     effect(() => {
@@ -106,6 +120,22 @@ export class FamilyMembersComponent implements OnInit {
     }));
   }
 
+  async addMember() {
+    const email = this.emailToAdd().trim();
+    const famId = this.family()?.id;
+    if (!email || !famId) return;
+
+    this.isAdding.set(true);
+    try {
+      await this.familyService.addMemberByEmail(famId, email);
+      this.emailToAdd.set('');
+    } catch (err: any) {
+      this.notificationService.error(err.message || 'Failed to add member');
+    } finally {
+      this.isAdding.set(false);
+    }
+  }
+
   copyCode() {
     const code = this.family()?.inviteCode;
     if (code) navigator.clipboard.writeText(code);
@@ -113,7 +143,11 @@ export class FamilyMembersComponent implements OnInit {
   }
 
   goBack() {
-    this.location.back();
+    if (this.bottomSheetRef) {
+      this.bottomSheetRef.dismiss();
+    } else {
+      this.location.back();
+    }
   }
 
 

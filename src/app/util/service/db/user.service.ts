@@ -786,6 +786,26 @@ export class UserService implements OnDestroy {
   }
 
   /**
+   * Get user data by email address
+   */
+  public async getUserByEmail(email: string): Promise<User | null> {
+    try {
+      const usersRef = collection(this.firestore, 'users');
+      const q = query(usersRef, where('email', '==', email.trim().toLowerCase()), limit(1));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        return null;
+      }
+      
+      return { uid: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() } as User;
+    } catch (error) {
+      console.error('Error fetching user by email:', error);
+      return null;
+    }
+  }
+
+  /**
    * Check if user exists in Firestore
    */
   private async checkUserExists(email: string): Promise<boolean> {

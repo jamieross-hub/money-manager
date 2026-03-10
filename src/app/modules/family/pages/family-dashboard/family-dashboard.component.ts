@@ -32,6 +32,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRippleModule } from '@angular/material/core';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatBottomSheet, MatBottomSheetModule } from '@angular/material/bottom-sheet';
 
 // NgRx
 import { Store } from '@ngrx/store';
@@ -64,6 +65,7 @@ import { UserService } from 'src/app/util/service/db/user.service';
 import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
 import { FamilyCreateDialogComponent } from '../../dialogs/family-create-dialog/family-create-dialog.component';
 import { FamilyJoinDialogComponent } from '../../dialogs/family-join-dialog/family-join-dialog.component';
+import { FamilyMembersComponent } from '../family-members/family-members.component';
 
 // Pipes & Directives
 import { CurrencyPipe, AppDatePipe } from 'src/app/util/pipes';
@@ -87,6 +89,7 @@ import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.d
     MatRippleModule,
     MatSnackBarModule,
     MatTooltipModule,
+    MatBottomSheetModule,
     // App
     CurrencyPipe,
     AppDatePipe,
@@ -116,6 +119,7 @@ export class FamilyDashboardComponent implements OnInit {
   // Material
   private readonly dialog                   = inject(MatDialog);
   private readonly snackBar                 = inject(MatSnackBar);
+  private readonly bottomSheet              = inject(MatBottomSheet);
 
   // App Services
   readonly         breakpointService        = inject(BreakpointService);
@@ -270,6 +274,12 @@ export class FamilyDashboardComponent implements OnInit {
 
   addTransaction(): void {
     // TODO: implement transaction addition logic
+  }
+
+  openMembersSheet(): void {
+    this.bottomSheet.open(FamilyMembersComponent, {
+      panelClass: ['bg-transparent', 'auto-height-sheet']
+    });
   }
 
   loadMoreActivities(): void {

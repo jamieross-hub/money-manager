@@ -28,7 +28,7 @@
           <div class="flex items-center gap-0.5">
             <button mat-icon-button
               class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-              [routerLink]="['/dashboard/family/members']" matTooltip="Manage members">
+              (click)="openMembersSheet()" matTooltip="Manage members">
               <mat-icon>manage_accounts</mat-icon>
             </button>
             <button mat-icon-button [matMenuTriggerFor]="familyMenu"

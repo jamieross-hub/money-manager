@@ -716,6 +716,39 @@ export class FamilyService implements OnDestroy {
     this.notificationService.success('Role updated');
   }
 
+  async addMemberByEmail(familyId: string, email: string): Promise<void> {
+    const user = await this.userService.getUserByEmail(email);
+    if (!user) {
+      throw new Error('User not found. Please ask them to sign up first.');
+    }
+
+    // Check if already a member
+    const existingSnap = await getDoc(this.getMemberDoc(familyId, user.uid));
+    if (existingSnap.exists() && existingSnap.data()?.['isActive']) {
+      throw new Error('User is already a member of this family.');
+    }
+
+    // Add or reactivate
+    const memberData: Omit<FamilyMember, 'id'> = {
+      familyId,
+      userId: user.uid,
+      email: user.email || '',
+      displayName: user.displayName || user.email?.split('@')[0] || 'Member',
+      photoURL: user.photoURL || '',
+      role: 'member',
+      joinedAt: new Date(),
+      isActive: true,
+    };
+
+    await setDoc(this.getMemberDoc(familyId, user.uid), memberData);
+    await updateDoc(this.getFamilyDoc(familyId), {
+      memberIds: arrayUnion(user.uid),
+      updatedAt: new Date()
+    });
+
+    this.notificationService.success(`${user.displayName} added to family!`);
+  }
+
   // ─── Transactions ─────────────────────────────────────────────────────────
 
   // ─── Stats ────────────────────────────────────────────────────────────────
