@@ -32,20 +32,23 @@ export class MultiplePaidBySheetComponent implements OnInit {
   public currencySymbol = signal<string>('₹');
 
   // Member amounts map: userId -> amount
-  public amounts: { [key: string]: number | null } = {};
+  public amountsValues = signal<{ [key: string]: number | null }>({});
 
   public totalAllocated = computed(() => {
     let sum = 0;
-    for (const userId in this.amounts) {
-      if (this.amounts[userId]) {
-        sum += this.amounts[userId] || 0;
+    const currentAmounts = this.amountsValues();
+    for (const userId in currentAmounts) {
+      const val = currentAmounts[userId];
+      if (val) {
+        sum += val;
       }
     }
-    return sum;
+    // Prevent floating point artifacts by rounding to 2 decimal places
+    return Math.round(sum * 100) / 100;
   });
 
   public remainingAmount = computed(() => {
-    return this.totalAmount() - this.totalAllocated();
+    return Math.round((this.totalAmount() - this.totalAllocated()) * 100) / 100;
   });
 
   isValid = computed(() => {
@@ -73,50 +76,36 @@ export class MultiplePaidBySheetComponent implements OnInit {
       }
 
       // Initialize amounts
+      const initialAmounts: { [key: string]: number | null } = {};
       this.data.members.forEach(m => {
-        this.amounts[m.userId] = null;
+        initialAmounts[m.userId] = null;
       });
 
       if (this.data.initialPaidBy && this.data.initialPaidBy.length > 0) {
         this.data.initialPaidBy.forEach(p => {
-          this.amounts[p.userId] = p.amount;
+          initialAmounts[p.userId] = p.amount;
         });
-      } else if (this.data.members.length > 0) {
-        // Just empty initialization
       }
+      this.amountsValues.set(initialAmounts);
     }
   }
 
   onAmountChange(userId: string, input: any): void {
-    // Force ChangeDetection update via model binding
     const val = parseFloat(input);
+    const current = { ...this.amountsValues() };
     if (!isNaN(val)) {
-      this.amounts[userId] = val;
+      current[userId] = val;
     } else {
-      this.amounts[userId] = null;
+      current[userId] = null;
     }
-    // Update computed values
-    this.totalAllocated = computed(() => {
-      let sum = 0;
-      for (const uid in this.amounts) {
-        if (this.amounts[uid]) {
-          sum += this.amounts[uid] || 0;
-        }
-      }
-      return sum;
-    });
-    this.remainingAmount = computed(() => {
-      return this.totalAmount() - this.totalAllocated();
-    });
-    this.isValid = computed(() => {
-      return Math.abs(this.totalAllocated() - this.totalAmount()) < 0.01;
-    });
+    this.amountsValues.set(current);
   }
 
   onSave(): void {
     const result: PaidByMember[] = [];
+    const currentAmounts = this.amountsValues();
     this.members().forEach(m => {
-      const amt = this.amounts[m.userId];
+      const amt = currentAmounts[m.userId];
       if (amt && amt > 0) {
         result.push({
           userId: m.userId,

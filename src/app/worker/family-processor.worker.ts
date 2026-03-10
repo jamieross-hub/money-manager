@@ -8,10 +8,10 @@ addEventListener('message', ({ data }) => {
   const { type, payload } = data;
 
   if (type === 'PROCESS_FAMILY_DATA') {
-    const { transactions, members, settlements, currentUserId, sessionStartTime, fingerprint, fid } = payload;
+    const { transactions, members, settlements, currentUserId, sessionStartTime, fingerprint, fid, mode } = payload;
     
-    const stats = computeStats(transactions, members);
-    const balances = computeBalances(transactions, members, settlements);
+    const stats = computeStats(transactions, members, mode || 'common');
+    const balances = computeBalances(transactions, members, settlements, mode || 'common');
     const activities = processActivities(transactions, settlements, members, currentUserId, sessionStartTime);
 
     postMessage({
@@ -21,7 +21,7 @@ addEventListener('message', ({ data }) => {
   }
 });
 
-function computeStats(transactions: Transaction[], members: FamilyMember[]): FamilyStats {
+function computeStats(transactions: Transaction[], members: FamilyMember[], mode: 'common' | 'split'): FamilyStats {
   let totalIncome = 0;
   let totalExpense = 0;
   const memberMap = new Map<string, FamilyMemberStats>();
@@ -42,60 +42,82 @@ function computeStats(transactions: Transaction[], members: FamilyMember[]): Fam
     });
   });
 
+  const activeMembers = members.filter(m => m.isActive);
+
   let transactionCount = 0;
   transactions.forEach(tx => {
     if (tx.status === TransactionStatus.DELETED) return;
-    if (tx.category === 'Settlement') return;
+    if (tx.category === 'Settlement' || tx.type === TransactionType.TRANSFER) return;
+
+    const amount = Number(tx.amount) || 0;
+    if (amount <= 0) return;
 
     transactionCount++;
-    if (tx.type === 'income') {
-      totalIncome += tx.amount;
+    if (tx.type === TransactionType.INCOME) {
+      totalIncome += amount;
     } else {
-      totalExpense += tx.amount;
-      categoryMap.set(tx.category, (categoryMap.get(tx.category) || 0) + tx.amount);
+      totalExpense += amount;
+      categoryMap.set(tx.category, (categoryMap.get(tx.category) || 0) + amount);
     }
 
-    // Calculation of ACTUAL payment (how much this person contributed)
-    if (tx.type === 'expense') {
-      if (tx.splitData) {
-        if (tx.splitData.paidByUserId === 'multiple' && tx.splitData.paidBy) {
-          tx.splitData.paidBy.forEach(p => {
-            const mStats = memberMap.get(p.userId);
-            if (mStats) mStats.totalPaid += p.amount;
-          });
-        } else if (tx.splitData.paidByUserId) {
-          const mStats = memberMap.get(tx.splitData.paidByUserId);
-          if (mStats) mStats.totalPaid += tx.amount;
+    // 1. Payment credit/debit (who physically handled the money)
+    // For INCOME, the receiver now "owes" the group their share, so totalPaid decreases.
+    const isIncome = tx.type === TransactionType.INCOME;
+    if (tx.splitData?.paidByUserId === 'multiple' && tx.splitData.paidBy?.length) {
+      tx.splitData.paidBy.forEach(p => {
+        const mStats = memberMap.get(p.userId);
+        if (mStats) {
+          const pAmt = Number(p.amount) || 0;
+          mStats.totalPaid += isIncome ? -pAmt : pAmt;
         }
-      } else {
-        const mStats = memberMap.get(tx.userId);
-        if (mStats) mStats.totalPaid += tx.amount;
+      });
+    } else {
+      const payerId = tx.splitData?.paidByUserId || tx.userId;
+      const mStats = memberMap.get(payerId);
+      if (mStats) {
+        mStats.totalPaid += isIncome ? -amount : amount;
       }
     }
 
+    // 2. Share (who consumes the benefit)
     if (tx.splitData?.splitBetween && tx.splitData.splitBetween.length > 0) {
       tx.splitData.splitBetween.forEach(share => {
         const mStats = memberMap.get(share.userId);
         if (mStats) {
-          if (tx.type === 'income') mStats.totalIncome += share.amount;
-          else mStats.totalExpense += share.amount;
+          const shareAmt = Number(share.amount) || 0;
+          if (isIncome) mStats.totalIncome += shareAmt;
+          else mStats.totalExpense += shareAmt;
         }
       });
-      const recorderStats = memberMap.get(tx.userId);
-      if (recorderStats) recorderStats.transactionCount++;
     } else {
-      const memberStats = memberMap.get(tx.userId);
-      if (memberStats) {
-        if (tx.type === 'income') memberStats.totalIncome += tx.amount;
-        else memberStats.totalExpense += tx.amount;
-        memberStats.transactionCount++;
+      // Default fallback based on group mode
+      if (mode === 'common') {
+        const shareAmt = Math.round((amount / activeMembers.length) * 100) / 100;
+        activeMembers.forEach(m => {
+          const mStats = memberMap.get(m.userId);
+          if (mStats) {
+            if (isIncome) mStats.totalIncome += shareAmt;
+            else mStats.totalExpense += shareAmt;
+          }
+        });
+      } else {
+        // 'split' mode fallback: 100% share to recorder
+        const mStats = memberMap.get(tx.userId);
+        if (mStats) {
+          if (isIncome) mStats.totalIncome += amount;
+          else mStats.totalExpense += amount;
+        }
       }
     }
+
+    // Always count for the recorder
+    const recorderStats = memberMap.get(tx.userId);
+    if (recorderStats) recorderStats.transactionCount++;
   });
 
   const memberBreakdown = Array.from(memberMap.values()).map(m => ({
     ...m,
-    netBalance: m.totalIncome - m.totalExpense
+    netBalance: Math.round((m.totalPaid + m.totalIncome - m.totalExpense) * 100) / 100
   }));
 
   const categoryBreakdown = Array.from(categoryMap.entries())
@@ -109,7 +131,7 @@ function computeStats(transactions: Transaction[], members: FamilyMember[]): Fam
   return {
     totalIncome,
     totalExpense,
-    netBalance: totalIncome - totalExpense,
+    netBalance: Math.round((totalIncome - totalExpense) * 100) / 100,
     transactionCount,
     memberBreakdown,
     categoryBreakdown,
@@ -119,9 +141,11 @@ function computeStats(transactions: Transaction[], members: FamilyMember[]): Fam
 function computeBalances(
   transactions: Transaction[],
   members: FamilyMember[],
-  settlements: Settlement[]
+  settlements: Settlement[],
+  mode: 'common' | 'split'
 ): BalanceEntry[] {
   const netBalances = new Map<string, number>();
+  const activeMembers = members.filter(m => m.isActive);
 
   for (const m of members) {
     netBalances.set(m.userId, 0);
@@ -135,30 +159,40 @@ function computeBalances(
   for (const tx of transactions) {
     if (tx.status === TransactionStatus.DELETED) continue;
     if (tx.category === 'Settlement' || tx.type === TransactionType.TRANSFER) continue;
-    if (!tx.splitData) continue;
 
-    const { paidByUserId, splitBetween, paidBy } = tx.splitData;
+    const txAmount = Number(tx.amount) || 0;
+    if (txAmount <= 0) continue;
+
     const multiplier = tx.type === TransactionType.INCOME ? -1 : 1;
 
-    let totalSplit = 0;
-    for (const share of splitBetween) {
-      const shareAmt = Number(share.amount) || 0;
-      totalSplit += shareAmt;
-      updateBalance(share.userId, -shareAmt * multiplier);
+    // 1. Handle Debits (Shares)
+    if (tx.splitData?.splitBetween && tx.splitData.splitBetween.length > 0) {
+      for (const share of tx.splitData.splitBetween) {
+        const shareAmt = Number(share.amount) || 0;
+        updateBalance(share.userId, -shareAmt * multiplier);
+      }
+    } else if (mode === 'common') {
+      const shareAmt = Math.round((txAmount / activeMembers.length) * 100) / 100;
+      activeMembers.forEach(m => updateBalance(m.userId, -shareAmt * multiplier));
+    } else {
+      updateBalance(tx.userId, -txAmount * multiplier);
     }
 
-    if (paidByUserId === 'multiple' && paidBy?.length) {
-      for (const payer of paidBy) {
+    // 2. Handle Credits (Payments)
+    if (tx.splitData?.paidByUserId === 'multiple' && tx.splitData.paidBy?.length) {
+      for (const payer of tx.splitData.paidBy) {
         const payerAmt = Number(payer.amount) || 0;
         updateBalance(payer.userId, payerAmt * multiplier);
       }
     } else {
-      updateBalance(paidByUserId, totalSplit * multiplier);
+      const payerId = tx.splitData?.paidByUserId || tx.userId;
+      updateBalance(payerId, txAmount * multiplier);
     }
   }
 
   for (const s of settlements) {
     const settleAmt = Number(s.amount) || 0;
+    if (settleAmt <= 0) continue;
     updateBalance(s.fromUserId, settleAmt);
     updateBalance(s.toUserId, -settleAmt);
   }
@@ -168,8 +202,8 @@ function computeBalances(
 
   for (const [userId, amount] of netBalances.entries()) {
     const roundedAmount = Math.round(amount * 100) / 100;
-    if (roundedAmount >= 0.1) creditors.push({ id: userId, amount: roundedAmount });
-    else if (roundedAmount <= -0.1) debtors.push({ id: userId, amount: Math.abs(roundedAmount) });
+    if (roundedAmount >= 0.01) creditors.push({ id: userId, amount: roundedAmount });
+    else if (roundedAmount <= -0.01) debtors.push({ id: userId, amount: Math.abs(roundedAmount) });
   }
 
   const result: BalanceEntry[] = [];

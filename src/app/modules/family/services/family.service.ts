@@ -722,7 +722,7 @@ export class FamilyService implements OnDestroy {
 
   // ─── Stats ────────────────────────────────────────────────────────────────
 
-  computeStats(transactions: Transaction[], members: FamilyMember[]): FamilyStats {
+  computeStats(transactions: Transaction[], members: FamilyMember[], mode: 'common' | 'split' = 'common'): FamilyStats {
     let totalIncome = 0;
     let totalExpense = 0;
     const memberMap = new Map<string, FamilyMemberStats>();
@@ -743,6 +743,8 @@ export class FamilyService implements OnDestroy {
       });
     });
 
+    const activeMembers = members.filter(m => m.isActive);
+
     let transactionCount = 0;
     // Accumulate
     transactions.forEach(tx => {
@@ -750,70 +752,73 @@ export class FamilyService implements OnDestroy {
       if (tx.status === TransactionStatus.DELETED) return;
 
       // Skip settlements for expense/income stats as they are internal transfers
-      if (tx.category === 'Settlement') return;
+      if (tx.category === 'Settlement' || tx.type === TransactionType.TRANSFER) return;
+
+      const amount = Number(tx.amount) || 0;
+      if (amount <= 0) return;
 
       transactionCount++;
-      if (tx.type === 'income') {
-        totalIncome += tx.amount;
+      const isIncome = tx.type === TransactionType.INCOME;
+      if (isIncome) {
+        totalIncome += amount;
       } else {
-        totalExpense += tx.amount;
-        categoryMap.set(tx.category, (categoryMap.get(tx.category) || 0) + tx.amount);
+        totalExpense += amount;
+        categoryMap.set(tx.category, (categoryMap.get(tx.category) || 0) + amount);
       }
 
-      // Track actual contributions (totalPaid)
-      if (tx.type === 'expense') {
-        if (tx.splitData) {
-          if (tx.splitData.paidByUserId === 'multiple' && tx.splitData.paidBy) {
-            tx.splitData.paidBy.forEach(p => {
-              const mStats = memberMap.get(p.userId);
-              if (mStats) mStats.totalPaid += p.amount;
-            });
-          } else if (tx.splitData.paidByUserId) {
-            const mStats = memberMap.get(tx.splitData.paidByUserId);
-            if (mStats) mStats.totalPaid += tx.amount;
+      // 1. Payment credit/debit (who physically handled the money)
+      if (tx.splitData?.paidByUserId === 'multiple' && tx.splitData.paidBy?.length) {
+        tx.splitData.paidBy.forEach(p => {
+          const mStats = memberMap.get(p.userId);
+          if (mStats) {
+            const pAmt = Number(p.amount) || 0;
+            mStats.totalPaid += isIncome ? -pAmt : pAmt;
           }
-        } else {
-          const mStats = memberMap.get(tx.userId);
-          if (mStats) mStats.totalPaid += tx.amount;
+        });
+      } else {
+        const payerId = tx.splitData?.paidByUserId || tx.userId;
+        const mStats = memberMap.get(payerId);
+        if (mStats) {
+          mStats.totalPaid += isIncome ? -amount : amount;
         }
       }
 
+      // 2. Share (who consumes the benefit)
       if (tx.splitData?.splitBetween && tx.splitData.splitBetween.length > 0) {
-        // In split mode, attribute share based on splitData
         tx.splitData.splitBetween.forEach(share => {
           const mStats = memberMap.get(share.userId);
           if (mStats) {
-            if (tx.type === 'income') {
-              mStats.totalIncome += share.amount;
-            } else {
-              mStats.totalExpense += share.amount;
-            }
+            const shareAmt = Number(share.amount) || 0;
+            if (isIncome) mStats.totalIncome += shareAmt;
+            else mStats.totalExpense += shareAmt;
           }
         });
-        
-        // Count the transaction for whoever recorded it
-        const recorderStats = memberMap.get(tx.userId);
-        if (recorderStats) {
-          recorderStats.transactionCount++;
-        }
-      } else {
-        // Simple mode: attribute to the recording user
-        const memberStats = memberMap.get(tx.userId);
-        if (memberStats) {
-          if (tx.type === 'income') {
-            memberStats.totalIncome += tx.amount;
-          } else {
-            memberStats.totalExpense += tx.amount;
+      } else if (mode === 'common') {
+        const shareAmt = Math.round((amount / activeMembers.length) * 100) / 100;
+        activeMembers.forEach(m => {
+          const mStats = memberMap.get(m.userId);
+          if (mStats) {
+            if (isIncome) mStats.totalIncome += shareAmt;
+            else mStats.totalExpense += shareAmt;
           }
-          memberStats.transactionCount++;
+        });
+      } else {
+        const mStats = memberMap.get(tx.userId);
+        if (mStats) {
+          if (isIncome) mStats.totalIncome += amount;
+          else mStats.totalExpense += amount;
         }
       }
+
+      // Always count for the recorder
+      const recorderStats = memberMap.get(tx.userId);
+      if (recorderStats) recorderStats.transactionCount++;
     });
 
     // Finalize net balances and member breakdown
     const memberBreakdown = Array.from(memberMap.values()).map(m => ({
       ...m,
-      netBalance: m.totalIncome - m.totalExpense
+      netBalance: Math.round((m.totalPaid + m.totalIncome - m.totalExpense) * 100) / 100
     }));
 
     const categoryBreakdown = Array.from(categoryMap.entries())
@@ -827,7 +832,7 @@ export class FamilyService implements OnDestroy {
     return {
       totalIncome,
       totalExpense,
-      netBalance: totalIncome - totalExpense,
+      netBalance: Math.round((totalIncome - totalExpense) * 100) / 100,
       transactionCount,
       memberBreakdown,
       categoryBreakdown,
@@ -1028,9 +1033,11 @@ export class FamilyService implements OnDestroy {
   computeBalances(
     transactions: Transaction[],
     members: FamilyMember[],
-    settlements: Settlement[]
+    settlements: Settlement[],
+    mode: 'common' | 'split' = 'common'
   ): BalanceEntry[] {
     const netBalances = new Map<string, number>();
+    const activeMembers = members.filter(m => m.isActive);
 
     // Initialize all members to ensure they appear in balances even if they have no transactions
     for (const m of members) {
@@ -1051,51 +1058,48 @@ export class FamilyService implements OnDestroy {
       if (tx.status === TransactionStatus.DELETED) continue;
       // Skip settlements for balance stats as they are mapped from settlements collection
       if (tx.category === 'Settlement' || tx.type === TransactionType.TRANSFER) continue;
-      if (!tx.splitData) continue;
-
-      const { paidByUserId, splitBetween, paidBy } = tx.splitData;
       
-      // Income transactions are treated as "negative debt" - receiving money for the group
-      // means you OWE others their share, whereas paying (expense) means others OWE you.
+      const txAmount = Number(tx.amount) || 0;
+      if (txAmount <= 0) continue;
+
       const multiplier = tx.type === TransactionType.INCOME ? -1 : 1;
 
-      // Subtract shares (negative balance/debt for expense, positive for income)
-      let totalSplit = 0;
-      for (const share of splitBetween) {
-        const shareAmt = Number(share.amount) || 0;
-        totalSplit += shareAmt;
-        updateBalance(share.userId, -shareAmt * multiplier);
+      // 1. Handle Debits (Shares)
+      if (tx.splitData?.splitBetween && tx.splitData.splitBetween.length > 0) {
+        for (const share of tx.splitData.splitBetween) {
+          const shareAmt = Number(share.amount) || 0;
+          updateBalance(share.userId, -shareAmt * multiplier);
+        }
+      } else if (mode === 'common') {
+        const shareAmt = Math.round((txAmount / activeMembers.length) * 100) / 100;
+        activeMembers.forEach(m => updateBalance(m.userId, -shareAmt * multiplier));
+      } else {
+        updateBalance(tx.userId, -txAmount * multiplier);
       }
 
-      // Add paid amounts (positive balance/credit for expense, negative for income)
-      if (paidByUserId === 'multiple' && paidBy?.length) {
-        let totalPaid = 0;
-        for (const payer of paidBy) {
+      // 2. Handle Credits (Payments)
+      if (tx.splitData?.paidByUserId === 'multiple' && tx.splitData.paidBy?.length) {
+        for (const payer of tx.splitData.paidBy) {
           const payerAmt = Number(payer.amount) || 0;
-          totalPaid += payerAmt;
           updateBalance(payer.userId, payerAmt * multiplier);
         }
-
-        // Validate multiple payer sum
-        if (Math.abs(totalPaid - totalSplit) > 0.01) {
-          console.error(`Value mismatch in transaction ${tx.id}: total split ${totalSplit} != total paid ${totalPaid}`);
-        }
       } else {
-        // Use the sum of all shares to ensure exact zero-sum if possible
-        updateBalance(paidByUserId, totalSplit * multiplier);
+        const payerId = tx.splitData?.paidByUserId || tx.userId;
+        updateBalance(payerId, txAmount * multiplier);
       }
     }
 
     // Process settlements
     for (const s of settlements) {
       const settleAmt = Number(s.amount) || 0;
+      if (settleAmt <= 0) continue;
       updateBalance(s.fromUserId, settleAmt); // Sender paid off debt, balance increases
       updateBalance(s.toUserId, -settleAmt);  // Receiver got paid, balance decreases
     }
 
     // Balance corruption safety check
     const totalNet = Array.from(netBalances.values()).reduce((sum, v) => sum + v, 0);
-    if (Math.abs(totalNet) > 0.1) { // Increased threshold for corruption check due to multi-step rounding
+    if (Math.abs(totalNet) > 0.1) {
       console.error("Balance corruption detected: net balances do not sum to zero", totalNet);
     }
 
@@ -1104,12 +1108,10 @@ export class FamilyService implements OnDestroy {
     const debtors: { id: string; amount: number }[] = [];
 
     for (const [userId, amount] of netBalances.entries()) {
-      const roundedAmount = Math.round(amount * 100) / 100; // Prevent float artifacts
-      // Use a small threshold (0.10) to filter out "dust" caused by rounding in transactions
-      // especially in split groups where 100/3 = 33.33 + 33.33 + 33.34
-      if (roundedAmount >= 0.1) { 
+      const roundedAmount = Math.round(amount * 100) / 100;
+      if (roundedAmount >= 0.01) { 
         creditors.push({ id: userId, amount: roundedAmount });
-      } else if (roundedAmount <= -0.1) {
+      } else if (roundedAmount <= -0.01) {
         debtors.push({ id: userId, amount: Math.abs(roundedAmount) });
       }
     }

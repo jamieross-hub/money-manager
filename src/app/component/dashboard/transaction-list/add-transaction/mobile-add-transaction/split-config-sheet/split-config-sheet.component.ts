@@ -252,41 +252,74 @@ export class SplitConfigSheetComponent implements OnInit {
     const result: SplitBetweenMember[] = [];
 
     if (mode === 'equally') {
-       const includedList = list.filter(m => m.included);
-       const chunkSize = totalAmt / includedList.length;
-       const percentSize = 100 / includedList.length;
+      const includedList = list.filter(m => m.included);
+      const count = includedList.length;
+      
+      // Calculate split with 2 decimals
+      const chunkSize = Math.floor((totalAmt / count) * 100) / 100;
+      // Calculate remainder in cents
+      let remainder = Math.round((totalAmt - (chunkSize * count)) * 100);
+      
+      const percentSize = Math.round((100 / count) * 100) / 100;
+      let percentRemainder = Math.round((100 - (percentSize * count)) * 100);
 
-       includedList.forEach(m => {
-          result.push({
-             userId: m.userId,
-             displayName: m.displayName,
-             photoURL: m.photoURL,
-             amount: parseFloat(chunkSize.toFixed(2)),
-             percentage: parseFloat(percentSize.toFixed(2))
-          });
-       });
+      includedList.forEach((m, idx) => {
+        let finalAmt = chunkSize;
+        let finalPercent = percentSize;
+
+        // Distribute remainder (cents) one by one starting from 1st or last
+        // Distributing to last members is conventional
+        if (remainder > 0) {
+          finalAmt = Math.round((finalAmt + 0.01) * 100) / 100;
+          remainder--;
+        }
+        if (percentRemainder > 0) {
+          finalPercent = Math.round((finalPercent + 0.01) * 100) / 100;
+          percentRemainder--;
+        }
+
+        result.push({
+          userId: m.userId,
+          displayName: m.displayName,
+          photoURL: m.photoURL,
+          amount: finalAmt,
+          percentage: finalPercent
+        });
+      });
     } else if (mode === 'unequally') {
-       list.filter(m => m.amount && m.amount > 0).forEach(m => {
-          const percent = (m.amount! / totalAmt) * 100;
-          result.push({
-            userId: m.userId,
-            displayName: m.displayName,
-            photoURL: m.photoURL,
-            amount: m.amount!,
-            percentage: parseFloat(percent.toFixed(2))
-          });
-       });
+      list.filter(m => m.amount && m.amount > 0).forEach(m => {
+        const percent = Math.round(((m.amount! / totalAmt) * 100) * 100) / 100;
+        result.push({
+          userId: m.userId,
+          displayName: m.displayName,
+          photoURL: m.photoURL,
+          amount: m.amount!,
+          percentage: percent
+        });
+      });
     } else if (mode === 'percentage') {
-       list.filter(m => m.percentage && m.percentage > 0).forEach(m => {
-          const amt = (m.percentage! / 100) * totalAmt;
-          result.push({
-            userId: m.userId,
-            displayName: m.displayName,
-            photoURL: m.photoURL,
-            amount: parseFloat(amt.toFixed(2)),
-            percentage: m.percentage!
-          });
-       });
+      const includedList = list.filter(m => m.percentage && m.percentage > 0);
+      const count = includedList.length;
+      
+      let runningAmountSum = 0;
+      includedList.forEach((m, idx) => {
+        let amt = Math.round(((m.percentage! / 100) * totalAmt) * 100) / 100;
+        
+        // Final item adjustment to ensure exact match with totalAmount
+        if (idx === count - 1) {
+          amt = Math.round((totalAmt - runningAmountSum) * 100) / 100;
+        } else {
+          runningAmountSum += amt;
+        }
+
+        result.push({
+          userId: m.userId,
+          displayName: m.displayName,
+          photoURL: m.photoURL,
+          amount: amt,
+          percentage: m.percentage!
+        });
+      });
     }
 
     this.bottomSheetRef.dismiss({

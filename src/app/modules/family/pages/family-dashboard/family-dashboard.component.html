@@ -199,16 +199,16 @@
               </div>
               <div class="flex flex-col items-end">
                 <span class="text-[9px] font-bold uppercase tracking-widest mb-0.5"
-                  [class.text-red-500]="myNetSettleBalance() < -0.1"
-                  [class.text-green-600]="myNetSettleBalance() > 0.1"
-                  [class.text-gray-400]="myNetSettleBalance() >= -0.1 && myNetSettleBalance() <= 0.1">
-                  {{ myNetSettleBalance() > 0.1 ? 'You Get' : (myNetSettleBalance() < -0.1 ? 'You Owe' : 'Settled') }}
+                  [class.text-red-500]="myNetSettleBalance() < -0.01"
+                  [class.text-green-600]="myNetSettleBalance() > 0.01"
+                  [class.text-gray-400]="myNetSettleBalance() >= -0.01 && myNetSettleBalance() <= 0.01">
+                  {{ myNetSettleBalance() > 0.01 ? 'You Get' : (myNetSettleBalance() < -0.01 ? 'You Owe' : 'Settled') }}
                 </span>
                 <span class="text-xl font-black leading-none"
-                  [class.text-red-600]="myNetSettleBalance() < -0.1"
-                  [class.text-green-600]="myNetSettleBalance() > 0.1"
-                  [class.text-gray-800]="myNetSettleBalance() >= -0.1 && myNetSettleBalance() <= 0.1"
-                  [class.dark:text-gray-200]="myNetSettleBalance() >= -0.1 && myNetSettleBalance() <= 0.1">
+                  [class.text-red-600]="myNetSettleBalance() < -0.01"
+                  [class.text-green-600]="myNetSettleBalance() > 0.01"
+                  [class.text-gray-800]="myNetSettleBalance() >= -0.01 && myNetSettleBalance() <= 0.01"
+                  [class.dark:text-gray-200]="myNetSettleBalance() >= -0.01 && myNetSettleBalance() <= 0.01">
                   {{ (myNetSettleBalance() < 0 ? -myNetSettleBalance() : myNetSettleBalance()) | currency }}
                 </span>
               </div>

@@ -130,11 +130,16 @@ export class SettleUpComponent implements OnInit {
       }
     }
 
-    return { my, others, owedByMe, owedToMe };
+    return { 
+      my, 
+      others, 
+      owedByMe: Math.round(owedByMe * 100) / 100, 
+      owedToMe: Math.round(owedToMe * 100) / 100 
+    };
   }, {
     equal: (a, b) => (
-      a.owedByMe === b.owedByMe &&
-      a.owedToMe === b.owedToMe &&
+      Math.abs(a.owedByMe - b.owedByMe) < 0.01 &&
+      Math.abs(a.owedToMe - b.owedToMe) < 0.01 &&
       a.my.length === b.my.length &&
       a.others.length === b.others.length
     )

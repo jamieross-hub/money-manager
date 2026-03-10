@@ -350,20 +350,38 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     const paidByMember = members.find(m => m.userId === paidByUserId);
 
     // If it's a simple selection (just user IDs stored as strings - backward compatibility or edge case)
-    // convert it to SplitBetweenMember objects
+    // convert it to SplitBetweenMember objects with accurate remainder distribution
     if (splitBetween.length > 0 && typeof splitBetween[0] === 'string') {
       const amount = parseFloat(this.transactionForm.get('amount')?.value || 0);
       const splitBetweenIds = splitBetween as unknown as string[];
-      splitBetween = splitBetweenIds.map(uid => {
+      const count = splitBetweenIds.length;
+      
+      const chunkSize = Math.floor((amount / count) * 100) / 100;
+      let remainder = Math.round((amount - (chunkSize * count)) * 100);
+      
+      const percentSize = Math.round((100 / count) * 100) / 100;
+      let percentRemainder = Math.round((100 - (percentSize * count)) * 100);
+
+      splitBetween = splitBetweenIds.map((uid, idx) => {
         const m = members.find(mem => mem.userId === uid);
-        const percentage = splitBetweenIds.length > 0 ? 100 / splitBetweenIds.length : 0;
-        const shareAmount = amount * percentage / 100;
+        let finalAmt = chunkSize;
+        let finalPercent = percentSize;
+
+        if (remainder > 0) {
+          finalAmt = Math.round((finalAmt + 0.01) * 100) / 100;
+          remainder--;
+        }
+        if (percentRemainder > 0) {
+          finalPercent = Math.round((finalPercent + 0.01) * 100) / 100;
+          percentRemainder--;
+        }
+
         return {
           userId: uid,
           displayName: m?.displayName || uid,
           photoURL: m?.photoURL || '',
-          percentage: parseFloat(percentage.toFixed(2)),
-          amount: parseFloat(shareAmount.toFixed(2)),
+          percentage: finalPercent,
+          amount: finalAmt,
         };
       });
     }
@@ -1118,26 +1136,38 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
   private updateEqualSplitAmounts(totalAmount: number): void {
     if (this.splitConfigMode() === 'equally') {
-      const currentSplits = this.transactionForm.get('splitBetween')?.value || [];
+      const currentSplits: SplitBetweenMember[] = this.transactionForm.get('splitBetween')?.value || [];
       const members = this.familyMembers();
       
-      if (currentSplits.length > 0) {
-        const splitAmount = +(totalAmount / currentSplits.length).toFixed(2);
-        const updatedSplits = currentSplits.map((s: any) => ({ ...s, amount: splitAmount }));
+      const targetList = currentSplits.length > 0 
+        ? currentSplits 
+        : members.map(m => ({ userId: m.userId, displayName: m.displayName, photoURL: m.photoURL || '', amount: 0, percentage: 0 }));
+
+      if (targetList.length > 0 && totalAmount > 0) {
+        const count = targetList.length;
+        const chunkSize = Math.floor((totalAmount / count) * 100) / 100;
+        let remainder = Math.round((totalAmount - (chunkSize * count)) * 100);
+        
+        const percentSize = Math.round((100 / count) * 100) / 100;
+        let percentRemainder = Math.round((100 - (percentSize * count)) * 100);
+
+        const updatedSplits = targetList.map((s, idx) => {
+          let finalAmt = chunkSize;
+          let finalPercent = percentSize;
+
+          if (remainder > 0) {
+            finalAmt = Math.round((finalAmt + 0.01) * 100) / 100;
+            remainder--;
+          }
+          if (percentRemainder > 0) {
+            finalPercent = Math.round((finalPercent + 0.01) * 100) / 100;
+            percentRemainder--;
+          }
+
+          return { ...s, amount: finalAmt, percentage: finalPercent };
+        });
+
         this.transactionForm.get('splitBetween')?.setValue(updatedSplits, { emitEvent: false });
-      } else if (totalAmount > 0 && members.length > 0 && !this.editMode() && !this.viewMode()) {
-        const splitAmount = +(totalAmount / members.length).toFixed(2);
-        const percentage = +(100 / members.length).toFixed(2);
-        
-        const initialSplits: SplitBetweenMember[] = members.map(m => ({
-          userId: m.userId,
-          displayName: m.displayName,
-          photoURL: m.photoURL || '',
-          amount: splitAmount,
-          percentage: percentage
-        }));
-        
-        this.transactionForm.patchValue({ splitBetween: initialSplits });
       }
     }
   }

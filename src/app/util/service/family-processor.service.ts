@@ -16,6 +16,7 @@ export interface FamilyProcessorInput {
   members: FamilyMember[];
   settlements: Settlement[];
   familyId: string;
+  mode: 'common' | 'split';
   currentUserId?: string;
   sessionStartTime: number;
 }
@@ -85,6 +86,7 @@ export class FamilyProcessorService {
       members: mem, 
       settlements: set, 
       familyId: fam?.id, 
+      mode: (fam?.mode || 'common') as 'common' | 'split',
       ready: isReady,
       currentUserId: uid
     };
@@ -120,6 +122,7 @@ export class FamilyProcessorService {
               members: input.members,
               settlements: input.settlements,
               familyId: familyId,
+              mode: input.mode,
               currentUserId: input.currentUserId || undefined,
               sessionStartTime: this.sessionStartTime
             });
@@ -169,6 +172,7 @@ export class FamilyProcessorService {
     const lastTx = input.transactions[0];
     return JSON.stringify({
       fid: input.familyId,
+      mode: input.mode,
       tFingerprint: input.transactions.length > 0 ? `${input.transactions.length}_${lastTx?.id}_${lastTx?.updatedAt}` : 'empty',
       mCount: input.members.length,
       sCount: input.settlements.length,

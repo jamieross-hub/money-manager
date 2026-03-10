@@ -26,19 +26,19 @@
 
     <!-- Status Summary Pills -->
     <div class="balance-pills-container">
-      @if (totalOwedByMe() > 0) {
+      @if (totalOwedByMe() >= 0.01) {
         <div class="status-pill debt">
           <mat-icon>arrow_outward</mat-icon>
-          <span>You owe ₹{{ totalOwedByMe() | number:'1.0-0' }}</span>
+          <span>You owe {{ totalOwedByMe() | currency }}</span>
         </div>
       }
-      @if (totalOwedToMe() > 0) {
+      @if (totalOwedToMe() >= 0.01) {
         <div class="status-pill credit">
           <mat-icon>call_received</mat-icon>
-          <span>₹{{ totalOwedToMe() | number:'1.0-0' }} owed to you</span>
+          <span>{{ totalOwedToMe() | currency }} owed to you</span>
         </div>
       }
-      @if (totalOwedByMe() === 0 && totalOwedToMe() === 0 && balances().length > 0) {
+      @if (totalOwedByMe() < 0.01 && totalOwedToMe() < 0.01 && balances().length > 0) {
         <div class="status-pill">
           <mat-icon>verified</mat-icon>
           <span>You're all settled</span>
@@ -86,7 +86,7 @@
                 <p class="amount-label" 
                    [class.text-error-600]="b | iOwe : currentUserId()"
                    [class.text-success-600]="b | owedToMe : currentUserId()">
-                  {{ b.amount | currency: 'INR':'symbol':'1.0-0' }}
+                  {{ b.amount | currency }}
                 </p>
               </div>
 
@@ -130,7 +130,7 @@
                   {{ b.fromDisplayName }} <span class="text-neutral-400 font-normal">→</span> {{ b.toDisplayName }}
                 </p>
                 <p class="amount-label !text-sm text-neutral-500">
-                  {{ b.amount | currency: 'INR':'symbol':'1.0-0' }}
+                  {{ b.amount | currency }}
                 </p>
               </div>
             </div>
@@ -159,7 +159,7 @@
                 </p>
               </div>
               <div class="history-amount">
-                ₹{{ s.amount | number:'1.0-0' }}
+                {{ s.amount | currency }}
               </div>
             </div>
           }
