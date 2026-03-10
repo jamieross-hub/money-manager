@@ -36,6 +36,9 @@ import { FeedbackService } from './feedback.service';
 import { ContactService } from './db/contact.service';
 import { NotificationService } from './notification.service';
 
+/**
+ * Interface and Types
+ */
 export interface NetworkStatus {
   online: boolean;
   connectionType?: string;
@@ -92,20 +95,22 @@ export interface CacheItem<T = any> {
   providedIn: 'root'
 })
 export class CommonSyncService implements OnDestroy {
+  // #region Properties & State
   private readonly destroy$ = new Subject<void>();
   private syncSubscription: Subscription | null = null;
   private transactionSubscription: Subscription | null = null;
+  
   private readonly SYNC_INTERVAL = 5 * 60 * 1000; // 5 minutes
-  private observersInitialized = false;
   private readonly DEFAULT_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
   private readonly DEFAULT_MAX_SIZE = 50 * 1024 * 1024; // 50MB
   private readonly HIGH_PRIORITY_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7 days
   private readonly LOW_PRIORITY_EXPIRY = 60 * 60 * 1000; // 1 hour
+  
+  private observersInitialized = false;
+  private serviceWorkerRegistration: ServiceWorkerRegistration | null = null;
+  private syncQueue: SyncItem[] = [];
 
   private networkStatusSignal = signal<NetworkStatus>({
-    // Use the real browser status at construction time — NOT a hardcoded false.
-    // A hardcoded false caused AuthGuard to incorrectly treat the user as offline
-    // during startup, even on a stable connection.
     online: typeof navigator !== 'undefined' ? navigator.onLine : true
   });
 
@@ -124,9 +129,7 @@ export class CommonSyncService implements OnDestroy {
   public readonly networkStatus$: Observable<NetworkStatus> = toObservable(this.networkStatus);
   public readonly isOnline: Signal<boolean> = computed(() => this.networkStatusSignal().online);
   public readonly isOnline$: Observable<boolean> = toObservable(this.isOnline);
-
-  private serviceWorkerRegistration: ServiceWorkerRegistration | null = null;
-  private syncQueue: SyncItem[] = [];
+  // #endregion
 
   constructor(
     private firestore: Firestore,
@@ -149,6 +152,13 @@ export class CommonSyncService implements OnDestroy {
     }
   }
 
+  ngOnDestroy(): void {
+    this.stopSync();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // #region Initialization
   /**
    * Initialize all services
    */
@@ -202,8 +212,6 @@ export class CommonSyncService implements OnDestroy {
     }
   }
 
-
-
   /**
    * Initialize background sync functionality
    */
@@ -233,6 +241,36 @@ export class CommonSyncService implements OnDestroy {
   }
 
   /**
+   * Listen for sync events from service worker
+   */
+  private setupServiceWorkerSyncListener(): void {
+    if ('serviceWorker' in navigator) {
+      fromEvent(navigator.serviceWorker, 'message')
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((event: any) => {
+          if (event && event.data && event.data.type === 'SYNC_COMPLETED') {
+            const { transactionId, success } = event.data;
+            if (transactionId) {
+              // High-performance O(1) lookup using the dedicated transactions store index
+              const transaction = this.storageService.getItem<Transaction>(transactionId, 'transactions');
+              
+              if (transaction) {
+                this.updateItemSyncStatus({
+                  type: 'transaction',
+                  data: transaction,
+                  operation: 'update',
+                  id: 'legacy-sw-sync'
+                } as any, success ? 'synced' : 'failed');
+              }
+            }
+          }
+        });
+    }
+  }
+  // #endregion
+
+  // #region Network Monitoring & Status
+  /**
    * Handle network status changes
    */
   private handleNetworkChange(online: boolean): void {
@@ -242,6 +280,71 @@ export class CommonSyncService implements OnDestroy {
     } else {
       this.showOfflineNotification();
     }
+  }
+
+  /**
+   * Get current network status
+   */
+  public getCurrentNetworkStatus(): NetworkStatus {
+    return this.networkStatusSignal();
+  }
+
+  /**
+   * Check if currently online
+   */
+  public isCurrentlyOnline(): boolean {
+    return this.networkStatusSignal().online;
+  }
+
+  /**
+   * Check if app should work in offline mode
+   */
+  public shouldWorkOffline(): boolean {
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        return false;
+      }
+
+      // Check if user data is cached
+      const cachedUserData = this.storageService.getItem(LocalStorageKeyHelper.getUserDataKey(currentUser.uid));
+      if (!cachedUserData) {
+        return false;
+      }
+
+      // Check if app has some cached data
+      const hasCachedData = this.storageService.getItem(LocalStorageKey.APP_CACHE_VERSION) ||
+        this.storageService.getItem(LocalStorageKeyHelper.getTransactionsCacheKey(currentUser.uid)) ||
+        this.storageService.getItem(LocalStorageKeyHelper.getCategoriesCacheKey(currentUser.uid));
+
+      return !!hasCachedData;
+    } catch (error) {
+      console.error('Error checking offline capability:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get connection quality
+   */
+  public getConnectionQuality(): string {
+    const status = this.networkStatusSignal();
+    if (!status.online) return 'offline';
+    if (status.effectiveType === '4g') return 'excellent';
+    if (status.effectiveType === '3g') return 'good';
+    if (status.effectiveType === '2g') return 'poor';
+    return 'unknown';
+  }
+
+  /**
+   * Update network status
+   */
+  private updateNetworkStatus(status: Partial<NetworkStatus>): void {
+    const currentStatus = this.networkStatusSignal();
+    const newStatus = { ...currentStatus, ...status };
+    this.networkStatusSignal.set(newStatus);
   }
 
   /**
@@ -257,33 +360,9 @@ export class CommonSyncService implements OnDestroy {
   private showOfflineNotification(): void {
     console.log('You are offline', 'Changes will be saved locally and synced when you reconnect.');
   }
+  // #endregion
 
-
-
-
-
-  /**
-   * Check if mobile device
-   */
-  private isMobileDevice(): boolean {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  }
-
-  /**
-   * Request a background sync from the Service Worker
-   */
-  requestBackgroundSync(): void {
-    if ('serviceWorker' in navigator && 'SyncManager' in window) {
-      navigator.serviceWorker.ready.then((swRegistration: any) => {
-        return swRegistration.sync.register('sync-all-data');
-      }).then(() => {
-        console.log('✅ Background sync "sync-all-data" registered');
-      }).catch((err) => {
-        console.warn('⚠️ Background sync registration failed:', err);
-      });
-    }
-  }
-
+  // #region Sync Control
   /**
    * Start the periodic sync process
    */
@@ -307,6 +386,107 @@ export class CommonSyncService implements OnDestroy {
     ).subscribe();
   }
 
+  /**
+   * Stop the periodic sync process
+   */
+  stopSync(): void {
+    if (this.syncSubscription) {
+      this.syncSubscription.unsubscribe();
+      this.syncSubscription = null;
+    }
+  }
+
+  /**
+   * Perform a full sync (Push pending changes + Pull from Firestore)
+   */
+  syncAll(forcedFamilyId?: string | null) {
+    const userId = this.userService.getCurrentUserId();
+    const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
+    const effectiveFamilyId = forcedFamilyId !== undefined 
+          ? (forcedFamilyId || undefined) 
+          : (profile?.preferences?.activeFamilyId || undefined);
+    const isFamilyMode = forcedFamilyId !== undefined 
+          ? !!forcedFamilyId 
+          : (profile?.preferences?.isFamilyMode ?? false);
+
+    console.log(`[CommonSyncService] syncAll started. UserId: ${userId}, Mode: ${isFamilyMode ? 'Family' : 'Personal'}, FamilyId: ${effectiveFamilyId}`);
+
+    // 1. Handle Guest Mode
+    if (userId === 'offline-guest') {
+      console.log('🔄 Sync skipped: Guest Mode (Local Only)');
+      return of(null);
+    }
+
+    if (!userId) {
+      return of(null);
+    }
+
+    // 2. Handle Network Offline
+    if (!this.isCurrentlyOnline()) {
+      console.log('🔄 Sync skipped: Device is Offline');
+      return of(null);
+    }
+
+    console.log('🔄 Performing full sync...');
+
+    // Resolve services lazily to avoid circular dependencies
+    const transactionsService = this.injector.get(TransactionsFacadeService);
+    const accountsService = this.injector.get(AccountsFacadeService);
+    const categoryService = this.injector.get(CategoryFacadeService);
+    const budgetsService = this.injector.get(BudgetsService);
+    const goalsService = this.injector.get(GoalsService);
+    const googleSheetsService = this.injector.get(GoogleSheetsService);
+    const subscriptionService = this.injector.get(SubscriptionService);
+    const feedbackService = this.injector.get(FeedbackService);
+    const contactService = this.injector.get(ContactService);
+
+    // 1. Push pending changes first
+    return from(this.manualSync()).pipe(
+      timeout(15000),
+      switchMap(() => from(new Promise<void>(resolve => setTimeout(resolve, 1500)))),
+      // 2. Pull changes from all collections
+      switchMap(() => {
+        return forkJoin([
+          transactionsService.pullFromFirestore(userId, effectiveFamilyId),
+          accountsService.pullFromFirestore(userId),
+          categoryService.pullFromFirestore(userId),
+          budgetsService.pullFromFirestore(userId),
+          goalsService.pullFromFirestore(userId),
+          googleSheetsService.pullFromFirestore(userId),
+          subscriptionService.pullFromFirestore(userId),
+          this.userService.pullFromFirestore(userId),
+          this.familyService.pullFromFirestore(userId),
+          feedbackService.pullFromFirestore(),
+          contactService.pullFromFirestore()
+        ]).pipe(
+          timeout(30000)
+        );
+      }),
+      tap(() => {
+        console.log('[CommonSyncService] syncAll: Pull complete for all services');
+        console.log('✅ Sync completed successfully');
+      }),
+      catchError(error => {
+        if (error.name === 'TimeoutError') {
+          console.warn('⚠️ Sync timed out: Continuing in offline mode');
+        } else if (error.code === 'unavailable' || error.message?.includes('network')) {
+          console.warn('⚠️ Firestore unavailable: Continuing in offline mode');
+        } else {
+          console.error('❌ Sync failed:', error);
+        }
+        return of(null);
+      })
+    );
+  }
+
+  /**
+   * Manual sync trigger
+   */
+  async manualSync(): Promise<void> {
+    console.log('Manual sync triggered');
+    await this.processSyncQueue();
+  }
+
   private initializeObservers(): void {
     if (this.observersInitialized) return;
     this.observersInitialized = true;
@@ -325,12 +505,8 @@ export class CommonSyncService implements OnDestroy {
       ),
       tap(([user, familyId]) => console.log(`🔄 Sync context changed for user: ${user.uid}, Mode: ${user.preferences?.isFamilyMode ? 'Family' : 'Personal'}, FamilyId: ${familyId}`)),
       switchMap(([user, familyId]) => {
-        // 1. Initial full sync (already has internal network check)
-        // Pass familyId explicitly to ensure syncAll pulls for the new context
         const initialSync$ = this.syncAll(familyId);
         
-        // 2. Start real-time sync listeners reactively based on network
-        // We add a delay to ensure app startup always starts with IndexedDB
         const transactionsService = this.injector.get(TransactionsFacadeService);
         const accountsService = this.injector.get(AccountsFacadeService);
         const categoryService = this.injector.get(CategoryFacadeService);
@@ -338,7 +514,7 @@ export class CommonSyncService implements OnDestroy {
         const goalsService = this.injector.get<GoalsService>(GoalsService);
 
         const realTimeSync$ = this.isOnline$.pipe(
-          delay(10000), // Delay to ensure startup completes with local data
+          delay(10000),
           switchMap(online => {
             if (online) {
               console.log('🌐 Online: Enabling real-time sync listeners (Full Set)');
@@ -370,7 +546,7 @@ export class CommonSyncService implements OnDestroy {
       })
     ).subscribe();
 
-    // Passive State Handling: Pause sync when app is in background
+    // Passive State Handling
     fromEvent(document, 'visibilitychange').pipe(
       takeUntil(this.destroy$),
       map(() => document.visibilityState),
@@ -386,122 +562,9 @@ export class CommonSyncService implements OnDestroy {
       })
     ).subscribe();
   }
+  // #endregion
 
-  /**
-   * Stop the periodic sync process
-   */
-  stopSync(): void {
-    if (this.syncSubscription) {
-      this.syncSubscription.unsubscribe();
-      this.syncSubscription = null;
-    }
-  }
-
-  /**
-   * Perform a full sync (Push pending changes + Pull from Firestore)
-   */
-  syncAll(forcedFamilyId?: string | null) {
-    const userId = this.userService.getCurrentUserId();
-    const effectiveFamilyId = forcedFamilyId !== undefined 
-          ? (forcedFamilyId || undefined) 
-          : (this.store.selectSignal(ProfileSelectors.selectProfile)()?.preferences?.activeFamilyId || undefined);
-    const isFamilyMode = forcedFamilyId !== undefined 
-          ? !!forcedFamilyId 
-          : (this.store.selectSignal(ProfileSelectors.selectProfile)()?.preferences?.isFamilyMode ?? false);
-
-    console.log(`[CommonSyncService] syncAll started. UserId: ${userId}, Mode: ${isFamilyMode ? 'Family' : 'Personal'}, FamilyId: ${effectiveFamilyId}`);
-
-
-    // 1. Handle Guest Mode
-    if (userId === 'offline-guest') {
-      console.log('🔄 Sync skipped: Guest Mode (Local Only)');
-      return of(null);
-    }
-
-    if (!userId) {
-      return of(null);
-    }
-
-    // 2. Handle Network Offline
-    if (!this.isCurrentlyOnline()) {
-      console.log('🔄 Sync skipped: Device is Offline');
-      return of(null);
-    }
-
-    console.log('🔄 Performing full sync...');
-
-    // Resolve services lazily to avoid circular dependencies
-    // Using Facades ensures we pull from the correct source (Personal vs Family)
-    const transactionsService = this.injector.get(TransactionsFacadeService);
-    const accountsService = this.injector.get(AccountsFacadeService);
-    const categoryService = this.injector.get(CategoryFacadeService);
-    const budgetsService = this.injector.get(BudgetsService);
-    const goalsService = this.injector.get(GoalsService);
-    const googleSheetsService = this.injector.get(GoogleSheetsService);
-    const subscriptionService = this.injector.get(SubscriptionService);
-    const feedbackService = this.injector.get(FeedbackService);
-    const contactService = this.injector.get(ContactService);
-    const familyService = this.injector.get(FamilyService); // For family members and settlements
-
-    // 1. Push pending changes first
-    return from(this.manualSync()).pipe(
-      timeout(15000), // Timeout after 15s if push hangs
-      // Wait a short propagation window after pushing so Firestore batch commits
-      // are visible to the subsequent getDocs pull. Without this, the pull can
-      // arrive before the just-committed offline transactions are readable,
-      // even though manualSync() has already resolved.
-      switchMap(() => from(new Promise<void>(resolve => setTimeout(resolve, 1500)))),
-      // 2. Pull changes from all collections
-      switchMap(() => {
-        return forkJoin([
-          transactionsService.pullFromFirestore(userId, effectiveFamilyId),
-          accountsService.pullFromFirestore(userId),
-          categoryService.pullFromFirestore(userId),
-          budgetsService.pullFromFirestore(userId),
-          goalsService.pullFromFirestore(userId),
-          googleSheetsService.pullFromFirestore(userId),
-          subscriptionService.pullFromFirestore(userId),
-          this.userService.pullFromFirestore(userId),
-          this.familyService.pullFromFirestore(userId),
-          feedbackService.pullFromFirestore(),
-          contactService.pullFromFirestore()
-        ]).pipe(
-          timeout(30000) // Timeout after 30s if pull hangs
-        );
-      }),
-      tap(() => {
-        console.log('[CommonSyncService] syncAll: Pull complete for all services');
-        console.log('✅ Sync completed successfully');
-      }),
-      catchError(error => {
-        if (error.name === 'TimeoutError') {
-          console.warn('⚠️ Sync timed out: Continuing in offline mode');
-        } else if (error.code === 'unavailable' || error.message?.includes('network')) {
-          console.warn('⚠️ Firestore unavailable: Continuing in offline mode');
-        } else {
-          console.error('❌ Sync failed:', error);
-        }
-        return of(null);
-      })
-    );
-  }
-
-  // ==================== CACHE OPERATIONS ====================
-
-  /**
-   * Get sync status observable
-   */
-  get syncStatus$(): Observable<SyncStatus> {
-    return toObservable(this.syncStatusSignal);
-  }
-
-  /**
-   * Get current sync status
-   */
-  get syncStatus(): SyncStatus {
-    return this.syncStatusSignal();
-  }
-
+  // #region Sync Queue Management
   /**
    * Register a sync item for processing
    */
@@ -524,9 +587,6 @@ export class CommonSyncService implements OnDestroy {
         maxRetries: item.maxRetries || 3
       };
 
-      // Optimization: If a sync item for this specific record already exists in the queue,
-      // merge it instead of adding a new one. This prevents redundant Firestore operations
-      // and keeps the queue minimal.
       const syncItemRecordId = this.getRecordId(syncItem);
       const existingIndex = this.syncQueue.findIndex(qItem => 
         qItem.type === syncItem.type && 
@@ -539,25 +599,21 @@ export class CommonSyncService implements OnDestroy {
         
         if (syncItem.operation === 'delete') {
           if (existingItem.operation === 'create') {
-            // Created and deleted offline: remove from queue entirely
             this.syncQueue.splice(existingIndex, 1);
             await this.saveSyncQueue();
             this.updateSyncStatus({ pendingItems: this.syncQueue.length });
             console.log('Sync item optimized: create + delete removed from queue');
             return { success: true };
           } else {
-            // update + delete => just keep delete
             this.syncQueue[existingIndex] = syncItem;
           }
         } else if (syncItem.operation === 'update' && existingItem.operation === 'create') {
-          // create + update => keep as create with new data
           this.syncQueue[existingIndex] = {
             ...syncItem,
             operation: 'create',
-            id: existingItem.id // Keep original sync ID
+            id: existingItem.id
           };
         } else {
-          // Default: replace existing with new (handles update + update)
           this.syncQueue[existingIndex] = syncItem;
         }
       } else {
@@ -604,29 +660,15 @@ export class CommonSyncService implements OnDestroy {
         if (!userId) continue;
 
         switch (item.type) {
-          case 'transaction':
-            await this.processTransactionSync(item, batch, userId);
-            break;
-          case 'budget':
-            await this.processBudgetSync(item, batch, userId);
-            break;
-          case 'account':
-            await this.processAccountSync(item, batch, userId);
-            break;
-          case 'goal':
-            await this.processGoalSync(item, batch, userId);
-            break;
-          case 'category':
-            await this.processCategorySync(item, batch, userId);
-            break;
-          case 'user':
-            await this.processUserSync(item, batch, userId);
-            break;
+          case 'transaction': await this.processTransactionSync(item, batch, userId); break;
+          case 'budget': await this.processBudgetSync(item, batch, userId); break;
+          case 'account': await this.processAccountSync(item, batch, userId); break;
+          case 'goal': await this.processGoalSync(item, batch, userId); break;
+          case 'category': await this.processCategorySync(item, batch, userId); break;
+          case 'user': await this.processUserSync(item, batch, userId); break;
         }
 
         processedItems.push(item.id);
-
-        // Update sync status for the record in store and cache
         await this.updateItemSyncStatus(item, 'synced');
       } catch (error) {
         console.error(`Failed to process sync item ${item.id}:`, error);
@@ -634,7 +676,6 @@ export class CommonSyncService implements OnDestroy {
         item.retryCount++;
         if (item.retryCount >= (item.maxRetries || 3)) {
           failedItems.push(item.id);
-          // Update sync status to failed
           await this.updateItemSyncStatus(item, 'failed');
         }
       }
@@ -665,6 +706,95 @@ export class CommonSyncService implements OnDestroy {
   }
 
   /**
+   * Trigger background sync
+   */
+  async triggerBackgroundSync(syncType?: string): Promise<void> {
+    if (!this.serviceWorkerRegistration) {
+      console.warn('Service worker not available for background sync');
+      return;
+    }
+
+    try {
+      this.updateSyncStatus({ isSyncing: true });
+
+      const syncTag = syncType || 'sync-transactions';
+      if ('sync' in this.serviceWorkerRegistration) {
+        // @ts-ignore
+        await (this.serviceWorkerRegistration as any).sync.register(syncTag);
+        console.log('Background sync triggered:', syncTag);
+      } else {
+        console.warn('Background Sync is not supported in this browser.');
+      }
+
+      this.updateSyncStatus({
+        lastSyncTime: Date.now(),
+        isSyncing: false
+      });
+
+    } catch (error) {
+      console.error('Failed to trigger background sync:', error);
+      this.updateSyncStatus({ isSyncing: false });
+    }
+  }
+
+  /**
+   * Request a background sync from the Service Worker
+   */
+  requestBackgroundSync(): void {
+    if ('serviceWorker' in navigator && 'SyncManager' in window) {
+      navigator.serviceWorker.ready.then((swRegistration: any) => {
+        return swRegistration.sync.register('sync-all-data');
+      }).then(() => {
+        console.log('✅ Background sync "sync-all-data" registered');
+      }).catch((err) => {
+        console.warn('⚠️ Background sync registration failed:', err);
+      });
+    }
+  }
+
+  private async loadSyncQueue(): Promise<void> {
+    try {
+      const queue = await this.getCachedData<SyncItem[]>(LocalStorageKey.SYNC_QUEUE);
+      if (queue && Array.isArray(queue)) {
+        this.syncQueue = queue;
+        this.updateSyncStatus({ pendingItems: this.syncQueue.length });
+      } else {
+        this.syncQueue = [];
+        this.updateSyncStatus({ pendingItems: 0 });
+      }
+    } catch (error) {
+      console.error('Failed to load sync queue:', error);
+      this.syncQueue = [];
+      this.updateSyncStatus({ pendingItems: 0 });
+    }
+  }
+
+  private async saveSyncQueue(): Promise<void> {
+    try {
+      await this.cacheData(LocalStorageKey.SYNC_QUEUE, this.syncQueue);
+    } catch (error) {
+      console.error('Failed to save sync queue:', error);
+    }
+  }
+
+  /**
+   * Clear completed sync items
+   */
+  async clearCompletedItems(): Promise<void> {
+    try {
+      this.updateSyncStatus({
+        pendingItems: this.syncQueue.length,
+        failedItems: 0,
+        invalidItems: 0
+      });
+    } catch (error) {
+      console.error('Failed to clear completed items:', error);
+    }
+  }
+  // #endregion
+
+  // #region Entity Sync Processors
+  /**
    * Process transaction sync operations
    */
   private async processTransactionSync(item: SyncItem, batch: any, userId: string): Promise<void> {
@@ -676,7 +806,6 @@ export class CommonSyncService implements OnDestroy {
       throw new Error('Missing transaction ID');
     }
 
-    // Ensure the transaction is updated as synced when pushing to Firestore
     const dataToWrite = this.scrubUndefined({ ...item.data });
     if ('syncStatus' in dataToWrite && item.operation !== 'delete') {
       dataToWrite.syncStatus = 'synced';
@@ -695,108 +824,6 @@ export class CommonSyncService implements OnDestroy {
         break;
     }
   }
-
-  /**
-   * Helper to get the correct ID field for a sync item based on its type
-   */
-  private getRecordId(item: SyncItem): string | undefined {
-    if (!item || !item.data) return undefined;
-    
-    switch (item.type) {
-      case 'transaction':
-      case 'budget':
-      case 'category':
-        return item.data.id || item.data.budgetId; // Handle both 'id' and 'budgetId' compatibility
-      case 'account':
-        return item.data.accountId;
-      case 'goal':
-        return item.data.goalId;
-      case 'user':
-        return item.data.uid;
-      default:
-        return item.data.id;
-    }
-  }
-
-  /**
-   * Universal helper to update sync status for any item in store and cache
-   */
-  private async updateItemSyncStatus(item: SyncItem, status: 'synced' | 'failed'): Promise<void> {
-    if (item.operation === 'delete') return; // No need to update status for deletions
-    
-    const recordId = this.getRecordId(item);
-    if (!recordId) return;
-
-    try {
-      const isFamily = item.collectionPath ? item.collectionPath.includes('family-groups') : !!item.data.familyId;
-      const familyId = isFamily ? (item.data.familyId || (item.collectionPath?.split('/')[1])) : undefined;
-
-      // 1. Transaction-specific logic (most critical)
-      if (item.type === 'transaction') {
-        this.store.dispatch(TransactionsActions.updateTransactionSuccess({
-          transaction: {
-            ...item.data,
-            syncStatus: status,
-            lastSyncedAt: new Date()
-          } as Transaction
-        }));
-
-        const itemKey = LocalStorageKeyHelper.getTransactionItemKey(recordId, familyId);
-        const existing = this.storageService.getItem<Transaction>(itemKey, 'transactions');
-        
-        this.storageService.setItem(itemKey, {
-          ...(existing || item.data),
-          syncStatus: status as any,
-          lastSyncedAt: new Date()
-        }, 'transactions');
-      } 
-      // 2. Budget status update
-      else if (item.type === 'budget') {
-        const budget = { ...item.data, syncStatus: status, lastSyncedAt: new Date() };
-        this.store.dispatch(BudgetsActions.updateBudgetSuccess({ budget }));
-        
-        const cacheKey = LocalStorageKeyHelper.getBudgetsCacheKey(this.getCurrentUserId() || '', familyId);
-        const budgets = this.storageService.getItem<any[]>(cacheKey) || [];
-        const index = budgets.findIndex(b => b.budgetId === recordId || b.id === recordId);
-        if (index !== -1) {
-          budgets[index] = { ...budgets[index], ...budget };
-          this.storageService.setItem(cacheKey, budgets);
-        }
-      }
-      // 3. Account status update
-      else if (item.type === 'account') {
-        const account = { ...item.data, syncStatus: status, lastSyncAt: new Date() };
-        this.store.dispatch(AccountsActions.updateAccountSuccess({ account }));
-        
-        const cacheKey = LocalStorageKeyHelper.getAccountsCacheKey(this.getCurrentUserId() || '', familyId);
-        const accounts = this.storageService.getItem<any[]>(cacheKey) || [];
-        const index = accounts.findIndex(a => a.accountId === recordId);
-        if (index !== -1) {
-          accounts[index] = { ...accounts[index], ...account };
-          this.storageService.setItem(cacheKey, accounts);
-        }
-      }
-      // 4. Goal status update
-      else if (item.type === 'goal') {
-        const goal = { ...item.data, syncStatus: status, lastSyncedAt: new Date() };
-        this.store.dispatch(GoalsActions.updateGoalSuccess({ goal }));
-        
-        const cacheKey = LocalStorageKeyHelper.getGoalsCacheKey(this.getCurrentUserId() || '');
-        const goals = this.storageService.getItem<any[]>(cacheKey) || [];
-        const index = goals.findIndex(g => g.goalId === recordId);
-        if (index !== -1) {
-          goals[index] = { ...goals[index], ...goal };
-          this.storageService.setItem(cacheKey, goals);
-        }
-      }
-      
-      console.log(`[CommonSyncService] ${item.type} ${recordId} sync status updated to: ${status}`);
-    } catch (error) {
-      console.error(`Failed to update ${item.type} sync status:`, error);
-    }
-  }
-
-
 
   private async processBudgetSync(item: SyncItem, batch: any, userId: string): Promise<void> {
     const recordId = this.getRecordId(item);
@@ -832,9 +859,6 @@ export class CommonSyncService implements OnDestroy {
     }
   }
 
-  /**
-   * Process category sync operations
-   */
   private async processCategorySync(item: SyncItem, batch: any, userId: string): Promise<void> {
     const basePath = item.collectionPath || `users/${userId}/categories`;
 
@@ -871,88 +895,105 @@ export class CommonSyncService implements OnDestroy {
     }
   }
 
+  private async processUserSync(item: SyncItem, batch: any, userId: string): Promise<void> {
+    const userRef = doc(this.firestore, `users/${userId}`);
+    const data = { ...item.data };
+    delete data.uid;
+
+    if (item.operation === 'update' || item.operation === 'create') {
+      batch.set(userRef, {
+        ...data,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    } else if (item.operation === 'delete') {
+      batch.delete(userRef);
+    }
+  }
+  // #endregion
+
+  // #region Status & Statistics
   /**
-   * Validate sync item data
+   * Get sync status observable
    */
-  private validateSyncItem(item: Omit<SyncItem, 'timestamp' | 'retryCount'>): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
-
-    if (!item.id || !item.type || !item.data) {
-      errors.push('Missing required fields: id, type, or data');
-      return { isValid: false, errors };
-    }
-
-    switch (item.type) {
-      case 'transaction':
-        const transactionValidation = this.validationService.validateTransactionData(item.data, item.operation);
-        if (!transactionValidation.isValid) {
-          errors.push(...transactionValidation.errors);
-        }
-        break;
-
-      case 'budget':
-        const budgetValidation = this.validationService.validateCommonData(item.data);
-        if (!budgetValidation.isValid) {
-          errors.push(...budgetValidation.errors);
-        }
-        break;
-
-      case 'account':
-        const accountValidation = this.validationService.validateCommonData(item.data);
-        if (!accountValidation.isValid) {
-          errors.push(...accountValidation.errors);
-        }
-        break;
-
-      case 'goal':
-        const goalValidation = this.validationService.validateCommonData(item.data);
-        if (!goalValidation.isValid) {
-          errors.push(...goalValidation.errors);
-        }
-        break;
-    }
-
-    return { isValid: errors.length === 0, errors };
+  get syncStatus$(): Observable<SyncStatus> {
+    return toObservable(this.syncStatusSignal);
   }
 
   /**
-   * Trigger background sync
+   * Get current sync status
    */
-  async triggerBackgroundSync(syncType?: string): Promise<void> {
-    if (!this.serviceWorkerRegistration) {
-      console.warn('Service worker not available for background sync');
-      return;
-    }
+  get syncStatus(): SyncStatus {
+    return this.syncStatusSignal();
+  }
+
+  /**
+   * Universal helper to update sync status for any item in store and cache
+   */
+  private async updateItemSyncStatus(item: SyncItem, status: 'synced' | 'failed'): Promise<void> {
+    if (item.operation === 'delete') return;
+    
+    const recordId = this.getRecordId(item);
+    if (!recordId) return;
 
     try {
-      this.updateSyncStatus({ isSyncing: true });
+      const isFamily = item.collectionPath ? item.collectionPath.includes('family-groups') : !!item.data.familyId;
+      const familyId = isFamily ? (item.data.familyId || (item.collectionPath?.split('/')[1])) : undefined;
+      const userId = this.getCurrentUserId() || '';
 
-      const syncTag = syncType || 'sync-transactions';
-      if ('sync' in this.serviceWorkerRegistration) {
-        // @ts-ignore: Property 'sync' may not exist on some types
-        await (this.serviceWorkerRegistration as any).sync.register(syncTag);
-        console.log('Background sync triggered:', syncTag);
-      } else {
-        console.warn('Background Sync is not supported in this browser.');
+      if (item.type === 'transaction') {
+        this.store.dispatch(TransactionsActions.updateTransactionSuccess({
+          transaction: { ...item.data, syncStatus: status, lastSyncedAt: new Date() } as Transaction
+        }));
+
+        const itemKey = LocalStorageKeyHelper.getTransactionItemKey(recordId, familyId);
+        const existing = this.storageService.getItem<Transaction>(itemKey, 'transactions');
+        this.storageService.setItem(itemKey, {
+          ...(existing || item.data),
+          syncStatus: status as any,
+          lastSyncedAt: new Date()
+        }, 'transactions');
+      } 
+      else if (item.type === 'budget') {
+        const budget = { ...item.data, syncStatus: status, lastSyncedAt: new Date() };
+        this.store.dispatch(BudgetsActions.updateBudgetSuccess({ budget }));
+        
+        const cacheKey = LocalStorageKeyHelper.getBudgetsCacheKey(userId, familyId);
+        const budgets = this.storageService.getItem<any[]>(cacheKey) || [];
+        const index = budgets.findIndex(b => b.budgetId === recordId || b.id === recordId);
+        if (index !== -1) {
+          budgets[index] = { ...budgets[index], ...budget };
+          this.storageService.setItem(cacheKey, budgets);
+        }
       }
-
-      this.updateSyncStatus({
-        lastSyncTime: Date.now(),
-        isSyncing: false
-      });
-
+      else if (item.type === 'account') {
+        const account = { ...item.data, syncStatus: status, lastSyncAt: new Date() };
+        this.store.dispatch(AccountsActions.updateAccountSuccess({ account }));
+        
+        const cacheKey = LocalStorageKeyHelper.getAccountsCacheKey(userId, familyId);
+        const accounts = this.storageService.getItem<any[]>(cacheKey) || [];
+        const index = accounts.findIndex(a => a.accountId === recordId);
+        if (index !== -1) {
+          accounts[index] = { ...accounts[index], ...account };
+          this.storageService.setItem(cacheKey, accounts);
+        }
+      }
+      else if (item.type === 'goal') {
+        const goal = { ...item.data, syncStatus: status, lastSyncedAt: new Date() };
+        this.store.dispatch(GoalsActions.updateGoalSuccess({ goal }));
+        
+        const cacheKey = LocalStorageKeyHelper.getGoalsCacheKey(userId);
+        const goals = this.storageService.getItem<any[]>(cacheKey) || [];
+        const index = goals.findIndex(g => g.goalId === recordId);
+        if (index !== -1) {
+          goals[index] = { ...goals[index], ...goal };
+          this.storageService.setItem(cacheKey, goals);
+        }
+      }
+      
+      console.log(`[CommonSyncService] ${item.type} ${recordId} sync status updated to: ${status}`);
     } catch (error) {
-      console.error('Failed to trigger background sync:', error);
-      this.updateSyncStatus({ isSyncing: false });
+      console.error(`Failed to update ${item.type} sync status:`, error);
     }
-  }
-
-  /**
-   * Manual sync trigger
-   */
-  async manualSync(): Promise<void> {
-    console.log('Manual sync triggered');
-    await this.processSyncQueue();
   }
 
   /**
@@ -971,30 +1012,19 @@ export class CommonSyncService implements OnDestroy {
     };
   }
 
-  /**
-   * Clear completed sync items
-   */
-  async clearCompletedItems(): Promise<void> {
-    try {
-      this.updateSyncStatus({
-        pendingItems: this.syncQueue.length,
-        failedItems: 0,
-        invalidItems: 0
-      });
-    } catch (error) {
-      console.error('Failed to clear completed items:', error);
-    }
+  private updateSyncStatus(updates: Partial<SyncStatus>): void {
+    const currentStatus = this.syncStatusSignal();
+    const newStatus = { ...currentStatus, ...updates, isOnline: this.isCurrentlyOnline() };
+    this.syncStatusSignal.set(newStatus);
   }
+  // #endregion
 
-  // ==================== CACHE OPERATIONS ====================
-
+  // #region Cache Operations (Public)
   /**
    * Cache data with options
    */
   async cacheData<T>(key: string, data: T, options: CacheOptions = {}): Promise<void> {
-    if (isPlatformServer(this.platformId)) {
-      return;
-    }
+    if (isPlatformServer(this.platformId)) return;
 
     try {
       const cacheItem: CacheItem<T> = {
@@ -1019,20 +1049,15 @@ export class CommonSyncService implements OnDestroy {
    * Get cached data
    */
   async getCachedData<T>(key: string): Promise<T | null> {
-    if (isPlatformServer(this.platformId)) {
-      return null;
-    }
+    if (isPlatformServer(this.platformId)) return null;
 
     try {
       let cacheItem = await this.getFromCacheStorage<T>(key);
-
       if (!cacheItem) {
         cacheItem = await this.getFromIndexedDB<T>(key);
       }
 
-      if (!cacheItem) {
-        return null;
-      }
+      if (!cacheItem) return null;
 
       if (this.isExpired(cacheItem)) {
         await this.removeCachedData(key);
@@ -1050,9 +1075,7 @@ export class CommonSyncService implements OnDestroy {
    * Remove cached data
    */
   async removeCachedData(key: string): Promise<void> {
-    if (isPlatformServer(this.platformId)) {
-      return;
-    }
+    if (isPlatformServer(this.platformId)) return;
 
     try {
       await Promise.all([
@@ -1068,9 +1091,7 @@ export class CommonSyncService implements OnDestroy {
    * Clear all cached data
    */
   async clearCache(): Promise<void> {
-    if (isPlatformServer(this.platformId)) {
-      return;
-    }
+    if (isPlatformServer(this.platformId)) return;
 
     try {
       await Promise.all([
@@ -1093,13 +1114,7 @@ export class CommonSyncService implements OnDestroy {
     indexedDBSize: number;
   }> {
     if (isPlatformServer(this.platformId)) {
-      return {
-        totalItems: 0,
-        totalSize: 0,
-        expiredItems: 0,
-        cacheStorageSize: 0,
-        indexedDBSize: 0
-      };
+      return { totalItems: 0, totalSize: 0, expiredItems: 0, cacheStorageSize: 0, indexedDBSize: 0 };
     }
 
     try {
@@ -1123,253 +1138,12 @@ export class CommonSyncService implements OnDestroy {
       };
     } catch (error) {
       console.error('Failed to get cache stats:', error);
-      return {
-        totalItems: 0,
-        totalSize: 0,
-        expiredItems: 0,
-        cacheStorageSize: 0,
-        indexedDBSize: 0
-      };
+      return { totalItems: 0, totalSize: 0, expiredItems: 0, cacheStorageSize: 0, indexedDBSize: 0 };
     }
   }
+  // #endregion
 
-  // ==================== NETWORK STATUS ====================
-
-  /**
-   * Get current network status
-   */
-  public getCurrentNetworkStatus(): NetworkStatus {
-    return this.networkStatusSignal();
-  }
-
-  /**
-   * Check if currently online
-   */
-  public isCurrentlyOnline(): boolean {
-    return this.networkStatusSignal().online;
-  }
-
-  /**
-   * Check if app should work in offline mode
-   */
-  public shouldWorkOffline(): boolean {
-    // App should work offline if:
-    // 1. User is authenticated (has cached auth data)
-    // 2. Has cached user data
-    // 3. Has cached app data
-    try {
-      const auth = getAuth();
-      const currentUser = auth.currentUser;
-
-      if (!currentUser) {
-        return false;
-      }
-
-      // Check if user data is cached
-      const cachedUserData = this.storageService.getItem(LocalStorageKeyHelper.getUserDataKey(currentUser.uid));
-      if (!cachedUserData) {
-        return false;
-      }
-
-      // Check if app has some cached data
-      const hasCachedData = this.storageService.getItem(LocalStorageKey.APP_CACHE_VERSION) ||
-        this.storageService.getItem(LocalStorageKeyHelper.getTransactionsCacheKey(currentUser.uid)) ||
-        this.storageService.getItem(LocalStorageKeyHelper.getCategoriesCacheKey(currentUser.uid));
-
-      return !!hasCachedData;
-    } catch (error) {
-      console.error('Error checking offline capability:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Get connection quality
-   */
-  public getConnectionQuality(): string {
-    const status = this.networkStatusSignal();
-    if (!status.online) return 'offline';
-    if (status.effectiveType === '4g') return 'excellent';
-    if (status.effectiveType === '3g') return 'good';
-    if (status.effectiveType === '2g') return 'poor';
-    return 'unknown';
-  }
-
-  /**
-   * Request notification permission
-   */
-  public requestNotificationPermission(): Promise<NotificationPermission> {
-    if ('Notification' in window) {
-      return Notification.requestPermission();
-    }
-    return Promise.resolve('denied' as NotificationPermission);
-  }
-
-  // ==================== PRIVATE HELPER METHODS ====================
-
-  /**
-   * Update network status
-   */
-  private updateNetworkStatus(status: Partial<NetworkStatus>): void {
-    const currentStatus = this.networkStatusSignal();
-    const newStatus = { ...currentStatus, ...status };
-    this.networkStatusSignal.set(newStatus);
-  }
-
-  /**
-   * Update sync status
-   */
-  private updateSyncStatus(updates: Partial<SyncStatus>): void {
-    const currentStatus = this.syncStatusSignal();
-    const newStatus = { ...currentStatus, ...updates, isOnline: this.isCurrentlyOnline() };
-    this.syncStatusSignal.set(newStatus);
-  }
-
-  /**
-   * Get current user ID
-   */
-  private getCurrentUserId(): string | null {
-    return this.userService.getCurrentUserId();
-  }
-
-  /**
-   * Load sync queue from storage
-   */
-  private async loadSyncQueue(): Promise<void> {
-    try {
-      const queue = await this.getCachedData<SyncItem[]>(LocalStorageKey.SYNC_QUEUE);
-      if (queue && Array.isArray(queue)) {
-        this.syncQueue = queue;
-        this.updateSyncStatus({ pendingItems: this.syncQueue.length });
-      } else {
-        // If queue is not an array, initialize as empty array
-        this.syncQueue = [];
-        this.updateSyncStatus({ pendingItems: 0 });
-      }
-    } catch (error) {
-      console.error('Failed to load sync queue:', error);
-      // Initialize as empty array on error
-      this.syncQueue = [];
-      this.updateSyncStatus({ pendingItems: 0 });
-    }
-  }
-
-  /**
-   * Save sync queue to storage
-   */
-  private async saveSyncQueue(): Promise<void> {
-    try {
-      await this.cacheData(LocalStorageKey.SYNC_QUEUE, this.syncQueue);
-    } catch (error) {
-      console.error('Failed to save sync queue:', error);
-    }
-  }
-
-  /**
-   * Get default expiry based on priority
-   */
-  private getDefaultExpiry(priority?: 'high' | 'normal' | 'low'): number {
-    switch (priority) {
-      case 'high':
-        return this.HIGH_PRIORITY_EXPIRY;
-      case 'low':
-        return this.LOW_PRIORITY_EXPIRY;
-      default:
-        return this.DEFAULT_EXPIRY;
-    }
-  }
-
-  /**
-   * Calculate data size in bytes
-   */
-  private calculateSize(data: any): number {
-    try {
-      const jsonString = JSON.stringify(data);
-      return new Blob([jsonString]).size;
-    } catch (error) {
-      return 0;
-    }
-  }
-
-  /**
-   * Check if cache item is expired
-   */
-  private isExpired(cacheItem: CacheItem): boolean {
-    if (!cacheItem.expiry) {
-      return false;
-    }
-    return Date.now() > cacheItem.timestamp + cacheItem.expiry;
-  }
-
-  /**
-   * Clean up expired and old items
-   */
-  private async cleanupCache(): Promise<void> {
-    try {
-      const stats = await this.getCacheStats();
-
-      const keys = await this.getCacheKeys();
-      for (const key of keys) {
-        const data = await this.getCachedData(key);
-        if (data === null) {
-          await this.removeCachedData(key);
-        }
-      }
-
-      if (stats.totalSize > this.DEFAULT_MAX_SIZE) {
-        const allItems = await this.getAllFromCacheStorage();
-        const sortedItems = allItems
-          .filter(item => !this.isExpired(item))
-          .sort((a, b) => {
-            const priorityOrder = { high: 3, normal: 2, low: 1 };
-            const aPriority = priorityOrder[a.priority];
-            const bPriority = priorityOrder[b.priority];
-
-            if (aPriority !== bPriority) {
-              return bPriority - aPriority;
-            }
-            return a.timestamp - b.timestamp;
-          });
-
-        for (const item of sortedItems) {
-          if (item.priority === 'low') {
-            await this.removeCachedData(item.key);
-            const newStats = await this.getCacheStats();
-            if (newStats.totalSize <= this.DEFAULT_MAX_SIZE * 0.8) {
-              break;
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Failed to cleanup cache:', error);
-    }
-  }
-
-  /**
-   * Get cache keys
-   */
-  private async getCacheKeys(): Promise<string[]> {
-    if (isPlatformServer(this.platformId)) {
-      return [];
-    }
-
-    try {
-      const [cacheStorageKeys, indexedDBKeys] = await Promise.all([
-        this.getCacheStorageKeys(),
-        this.getIndexedDBKeys()
-      ]);
-
-      return [...new Set([...cacheStorageKeys, ...indexedDBKeys])];
-    } catch (error) {
-      console.error('Failed to get cache keys:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Store data in Cache Storage
-   */
+  // #region Storage Implementation (Private)
   private async storeInCacheStorage(key: string, cacheItem: CacheItem): Promise<void> {
     if ('caches' in window) {
       try {
@@ -1382,9 +1156,6 @@ export class CommonSyncService implements OnDestroy {
     }
   }
 
-  /**
-   * Store data in Local Storage
-   */
   private async storeInIndexedDB(key: string, cacheItem: CacheItem): Promise<void> {
     try {
       this.storageService.setItem(key, cacheItem);
@@ -1393,18 +1164,12 @@ export class CommonSyncService implements OnDestroy {
     }
   }
 
-  /**
-   * Get data from Cache Storage
-   */
   private async getFromCacheStorage<T>(key: string): Promise<CacheItem<T> | null> {
     if ('caches' in window) {
       try {
         const cache = await caches.open('money-manager-data');
         const response = await cache.match(key);
-        if (response) {
-          const data = await response.json();
-          return data as CacheItem<T>;
-        }
+        if (response) return await response.json();
       } catch (error) {
         console.warn('Failed to get from Cache Storage:', error);
       }
@@ -1412,9 +1177,6 @@ export class CommonSyncService implements OnDestroy {
     return null;
   }
 
-  /**
-   * Get data from Local Storage
-   */
   private async getFromIndexedDB<T>(key: string): Promise<CacheItem<T> | null> {
     try {
       return this.storageService.getItem<CacheItem<T>>(key);
@@ -1424,9 +1186,6 @@ export class CommonSyncService implements OnDestroy {
     return null;
   }
 
-  /**
-   * Remove data from Cache Storage
-   */
   private async removeFromCacheStorage(key: string): Promise<void> {
     if ('caches' in window) {
       try {
@@ -1438,9 +1197,6 @@ export class CommonSyncService implements OnDestroy {
     }
   }
 
-  /**
-   * Remove data from Local Storage
-   */
   private async removeFromIndexedDB(key: string): Promise<void> {
     try {
       this.storageService.removeItem(key);
@@ -1449,25 +1205,17 @@ export class CommonSyncService implements OnDestroy {
     }
   }
 
-  /**
-   * Clear Cache Storage
-   */
   private async clearCacheStorage(): Promise<void> {
     if ('caches' in window) {
       try {
         const cacheNames = await caches.keys();
-        await Promise.all(
-          cacheNames.map(cacheName => caches.delete(cacheName))
-        );
+        await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
       } catch (error) {
         console.warn('Failed to clear Cache Storage:', error);
       }
     }
   }
 
-  /**
-   * Clear Local Storage
-   */
   private async clearIndexedDB(): Promise<void> {
     try {
       this.storageService.clear();
@@ -1476,24 +1224,16 @@ export class CommonSyncService implements OnDestroy {
     }
   }
 
-  /**
-   * Get all items from Cache Storage
-   */
   private async getAllFromCacheStorage(): Promise<CacheItem[]> {
     if ('caches' in window) {
       try {
         const cache = await caches.open('money-manager-data');
         const keys = await cache.keys();
         const items: CacheItem[] = [];
-
         for (const request of keys) {
           const response = await cache.match(request);
-          if (response) {
-            const data = await response.json();
-            items.push(data);
-          }
+          if (response) items.push(await response.json());
         }
-
         return items;
       } catch (error) {
         console.warn('Failed to get all from Cache Storage:', error);
@@ -1502,18 +1242,13 @@ export class CommonSyncService implements OnDestroy {
     return [];
   }
 
-  /**
-   * Get all items from Local Storage
-   */
   private async getAllFromIndexedDB(): Promise<CacheItem[]> {
     try {
       const keys = this.storageService.getAllKeys();
       const items: CacheItem[] = [];
       for (const key of keys) {
         const item = this.storageService.getItem<CacheItem>(key);
-        if (item) {
-          items.push(item);
-        }
+        if (item) items.push(item);
       }
       return items;
     } catch (error) {
@@ -1522,9 +1257,6 @@ export class CommonSyncService implements OnDestroy {
     }
   }
 
-  /**
-   * Get Cache Storage keys
-   */
   private async getCacheStorageKeys(): Promise<string[]> {
     if ('caches' in window) {
       try {
@@ -1538,9 +1270,6 @@ export class CommonSyncService implements OnDestroy {
     return [];
   }
 
-  /**
-   * Get Local Storage keys
-   */
   private async getIndexedDBKeys(): Promise<string[]> {
     try {
       return this.storageService.getAllKeys();
@@ -1549,69 +1278,56 @@ export class CommonSyncService implements OnDestroy {
       return [];
     }
   }
+  // #endregion
 
-  /**
-   * Deduplicate items by key, keeping the most recent
-   */
-  private deduplicateItems(items: CacheItem[]): CacheItem[] {
-    const uniqueItems = new Map<string, CacheItem>();
-
-    for (const item of items) {
-      const existing = uniqueItems.get(item.key);
-      if (!existing || item.timestamp > existing.timestamp) {
-        uniqueItems.set(item.key, item);
-      }
-    }
-
-    return Array.from(uniqueItems.values());
+  // #region Private Helpers
+  private getCurrentUserId(): string | null {
+    return this.userService.getCurrentUserId();
   }
 
-  /**
-   * Check if background sync is supported
-   */
-  isSupported(): boolean {
-    return 'serviceWorker' in navigator && 'sync' in window;
-  }
-
-  /**
-   * Listen for sync events from service worker
-   */
-  private setupServiceWorkerSyncListener(): void {
-    if ('serviceWorker' in navigator) {
-      fromEvent(navigator.serviceWorker, 'message')
-        .pipe(takeUntil(this.destroy$))
-        .subscribe((event: any) => {
-          if (event && event.data && event.data.type === 'SYNC_COMPLETED') {
-            const { transactionId, success } = event.data;
-      if (transactionId) {
-        // High-performance O(1) lookup using the dedicated transactions store index
-        const transaction = this.storageService.getItem<Transaction>(transactionId, 'transactions');
-        
-        if (transaction) {
-          this.updateItemSyncStatus({
-            type: 'transaction',
-            data: transaction,
-            operation: 'update',
-            id: 'legacy-sw-sync'
-          } as any, success ? 'synced' : 'failed');
-        }
-      }
-          }
-        });
+  private getRecordId(item: SyncItem): string | undefined {
+    if (!item || !item.data) return undefined;
+    switch (item.type) {
+      case 'transaction':
+      case 'budget':
+      case 'category':
+        return item.data.id || item.data.budgetId;
+      case 'account':
+        return item.data.accountId;
+      case 'goal':
+        return item.data.goalId;
+      case 'user':
+        return item.data.uid;
+      default:
+        return item.data.id;
     }
   }
 
-  /**
-   * Recursively remove keys with undefined values from an object
-   */
+  private validateSyncItem(item: Omit<SyncItem, 'timestamp' | 'retryCount'>): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    if (!item.id || !item.type || !item.data) {
+      errors.push('Missing required fields: id, type, or data');
+      return { isValid: false, errors };
+    }
+
+    switch (item.type) {
+      case 'transaction':
+        const txVal = this.validationService.validateTransactionData(item.data, item.operation);
+        if (!txVal.isValid) errors.push(...txVal.errors);
+        break;
+      case 'budget':
+      case 'account':
+      case 'goal':
+        const val = this.validationService.validateCommonData(item.data);
+        if (!val.isValid) errors.push(...val.errors);
+        break;
+    }
+    return { isValid: errors.length === 0, errors };
+  }
+
   private scrubUndefined(obj: any): any {
-    if (obj === null || typeof obj !== 'object' || obj instanceof Date) {
-      return obj;
-    }
-
-    if (Array.isArray(obj)) {
-      return obj.map(item => this.scrubUndefined(item));
-    }
+    if (obj === null || typeof obj !== 'object' || obj instanceof Date) return obj;
+    if (Array.isArray(obj)) return obj.map(item => this.scrubUndefined(item));
 
     const result: any = {};
     let scrubbedCount = 0;
@@ -1627,30 +1343,94 @@ export class CommonSyncService implements OnDestroy {
     if (scrubbedCount > 0) {
       console.log(`[CommonSyncService] Scrubbed ${scrubbedCount} undefined properties from object`, obj.id || '');
     }
-
     return result;
   }
 
-  ngOnDestroy(): void {
-    this.stopSync();
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-  /**
-   * Process user profile sync
-   */
-  private async processUserSync(item: SyncItem, batch: any, userId: string): Promise<void> {
-    const userRef = doc(this.firestore, `users/${userId}`);
-    const data = { ...item.data };
-    delete data.uid; // Already in path
-
-    if (item.operation === 'update' || item.operation === 'create') {
-      batch.set(userRef, {
-        ...data,
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-    } else if (item.operation === 'delete') {
-      batch.delete(userRef);
+  private getDefaultExpiry(priority?: 'high' | 'normal' | 'low'): number {
+    switch (priority) {
+      case 'high': return this.HIGH_PRIORITY_EXPIRY;
+      case 'low': return this.LOW_PRIORITY_EXPIRY;
+      default: return this.DEFAULT_EXPIRY;
     }
   }
+
+  private calculateSize(data: any): number {
+    try {
+      const jsonString = JSON.stringify(data);
+      return new Blob([jsonString]).size;
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  private isExpired(cacheItem: CacheItem): boolean {
+    if (!cacheItem.expiry) return false;
+    return Date.now() > cacheItem.timestamp + cacheItem.expiry;
+  }
+
+  private async cleanupCache(): Promise<void> {
+    try {
+      const stats = await this.getCacheStats();
+      const keys = await this.getCacheKeys();
+      for (const key of keys) {
+        const data = await this.getCachedData(key);
+        if (data === null) await this.removeCachedData(key);
+      }
+
+      if (stats.totalSize > this.DEFAULT_MAX_SIZE) {
+        const allItems = await this.getAllFromCacheStorage();
+        const sortedItems = allItems
+          .filter(item => !this.isExpired(item))
+          .sort((a, b) => {
+            const priorityOrder = { high: 3, normal: 2, low: 1 };
+            const aP = priorityOrder[a.priority];
+            const bP = priorityOrder[b.priority];
+            return aP !== bP ? bP - aP : a.timestamp - b.timestamp;
+          });
+
+        for (const item of sortedItems) {
+          if (item.priority === 'low') {
+            await this.removeCachedData(item.key);
+            const newStats = await this.getCacheStats();
+            if (newStats.totalSize <= this.DEFAULT_MAX_SIZE * 0.8) break;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to cleanup cache:', error);
+    }
+  }
+
+  private async getCacheKeys(): Promise<string[]> {
+    if (isPlatformServer(this.platformId)) return [];
+    try {
+      const [cacheStorageKeys, indexedDBKeys] = await Promise.all([
+        this.getCacheStorageKeys(),
+        this.getIndexedDBKeys()
+      ]);
+      return [...new Set([...cacheStorageKeys, ...indexedDBKeys])];
+    } catch (error) {
+      console.error('Failed to get cache keys:', error);
+      return [];
+    }
+  }
+
+  private deduplicateItems(items: CacheItem[]): CacheItem[] {
+    const uniqueItems = new Map<string, CacheItem>();
+    for (const item of items) {
+      const existing = uniqueItems.get(item.key);
+      if (!existing || item.timestamp > existing.timestamp) uniqueItems.set(item.key, item);
+    }
+    return Array.from(uniqueItems.values());
+  }
+
+  public requestNotificationPermission(): Promise<NotificationPermission> {
+    if ('Notification' in window) return Notification.requestPermission();
+    return Promise.resolve('denied' as NotificationPermission);
+  }
+
+  isSupported(): boolean {
+    return 'serviceWorker' in navigator && 'sync' in window;
+  }
+  // #endregion
 }
