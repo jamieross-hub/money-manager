@@ -26,7 +26,15 @@ export class ErrorHandlerService implements ErrorHandler {
     private snackBar: MatSnackBar
   ) {}
 
-  handleError(error: Error): void {
+  handleError(error: any): void {
+    // Handle dynamically loading chunk errors (e.g. after a new deploy)
+    const message = error?.message || error?.toString() || '';
+    if (message.includes('ChunkLoadError') || message.includes('Loading chunk')) {
+      console.warn('ChunkLoadError detected in ErrorHandler. Reloading application...');
+      window.location.reload();
+      return;
+    }
+
     console.error('An error occurred:', error);
 
     // Create error log

@@ -54,6 +54,17 @@ function initializePwaFeatures() {
       console.warn('Failed to save app state:', error);
     }
   });
+
+  // Handle dynamically loading chunk errors (e.g. after a new deploy)
+  window.addEventListener('unhandledrejection', (event: any) => {
+    if (
+      event?.reason?.message?.includes('ChunkLoadError') ||
+      event?.reason?.message?.includes('Loading chunk')
+    ) {
+      console.warn('Unhandled chunk error detected. Reloading application...');
+      window.location.reload();
+    }
+  });
 }
 
 // Intelligent cache management that preserves authentication
