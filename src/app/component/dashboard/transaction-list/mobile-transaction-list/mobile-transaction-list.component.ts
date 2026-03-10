@@ -221,6 +221,7 @@ export class MobileTransactionListComponent
   public pullDistance = signal<number>(0);
   public isPulling = signal<boolean>(false);
   private startY = 0;
+  private canPull = false;
   public readonly REFRESH_THRESHOLD = 80;
   public readonly MAX_PULL = 150;
 
@@ -860,35 +861,49 @@ export class MobileTransactionListComponent
 
   // Pull to refresh handlers
   onTouchStart(event: TouchEvent) {
-    if (this.scrollContainer.nativeElement.scrollTop === 0) {
-      this.startY = event.touches[0].pageY;
-      this.isPulling.set(true);
-    }
+    this.startY = event.touches[0].pageY;
+    const container = this.scrollContainer.nativeElement;
+    // We only enable pull-to-refresh if we start at the very top
+    this.canPull = container.scrollTop <= 0 && !this.isFullSyncing();
+    this.isPulling.set(false);
+    this.pullDistance.set(0);
   }
 
   onTouchMove(event: TouchEvent) {
-    if (!this.isPulling()) return;
+    if (!this.canPull) return;
 
     const currentY = event.touches[0].pageY;
     const diff = currentY - this.startY;
 
-    if (diff > 0 && this.scrollContainer.nativeElement.scrollTop === 0) {
+    // If the user moves downward (finger down) and were at the top
+    if (diff > 0) {
       // Apply some resistance (damping)
       const easedDiff = Math.min(this.MAX_PULL, diff * 0.4);
       this.pullDistance.set(easedDiff);
       
-      // Prevent default scroll when pulling down at the top
+      // If we've pulled enough to show intent, consider it "pulling"
       if (this.pullDistance() > 5) {
+        this.isPulling.set(true);
         if (event.cancelable) event.preventDefault();
       }
-    } else {
-      this.isPulling.set(false);
-      this.pullDistance.set(0);
+    } else if (diff < 0) {
+      // If they move finger UP, it's either returning from a pull or a scroll-down
+      if (this.isPulling()) {
+        this.isPulling.set(false);
+        this.pullDistance.set(0);
+      }
+      // Disable pull-to-refresh for the remainder of this touch session
+      this.canPull = false;
     }
   }
 
   onTouchEnd() {
-    if (!this.isPulling()) return;
+    if (!this.canPull || !this.isPulling()) {
+      this.canPull = false;
+      this.isPulling.set(false);
+      this.pullDistance.set(0);
+      return;
+    }
 
     if (this.pullDistance() >= this.REFRESH_THRESHOLD) {
       this.refreshData();
@@ -896,6 +911,7 @@ export class MobileTransactionListComponent
 
     this.isPulling.set(false);
     this.pullDistance.set(0);
+    this.canPull = false;
   }
 
   refreshData() {
