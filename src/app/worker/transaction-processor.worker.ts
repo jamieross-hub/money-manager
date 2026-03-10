@@ -258,12 +258,12 @@ addEventListener('message', ({ data }) => {
 
   const finalSortedTransactions = sortTransactions(mergedData, sort);
 
-  // 6. Totals
+  // 6. Totals (settlement transactions are excluded from both income and expense totals)
   const totalIncome = mergedData
-    .filter((t: any) => t.type === 'income' && !t.id?.startsWith('upcoming-'))
+    .filter((t: any) => t.type === 'income' && !t.id?.startsWith('upcoming-') && !t.settlementId)
     .reduce((sum: number, t: any) => sum + t.amount, 0);
   const totalExpenses = mergedData
-    .filter((t: any) => t.type === 'expense' && !t.id?.startsWith('upcoming-'))
+    .filter((t: any) => t.type === 'expense' && !t.id?.startsWith('upcoming-') && !t.settlementId)
     .reduce((sum: number, t: any) => sum + t.amount, 0);
 
   // 6. Grouping and View Models
