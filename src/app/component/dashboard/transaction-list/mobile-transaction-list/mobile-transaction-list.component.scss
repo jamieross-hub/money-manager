@@ -705,6 +705,8 @@
   margin-top: 4px;
 
   &.sticky {
+    background-color: var(--surface-100);
+   opacity: 0.8;
     z-index: 20;
     transition: all 0.2s ease;
   }
