@@ -363,6 +363,9 @@ export class TransactionsService extends BaseService {
             this.transactionsSubject.next(cached);
             // Hydrate personal store immediately
             this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: cached }));
+        }else{
+            //pull trasaction from firebase
+            this.pullFromFirestore(userId).subscribe();
         }
 
         return this.localStorageUtility.isReady$.pipe(
