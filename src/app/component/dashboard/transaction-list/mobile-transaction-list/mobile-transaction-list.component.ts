@@ -52,12 +52,13 @@ import {
 } from '../../../../util/components/custom-date-range-dialog';
 import { DateService } from 'src/app/util/service/date.service';
 import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
-import { selectSortedAllTransactions, selectSortedDeletedTransactions, selectRecurringTemplates } from 'src/app/store/transactions/transactions.selectors';
+import { selectSortedAllTransactions, selectSortedDeletedTransactions, selectRecurringTemplates, selectTransactionsLoading } from 'src/app/store/transactions/transactions.selectors';
 import { AppState } from 'src/app/store/app.state';
 import { Store } from '@ngrx/store';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
 import { RecurringInterval, SyncStatus } from 'src/app/util/config/enums';
 import { FilterService } from 'src/app/util/service/filter.service';
+import { CommonSyncService } from 'src/app/util/service/common-sync.service';
 import { CategoryService } from 'src/app/util/service/db/category.service';
 import { CurrencyService } from 'src/app/util/service/currency.service';
 import { ThemeSwitchingService } from 'src/app/util/service/theme-switching.service';
@@ -144,6 +145,7 @@ export class MobileTransactionListComponent
   private readonly userService = inject<UserService>(UserService);
   private readonly store = inject(Store<AppState>);
   private readonly appViewService = inject<AppViewService>(AppViewService);
+  private readonly syncService = inject<CommonSyncService>(CommonSyncService);
   private readonly dateService = inject<DateService>(DateService);
   private readonly categoryService = inject<CategoryService>(CategoryService);
   private readonly currencyService = inject<CurrencyService>(CurrencyService);
@@ -180,6 +182,11 @@ export class MobileTransactionListComponent
   allActiveTransactions = this.store.selectSignal<Transaction[]>(selectSortedAllTransactions);
   deletedTransactions = this.store.selectSignal<Transaction[]>(selectSortedDeletedTransactions);
   recurringTemplates = this.store.selectSignal<RecurringTemplate[]>(selectRecurringTemplates);
+  isLoadingTransactions = this.store.selectSignal<boolean>(selectTransactionsLoading);
+  syncStatus = toSignal(this.syncService.syncStatus$, { initialValue: this.syncService.syncStatus });
+  isSyncing = computed(() => this.syncStatus().isSyncing);
+
+  isLoading = computed(() => this.isLoadingTransactions() || this.isProcessing() || (this.isSyncing() && this.allTransactions().length === 0));
   
   allTransactions = computed(() => {
     if (this.selectedRange() === 'deleted') {

@@ -515,6 +515,75 @@
   }
 }
 
+
+// Skeleton Loader
+.skeleton-loader {
+  background: var(--surface-100);
+  border-radius: 16px;
+  margin: 0 12px 12px 12px;
+  border: 1px solid var(--surface-300);
+  overflow: hidden;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  animation: pulse 1.5s infinite ease-in-out;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  .skeleton-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--surface-300) 0%, var(--surface-200) 100%);
+  }
+
+  .skeleton-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .skeleton-line {
+    height: 12px;
+    background: var(--surface-300);
+    border-radius: 6px;
+    
+    &.title { 
+      width: 45%; 
+      height: 16px; 
+      background: var(--surface-400);
+    }
+    &.subtitle { 
+      width: 65%; 
+      opacity: 0.6;
+    }
+  }
+
+  .skeleton-amount {
+    width: 70px;
+    height: 24px;
+    background: var(--surface-300);
+    border-radius: 8px;
+    margin-left: auto;
+  }
+}
+
+@keyframes pulse {
+  0% { 
+    opacity: 0.7; 
+    transform: scale(0.995);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  100% { 
+    opacity: 0.7; 
+    transform: scale(0.995);
+  }
+}
+
 @keyframes fadeInDown {
   from {
     opacity: 0;
@@ -1368,5 +1437,54 @@
   &:hover {
     background: rgba(var(--primary-rgb), 0.2);
     transform: scale(1.1);
+  }
+}
+
+.sync-indicator-floating {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--primary-600);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+  z-index: 100;
+  animation: slideInDown 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  pointer-events: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.spin-animation {
+  animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
   }
 }

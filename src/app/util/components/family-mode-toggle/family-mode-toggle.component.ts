@@ -126,11 +126,13 @@ export class FamilyModeToggleComponent implements OnInit {
         this.store.dispatch(GoalsActions.loadGoals({ userId }));
 
         // Give store a moment to propagate state before clearing loader/pending UI
-        setTimeout(() => {
-            this.isUpdating.set(false);
-            this.pendingState.set(null);
-            this.router.navigate(['/dashboard/home']);
-        }, 100);
+        // setTimeout(() => {
+        //     this.isUpdating.set(false);
+        //     this.pendingState.set(null);
+        //     this.router.navigate(['/dashboard/home']).catch(err => {
+        //         if (err?.message !== 'Transition was skipped') throw err;
+        //     });
+        // }, 100);
       });
 
       // 4. Handle failure

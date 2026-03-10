@@ -126,6 +126,7 @@ export class UserService implements OnDestroy {
   private readonly loginAttempts = new Map<string, { count: number; lastAttempt: number; lockedUntil?: number }>();
   private readonly rateLimitMap = new Map<string, RateLimitEntry>();
   private readonly auditLog: Array<{ timestamp: Date; event: string; userId?: string; details: any }> = [];
+  private pendingProfileUpdatesCount = 0;
 
   constructor(
     private readonly notificationService: NotificationService,
@@ -250,6 +251,11 @@ export class UserService implements OnDestroy {
 
         const userRef = doc(this.firestore, `users/${user.uid}`);
         this.profileUnsubscribe = onSnapshot(userRef, (docSnap) => {
+          if (this.pendingProfileUpdatesCount > 0) {
+            console.log('⏳ [UserService] Ignoring real-time snapshot: local update in progress');
+            return;
+          }
+
           if (docSnap.exists()) {
             let userData = docSnap.data() as User;
             // Sync display info from Auth
@@ -1280,6 +1286,7 @@ export class UserService implements OnDestroy {
    * Create or update user in Firestore
    */
   async createOrUpdateUser(user: User): Promise<void> {
+    this.pendingProfileUpdatesCount++;
     try {
       // 1. Optimistic Update (Cache & NgRx)
       this.storageService.setItem(`user-data-${user.uid}`, user);
@@ -1307,6 +1314,11 @@ export class UserService implements OnDestroy {
         error: error instanceof Error ? error.message : 'Unknown error'
       });
       throw error;
+    } finally {
+      // Debounce the release slightly to allow Firestore to finish propagating the write locally
+      setTimeout(() => {
+        this.pendingProfileUpdatesCount--;
+      }, 1500);
     }
   }
 
@@ -1817,12 +1829,22 @@ export class UserService implements OnDestroy {
     
     const familyRef = doc(this.firestore, `family-groups/${familyId}`);
     this.activeFamilyUnsubscribe = onSnapshot(familyRef, (docSnap) => {
+      // Guard: If we are in the middle of a profile update, ignore family status changes 
+      // as they might be based on a transient or soon-to-be-stale activeFamilyId.
+      if (this.pendingProfileUpdatesCount > 0) {
+          console.log(`⏳ [UserService] monitorActiveFamily: Skipping status check for ${familyId} (pending profile update)`);
+          return;
+      }
+
       // If document is missing or isActive is false, it means the group was deleted or deactivated
       if (!docSnap.exists() || docSnap.data()['isActive'] === false) {
         console.warn(`[UserService] Active family ${familyId} is no longer available. Leaving group...`);
         this.leaveDeletedGroup(familyId);
       }
     }, (error) => {
+      // Guard here too
+      if (this.pendingProfileUpdatesCount > 0) return;
+
       // Common if user was removed from the group and no longer has read permission
       if (error.code === 'permission-denied') {
         console.warn(`[UserService] Permission denied for active family ${familyId}. Likely removed. Leaving group...`);
@@ -1843,19 +1865,17 @@ export class UserService implements OnDestroy {
     try {
       console.log(`[UserService] Clearing active family ${familyId} from user ${user.uid} preferences`);
       
-      const updatedPreferences = {
-        ...user.preferences,
-        activeFamilyId: null,
-        isFamilyMode: false
+      const updatedUser: User = {
+        ...user,
+        preferences: {
+          ...user.preferences,
+          activeFamilyId: null,
+          isFamilyMode: false
+        }
       };
 
-      // 1. Update Firestore first (Source of Truth)
-      const userRef = doc(this.firestore, `users/${user.uid}`);
-      await updateDoc(userRef, {
-        'preferences.activeFamilyId': null,
-        'preferences.isFamilyMode': false,
-        updatedAt: serverTimestamp()
-      });
+      // 1. Update via centralized logic (NgRx + Sync Queue)
+      await this.createOrUpdateUser(updatedUser);
 
       // 2. Local cleanup for immediate consistency
       if (this.activeFamilyUnsubscribe) {

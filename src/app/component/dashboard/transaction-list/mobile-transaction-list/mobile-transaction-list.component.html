@@ -257,9 +257,30 @@
     
   
 
+    @if (isSyncing() && flattenedTransactions().length > 0) {
+      <div class="sync-indicator-floating">
+        <mat-icon class="spin-animation">sync</mat-icon>
+        <span>Refreshing...</span>
+      </div>
+    }
+
     <div class="transaction-scroll">
+      <!-- Loading Skeletons -->
+      @if (isLoading() && !flattenedTransactions().length) {
+        @for (i of [1,2,3,4,5,6,7,8]; track i) {
+          <div class="skeleton-loader">
+            <div class="skeleton-icon"></div>
+            <div class="skeleton-content">
+              <div class="skeleton-line title"></div>
+              <div class="skeleton-line subtitle"></div>
+            </div>
+            <div class="skeleton-amount"></div>
+          </div>
+        }
+      }
+
       <!-- Empty State -->
-      @if (!filteredTransactions().length) {
+      @if (!isLoading() && !filteredTransactions().length) {
         <div class="empty-state">
           <div class="empty-icon">
             <mat-icon>receipt_long</mat-icon>

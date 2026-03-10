@@ -64,8 +64,8 @@ export class TransactionProcessorService {
       clearTimeout(this.debounceTimer);
     }
     
+    this._isProcessing.set(true);
     this.debounceTimer = setTimeout(() => {
-      this._isProcessing.set(true);
       const result = this.executeLogic(data);
       this._output.set(result);
       this._isProcessing.set(false);
