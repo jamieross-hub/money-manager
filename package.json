@@ -9,7 +9,7 @@
     "build": "npm run config && ng build --configuration production",
     "build:cache-bust": "npm run config && node deploy-cache-bust.js && ng build --configuration production",
     "watch": "ng build --watch --configuration development",
-    "test": "playwright test --ui",
+    "test": "ng test --watch=false && npx playwright test -c playwright.e2e.config.ts",
     "test:ci": "ng test --watch=false --browsers=ChromeHeadless --code-coverage",
     "test:coverage": "ng test --watch=false --browsers=ChromeHeadless --code-coverage",
     "test:pre-commit": "ng test --watch=false --browsers=ChromeHeadless",
