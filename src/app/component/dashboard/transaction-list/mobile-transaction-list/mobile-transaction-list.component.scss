@@ -1490,29 +1490,39 @@
 }
 
 .pull-refresh-indicator {
-  overflow: hidden;
+  position: absolute;
+  top: -80px; // Height of indicator
+  left: 0;
+  width: 100%;
+  height: 80px;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   background: var(--surface-100);
-  width: 100%;
-  transition: height 0.1s ease-out;
+  z-index: 5;
+  pointer-events: none;
+  will-change: transform;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.active-pull {
+    transition: none; // Disable transition during active finger tracking
+  }
 
   .indicator-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-bottom: 20px;
-    gap: 8px;
+    gap: 4px;
     color: var(--neutral-400);
-    transition: all 0.2s ease;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease;
     opacity: 0.6;
-    transform: scale(0.9);
+    transform: scale(0.8);
 
     mat-icon {
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      transition: transform 0.1s linear;
     }
 
     span {
@@ -1525,7 +1535,7 @@
     &.ready {
       color: var(--primary-600);
       opacity: 1;
-      transform: scale(1.1);
+      transform: scale(1);
       
       mat-icon {
         animation: pulseHeart 1s infinite ease-in-out;
@@ -1534,8 +1544,18 @@
   }
 }
 
+.transaction-scroll {
+  height: auto;
+  will-change: transform;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.active-pull {
+    transition: none; // Disable transition during active finger tracking
+  }
+}
+
 @keyframes pulseHeart {
   0% { transform: scale(1); }
-  50% { transform: scale(1.2); }
+  50% { transform: scale(1.1); }
   100% { transform: scale(1); }
 }

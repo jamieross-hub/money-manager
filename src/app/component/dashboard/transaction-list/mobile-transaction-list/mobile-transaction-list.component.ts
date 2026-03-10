@@ -863,10 +863,8 @@ export class MobileTransactionListComponent
   onTouchStart(event: TouchEvent) {
     this.startY = event.touches[0].pageY;
     const container = this.scrollContainer.nativeElement;
-    // We only enable pull-to-refresh if we start at the very top
+    // canPull is true only if we are at the very top
     this.canPull = container.scrollTop <= 0 && !this.isFullSyncing();
-    this.isPulling.set(false);
-    this.pullDistance.set(0);
   }
 
   onTouchMove(event: TouchEvent) {
@@ -875,42 +873,33 @@ export class MobileTransactionListComponent
     const currentY = event.touches[0].pageY;
     const diff = currentY - this.startY;
 
-    // If the user moves downward (finger down) and were at the top
     if (diff > 0) {
-      // Apply some resistance (damping)
-      const easedDiff = Math.min(this.MAX_PULL, diff * 0.4);
+      // Apply quadratic damping for a smoother, more natural feel
+      // y = x / (1 + x/max)
+      const easedDiff = Math.min(this.MAX_PULL, (diff * 0.5) / (1 + (diff * 0.5) / this.MAX_PULL));
       this.pullDistance.set(easedDiff);
       
-      // If we've pulled enough to show intent, consider it "pulling"
-      if (this.pullDistance() > 5) {
+      if (easedDiff > 5) {
         this.isPulling.set(true);
+        // Prevent default scrolling only when we are actually pulling
         if (event.cancelable) event.preventDefault();
       }
-    } else if (diff < 0) {
-      // If they move finger UP, it's either returning from a pull or a scroll-down
-      if (this.isPulling()) {
-        this.isPulling.set(false);
-        this.pullDistance.set(0);
-      }
-      // Disable pull-to-refresh for the remainder of this touch session
+    } else if (diff < 0 && this.isPulling()) {
+      // If they were pulling but now move UP, reduce distance or cancel
+      this.pullDistance.set(0);
+      this.isPulling.set(false);
       this.canPull = false;
     }
   }
 
   onTouchEnd() {
-    if (!this.canPull || !this.isPulling()) {
-      this.canPull = false;
-      this.isPulling.set(false);
-      this.pullDistance.set(0);
-      return;
-    }
-
-    if (this.pullDistance() >= this.REFRESH_THRESHOLD) {
+    if (this.isPulling() && this.pullDistance() >= this.REFRESH_THRESHOLD) {
       this.refreshData();
     }
-
-    this.isPulling.set(false);
+    
+    // Always reset state on finger release
     this.pullDistance.set(0);
+    this.isPulling.set(false);
     this.canPull = false;
   }
 
