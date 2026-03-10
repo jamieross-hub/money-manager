@@ -217,13 +217,6 @@ export class MobileTransactionListComponent
   public showScrollIndicator = signal<boolean>(false);
   private scrollTimeout: any;
 
-  // Pull to refresh signals
-  public pullDistance = signal<number>(0);
-  public isPulling = signal<boolean>(false);
-  private startY = 0;
-  private canPull = false;
-  public readonly REFRESH_THRESHOLD = 80;
-  public readonly MAX_PULL = 150;
 
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
 
@@ -859,51 +852,5 @@ export class MobileTransactionListComponent
     }
   }
 
-  // Pull to refresh handlers
-  onTouchStart(event: TouchEvent) {
-    this.startY = event.touches[0].pageY;
-    const container = this.scrollContainer.nativeElement;
-    // canPull is true only if we are at the very top
-    this.canPull = container.scrollTop <= 0 && !this.isFullSyncing();
-  }
 
-  onTouchMove(event: TouchEvent) {
-    if (!this.canPull) return;
-
-    const currentY = event.touches[0].pageY;
-    const diff = currentY - this.startY;
-
-    if (diff > 0) {
-      // Apply quadratic damping for a smoother, more natural feel
-      // y = x / (1 + x/max)
-      const easedDiff = Math.min(this.MAX_PULL, (diff * 0.5) / (1 + (diff * 0.5) / this.MAX_PULL));
-      this.pullDistance.set(easedDiff);
-      
-      if (easedDiff > 5) {
-        this.isPulling.set(true);
-        // Prevent default scrolling only when we are actually pulling
-        if (event.cancelable) event.preventDefault();
-      }
-    } else if (diff < 0 && this.isPulling()) {
-      // If they were pulling but now move UP, reduce distance or cancel
-      this.pullDistance.set(0);
-      this.isPulling.set(false);
-      this.canPull = false;
-    }
-  }
-
-  onTouchEnd() {
-    if (this.isPulling() && this.pullDistance() >= this.REFRESH_THRESHOLD) {
-      this.refreshData();
-    }
-    
-    // Always reset state on finger release
-    this.pullDistance.set(0);
-    this.isPulling.set(false);
-    this.canPull = false;
-  }
-
-  refreshData() {
-    this.syncService.syncAll().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
-  }
 }
