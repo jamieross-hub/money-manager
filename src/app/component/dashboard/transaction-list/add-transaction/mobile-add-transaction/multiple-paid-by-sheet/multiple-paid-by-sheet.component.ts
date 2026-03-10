@@ -34,6 +34,11 @@ export class MultiplePaidBySheetComponent implements OnInit {
   // Member amounts map: userId -> amount
   public amountsValues = signal<{ [key: string]: number | null }>({});
 
+  // Expose the signal value as a plain object for template ngModel binding
+  get amounts(): { [key: string]: number | null } {
+    return this.amountsValues();
+  }
+
   public totalAllocated = computed(() => {
     let sum = 0;
     const currentAmounts = this.amountsValues();
