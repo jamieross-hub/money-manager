@@ -226,15 +226,7 @@ export class UserComponent {
     // and to let existing Firebase operations settle.
     setTimeout(async () => {
       try {
-        // 1. Log out cleanly - but use the lower-level logout to avoid router.navigate interference
-        // during an active window.location.reload()
-        try {
-          await this.userService.logout();
-        } catch (logErr) {
-          console.warn('Logout during update failed, proceeding anyway...', logErr);
-        }
-        
-        // 2. Clear known browser storage that might hold old state
+        // 1. Clear known browser storage that might hold old state
         if (typeof window !== 'undefined') {
           // Clear Cache Storage (PWA assets)
           if ('caches' in window) {
@@ -243,6 +235,11 @@ export class UserComponent {
               await Promise.all(cacheNames.map(name => caches.delete(name)));
             } catch (cErr) { console.warn('Cache clear error:', cErr); }
           }
+          
+          // Clear IndexedDB Transactions
+          try {
+            await this.localStorageService.clearTransactionsStore();
+          } catch (idbErr) { console.warn('IndexedDB transaction clear error:', idbErr); }
 
           // Activate update if ready
           if (this.swUpdate.isEnabled && this.updateAvailable()) {
@@ -252,16 +249,12 @@ export class UserComponent {
               console.warn('SW activation failed, continuing...', swErr);
             }
           }
-
-          // Clear local/session storage
-          localStorage.clear();
-          sessionStorage.clear();
           
           // Save a flag to indicate we just updated
           localStorage.setItem('app-updated', new Date().toISOString());
         }
 
-        // 3. Final Hard Reload
+        // 2. Final Hard Reload
         console.log('🔄 Reloading application for update...');
         window.location.reload();
       } catch (error) {

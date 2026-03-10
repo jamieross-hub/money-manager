@@ -13,6 +13,7 @@ dayjs.extend(weekOfYear);
 export interface ProcessorOutput {
   filteredTransactions: any[];
   flattenedTransactions: any[];
+  groupedTransactions: any[];
   totalIncome: number;
   totalExpenses: number;
   filteredCount: number;
@@ -28,6 +29,7 @@ export class TransactionProcessorService {
   private _output = signal<ProcessorOutput>({
     filteredTransactions: [],
     flattenedTransactions: [],
+    groupedTransactions: [],
     totalIncome: 0,
     totalExpenses: 0,
     filteredCount: 0
@@ -37,6 +39,7 @@ export class TransactionProcessorService {
 
   public filteredTransactions = computed(() => this._output().filteredTransactions);
   public flattenedTransactions = computed(() => this._output().flattenedTransactions);
+  public groupedTransactions = computed(() => this._output().groupedTransactions);
   public totalIncome = computed(() => this._output().totalIncome);
   public totalExpenses = computed(() => this._output().totalExpenses);
   public filteredCount = computed(() => this._output().filteredCount);
@@ -90,7 +93,7 @@ export class TransactionProcessorService {
     } = data;
 
     if (!transactions) {
-      return { filteredTransactions: [], flattenedTransactions: [], totalIncome: 0, totalExpenses: 0, filteredCount: 0 };
+      return { filteredTransactions: [], flattenedTransactions: [], groupedTransactions: [], totalIncome: 0, totalExpenses: 0, filteredCount: 0 };
     }
 
     // 1. Helper: Map creation
@@ -456,6 +459,7 @@ export class TransactionProcessorService {
     return {
       filteredTransactions: mergedData,
       flattenedTransactions: flattened,
+      groupedTransactions: finalGroups,
       totalIncome,
       totalExpenses,
       filteredCount

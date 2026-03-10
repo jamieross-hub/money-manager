@@ -618,6 +618,41 @@ export class LocalIndexDBStorageService {
             }
         });
     }
+    
+    /**
+     * Clear only transactions data
+     */
+    async clearTransactionsStore(): Promise<void> {
+        this.transactionsCache.clear();
+        this.familyIdIndex.clear();
+        this.userIdIndex.clear();
+        this.accountIdIndex.clear();
+
+        return new Promise((resolve, reject) => {
+            if (!this.db) return resolve();
+
+            try {
+                if (!this.db.objectStoreNames.contains(this.TRANSACTIONS_STORE)) {
+                    return resolve();
+                }
+
+                const transaction = this.db.transaction([this.TRANSACTIONS_STORE], 'readwrite');
+                transaction.objectStore(this.TRANSACTIONS_STORE).clear();
+
+                transaction.oncomplete = () => {
+                    console.log('✅ Transactions store cleared successfully');
+                    resolve();
+                };
+                transaction.onerror = (event) => {
+                    console.error('❌ Error clearing transactions store:', transaction.error);
+                    reject(transaction.error);
+                };
+            } catch (error) {
+                console.error('❌ Failed to start clear transactions transaction:', error);
+                reject(error);
+            }
+        });
+    }
 
     // ==========================================
     // Type-Safe Methods & Collections (No Changes)

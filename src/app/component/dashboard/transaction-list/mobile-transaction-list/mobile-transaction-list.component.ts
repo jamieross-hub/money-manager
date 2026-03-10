@@ -244,6 +244,7 @@ export class MobileTransactionListComponent
   // Processor Signals
   filteredTransactions = this.processorService.filteredTransactions;
   flattenedTransactions = this.processorService.flattenedTransactions;
+  groupedTransactions = this.processorService.groupedTransactions;
   totalIncome = this.processorService.totalIncome;
   totalExpenses = this.processorService.totalExpenses;
   filteredCount = this.processorService.filteredCount;

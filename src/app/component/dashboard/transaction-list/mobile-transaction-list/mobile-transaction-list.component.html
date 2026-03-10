@@ -307,14 +307,14 @@
         </div>
       }
 
-      @for (item of flattenedTransactions(); track trackById($index, item)) {
-        @if (item._isHeader) {
+      @for (group of groupedTransactions(); track group.date) {
+        <div class="transaction-group relative w-full">
           <div class="date-header-row sticky top-0 z-20 w-full px-2 py-2 pointer-events-none">
-            <div class="date-header-pill" [attr.data-header]="item.dateHeader">
-              {{ item.dateHeader }}
+            <div class="date-header-pill" [attr.data-header]="group.dateHeader">
+              {{ group.dateHeader }}
             </div>
           </div>
-        } @else {
+          @for (item of group.transactions; track trackById($index, item)) {
           <div class="w-full px-2">
             <div class="transaction-card mb-2" #cardElement
               [@popIn]="item._popState"
@@ -580,7 +580,8 @@
             }
           </div>
           </div>
-        }
+          }
+        </div>
       }
     </div>
 
