@@ -142,7 +142,7 @@
               (keydown)="onTabKey($event, chatInput)"
               (input)="onInputChange(chatInput)" 
               (click)="completeSuggestion(chatInput)"
-              class="w-full bg-transparent border-none focus:outline-none px-2 text-sm sm:text-base relative z-10 text-neutral-800">
+              class="w-full bg-transparent border-none focus:outline-none text-sm sm:text-base relative z-10 text-neutral-800">
           </div>
 
           <!-- Desktop Mic Button -->
@@ -156,7 +156,7 @@
           <!-- Modern Send Button -->
           <button (click)="sendMessage(chatInput)"
             class="bg-primary-600 hover:bg-primary-500 text-white p-2 rounded-full shadow-md hover:shadow-lg transition-all flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 shrink-0">
-            <mat-icon class="material-icons-outlined !text-[20px] sm:!text-[22px] !leading-none">arrow_upward</mat-icon>
+            <mat-icon class="material-icons-outlined !text-[20px] sm:!text-[22px] !leading-none mt-[5px]">arrow_upward</mat-icon>
           </button>
         </div>
       }
