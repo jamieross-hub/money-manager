@@ -298,7 +298,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
             throw new Error('Invalid date format');
           }
 
-          const transactionData = {
+          const transactionData: Transaction = {
             userId: userId,
             accountId: tx.accountId,
             amount: parseFloat(tx.amount),
@@ -315,7 +315,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
             createdBy: userId,
             updatedBy: userId,
             status: TransactionStatus.COMPLETED,
-            familyId: this.store.selectSignal(ProfileSelectors.selectIsFamilyMode)() ? (this.familyService.activeFamilyId() || undefined) : undefined,
+            familyId: this.store.selectSignal(ProfileSelectors.selectIsFamilyMode)() ? (this.familyService.activeFamilyId() || '') : '',
           };
 
           this.store.dispatch(TransactionsActions.createTransaction({ userId, transaction: transactionData }));

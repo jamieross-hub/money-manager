@@ -101,7 +101,7 @@ export interface Transaction extends Auditable, RecurrenceInfo {
   toAccountId?: string;
 
   // Family related fields
-  familyId?: string;
+  familyId: string;
   userDisplayName?: string;
   userPhotoURL?: string;
   /** Present only when the group mode is 'split' */

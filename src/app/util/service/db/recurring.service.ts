@@ -237,7 +237,7 @@ export class RecurringService extends BaseService {
       updatedAt: now,
       createdBy: userId,
       updatedBy: userId,
-      familyId: template.familyId,
+      familyId: template.familyId || '',
       // Metadata to track its origin
       isRecurring: false // The concrete transaction itself is not recurring
     };

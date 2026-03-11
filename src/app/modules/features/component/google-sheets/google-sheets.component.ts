@@ -13,7 +13,7 @@ import { AppState } from '../../../../store/app.state';
 import * as TransactionsActions from '../../../../store/transactions/transactions.actions';
 import { TransactionStatus, SyncStatus, TransactionType } from '../../../../util/config/enums';
 import { Auth } from '@angular/fire/auth';
-import { Category } from 'src/app/util/models';
+import { Category, Transaction } from 'src/app/util/models';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
 
 
@@ -291,9 +291,11 @@ export class GoogleSheetsComponent implements OnInit, OnDestroy {
     const importPromises = importedTransactions.map(async (tx) => {
       try {
         // Create transaction data structure
-        const transactionData = {
+        const transactionData: Transaction = {
           userId: userId,
-
+          familyId: '',
+          userDisplayName: '',
+          userPhotoURL: '',
           accountId: tx.accountId || 'default',
           amount: parseFloat(tx.amount),
           category: tx.category || 'Uncategorized',

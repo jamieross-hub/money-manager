@@ -87,7 +87,7 @@ export class ChatFacadeService implements OnDestroy {
         this.store.select(selectAllAccounts)
             .pipe(takeUntil(this.destroy$))
             .subscribe(accounts => {
-                this.defaultBankAccount = accounts.filter(account => account.type.toLowerCase().includes(AccountType.BANK))[0]; //Bank account as default
+                this.defaultBankAccount = accounts.filter(account => account?.type?.toLowerCase().includes(AccountType.BANK))[0]; //Bank account as default
             });
     }
 

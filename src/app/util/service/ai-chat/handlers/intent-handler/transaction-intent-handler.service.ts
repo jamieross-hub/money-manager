@@ -13,7 +13,7 @@ import { Store } from '@ngrx/store';
 import { UserService } from '../../../../service/db/user.service';
 import { NotificationService } from '../../../notification.service';
 import { HapticFeedbackService } from '../../../haptic-feedback.service';
-import { Account, Category } from "src/app/util/models";
+import { Account, Category, Transaction } from "src/app/util/models";
 import * as TransactionsActions from 'src/app/store/transactions/transactions.actions';
 import { EntityExtractorService } from '../../extractors/entity-extractor.service';
 import { INTENTS } from '../../models/intent-config';
@@ -58,12 +58,14 @@ export class TransactionIntentHandler implements IntentHandler {
             return `${type === TransactionType.INCOME ? 'Income' : 'Expense'} added locally: ${this.currencyService.formatAmount(amount)}`;
         }
 
-        const transactionData = {
+        const transactionData: Transaction = {
             userId,
             accountId: account?.accountId || '',
             categoryId: category?.id || '',
             category: category?.name,
-
+            familyId: '',
+            userDisplayName: '',
+            userPhotoURL: '',
             amount,
             type,
             date: new Date(),

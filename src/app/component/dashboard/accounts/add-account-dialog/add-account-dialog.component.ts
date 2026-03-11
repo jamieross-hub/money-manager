@@ -730,6 +730,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
             syncStatus: 'synced' as any,
             isPending: false,
             lastSyncedAt: new Date(),
+            familyId: '',
           };
           return this.transactionsService.createTransaction(uid, tx);
         });
@@ -780,6 +781,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
           syncStatus: 'synced' as any,
           isPending: true,
           lastSyncedAt: new Date(),
+          familyId: '',
         };
 
         return this.transactionsService.createTransaction(uid, transaction);
