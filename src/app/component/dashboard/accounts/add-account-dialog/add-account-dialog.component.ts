@@ -14,7 +14,7 @@ import { AccountType, TransactionType, RecurringInterval, TransactionStatus, Pay
 import { TransactionsService } from 'src/app/util/service/db/transactions.service';
 import { CategoryService } from 'src/app/util/service/db/category.service';
 import { AccountsService } from 'src/app/util/service/db/accounts.service';
-import { CATEGORY_COLORS, CATEGORY_ICONS, CategoryIcon } from 'src/app/util/config/config';
+import { CATEGORY_COLORS, CATEGORY_ICONS, ACCOUNT_ICONS, CategoryIcon } from 'src/app/util/config/config';
 import { MatBottomSheet, MatBottomSheetModule } from '@angular/material/bottom-sheet';
 import { IconSelectorDialogComponent } from '../../category/icon-selector-dialog/icon-selector-dialog.component';
 import { Transaction } from 'src/app/util/models/transaction.model';
@@ -150,7 +150,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
     { value: AccountType.INVESTMENT, label: 'Investment' },
   ];
 
-  public availableIcons = signal(CATEGORY_ICONS);
+  public availableIcons = signal(ACCOUNT_ICONS);
   public iconFilterCtrl = new FormControl('');
   public filteredIcons!: Signal<CategoryIcon[]>;
 
@@ -634,6 +634,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
       .open(IconSelectorDialogComponent, {
         data: {
           currentIcon: this.accountForm.get('icon')?.value,
+          availableIcons: this.availableIcons(),
         },
       })
       .afterDismissed()

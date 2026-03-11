@@ -8,13 +8,12 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  padding-bottom: 32px;
   justify-content: flex-start;
 }
 
 .icon-option-custom {
   flex: 0 0 calc(33% - 9px); // 4 items per row, accounting for gap
-  max-width: calc(34% - 9px);
+  max-width: calc(33% - 9px);
   cursor: pointer;
   background: white;
   min-height: 80px; 

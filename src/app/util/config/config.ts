@@ -673,162 +673,222 @@ export const TIMEZONES = [
 export interface CategoryIcon {
   icon: string;
   name: string;
+  group?: string;
 }
 
 export const CATEGORY_ICONS: CategoryIcon[] = [
   // ⭐ Popular
-  { icon: 'shopping_cart', name: 'Shopping' },
-  { icon: 'restaurant', name: 'Restaurant' },
-  { icon: 'local_grocery_store', name: 'Groceries' },
-  { icon: 'directions_car', name: 'Transport' },
-  { icon: 'payments', name: 'Payments' },
-  { icon: 'receipt_long', name: 'Bills' },
-  { icon: 'account_balance_wallet', name: 'Wallet' },
-  { icon: 'attach_money', name: 'Cash' },
+  { icon: 'shopping_cart', name: 'Shopping', group: 'Popular' },
+  { icon: 'restaurant', name: 'Restaurant', group: 'Popular' },
+  { icon: 'local_grocery_store', name: 'Groceries', group: 'Popular' },
+  { icon: 'directions_car', name: 'Transport', group: 'Popular' },
+  { icon: 'payments', name: 'Payments', group: 'Popular' },
+  { icon: 'receipt_long', name: 'Bills', group: 'Popular' },
+  { icon: 'account_balance_wallet', name: 'Wallet', group: 'Popular' },
+  { icon: 'attach_money', name: 'Cash', group: 'Popular' },
 
   // 🍽️ Food & Dining
-  { icon: 'restaurant', name: 'Restaurant' },
-  { icon: 'fastfood', name: 'Fast Food' },
-  { icon: 'local_cafe', name: 'Cafe' },
-  { icon: 'liquor', name: 'Drinks' },
-  { icon: 'ramen_dining', name: 'Food' },
-  { icon: 'local_dining', name: 'Dining' },
+  { icon: 'restaurant', name: 'Restaurant', group: 'Food & Dining' },
+  { icon: 'fastfood', name: 'Fast Food', group: 'Food & Dining' },
+  { icon: 'local_cafe', name: 'Cafe', group: 'Food & Dining' },
+  { icon: 'liquor', name: 'Drinks', group: 'Food & Dining' },
+  { icon: 'ramen_dining', name: 'Food', group: 'Food & Dining' },
+  { icon: 'local_dining', name: 'Dining', group: 'Food & Dining' },
 
   // 🛒 Shopping
-  { icon: 'shopping_cart', name: 'Shopping' },
-  { icon: 'shopping_bag', name: 'Shopping Bag' },
-  { icon: 'store', name: 'Store' },
-  { icon: 'storefront', name: 'Market' },
-  { icon: 'local_mall', name: 'Mall' },
-  { icon: 'local_offer', name: 'Deals' },
-  { icon: 'card_giftcard', name: 'Gift Card' },
+  { icon: 'shopping_cart', name: 'Shopping', group: 'Shopping' },
+  { icon: 'shopping_bag', name: 'Shopping Bag', group: 'Shopping' },
+  { icon: 'store', name: 'Store', group: 'Shopping' },
+  { icon: 'storefront', name: 'Market', group: 'Shopping' },
+  { icon: 'local_mall', name: 'Mall', group: 'Shopping' },
+  { icon: 'local_offer', name: 'Deals', group: 'Shopping' },
+  { icon: 'card_giftcard', name: 'Gift Card', group: 'Shopping' },
 
   // 🥦 Groceries & Household
-  { icon: 'local_grocery_store', name: 'Groceries' },
-  { icon: 'shopping_basket', name: 'Basket' },
-  { icon: 'inventory', name: 'Inventory' },
-  { icon: 'inventory_2', name: 'Supplies' },
-  { icon: 'cleaning_services', name: 'Cleaning' },
+  { icon: 'local_grocery_store', name: 'Groceries', group: 'Groceries' },
+  { icon: 'shopping_basket', name: 'Basket', group: 'Groceries' },
+  { icon: 'inventory', name: 'Inventory', group: 'Groceries' },
+  { icon: 'inventory_2', name: 'Supplies', group: 'Groceries' },
+  { icon: 'cleaning_services', name: 'Cleaning', group: 'Groceries' },
 
   // 🚗 Transport & Travel
-  { icon: 'directions_car', name: 'Car' },
-  { icon: 'two_wheeler', name: 'Bike' },
-  { icon: 'directions_bus', name: 'Bus' },
-  { icon: 'train', name: 'Train' },
-  { icon: 'flight', name: 'Flight' },
-  { icon: 'local_taxi', name: 'Taxi' },
-  { icon: 'local_gas_station', name: 'Fuel' },
-  { icon: 'commute', name: 'Commute' },
+  { icon: 'directions_car', name: 'Car', group: 'Transport' },
+  { icon: 'two_wheeler', name: 'Bike', group: 'Transport' },
+  { icon: 'directions_bus', name: 'Bus', group: 'Transport' },
+  { icon: 'train', name: 'Train', group: 'Transport' },
+  { icon: 'flight', name: 'Flight', group: 'Transport' },
+  { icon: 'local_taxi', name: 'Taxi', group: 'Transport' },
+  { icon: 'local_gas_station', name: 'Fuel', group: 'Transport' },
+  { icon: 'commute', name: 'Commute', group: 'Transport' },
 
-  // � Utilities & Bills
-  { icon: 'receipt', name: 'Receipt' },
-  { icon: 'receipt_long', name: 'Bills' },
-  { icon: 'lightbulb', name: 'Electricity' },
-  { icon: 'water_drop', name: 'Water' },
-  { icon: 'wifi', name: 'Internet' },
-  { icon: 'phone', name: 'Phone' },
-  { icon: 'router', name: 'Router' },
-  { icon: 'electrical_services', name: 'Electrical Services' },
+  //  Utilities & Bills
+  { icon: 'receipt', name: 'Receipt', group: 'Utilities' },
+  { icon: 'receipt_long', name: 'Bills', group: 'Utilities' },
+  { icon: 'lightbulb', name: 'Electricity', group: 'Utilities' },
+  { icon: 'water_drop', name: 'Water', group: 'Utilities' },
+  { icon: 'wifi', name: 'Internet', group: 'Utilities' },
+  { icon: 'phone', name: 'Phone', group: 'Utilities' },
+  { icon: 'router', name: 'Router', group: 'Utilities' },
+  { icon: 'electrical_services', name: 'Electrical Services', group: 'Utilities' },
 
   // 💰 Finance
-  { icon: 'account_balance', name: 'Bank' },
-  { icon: 'account_balance_wallet', name: 'Wallet' },
-  { icon: 'monetization_on', name: 'Money' },
-  { icon: 'payments', name: 'Payments' },
-  { icon: 'attach_money', name: 'Cash' },
-  { icon: 'credit_card', name: 'Credit Card' },
-  { icon: 'savings', name: 'Savings' },
-  { icon: 'currency_exchange', name: 'Exchange' },
-  { icon: 'request_quote', name: 'Invoice' },
-  { icon: 'paid', name: 'Paid' },
+  { icon: 'account_balance', name: 'Bank', group: 'Finance' },
+  { icon: 'account_balance_wallet', name: 'Wallet', group: 'Finance' },
+  { icon: 'monetization_on', name: 'Money', group: 'Finance' },
+  { icon: 'payments', name: 'Payments', group: 'Finance' },
+  { icon: 'attach_money', name: 'Cash', group: 'Finance' },
+  { icon: 'credit_card', name: 'Credit Card', group: 'Finance' },
+  { icon: 'savings', name: 'Savings', group: 'Finance' },
+  { icon: 'currency_exchange', name: 'Exchange', group: 'Finance' },
+  { icon: 'request_quote', name: 'Invoice', group: 'Finance' },
+  { icon: 'paid', name: 'Paid', group: 'Finance' },
 
   // 🧾 Documents
-  { icon: 'description', name: 'Documents' },
-  { icon: 'article', name: 'Article' },
-  { icon: 'folder', name: 'Folder' },
-  { icon: 'gavel', name: 'Legal' },
-  { icon: 'policy', name: 'Insurance' },
+  { icon: 'description', name: 'Documents', group: 'Documents' },
+  { icon: 'article', name: 'Article', group: 'Documents' },
+  { icon: 'folder', name: 'Folder', group: 'Documents' },
+  { icon: 'gavel', name: 'Legal', group: 'Documents' },
+  { icon: 'policy', name: 'Insurance', group: 'Documents' },
 
   // 🏠 Home
-  { icon: 'home', name: 'Home' },
-  { icon: 'apartment', name: 'Apartment' },
-  { icon: 'kitchen', name: 'Kitchen' },
-  { icon: 'bed', name: 'Bedroom' },
-  { icon: 'weekend', name: 'Furniture' },
+  { icon: 'home', name: 'Home', group: 'Home' },
+  { icon: 'apartment', name: 'Apartment', group: 'Home' },
+  { icon: 'kitchen', name: 'Kitchen', group: 'Home' },
+  { icon: 'bed', name: 'Bedroom', group: 'Home' },
+  { icon: 'weekend', name: 'Furniture', group: 'Home' },
 
   // 🧰 Repairs
-  { icon: 'build', name: 'Tools' },
-  { icon: 'construction', name: 'Construction' },
-  { icon: 'handyman', name: 'Handyman' },
-  { icon: 'plumbing', name: 'Plumbing' },
-  { icon: 'settings', name: 'Maintenance' },
+  { icon: 'build', name: 'Tools', group: 'Repairs' },
+  { icon: 'construction', name: 'Construction', group: 'Repairs' },
+  { icon: 'handyman', name: 'Handyman', group: 'Repairs' },
+  { icon: 'plumbing', name: 'Plumbing', group: 'Repairs' },
+  { icon: 'settings', name: 'Maintenance', group: 'Repairs' },
 
   // 🏥 Health & Wellness
-  { icon: 'local_hospital', name: 'Hospital' },
-  { icon: 'health_and_safety', name: 'Health' },
-  { icon: 'medication', name: 'Medicine' },
-  { icon: 'fitness_center', name: 'Gym' },
-  { icon: 'spa', name: 'Spa' },
-  { icon: 'self_improvement', name: 'Wellness' },
+  { icon: 'local_hospital', name: 'Hospital', group: 'Health' },
+  { icon: 'health_and_safety', name: 'Health', group: 'Health' },
+  { icon: 'medication', name: 'Medicine', group: 'Health' },
+  { icon: 'fitness_center', name: 'Gym', group: 'Health' },
+  { icon: 'spa', name: 'Spa', group: 'Health' },
+  { icon: 'self_improvement', name: 'Wellness', group: 'Health' },
 
   // 👕 Personal
-  { icon: 'checkroom', name: 'Clothing' },
-  { icon: 'dry_cleaning', name: 'Laundry' },
-  { icon: 'content_cut', name: 'Haircut' },
-  { icon: 'face', name: 'Personal Care' },
-  { icon: 'style', name: 'Fashion' },
+  { icon: 'checkroom', name: 'Clothing', group: 'Personal' },
+  { icon: 'dry_cleaning', name: 'Laundry', group: 'Personal' },
+  { icon: 'content_cut', name: 'Haircut', group: 'Personal' },
+  { icon: 'face', name: 'Personal Care', group: 'Personal' },
+  { icon: 'style', name: 'Fashion', group: 'Personal' },
 
   // 👶 Kids & Family
-  { icon: 'family_restroom', name: 'Family' },
-  { icon: 'child_care', name: 'Childcare' },
-  { icon: 'child_friendly', name: 'Kids' },
-  { icon: 'baby_changing_station', name: 'Baby Care' },
-  { icon: 'toys', name: 'Toys' },
+  { icon: 'family_restroom', name: 'Family', group: 'Family' },
+  { icon: 'child_care', name: 'Childcare', group: 'Family' },
+  { icon: 'child_friendly', name: 'Kids', group: 'Family' },
+  { icon: 'baby_changing_station', name: 'Baby Care', group: 'Family' },
+  { icon: 'toys', name: 'Toys', group: 'Family' },
 
   // 🎓 Education
-  { icon: 'school', name: 'School' },
-  { icon: 'menu_book', name: 'Books' },
-  { icon: 'library_books', name: 'Library' },
-  { icon: 'edit', name: 'Study' },
+  { icon: 'school', name: 'School', group: 'Education' },
+  { icon: 'menu_book', name: 'Books', group: 'Education' },
+  { icon: 'library_books', name: 'Library', group: 'Education' },
+  { icon: 'edit', name: 'Study', group: 'Education' },
 
   // 🎮 Entertainment & Leisure
-  { icon: 'movie', name: 'Movies' },
-  { icon: 'music_note', name: 'Music' },
-  { icon: 'sports_esports', name: 'Gaming' },
-  { icon: 'live_tv', name: 'Streaming' },
-  { icon: 'celebration', name: 'Party' },
+  { icon: 'movie', name: 'Movies', group: 'Entertainment' },
+  { icon: 'music_note', name: 'Music', group: 'Entertainment' },
+  { icon: 'sports_esports', name: 'Gaming', group: 'Entertainment' },
+  { icon: 'live_tv', name: 'Streaming', group: 'Entertainment' },
+  { icon: 'celebration', name: 'Party', group: 'Entertainment' },
 
   // 🏃 Activities
-  { icon: 'sports_soccer', name: 'Football' },
-  { icon: 'sports_cricket', name: 'Cricket' },
-  { icon: 'sports_basketball', name: 'Basketball' },
-  { icon: 'directions_run', name: 'Running' },
+  { icon: 'sports_soccer', name: 'Football', group: 'Activities' },
+  { icon: 'sports_cricket', name: 'Cricket', group: 'Activities' },
+  { icon: 'sports_basketball', name: 'Basketball', group: 'Activities' },
+  { icon: 'directions_run', name: 'Running', group: 'Activities' },
 
   // 🐾 Pets
-  { icon: 'pets', name: 'Pets' },
+  { icon: 'pets', name: 'Pets', group: 'Pets' },
 
   // 🎁 Charity & Gifts
-  { icon: 'redeem', name: 'Gift' },
-  { icon: 'volunteer_activism', name: 'Charity' },
-  { icon: 'cake', name: 'Birthday' },
+  { icon: 'redeem', name: 'Gift', group: 'Charity & Gifts' },
+  { icon: 'volunteer_activism', name: 'Charity', group: 'Charity & Gifts' },
+  { icon: 'cake', name: 'Birthday', group: 'Charity & Gifts' },
 
   // 💼 Work
-  { icon: 'work', name: 'Work' },
-  { icon: 'business_center', name: 'Business' },
-  { icon: 'computer', name: 'Tech' },
-  { icon: 'schedule', name: 'Schedule' },
+  { icon: 'work', name: 'Work', group: 'Work' },
+  { icon: 'business_center', name: 'Business', group: 'Work' },
+  { icon: 'computer', name: 'Tech', group: 'Work' },
+  { icon: 'schedule', name: 'Schedule', group: 'Work' },
 
   // 📈 Investments
-  { icon: 'show_chart', name: 'Stocks' },
-  { icon: 'insights', name: 'Insights' },
-  { icon: 'trending_up', name: 'Growth' },
+  { icon: 'show_chart', name: 'Stocks', group: 'Investments' },
+  { icon: 'insights', name: 'Insights', group: 'Investments' },
+  { icon: 'trending_up', name: 'Growth', group: 'Investments' },
 
   // 🏷️ Generic
-  { icon: 'category', name: 'Category' },
-  { icon: 'label', name: 'Label' },
-  { icon: 'bookmark', name: 'Bookmark' },
-  { icon: 'star', name: 'Favorite' },
-  { icon: 'flag', name: 'Flag' },
+  { icon: 'category', name: 'Category', group: 'Generic' },
+  { icon: 'label', name: 'Label', group: 'Generic' },
+  { icon: 'bookmark', name: 'Bookmark', group: 'Generic' },
+  { icon: 'star', name: 'Favorite', group: 'Generic' },
+  { icon: 'flag', name: 'Flag', group: 'Generic' },
+
+  // 🎭 Lifestyle & Fun
+  { icon: 'rocket_launch', name: 'Startups', group: 'Fun' },
+  { icon: 'auto_awesome', name: 'Magic', group: 'Fun' },
+  { icon: 'emoji_events', name: 'Trophy', group: 'Fun' },
+  { icon: 'casino', name: 'Gambling', group: 'Fun' },
+  { icon: 'sports_bar', name: 'Beer/Drinks', group: 'Fun' },
+  { icon: 'nightlife', name: 'Parties', group: 'Fun' },
+  { icon: 'outdoor_grill', name: 'BBQ', group: 'Fun' },
+  { icon: 'palette', name: 'Art', group: 'Fun' },
+  { icon: 'camera_alt', name: 'Photography', group: 'Fun' },
+  { icon: 'hiking', name: 'Adventure', group: 'Fun' },
+  { icon: 'surfing', name: 'Surfing', group: 'Fun' },
+  { icon: 'icecream', name: 'Teats', group: 'Fun' },
+  { icon: 'theater_comedy', name: 'Theater', group: 'Fun' },
+  { icon: 'attractions', name: 'Amusement', group: 'Fun' },
+  { icon: 'castle', name: 'Travel', group: 'Fun' },
+];
+
+export const ACCOUNT_ICONS: CategoryIcon[] = [
+  // Core Financial
+  { icon: 'account_balance', name: 'Bank', group: 'Core Financial' },
+  { icon: 'account_balance_wallet', name: 'Wallet', group: 'Core Financial' },
+  { icon: 'credit_card', name: 'Credit Card', group: 'Core Financial' },
+  { icon: 'payments', name: 'Cash', group: 'Core Financial' },
+  { icon: 'savings', name: 'Savings', group: 'Core Financial' },
+  { icon: 'monetization_on', name: 'Income', group: 'Core Financial' },
+  { icon: 'paid', name: 'Paid', group: 'Core Financial' },
+  
+  // Banking & Cards
+  { icon: 'account_box', name: 'Personal Account', group: 'Banking & Cards' },
+  { icon: 'business', name: 'Business Account', group: 'Banking & Cards' },
+  { icon: 'security', name: 'Insurance', group: 'Banking & Cards' },
+  { icon: 'contactless', name: 'Digital/Contactless', group: 'Banking & Cards' },
+  { icon: 'wallet', name: 'Digital Wallet', group: 'Banking & Cards' },
+  { icon: 'credit_score', name: 'Credit Score', group: 'Banking & Cards' },
+  
+  // Assets & Investments
+  { icon: 'trending_up', name: 'Investment', group: 'Assets & Investments' },
+  { icon: 'show_chart', name: 'Stocks', group: 'Assets & Investments' },
+  { icon: 'currency_bitcoin', name: 'Crypto', group: 'Assets & Investments' },
+  { icon: 'token', name: 'Digital Assets', group: 'Assets & Investments' },
+  { icon: 'home', name: 'Real Estate', group: 'Assets & Investments' },
+  { icon: 'directions_car', name: 'Vehicle', group: 'Assets & Investments' },
+  { icon: 'diamond', name: 'Luxury/Gold', group: 'Assets & Investments' },
+  
+  // Usage Themed
+  { icon: 'family_restroom', name: 'Family Account', group: 'Usage Combined' },
+  { icon: 'groups', name: 'Shared Account', group: 'Usage Combined' },
+  { icon: 'flight', name: 'Travel Fund', group: 'Usage Combined' },
+  { icon: 'school', name: 'Education Fund', group: 'Usage Combined' },
+  { icon: 'local_hospital', name: 'Medical Fund', group: 'Usage Combined' },
+  { icon: 'work', name: 'Salary Account', group: 'Usage Combined' },
+  { icon: 'storefront', name: 'Merchant Account', group: 'Usage Combined' },
+  
+  // Generic
+  { icon: 'account_circle', name: 'Profile', group: 'Generic' },
+  { icon: 'stars', name: 'Premium', group: 'Generic' },
+  { icon: 'auto_awesome', name: 'Special', group: 'Generic' },
 ];
 
 

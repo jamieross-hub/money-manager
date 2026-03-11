@@ -70,19 +70,31 @@ export class IconSelectorDialogComponent {
   public selectedIcon = signal<string>('category');
   public searchTerm = signal<string>('');
   
-  public filteredIcons = computed(() => {
+  public groupedIcons = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
     const icons = this.availableIcons();
-    
-    if (!term) {
-      return icons;
-    }
-    
-    return icons.filter(item =>
+    const filtered = !term ? icons : icons.filter(item =>
       item.name.toLowerCase().includes(term) ||
-      item.icon.toLowerCase().includes(term)
+      item.icon.toLowerCase().includes(term) ||
+      item.group?.toLowerCase().includes(term)
     );
+
+    const groups: { name: string, icons: CategoryIcon[] }[] = [];
+    const groupMap = new Map<string, CategoryIcon[]>();
+
+    filtered.forEach(icon => {
+      const groupName = icon.group || 'Other';
+      if (!groupMap.has(groupName)) {
+        groupMap.set(groupName, []);
+        groups.push({ name: groupName, icons: groupMap.get(groupName)! });
+      }
+      groupMap.get(groupName)!.push(icon);
+    });
+
+    return groups;
   });
+
+  public hasNoIcons = computed(() => this.groupedIcons().length === 0);
 
   constructor(
     public bottomSheetRef: MatBottomSheetRef<IconSelectorDialogComponent>,

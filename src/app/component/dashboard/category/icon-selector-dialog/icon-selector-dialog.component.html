@@ -1,6 +1,6 @@
 <div class="bottom-sheet-container flex flex-col h-full max-h-[85vh]">
   <!-- Header Area -->
-  <div class="px-5 pt-4 pb-2 bg-white dark:bg-gray-800 rounded-t-3xl sticky top-0 z-20">
+  <div class="px-5 pt-4 pb-2 bg-transparent dark:bg-gray-800 rounded-t-3xl sticky top-0 z-20">
     <!-- Drag Handle Indicator -->
     <div class="flex justify-center mb-4">
       <div
@@ -36,7 +36,7 @@
 
 <!-- Icons Grid Container -->
 <div class="overflow-y-auto px-5 pb-12 flex-1 pt-2">
-  @if (filteredIcons() && filteredIcons().length === 0) {
+  @if (hasNoIcons()) {
     <div
       class="flex flex-col items-center justify-center py-16 text-gray-400">
       <mat-icon class="text-6xl opacity-20 mb-4">search_off</mat-icon>
@@ -47,19 +47,27 @@
     </div>
   }
 
-  @if (filteredIcons() && filteredIcons().length > 0) {
-    <div class="icons-grid-custom">
-      @for (item of filteredIcons(); track trackByIcon($index, item)) {
-        <button type="button" (click)="selectIcon(item.icon)"
-          class="icon-option-custom flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200"
-          [class.selected-icon]="selectedIcon() === item.icon" [attr.aria-label]="'Select ' + item.name + ' icon'"
-          [attr.aria-selected]="selectedIcon() === item.icon">
-          <mat-icon class="text-3xl mb-1.5 text-primary">{{ item.icon }}</mat-icon>
-          <span class="text-[8px] font-bold uppercase tracking-widest text-gray-400 text-center truncate w-full px-1">{{
-          item.name }}</span>
-        </button>
-      }
-    </div>
+  @if (!hasNoIcons()) {
+    @for (group of groupedIcons(); track group.name) {
+      <div class="group-section mb-6">
+        <div class="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 mb-3 px-1 opacity-80 flex items-center">
+          <span class="mr-2">{{ group.name }}</span>
+          <div class="h-px bg-slate-100 dark:bg-slate-700/50 flex-1"></div>
+        </div>
+        <div class="icons-grid-custom">
+          @for (item of group.icons; track trackByIcon($index, item)) {
+            <button type="button" (click)="$event.stopPropagation(); selectIcon(item.icon)"
+              class="icon-option-custom flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200"
+              [class.selected-icon]="selectedIcon() === item.icon" [attr.aria-label]="'Select ' + item.name + ' icon'"
+              [attr.aria-selected]="selectedIcon() === item.icon">
+              <mat-icon class="text-3xl mb-1.5 text-primary">{{ item.icon }}</mat-icon>
+              <span class="text-[8px] font-bold uppercase tracking-widest text-gray-400 text-center truncate w-full px-1">{{
+              item.name }}</span>
+            </button>
+          }
+        </div>
+      </div>
+    }
   }
 </div>
 </div>
