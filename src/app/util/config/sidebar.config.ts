@@ -92,6 +92,12 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         order: 1
       },
       {
+        label: 'NAVIGATION.AUTO_SYNC',
+        route: '/dashboard/auto-sync',
+        icon: 'sync',
+        order: 1.5,
+      },
+      {
         label: 'NAVIGATION.TAX',
         route: '/dashboard/tax',
         icon: 'calculate',

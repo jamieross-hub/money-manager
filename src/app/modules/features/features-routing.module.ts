@@ -7,6 +7,7 @@ import { GoogleSheetsComponent } from './component/google-sheets/google-sheets.c
 import { OpenaiInteractionComponent } from './component/openai-interaction/openai-interaction.component';
 import { LoanCalculatorComponent } from './component/loan-calculator/loan-calculator.component';
 import { ReportsComponent } from './component/reports/reports.component';
+import { AutoSyncComponent } from './component/auto-sync/auto-sync.component';
 
 const routes: Routes = [
     {
@@ -60,6 +61,14 @@ const routes: Routes = [
     {
         path: 'backup-restore',
         component: BackupRestoreComponent,
+        data: {
+            roles: ['free', 'premium', 'admin'],
+            requireEmailVerification: true
+        }
+    },
+    {
+        path: 'auto-sync',
+        component: AutoSyncComponent,
         data: {
             roles: ['free', 'premium', 'admin'],
             requireEmailVerification: true
