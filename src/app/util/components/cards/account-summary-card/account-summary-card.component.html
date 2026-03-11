@@ -13,7 +13,7 @@
           Total Balance
         </p>
         <div class="summary-subtitle text-xs text-neutral-500">
-          Balance across {{ (positiveAccounts().length ) + (negativeAccounts().length ) }} accounts
+          Balance across {{ positiveAccounts().length + negativeAccounts().length }} accounts
         </div>
       </div>
     </div>
@@ -37,15 +37,15 @@
   <div class="text-sm flex flex-col gap-4">
     @if (positiveAccounts().length) {
       <div class="flex items-center gap-3">
-        <div class="income-icon-wrap rounded-lg p-2 flex items-center justify-center">
+        <div class="income-icon-wrap rounded-lg p-2 flex items-center justify-center shrink-0">
           <mat-icon aria-hidden="true">arrow_upward</mat-icon>
         </div>
-        <div class="w-full">
-          <div class="flex items-center justify-between">
-            <div class="breakdown-label font-medium text-neutral-700">Assets</div>
-            <div class="text-xs text-neutral-500">{{ positiveAccounts().length }} accounts</div>
+        <div class="flex-1 flex items-center justify-between min-w-0">
+          <div class="flex flex-col min-w-0">
+            <span class="breakdown-label font-medium text-neutral-700 truncate">Assets</span>
+            <span class="text-xs text-neutral-500 truncate">{{ positiveAccounts().length }} accounts</span>
           </div>
-          <div class="mt-1 font-bold text-md text-success-600" aria-label="Assets total">
+          <div class="font-semibold text-md text-success-600 whitespace-nowrap ml-4" aria-label="Assets total">
             {{ totalPositiveBalance() | currency:{round:true} }}
           </div>
         </div>
@@ -54,15 +54,15 @@
 
     @if (negativeAccounts().length) {
       <div class="flex items-center gap-3">
-        <div class="expense-icon-wrap rounded-lg p-2 flex items-center justify-center">
+        <div class="expense-icon-wrap rounded-lg p-2 flex items-center justify-center shrink-0">
           <mat-icon aria-hidden="true">arrow_downward</mat-icon>
         </div>
-        <div class="w-full">
-          <div class="flex items-center justify-between">
-            <div class="breakdown-label font-medium text-neutral-700">Liabilities</div>
-            <div class="text-xs text-neutral-500">{{ negativeAccounts().length }} accounts</div>
+        <div class="flex-1 flex items-center justify-between min-w-0">
+          <div class="flex flex-col min-w-0">
+            <span class="breakdown-label font-medium text-neutral-700 truncate">Liabilities</span>
+            <span class="text-xs text-neutral-500 truncate">{{ negativeAccounts().length }} accounts</span>
           </div>
-          <div class="mt-1 font-bold text-md text-error-600" aria-label="Liabilities total">
+          <div class="font-semibold text-md text-error-600 whitespace-nowrap ml-4" aria-label="Liabilities total">
             {{ totalNegativeBalance() | currency:{round:true} }}
           </div>
         </div>

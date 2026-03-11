@@ -46,7 +46,7 @@
             <div class="text-xs text-neutral-500">{{ summary.incomeCount }} categories</div>
           </div>
           <div class="flex items-center justify-between mt-1">
-            <div class="font-bold text-md text-success-600">
+            <div class="font-medium text-md text-success-600">
               {{ summary.totalIncome | currency:{round:true} }}
             </div>
             @if (summary.incomeChange !== 0) {
@@ -78,7 +78,7 @@
             <div class="text-xs text-neutral-500">{{ summary.expenseCount }} categories</div>
           </div>
           <div class="flex items-center justify-between mt-1">
-            <div class="font-bold text-md text-error-600">
+            <div class="font-medium text-md text-error-600">
               {{ summary.totalExpense | currency:{round:true} }}
             </div>
             @if (summary.expenseChange !== 0) {
