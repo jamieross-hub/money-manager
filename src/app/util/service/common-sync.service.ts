@@ -575,7 +575,15 @@ export class CommonSyncService implements OnDestroy {
    */
   async registerSyncItem(item: Omit<SyncItem, 'timestamp' | 'retryCount'>): Promise<{ success: boolean; errors?: string[] }> {
     try {
-      const validationResult = this.validateSyncItem(item);
+      let validationResult = this.validateSyncItem(item);
+
+      // If transaction is going for deletion and data is invalid then update undefined to empty and allow to go forward
+      if (!validationResult.isValid && item.type === 'transaction' && item.operation === 'delete') {
+        console.warn('[CommonSyncService] Transaction delete item is invalid, fixing undefined fields to empty strings', item.id, validationResult.errors);
+        item.data = this.convertUndefinedToEmpty(item.data);
+        // After fixing, we consider it valid for the purpose of proceeding with the deletion
+        validationResult = { isValid: true, errors: [] };
+      }
 
       if (!validationResult.isValid) {
         console.error('Invalid sync item data:', item.id, validationResult.errors);
@@ -1348,6 +1356,25 @@ export class CommonSyncService implements OnDestroy {
     if (scrubbedCount > 0) {
       console.log(`[CommonSyncService] Scrubbed ${scrubbedCount} undefined properties from object`, obj.id || '');
     }
+    return result;
+  }
+
+  /**
+   * Recursively convert undefined values to empty strings
+   */
+  private convertUndefinedToEmpty(obj: any): any {
+    if (obj === null || typeof obj !== 'object' || obj instanceof Date) return obj;
+    if (Array.isArray(obj)) return obj.map(item => this.convertUndefinedToEmpty(item));
+
+    const result: any = {};
+    Object.keys(obj).forEach(key => {
+      const value = obj[key];
+      if (value !== undefined) {
+        result[key] = this.convertUndefinedToEmpty(value);
+      } else {
+        result[key] = '';
+      }
+    });
     return result;
   }
 
