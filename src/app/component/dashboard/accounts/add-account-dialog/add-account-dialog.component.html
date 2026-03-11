@@ -11,36 +11,79 @@
 <app-common-body-content>
   <form [formGroup]="accountForm" (ngSubmit)="onSubmit()" class="space-y-6">
 
-    <!-- Account Name and Type -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm h-full">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Account Name *</label>
-        <input type="text" formControlName="name" [maxlength]="50" placeholder="e.g., Chase Checking"
-          class="w-full py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-        <div class="flex justify-between items-center mt-1">
-          @if(accountForm.get('name')?.hasError('required') && accountForm.get('name')?.touched) {
-            <p class="text-red-500 text-sm">Account name is required</p>
-          }
-          @if(accountForm.get('name')?.hasError('maxlength')) {
-            <p class="text-red-500 text-sm">Account name must be less than 50 characters</p>
-          }
-          <span class="text-xs text-gray-500">{{ accountForm.get('name')?.value?.length || 0 }}/50</span>
+    <!-- Appearance and Details Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm space-y-4">
+      <div class="flex items-end gap-3">
+        <!-- Clickable Icon Selector -->
+        <div (click)="openIconSelectorDialog()" 
+          class="w-14 h-14 flex-shrink-0 flex items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all group overflow-hidden"
+          [style.background-color]="colorValue() + '1A'"
+          matTooltip="Change Icon">
+          <mat-icon class="!w-8 !h-8 !text-[32px] transition-transform group-hover:scale-110" 
+            [style.color]="colorValue() || '#005cbb'">
+            {{ iconValue() || 'account_balance' }}
+          </mat-icon>
+        </div>
+
+        <!-- Account Name Input -->
+        <div class="flex-grow">
+          <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1 px-1">
+            Account Name *
+          </label>
+          <input type="text" formControlName="name" [maxlength]="50" placeholder="e.g., Chase Checking"
+            class="w-full py-2.5 px-4 text-base font-semibold border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50/30 dark:bg-gray-900/30 focus:outline-none focus:ring-2 focus:ring-primary-600/20 focus:border-primary-600 dark:focus:border-primary-400 transition-all shadow-sm" />
         </div>
       </div>
-
-      <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm h-full">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Account Type *</label>
-        <mat-form-field appearance="fill" class="w-full">
-          <mat-label>Select account type</mat-label>
-          <mat-select formControlName="type">
-            @for (type of accountTypes; track type.value) {
-              <mat-option [value]="type.value">{{ type.label }}</mat-option>
-            }
-          </mat-select>
-          @if(accountForm.get('type')?.hasError('required') && accountForm.get('type')?.touched) {
-            <mat-error>Account type is required</mat-error>
+      
+      <!-- Validation Errors & Character Count Row -->
+      <div class="flex justify-between items-center px-1">
+        <div>
+          @if(accountForm.get('name')?.hasError('required') && accountForm.get('name')?.touched) {
+            <p class="text-red-500 text-[10px] font-medium leading-none m-0">Account name is required</p>
           }
-        </mat-form-field>
+          @if(accountForm.get('name')?.hasError('maxlength')) {
+            <p class="text-red-500 text-[10px] font-medium leading-none m-0">Too long</p>
+          }
+        </div>
+        <span class="text-[10px] font-medium text-gray-400 dark:text-gray-500">{{ accountForm.get('name')?.value?.length || 0 }}/50</span>
+      </div>
+
+      <!-- Account Color & Type Row -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1 px-1">Account Color *</label>
+          <mat-form-field appearance="outline" class="w-full custom-mat-field">
+            <mat-select formControlName="color" [panelClass]="'custom-select-panel'">
+              <mat-select-trigger>
+                <div class="flex items-center gap-3">
+                  <div class="w-6 h-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm" [style.background-color]="colorValue()"></div>
+                  <span class="font-bold text-gray-900 dark:text-gray-100">{{ getColorLabel(colorValue()) }}</span>
+                </div>
+              </mat-select-trigger>
+              @for (color of filteredColors(); track color) {
+                <mat-option [value]="color.value">
+                  <div class="flex items-center gap-3">
+                    <div class="w-5 h-5 rounded-md border border-gray-200 dark:border-gray-700" [style.background-color]="color.value"></div>
+                    <span class="font-medium text-sm">{{ color.label }}</span>
+                  </div>
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1 px-1">Account Type *</label>
+          <mat-form-field appearance="outline" class="w-full custom-mat-field">
+            <mat-select formControlName="type">
+              @for (type of accountTypes; track type.value) {
+                <mat-option [value]="type.value">
+                  <span class="text-sm font-medium">{{ type.label }}</span>
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
       </div>
     </div>
 

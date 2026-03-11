@@ -834,6 +834,7 @@ export const CATEGORY_ICONS: CategoryIcon[] = [
 
 // Available colors for category selection
 export const CATEGORY_COLORS: { label: string; value: string }[] = [
+  // Vibrant & Modern
   { label: 'Emerald', value: '#10B981' },
   { label: 'Teal', value: '#14B8A6' },
   { label: 'Cyan', value: '#06B6D4' },
@@ -842,18 +843,33 @@ export const CATEGORY_COLORS: { label: string; value: string }[] = [
   { label: 'Indigo', value: '#6366F1' },
   { label: 'Violet', value: '#8B5CF6' },
   { label: 'Purple', value: '#A855F7' },
-  { label: 'Fuchsia', value: '#D946EF' },
-  { label: 'Pink', value: '#EC4899' },
-  { label: 'Rose', value: '#F43F5E' },
   { label: 'Red', value: '#EF4444' },
   { label: 'Orange', value: '#F97316' },
   { label: 'Amber', value: '#F59E0B' },
-  { label: 'Yellow', value: '#EAB308' },
-  { label: 'Lime', value: '#84CC16' },
   { label: 'Green', value: '#22C55E' },
-  { label: 'Slate', value: '#64748B' },
-  { label: 'Gold', value: '#FFD700' },
+  
+  // Premium & Sophisticated
+  { label: 'Midnight', value: '#1E293B' },
+  { label: 'Charcoal', value: '#334155' },
+  { label: 'Forest', value: '#064E3B' },
+  { label: 'Burgundy', value: '#7F1D1D' },
+  { label: 'Navy', value: '#1E3A8A' },
+  { label: 'Grape', value: '#581C87' },
+  { label: 'Chocolate', value: '#451A03' },
+  
+  // Soft & Elegant
+  { label: 'Lavender', value: '#E8EAF6' },
+  { label: 'Champagne', value: '#F7E7CE' },
+  { label: 'Mint', value: '#D1FAE5' },
+  { label: 'Peach', value: '#FFEDD5' },
+  { label: 'Rose', value: '#F43F5E' },
+  
+  // Metallic
+  { label: 'Gold', value: '#D4AF37' },
+  { label: 'Silver', value: '#C0C0C0' },
+  { label: 'Bronze', value: '#CD7F32' },
   { label: 'Platinum', value: '#E5E4E2' },
+  { label: 'Slate', value: '#64748B' },
 ];
 
 

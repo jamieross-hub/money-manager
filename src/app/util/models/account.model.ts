@@ -51,6 +51,8 @@ export interface Account {
 	institution?: string;
 	currency?: string;
 	isActive?: boolean;
+	icon?: string;
+	color?: string;
 	lastSyncAt?: Timestamp | Date;
 	syncStatus?: SyncStatus;
 	// Loan-specific properties (only used when type is 'loan')

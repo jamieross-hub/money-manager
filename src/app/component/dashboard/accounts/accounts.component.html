@@ -96,17 +96,23 @@
 		}">
         @for (groupData of groupedAccountsViewModel; track groupData.id) {
           <div class="account-group-container" [class.is-expanded]="!groupData.isCollapsed">
-            <div class="group-header" (click)="toggleGroupCollapse(groupData.id)">
-              <div class="group-info">
-                <p class="group-name dark:text-slate-200 font-heading">{{ groupData.name }}</p>
-                <span class="count dark:bg-slate-800 dark:text-slate-400 financial-data">{{ groupData.count }}</span>
+            <div class="flex items-center justify-between py-2 px-1 cursor-pointer group hover:opacity-80 transition-opacity" (click)="toggleGroupCollapse(groupData.id)">
+              <div class="flex items-center gap-2 overflow-hidden">
+                <p class="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 truncate">
+                  {{ groupData.name }}
+                </p>
+                <span class="px-1.5 py-0.5 text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
+                  {{ groupData.count }}
+                </span>
               </div>
-              <div class="group-right">
-                <span class="group-balance dark:text-slate-200 financial-data" [class.negative]="groupData.totalBalance < 0">
+              <div class="flex items-center gap-3 shrink-0">
+                <span class="text-xs font-bold financial-data dark:text-slate-200 opacity-90" [class.text-red-500]="groupData.totalBalance < 0">
                   {{ groupData.formattedTotalBalance }}
                 </span>
-                <mat-icon class="expansion-arrow">{{ groupData.isCollapsed ? 'expand_more' : 'expand_less'
-                }}</mat-icon>
+                <mat-icon class="text-slate-400 transition-transform duration-200 !text-lg !w-5 !h-5 flex items-center justify-center"
+                          [class.rotate-180]="!groupData.isCollapsed">
+                  expand_more
+                </mat-icon>
               </div>
             </div>
             @if (!groupData.isCollapsed) {
@@ -119,8 +125,8 @@
                       (click)="toggleAccountExpansion(accountVM.account)">
                       <mat-card-content>
                         <div class="card-top">
-                          <div class="account-icon-wrap" [class]="accountVM.account.type">
-                            <mat-icon>{{ accountVM.icon }}</mat-icon>
+                          <div class="account-icon-wrap" [class]="accountVM.account.type" [style.background-color]="accountVM.color + '1A'">
+                            <mat-icon [style.color]="accountVM.color">{{ accountVM.icon }}</mat-icon>
                           </div>
                           <div class="account-titles">
                             <p class="name dark:text-slate-100">{{ accountVM.formattedName }}</p>

@@ -1,10 +1,11 @@
 import {
   Component, Inject, OnDestroy, OnInit,
-  ChangeDetectionStrategy, signal, computed
+  ChangeDetectionStrategy, signal, computed, Signal
 } from '@angular/core';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { UserService } from 'src/app/util/service/db/user.service';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { ValidationService } from 'src/app/util/service/validation.service';
@@ -13,10 +14,14 @@ import { AccountType, TransactionType, RecurringInterval, TransactionStatus, Pay
 import { TransactionsService } from 'src/app/util/service/db/transactions.service';
 import { CategoryService } from 'src/app/util/service/db/category.service';
 import { AccountsService } from 'src/app/util/service/db/accounts.service';
+import { CATEGORY_COLORS, CATEGORY_ICONS, CategoryIcon } from 'src/app/util/config/config';
+import { MatBottomSheet, MatBottomSheetModule } from '@angular/material/bottom-sheet';
+import { IconSelectorDialogComponent } from '../../category/icon-selector-dialog/icon-selector-dialog.component';
 import { Transaction } from 'src/app/util/models/transaction.model';
 import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
 import { Observable, of, Subject, takeUntil, firstValueFrom, forkJoin } from 'rxjs';
-import { switchMap, map } from 'rxjs/operators';
+import { switchMap, map, startWith } from 'rxjs/operators';
+import { getAccountGroup } from 'src/app/util/config/account.config';
 import dayjs from 'dayjs';
 import { CommonModule } from '@angular/common';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -54,6 +59,8 @@ import { CurrencyPipe } from 'src/app/util/pipes';
     CommonHeaderComponent,
     CommonBodyContentComponent,
     CurrencyPipe,
+    MatBottomSheetModule,
+    MatAutocompleteModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -143,6 +150,17 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
     { value: AccountType.INVESTMENT, label: 'Investment' },
   ];
 
+  public availableIcons = signal(CATEGORY_ICONS);
+  public iconFilterCtrl = new FormControl('');
+  public filteredIcons!: Signal<CategoryIcon[]>;
+
+  public availableColors = signal(CATEGORY_COLORS);
+  public colorFilterCtrl = new FormControl('');
+  public filteredColors!: Signal<{ label: string; value: string }[]>;
+
+  public colorValue!: Signal<string>;
+  public iconValue!: Signal<string>;
+
   constructor(
     @Inject(MAT_DIALOG_DATA) public dialogData: Account | null,
     private fb: FormBuilder,
@@ -154,7 +172,8 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
     private categoryService: CategoryService,
     private accountsService: AccountsService,
     private userService: UserService,
-    private mobileBackButtonService: MobileBackButtonService
+    private mobileBackButtonService: MobileBackButtonService,
+    private bottomSheet: MatBottomSheet,
   ) {
     this.accountForm = this.buildForm();
 
@@ -168,6 +187,15 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
     if (this.dialogData) {
       this.patchFormWithExistingAccount(this.dialogData);
     }
+
+    const iconSearchValue = toSignal(this.iconFilterCtrl.valueChanges.pipe(startWith('')), { initialValue: '' });
+    this.filteredIcons = computed(() => this._filterIcons(iconSearchValue() || ''));
+
+    const colorSearchValue = toSignal(this.colorFilterCtrl.valueChanges.pipe(startWith('')), { initialValue: '' });
+    this.filteredColors = computed(() => this._filterColors(colorSearchValue() || ''));
+
+    this.colorValue = toSignal(this.accountForm.controls['color'].valueChanges.pipe(startWith(this.accountForm.controls['color'].value)), { initialValue: this.accountForm.controls['color'].value });
+    this.iconValue = toSignal(this.accountForm.controls['icon'].valueChanges.pipe(startWith(this.accountForm.controls['icon'].value)), { initialValue: this.accountForm.controls['icon'].value });
 
     this.setupFormListeners();
   }
@@ -195,6 +223,8 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
       name:                    ['', this.validationService.getAccountNameValidators()],
       type:                    ['bank', Validators.required],
       balance:                 [0, this.validationService.getAccountBalanceValidators()],
+      icon:                    ['account_balance', Validators.required],
+      color:                   ['#10B981', Validators.required],
       description:             [''],
       // Loan fields
       lenderName:              [''],
@@ -232,6 +262,8 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
       name:        account.name,
       type:        account.type,
       balance:     account.balance ?? 0,
+      icon:        account.icon || 'account_balance',
+      color:       (account.color || '#60a5fa').toUpperCase(),
       description: account.description,
       ...(account.loanDetails && {
         lenderName:              account.loanDetails.lenderName,
@@ -271,7 +303,20 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
     // Toggle validators based on account type
     this.accountForm.get('type')!.valueChanges
       .pipe(takeUntil(this.destroy$))
-      .subscribe(type => this.updateValidatorsForAccountType(type));
+      .subscribe(type => {
+        this.updateValidatorsForAccountType(type);
+        
+        // Auto-default icon and color for new accounts based on type
+        if (!this.dialogData) {
+          const group = getAccountGroup(type as AccountType);
+          if (group) {
+            this.accountForm.patchValue({
+              icon: group.icon,
+              color: group.color
+            }, { emitEvent: false });
+          }
+        }
+      });
 
     // Auto-fill account name from lender name for loans
     this.accountForm.get('lenderName')!.valueChanges
@@ -509,6 +554,8 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
       balance: isLoan 
         ? (existingId ? this.dialogData?.balance : -(Math.abs(Number(formData.loanAmount) || 0)))
         : (isCredit ? -(Math.abs(Number(formData.balance) || 0)) : (Number(formData.balance) || 0)),
+      icon: formData.icon,
+      color: formData.color,
       description: formData.description || '',
     };
 
@@ -580,6 +627,47 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
 
   onClose(): void {
     this.dialogRef.close();
+  }
+
+  openIconSelectorDialog(): void {
+    this.bottomSheet
+      .open(IconSelectorDialogComponent, {
+        data: {
+          currentIcon: this.accountForm.get('icon')?.value,
+        },
+      })
+      .afterDismissed()
+      .subscribe((selectedIcon: string) => {
+        if (selectedIcon) {
+          this.accountForm.patchValue({ icon: selectedIcon });
+          this.hapticFeedback.lightVibration();
+        }
+      });
+  }
+
+  private _filterIcons(value: string): CategoryIcon[] {
+    const filterValue = value.toLowerCase();
+    return this.availableIcons().filter((item: CategoryIcon) =>
+      item.name.toLowerCase().includes(filterValue) ||
+      item.icon.toLowerCase().includes(filterValue)
+    );
+  }
+
+  private _filterColors(value: string): { label: string; value: string }[] {
+    const filterValue = value.toLowerCase();
+    return this.availableColors().filter((color: { label: string; value: string }) => color.label.toLowerCase().includes(filterValue));
+  }
+
+  getColorLabel(value: string): string {
+    if (!value) return '';
+    const color = this.availableColors().find(c => c.value.toUpperCase() === value.toUpperCase());
+    return color ? color.label : value;
+  }
+
+  getIconName(value: string): string {
+    if (!value) return 'Account';
+    const found = this.availableIcons().find((item: CategoryIcon) => item.icon === value);
+    return found ? found.name : value.replace(/_/g, ' ');
   }
 
   // ─── Private Helpers ──────────────────────────────────────────────────────

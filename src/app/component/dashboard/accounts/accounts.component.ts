@@ -29,6 +29,7 @@ import { CurrencyService } from 'src/app/util/service/currency.service';
 interface AccountViewModel {
   account: Account;
   icon: string;
+  color?: string;
   balanceClass: string;
   isLoan: boolean;
   loanRemainingBalance?: number;
@@ -239,7 +240,8 @@ export class AccountsComponent implements OnInit, OnDestroy {
 
             return {
               account,
-              icon: this.getAccountIcon(account.type),
+              icon: account.icon || this.getAccountIcon(account.type),
+              color: account.color || '#60a5fa',
               balanceClass: this.getBalanceClass(account),
               isLoan: account.type === AccountType.LOAN && !!account.loanDetails,
               loanRemainingBalance: account.loanDetails?.remainingBalance,

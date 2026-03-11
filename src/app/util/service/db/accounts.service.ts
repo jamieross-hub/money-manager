@@ -284,6 +284,8 @@ export class AccountsService {
                         isActive: data.isActive !== undefined ? data.isActive : true,
                         lastSyncAt: data.lastSyncAt || null,
                         syncStatus: data.syncStatus,
+                        icon: data.icon || '',
+                        color: data.color || '',
                         loanDetails: data.loanDetails || null,
                         creditCardDetails: data.creditCardDetails || null
                     };
