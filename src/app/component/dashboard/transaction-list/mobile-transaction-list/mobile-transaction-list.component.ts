@@ -17,7 +17,7 @@ import {
   ElementRef,
   AfterViewInit,
   DestroyRef,
-  HostListener
+  HostListener  
 } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
@@ -163,6 +163,7 @@ export class MobileTransactionListComponent
   isRecurring = input<boolean>(false);
 
   selectedTx: Transaction | null = null;
+  selectedTxForActions = signal<Transaction | null>(null);
   showFilters: boolean = false;
 
   // Signals defined below...
@@ -220,6 +221,11 @@ export class MobileTransactionListComponent
   public currentScrollHeader = signal<string>('');
   public showScrollIndicator = signal<boolean>(false);
   private scrollTimeout: any;
+
+  // Long press handling
+  private longPressTimeout: any;
+  private readonly LONG_PRESS_DURATION = 500; // ms
+  private isLongPressing = false;
 
 
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
@@ -324,6 +330,13 @@ export class MobileTransactionListComponent
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
+    if (this.selectedTxForActions()) {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.transaction-card')) {
+        this.selectedTxForActions.set(null);
+      }
+    }
+
     if (this.showActiveFilterDetails() || this.showSearchInput()) {
       const target = event.target as HTMLElement;
       const isInsideIndicator = !!target.closest('.active-filters-indicator');
@@ -660,7 +673,12 @@ export class MobileTransactionListComponent
     return this.filterService.hasActiveFilters();
   }
 
-  onLongPress(transaction: Transaction, element: HTMLElement) {
+  onTransactionClick(transaction: Transaction, element: HTMLElement) {
+    if (this.isLongPressing) return;
+    if (this.selectedTxForActions()) {
+      this.selectedTxForActions.set(null);
+      return;
+    }
     if (transaction.id?.startsWith('upcoming-')) return;
 
     if (this.selectedTx?.id === transaction.id) {
@@ -672,6 +690,29 @@ export class MobileTransactionListComponent
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 150);
     }
+  }
+
+  onLongPressStart(transaction: Transaction) {
+    if (transaction.id?.startsWith('upcoming-') || (transaction as any)._isDeleted) return;
+
+    this.isLongPressing = false;
+    this.longPressTimeout = setTimeout(() => {
+      this.isLongPressing = true;
+      this.selectedTxForActions.set(transaction);
+      this.selectedTx = null; // Close expansion if open
+    }, this.LONG_PRESS_DURATION);
+  }
+
+  onLongPressEnd() {
+    if (this.longPressTimeout) {
+      clearTimeout(this.longPressTimeout);
+      this.longPressTimeout = null;
+    }
+  }
+
+  cancelActions(event?: Event) {
+    if (event) event.stopPropagation();
+    this.selectedTxForActions.set(null);
   }
 
   onEditTransaction(transaction: Transaction) {

@@ -395,9 +395,37 @@
               [class.deleted]="item._isDeleted"
               [class.opacity-50]="item.syncStatus === 'pending'"
               [class.grayscale]="item.syncStatus === 'pending'"
-              (click)="onLongPress(item, cardElement)">
+              (mousedown)="onLongPressStart(item)"
+              (touchstart)="onLongPressStart(item)"
+              (mouseup)="onLongPressEnd()"
+              (touchend)="onLongPressEnd()"
+              (click)="onTransactionClick(item, cardElement)">
               <!-- Main Transaction Content -->
               <div class="transaction-main">
+                @if (selectedTxForActions()?.id === item.id) {
+                  <div class="transaction-action-overlay">
+                    <div class="action-overlay-content">
+                      @if (canEdit(item)) {
+                        <button mat-icon-button class="overlay-action-btn edit" (click)="onEditTransaction(item); cancelActions($event)">
+                          <mat-icon>edit</mat-icon>
+                        </button>
+                      }
+                      
+                      @if (!canEdit(item) && !item.settlementId && item.categoryId !== 'adjustment' && isFamilyMode() && isSplitMode()) {
+                         <button mat-icon-button class="overlay-action-btn adjust" (click)="onAdjustTransaction(item); cancelActions($event)">
+                          <mat-icon>tune</mat-icon>
+                        </button>
+                      }
+
+                      @if (canDelete(item)) {
+                        <button mat-icon-button class="overlay-action-btn delete" (click)="onDeleteTransaction(item); cancelActions($event)">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      }
+                      
+                    </div>
+                  </div>
+                }
                 <!-- Icon -->
                 <div class="transaction-icon">
                   <div class="icon-container" [style.background-color]="item._categoryBgColor"
