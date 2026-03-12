@@ -734,3 +734,37 @@ button {
 }
 
 
+// Family Switch Badge
+.family-badge-chip {
+  height: 28px !important;
+  line-height: 28px !important;
+  padding: 0 10px !important;
+  min-width: unset !important;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.15);
+  }
+}
+
+.family-switch-menu {
+  .mat-menu-item {
+    font-size: 13px;
+    height: 44px;
+    line-height: 44px;
+    
+    &.active-family {
+      background: var(--primary-50);
+      color: var(--primary-700);
+      
+      [data-theme='dark'] & {
+        background: rgba(var(--primary-rgb), 0.1);
+        color: var(--primary-300);
+      }
+    }
+    
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+}

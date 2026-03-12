@@ -32,11 +32,39 @@
           <p class="text-xl font-bold text-gray-900 dark:text-white !mb-0 break-words">{{ fullName() }}</p>
           <p class="text-sm text-gray-500 dark:text-gray-400 m-0 mt-0.5 break-all">{{ userProfile()?.email }}</p>
           @if (isFamilyMode() && activeFamilyName()) {
-            <div class="flex items-center gap-1.5 mt-1.5">
-              <span class="px-2 py-0.5 rounded-md bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-[10px] font-bold uppercase tracking-wider border border-primary-100 dark:border-primary-800 flex items-center gap-1">
-                <mat-icon class="!w-3 !h-3 !text-[12px]">family_restroom</mat-icon>
-                {{ activeFamilyName() }}
-              </span>
+            <div class="flex items-center gap-1.5 mt-2">
+              <button mat-button [matMenuTriggerFor]="familySwitchMenu" 
+                class="family-badge-chip flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary-100 dark:border-primary-800/50 bg-primary-50/50 dark:bg-primary-900/10 hover:bg-primary-100 dark:hover:bg-primary-900/20 transition-all duration-200">
+                <mat-icon class="!w-4 !h-4 !text-[16px] text-primary-600 dark:text-primary-400">family_restroom</mat-icon>
+                <span class="text-[11px] font-bold text-primary-700 dark:text-primary-300 uppercase tracking-tight">
+                  {{ activeFamilyName() }}
+                </span>
+                @if (familyGroups().length > 1) {
+                  <mat-icon class="!w-3 !h-3 !text-[14px] text-primary-400">expand_more</mat-icon>
+                }
+              </button>
+              
+              <mat-menu #familySwitchMenu="matMenu" class="family-switch-menu">
+                <div class="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-800 mb-1">
+                  Switch Family
+                </div>
+                @for (family of familyGroups(); track family.id) {
+                  <button mat-menu-item (click)="switchActiveFamily(family.id!)" 
+                    [class.active-family]="family.id === activeFamilyId()">
+                    <div class="flex items-center justify-between w-full gap-4">
+                      <span [class.font-bold]="family.id === activeFamilyId()">{{ family.name }}</span>
+                      @if (family.id === activeFamilyId()) {
+                        <mat-icon class="!w-4 !h-4 !text-[18px] text-primary-600">check_circle</mat-icon>
+                      }
+                    </div>
+                  </button>
+                }
+                <mat-divider class="!my-1"></mat-divider>
+                <button mat-menu-item routerLink="/dashboard/family">
+                  <mat-icon class="!w-4 !h-4 !text-[18px]">settings</mat-icon>
+                  <span>Manage Families</span>
+                </button>
+              </mat-menu>
             </div>
           }
           <!-- <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ 'PROFILE.MEMBER_SINCE' | translate }} {{

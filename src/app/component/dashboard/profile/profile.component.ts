@@ -5,7 +5,7 @@ import { Actions, ofType } from '@ngrx/effects';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslationService, Language } from 'src/app/util/service/translation.service';
 import { User, UserPreferences } from 'src/app/util/models';
 import { NotificationService } from 'src/app/util/service/notification.service';
@@ -65,6 +65,8 @@ import { ThemeToggleComponent } from 'src/app/util/components/theme-toggle/theme
 import { SsrService } from 'src/app/util/service/ssr.service';
 
 import { CommonSyncService } from 'src/app/util/service/common-sync.service';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 @Component({
   selector: 'app-profile',
   templateUrl: './profile.component.html',
@@ -86,7 +88,10 @@ import { CommonSyncService } from 'src/app/util/service/common-sync.service';
     QuickActionsFabComponent,
     MatExpansionModule,
     ThemeToggleComponent,
-    MatBottomSheetModule
+    MatBottomSheetModule,
+    RouterLink,
+    MatMenuModule,
+    MatDividerModule,
 ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
