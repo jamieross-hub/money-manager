@@ -277,7 +277,7 @@ export class FamilyEffects {
         const userId = this.userService.getCurrentUserId() || '';
         return this.transactionsFacade.updateTransaction(userId, txId, request).pipe(
           map(() => {
-            this.notificationService.success('Transaction updated');
+            this.notificationService.info('Transaction updated');
             return FamilyActions.updateTransactionSuccess({ txId, request });
           }),
           catchError(err => {
@@ -299,7 +299,7 @@ export class FamilyEffects {
             if (transaction && (transaction as Transaction).id) {
               const tx = transaction as Transaction;
               if (!tx.settlementId) {
-                this.notificationService.success('Transaction deleted');
+                this.notificationService.info('Transaction deleted');
               }
               return FamilyActions.deleteTransactionSuccess({ txId, transaction: tx });
             }

@@ -771,7 +771,7 @@ export class CategoryService implements OnDestroy {
                     categoryId: category.id
                 }));
 
-                this.notificationService.success('Category deleted successfully');
+                this.notificationService.info('Category deleted successfully');
                 this.hapticFeedback.successVibration();
             }
         });

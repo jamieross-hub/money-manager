@@ -103,7 +103,7 @@ export class TaxComponent implements OnInit, OnDestroy {
       this.calculateTax();
 
       if (this.totalIncome > 0) {
-        this.notificationService.success('Tax calculation completed!');
+        this.notificationService.info('Tax calculation completed!');
       }
     } catch (error) {
       console.error('Error calculating tax:', error);

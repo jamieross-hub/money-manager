@@ -171,7 +171,7 @@ export class FeedbackComponent implements OnInit, OnDestroy {
 
       await this.feedbackService.submitFeedback(feedbackData);
 
-      this.notificationService.success('Thank you for your feedback! We\'ll get back to you soon.');
+      this.notificationService.info('Thank you for your feedback! We\'ll get back to you soon.');
       this.resetForm();
 
     } catch (error) {

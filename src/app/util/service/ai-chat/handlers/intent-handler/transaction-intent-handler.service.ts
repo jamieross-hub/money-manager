@@ -83,7 +83,7 @@ export class TransactionIntentHandler implements IntentHandler {
 
         try {
             await this.store.dispatch(TransactionsActions.createTransaction({ userId, transaction: transactionData }));
-            this.notificationService.success('Transaction added successfully');
+            this.notificationService.info('Transaction added successfully');
             this.hapticFeedback.successVibration();
             return `${type === TransactionType.INCOME ? 'Income' : 'Expense'} added: ${this.currencyService.formatAmount(amount)}`;
         } catch (error) {

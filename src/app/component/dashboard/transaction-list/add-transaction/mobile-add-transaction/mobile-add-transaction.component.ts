@@ -848,7 +848,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
               transaction: adjustmentData,
             })
           );
-          this.notificationService.success('Adjustment recorded successfully');
+          this.notificationService.info('Adjustment recorded successfully');
         } else if (this.dialogData?.id) {
           // 1. Update the transaction instance
           await this.store.dispatch(
@@ -874,7 +874,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
                 template: templateUpdate,
               })
             );
-            this.notificationService.success('Transaction and recurring template updated');
+            this.notificationService.info('Transaction and recurring template updated');
           } else {
             // If it WAS recurring but now it's NOT, delete the template
             if (this.dialogData.isRecurring) {
@@ -884,9 +884,9 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
                   templateId: this.dialogData.id
                 })
               );
-              this.notificationService.success('Transaction updated and recurring deleted');
+              this.notificationService.info('Transaction updated and recurring deleted');
             } else {
-              this.notificationService.success('Transaction updated successfully');
+              this.notificationService.info('Transaction updated successfully');
             }
           }
         } else {
@@ -937,7 +937,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
             );
           }
 
-          this.notificationService.success('Transaction added successfully');
+          this.notificationService.info('Transaction added successfully');
           this.hapticFeedback.successVibration();
         }
 

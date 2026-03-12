@@ -640,7 +640,7 @@ export class FamilyService implements OnDestroy {
       banner,
       updatedAt: new Date()
     });
-    this.notificationService.success('Banner updated successfully');
+    this.notificationService.info('Banner updated successfully');
   }
 
   private async getMembershipRecord(familyId: string, userId: string): Promise<FamilyMember | null> {
@@ -701,7 +701,7 @@ export class FamilyService implements OnDestroy {
     // memberId here should be the userId since we use it as doc ID
     await updateDoc(this.getMemberDoc(familyId, memberId), { isActive: false });
     await updateDoc(this.getFamilyDoc(familyId), { memberIds: arrayRemove(memberId) });
-    this.notificationService.success('Member removed successfully');
+    this.notificationService.info('Member removed successfully');
   }
 
   async leaveFamily(familyId: string): Promise<void> {
@@ -713,7 +713,7 @@ export class FamilyService implements OnDestroy {
 
   async updateMemberRole(familyId: string, memberId: string, role: 'admin' | 'member'): Promise<void> {
     await updateDoc(this.getMemberDoc(familyId, memberId), { role });
-    this.notificationService.success('Role updated');
+    this.notificationService.info('Role updated');
   }
 
   async addMemberByEmail(familyId: string, email: string): Promise<void> {

@@ -523,13 +523,13 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
 
       if (id) {
         await firstValueFrom(this.accountsService.updateAccount(uid, id, accountData));
-        this.notificationService.success('Account updated successfully');
+        this.notificationService.info('Account updated successfully');
       } else {
         const newAccountId = await firstValueFrom(this.accountsService.createAccount(uid, accountData));
         if (newAccountId) {
           await this.handlePostCreationLogic(accountData, newAccountId);
         } else {
-          this.notificationService.success('Account added successfully');
+          this.notificationService.info('Account added successfully');
         }
         this.hapticFeedback.successVibration();
       }

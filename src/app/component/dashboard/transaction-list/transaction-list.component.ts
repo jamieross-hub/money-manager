@@ -211,7 +211,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       }
       
       if (!transaction.settlementId) {
-        this.notificationService.success('Transaction deleted');
+        this.notificationService.info('Transaction deleted');
       }
     }
   }

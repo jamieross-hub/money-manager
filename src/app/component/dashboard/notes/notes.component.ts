@@ -144,7 +144,7 @@ export class NotesComponent implements OnInit {
       this.filterNotes();
       this.resetNewNote();
       this.isAddingNote = false;
-      this.notificationService.success('Note saved successfully');
+      this.notificationService.info('Note saved successfully');
     } catch (error) {
       console.error('Error saving note:', error);
       this.notificationService.error('Failed to save note');
