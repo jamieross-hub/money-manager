@@ -287,7 +287,7 @@ function processActivities(
       }
     }
 
-    const sortTime = getTime(tx.date);
+    const sortTime = getTime(tx.createdAt);
     const createdTime = getTime(tx.createdAt);
 
     allActivities.push({
@@ -367,25 +367,15 @@ function processActivities(
 
 
   return allActivities.sort((a, b) => {
-    // 1. Primary Sort: Day Group (Descending)
-    const dayA = new Date(a._sortTime).setHours(0, 0, 0, 0);
-    const dayB = new Date(b._sortTime).setHours(0, 0, 0, 0);
+    // 1. Primary Sort: Most Recent (Descending by Time)
+    const timeA = a._sortTime || 0;
+    const timeB = b._sortTime || 0;
 
-    if (dayB !== dayA) {
-      return dayB - dayA;
+    if (timeB !== timeA) {
+      return timeB - timeA;
     }
     
-    // 2. Same Day Tie-break: Put Member Activities at the TOP of that day
-    // (Join/Leave events are prioritized "announcements" for the day)
-    if (a.category === 'MemberActivity' && b.category !== 'MemberActivity') return -1;
-    if (b.category === 'MemberActivity' && a.category !== 'MemberActivity') return 1;
-
-    // 3. Sort by Time within category groups (Descending)
-    if (b._sortTime !== a._sortTime) {
-      return b._sortTime - a._sortTime;
-    }
-
-    // 4. Last fallback: Database creation time
+    // 2. Last fallback: Database creation time
     return (b._createdTime || 0) - (a._createdTime || 0);
   });
 }

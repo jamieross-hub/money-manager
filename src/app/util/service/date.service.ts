@@ -75,7 +75,11 @@ export class DateService {
     const now = new Date();
     
     if (preserveTime) {
-      return new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+      // Only preserve current time if the date is today
+      const isToday = year === now.getFullYear() && (month - 1) === now.getMonth() && day === now.getDate();
+      if (isToday) {
+        return new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+      }
     }
     
     return new Date(year, month - 1, day, 0, 0, 0, 0);
