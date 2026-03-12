@@ -96,16 +96,7 @@ export class FamilyProcessorService {
     this.initWorker();
 
     // ─── Self-Driving Connector ───
-    // 1. Immediate Cache Load: Show last known data as soon as Family ID is available
-    effect(() => {
-      const famId = this.family()?.id;
-      const isFamily = this.isFamilyMode();
-      if (famId && isFamily) {
-        untracked(() => this.loadFromCache(famId));
-      }
-    }, { allowSignalWrites: true });
-
-    // 2. Cleanup & Processing: Triggers when all dependencies are ready
+    // 1. Processing: Triggers when all dependencies are ready
     // We explicitly track the familyId to ensure group changes are handled cleanly.
     effect(() => {
       const input = this.connector();
@@ -142,19 +133,6 @@ export class FamilyProcessorService {
           this.balances.set(payload.balances);
           this.activities.set(payload.activities);
           this.isProcessing.set(false);
-
-          // ── Save to IndexDB for persistence
-          const result = payload as any;
-          if (result.fingerprint && result.fid) {
-            const cacheKey = `family_calc_${result.fid}`;
-            this.localStorageUtility.setItem(cacheKey, {
-              stats: result.stats,
-              balances: result.balances,
-              activities: result.activities,
-              fingerprint: result.fingerprint,
-              updatedAt: Date.now()
-            });
-          }
         }
       };
       this.worker.onerror = (err) => {
@@ -182,39 +160,31 @@ export class FamilyProcessorService {
 
   private lastInputStr = '';
 
+
   /**
-   * Attempts to load pre-calculated data from IndexedDB
+   * Explicitly triggers a reload of family data by clearing internal trackers and forcing processing.
    */
-  private loadFromCache(familyId: string, fingerprint?: string): boolean {
-    if (fingerprint === 'undefined') return false; // Prevent logic errors with stringified undefined
+  loadFamilyData(familyId: string) {
+    if (!familyId) return;
+    
+    console.log(`[FamilyProcessor] Explicit load requested for family: ${familyId}.`);
     const cacheKey = `family_calc_${familyId}`;
-    const cached = this.localStorageUtility.getItem<{
-      stats: FamilyStats,
-      balances: BalanceEntry[],
-      activities: any[],
-      fingerprint: string
-    }>(cacheKey);
-
-    if (cached) {
-      // If a fingerprint is provided, it MUST match for the cache to be considered valid for a "process" skip
-      if (fingerprint && cached.fingerprint !== fingerprint) {
-        return false;
-      }
-
-      // Update signals with cached values
-      this.stats.set(cached.stats);
-      this.balances.set(cached.balances);
-      this.activities.set(cached.activities);
-      
-      if (fingerprint) {
-        console.log(`[FamilyProcessor] Using verified cache for family: ${familyId}`);
-        this.isProcessing.set(false);
-      } else {
-        console.log(`[FamilyProcessor] Initial cache preview for family: ${familyId}`);
-      }
-      return true;
+    this.localStorageUtility.removeItem(cacheKey); // Optional cleanup of old cache
+    this.lastInputStr = ''; // Force fingerprint re-evaluation
+    
+    // Check if we are ready to process immediately
+    const input = untracked(() => this.connector());
+    if (input.ready && input.familyId === familyId) {
+      this.process({
+        transactions: input.transactions,
+        members: input.members,
+        settlements: input.settlements,
+        familyId: familyId,
+        mode: input.mode,
+        currentUserId: input.currentUserId || undefined,
+        sessionStartTime: this.sessionStartTime
+      });
     }
-    return false;
   }
 
   process(input: FamilyProcessorInput) {
@@ -225,13 +195,9 @@ export class FamilyProcessorService {
 
     const currentFingerprint = this.generateFingerprint(input);
 
-    // 1. Quick in-memory skip if pending or already processed in current session
+    // 2. Quick in-memory skip if pending or already processed in current session
     if (this.lastInputStr === currentFingerprint) return;
     this.lastInputStr = currentFingerprint;
-
-    // 2. Check IndexedDB Cache first for immediate display and skip worker if valid
-    const isCacheValid = this.loadFromCache(input.familyId, currentFingerprint);
-    if (isCacheValid) return; 
 
     // 3. Debounce worker processing if no valid cache
     if (this.debounceTimer) {

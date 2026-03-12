@@ -25,6 +25,8 @@ import { NotificationService } from '../../service/notification.service';
 import { User, UserPreferences } from '../../models';
 import { Family } from '../../models/family.model';
 import { filter, take, delay } from 'rxjs';
+import * as FamilyActions from '../../../modules/family/store/family.actions';
+import { FamilyProcessorService } from '../../service/family-processor.service';
 
 @Component({
   selector: 'app-family-mode-toggle',
@@ -42,6 +44,7 @@ export class FamilyModeToggleComponent implements OnInit {
   private readonly syncService = inject(CommonSyncService);
   private readonly notificationService = inject(NotificationService);
   readonly breakpointService = inject(BreakpointService);
+  private readonly familyProcessor = inject(FamilyProcessorService);
 
   // Signal Inputs
   readonly isFlat = input(false);
@@ -125,10 +128,17 @@ export class FamilyModeToggleComponent implements OnInit {
         this.store.dispatch(BudgetsActions.loadBudgets({ userId }));
         this.store.dispatch(GoalsActions.loadGoals({ userId }));
 
+        // Determine the target route based on the new state
+        const activeId = changes.activeFamilyId || profile.preferences?.activeFamilyId;
+        const targetRoute = enabled 
+          ? (activeId ? `/dashboard/family/dashboard/${activeId}` : '/dashboard/groups')
+          : '/dashboard/home';
+
         // Give store a moment to propagate state before clearing loader/pending UI
         this.isUpdating.set(false);
         this.pendingState.set(null);
-        this.router.navigate(['/dashboard/home']).catch(err => {
+        
+        this.router.navigate([targetRoute]).catch(err => {
           if (err?.message !== 'Transition was skipped') throw err;
         });
       });
@@ -158,6 +168,11 @@ export class FamilyModeToggleComponent implements OnInit {
             activeFamilyId: families[0].id
           };
         }
+      }
+
+      if (enabled && changes.activeFamilyId) {
+        this.store.dispatch(FamilyActions.loadFamily({ familyId: changes.activeFamilyId }));
+        this.familyProcessor.loadFamilyData(changes.activeFamilyId);
       }
 
       // 6. Finally dispatch
