@@ -435,19 +435,19 @@
                   @if (item.notes) {
                     <div class="transaction-notes">{{ item.notes }}</div>
                   }
-                   <div class="amount-type">
-                    @if (selectedRange() === null) {
-                      {{ item.date | appDate:'short-time' }}
-                    } @else {
-                      {{ item.date | appDate:'time-only' }}
-                    }
-                  </div>
                 </div>
 
                 <!-- Amount (right) -->
                 <div class="transaction-amount">
                   <div class="amount-value" [ngClass]="item._isIncome ? 'income-text' : 'expense-text'">
                     {{ item._isIncome ? '+' : '-' }}{{ item.amount | currency }}
+                  </div>
+                  <div class="amount-type">
+                    @if (selectedRange() === null) {
+                      {{ item.date | appDate:'short-time' }}
+                    } @else {
+                      {{ item.date | appDate:'time-only' }}
+                    }
                   </div>
                 </div>
               </div>

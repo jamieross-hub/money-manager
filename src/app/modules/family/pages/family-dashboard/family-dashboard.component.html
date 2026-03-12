@@ -293,7 +293,7 @@
         <div class="flex flex-col gap-3 pb-4">
           @for (tx of displayedActivities(); track tx._trackId) {
             <div 
-              class="bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
+              class="bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between gap-1">
               <div class="flex-1 min-w-0 flex items-center gap-3">
                 <!-- User Avatars -->
                 @if (tx.category === 'Settlement') {
@@ -350,8 +350,8 @@
             </div>
             <!-- Compact Date & Time -->
             <div class="flex flex-col items-end shrink-0">
-              <span class="text-[0.9rem] font-medium text-gray-500 dark:text-gray-400  tracking-tighter leading-tight">{{ tx.date | appDate:'dd MMM' }}</span>
-              <span class="text-[10px] font-medium text-gray-400 leading-tight">{{ tx.date | appDate:'time-only' }}</span>
+              <span class="text-[0.9rem] font-medium text-gray-500 dark:text-gray-400">{{ tx.date | appDate:'dd MMM' }}</span>
+              <span class="text-[9px] font-medium text-gray-400">{{ tx.date | appDate:'time-only' }}</span>
             </div>
           </div>
         }
