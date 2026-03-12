@@ -108,6 +108,11 @@
     display: flex !important;
     justify-content: center !important;
     align-items: flex-end !important;
+
+    // Ensure dialogs are centered, while snackbars remain at the bottom
+    &:has(.mat-mdc-dialog-container) {
+      align-items: center !important;
+    }
   }
 
   .mat-mdc-snack-bar-container {
