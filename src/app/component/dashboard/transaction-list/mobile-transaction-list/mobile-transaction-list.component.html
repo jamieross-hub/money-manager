@@ -406,20 +406,20 @@
                   <div class="transaction-action-overlay">
                     <div class="action-overlay-content">
                       @if (canEdit(item)) {
-                        <button mat-icon-button class="overlay-action-btn edit" (click)="onEditTransaction(item); cancelActions($event)">
-                          <mat-icon>edit</mat-icon>
+                        <button mat-flat-button  (click)="onEditTransaction(item); cancelActions($event)">
+                          <mat-icon>edit</mat-icon> Edit
                         </button>
                       }
                       
-                      @if (!canEdit(item) && !item.settlementId && item.categoryId !== 'adjustment' && isFamilyMode() && isSplitMode()) {
+                      <!-- @if (!canEdit(item) && !item.settlementId && item.categoryId !== 'adjustment' && isFamilyMode() && isSplitMode()) {
                          <button mat-icon-button class="overlay-action-btn adjust" (click)="onAdjustTransaction(item); cancelActions($event)">
                           <mat-icon>tune</mat-icon>
                         </button>
-                      }
+                      } -->
 
                       @if (canDelete(item)) {
-                        <button mat-icon-button class="overlay-action-btn delete" (click)="onDeleteTransaction(item); cancelActions($event)">
-                          <mat-icon>delete</mat-icon>
+                        <button mat-flat-button (click)="onDeleteTransaction(item); cancelActions($event)">
+                          <mat-icon>delete</mat-icon> Delete
                         </button>
                       }
                       
