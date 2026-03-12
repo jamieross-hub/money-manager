@@ -120,7 +120,7 @@ export class FamilyProcessorService {
           }
         });
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   private initWorker() {

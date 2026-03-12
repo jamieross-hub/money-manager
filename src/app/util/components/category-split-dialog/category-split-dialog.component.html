@@ -20,7 +20,7 @@
 
     <form [formGroup]="categorySplitForm">
       <div formArrayName="splits" class="splits-container">
-        @for (split of splitsArray.controls; track split; let i = $index) {
+        @for (split of splitsArray.controls; track i; let i = $index) {
           <div [formGroupName]="i" class="split-item">
             <div class="split-header">
               <h3>Split {{ i + 1 }}</h3>
@@ -34,7 +34,7 @@
               <mat-form-field appearance="fill" class="w-full">
                 <mat-label>Category</mat-label>
                 <mat-select formControlName="categoryId" (selectionChange)="onCategoryChange($event.value, i)">
-                  @for (category of categories$ | async; track category) {
+                  @for (category of categories$ | async; track category.id) {
                     <mat-option [value]="category.id">
                       <div class="category-option">
                         <div class="category-icon" [style.background-color]="category.color">

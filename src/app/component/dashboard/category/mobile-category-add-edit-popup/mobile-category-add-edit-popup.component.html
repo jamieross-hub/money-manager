@@ -99,7 +99,7 @@
                 <ngx-mat-select-search [formControl]="colorFilterCtrl" placeholderLabel="Search colors..." 
                   noEntriesFoundLabel="No colors found"></ngx-mat-select-search>
               </mat-option> -->
-              @for (color of filteredColors(); track color) {
+              @for (color of filteredColors(); track color.value) {
                 <mat-option [value]="color.value">
                   <div class="flex items-center gap-3">
                     <div class="w-5 h-5 rounded-md border border-gray-200 dark:border-gray-700" [style.background-color]="color.value"></div>

@@ -65,7 +65,7 @@
           <mat-form-field appearance="fill" class="form-field category-field">
             <mat-label>Category *</mat-label>
             <mat-select formControlName="category">
-              @for (category of feedbackCategories; track category) {
+              @for (category of feedbackCategories; track category.value) {
                 <mat-option [value]="category.value">
                   <div class="category-option">
                     <mat-icon>{{ category.icon }}</mat-icon>
@@ -82,7 +82,7 @@
           <mat-form-field appearance="fill" class="form-field priority-field">
             <mat-label>Priority *</mat-label>
             <mat-select formControlName="priority">
-              @for (priority of priorityLevels; track priority) {
+              @for (priority of priorityLevels; track priority.value) {
                 <mat-option [value]="priority.value">
                   <div class="priority-option">
                     <div class="priority-indicator" [style.background-color]="priority.color"></div>

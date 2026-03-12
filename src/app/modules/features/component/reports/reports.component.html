@@ -367,7 +367,7 @@
                {{ currentPeriodSummary?.label }}
                 </p> -->
                 <div>
-                  @for (cat of currentPeriodSummary?.categoryBreakdown; track cat; let i = $index; let first = $first) {
+                  @for (cat of currentPeriodSummary?.categoryBreakdown; track cat.categoryId; let i = $index; let first = $first) {
                     <!-- <mat-divider *ngIf="!first"></mat-divider> -->
                     <div class="py-3 px-2 border-b border-neutral-100 flex items-center gap-4">
                       <!-- Left: Icon Box -->
@@ -750,7 +750,7 @@
                 These categories are trending above their average. Keep an eye on them!
               </p>
               <mat-list>
-                @for (cat of nextMonthPrediction.overspendCategories; track cat) {
+                @for (cat of nextMonthPrediction.overspendCategories; track cat.categoryId) {
                   <mat-list-item
                     class="!h-auto !py-2">
                     <div

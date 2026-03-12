@@ -10,7 +10,7 @@
     <div class="chat-controls" role="group" aria-label="Select category">
       <!-- Category Chips -->
       <div class="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto py-2">
-        @for (category of categories; track category) {
+        @for (category of categories; track category.id) {
           <mat-chip-option [disabled]="isDisabled" (click)="onChange(category)"
             [class.selected-chip]="currentCategory?.id === category.id" class="category-chip">
             <div class="flex items-center gap-1.5">

@@ -43,7 +43,7 @@
   <!-- CSS Based Bar Chart -->
   @if (chartData.length > 0) {
     <div class="chart-container-inner">
-      @for (item of chartData; track item; let i = $index) {
+      @for (item of chartData; track item.period; let i = $index) {
         <div
           class="bar-wrapper"
           [class.monthly-bar]="currentView === 'MONTHLY' && viewMode === 'trend'"

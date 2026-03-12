@@ -37,7 +37,7 @@
             }
             @if (data.recentTransactions?.length) {
               <div class="transaction-list">
-                @for (transaction of data.recentTransactions; track transaction) {
+                @for (transaction of data.recentTransactions; track transaction.id) {
                   <div class="transaction-item">
                     <div class="transaction-info">
                       <span class="description">{{ transaction.category }}</span>

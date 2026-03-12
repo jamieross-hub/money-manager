@@ -27,7 +27,7 @@
 <!-- Category List -->
 <div class="overflow-y-auto px-2 pb-4">
   <mat-nav-list>
-    @for (category of filteredCategories$ | async; track category) {
+    @for (category of filteredCategories$ | async; track category.id) {
       <mat-list-item (click)="selectCategory(category)"
         class="rounded-lg mb-1 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
         [class.bg-blue-50]="category.id === data.selectedCategoryId"

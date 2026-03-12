@@ -363,7 +363,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-neutral-100">
-                  @for (row of taxCalculation.slabWiseTax; track row) {
+                  @for (row of taxCalculation.slabWiseTax; track row.slab.description) {
                     <tr class="hover:bg-surface-100 transition-colors"
                       [class.text-neutral-300]="row.incomeInSlab === 0">
                       <td class="px-4 py-3 text-sm">{{ row.slab.description }}</td>

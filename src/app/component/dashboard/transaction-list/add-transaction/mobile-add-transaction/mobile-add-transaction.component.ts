@@ -1,4 +1,4 @@
-import { Component, Inject, inject, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, ChangeDetectorRef } from '@angular/core';
+import { Component, Inject, inject, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, effect, ChangeDetectorRef } from '@angular/core';
 import dayjs from 'dayjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -268,6 +268,19 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     // Intercept hardware back button on mobile
     this.mobileBackButtonService.openModal('add-transaction', () => {
       this.dialogRef.close();
+    });
+
+    // Handle disabled state for reserved categories or view mode
+    effect(() => {
+      const isReserved = this.isReservedCategory();
+      const isView = this.viewMode();
+      const categoryIdControl = this.transactionForm.get('categoryId');
+      
+      if (isReserved || isView) {
+        categoryIdControl?.disable({ emitEvent: false });
+      } else {
+        categoryIdControl?.enable({ emitEvent: false });
+      }
     });
   }
 

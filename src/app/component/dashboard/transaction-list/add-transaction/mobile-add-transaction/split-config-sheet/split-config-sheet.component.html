@@ -40,7 +40,7 @@
         class="w-full custom-tab-group"
         [selectedIndex]="getModeIndex()"
         (selectedIndexChange)="setModeByIndex($event)">
-        @for (m of modes; track m) {
+        @for (m of modes; track m.value) {
           <mat-tab>
             <ng-template mat-tab-label>
               <div class="flex flex-col items-center py-2 px-4 gap-1 min-w-[80px]">

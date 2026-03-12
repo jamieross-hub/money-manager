@@ -174,7 +174,7 @@
         </mat-card-header>
         <mat-card-content>
           <div class="savings-goals">
-            @for (goal of yearlyBudget.savingsGoals; track goal; let i = $index) {
+            @for (goal of yearlyBudget.savingsGoals; track i; let i = $index) {
               <div class="savings-goal-item">
                 <mat-form-field appearance="fill">
                   <mat-label>Goal Name</mat-label>
@@ -220,7 +220,7 @@
         </mat-card-header>
         <mat-card-content>
           <div class="debt-items">
-            @for (debt of yearlyBudget.debts; track debt; let i = $index) {
+            @for (debt of yearlyBudget.debts; track i; let i = $index) {
               <div class="debt-item">
                 <mat-form-field appearance="fill">
                   <mat-label>Debt Name</mat-label>
@@ -285,7 +285,7 @@
               <h3>Expenses</h3>
               <div class="summary-amount">{{ getTotalAllocated() | currency }}</div>
               <div class="summary-breakdown">
-                @for (category of getExpenseCategories(); track category) {
+                @for (category of getExpenseCategories(); track category.id) {
                   <div class="breakdown-item">
                     <span>{{ category.name }}:</span>
                     <span>{{ getCategoryBudget(category.id || '') | currency }}</span>
@@ -297,7 +297,7 @@
               <h3>Savings</h3>
               <div class="summary-amount">{{ getTotalSavings() | currency }}</div>
               <div class="summary-breakdown">
-                @for (goal of yearlyBudget.savingsGoals; track goal) {
+                @for (goal of yearlyBudget.savingsGoals; track goal.name) {
                   <div class="breakdown-item">
                     <span>{{ goal.name }}:</span>
                     <span>{{ goal.monthlyContribution * 12 | currency }}</span>
@@ -309,7 +309,7 @@
               <h3>Debt Payments</h3>
               <div class="summary-amount">{{ getTotalDebtPayments() | currency }}</div>
               <div class="summary-breakdown">
-                @for (debt of yearlyBudget.debts; track debt) {
+                @for (debt of yearlyBudget.debts; track debt.name) {
                   <div class="breakdown-item">
                     <span>{{ debt.name }}:</span>
                     <span>{{ debt.monthlyPayment * 12 | currency }}</span>
@@ -382,7 +382,7 @@
               <div class="monthly-breakdown">
                 <h3>Monthly Breakdown</h3>
                 <div class="monthly-grid">
-                  @for (month of getMonthlyBreakdown(); track month; let i = $index) {
+                  @for (month of getMonthlyBreakdown(); track i; let i = $index) {
                     <div class="month-item">
                       <h4>{{ getMonthName(i) }}</h4>
                       <div class="month-details">

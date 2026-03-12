@@ -60,7 +60,7 @@
                   <span class="font-bold text-gray-900 dark:text-gray-100">{{ getColorLabel(colorValue()) }}</span>
                 </div>
               </mat-select-trigger>
-              @for (color of filteredColors(); track color) {
+              @for (color of filteredColors(); track color.value) {
                 <mat-option [value]="color.value">
                   <div class="flex items-center gap-3">
                     <div class="w-5 h-5 rounded-md border border-gray-200 dark:border-gray-700" [style.background-color]="color.value"></div>

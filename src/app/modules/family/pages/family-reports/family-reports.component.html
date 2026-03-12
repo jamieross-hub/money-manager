@@ -43,7 +43,7 @@
       <div class="px-4 mt-5">
         <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Expense by Category</h2>
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
-          @for (cat of categoryBreakdown(); track cat) {
+          @for (cat of categoryBreakdown(); track cat.category) {
             <div class="flex items-center gap-3 px-4 py-3">
               <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-primary-50 dark:bg-primary-900/30 flex-shrink-0">
                 <mat-icon class="!text-sm text-primary-600 dark:text-primary-300">{{ getCategoryIcon(cat.category) }}</mat-icon>
@@ -70,7 +70,7 @@
       <div class="px-4 mt-5">
         <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Member Contribution</h2>
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
-          @for (m of stats()!.memberBreakdown; track m) {
+          @for (m of stats()!.memberBreakdown; track m.userId) {
             <div class="px-4 py-3">
               <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2">

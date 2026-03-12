@@ -160,7 +160,7 @@
               <!-- First Name -->
               <mat-form-field appearance="fill" class="form-field">
                 <mat-label>{{ 'PROFILE.FIRST_NAME' | translate }} *</mat-label>
-                <input matInput formControlName="firstName" [disabled]="!isEditing()"
+                <input matInput formControlName="firstName"
                   autocomplete="given-name" />
                 @if (profileForm.get('firstName')?.hasError('required')) {
                   <mat-error>
@@ -176,7 +176,7 @@
               <!-- Last Name -->
               <mat-form-field appearance="fill" class="form-field">
                 <mat-label>{{ 'PROFILE.LAST_NAME' | translate }} *</mat-label>
-                <input matInput formControlName="lastName" [disabled]="!isEditing()"
+                <input matInput formControlName="lastName"
                   autocomplete="family-name" />
                 @if (profileForm.get('lastName')?.hasError('required')) {
                   <mat-error>
@@ -192,7 +192,7 @@
               <!-- Email -->
               <mat-form-field appearance="fill" class="form-field">
                 <mat-label>{{ 'PROFILE.EMAIL' | translate }} *</mat-label>
-                <input matInput type="email" formControlName="email" [disabled]="!isEditing()"
+                <input matInput type="email" formControlName="email"
                   autocomplete="email" />
                 @if (profileForm.get('email')?.hasError('required')) {
                   <mat-error>
@@ -208,7 +208,7 @@
               <!-- Phone -->
               <mat-form-field appearance="fill" class="form-field">
                 <mat-label>{{ 'PROFILE.PHONE' | translate }}</mat-label>
-                <input matInput formControlName="phone" [disabled]="!isEditing()"
+                <input matInput formControlName="phone"
                   placeholder="+1 (555) 123-4567" autocomplete="tel" />
                 @if (profileForm.get('phone')?.hasError('pattern')) {
                   <mat-error>
@@ -220,7 +220,7 @@
               <mat-form-field appearance="fill" class="form-field">
                 <mat-label>{{ 'PROFILE.DOB' | translate }}</mat-label>
                 <input matInput [matDatepicker]="dobPicker" formControlName="dateOfBirth"
-                  [disabled]="!isEditing()" autocomplete="bday" />
+                  autocomplete="bday" />
                 <mat-datepicker-toggle matSuffix [for]="dobPicker"
                 [disabled]="!isEditing()"></mat-datepicker-toggle>
                 <mat-datepicker #dobPicker></mat-datepicker>
@@ -228,13 +228,13 @@
               <!-- Occupation -->
               <mat-form-field appearance="fill" class="form-field">
                 <mat-label>{{ 'PROFILE.OCCUPATION' | translate }}</mat-label>
-                <input matInput formControlName="occupation" [disabled]="!isEditing()"
+                <input matInput formControlName="occupation"
                   placeholder="e.g., Software Engineer" autocomplete="organization-title" />
               </mat-form-field>
               <!-- Monthly Income -->
               <mat-form-field appearance="fill" class="form-field">
                 <mat-label>{{ 'PROFILE.MONTHLY_INCOME' | translate }}</mat-label>
-                <input matInput type="number" formControlName="monthlyIncome" [disabled]="!isEditing()"
+                <input matInput type="number" formControlName="monthlyIncome"
                   step="0.01" autocomplete="off" />
                 <span matTextPrefix>{{ userProfile()?.preferences?.defaultCurrency }}&nbsp;</span>
                 @if (profileForm.get('monthlyIncome')?.hasError('min')) {
@@ -260,7 +260,7 @@
               <!-- ₹ -->
               <mat-form-field appearance="fill" class="form-field">
                 <mat-label>{{ 'PROFILE.DEFAULT_CURRENCY' | translate }} *</mat-label>
-                <mat-select formControlName="defaultCurrency" [disabled]="!isEditing()">
+                <mat-select formControlName="defaultCurrency">
                   @for (currency of currencies; track currency) {
                     <mat-option [value]="currency">
                       {{ currency }}
@@ -271,7 +271,7 @@
               <!-- Timezone -->
               <mat-form-field appearance="fill" class="form-field">
                 <mat-label>{{ 'PROFILE.TIMEZONE' | translate }} *</mat-label>
-                <mat-select formControlName="timezone" [disabled]="!isEditing()">
+                <mat-select formControlName="timezone">
                   @for (tz of timezones; track tz.value) {
                     <mat-option [value]="tz.value">
                       {{ tz.label }}
@@ -281,7 +281,7 @@
               </mat-form-field>
               <mat-form-field appearance="fill" class="form-field">
                 <mat-label>{{ 'PROFILE.LANGUAGE' | translate }} *</mat-label>
-                <mat-select formControlName="language" [disabled]="!isEditing()">
+                <mat-select formControlName="language">
                   @for (lang of languages; track lang.code) {
                     <mat-option [value]="lang.code">
                       {{ lang.name }}
@@ -291,7 +291,7 @@
               </mat-form-field>
               <mat-form-field appearance="fill" class="form-field">
                 <mat-label>{{ 'PROFILE.COUNTRY' | translate }} *</mat-label>
-                <mat-select formControlName="country" [disabled]="!isEditing()">
+                <mat-select formControlName="country">
                   @for (country of countries; track country.code) {
                     <mat-option [value]="country.code">
                       {{ country.countryName }}
@@ -301,7 +301,7 @@
               </mat-form-field>
               <mat-form-field appearance="fill" class="form-field">
                 <mat-label>{{ 'PROFILE.APP_VIEW' | translate }}</mat-label>
-                <mat-select formControlName="appView" [disabled]="!isEditing()">
+                <mat-select formControlName="appView">
                   @for (option of appViewOptions; track option.value) {
                     <mat-option [value]="option.value">
                       {{ option.label | translate }}
@@ -313,25 +313,25 @@
             <!-- Notification Preferences -->
             <div class="preferences-grid">
               <div class="preference-item">
-                <mat-slide-toggle formControlName="notifications" [disabled]="!isEditing()" color="primary">
+                <mat-slide-toggle formControlName="notifications" color="primary">
                   <span class="toggle-label">{{ 'PROFILE.NOTIFICATIONS' | translate }}</span>
                 </mat-slide-toggle>
                 <p class="preference-description">{{ 'PROFILE.NOTIFICATIONS_DESC' | translate }}</p>
               </div>
               <div class="preference-item">
-                <mat-slide-toggle formControlName="emailUpdates" [disabled]="!isEditing()" color="primary">
+                <mat-slide-toggle formControlName="emailUpdates" color="primary">
                   <span class="toggle-label">{{ 'PROFILE.EMAIL_UPDATES' | translate }}</span>
                 </mat-slide-toggle>
                 <p class="preference-description">{{ 'PROFILE.EMAIL_UPDATES_DESC' | translate }}</p>
               </div>
               <div class="preference-item">
-                <mat-slide-toggle formControlName="budgetAlerts" [disabled]="!isEditing()" color="primary">
+                <mat-slide-toggle formControlName="budgetAlerts" color="primary">
                   <span class="toggle-label">{{ 'PROFILE.BUDGET_ALERTS' | translate }}</span>
                 </mat-slide-toggle>
                 <p class="preference-description">{{ 'PROFILE.BUDGET_ALERTS_DESC' | translate }}</p>
               </div>
               <div class="preference-item">
-                <mat-slide-toggle formControlName="categoryListViewMode" [disabled]="!isEditing()"
+                <mat-slide-toggle formControlName="categoryListViewMode"
                   color="primary">
                   <span class="toggle-label">{{ 'PROFILE.VIEW_MODE' | translate }}</span>
                 </mat-slide-toggle>

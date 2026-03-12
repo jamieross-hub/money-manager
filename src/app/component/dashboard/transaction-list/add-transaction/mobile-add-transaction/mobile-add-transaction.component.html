@@ -82,7 +82,7 @@
         @if(!breakpointService.device.isMobile) {
           <mat-form-field appearance="fill" class="w-full">
             <mat-label>Select a category</mat-label>
-            <mat-select formControlName="categoryId" [disabled]="viewMode() || isReservedCategory()"
+            <mat-select formControlName="categoryId"
               (selectionChange)="onCategoryChange($event.value)">
               <mat-select-trigger>
                 @if (transactionForm.get('categoryId')?.value) {
@@ -100,7 +100,7 @@
                   placeholderLabel="Search categories..." noEntriesFoundLabel="No categories found">
                 </ngx-mat-select-search>
               </mat-option>
-              @for (category of filteredCategories | async; track category) {
+              @for (category of filteredCategories | async; track category.id) {
                 <mat-option [value]="category.id">
                   <div class="flex items-center gap-2">
                     <mat-icon [style.color]="category.color || '#cccccc'">{{ category.icon }}</mat-icon>
@@ -159,7 +159,7 @@
           Date *
         </label>
         <div class="relative">
-          <input type="date" formControlName="date" [disabled]="viewMode()"
+          <input type="date" formControlName="date"
             class="w-full py-3 px-4 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [&::-webkit-calendar-picker-indicator]:bg-none [&::-webkit-calendar-picker-indicator]:bg-transparent [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:top-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
             [class.bg-gray-100]="viewMode()" />
           <mat-icon
@@ -390,7 +390,7 @@
             <div class="space-y-2">
               <mat-form-field appearance="fill" class="w-full">
                 <mat-label>Select an account</mat-label>
-                <mat-select formControlName="accountId" [disabled]="viewMode()">
+                <mat-select formControlName="accountId">
                   @for (account of accountList$ | async; track account.accountId) {
                     <mat-option [value]="account.accountId">{{ account.name }} ({{ account.type | titlecase
                     }})</mat-option>
@@ -414,7 +414,7 @@
               </label>
               <mat-form-field appearance="fill" class="w-full">
                 <mat-label>Select payment method</mat-label>
-                <mat-select formControlName="paymentMethod" [disabled]="viewMode()">
+                <mat-select formControlName="paymentMethod">
                   <mat-select-trigger>
                     @if (transactionForm.get('paymentMethod')?.value) {
                       <div class="flex items-center gap-2">
@@ -446,7 +446,6 @@
             Notes
           </label>
           <textarea formControlName="description" [rows]="3" placeholder="Add any additional notes..."
-            [disabled]="viewMode()"
             class="w-full py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
           [class.bg-gray-100]="viewMode()"></textarea>
         </div>
@@ -462,7 +461,7 @@
               </label>
               <mat-slide-toggle formControlName="isCategorySplit"
                 (change)="transactionForm.get('isCategorySplit')?.value ? openCategorySplitDialog() : clearCategorySplits()"
-              [disabled]="viewMode()"></mat-slide-toggle>
+              ></mat-slide-toggle>
             </div>
 
             <!-- Category Split Options -->
@@ -511,7 +510,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Recurring Transaction
                 </label>
-                <mat-slide-toggle formControlName="isRecurring" [disabled]="viewMode()"></mat-slide-toggle>
+                <mat-slide-toggle formControlName="isRecurring"></mat-slide-toggle>
               </div>
 
               <!-- Recurring Transaction Options -->
@@ -524,7 +523,7 @@
                     </label>
                     <mat-form-field appearance="fill" class="w-full">
                       <mat-label>Select interval</mat-label>
-                      <mat-select formControlName="recurringInterval" [disabled]="viewMode()">
+                      <mat-select formControlName="recurringInterval">
                         <mat-option [value]="'daily'">Daily</mat-option>
                         <mat-option [value]="'weekly'">Weekly</mat-option>
                         <mat-option [value]="'monthly'">Monthly</mat-option>
@@ -540,7 +539,6 @@
                     </label>
                     <div class="relative">
                       <input type="date" formControlName="recurringStartDate" [min]="recurringMinDate"
-                        [max]="recurringMaxDate" [disabled]="viewMode()"
                         class="w-full py-3 px-4 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [&::-webkit-calendar-picker-indicator]:bg-none [&::-webkit-calendar-picker-indicator]:bg-transparent [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:top-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                         [class.bg-gray-100]="viewMode()" />
                       <mat-icon
@@ -557,7 +555,6 @@
                     </label>
                     <div class="relative">
                       <input type="date" formControlName="recurringEndDate" [min]="recurringMinDate"
-                        [max]="recurringMaxDate" [disabled]="viewMode()"
                         class="w-full py-3 px-4 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [&::-webkit-calendar-picker-indicator]:bg-none [&::-webkit-calendar-picker-indicator]:bg-transparent [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:top-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                         [class.bg-gray-100]="viewMode()" />
                       <mat-icon
@@ -643,7 +640,7 @@
                       Tax Amount
                     </label>
                     <input type="number" formControlName="taxAmount" placeholder="0.00" step="0.01"
-                      (input)="updateTaxCalculations('taxAmount')" [disabled]="viewMode()"
+                      (input)="updateTaxCalculations('taxAmount')"
                       class="w-full py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       [class.bg-gray-100]="viewMode()" />
                     @if(transactionForm.get('taxAmount')?.hasError('min') && transactionForm.get('taxAmount')?.touched)
@@ -658,7 +655,7 @@
                       Tax Percentage (%)
                     </label>
                     <input type="number" formControlName="taxPercentage" placeholder="0" step="0.01" min="0" max="100"
-                      (input)="updateTaxCalculations('percentage')" [disabled]="viewMode()"
+                      (input)="updateTaxCalculations('percentage')"
                       class="w-full py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       [class.bg-gray-100]="viewMode()" />
                     <div class="flex justify-between items-center mt-1">

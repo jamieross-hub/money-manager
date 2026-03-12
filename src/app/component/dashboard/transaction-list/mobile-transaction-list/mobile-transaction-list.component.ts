@@ -505,7 +505,7 @@ export class MobileTransactionListComponent
         currentUserId: this.currentUserId,
         familyId: activeFamilyId
       });
-    }, { allowSignalWrites: true });
+    });
 
     // Watch for Input changes and hook into filterService
     effect(() => {

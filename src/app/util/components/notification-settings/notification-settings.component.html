@@ -46,7 +46,7 @@
         <div class="ns-section">
           <h3 class="ns-section-title">Alert Types</h3>
           <div class="ns-list">
-            @for (type of notificationTypes; track type) {
+            @for (type of notificationTypes; track type.key) {
               <div class="ns-list-item">
                 <div class="ns-item-icon">{{ type.icon }}</div>
                 <div class="ns-item-content">
@@ -68,7 +68,7 @@
         <div class="ns-section">
           <h3 class="ns-section-title">Preferences</h3>
           <div class="ns-list">
-            @for (setting of advancedSettings; track setting) {
+            @for (setting of advancedSettings; track setting.key) {
               <div class="ns-list-item">
                 <div class="ns-item-icon">{{ setting.icon }}</div>
                 <div class="ns-item-content">

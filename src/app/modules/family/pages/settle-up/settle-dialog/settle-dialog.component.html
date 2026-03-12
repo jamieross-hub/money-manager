@@ -42,7 +42,7 @@
       <div class="field-group">
         <label class="field-label">Payment Method</label>
         <div class="method-grid">
-          @for (m of methods; track m) {
+          @for (m of methods; track m.value) {
             <button type="button" class="method-btn"
               [class.method-btn-active]="form.value.method === m.value" (click)="selectMethod(m.value)" matRipple>
               <mat-icon class="!text-xl mb-1">{{ m.icon }}</mat-icon>
