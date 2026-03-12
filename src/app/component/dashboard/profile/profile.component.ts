@@ -119,6 +119,8 @@ export class ProfileComponent {
   // ─── Signals (State) ───────────────────────────────────────────────
   private ignoreLoader = false;
   readonly isLoading = signal(false);
+  readonly isGoogleLoading = signal(false);
+  readonly isLogoutLoading = signal(false);
   readonly isEditing = signal(false);
   readonly userProfile = signal<User | null>(null);
   readonly familyGroups = signal<Family[]>([]);
@@ -316,7 +318,7 @@ export class ProfileComponent {
   }
   async switchActiveFamily(familyId: string): Promise<void> {
     const profile = this.userProfile();
-    if (!profile || this.activeFamilyId() === familyId) return;
+    if (!profile || (this.activeFamilyId() === familyId && this.isFamilyMode())) return;
 
     this.isLoading.set(true);
     try {
@@ -327,42 +329,50 @@ export class ProfileComponent {
         activeFamilyId: familyId
       });
 
-      this.notificationService.success('Switched active family');
+      this.notificationService.success('Switched to active family');
 
       // Clear stores and sync
-      this.store.dispatch(TransactionsActions.clearTransactions());
-      this.store.dispatch(AccountsActions.clearAccounts());
-      this.store.dispatch(CategoriesActions.clearCategories());
-      this.store.dispatch(BudgetsActions.clearBudgets());
-      this.store.dispatch(GoalsActions.clearGoals());
-      // Wait for Store to update before syncing (if not guest)
-      if (!this.userService.isGuestUser()) {
-        const actions$ = inject(Actions);
-        actions$.pipe(
-          ofType(ProfileActions.updatePreferencesSuccess),
-          filter(action => !!action.profile),
-          take(1),
-          delay(100)
-        ).subscribe(() => {
-          this.syncService.syncAll().subscribe();
-          this.isLoading.set(false);
-        });
-      } else {
-        // For guest mode, updates are immediate — store already updated
-        this.store.select(ProfileSelectors.selectProfile).pipe(
-          filter(u => !!u),
-          take(1),
-          delay(100)
-        ).subscribe(() => {
-          this.syncService.syncAll().subscribe();
-          this.isLoading.set(false);
-        });
-      }
+      this.clearLocalStores();
+      this.syncService.syncAll().subscribe({
+        complete: () => this.isLoading.set(false),
+        error: () => this.isLoading.set(false)
+      });
     } catch (error) {
       console.error('Error switching family:', error);
       this.notificationService.error('Failed to switch family');
       this.isLoading.set(false);
     }
+  }
+
+  async switchToPersonalMode(): Promise<void> {
+    if (!this.isFamilyMode()) return;
+
+    this.isLoading.set(true);
+    try {
+      await this.applyPreferenceChanges({
+        isFamilyMode: false
+      });
+
+      this.notificationService.success('Switched to Personal Mode');
+
+      this.clearLocalStores();
+      this.syncService.syncAll().subscribe({
+        complete: () => this.isLoading.set(false),
+        error: () => this.isLoading.set(false)
+      });
+    } catch (error) {
+      console.error('Error switching to personal mode:', error);
+      this.notificationService.error('Failed to switch mode');
+      this.isLoading.set(false);
+    }
+  }
+
+  private clearLocalStores() {
+    this.store.dispatch(TransactionsActions.clearTransactions());
+    this.store.dispatch(AccountsActions.clearAccounts());
+    this.store.dispatch(CategoriesActions.clearCategories());
+    this.store.dispatch(BudgetsActions.clearBudgets());
+    this.store.dispatch(GoalsActions.clearGoals());
   }
 
   createFamilyGroup(): void {
@@ -649,6 +659,7 @@ export class ProfileComponent {
 
   async signInWithGoogle(): Promise<void> {
     try {
+      this.isGoogleLoading.set(true);
       this.isLoading.set(true);
       await this.userService.signInWithGoogle();
       this.notificationService.success('Successfully signed in with Google');
@@ -657,12 +668,14 @@ export class ProfileComponent {
       console.error('Error signing in with Google:', error);
       this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
     } finally {
+      this.isGoogleLoading.set(false);
       this.isLoading.set(false);
     }
   }
 
   async logout(): Promise<void> {
     try {
+      this.isLogoutLoading.set(true);
       this.isLoading.set(true);
       await this.userService.logout();
       this.notificationService.success('Logged out successfully');
@@ -671,6 +684,7 @@ export class ProfileComponent {
       console.error('Error logging out:', error);
       this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
     } finally {
+      this.isLogoutLoading.set(false);
       this.isLoading.set(false);
     }
   }

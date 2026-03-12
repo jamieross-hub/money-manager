@@ -741,6 +741,36 @@ button {
   padding: 0 10px !important;
   min-width: unset !important;
   
+  &.family-active {
+    border-color: var(--primary-100);
+    background: var(--primary-50);
+    color: var(--primary-700);
+
+    mat-icon { color: var(--primary-600); }
+
+    [data-theme='dark'] & {
+      border-color: rgba(var(--primary-rgb), 0.2);
+      background: rgba(var(--primary-rgb), 0.1);
+      color: var(--primary-300);
+      mat-icon { color: var(--primary-400); }
+    }
+  }
+
+  &.personal-active {
+    border-color: var(--neutral-200);
+    background: var(--surface-100);
+    color: var(--neutral-600);
+
+    mat-icon { color: var(--neutral-400); }
+
+    [data-theme='dark'] & {
+      border-color: var(--neutral-700);
+      background: var(--surface-300);
+      color: var(--neutral-400);
+      mat-icon { color: var(--neutral-500); }
+    }
+  }
+  
   &:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.15);
