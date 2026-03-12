@@ -1,4 +1,5 @@
 import { Component, ElementRef, ViewChild, ChangeDetectorRef, AfterViewInit, OnInit, OnDestroy, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { TransactionType } from 'src/app/util/config/enums';
 import { Category } from 'src/app/util/models';
 import { ChatFacadeService } from 'src/app/util/service/ai-chat/chat-facade-service';
@@ -117,6 +118,7 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
 
 
   @ViewChild('scrollContainer') chatScrollContainer!: ElementRef<HTMLElement>;
+  private scrollSubscription?: Subscription;
 
   constructor() { }
 
@@ -138,6 +140,7 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.scrollSubscription?.unsubscribe();
     if (this.typingTimeout) {
       clearTimeout(this.typingTimeout);
     }
@@ -179,18 +182,35 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
     this.typingTimeout = setTimeout(() => this.animatePlaceholder(), typeSpeed);
   }
 
+  private isInitialLoad = true;
+
   ngAfterViewInit() {
-    this.chatFacadeService.scrollToTop.subscribe(() => {
-      if (this.chatScrollContainer) {
-        const nativeElement = this.chatScrollContainer.nativeElement;
-        nativeElement.scrollTo({
-          top: nativeElement.scrollHeight,
-          behavior: 'smooth'
-        });
-      }
+    this.scrollSubscription = this.chatFacadeService.scrollToTop.subscribe(() => {
+      this.scrollToBottom();
     });
 
-    // Also scroll to top on initial load if needed, or rely on service trigger
+    // Initial scroll to bottom when component loads
+    setTimeout(() => this.scrollToBottom(), 200);
+  }
+
+  private scrollToBottom() {
+    if (this.chatScrollContainer) {
+      const nativeElement = this.chatScrollContainer.nativeElement;
+      const behavior = this.isInitialLoad ? 'auto' : 'smooth';
+      
+      // Use requestAnimationFrame to ensure the DOM has updated
+      requestAnimationFrame(() => {
+        nativeElement.scrollTo({
+          top: nativeElement.scrollHeight,
+          behavior: behavior as ScrollBehavior
+        });
+        
+        if (this.isInitialLoad) {
+          // Keep it 'auto' for a bit longer to catch all initial messages
+          setTimeout(() => this.isInitialLoad = false, 500);
+        }
+      });
+    }
   }
 
   sendMessage(input: HTMLInputElement) {
