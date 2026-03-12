@@ -11,9 +11,9 @@ import { environment } from '@env/environment';
 import { securityInterceptor } from './util/interceptors/security.interceptor';
 
 // Firebase
-import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
+import { provideFirebaseApp, initializeApp, getApp } from '@angular/fire/app';
 import { provideAuth, getAuth, indexedDBLocalPersistence } from '@angular/fire/auth';
-import { provideFirestore, getFirestore, enableMultiTabIndexedDbPersistence } from '@angular/fire/firestore';
+import { provideFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from '@angular/fire/firestore';
 import { provideMessaging, getMessaging } from '@angular/fire/messaging';
 import { provideAnalytics, getAnalytics, UserTrackingService, ScreenTrackingService, setAnalyticsCollectionEnabled } from '@angular/fire/analytics';
 
@@ -92,22 +92,14 @@ export const appConfig: ApplicationConfig = {
       const auth = getAuth();
       auth.setPersistence(indexedDBLocalPersistence)
         .then(() => console.log("✅ Auth persistence enabled"))
-        .catch((error) => console.warn("⚠️ Auth persistence error:", error.message));
+        .catch((error: any) => console.warn("⚠️ Auth persistence error:", error.message));
       return auth;
     }),
 
     provideFirestore(() => {
-      const firestore = getFirestore();
-      enableMultiTabIndexedDbPersistence(firestore).then(() => {
-        console.log("✅ Firestore multi-tab persistence enabled");
-      }).catch((err) => {
-        if (err.code === 'failed-precondition') {
-          console.warn("⚠️ Multiple tabs detected. Persistence handled by multi-tab mode.");
-        } else if (err.code === 'unimplemented') {
-          console.warn("⚠️ IndexedDB persistence not supported. Falling back to cache.");
-        }
+      return initializeFirestore(getApp(), {
+        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
       });
-      return firestore;
     }),
 
     provideMessaging(() => {
