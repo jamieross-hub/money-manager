@@ -1,10 +1,11 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 import { Auth, authState } from '@angular/fire/auth';
-import { map, take, finalize } from 'rxjs/operators';
+import { map, take, finalize, timeout, catchError } from 'rxjs/operators';
 import { UserService } from '../service/db/user.service';
 import { UserRole } from '../models/user.model';
 import { LoaderService } from '../service/loader.service';
+import { CommonSyncService } from '../service/common-sync.service';
 
 /**
  * Functional AuthGuard for minimalist routing protection.
@@ -15,6 +16,7 @@ export const authGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
   const userService = inject(UserService);
   const loaderService = inject(LoaderService);
+  const syncService = inject(CommonSyncService);
 
   // 1. Check for valid roles requirement
   const hasRolePermission = (): boolean => {
@@ -24,17 +26,24 @@ export const authGuard: CanActivateFn = (route, state) => {
     return !!(user && requiredRoles.includes(user.role));
   };
 
-  // 2. FAST PATH: Already authenticated or guest mode
-  if (auth.currentUser || userService.isGuestUser()) {
-    if (hasRolePermission()) return true;
+  const cachedUser = userService.getCurrentUserSnapshot();
+
+  // 2. FAST PATH: Already authenticated, guest mode, OR use synchronous cache
+  // If we have a cached user, we trust it immediately to prevent the "keep on loading" issue.
+  if (auth.currentUser || userService.isGuestUser() || cachedUser) {
+    if (hasRolePermission()) {
+      loaderService.hide();
+      return true;
+    }
     
     // Unauthorized: Redirect to dashboard
     return router.createUrlTree(['/dashboard'], { queryParams: { error: 'unauthorized' } });
   }
 
-  // 3. SLOW PATH: Wait for Firebase Auth initialization
+  // 3. SLOW PATH: Only if we have NO session info at all (new visitor or logged out)
   loaderService.show();
   return authState(auth).pipe(
+    timeout(5000), // Wait max 5 seconds for Firebase response
     take(1),
     map(user => {
       // If user is authenticated or guest mode is active
@@ -47,6 +56,12 @@ export const authGuard: CanActivateFn = (route, state) => {
       return router.createUrlTree(['/sign-in'], { 
         queryParams: { redirect: state.url } 
       });
+    }),
+    catchError(() => {
+      // On timeout or error, redirect to sign-in
+      return [router.createUrlTree(['/sign-in'], { 
+        queryParams: { redirect: state.url, error: 'network_timeout' } 
+      })];
     }),
     finalize(() => loaderService.hide())
   );

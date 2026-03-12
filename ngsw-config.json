@@ -18,7 +18,7 @@
     },
     {
       "name": "assets",
-      "installMode": "prefetch",
+      "installMode": "lazy",
       "updateMode": "prefetch",
       "resources": {
         "files": [
@@ -28,7 +28,7 @@
     },
     {
       "name": "fonts",
-      "installMode": "prefetch",
+      "installMode": "lazy",
       "updateMode": "prefetch",
       "resources": {
         "urls": [
@@ -40,7 +40,7 @@
     },
     {
       "name": "icons",
-      "installMode": "prefetch",
+      "installMode": "lazy",
       "updateMode": "prefetch",
       "resources": {
         "files": [
@@ -50,7 +50,7 @@
     },
     {
       "name": "i18n",
-      "installMode": "prefetch",
+      "installMode": "lazy",
       "updateMode": "prefetch",
       "resources": {
         "files": [
