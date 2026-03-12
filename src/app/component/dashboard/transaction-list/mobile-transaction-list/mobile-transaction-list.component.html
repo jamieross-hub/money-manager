@@ -5,67 +5,89 @@
   <!-- Mobile Filter Header -->
   @if (showFilters && !showChart) {
     <div class="mobile-filter-header">
-      <!-- Active Filters Indicator -->
-      @if (activeFiltersCount() > 0) {
-        <div class="active-filters-indicator"
-          (click)="toggleFilterDetails($event)" [class.expanded]="showActiveFilterDetails()">
-          <div class="indicator-main">
-            <mat-icon class="filter-icon">filter_list</mat-icon>
-            <span class="filter-text">{{ activeFiltersCount() }} active {{ activeFiltersCount() === 1 ? 'filter' : 'filters' }}</span>
-            <mat-icon class="expand-icon">{{ showActiveFilterDetails() ? 'expand_less' : 'expand_more' }}</mat-icon>
-            <button mat-icon-button class="quick-clear-btn" (click)="quickClearFilters(); $event.stopPropagation()" matTooltip="Clear all filters">
-              <mat-icon>close</mat-icon>
-            </button>
-          </div>
-          <!-- Detailed Filter Chips -->
-          @if (showActiveFilterDetails()) {
-            <div class="active-filter-details">
-              <div class="filter-chip-list">
+      <!-- Combined Search & Active Filters Indicator -->
+      <div class="active-filters-indicator" [class.expanded]="showActiveFilterDetails()" [class.search-active]="showSearchInput()">
+        <div class="indicator-main">
+          <button mat-icon-button class="search-toggle-btn" (click)="(showSearchInput() || showActiveFilterDetails()) ? closeExpandedHeader($event) : toggleSearch($event)" 
+            [class.active]="showSearchInput() || searchTerm() || showActiveFilterDetails()" matTooltip="Search transactions">
+            <mat-icon>{{ (showSearchInput() || showActiveFilterDetails()) ? 'arrow_back' : 'search' }}</mat-icon>
+          </button>
+          
+          @if (showSearchInput()) {
+            <div class="search-input-wrapper-inner">
+              <input type="text" [ngModel]="searchTerm()" (ngModelChange)="onSearchChange($event)"
+                placeholder="Search transactions..." class="search-input-inline" #searchInput
+                (keyup.escape)="toggleSearch()" autofocus />
+              @if (searchTerm()) {
+                <button mat-icon-button class="clear-search-btn-inline" (click)="onSearchChange('')">
+                  <mat-icon>close</mat-icon>
+                </button>
+              }
+            </div>
+          } @else {
+            <div class="filter-summary-content" (click)="toggleFilterDetails($event)">
+              <span class="filter-text">
+                @if (activeFiltersCount() > 0) {
+                  {{ activeFiltersCount() }} active {{ activeFiltersCount() === 1 ? 'filter' : 'filters' }}
+                } @else {
+                  Search Transactions
+                }
+              </span>
+              @if (activeFiltersCount() > 0) {
+                <mat-icon class="expand-icon">{{ showActiveFilterDetails() ? 'expand_less' : 'expand_more' }}</mat-icon>
+              }
+            </div>
+            
+            @if (activeFiltersCount() > 0) {
+              <button mat-icon-button class="quick-clear-btn" (click)="quickClearFilters(); $event.stopPropagation()" matTooltip="Clear all filters">
+                <mat-icon>close</mat-icon>
+              </button>
+            }
+          }
+        </div>
+
+        <!-- Detailed Filter Chips -->
+        @if (showActiveFilterDetails() || showSearchInput()) {
+          <div class="active-filter-details">
+            @if (showActiveFilterDetails() && !showSearchInput()) {
+              <div class="expanded-search-container">
+                <mat-icon class="search-icon-mini">search</mat-icon>
+                <input type="text" [ngModel]="searchTerm()" (ngModelChange)="onSearchChange($event)"
+                  placeholder="Search transactions..." class="search-input-inline" autofocus
+                  (keyup.escape)="closeExpandedHeader($event)" />
                 @if (searchTerm()) {
-                  <div class="filter-chip">
-                    <mat-icon>search</mat-icon>
-                    <span class="chip-text">{{ searchTerm() }}</span>
-                    <button (click)="clearFilter('search'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
-                  </div>
-                }
-                @if (selectedType() !== 'all') {
-                  <div class="filter-chip">
-                    <mat-icon>account_balance_wallet</mat-icon>
-                    <span class="chip-text">{{ currentTypeLabel() }}</span>
-                    <button (click)="clearFilter('type'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
-                  </div>
-                }
-                @if (!(selectedCategory() | includes:'all')) {
-                  <div class="filter-chip">
-                    <mat-icon>category</mat-icon>
-                    <span class="chip-text">{{ currentCategoryLabel() }}</span>
-                    <button (click)="clearFilter('category'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
-                  </div>
-                }
-                @if (selectedDate() || selectedDateRange()) {
-                  <div class="filter-chip">
-                    <mat-icon>calendar_today</mat-icon>
-                    <span class="chip-text">{{ currentDateLabel() }}</span>
-                    <button (click)="clearFilter('date'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
-                  </div>
+                  <button mat-icon-button class="clear-search-btn-mini" (click)="onSearchChange('')">
+                    <mat-icon>close</mat-icon>
+                  </button>
                 }
               </div>
+            }
+
+            <div class="filter-chip-list">
+              @if (selectedType() !== 'all') {
+                <div class="filter-chip">
+                  <mat-icon>account_balance_wallet</mat-icon>
+                  <span class="chip-text">{{ currentTypeLabel() }}</span>
+                  <button (click)="clearFilter('type'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
+                </div>
+              }
+              @if (!(selectedCategory() | includes:'all')) {
+                <div class="filter-chip">
+                  <mat-icon>category</mat-icon>
+                  <span class="chip-text">{{ currentCategoryLabel() }}</span>
+                  <button (click)="clearFilter('category'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
+                </div>
+              }
+              @if (selectedDate() || selectedDateRange()) {
+                <div class="filter-chip">
+                  <mat-icon>calendar_today</mat-icon>
+                  <span class="chip-text">{{ currentDateLabel() }}</span>
+                  <button (click)="clearFilter('date'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
+                </div>
+              }
             </div>
-          }
-        </div>
-      }
-      <!-- Search Bar -->
-      <div class="search-container">
-        <div class="search-input-wrapper">
-          <mat-icon class="search-icon">search</mat-icon>
-          <input type="text" [ngModel]="searchTerm()" (ngModelChange)="onSearchChange($event)"
-            placeholder="Search transactions..." class="search-input" />
-          @if (searchTerm()) {
-            <button mat-icon-button class="clear-search-btn" (click)="onSearchChange('')">
-              <mat-icon>close</mat-icon>
-            </button>
-          }
-        </div>
+          </div>
+        }
       </div>
       <!-- Filter Menu Buttons -->
       <div class="filter-menu-container md:justify-center">

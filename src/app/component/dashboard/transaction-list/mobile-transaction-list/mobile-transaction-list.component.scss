@@ -20,20 +20,20 @@
   z-index: 10;
 }
 
-// Active Filters Indicator
+// Active Filters Indicator & Search Combined
 .active-filters-indicator {
   display: flex;
   flex-direction: column;
   background: var(--surface-50);
   border: 1px solid var(--surface-300);
   border-radius: 12px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   animation: fadeIn 0.3s ease;
   overflow: hidden;
-  cursor: pointer;
   transition: all 0.2s ease-in-out;
+  width: 100%;
 
-  &:hover {
+  &:hover:not(.search-active) {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     transform: translateY(-1px);
     border-color: var(--primary-300);
@@ -42,16 +42,46 @@
   &.expanded {
     background: var(--surface-100);
     border-color: var(--primary-400);
+  }
 
-  
+  &.search-active {
+    border-color: var(--primary-500);
+    background: var(--surface-0);
+    box-shadow: 0 0 0 3px var(--primary-alpha-10);
   }
 
   .indicator-main {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 10px;
+    gap: 0;
+    padding: 2px 4px;
     width: 100%;
+    min-height: 44px;
+  }
+
+  .search-toggle-btn {
+    color: var(--neutral-400);
+    transition: all 0.2s ease;
+    
+    &.active {
+      color: var(--primary-600);
+    }
+
+    &:hover {
+      background: var(--surface-100);
+      color: var(--primary-500);
+    }
+  }
+
+  .filter-summary-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding:10px;
+    cursor: pointer;
+    height: 100%;
+    align-self: stretch;
   }
 
   .filter-icon {
@@ -63,8 +93,8 @@
 
   .filter-text {
     font-size: 13px;
-    font-weight: 600;
-    color: var(--primary-700);
+    font-weight: 500;
+    color: var(--secondary-500);
     flex: 1;
   }
 
@@ -76,16 +106,101 @@
     transition: transform 0.2s ease;
   }
 
+  // Inline Search Input
+  .search-input-wrapper-inner {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding-right: 8px;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .search-input-inline {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 8px 0;
+    font-size: 15px;
+    color: var(--neutral-900);
+    outline: none;
+    width: 100%;
+
+    &::placeholder {
+      color: var(--neutral-400);
+    }
+  }
+
+  .clear-search-btn-inline {
+    color: var(--neutral-400);
+    width: 32px;
+    height: 32px;
+
+    &:hover {
+      color: var(--error-500);
+      background: var(--error-50);
+    }
+  }
+
   .active-filter-details {
     padding: 0 12px 12px 12px;
     border-top: 1px solid rgba(var(--primary-600), 0.1);
     animation: slideDown 0.2s ease-out;
 
+    .expanded-search-container {
+      display: flex;
+      align-items: center;
+      background: var(--surface-100);
+      border: 1px solid var(--surface-300);
+      border-radius: 10px;
+      padding: 0 8px;
+      margin-top: 12px;
+      margin-bottom: 4px;
+      height: 38px;
+      transition: all 0.2s ease;
+
+      &:focus-within {
+        border-color: var(--primary-400);
+        background: var(--surface-0);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .search-icon-mini {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: var(--neutral-400);
+        margin-right: 8px;
+      }
+
+      .search-input-inline {
+        flex: 1;
+        font-size: 14px;
+        padding: 4px 0;
+      }
+
+      .clear-search-btn-mini {
+        width: 28px;
+        height: 28px;
+        color: var(--neutral-400);
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+
+        &:hover {
+          color: var(--error-500);
+          background: var(--error-50);
+        }
+      }
+    }
+
     .filter-chip-list {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-top: 12px;
+      margin-top: 8px;
     }
 
     .filter-chip {
@@ -167,62 +282,6 @@
   }
 }
 
-.search-container {
-  margin-bottom: 8px;
-  width: 100%;
-}
-
-.search-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  background: var(--surface-50);
-  border: 1px solid var(--surface-300);
-  border-radius: 10px;
-  padding: 0 12px;
-  height: 38px;
-  transition: all 0.2s ease;
-
-  &:focus-within {
-    border-color: var(--primary-500);
-    background: var(--surface-0);
-    box-shadow: 0 0 0 3px var(--primary-alpha-10);
-  }
-}
-
-.search-icon {
-  color: var(--neutral-400);
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
-  margin-right: 6px;
-}
-
-.search-input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  padding: 12px 0;
-  font-size: 16px;
-  color: var(--neutral-900);
-  outline: none;
-
-  &::placeholder {
-    color: var(--neutral-400);
-  }
-}
-
-.clear-search-btn {
-  color: #9ca3af;
-  width: 32px;
-  height: 32px;
-  margin-left: 8px;
-
-  &:hover {
-    color: #6b7280;
-    background: #f3f4f6;
-  }
-}
 
 // Filter Menu Container
 .filter-menu-container {
@@ -442,8 +501,9 @@
 }
 
 .summary-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: 8px;
   max-width: 600px;
   margin: 0 auto;
@@ -455,8 +515,8 @@
   justify-content: center;
   gap: 4px;
   padding: 6px 4px;
-  background: var(--surface-50);
-  border: 1px solid var(--surface-300);
+  // background: var(--surface-50);
+  // border: 1px solid var(--surface-300);
   border-radius: 8px;
   transition: all 0.2s ease;
   min-width: 0;
@@ -484,7 +544,7 @@
 
   .stat-value {
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--neutral-800);
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -786,10 +846,10 @@
 
 .date-header-pill {
   font-family: 'Outfit', 'Inter', system-ui, sans-serif;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   color: var(--primary-600);
-  padding: 6px 14px;
+  padding: 4px 12px;
   background: var(--surface-0-alpha-70);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -822,14 +882,14 @@
 // Transaction Cards
 .transaction-card {
   background: var(--surface-50);
-  border-radius: 16px;
-  margin-bottom: 12px;
+  border-radius: 12px;
+  margin-bottom: 8px;
   border: 1px solid var(--surface-200);
   overflow: hidden;
   position: relative;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 
   &::before {
     content: '';
@@ -910,8 +970,8 @@
 .transaction-main {
   display: flex;
   align-items: center;
-  padding: 14px 16px;
-  gap: 14px;
+  padding: 10px 14px;
+  gap: 12px;
 }
 
 .transaction-icon {
@@ -919,9 +979,9 @@
 }
 
 .icon-container {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -929,21 +989,21 @@
   transition: all 0.3s ease;
   overflow: hidden;
   position: relative;
-  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.2), 0 2px 6px rgba(0, 0, 0, 0.08);
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.2), 0 2px 4px rgba(0, 0, 0, 0.05);
 
   &::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 100%);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
     pointer-events: none;
   }
 
   mat-icon {
-    font-size: 22px;
-    width: 22px;
-    height: 22px;
-    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
+    font-size: 19px;
+    width: 19px;
+    height: 19px;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.08));
   }
 
   &.income-bg {
@@ -1044,15 +1104,15 @@
 
 .transaction-title {
   font-family: 'Outfit', 'Inter', system-ui, sans-serif;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--neutral-900);
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   line-height: 1.2;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
 // Row that holds inline chips (recurring, split)
@@ -1105,11 +1165,11 @@
 .transaction-details {
   .transaction-notes {
     font-family: 'Inter', system-ui, sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     color: var(--neutral-400);
     font-weight: 450;
     line-height: 1.4;
-    margin-top: 2px;
+    margin-top: 1px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1121,7 +1181,7 @@
 
     &::before {
       content: '•';
-      font-size: 14px;
+      font-size: 12px;
       color: var(--neutral-300);
     }
   }
@@ -1141,11 +1201,11 @@
   // JetBrains Mono with tabular + slashed-zero features for financial data
   font-family: 'JetBrains Mono', monospace;
   font-feature-settings: "tnum" on, "zero" on;
-  font-size: 1rem;
-  font-weight: 800;
+  font-size: 0.92rem;
+  font-weight: 700;
   margin: 0;
   white-space: nowrap;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 
   &.income-text  { color: var(--success-600); }
   &.expense-text { color: var(--error-600); }

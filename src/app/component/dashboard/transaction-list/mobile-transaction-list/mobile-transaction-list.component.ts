@@ -16,7 +16,8 @@ import {
   ViewChild,
   ElementRef,
   AfterViewInit,
-  DestroyRef
+  DestroyRef,
+  HostListener
 } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
@@ -209,6 +210,7 @@ export class MobileTransactionListComponent
   
   selectedSort = signal<string>('date-desc');
   showActiveFilterDetails = signal<boolean>(false);
+  showSearchInput = signal<boolean>(false);
   public selectedRange = signal<string | null>(null);
   /** null = All Members; a userId string = filter to that member */
   public selectedMember = signal<string | null>(null);
@@ -308,6 +310,37 @@ export class MobileTransactionListComponent
   toggleFilterDetails(event: MouseEvent) {
     if ((event.target as HTMLElement).closest('.quick-clear-btn')) return;
     this.showActiveFilterDetails.set(!this.showActiveFilterDetails());
+  }
+
+  toggleSearch(event?: MouseEvent) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.showSearchInput.set(!this.showSearchInput());
+    if (!this.showSearchInput()) {
+      this.onSearchChange('');
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    if (this.showActiveFilterDetails() || this.showSearchInput()) {
+      const target = event.target as HTMLElement;
+      const isInsideIndicator = !!target.closest('.active-filters-indicator');
+      const isOverlay = !!target.closest('.cdk-overlay-container');
+      
+      if (!isInsideIndicator && !isOverlay) {
+        this.showSearchInput.set(false);
+        this.showActiveFilterDetails.set(false);
+      }
+    }
+  }
+
+  closeExpandedHeader(event?: Event) {
+    if (event) event.stopPropagation();
+    this.showSearchInput.set(false);
+    this.showActiveFilterDetails.set(false);
+    this.onSearchChange('');
   }
 
   clearFilter(type: 'search' | 'category' | 'type' | 'date') {
