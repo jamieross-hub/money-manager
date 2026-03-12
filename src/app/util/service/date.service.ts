@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Timestamp } from '@angular/fire/firestore';
+import { DateUtil } from '../helpers/date.util';
 
 @Injectable({
   providedIn: 'root'
@@ -14,47 +15,7 @@ export class DateService {
    * @returns Date object or null if conversion fails
    */
   toDate(timestamp: any): Date | null {
-    try {
-      if (!timestamp) {
-        return null;
-      }
-
-      // If it's already a Date object
-      if (timestamp instanceof Date) {
-        return timestamp;
-      }
-
-      // If it's a Firebase Timestamp
-      if (timestamp instanceof Timestamp) {
-        return timestamp.toDate();
-      }
-
-      // If it's a Firestore timestamp object with seconds/nanoseconds
-      if (timestamp && typeof timestamp === 'object' && 'seconds' in timestamp) {
-        return new Timestamp(timestamp.seconds, timestamp.nanoseconds).toDate();
-      }
-
-      // If it's a number (milliseconds)
-      if (typeof timestamp === 'number') {
-        return new Date(timestamp);
-      }
-
-      // If it's a string, try to parse it
-      if (typeof timestamp === 'string') {
-        const parsed = new Date(timestamp);
-        return isNaN(parsed.getTime()) ? null : parsed;
-      }
-
-      // If it's an object with toDate method
-      if (timestamp && typeof timestamp.toDate === 'function') {
-        return timestamp.toDate();
-      }
-
-      return null;
-    } catch (error) {
-      console.error('Error converting timestamp to date:', error, timestamp);
-      return null;
-    }
+    return DateUtil.toDate(timestamp);
   }
 
   /**
@@ -63,44 +24,9 @@ export class DateService {
    * @returns Firebase Timestamp or null if conversion fails
    */
   toTimestamp(dateValue: any): Timestamp | null {
-    try {
-      if (!dateValue) {
-        return null;
-      }
-
-      // If it's already a Timestamp
-      if (dateValue instanceof Timestamp) {
-        return dateValue;
-      }
-
-      // If it's a Date object
-      if (dateValue instanceof Date) {
-        return Timestamp.fromDate(dateValue);
-      }
-
-      // If it's a number (milliseconds)
-      if (typeof dateValue === 'number') {
-        return Timestamp.fromDate(new Date(dateValue));
-      }
-
-      // If it's a string, try to parse it
-      if (typeof dateValue === 'string') {
-        const date = new Date(dateValue);
-        if (!isNaN(date.getTime())) {
-          return Timestamp.fromDate(date);
-        }
-      }
-
-      // If it's an object with toDate method
-      if (dateValue && typeof dateValue.toDate === 'function') {
-        return Timestamp.fromDate(dateValue.toDate());
-      }
-
-      return null;
-    } catch (error) {
-      console.error('Error converting date to timestamp:', error, dateValue);
-      return null;
-    }
+    const raw = DateUtil.toTimestamp(dateValue);
+    if (!raw) return null;
+    return new Timestamp(raw.seconds, raw.nanoseconds);
   }
 
   /**

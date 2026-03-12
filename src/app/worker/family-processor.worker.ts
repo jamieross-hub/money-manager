@@ -3,6 +3,7 @@
 import { Transaction } from '../util/models/transaction.model';
 import { FamilyMember, FamilyStats, FamilyMemberStats, Settlement, BalanceEntry } from '../util/models/family.model';
 import { TransactionStatus, TransactionType } from '../util/config/enums';
+import { DateUtil } from '../util/helpers/date.util';
 
 addEventListener('message', ({ data }) => {
   const { type, payload } = data;
@@ -253,22 +254,15 @@ function processActivities(
   const memberMap = new Map(mems.map(m => [m.userId, m]));
   const allActivities: any[] = [];
 
+
   const getTime = (val: any) => {
-    if (!val) return 0;
-    
-    // Handle Firestore Timestamp
-    if (typeof val === 'object' && 'seconds' in val) {
-      return val.seconds * 1000;
-    }
-    
-    // Handle Date object or ISO string
-    const d = new Date(val);
-    return isNaN(d.getTime()) ? 0 : d.getTime();
+    const d = DateUtil.toDate(val);
+    return d ? d.getTime() : 0;
   };
 
   // 1. Transactions
   for (const tx of txns) {
-    if (tx.category === 'Settlement') continue;
+    if (tx.category === 'Settlement' || tx.status === TransactionStatus.DELETED) continue;
 
     let payerId = tx.userId;
     let payerName = tx.userDisplayName || 'Unknown';
@@ -302,9 +296,9 @@ function processActivities(
       payerName,
       payerPhoto,
       payerLabel: payerId === currentUid ? 'You' : payerName,
-      _isIncome: tx.type === TransactionType.INCOME,
+      _isIncome: tx.type === 'income' || (tx as any).type === 1, // Handle both enum and string
       _sortTime: sortTime,
-      _createdTime: createdTime,
+      _createdTime: createdTime || sortTime,
       _trackId: tx.id || `tx_${payerId}_${sortTime}`,
       _popState: (createdTime > sessionStartTime && (Date.now() - createdTime) < 10000) ? 'new' : 'old'
     });
@@ -339,7 +333,7 @@ function processActivities(
       note: set.note || 'Settlement',
       _isIncome,
       _sortTime: sortTime,
-      _createdTime: createdTime,
+      _createdTime: createdTime || sortTime,
       _trackId: settlementId,
       _popState: (createdTime > sessionStartTime && (Date.now() - createdTime) < 10000) ? 'new' : 'old'
     });
@@ -350,6 +344,9 @@ function processActivities(
     const sortTime = getTime(m.joinedAt);
     const createdTime = getTime(m.joinedAt);
     
+    // Safety check: if time is missing from joinedAt (e.g. 00:00:00), 
+    // it will sort below transactions that have real times.
+    
     allActivities.push({
       id: `mem_${m.userId}_${m.isActive ? 'join' : 'leave'}`,
       category: 'MemberActivity',
@@ -359,10 +356,10 @@ function processActivities(
       payerId: m.userId,
       payerName: m.displayName,
       payerPhoto: m.photoURL,
-      payerLabel: m.displayName,
-      note: `${m.displayName} ${m.isActive ? 'joined' : 'left'} the group`,
+      payerLabel: m.userId === currentUid ? 'You' : m.displayName,
+      note: `${m.userId === currentUid ? 'You' : m.displayName} ${m.isActive ? 'joined' : 'left'} the group`,
       _sortTime: sortTime,
-      _createdTime: createdTime,
+      _createdTime: createdTime || sortTime,
       _trackId: `mem_${m.userId}_${m.isActive ? 'join' : 'leave'}_${sortTime}`,
       _popState: (createdTime > sessionStartTime) ? 'new' : 'old'
     });
@@ -370,7 +367,25 @@ function processActivities(
 
 
   return allActivities.sort((a, b) => {
-    if (b._sortTime !== a._sortTime) return b._sortTime - a._sortTime;
+    // 1. Primary Sort: Day Group (Descending)
+    const dayA = new Date(a._sortTime).setHours(0, 0, 0, 0);
+    const dayB = new Date(b._sortTime).setHours(0, 0, 0, 0);
+
+    if (dayB !== dayA) {
+      return dayB - dayA;
+    }
+    
+    // 2. Same Day Tie-break: Put Member Activities at the TOP of that day
+    // (Join/Leave events are prioritized "announcements" for the day)
+    if (a.category === 'MemberActivity' && b.category !== 'MemberActivity') return -1;
+    if (b.category === 'MemberActivity' && a.category !== 'MemberActivity') return 1;
+
+    // 3. Sort by Time within category groups (Descending)
+    if (b._sortTime !== a._sortTime) {
+      return b._sortTime - a._sortTime;
+    }
+
+    // 4. Last fallback: Database creation time
     return (b._createdTime || 0) - (a._createdTime || 0);
   });
 }

@@ -3,6 +3,7 @@
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
+import { DateUtil } from '../util/helpers/date.util';
 
 dayjs.extend(isBetween);
 dayjs.extend(weekOfYear);
@@ -44,16 +45,7 @@ addEventListener('message', ({ data }) => {
 
   // 2. Helper: Date conversion
   const toDate = (val: any): Date | null => {
-    if (!val) return null;
-    if (val instanceof Date) return val;
-    if (val && typeof val === 'object' && val.seconds) return new Date(val.seconds * 1000);
-    if (typeof val === 'number') return new Date(val);
-    if (typeof val === 'string') {
-      const d = new Date(val);
-      return isNaN(d.getTime()) ? null : d;
-    }
-    if (val && typeof val.toDate === 'function') return val.toDate();
-    return null;
+    return DateUtil.toDate(val);
   };
 
   const calculateNextDate = (currentDate: Date, interval: string): Date => {
