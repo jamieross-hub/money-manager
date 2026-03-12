@@ -45,6 +45,7 @@ export interface NetworkStatus {
   effectiveType?: string;
   downlink?: number;
   rtt?: number;
+  isSlow?: boolean;
 }
 
 export interface SyncItem {
@@ -107,12 +108,18 @@ export class CommonSyncService implements OnDestroy {
   private readonly HIGH_PRIORITY_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7 days
   private readonly LOW_PRIORITY_EXPIRY = 60 * 60 * 1000; // 1 hour
   
+  // Slow connection thresholds
+  private readonly SLOW_RTT_THRESHOLD = 2000; // 2 seconds
+  private readonly SLOW_DOWNLINK_THRESHOLD = 0.15; // 150 kbps
+  private readonly SLOW_EFFECTIVE_TYPES = ['slow-2g', '2g'];
+  
   private observersInitialized = false;
   private serviceWorkerRegistration: ServiceWorkerRegistration | null = null;
   private syncQueue: SyncItem[] = [];
 
   private networkStatusSignal = signal<NetworkStatus>({
-    online: typeof navigator !== 'undefined' ? navigator.onLine : true
+    online: typeof navigator !== 'undefined' ? navigator.onLine : true,
+    isSlow: false
   });
 
   private syncStatusSignal = signal<SyncStatus>({
@@ -129,8 +136,12 @@ export class CommonSyncService implements OnDestroy {
 
   public readonly networkStatus = this.networkStatusSignal.asReadonly();
   public readonly networkStatus$: Observable<NetworkStatus> = toObservable(this.networkStatus);
-  public readonly isOnline: Signal<boolean> = computed(() => this.networkStatusSignal().online);
+  public readonly isOnline: Signal<boolean> = computed(() => {
+    const status = this.networkStatusSignal();
+    return status.online && !status.isSlow;
+  });
   public readonly isOnline$: Observable<boolean> = toObservable(this.isOnline);
+  public readonly isSlowConnection: Signal<boolean> = computed(() => !!this.networkStatusSignal().isSlow);
   // #endregion
 
   constructor(
@@ -148,7 +159,6 @@ export class CommonSyncService implements OnDestroy {
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     if (!isPlatformServer(this.platformId)) {
-      this.networkStatusSignal.set({ online: navigator.onLine });
       this.initializeServices();
       this.setupServiceWorkerSyncListener();
     }
@@ -172,12 +182,23 @@ export class CommonSyncService implements OnDestroy {
     ]);
   }
 
-  /**
-   * Initialize network monitoring
-   */
   private initializeNetworkMonitoring(): void {
     if (isPlatformServer(this.platformId)) {
       return;
+    }
+
+    // Capture initial connection status
+    if ('connection' in navigator) {
+      const connection = (navigator as any).connection;
+      this.updateNetworkStatus({
+        online: navigator.onLine,
+        connectionType: connection.effectiveType,
+        effectiveType: connection.effectiveType,
+        downlink: connection.downlink,
+        rtt: connection.rtt
+      });
+    } else {
+      this.updateNetworkStatus({ online: navigator.onLine });
     }
 
     // Monitor online/offline events
@@ -188,11 +209,11 @@ export class CommonSyncService implements OnDestroy {
     merge(online$, offline$)
       .pipe(
         startWith(navigator.onLine),
-        takeUntil(this.destroy$)
+        takeUntil(this.destroy$),
+        distinctUntilChanged()
       )
       .subscribe(online => {
         this.updateNetworkStatus({ online });
-        this.handleNetworkChange(online);
       });
 
     // Monitor connection quality if available
@@ -235,7 +256,7 @@ export class CommonSyncService implements OnDestroy {
       }
 
       console.log('Background sync initialized successfully');
-      this.updateSyncStatus({ isOnline: navigator.onLine });
+      this.updateSyncStatus({ isOnline: this.isCurrentlyOnline() });
 
     } catch (error) {
       console.error('Failed to initialize background sync:', error);
@@ -275,12 +296,16 @@ export class CommonSyncService implements OnDestroy {
   /**
    * Handle network status changes
    */
-  private handleNetworkChange(online: boolean): void {
+  private handleNetworkChange(online: boolean, isSlow: boolean = false): void {
     if (online) {
       this.showOnlineNotification();
       this.processSyncQueue();
     } else {
-      this.showOfflineNotification();
+      if (isSlow) {
+        this.showSlowConnectionNotification();
+      } else {
+        this.showOfflineNotification();
+      }
     }
   }
 
@@ -292,10 +317,24 @@ export class CommonSyncService implements OnDestroy {
   }
 
   /**
-   * Check if currently online
+   * Check if currently online (Effective online status)
    */
   public isCurrentlyOnline(): boolean {
-    return this.networkStatusSignal().online;
+    const status = this.networkStatusSignal();
+    return status.online && !status.isSlow;
+  }
+
+  /**
+   * Check if the connection is slow based on current status
+   */
+  private calculateIsSlow(status: NetworkStatus): boolean {
+    if (!status.online) return false;
+    
+    const isSlowType = status.effectiveType && this.SLOW_EFFECTIVE_TYPES.includes(status.effectiveType);
+    const isSlowRTT = status.rtt !== undefined && status.rtt > this.SLOW_RTT_THRESHOLD;
+    const isSlowDownlink = status.downlink !== undefined && status.downlink < this.SLOW_DOWNLINK_THRESHOLD;
+    
+    return !!(isSlowType || isSlowRTT || isSlowDownlink);
   }
 
   /**
@@ -334,6 +373,7 @@ export class CommonSyncService implements OnDestroy {
   public getConnectionQuality(): string {
     const status = this.networkStatusSignal();
     if (!status.online) return 'offline';
+    if (status.isSlow) return 'poor (slow)';
     if (status.effectiveType === '4g') return 'excellent';
     if (status.effectiveType === '3g') return 'good';
     if (status.effectiveType === '2g') return 'poor';
@@ -345,8 +385,18 @@ export class CommonSyncService implements OnDestroy {
    */
   private updateNetworkStatus(status: Partial<NetworkStatus>): void {
     const currentStatus = this.networkStatusSignal();
-    const newStatus = { ...currentStatus, ...status };
+    const isSlow = this.calculateIsSlow({ ...currentStatus, ...status });
+    const newStatus = { ...currentStatus, ...status, isSlow };
+    
+    // Check if effective online status changed
+    const wasEffectivelyOnline = currentStatus.online && !currentStatus.isSlow;
+    const isEffectivelyOnline = newStatus.online && !newStatus.isSlow;
+    
     this.networkStatusSignal.set(newStatus);
+    
+    if (wasEffectivelyOnline !== isEffectivelyOnline) {
+      this.handleNetworkChange(isEffectivelyOnline, isSlow);
+    }
   }
 
   /**
@@ -354,6 +404,7 @@ export class CommonSyncService implements OnDestroy {
    */
   private showOnlineNotification(): void {
     console.log('You are back online!', 'Your data will sync automatically.');
+    this.notificationService.info('Back online. Sync resumed.');
   }
 
   /**
@@ -361,6 +412,15 @@ export class CommonSyncService implements OnDestroy {
    */
   private showOfflineNotification(): void {
     console.log('You are offline', 'Changes will be saved locally and synced when you reconnect.');
+    this.notificationService.warning('You are offline. Working in local mode.');
+  }
+
+  /**
+   * Show slow connection notification
+   */
+  private showSlowConnectionNotification(): void {
+    console.warn('Internet connection is slow. Switching to pure offline mode for better performance.');
+    this.notificationService.warning('Slow internet detected. Switching to offline mode for better performance.');
   }
   // #endregion
 
@@ -639,7 +699,7 @@ export class CommonSyncService implements OnDestroy {
         pendingItems: this.syncQueue.length
       });
 
-      if (navigator.onLine) {
+      if (this.isCurrentlyOnline()) {
         await this.processSyncQueue();
       } else {
         await this.triggerBackgroundSync('sync-all-data');
