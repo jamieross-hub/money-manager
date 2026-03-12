@@ -194,7 +194,7 @@
 
   .name-label {
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--neutral-900);
     margin-bottom: 1px;
     white-space: nowrap;
@@ -206,7 +206,7 @@
 
   .amount-label {
     font-size: 14px;
-    font-weight: 800;
+    font-weight: 600;
     font-family: 'JetBrains Mono', monospace;
     white-space: nowrap;
   }
@@ -272,7 +272,7 @@
   .history-amount {
     font-family: 'JetBrains Mono', monospace;
     font-size: 15px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--success-600);
     text-align: right;
   }
