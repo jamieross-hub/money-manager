@@ -955,7 +955,7 @@ export class UserService implements OnDestroy {
       }
 
       await sendPasswordResetEmail(this.auth, email);
-      this.notificationService.success('Password reset email sent. Please check your inbox.');
+      this.notificationService.info('Password reset email sent. Please check your inbox.');
 
       this.logAuditEvent('PASSWORD_RESET_REQUESTED', undefined, {
         email,
@@ -994,7 +994,7 @@ export class UserService implements OnDestroy {
       // Update password
       await updatePassword(currentUser, newPassword);
 
-      this.notificationService.success('Password updated successfully');
+      this.notificationService.info('Password updated successfully');
 
       this.logAuditEvent('PASSWORD_UPDATED', currentUser.uid, {
         timestamp: new Date().toISOString()

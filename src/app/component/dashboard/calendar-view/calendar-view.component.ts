@@ -268,7 +268,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     this.filterService.selectedDateRange.set({ startDate, endDate });
 
     // Show success notification
-    this.notificationService.success(`Filtering transactions for ${categoryName} in ${this.availableMonths[this.selectedMonth].label} ${this.selectedYear}`);
+    this.notificationService.info(`Filtering transactions for ${categoryName} in ${this.availableMonths[this.selectedMonth].label} ${this.selectedYear}`);
   }
 
   // Method removed

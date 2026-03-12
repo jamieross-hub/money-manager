@@ -329,7 +329,7 @@ export class ProfileComponent {
         activeFamilyId: familyId
       });
 
-      this.notificationService.success('Switched to active family');
+      this.notificationService.info('Switched to active family');
 
       // Clear stores and sync
       this.clearLocalStores();
@@ -353,7 +353,7 @@ export class ProfileComponent {
         isFamilyMode: false
       });
 
-      this.notificationService.success('Switched to Personal Mode');
+      this.notificationService.info('Switched to Personal Mode');
 
       this.clearLocalStores();
       this.syncService.syncAll().subscribe({
@@ -383,7 +383,7 @@ export class ProfileComponent {
           this.isLoading.set(true);
           const family = await this.familyService.createFamily(result);
           this.loadFamilies();
-          this.notificationService.success('Family created! Share the invite code with family members.');
+          this.notificationService.info('Family created! Share the invite code with family members.');
           this.router.navigate(['/dashboard/family/groups']);
         } catch (error: any) {
           this.notificationService.error(error?.message || ERROR_MESSAGES.NETWORK.SERVER_ERROR);
@@ -407,7 +407,7 @@ export class ProfileComponent {
               await this.switchActiveFamily(family.id);
             }
             this.loadFamilies();
-            this.notificationService.success(`Joined "${family.name}" family!`);
+            this.notificationService.info(`Joined "${family.name}" family!`);
             this.router.navigate(['/dashboard/family/groups']);
           } catch (error: any) {
             this.notificationService.error(error?.message || ERROR_MESSAGES.NETWORK.SERVER_ERROR);
@@ -452,7 +452,7 @@ export class ProfileComponent {
           if (this.activeFamilyId() === family.id) {
             this.familyMembers.set([]);
           }
-          this.notificationService.success('Family wallet deleted successfully.');
+          this.notificationService.info('Family Group deleted successfully.');
         } catch (error: any) {
           console.error('Error deleting family:', error);
           this.notificationService.error(error?.message || 'Failed to delete family wallet');
@@ -469,7 +469,7 @@ export class ProfileComponent {
 
   copyFamilyCode(code: string): void {
     navigator.clipboard.writeText(code).then(() => {
-      this.notificationService.success('Invite code copied!');
+      this.notificationService.info('Invite code copied!');
     });
   }
 
@@ -610,7 +610,7 @@ export class ProfileComponent {
           this.userService.storageService.setItem(`user-data-${updatedUser.uid}`, updatedUser);
           this.store.dispatch(ProfileActions.setProfile({ profile: updatedUser }));
           this.userProfile.set(updatedUser);
-          this.notificationService.success('Profile updated successfully.');
+          this.notificationService.info('Profile updated successfully.');
         } else {
           this.store.dispatch(ProfileActions.updateProfile({
             userId: profile.uid,
@@ -662,7 +662,7 @@ export class ProfileComponent {
       this.isGoogleLoading.set(true);
       this.isLoading.set(true);
       await this.userService.signInWithGoogle();
-      this.notificationService.success('Successfully signed in with Google');
+      this.notificationService.info('Successfully signed in with Google');
       window.location.reload();
     } catch (error) {
       console.error('Error signing in with Google:', error);
@@ -678,7 +678,7 @@ export class ProfileComponent {
       this.isLogoutLoading.set(true);
       this.isLoading.set(true);
       await this.userService.logout();
-      this.notificationService.success('Logged out successfully');
+      this.notificationService.info('Logged out successfully');
       window.location.reload();
     } catch (error) {
       console.error('Error logging out:', error);
@@ -735,7 +735,7 @@ export class ProfileComponent {
           this.isLoading.set(true);
           // Use Auth directly for the Firebase account deletion call
           await this.auth.currentUser?.delete();
-          this.notificationService.success('Account deleted successfully');
+          this.notificationService.info('Account deleted successfully');
           this.router.navigate(['/sign-in']);
         } catch (error) {
           console.error('Error deleting account:', error);
@@ -835,7 +835,7 @@ export class ProfileComponent {
             if (this.userService.isGuestUser()) {
               this.userService.storageService.setItem(`user-data-${updatedProfile.uid}`, updatedProfile);
               this.store.dispatch(ProfileActions.setProfile({ profile: updatedProfile }));
-              this.notificationService.success('Profile picture updated successfully.');
+              this.notificationService.info('Profile picture updated successfully.');
             } else {
               this.store.dispatch(ProfileActions.updateProfile({
                 userId: updatedProfile.uid,

@@ -1,48 +1,109 @@
 // Notification styles for snack bars
 .snack-bar-success {
-  background: #22c55e !important; /* green */
+  background: transparent !important; /* green */
   color: #fff !important;
 }
 .snack-bar-error {
-  background: #ef4444 !important; /* red */
+  background: var(--error-600) !important; /* red */
   color: #fff !important;
 }
 .snack-bar-warning {
-  background: #facc15 !important; /* yellow */
-  color: #333 !important;
+  background: var(--warning-600) !important; /* yellow */
+  color: #fff !important;
 }
 .snack-bar-info {
-  background: #0ea5e9 !important; /* blue */
+  background: var(--info-600) !important; /* blue */
   color: #fff !important;
 }
 
-/* Mobile notification positioning - slightly up from bottom */
+/* Mobile notification positioning and aesthetics */
 .mobile-notification {
-  margin-bottom: calc(110px + env(safe-area-inset-bottom)) !important;
-  border-radius: 10px !important;
+  margin-bottom: calc(100px + env(safe-area-inset-bottom)) !important;
+  
+  .mat-mdc-snackbar-surface {
+    border-radius: 16px !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+    padding: 8px 16px !important;
+    min-height: auto !important;
+    display: flex !important;
+    width: fit-content !important;
+    align-items: center !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    opacity: 0.9;
+  }
+
+  .mdc-snackbar__label {
+    font-weight: 500 !important;
+    letter-spacing: 0.01em !important;
+    font-size: 0.95rem !important;
+    padding: 8px 0 !important;
+    text-align: center;
+    // width: 100%;
+    color: #fff !important;
+  }
+
+  .mat-mdc-snack-bar-label {
+    padding: 0 !important;
+  }
+
+  .mat-mdc-snack-bar-actions {
+    .mat-mdc-button {
+      color: rgba(255, 255, 255, 0.9) !important;
+      font-weight: 600 !important;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+      min-width: 48px;
+      padding: 0 8px !important;
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+      }
+    }
+  }
+
+
+  /* Success State */
+  &.snack-bar-success .mat-mdc-snackbar-surface {
+    background-color: var(--success-600) !important;
+    color: var(--success-600) !important;
+  }
+
+  /* Error State */
+  &.snack-bar-error .mat-mdc-snackbar-surface {
+    background-color: rgba(220, 38, 38, 0.9) !important; /* error-600 with opacity */
+  }
+
+  /* Warning State */
+  &.snack-bar-warning .mat-mdc-snackbar-surface {
+    background-color: rgba(202, 138, 4, 0.9) !important; /* warning-600 with opacity */
+  }
+
+  /* Info State */
+  &.snack-bar-info .mat-mdc-snackbar-surface {
+    background-color: var(--secondary-600) !important;
+    color: var(--info-600) !important;  
+  }
 }
 
-/* Mobile notification overrides for snack bars */
-.mobile-notification.snack-bar-success,
-.mobile-notification.snack-bar-error,
-.mobile-notification.snack-bar-warning,
-.mobile-notification.snack-bar-info {
-  font-size: 1.1rem;
-  min-width: 80vw;
-  max-width: 95vw;
-  margin-left: auto;
-  margin-right: auto;
-  text-align: center;
-  border-radius: 10px !important;
-  .mat-mdc-snackbar-surface {
-    opacity: 0.9;
-    @apply bg-primary text-white;
-    padding-right:0 !important;
-    border-radius: 10px !important;
+/* Ensure mobile snackbar is centered and properly sized */
+@media (max-width: 768px) {
+  .cdk-global-overlay-wrapper {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-end !important;
   }
-} 
 
-.mat-mdc-snack-bar-handset{
-  height: 40px !important;
-  margin-bottom: 6rem !important;
+  .mat-mdc-snack-bar-container {
+    min-width: calc(100vw - 32px) !important;
+    max-width: calc(100vw - 32px) !important;
+    margin: 0 16px 16px 16px !important;
+  }
+}
+
+.mat-mdc-snack-bar-handset {
+  height: auto !important;
+  margin-bottom: calc(100px + env(safe-area-inset-bottom)) !important;
 }

@@ -110,7 +110,7 @@ export class FamilyModeToggleComponent implements OnInit {
       // 3. Handle success
       success$.subscribe(() => {
         clearTimeout(timeoutTimer);
-        this.notificationService.success(`Family mode ${enabled ? 'enabled' : 'disabled'}`);
+        this.notificationService.info(`Family mode ${enabled ? 'enabled' : 'disabled'}`);
         
         // Clear all stores for personal/family switch to avoid data mixing
         // We do this on SUCCESS to ensure we don't clear if update fails

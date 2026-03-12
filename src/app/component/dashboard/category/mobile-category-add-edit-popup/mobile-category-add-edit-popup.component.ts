@@ -262,7 +262,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
             group: formValue.group?.trim() || '',
           })
         );
-        this.notificationService.success('Category updated successfully');
+        this.notificationService.info('Category updated successfully');
       } else {
         await this.store.dispatch(
           createCategory({
@@ -274,7 +274,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
             group: formValue.group?.trim() || undefined,
           })
         );
-        this.notificationService.success('Category added successfully');
+        this.notificationService.info('Category added successfully');
         this.hapticFeedback.successVibration();
       }
 

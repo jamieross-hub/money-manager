@@ -350,7 +350,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
           const txMsg = linkedTransactions.length > 0
             ? ` and ${linkedTransactions.length} linked transaction(s) deleted.`
             : '';
-          this.notificationService.success(`Account deleted successfully${txMsg}`);
+          this.notificationService.info(`Account deleted successfully${txMsg}`);
         } catch (error) {
           this.notificationService.error('Failed to delete account');
           console.error('Error deleting account:', error);

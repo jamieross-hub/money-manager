@@ -30,7 +30,7 @@ export class NotificationService {
   ) {}
 
   // Show success message
-  success(message: string, action: string = "Close"): void {
+  success(message: string, action?: string): void {
     this.snackBar.open(message, action, {
       ...this.defaultConfig,
       panelClass: this.isMobile() ? ['snack-bar-success', 'mobile-notification'] : ['snack-bar-success'],
@@ -38,7 +38,7 @@ export class NotificationService {
   }
 
   // Show error message
-  error(message: string, action: string = "Close"): void {
+  error(message: string, action?: string): void {
     this.snackBar.open(message, action, {
       ...this.defaultConfig,
       panelClass: this.isMobile() ? ['snack-bar-error', 'mobile-notification'] : ['snack-bar-error'],
@@ -46,7 +46,7 @@ export class NotificationService {
   }
 
   // Show info message
-  info(message: string, action: string = "Close"): void {
+  info(message: string, action?: string): void {
     this.snackBar.open(message, action, {
       ...this.defaultConfig,
       panelClass: this.isMobile() ? ['snack-bar-info', 'mobile-notification'] : ['snack-bar-info'],
@@ -54,7 +54,7 @@ export class NotificationService {
   }
 
   // Show warning message
-  warning(message: string, action: string = "Close"): void {
+  warning(message: string, action?: string): void {
     this.snackBar.open(message, action, {
       ...this.defaultConfig,
       panelClass: this.isMobile() ? ['snack-bar-warning', 'mobile-notification'] : ['snack-bar-warning'],

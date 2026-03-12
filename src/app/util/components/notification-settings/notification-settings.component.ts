@@ -268,7 +268,7 @@ export class NotificationSettingsComponent implements OnInit, OnDestroy {
       if (permission === 'granted') {
         this.notificationsEnabled = true;
         this.saveNotificationsEnabled();
-        this.notificationService.success('Notifications enabled successfully!');
+        this.notificationService.info('Notifications enabled successfully!');
       } else {
         this.notificationService.error('Notification permission denied');
       }
@@ -284,7 +284,7 @@ export class NotificationSettingsComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     try {
       this.messagingService.sendTestNotification();
-      this.notificationService.success('Test notification sent!');
+      this.notificationService.info('Test notification sent!');
     } catch (error) {
       console.error('Error sending test notification:', error);
       this.notificationService.error('Failed to send test notification');

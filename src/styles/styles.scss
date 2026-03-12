@@ -589,6 +589,30 @@ app-chat {
   animation: none;
 }
 
+/* 
+   Isolate Overlay Container during View Transitions 
+   This prevents snackbars, dialogs, and bottom sheets from flickering 
+   when the main content transitions.
+*/
+.cdk-overlay-container {
+  view-transition-name: overlay-container;
+}
+
+::view-transition-old(overlay-container),
+::view-transition-new(overlay-container) {
+  animation: none !important;
+  mix-blend-mode: normal !important;
+}
+
+/* 
+   Ensure the root transition doesn't interfere if not needed.
+   Since we named main-content and footer, root only contains 
+   the header and the base background.
+*/
+::view-transition-group(root) {
+  z-index: 0;
+}
+
 @keyframes fade-in {
   from { opacity: 0; }
 }
@@ -602,3 +626,4 @@ app-chat {
   animation-duration: 50ms;
   will-change: opacity;
 }
+
