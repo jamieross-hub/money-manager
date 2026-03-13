@@ -1,7 +1,7 @@
 import { Injectable, Inject, PLATFORM_ID, Injector, signal, OnDestroy, computed, Signal } from '@angular/core';
 import { BehaviorSubject, Observable, fromEvent, interval, from, of, Subject, combineLatest, merge, forkJoin, Subscription } from 'rxjs';
 import { map, switchMap, catchError, tap, take, filter, distinctUntilChanged, takeUntil, delay, startWith, timeout } from 'rxjs/operators';
-import { Firestore, collection, doc, writeBatch, serverTimestamp, Timestamp } from '@angular/fire/firestore';
+import { Firestore, collection, doc, writeBatch, serverTimestamp, Timestamp, getDoc, getDocFromServer } from '@angular/fire/firestore';
 import { Auth, getAuth } from '@angular/fire/auth';
 import { SwUpdate } from '@angular/service-worker';
 import { isPlatformServer } from '@angular/common';
@@ -182,38 +182,70 @@ export class CommonSyncService implements OnDestroy {
     ]);
   }
 
+  private async checkFirebaseConnection(): Promise<boolean> {
+    try {
+      const ref = doc(this.firestore, "health", "ping");
+      // Use getDocFromServer to bypass cache and enforce real network request
+      const pingPromise = getDocFromServer(ref);
+      const timeoutPromise = new Promise<boolean>((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000));
+      await Promise.race([pingPromise, timeoutPromise]);
+      return true;
+    } catch (e: any) {
+      // Treat permission-denied as online since we reached the server
+      if (e?.code === 'permission-denied' || e?.message?.includes('Missing or insufficient permissions')) {
+        return true;
+      }
+      return false;
+    }
+  }
+
   private initializeNetworkMonitoring(): void {
     if (isPlatformServer(this.platformId)) {
       return;
     }
 
+    let checkTimeout: any;
+    const verifyConnection = async (retryCount = 0) => {
+      if (navigator.onLine) {
+        const isOnline = await this.checkFirebaseConnection();
+        this.updateNetworkStatus({ online: isOnline });
+        
+        // If the browser reports online but the server is unreachable, 
+        // retry for a bit because DNS/Websockets take time to reconnect after switching networks.
+        if (!isOnline && retryCount < 5) {
+          clearTimeout(checkTimeout);
+          checkTimeout = setTimeout(() => {
+            verifyConnection(retryCount + 1);
+          }, 3000);
+        }
+      } else {
+        this.updateNetworkStatus({ online: false });
+      }
+    };
+
     // Capture initial connection status
     if ('connection' in navigator) {
       const connection = (navigator as any).connection;
       this.updateNetworkStatus({
-        online: navigator.onLine,
         connectionType: connection.effectiveType,
         effectiveType: connection.effectiveType,
         downlink: connection.downlink,
         rtt: connection.rtt
       });
-    } else {
-      this.updateNetworkStatus({ online: navigator.onLine });
     }
 
-    // Monitor online/offline events
-    const online$ = fromEvent(window, 'online').pipe(map(() => true));
-    const offline$ = fromEvent(window, 'offline').pipe(map(() => false));
+    // Initial check
+    verifyConnection();
 
-    // Combine online/offline events with initial state
+    // Monitor online/offline events
+    const online$ = fromEvent(window, 'online');
+    const offline$ = fromEvent(window, 'offline');
+
+    // Combine online/offline events
     merge(online$, offline$)
-      .pipe(
-        startWith(navigator.onLine),
-        takeUntil(this.destroy$),
-        distinctUntilChanged()
-      )
-      .subscribe(online => {
-        this.updateNetworkStatus({ online });
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        verifyConnection();
       });
 
     // Monitor connection quality if available
@@ -224,12 +256,12 @@ export class CommonSyncService implements OnDestroy {
           .pipe(takeUntil(this.destroy$))
           .subscribe(() => {
             this.updateNetworkStatus({
-              online: navigator.onLine,
               connectionType: connection.effectiveType,
               effectiveType: connection.effectiveType,
               downlink: connection.downlink,
               rtt: connection.rtt
             });
+            verifyConnection();
           });
       }
     }
