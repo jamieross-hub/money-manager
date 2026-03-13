@@ -504,6 +504,7 @@ export class MobileTransactionListComponent
       const isRecurringMode = this.isRecurring();
       const isFamilyMode = this.isFamilyMode();
       const activeFamilyId = this.activeFamily()?.id;
+      const _currentCurrency = this.currencyService.currentCurrency(); 
 
       this.processorService.process({
         transactions,

@@ -3,6 +3,7 @@ import { Transaction } from '../models/transaction.model';
 import { RecurringTemplate } from '../models/recurring.model';
 import { Category, Account } from '../models';
 import { UserService } from './db/user.service';
+import { CurrencyService } from './currency.service';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
@@ -24,6 +25,7 @@ export interface ProcessorOutput {
 })
 export class TransactionProcessorService {
   private readonly userService = inject(UserService);
+  private readonly currencyService = inject(CurrencyService);
   
   // Output Signals
   private _output = signal<ProcessorOutput>({
@@ -324,21 +326,19 @@ export class TransactionProcessorService {
     if (filters.selectedMember) {
       const memberId = filters.selectedMember;
       filtered = filtered.filter((t: any) => {
-        // 1. Direct involvement as primary user, creator, or payer
-        if (t.userId === memberId || t.createdBy === memberId || t.splitData?.paidByUserId === memberId) return true;
-
-        // 2. Part of a split transaction
-        if (t.splitData) {
-          const sd = t.splitData;
-          if (sd.paidByUserId === memberId) return true;
-          if (sd.paidBy && sd.paidBy.some((p: any) => p.userId === memberId)) return true;
-          if (sd.splitBetween && sd.splitBetween.some((s: any) => s.userId === memberId)) return true;
-        }
-
-        // 3. Part of a settlement
+        // 1. Part of a settlement (Sender or Receiver)
         if (t.settlementFromUserId === memberId || t.settlementToUserId === memberId) return true;
 
-        return false;
+        // 2. Split Transaction: ONLY include if they paid or are in the split
+        if (t.splitData) {
+          const sd = t.splitData;
+          const isPayer = sd.paidByUserId === memberId || (sd.paidBy && sd.paidBy.some((p: any) => p.userId === memberId));
+          const isInSplit = sd.splitBetween && sd.splitBetween.some((s: any) => s.userId === memberId);
+          return isPayer || isInSplit;
+        }
+
+        // 3. Normal Transaction: check owner/creator
+        return t.userId === memberId || t.createdBy === memberId;
       });
     }
 
@@ -410,6 +410,9 @@ export class TransactionProcessorService {
       dateHeader: string;
       transactions: any[];
       isUpcomingGroup?: boolean;
+      totalAmount: number;
+      totalFormatted?: string;
+      totalClass?: string;
     }
 
     const groupsMap = new Map<string, Group>();
@@ -443,7 +446,7 @@ export class TransactionProcessorService {
         if (memberId) {
           const isDirect = tx.splitData 
             ? (tx.splitData.paidByUserId === memberId || (tx.splitData.paidBy && tx.splitData.paidBy.some((p: any) => p.userId === memberId)))
-            : (tx.userId === memberId || tx.createdBy === memberId);
+            : (tx.settlementFromUserId === memberId || tx.settlementToUserId === memberId || tx.userId === memberId || tx.createdBy === memberId);
           involvementPrefix = isDirect ? 'direct_' : 'involved_';
         }
 
@@ -483,10 +486,19 @@ export class TransactionProcessorService {
             header = baseHeader;
             dateHeaderCache.set(dateKey, header);
           }
-          group = { date: dateKey, dateHeader: header, transactions: [], isUpcomingGroup: txView._isUpcoming };
+          group = { 
+            date: dateKey, 
+            dateHeader: header, 
+            transactions: [], 
+            isUpcomingGroup: txView._isUpcoming,
+            totalAmount: 0
+          };
           groupsMap.set(dateKey, group);
         }
         group.transactions.push(txView);
+        if (!txView._isUpcoming) {
+          group.totalAmount += txView._isIncome ? txView.amount : -txView.amount;
+        }
         return;
       }
       // ── Full enrichment (only for new/changed transactions) ─────────────────
@@ -540,7 +552,7 @@ export class TransactionProcessorService {
       if (memberId) {
         const isDirect = tx.splitData 
           ? (tx.splitData.paidByUserId === memberId || (tx.splitData.paidBy && tx.splitData.paidBy.some((p: any) => p.userId === memberId)))
-          : (tx.userId === memberId || tx.createdBy === memberId);
+          : (tx.settlementFromUserId === memberId || tx.settlementToUserId === memberId || tx.userId === memberId || tx.createdBy === memberId);
         involvementPrefix = isDirect ? 'direct_' : 'involved_';
       }
 
@@ -583,13 +595,31 @@ export class TransactionProcessorService {
           header = baseHeader;
           dateHeaderCache.set(dateKey, header);
         }
-        group = { date: dateKey, dateHeader: header, transactions: [], isUpcomingGroup: txView._isUpcoming };
+        group = { 
+          date: dateKey, 
+          dateHeader: header, 
+          transactions: [], 
+          isUpcomingGroup: txView._isUpcoming,
+          totalAmount: 0
+        };
         groupsMap.set(dateKey, group);
       }
       group.transactions.push(txView);
+      if (!txView._isUpcoming) {
+        group.totalAmount += txView._isIncome ? txView.amount : -txView.amount;
+      }
     });
 
     const groups = Array.from(groupsMap.values());
+
+    // Set totals and classes (except upcoming)
+    groups.forEach(group => {
+      if (!group.isUpcomingGroup && group.transactions.length > 0) {
+        const amt = group.totalAmount;
+        group.totalFormatted = this.currencyService.formatAmount(Math.abs(amt), { round: true });
+        group.totalClass = amt >= 0 ? 'income-text' : 'expense-text';
+      }
+    });
 
     let finalGroups = groups;
     if (isDateSort) {

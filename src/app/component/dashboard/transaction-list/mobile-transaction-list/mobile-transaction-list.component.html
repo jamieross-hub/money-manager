@@ -399,7 +399,10 @@
         <div class="transaction-group relative w-full">
           <div class="date-header-row sticky top-0 z-20 w-full px-2 py-2 pointer-events-none">
             <div class="date-header-pill" [attr.data-header]="group.dateHeader">
-              {{ group.dateHeader }}
+              <span class="header-title !text-[10px]">{{ group.dateHeader }}</span>
+              @if (group.totalFormatted) {
+                <span class="header-total" [ngClass]="group.totalClass">({{ group.totalFormatted }})</span>
+              }
             </div>
           </div>
           @for (item of group.transactions; track trackById($index, item)) {

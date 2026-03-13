@@ -853,7 +853,7 @@
   -webkit-backdrop-filter: blur(12px);
   border-radius: 999px;
   border: 1px solid var(--surface-200);
-  text-transform: uppercase;
+  // text-transform: uppercase;
   letter-spacing: 0.08em;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   pointer-events: auto;
@@ -870,6 +870,23 @@
     transform: scale(1.05);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
     border-color: var(--primary-500);
+  }
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  .header-total {
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    
+    &.income-text { color: var(--success-600); }
+    &.expense-text { color: var(--error-600); }
+
+    [data-theme='dark'] & {
+      &.income-text { color: var(--success-400); }
+      &.expense-text { color: var(--error-400); }
+    }
   }
 }
 
