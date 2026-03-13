@@ -428,7 +428,7 @@
                         </button>
                       }
                       
-                      @if (!canEdit(item) && !item.settlementId && item.categoryId !== 'adjustment' && isFamilyMode() && isSplitMode()) {
+                      @if (canAdjust(item)) {
                          <button mat-icon-button class="overlay-action-btn adjust" (click)="onAdjustTransaction(item); cancelActions($event)">
                           <mat-icon>tune</mat-icon>
                         </button>
@@ -538,7 +538,7 @@
                     @if (!canEdit(item) && !canDelete(item)) {
                       <span class="text-[11px] text-gray-400 dark:text-gray-500 italic px-2">View only</span>
                     }
-                    @if (!canEdit(item) && !item.settlementId && item.categoryId !== 'adjustment' && isFamilyMode() && isSplitMode()) {
+                    @if (canAdjust(item)) {
                       <button mat-icon-button class="action-button adjust-btn" (click)="onAdjustTransaction(item); $event.stopPropagation()"
                         matTooltip="Adjust transaction details">
                         <mat-icon>tune</mat-icon>

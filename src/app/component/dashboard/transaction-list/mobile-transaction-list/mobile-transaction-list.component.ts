@@ -416,6 +416,15 @@ export class MobileTransactionListComponent
     return me?.role === 'admin';
   }
 
+  canAdjust(tx: Transaction): boolean {
+    return !this.canEdit(tx) && 
+           !tx.settlementId && 
+           tx.categoryId !== 'adjustment' && 
+           this.isFamilyMode() && 
+           this.isSplitMode() && 
+           tx.syncStatus !== SyncStatus.PENDING;
+  }
+
   // Labels (Computed)
   currentSortLabel = computed(() => {
     const option = this.sortOptions.find(opt => opt.value === this.selectedSort());
