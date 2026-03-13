@@ -178,7 +178,7 @@
               }
             </button>
             <mat-divider></mat-divider>
-            @for (member of familyMembers(); track member.userId) {
+            @for (member of sortedFamilyMembers(); track member.userId) {
               @if (member.isActive) {
                 <button mat-menu-item [class.active-menu-item]="selectedMember() === member.userId"
                   (click)="onMemberChange(member.userId)">

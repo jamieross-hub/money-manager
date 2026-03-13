@@ -375,6 +375,18 @@ export class MobileTransactionListComponent
     { initialValue: [] as FamilyMember[] }
   );
 
+  /** Family members sorted so the current user is always on top */
+  sortedFamilyMembers = computed(() => {
+    const members = this.familyMembers() || [];
+    const uid = this.currentUserId;
+    if (!uid) return members;
+    return [...members].sort((a, b) => {
+      if (a.userId === uid) return -1;
+      if (b.userId === uid) return 1;
+      return 0;
+    });
+  });
+
   /**
    * Returns true if the current user can edit the given transaction.
    * - Transactions linked to a settlement CANNOT be edited (to prevent data inconsistency).
