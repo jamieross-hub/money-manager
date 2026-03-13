@@ -2,8 +2,24 @@
   <!-- Chart area (amCharts) -->
   <!-- Chart area removed -->
     
-  <!-- Mobile Filter Header -->
-  @if (showFilters && !showChart) {
+  <!-- Mobile Filter Header / Selection Toolbar -->
+  @if (isSelectionMode()) {
+    <div class="selection-toolbar">
+      <div class="toolbar-content">
+        <button mat-icon-button (click)="clearSelection()" class="close-selection-btn">
+          <mat-icon>close</mat-icon>
+        </button>
+        <span class="selection-count">{{ selectedTxIds().size }}</span>
+        <div class="spacer"></div>
+        <button mat-icon-button (click)="selectAll()" matTooltip="Select All">
+          <mat-icon>select_all</mat-icon>
+        </button>
+        <button mat-icon-button (click)="onDeleteSelectedTransactions()" class="delete-selected-btn" matTooltip="Delete selected">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+  } @else if (showFilters && !showChart) {
     <div class="mobile-filter-header">
       <!-- Combined Search & Active Filters Indicator -->
       <div class="active-filters-indicator" [class.expanded]="showActiveFilterDetails()" [class.search-active]="showSearchInput()">
@@ -390,7 +406,8 @@
           <div class="w-full px-2">
             <div class="transaction-card mb-2" #cardElement
               [@popIn]="item._popState"
-              [class.selected]="selectedTx?.id === item.id"
+              [class.selected]="selectedTx?.id === item.id || selectedTxIds().has(item.id!)"
+              [class.multi-selected]="selectedTxIds().has(item.id!)"
               [class.upcoming]="item._isUpcoming"
               [class.deleted]="item._isDeleted"
               [class.opacity-50]="item.syncStatus === 'pending'"
@@ -430,6 +447,12 @@
                 <div class="transaction-icon">
                   <div class="icon-container" [style.background-color]="item._categoryBgColor"
                     [style.color]="item._categoryColor">
+                    
+                    @if (selectedTxIds().has(item.id!)) {
+                      <div class="selection-indicator">
+                        <mat-icon>check</mat-icon>
+                      </div>
+                    }
 
                     @if(isFamilyMode() && isSplitMode() && item.splitData) {
                       <div class="member-pic-stack">

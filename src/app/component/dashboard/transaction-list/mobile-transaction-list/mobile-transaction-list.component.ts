@@ -164,6 +164,8 @@ export class MobileTransactionListComponent
 
   selectedTx: Transaction | null = null;
   selectedTxForActions = signal<Transaction | null>(null);
+  selectedTxIds = signal<Set<string>>(new Set());
+  isSelectionMode = computed(() => this.selectedTxIds().size > 0);
   showFilters: boolean = false;
 
   // Signals defined below...
@@ -330,10 +332,11 @@ export class MobileTransactionListComponent
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
-    if (this.selectedTxForActions()) {
+    if (this.selectedTxForActions() || this.isSelectionMode()) {
       const target = event.target as HTMLElement;
-      if (!target.closest('.transaction-card')) {
+      if (!target.closest('.transaction-card') && !target.closest('.selection-toolbar')) {
         this.selectedTxForActions.set(null);
+        this.clearSelection();
       }
     }
 
@@ -587,6 +590,7 @@ export class MobileTransactionListComponent
 
   onSearchChange(term: string) {
     this.filterService.setSearchTerm(term);
+    this.clearSelection();
   }
 
   onSortChange(sortValue: string) {
@@ -675,6 +679,12 @@ export class MobileTransactionListComponent
 
   onTransactionClick(transaction: Transaction, element: HTMLElement) {
     if (this.isLongPressing) return;
+    
+    if (this.isSelectionMode()) {
+      this.toggleSelection(transaction);
+      return;
+    }
+
     if (this.selectedTxForActions()) {
       this.selectedTxForActions.set(null);
       return;
@@ -692,13 +702,43 @@ export class MobileTransactionListComponent
     }
   }
 
+  toggleSelection(transaction: Transaction) {
+    if (transaction.id?.startsWith('upcoming-') || (transaction as any)._isDeleted) return;
+    
+    const id = transaction.id;
+    if (!id) return;
+
+    const current = new Set(this.selectedTxIds());
+    if (current.has(id)) {
+      current.delete(id);
+    } else {
+      current.add(id);
+    }
+    this.selectedTxIds.set(current);
+    
+    if (current.size === 0) {
+      this.isLongPressing = false;
+    }
+  }
+
+  clearSelection() {
+    this.selectedTxIds.set(new Set());
+  }
+
+  selectAll() {
+    const allIds = this.flattenedTransactions()
+      .filter(tx => tx.id && !tx.id.startsWith('upcoming-') && !(tx as any)._isDeleted)
+      .map(tx => tx.id!);
+    this.selectedTxIds.set(new Set(allIds));
+  }
+
   onLongPressStart(transaction: Transaction) {
     if (transaction.id?.startsWith('upcoming-') || (transaction as any)._isDeleted) return;
 
     this.isLongPressing = false;
     this.longPressTimeout = setTimeout(() => {
       this.isLongPressing = true;
-      this.selectedTxForActions.set(transaction);
+      this.toggleSelection(transaction);
       this.selectedTx = null; // Close expansion if open
     }, this.LONG_PRESS_DURATION);
   }
@@ -744,6 +784,28 @@ export class MobileTransactionListComponent
           this.deleteTransaction.emit(transaction);
         }
       });
+  }
+
+  onDeleteSelectedTransactions() {
+    const selectedIds = this.selectedTxIds();
+    if (selectedIds.size === 0) return;
+
+    const transactionsToDelete = this.flattenedTransactions().filter(tx => tx.id && selectedIds.has(tx.id));
+    
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '300px',
+      data: {
+        title: 'Delete Transactions',
+        message: `Are you sure you want to delete ${selectedIds.size} selected transactions?`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      }
+    }).afterClosed().subscribe(result => {
+      if (result) {
+        transactionsToDelete.forEach(tx => this.deleteTransaction.emit(tx));
+        this.clearSelection();
+      }
+    });
   }
 
   onConfirmRecurring(tx: Transaction) {

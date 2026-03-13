@@ -1556,6 +1556,92 @@
   }
 }
 
+// Selection Toolbar
+.selection-toolbar {
+  background: var(--primary-600);
+  padding: 8px 16px;
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+  color: white;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  animation: slideDown 0.2s ease-out;
+
+  .toolbar-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 16px;
+  }
+
+  .close-selection-btn {
+    color: white;
+  }
+
+  .selection-count {
+    font-size: 18px;
+    font-weight: 600;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .spacer {
+    flex: 1;
+  }
+
+  .delete-selected-btn {
+    color: white;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  button {
+    color: white !important;
+  }
+}
+
+// Selection Indicator on Card Icon
+.selection-indicator {
+  position: absolute;
+  inset: 0;
+  background: var(--primary-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  animation: scaleIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  mat-icon {
+    color: white !important;
+    font-size: 24px !important;
+    width: 24px !important;
+    height: 24px !important;
+  }
+}
+
+.transaction-card.multi-selected {
+  background: var(--primary-alpha-10) !important;
+  border-color: var(--primary-300) !important;
+  
+  &::before {
+    opacity: 1 !important;
+    background: var(--primary-500) !important;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 // Animations
 @keyframes slideDown {
   from {
@@ -1599,7 +1685,7 @@
   font-size: 27px;
   top: -28px !important;
   left: -24px !important;
-  color: #059669;
+  color: #5e7bb7;
 }
 
 .category-splits-list {
