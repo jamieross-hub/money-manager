@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 import { RouterModule } from '@angular/router';
 import { ChatComponent } from '../chat/chat.component';
@@ -9,7 +9,6 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { UserService } from 'src/app/util/service/db/user.service';
 
 import { MobileAddTransactionComponent } from '../transaction-list/add-transaction/mobile-add-transaction/mobile-add-transaction.component';
-import { GroupSelectionComponent } from 'src/app/modules/family/pages/group-selection/group-selection.component';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import * as fromProfile from 'src/app/store/profile/profile.selectors';
@@ -23,7 +22,7 @@ import { FamilyService } from 'src/app/modules/family/services/family.service';
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
   standalone: true,
-  imports: [RouterModule, ChatComponent, GroupSelectionComponent],
+  imports: [RouterModule, ChatComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HomeComponent {
@@ -179,14 +178,6 @@ export class HomeComponent {
         panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
       });
     }
-
-    effect(() => {
-      const isFamily = this.isFamilyMode();
-      const activeId = this.familyService.activeFamilyId();
-      if (isFamily && activeId) {
-        this.router.navigate([`/dashboard/family/dashboard/${activeId}`]);
-      }
-    });
   }
 
 

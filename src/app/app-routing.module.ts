@@ -4,6 +4,7 @@ import { SignInComponent } from './component/auth/sign-in/sign-in.component';
 import { RegistrationComponent } from './component/auth/registration/registration.component';
 import { DashboardComponent } from './component/dashboard/dashboard.component';
 import { authGuard } from './util/guard/auth.guard';
+import { familyModeGuard } from './util/guard/family-mode.guard';
 import { HomeComponent } from './component/dashboard/home/home.component';
 import { LandingComponent } from './component/landing/landing.component';
 import { NotificationSettingsComponent } from './util/components/notification-settings/notification-settings.component';
@@ -40,9 +41,19 @@ export const routes: Routes = [
     },
 
     children: [
-      { path: '', component: HomeComponent, title: 'Home' },
+      { 
+        path: '', 
+        component: HomeComponent, 
+        title: 'Home',
+        canActivate: [familyModeGuard]
+      },
       { path: 'sync-to-cloud', component: SyncToCloudComponent, title: 'Sync to Cloud' },
-      { path: 'home', component: HomeComponent, title: 'Home' },
+      { 
+        path: 'home', 
+        component: HomeComponent, 
+        title: 'Home',
+        canActivate: [familyModeGuard]
+      },
       {
         path: 'accounts',
         loadComponent: () => import('./component/dashboard/accounts/accounts.component').then(m => m.AccountsComponent),

@@ -80,6 +80,14 @@ export class FamilyService implements OnDestroy {
     private dialog: MatDialog,
     private injector: Injector
   ) {
+    // Synchronously initialize from storage if it's already hot (via APP_INITIALIZER)
+    if (this.storageService.isReady) {
+      const storedId = this.getInitialActiveFamilyId();
+      if (storedId) {
+        this.activeFamilyId.set(storedId);
+      }
+    }
+    
     this.syncActiveFamilyWithProfile();
   }
 
