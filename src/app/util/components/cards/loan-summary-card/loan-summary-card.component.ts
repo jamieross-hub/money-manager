@@ -99,16 +99,12 @@ export class LoanSummaryCardComponent {
       const paid = details.totalPaid ?? (loanAmount - remaining);
       const monthly = details.monthlyPayment || this._calcMonthly(loan);
       
-      const start = dayjs(this._toDate(details.startDate)).startOf('day');
+      const start = dayjs(this._toDate(details.startDate)).startOf('month');
       const duration = Number(details.durationMonths) || 0;
       const endDate = start.add(duration, 'month');
-      
-      let elapsed = 0;
-      let paymentDate = start;
-      while (paymentDate.isBefore(now)) {
-        elapsed++;
-        paymentDate = paymentDate.add(1, 'month');
-      }
+
+      // O(1) — replaces the old O(months_elapsed) while-loop
+      const elapsed = Math.max(0, Math.floor(now.diff(start, 'month')));
       const moLeft = Math.max(0, duration - elapsed);
 
       // Aggregates

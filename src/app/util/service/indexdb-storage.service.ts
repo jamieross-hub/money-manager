@@ -236,8 +236,10 @@ export class LocalIndexDBStorageService {
 
     /**
      * Get an item (Sync API, Read from Cache)
+     * @param clone - Set false to skip structuredClone for hot-path reads where
+     *   the caller treats the value as read-only (e.g. dispatching into NgRx).
      */
-    getItem<T>(key: string, storeName: string = this.STORE_NAME): T | null {
+    getItem<T>(key: string, storeName: string = this.STORE_NAME, clone = true): T | null {
         const cache = storeName === this.TRANSACTIONS_STORE ? this.transactionsCache : this.keyValueCache;
         const value = cache.get(key);
 
@@ -245,8 +247,10 @@ export class LocalIndexDBStorageService {
             return null;
         }
 
-        // Deep copy to prevent reference mutation issues
-        return structuredClone(value) as T;
+        // Deep copy prevents external mutation of the cached object.
+        // Pass clone=false for read-only callers (e.g. dispatch into NgRx store)
+        // to avoid the structuredClone overhead on hot paths.
+        return clone ? structuredClone(value) as T : value as T;
     }
 
     /**

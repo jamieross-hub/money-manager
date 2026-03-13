@@ -1,12 +1,22 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { CategoriesState } from './categories.state';
 import { TransactionType } from 'src/app/util/config/enums';
+import { Category } from '../../util/models/category.model';
 
 export const selectCategoriesState = createFeatureSelector<CategoriesState>('categories');
 
-export const selectAllCategories = createSelector(
+/** Active bucket (personal or family, driven by activeContext) */
+export const selectCategoriesActiveBucket = createSelector(
   selectCategoriesState,
-  (state) => state.ids.map(id => state.entities[id]).filter(category => category)
+  (state) => state[state.activeContext]
+);
+
+export const selectAllCategories = createSelector(
+  selectCategoriesActiveBucket,
+  (bucket): Category[] =>
+    bucket.ids
+      .map(id => bucket.entities[id])
+      .filter((c): c is Category => !!c)
 );
 
 export const selectCategoriesLoading = createSelector(
@@ -20,8 +30,8 @@ export const selectCategoriesError = createSelector(
 );
 
 export const selectCategoryById = (categoryId: string) => createSelector(
-  selectCategoriesState,
-  (state) => state.entities[categoryId]
+  selectCategoriesActiveBucket,
+  (bucket) => bucket.entities[categoryId]
 );
 
 export const selectCategoriesByType = (type: TransactionType) => createSelector(
@@ -42,4 +52,4 @@ export const selectExpenseCategories = createSelector(
 export const selectCategoryByName = (name: string) => createSelector(
   selectAllCategories,
   (categories) => categories.find(c => c.name.toLowerCase() === name.toLowerCase())
-); 
+);

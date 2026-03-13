@@ -547,41 +547,101 @@ export class TransactionsService extends BaseService {
         const effectiveFamilyId = familyId || (isFamilyMode ? this.getFamilyId() : undefined);
 
         return new Observable<void>(observer => {
+            // Track whether this is the first snapshot emission (full load) vs. incremental.
+            let isFirstSnapshot = true;
+
             const unsubscribe = onSnapshot(transactionsRef,
                 (querySnapshot) => {
-                    const firestoreTransactions: Transaction[] = [];
-                    querySnapshot.forEach((docSnap) => {
-                        const data = docSnap.data();
-                        if (data && (data['amount'] !== undefined || docSnap.id)) {
-                            const tx = { id: docSnap.id, ...data } as Transaction;
-                            // Inject familyId to ensure indexing works correctly in IndexedDB
-                            if (effectiveFamilyId && !tx.familyId) {
-                                tx.familyId = effectiveFamilyId;
+                    if (isFirstSnapshot) {
+                        // ── FULL LOAD (first emission) ─────────────────────────────────────
+                        // On the initial snapshot we must reconcile all Firestore docs with
+                        // local pending items, just like pullFromFirestore does.
+                        isFirstSnapshot = false;
+
+                        const firestoreTransactions: Transaction[] = [];
+                        querySnapshot.forEach((docSnap) => {
+                            const data = docSnap.data();
+                            if (data && (data['amount'] !== undefined || docSnap.id)) {
+                                const tx = { id: docSnap.id, ...data } as Transaction;
+                                if (effectiveFamilyId && !tx.familyId) {
+                                    tx.familyId = effectiveFamilyId;
+                                }
+                                firestoreTransactions.push(tx);
                             }
-                            firestoreTransactions.push(tx);
+                        });
+
+                        console.log(`[TransactionsService] Real-time update (initial): ${firestoreTransactions.length} transactions`);
+
+                        // Merge with local pending transactions to protect offline writes.
+                        const localTransactions = this.getCachedTransactions(userId, familyId);
+                        const merged = this.mergeFirestoreAndLocal(firestoreTransactions, localTransactions);
+
+                        // Persist merged list to IndexedDB.
+                        merged.forEach(tx => this.updateTransactionCache(userId, 'update', tx));
+
+                        // Re-read sorted list from IndexedDB (Source of Truth).
+                        const updatedFromCache = this.getCachedTransactions(userId, familyId);
+
+                        this.transactionsSubject.next(updatedFromCache);
+                        if (effectiveFamilyId) {
+                            this.store.dispatch(FamilyActions.loadTransactionsSuccess({ transactions: updatedFromCache }));
+                        } else {
+                            this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: updatedFromCache }));
+                        }
+
+                        observer.next();
+                        return;
+                    }
+
+                    // ── INCREMENTAL UPDATE (subsequent emissions) ──────────────────────────
+                    // Only process the documents that actually changed (added/modified/removed).
+                    // This avoids re-writing all 397+ documents on every tiny update.
+                    const changes = querySnapshot.docChanges();
+                    if (changes.length === 0) {
+                        observer.next();
+                        return;
+                    }
+
+                    console.log(`[TransactionsService] Real-time incremental update: ${changes.length} change(s)`);
+
+                    // Build a mutable map from the current in-memory list for O(1) patching.
+                    const current = this.transactionsSubject.getValue();
+                    const txMap = new Map<string, Transaction>(current.map(t => [t.id!, t]));
+
+                    changes.forEach((change) => {
+                        const docSnap = change.doc;
+                        if (change.type === 'removed') {
+                            // Remove from map and IndexedDB cache.
+                            txMap.delete(docSnap.id);
+                            const itemKey = LocalStorageKeyHelper.getTransactionItemKey(docSnap.id, effectiveFamilyId);
+                            this.localStorageUtility.removeTransaction(itemKey);
+                        } else {
+                            // 'added' or 'modified'
+                            const data = docSnap.data();
+                            if (data && (data['amount'] !== undefined || docSnap.id)) {
+                                const tx = { id: docSnap.id, ...data } as Transaction;
+                                if (effectiveFamilyId && !tx.familyId) {
+                                    tx.familyId = effectiveFamilyId;
+                                }
+
+                                // Only overwrite if the local copy is not a still-pending write.
+                                const existing = txMap.get(tx.id!);
+                                const isLocalPending = existing?.syncStatus === 'pending';
+                                if (!isLocalPending) {
+                                    txMap.set(tx.id!, tx);
+                                    this.updateTransactionCache(userId, 'update', tx);
+                                }
+                            }
                         }
                     });
 
-                    console.log(`[TransactionsService] Real-time update: ${firestoreTransactions.length} transactions`);
-
-                    // ── Same merge logic as pullFromFirestore.
-                    // onSnapshot fires when coming back online and may not yet contain
-                    // transactions that were pushed by the sync queue in the same moment.
-                    const localTransactions = this.getCachedTransactions(userId, familyId);
-                    const merged = this.mergeFirestoreAndLocal(firestoreTransactions, localTransactions);
-
-                    // 1. Update cache with individual objects
-                    merged.forEach(tx => this.updateTransactionCache(userId, 'update', tx));
-
-                    // 2. Re-read from IndexedDB cache (Source of Truth)
-                    const updatedFromCache = this.getCachedTransactions(userId, familyId);
-
-                    // 3. Update subject and NgRx state
-                    this.transactionsSubject.next(updatedFromCache);
+                    // Produce sorted array and push to store — no full IndexedDB re-read needed.
+                    const updatedList = this.sortTransactions(Array.from(txMap.values()));
+                    this.transactionsSubject.next(updatedList);
                     if (effectiveFamilyId) {
-                        this.store.dispatch(FamilyActions.loadTransactionsSuccess({ transactions: updatedFromCache }));
+                        this.store.dispatch(FamilyActions.loadTransactionsSuccess({ transactions: updatedList }));
                     } else {
-                        this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: updatedFromCache }));
+                        this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: updatedList }));
                     }
 
                     observer.next();

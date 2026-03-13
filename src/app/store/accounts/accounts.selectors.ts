@@ -1,42 +1,62 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { AccountsState } from './accounts.state';
 import { AccountType, TransactionType } from 'src/app/util/config/enums';
-import { LoanDetails } from 'src/app/util/models';
+import { Account } from 'src/app/util/models/account.model';
 import * as TransactionsSelectors from '../transactions/transactions.selectors';
 
 export const selectAccountsState = createFeatureSelector<AccountsState>('accounts');
 
-export const selectAllAccountsRaw = createSelector(
+/** Active context (personal | family) */
+export const selectActiveContext = createSelector(
   selectAccountsState,
-  (state) => {
-    // Only emit if there are actual accounts loaded
-    if (!state.ids || state.ids.length === 0) {
-      return [];
-    }
-    return state.ids.map(id => state.entities[id]).filter(account => account);
+  (state) => state.activeContext
+);
+
+/** Active bucket (the personal or family entity map, depending on mode) */
+export const selectActiveBucket = createSelector(
+  selectAccountsState,
+  (state) => state[state.activeContext]
+);
+
+export const selectAllAccountsRaw = createSelector(
+  selectActiveBucket,
+  (bucket): Account[] => {
+    if (!bucket.ids || bucket.ids.length === 0) return [];
+    return bucket.ids
+      .map(id => bucket.entities[id])
+      .filter((a): a is Account => !!a);
   }
 );
 
 /**
- * Enhanced selector that returns all accounts with derived loan logic applied.
- * This is the primary selector used by most components.
+ * Memoized loan impact map: accountId → net balance impact from all completed transactions.
+ * Split from selectAllAccounts so the O(N) transaction scan is only re-run when
+ * transactions actually change — NOT on every account update (e.g. mode switch).
  */
-export const selectAllAccounts = createSelector(
-  selectAllAccountsRaw,
+export const selectLoanImpactMap = createSelector(
   TransactionsSelectors.selectAllTransactions,
-  (accounts, allTransactions) => {
-    // Optimization: Group transaction impacts by accountId first to avoid O(N*M) complexity
+  (allTransactions): Map<string, number> => {
     const loanImpacts = new Map<string, number>();
-    
     allTransactions.forEach(t => {
       if (t.isPending || t.status === 'pending' || !t.accountId) return;
-      
       const current = loanImpacts.get(t.accountId) || 0;
       const amount = Number(t.amount) || 0;
       const impact = t.type === TransactionType.INCOME ? amount : -amount;
       loanImpacts.set(t.accountId, current + impact);
     });
+    return loanImpacts;
+  }
+);
 
+/**
+ * Enhanced selector that returns all accounts with derived loan logic applied.
+ * Uses the memoized selectLoanImpactMap — the transaction scan is NOT repeated
+ * when only accounts change (e.g. after a mode switch).
+ */
+export const selectAllAccounts = createSelector(
+  selectAllAccountsRaw,
+  selectLoanImpactMap,
+  (accounts, loanImpacts): Account[] => {
     return accounts.map(account => {
       if (account.type !== AccountType.LOAN || !account.loanDetails) {
         return account;
@@ -44,8 +64,6 @@ export const selectAllAccounts = createSelector(
 
       const loanAmount = account.loanDetails.loanAmount || 0;
       const netImpact = loanImpacts.get(account.accountId) || 0;
-      // Loan amount is money owed (liability) so it starts as negative.
-      // Payments are expenses → netImpact is negative → they reduce the debt (bring it toward 0).
       const derivedBalance = -loanAmount - netImpact;
       const remainingBalance = Math.abs(derivedBalance);
 
@@ -61,7 +79,6 @@ export const selectAllAccounts = createSelector(
     });
   }
 );
-
 
 export const selectAccountsLoading = createSelector(
   selectAccountsState,
@@ -79,78 +96,65 @@ export const selectSelectedAccountId = createSelector(
 );
 
 export const selectSelectedAccount = createSelector(
-  selectAccountsState,
+  selectActiveBucket,
   selectSelectedAccountId,
-  (state, selectedId) => selectedId ? state.entities[selectedId] : null
+  (bucket, selectedId) => selectedId ? bucket.entities[selectedId] : null
 );
 
 export const selectAccountById = (accountId: string) => createSelector(
-  selectAccountsState,
-  (state) => state.entities[accountId]
+  selectActiveBucket,
+  (bucket) => bucket.entities[accountId]
 );
 
 export const selectAccountsByType = (type: 'bank' | 'cash' | 'credit' | 'loan') => createSelector(
   selectAllAccounts,
-  (accounts) => accounts?.filter(a => a.type === type) || []
+  (accounts) => accounts.filter(a => a.type === type)
 );
 
 export const selectActiveAccounts = createSelector(
   selectAllAccounts,
-  (accounts) => accounts?.filter(a => a.isActive !== false) || []
+  (accounts) => accounts.filter(a => a.isActive !== false)
 );
 
 export const selectTotalBalance = createSelector(
   selectAllAccounts,
-  (accounts) => {
-    if (!accounts) return 0;
-    return accounts.reduce((sum, account) => sum + (Number(account.balance) || 0), 0);
-  }
+  (accounts) => accounts.reduce((sum, account) => sum + (Number(account.balance) || 0), 0)
 );
 
 export const selectTotalBalanceByType = (type: AccountType) => createSelector(
   selectAllAccounts,
-  (accounts) => {
-    if (!accounts) return 0;
-    const filteredAccounts = accounts.filter(a => a.type === type);
-    return filteredAccounts.reduce((sum, account) => sum + (Number(account.balance) || 0), 0);
-  }
+  (accounts) => accounts
+    .filter(a => a.type === type)
+    .reduce((sum, account) => sum + (Number(account.balance) || 0), 0)
 );
 
 export const selectTotalAssets = createSelector(
   selectAllAccounts,
-  (accounts) => accounts
-    // Include all accounts except LOAN. 
-    // For CREDIT, only include if balance is positive (asset/overpayment).
-    // For others (BANK, CASH, INVESTMENT), assume positive/negative reflects net worth directly (including negative bank balance as "debt" but technically it reduces asset total here or should move to liability? 
-    // Standard approach: Sum of all positive asset-type accounts + positive credit accounts.
-    ?.reduce((sum, account) => {
-      if (account.type === AccountType.LOAN) return sum;
-      if (account.type === AccountType.CREDIT) {
-        return sum + (account.balance > 0 ? account.balance : 0);
-      }
-      return sum + account.balance;
-    }, 0) || 0
+  (accounts) => accounts.reduce((sum, account) => {
+    if (account.type === AccountType.LOAN) return sum;
+    if (account.type === AccountType.CREDIT) {
+      return sum + (account.balance > 0 ? account.balance : 0);
+    }
+    return sum + account.balance;
+  }, 0)
 );
 
 export const selectTotalLiabilities = createSelector(
   selectAllAccounts,
-  (accounts) => accounts
-    ?.reduce((sum, account) => {
-      if (account.type === AccountType.LOAN || account.type === AccountType.CREDIT) {
-        const balance = Number(account.balance) || 0;
-        // Liability is the absolute value of the negative balance.
-        return sum + (balance < 0 ? Math.abs(balance) : 0);
-      }
-      return sum;
-    }, 0) || 0
+  (accounts) => accounts.reduce((sum, account) => {
+    if (account.type === AccountType.LOAN || account.type === AccountType.CREDIT) {
+      const balance = Number(account.balance) || 0;
+      return sum + (balance < 0 ? Math.abs(balance) : 0);
+    }
+    return sum;
+  }, 0)
 );
 
 export const selectAccountsByInstitution = (institution: string) => createSelector(
   selectAllAccounts,
-  (accounts) => accounts?.filter(a => a.institution === institution) || []
+  (accounts) => accounts.filter(a => a.institution === institution)
 );
 
-// Derived Loan Selectors
 export const selectLoanWithDerivedDetails = (accountId: string) => createSelector(
   selectAllAccounts,
   (accounts) => accounts.find(a => a.accountId === accountId)

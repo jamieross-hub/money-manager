@@ -91,13 +91,11 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
     }
 
     ngAfterViewInit(): void {
-        this.browserOnly(() => {
-            // Small timeout to ensure DOM is ready
-            setTimeout(() => {
-                // this.initChart();
-                this.subscribeToData();
-            }, 100);
-        });
+        // Intentionally empty — data is driven reactively via the
+        // constructor effect() + updateData(). The old subscribeToData()
+        // call was removed because it opened a permanent hot combineLatest
+        // subscription that re-ran processTransactions() on every store update
+        // (doubling the work already done by the effect-triggered updateData).
     }
 
     ngOnDestroy(): void {
@@ -140,17 +138,6 @@ export class MonthlyExpenditureCardComponent implements OnInit, OnDestroy, After
 
 
 
-    private subscribeToData() {
-        this.subscription.add(
-            combineLatest([
-                this.store.select(TransactionsSelectors.selectAllTransactions),
-                this.store.select(CategoriesSelectors.selectAllCategories)
-            ]).subscribe(([transactions, categories]) => {
-                const data = this.processTransactions(transactions, categories);
-                this.updateChart(data);
-            })
-        );
-    }
 
     private updateData() {
         this.subscription.add(

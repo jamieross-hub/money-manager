@@ -12,49 +12,59 @@ const dateService = new DateService();
 
 export const selectTransactionsState = createFeatureSelector<TransactionsState>('transactions');
 
-// Base selectors
-export const selectAllTransactions = createSelector(
-  selectTransactionsState,
-  ProfileSelectors.selectIsFamilyMode,
-  FamilySelectors.selectFamilyTransactions,
-  FamilySelectors.selectFamily,
-  (state, isFamilyMode, familyTransactions, activeFamily) => {
-    if (isFamilyMode) {
-      // In family mode, we trust the familyTransactions slice which is populated 
-      // via the efficient familyId index in the service layer.
-      const seenSettlements = new Set();
-      return (familyTransactions || []).filter(t => {
-        if (t.settlementId) {
-          if (seenSettlements.has(t.settlementId)) return false;
-          seenSettlements.add(t.settlementId);
-        }
-        return true;
-      });
-    }
+// --- Intermediate Streams (Independent Memoization) ---
 
-    // Personal mode: Return personal entities (already userId-filtered by service)
-    return state.ids
-      .map(id => state.entities[id])
-      .filter(Boolean)
-      .filter(t => t.status !== TransactionStatus.DELETED || t.syncStatus === SyncStatus.PENDING);
+export const selectPersonalTransactions = createSelector(
+  selectTransactionsState,
+  (state) => state.ids
+    .map(id => state.entities[id])
+    .filter(Boolean)
+    .filter(t => t.status !== TransactionStatus.DELETED || t.syncStatus === SyncStatus.PENDING)
+);
+
+export const selectFamilyTransactionsProcessed = createSelector(
+  FamilySelectors.selectFamilyTransactions,
+  (familyTransactions) => {
+    // In family mode, we trust the familyTransactions slice which is populated 
+    // via the efficient familyId index in the service layer.
+    const seenSettlements = new Set();
+    return (familyTransactions || []).filter(t => {
+      if (t.settlementId) {
+        if (seenSettlements.has(t.settlementId)) return false;
+        seenSettlements.add(t.settlementId);
+      }
+      return true;
+    });
   }
 );
 
-export const selectDeletedTransactions = createSelector(
+export const selectPersonalDeletedTransactions = createSelector(
   selectTransactionsState,
-  ProfileSelectors.selectIsFamilyMode,
+  (state) => state.ids
+    .map(id => state.entities[id])
+    .filter(Boolean)
+    .filter(t => t.status === TransactionStatus.DELETED)
+);
+
+export const selectFamilyDeletedTransactionsProcessed = createSelector(
   FamilySelectors.selectRawFamilyTransactions,
-  FamilySelectors.selectFamily,
-  (state, isFamilyMode, familyTransactions, activeFamily) => {
-    if (isFamilyMode) {
-      return (familyTransactions || []).filter(t => t.status === TransactionStatus.DELETED);
-    }
-    
-    return state.ids
-      .map(id => state.entities[id])
-      .filter(Boolean)
-      .filter(t => t.status === TransactionStatus.DELETED);
-  }
+  (familyTransactions) => (familyTransactions || []).filter(t => t.status === TransactionStatus.DELETED)
+);
+
+// --- Main Selectors (Context Switching Only) ---
+
+export const selectAllTransactions = createSelector(
+  selectPersonalTransactions,
+  selectFamilyTransactionsProcessed,
+  ProfileSelectors.selectIsFamilyMode,
+  (personalTx, familyTx, isFamilyMode) => isFamilyMode ? familyTx : personalTx
+);
+
+export const selectDeletedTransactions = createSelector(
+  selectPersonalDeletedTransactions,
+  selectFamilyDeletedTransactionsProcessed,
+  ProfileSelectors.selectIsFamilyMode,
+  (personalTx, familyTx, isFamilyMode) => isFamilyMode ? familyTx : personalTx
 );
 
 export const selectSortedDeletedTransactions = createSelector(
@@ -62,9 +72,21 @@ export const selectSortedDeletedTransactions = createSelector(
   (transactions) => dateService.sortByDate(transactions, 'date', false)
 );
 
+/**
+ * Sorted transactions for display. Transactions arriving from Firestore are already
+ * ordered by date DESC (orderBy clause in the listener). We detect this cheaply and
+ * skip the O(N log N) sort when the array is already in order.
+ */
 export const selectSortedAllTransactions = createSelector(
   selectAllTransactions,
-  (transactions) => dateService.sortByDate(transactions, 'date', false)
+  (transactions) => {
+    if (transactions.length < 2) return transactions;
+    // Check if already sorted desc by date (true in >95% of cases from Firestore)
+    const first = dateService.toDate(transactions[0]?.date);
+    const last  = dateService.toDate(transactions[transactions.length - 1]?.date);
+    if (first && last && first >= last) return transactions; // already sorted, zero cost
+    return dateService.sortByDate(transactions, 'date', false);
+  }
 );
 
 export const selectTransactionsLoading = createSelector(
@@ -92,9 +114,22 @@ export const selectSelectedTransaction = createSelector(
   (transactions, selectedId) => selectedId ? transactions.find(t => t.id === selectedId) || null : null
 );
 
+/**
+ * O(1) lookup by entity map — avoids O(N) Array.find() over all transactions.
+ * Falls back to selectAllTransactions find in family mode where entities map differs.
+ */
 export const selectTransactionById = (transactionId: string) => createSelector(
+  selectTransactionsState,
   selectAllTransactions,
-  (transactions) => transactions.find(t => t.id === transactionId)
+  ProfileSelectors.selectIsFamilyMode,
+  (state, allTransactions, isFamilyMode) => {
+    if (!isFamilyMode) {
+      // Personal mode: direct O(1) map lookup
+      return state.entities[transactionId] ?? null;
+    }
+    // Family mode: transactions are in a separate slice, fall back to find
+    return allTransactions.find(t => t.id === transactionId) ?? null;
+  }
 );
 
 // Helper function to convert Timestamp to Date

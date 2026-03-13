@@ -47,6 +47,19 @@ export class TransactionProcessorService {
 
   private debounceTimer: any;
 
+  /**
+   * WeakMap cache: Transaction object reference → enriched view-model.
+   * Unchanged tx refs (from our incremental onSnapshot fix) get zero-cost cache hits,
+   * eliminating ~390 redundant dayjs.format() calls per incremental update.
+   */
+  private txViewCache = new WeakMap<object, any>();
+
+  /** Memoised category/account maps — rebuilt only when array reference changes. */
+  private _lastCategories: Category[] = [];
+  private _lastAccounts: Account[] = [];
+  private _categoryMap = new Map<string, any>();
+  private _accountMap = new Map<string, any>();
+
   process(data: {
     transactions: Transaction[];
     recurringTemplates: RecurringTemplate[];
@@ -64,16 +77,27 @@ export class TransactionProcessorService {
     familyId?: string;
   }) {
     if (this.debounceTimer) {
+      cancelAnimationFrame(this.debounceTimer);
       clearTimeout(this.debounceTimer);
     }
-    
+
     this._isProcessing.set(true);
-    this.debounceTimer = setTimeout(() => {
+
+    // Use requestIdleCallback so heavy processing runs during browser idle time
+    // rather than blocking the render pipeline. Falls back to setTimeout on
+    // browsers that don't support rIC (e.g. Firefox < 55, Safari < 16).
+    const run = () => {
       const result = this.executeLogic(data);
       this._output.set(result);
       this._isProcessing.set(false);
       this.debounceTimer = null;
-    }, 50);
+    };
+
+    if (typeof requestIdleCallback !== 'undefined') {
+      this.debounceTimer = requestIdleCallback(run, { timeout: 150 });
+    } else {
+      this.debounceTimer = setTimeout(run, 150);
+    }
   }
 
   private executeLogic(data: any): ProcessorOutput {
@@ -96,16 +120,28 @@ export class TransactionProcessorService {
       return { filteredTransactions: [], flattenedTransactions: [], groupedTransactions: [], totalIncome: 0, totalExpenses: 0, filteredCount: 0 };
     }
 
-    // 1. Helper: Map creation
-    const categoryMap = new Map();
-    categories.forEach((cat: any) => {
-      if (cat.id) categoryMap.set(cat.id, cat);
-    });
-
-    const accountMap = new Map();
-    accounts.forEach((acc: any) => {
-      accountMap.set(acc.accountId, acc);
-    });
+    // 1. Helper: Map creation — memoised by array reference so we only iterate
+    // categories/accounts when they actually change (rare vs. transaction updates).
+    if (categories !== this._lastCategories) {
+      this._categoryMap = new Map();
+      categories.forEach((cat: any) => {
+        if (cat.id) this._categoryMap.set(cat.id, cat);
+      });
+      this._lastCategories = categories;
+      // Invalidate tx view cache when category data changes (colors/icons may differ)
+      this.txViewCache = new WeakMap();
+    }
+    if (accounts !== this._lastAccounts) {
+      this._accountMap = new Map();
+      accounts.forEach((acc: any) => {
+        this._accountMap.set(acc.accountId, acc);
+      });
+      this._lastAccounts = accounts;
+      // Invalidate tx view cache when account data changes
+      this.txViewCache = new WeakMap();
+    }
+    const categoryMap = this._categoryMap;
+    const accountMap = this._accountMap;
 
     // 2. Helper: Date conversion
     const toDate = (val: any): Date | null => {
@@ -152,36 +188,45 @@ export class TransactionProcessorService {
       }
     };
 
-    const generateUpcomingTransactions = (recurringTransactions: any[], startDate: Date, endDate: Date, allTxs: any[]): any[] => {
-      const upcoming: any[] = [];
-      
-      const existMap = new Map<string, Date[]>();
+    /**
+     * Build the existMap once — shared between both generateUpcomingTransactions
+     * calls below (upcoming range AND due-soon merge). Previously it was rebuilt
+     * inside the function on every call, scanning all transactions twice.
+     */
+    const buildExistMap = (allTxs: any[]): Map<string, Date[]> => {
+      const map = new Map<string, Date[]>();
       allTxs.forEach(t => {
         if (t.id?.startsWith('upcoming-') || (t.id === t.templateId && t.isPending)) return;
-        
         const key = `${t.categoryId}|${t.amount}|${t.accountId}|${t.type}`;
         const tDate = toDate(t.date);
         if (!tDate) return;
-        
-        if (!existMap.has(key)) existMap.set(key, []);
-        existMap.get(key)!.push(tDate);
+        if (!map.has(key)) map.set(key, []);
+        map.get(key)!.push(tDate);
       });
+      return map;
+    };
+
+    // Pre-built once, reused in both upcoming and merge call sites
+    const sharedExistMap = buildExistMap(transactions);
+
+    const generateUpcomingTransactions = (recurringTransactions: any[], startDate: Date, endDate: Date, existMap: Map<string, Date[]>): any[] => {
+      const upcoming: any[] = [];
 
       recurringTransactions.forEach(rt => {
         if (!rt.nextOccurrence || !rt.isRecurring) return;
         let nextDate = toDate(rt.nextOccurrence);
         if (!nextDate) return;
-        
+
         const baseTransaction = { ...rt };
         const key = `${rt.categoryId}|${rt.amount}|${rt.accountId}|${rt.type}`;
         const relevantDates = existMap.get(key) || [];
-        
+
         let safetyCounter = 0;
         const MAX_ITERATIONS = 50;
 
         while (nextDate <= endDate && safetyCounter < MAX_ITERATIONS) {
           safetyCounter++;
-          
+
           const exists = relevantDates.some(txDate => isSamePeriod(txDate, nextDate as Date, rt.recurringInterval));
 
           if (exists) {
@@ -197,7 +242,7 @@ export class TransactionProcessorService {
             syncStatus: 'PENDING',
             isPending: true
           });
-          
+
           break;
         }
       });
@@ -214,7 +259,12 @@ export class TransactionProcessorService {
       if (appView === 'WEEKLY') endDate = dayjs().add(1, 'week').endOf('day').toDate();
       else if (appView === 'YEARLY') endDate = dayjs().add(1, 'year').endOf('day').toDate();
       else endDate = dayjs().add(1, 'month').endOf('day').toDate();
-      sourceData = generateUpcomingTransactions(templates.map((t: any) => ({ ...t, isRecurring: true })), startDate, endDate, transactions);
+      sourceData = generateUpcomingTransactions(
+        templates.map((t: any) => ({ ...t, isRecurring: true })),
+        startDate,
+        endDate,
+        sharedExistMap  // reuse pre-built map
+      );
     } else {
       if (isRecurringMode) {
         sourceData = recurringTemplates || [];
@@ -280,7 +330,12 @@ export class TransactionProcessorService {
     if (range !== 'upcoming' && range !== null && !isRecurringMode && !isDeletedMode) {
       const endOfCheck = dayjs().add(3, 'day').endOf('day').toDate();
       const templates = (recurringTemplates || []).map((t: any) => ({ ...t, isRecurring: true }));
-      const dueSoon = generateUpcomingTransactions(templates, dayjs().subtract(1, 'year').toDate(), endOfCheck, transactions);
+      const dueSoon = generateUpcomingTransactions(
+        templates,
+        dayjs().subtract(1, 'year').toDate(),
+        endOfCheck,
+        sharedExistMap  // reuse pre-built map — no second full scan
+      );
 
       const actualData = filtered.filter((t: any) => {
         if (t.isPending && t.isRecurring && !t.id?.startsWith('upcoming-')) {
@@ -356,6 +411,47 @@ export class TransactionProcessorService {
       const createdAt = tx.createdAt; 
       const createdAtDate = createdAt ? toDate(createdAt) : null;
 
+      // ── WeakMap cache for view-model enrichment ────────────────────────────
+      // If the transaction object reference hasn't changed (unchanged tx after
+      // our incremental onSnapshot fix), return the cached view immediately
+      // — skipping all dayjs.format() and string allocations.
+      const cached = this.txViewCache.get(tx);
+      if (cached) {
+        // Still need to recompute group key (depends on today/range context) but
+        // the expensive object creation is skipped.
+        const txView = cached;
+        let dateKey: string;
+        if (txView._isUpcoming && txView._isOverdue) {
+          dateKey = 'overdue';
+        } else if (txView._isUpcoming && range !== 'upcoming') {
+          dateKey = 'upcoming';
+        } else if ((range === 'this-year' || range === null) && !dayjs(toDate(tx.date)).isSame(today, 'day') && !dayjs(toDate(tx.date)).isSame(yesterday, 'day')) {
+          dateKey = dayjs(toDate(tx.date)).format('YYYY-MM');
+        } else {
+          dateKey = dayjs(toDate(tx.date)).format('YYYY-MM-DD');
+        }
+        if (isRecurringMode && txView._isUpcoming) return;
+        let group = groupsMap.get(dateKey);
+        if (!group) {
+          let header = dateHeaderCache.get(dateKey);
+          if (!header) {
+            const dObj = dayjs(toDate(tx.date));
+            if (dateKey === 'overdue') header = 'Overdue Recurring';
+            else if (dateKey === 'upcoming') header = 'Upcoming';
+            else if (dObj.isSame(today, 'day')) header = 'Today';
+            else if (dObj.isSame(yesterday, 'day')) header = 'Yesterday';
+            else if (range === 'this-year' || range === null) header = dObj.format('MMMM YYYY');
+            else if (isDateSort) header = dObj.format('dddd, DD MMM YYYY');
+            else header = dObj.format('DD MMM YYYY');
+            dateHeaderCache.set(dateKey, header);
+          }
+          group = { date: dateKey, dateHeader: header, transactions: [], isUpcomingGroup: txView._isUpcoming };
+          groupsMap.set(dateKey, group);
+        }
+        group.transactions.push(txView);
+        return;
+      }
+      // ── Full enrichment (only for new/changed transactions) ─────────────────
       const txView = {
         ...tx,
         _categoryColor: category?.color || '#46777f',
@@ -392,8 +488,11 @@ export class TransactionProcessorService {
         })(),
         _isOverdue: txDate ? dateObj.isBefore(today, 'day') : false,
         _isDeleted: tx.status === 'deleted',
-        _popState: (createdAtDate && createdAtDate.getTime() > sessionStartTime) ? 'new' : 'old'
+        _popState: (createdAtDate && createdAtDate.getTime() > sessionStartTime) ? 'new' : 'old',
+        _isHeader: false  // baked in here so flatten step pushes refs not copies
       };
+      // Store in cache for next run
+      this.txViewCache.set(tx, txView);
 
       let dateKey: string;
       if (txView._isUpcoming && txView._isOverdue) {
@@ -446,18 +545,16 @@ export class TransactionProcessorService {
     }
 
     // 8. Flatten for Virtual Scroll
+    // _isHeader is pre-set on each view-model so we push by reference, not copy.
     const flattened: any[] = [];
     finalGroups.forEach((group: any) => {
-      flattened.push({ 
-        _isHeader: true, 
+      flattened.push({
+        _isHeader: true,
         dateHeader: group.dateHeader,
-        id: `header-${group.date}` 
+        id: `header-${group.date}`
       });
       group.transactions.forEach((tx: any) => {
-        flattened.push({ 
-          ...tx,
-          _isHeader: false
-        });
+        flattened.push(tx);  // reference, no spread alloc
       });
     });
 
@@ -473,7 +570,11 @@ export class TransactionProcessorService {
 
   destroy() {
     if (this.debounceTimer) {
+      if (typeof cancelIdleCallback !== 'undefined') {
+        cancelIdleCallback(this.debounceTimer);
+      } else {
         clearTimeout(this.debounceTimer);
+      }
     }
   }
 }

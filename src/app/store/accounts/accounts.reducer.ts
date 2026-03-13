@@ -1,159 +1,172 @@
 import { createReducer, on } from '@ngrx/store';
-import { AccountsState, initialState } from './accounts.state';
+import { AccountsState, AccountsBucket, initialState } from './accounts.state';
 import * as AccountsActions from './accounts.actions';
+import { AccountsContext } from './accounts.state';
+
+// Helper: get the target context bucket key from an action's optional context field,
+// falling back to the current activeContext in state.
+function ctx(state: AccountsState, actionCtx?: AccountsContext): AccountsContext {
+  return actionCtx ?? state.activeContext;
+}
+
+function updateBucket(
+  state: AccountsState,
+  context: AccountsContext,
+  patch: Partial<AccountsBucket>
+): AccountsState {
+  return {
+    ...state,
+    [context]: { ...state[context], ...patch }
+  };
+}
 
 export const accountsReducer = createReducer(
   initialState,
-  
-  // Load Accounts
+
+  // ── Context switch (personal ↔ family) ─────────────────────────────────────
+  on(AccountsActions.setAccountsContext, (state, { context }) => ({
+    ...state,
+    activeContext: context
+  })),
+
+  // ── Load Accounts ───────────────────────────────────────────────────────────
   on(AccountsActions.loadAccounts, (state) => ({
     ...state,
     loading: true,
     error: null
   })),
-  
-  on(AccountsActions.loadAccountsSuccess, (state, { accounts }) => {
+
+  on(AccountsActions.loadAccountsSuccess, (state, { accounts, context }) => {
+    const target = ctx(state, context);
     const entities = accounts.reduce((acc, account) => {
       acc[account.accountId] = account;
       return acc;
     }, {} as { [id: string]: any });
-    
     const ids = accounts.map(a => a.accountId);
-    
-    return {
-      ...state,
-      entities,
-      ids,
-      loading: false,
-      error: null
-    };
+    return updateBucket({ ...state, loading: false, error: null }, target, { entities, ids });
   }),
-  
+
   on(AccountsActions.loadAccountsFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  
-  // Create Account
+
+  // ── Create Account ──────────────────────────────────────────────────────────
   on(AccountsActions.createAccount, (state) => ({
     ...state,
     loading: true,
     error: null
   })),
-  
-  on(AccountsActions.createAccountSuccess, (state, { account }) => {
-    return {
-      ...state,
-      entities: {
-        ...state.entities,
-        [account.accountId]: account
-      },
-      ids: [...state.ids, account.accountId],
-      loading: false,
-      error: null
-    };
+
+  on(AccountsActions.createAccountSuccess, (state, { account, context }) => {
+    const target = ctx(state, context);
+    const bucket = state[target];
+    return updateBucket({ ...state, loading: false, error: null }, target, {
+      entities: { ...bucket.entities, [account.accountId]: account },
+      ids: bucket.ids.includes(account.accountId)
+        ? bucket.ids
+        : [...bucket.ids, account.accountId]
+    });
   }),
-  
+
   on(AccountsActions.createAccountFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  
-  // Update Account
+
+  // ── Update Account ──────────────────────────────────────────────────────────
   on(AccountsActions.updateAccount, (state) => ({
     ...state,
     loading: true,
     error: null
   })),
-  
-  on(AccountsActions.updateAccountSuccess, (state, { account }) => {
-    return {
-      ...state,
+
+  on(AccountsActions.updateAccountSuccess, (state, { account, context }) => {
+    const target = ctx(state, context);
+    const bucket = state[target];
+    // If it's an account that doesn't exist yet, no-op
+    if (!bucket.entities[account.accountId]) return { ...state, loading: false };
+    return updateBucket({ ...state, loading: false, error: null }, target, {
       entities: {
-        ...state.entities,
-        [account.accountId]: account
-      },
-      loading: false,
-      error: null
-    };
+        ...bucket.entities,
+        [account.accountId]: { ...bucket.entities[account.accountId], ...account }
+      }
+    });
   }),
-  
+
   on(AccountsActions.updateAccountFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  
-  // Delete Account
+
+  // ── Delete Account ──────────────────────────────────────────────────────────
   on(AccountsActions.deleteAccount, (state) => ({
     ...state,
     loading: true,
     error: null
   })),
-  
-  on(AccountsActions.deleteAccountSuccess, (state, { accountId }) => {
-    const { [accountId]: removed, ...remainingEntities } = state.entities;
-    
-    return {
-      ...state,
+
+  on(AccountsActions.deleteAccountSuccess, (state, { accountId, context }) => {
+    const target = ctx(state, context);
+    const bucket = state[target];
+    const { [accountId]: _removed, ...remainingEntities } = bucket.entities;
+    return updateBucket({ ...state, loading: false, error: null }, target, {
       entities: remainingEntities,
-      ids: state.ids.filter(id => id !== accountId),
-      loading: false,
-      error: null
-    };
+      ids: bucket.ids.filter(id => id !== accountId)
+    });
   }),
-  
+
   on(AccountsActions.deleteAccountFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  
-  // Get Single Account
+
+  // ── Get Single Account ──────────────────────────────────────────────────────
   on(AccountsActions.getAccount, (state) => ({
     ...state,
     loading: true,
     error: null
   })),
-  
+
   on(AccountsActions.getAccountSuccess, (state, { account }) => {
-    return {
+    const target = state.activeContext;
+    const bucket = state[target];
+    return updateBucket({
       ...state,
-      entities: {
-        ...state.entities,
-        [account.accountId]: account
-      },
-      ids: state.ids.includes(account.accountId) ? state.ids : [...state.ids, account.accountId],
-      selectedAccountId: account.accountId,
       loading: false,
-      error: null
-    };
+      error: null,
+      selectedAccountId: account.accountId
+    }, target, {
+      entities: { ...bucket.entities, [account.accountId]: account },
+      ids: bucket.ids.includes(account.accountId)
+        ? bucket.ids
+        : [...bucket.ids, account.accountId]
+    });
   }),
-  
+
   on(AccountsActions.getAccountFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  
-  // Update Account Balance for Transaction (Optimistic Reducer Logic)
+
+  // ── Update Account Balance for Transaction ──────────────────────────────────
   on(AccountsActions.updateAccountBalanceForTransaction, (state, { accountId, transactionType, oldTransaction, newTransaction }) => {
-    const account = state.entities[accountId];
+    const bucket = state[state.activeContext];
+    const account = bucket.entities[accountId];
     if (!account) return { ...state, loading: true };
 
-    let balanceChange = 0;
-
     const getEffect = (t: any) => {
-      // ONLY COMPLETED transactions should affect the current balance.
-      // Ignore future/scheduled/pending transactions.
       if (t.isPending || t.status === 'pending') return 0;
-      
       const amount = Number(t.amount) || 0;
       return t.type === 'income' ? amount : -amount;
     };
 
+    let balanceChange = 0;
     if (transactionType === 'create' && newTransaction) {
       balanceChange = getEffect(newTransaction);
     } else if (transactionType === 'update' && oldTransaction && newTransaction) {
@@ -168,58 +181,44 @@ export const accountsReducer = createReducer(
       updatedAt: new Date()
     };
 
-    return {
-      ...state,
-      entities: {
-        ...state.entities,
-        [accountId]: updatedAccount
-      },
-      loading: true,
-      error: null
-    };
+    return updateBucket({ ...state, loading: true, error: null }, state.activeContext, {
+      entities: { ...bucket.entities, [accountId]: updatedAccount }
+    });
   }),
-  
-  on(AccountsActions.updateAccountBalanceForTransactionSuccess, (state, { accountId, newBalance }) => ({
+
+  on(AccountsActions.updateAccountBalanceForTransactionSuccess, (state) => ({
     ...state,
     loading: false,
     error: null
   })),
-  
+
   on(AccountsActions.updateAccountBalanceForTransactionFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  
-  // Update Account Balance for Multiple Transactions (Optimistic Reducer Logic)
+
+  // ── Update Account Balance for Multiple Transactions ────────────────────────
   on(AccountsActions.updateAccountBalanceForTransactions, (state, { transactions }) => {
-    const updatedEntities = { ...state.entities };
-    
+    const bucket = state[state.activeContext];
+    const updatedEntities = { ...bucket.entities };
+
     transactions.forEach((t: any) => {
       const account = updatedEntities[t.accountId];
-      if (account) {
-        // ONLY COMPLETED transactions should affect the current balance.
-        if (!t.isPending && t.status !== 'pending') {
-          const amount = Number(t.amount) || 0;
-          const balanceChange = t.type === 'income' ? amount : -amount;
-          
-          let updatedAccount = {
-            ...account,
-            balance: (Number(account.balance) || 0) + balanceChange,
-            updatedAt: new Date()
-          };
-          
-          updatedEntities[t.accountId] = updatedAccount;
-        }
+      if (account && !t.isPending && t.status !== 'pending') {
+        const amount = Number(t.amount) || 0;
+        const balanceChange = t.type === 'income' ? amount : -amount;
+        updatedEntities[t.accountId] = {
+          ...account,
+          balance: (Number(account.balance) || 0) + balanceChange,
+          updatedAt: new Date()
+        };
       }
     });
 
-    return {
-      ...state,
-      entities: updatedEntities,
-      loading: true,
-      error: null
-    };
+    return updateBucket({ ...state, loading: true, error: null }, state.activeContext, {
+      entities: updatedEntities
+    });
   }),
 
   on(AccountsActions.updateAccountBalanceForTransactionsSuccess, (state) => ({
@@ -227,47 +226,38 @@ export const accountsReducer = createReducer(
     loading: false,
     error: null
   })),
-  
+
   on(AccountsActions.updateAccountBalanceForTransactionsFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  
-  // Update Account Balance for Account Transfer (Optimistic Reducer Logic)
+
+  // ── Update Account Balance for Account Transfer ─────────────────────────────
   on(AccountsActions.updateAccountBalanceForAccountTransfer, (state, { oldAccountId, newAccountId, transaction }) => {
-    const oldAccount = state.entities[oldAccountId];
-    const newAccount = state.entities[newAccountId];
-    
+    const bucket = state[state.activeContext];
+    const oldAccount = bucket.entities[oldAccountId];
+    const newAccount = bucket.entities[newAccountId];
     if (!oldAccount || !newAccount) return { ...state, loading: true };
 
     const amount = Number(transaction.amount) || 0;
     const transactionEffect = transaction.type === 'income' ? amount : -amount;
 
-    // Update old account (remove transaction effect)
-    const updatedOldAccount = {
-      ...oldAccount,
-      balance: (Number(oldAccount.balance) || 0) - transactionEffect,
-      updatedAt: new Date()
-    };
-
-    // Update new account (add transaction effect)
-    const updatedNewAccount = {
-      ...newAccount,
-      balance: (Number(newAccount.balance) || 0) + transactionEffect,
-      updatedAt: new Date()
-    };
-
-    return {
-      ...state,
+    return updateBucket({ ...state, loading: true, error: null }, state.activeContext, {
       entities: {
-        ...state.entities,
-        [oldAccountId]: updatedOldAccount,
-        [newAccountId]: updatedNewAccount
-      },
-      loading: true,
-      error: null
-    };
+        ...bucket.entities,
+        [oldAccountId]: {
+          ...oldAccount,
+          balance: (Number(oldAccount.balance) || 0) - transactionEffect,
+          updatedAt: new Date()
+        },
+        [newAccountId]: {
+          ...newAccount,
+          balance: (Number(newAccount.balance) || 0) + transactionEffect,
+          updatedAt: new Date()
+        }
+      }
+    });
   }),
 
   on(AccountsActions.updateAccountBalanceForAccountTransferSuccess, (state) => ({
@@ -275,13 +265,19 @@ export const accountsReducer = createReducer(
     loading: false,
     error: null
   })),
-  
+
   on(AccountsActions.updateAccountBalanceForAccountTransferFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  
-  // Clear State
-  on(AccountsActions.clearAccounts, () => initialState)
-); 
+
+  // ── Clear State ─────────────────────────────────────────────────────────────
+  // clearAccounts only clears the ACTIVE context bucket, preserving the other
+  on(AccountsActions.clearAccounts, (state) =>
+    updateBucket({ ...state }, state.activeContext, {
+      entities: {},
+      ids: []
+    })
+  )
+);

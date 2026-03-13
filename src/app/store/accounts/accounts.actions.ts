@@ -1,6 +1,7 @@
 import { createAction, props } from '@ngrx/store';
 import { Account, CreateAccountRequest, UpdateAccountRequest } from '../../util/models/account.model';
 import { Transaction } from '../../util/models/transaction.model';
+import { AccountsContext } from './accounts.state';
 
 // Load Accounts
 export const loadAccounts = createAction(
@@ -10,7 +11,7 @@ export const loadAccounts = createAction(
 
 export const loadAccountsSuccess = createAction(
   '[Accounts] Load Accounts Success',
-  props<{ accounts: Account[] }>()
+  props<{ accounts: Account[]; context?: AccountsContext }>()
 );
 
 export const loadAccountsFailure = createAction(
@@ -26,7 +27,7 @@ export const createAccount = createAction(
 
 export const createAccountSuccess = createAction(
   '[Accounts] Create Account Success',
-  props<{ account: Account }>()
+  props<{ account: Account; context?: AccountsContext }>()
 );
 
 export const createAccountFailure = createAction(
@@ -42,7 +43,7 @@ export const updateAccount = createAction(
 
 export const updateAccountSuccess = createAction(
   '[Accounts] Update Account Success',
-  props<{ account: Account }>()
+  props<{ account: Account; context?: AccountsContext }>()
 );
 
 export const updateAccountFailure = createAction(
@@ -58,7 +59,7 @@ export const deleteAccount = createAction(
 
 export const deleteAccountSuccess = createAction(
   '[Accounts] Delete Account Success',
-  props<{ accountId: string }>()
+  props<{ accountId: string; context?: AccountsContext }>()
 );
 
 export const deleteAccountFailure = createAction(
@@ -143,4 +144,10 @@ export const updateAccountBalanceForAccountTransferFailure = createAction(
 );
 
 // Clear State
-export const clearAccounts = createAction('[Accounts] Clear Accounts'); 
+export const clearAccounts = createAction('[Accounts] Clear Accounts');
+
+// Switch active context (personal ↔ family) without clearing data
+export const setAccountsContext = createAction(
+  '[Accounts] Set Context',
+  props<{ context: AccountsContext }>()
+);

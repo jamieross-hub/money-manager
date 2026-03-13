@@ -71,6 +71,11 @@ export class AccountsService {
         return isFamilyMode ? (this.familyService.activeFamilyId() || undefined) : undefined;
     }
 
+    /** Returns which NgRx bucket should receive incoming data */
+    protected getActiveContext(): 'personal' | 'family' {
+        return this.getFamilyId() ? 'family' : 'personal';
+    }
+
     // 🔹 Create a new account for the logged-in user
     createAccount(userId: string, accountData: CreateAccountRequest): Observable<string> {
         const accountId = this.generateAccountId();
@@ -131,7 +136,7 @@ export class AccountsService {
             switchMap(() => {
                 // 1. Emit cached accounts immediately from the current context (family vs personal)
                 const cacheKey = this.getAccountsCacheKey(userId);
-                const cachedAccounts = (this.localStorageUtility.getItem<Account[]>(cacheKey) || [])
+                const cachedAccounts = (this.localStorageUtility.getItem<Account[]>(cacheKey, undefined, false) || [])
                     .filter(a => !!(a && a.accountId));
                 
                 if (cachedAccounts.length > 0) {
@@ -168,7 +173,9 @@ export class AccountsService {
                     const firestoreAccounts: Account[] = [];
                     querySnapshot.forEach((docSnap) => {
                         const data = docSnap.data();
-                        if (data && (data['name'] !== undefined || docSnap.id)) {
+                        // Require a name — consistent with pullFromFirestore.
+                        // The old guard (`data['name'] !== undefined || docSnap.id`) accepted every document regardless of completeness.
+                        if (data && docSnap.id && data['name']) {
                             firestoreAccounts.push({ accountId: docSnap.id, ...data } as Account);
                         }
                     });
@@ -176,9 +183,12 @@ export class AccountsService {
                     // Update cache
                     this.localStorageUtility.setItem(cacheKey, firestoreAccounts);
                     
-                    // Update subject and Store
+                    // Update subject and Store — include context so data goes into the correct bucket
                     this.accountsSubject.next(firestoreAccounts);
-                    this.store.dispatch(AccountsActions.loadAccountsSuccess({ accounts: firestoreAccounts }));
+                    this.store.dispatch(AccountsActions.loadAccountsSuccess({
+                        accounts: firestoreAccounts,
+                        context: this.getActiveContext()
+                    }));
                     
                     observer.next();
                 },
@@ -218,10 +228,15 @@ export class AccountsService {
                 const accounts: Account[] = [];
                 querySnapshot.forEach((docSnap: any) => {
                     const data = docSnap.data();
-                    if (data && data.accountId && data.name) {
-                        accounts.push(data as Account);
+                    // Use docSnap.id as the authoritative accountId (consistent with
+                    // listenToAccounts). Family accounts store the ID only as the
+                    // document ID, not as a field — checking data.accountId caused
+                    // ALL family accounts to be skipped with the old guard.
+                    const accountId = docSnap.id || data?.accountId;
+                    if (data && accountId && data.name) {
+                        accounts.push({ accountId, ...data } as Account);
                     } else {
-                        console.warn('[AccountsService] Skipping invalid/empty account document:', docSnap.id);
+                        console.warn('[AccountsService] Skipping invalid/empty account document:', docSnap.id, { hasData: !!data, hasName: !!data?.name });
                     }
                 });
 
@@ -230,8 +245,11 @@ export class AccountsService {
                 // Update cache
                 this.localStorageUtility.setItem(this.getAccountsCacheKey(userId), accounts);
                 
-                // Update NgRx state
-                this.store.dispatch(AccountsActions.loadAccountsSuccess({ accounts }));
+                // Update NgRx state — include context so data goes into the correct bucket
+                this.store.dispatch(AccountsActions.loadAccountsSuccess({
+                    accounts,
+                    context: this.getActiveContext()
+                }));
             }),
             map(() => undefined),
             catchError(error => {
@@ -255,7 +273,7 @@ export class AccountsService {
         return new Observable<Account | undefined>(observer => {
             // Reads from IndexedDB first
             const cacheKey = this.getAccountsCacheKey(userId);
-            const cachedAccounts = this.localStorageUtility.getItem<Account[]>(cacheKey) || [];
+            const cachedAccounts = this.localStorageUtility.getItem<Account[]>(cacheKey, undefined, false) || [];
             const cached = cachedAccounts.find(a => a.accountId === accountId);
 
             if (cached) {
@@ -394,7 +412,7 @@ export class AccountsService {
         if (isGuest) {
             accounts = this.localStorageUtility.getEntities<Account>('accounts');
         } else {
-            accounts = this.localStorageUtility.getItem<Account[]>(cacheKey) || [];
+            accounts = this.localStorageUtility.getItem<Account[]>(cacheKey, undefined, false) || [];
         }
 
         const index = accounts.findIndex(a => (a as any).accountId === accountId);
@@ -482,7 +500,7 @@ export class AccountsService {
         if (isGuest) {
             accounts = this.localStorageUtility.getEntities<Account>('accounts');
         } else {
-            accounts = this.localStorageUtility.getItem<Account[]>(cacheKey) || [];
+            accounts = this.localStorageUtility.getItem<Account[]>(cacheKey, undefined, false) || [];
         }
         
         transactions.forEach((t: any) => {
@@ -548,7 +566,7 @@ export class AccountsService {
         if (isGuest) {
             accounts = this.localStorageUtility.getEntities<Account>('accounts');
         } else {
-            accounts = this.localStorageUtility.getItem<Account[]>(cacheKey) || [];
+            accounts = this.localStorageUtility.getItem<Account[]>(cacheKey, undefined, false) || [];
         }
 
         const oldIndex = accounts.findIndex(a => (a as any).accountId === oldAccountId);
@@ -645,7 +663,7 @@ export class AccountsService {
     protected updateAccountCache(userId: string, operation: 'create' | 'update' | 'delete', account?: Account): void {
         try {
             const cacheKey = this.getAccountsCacheKey(userId);
-            const cachedAccounts = (this.localStorageUtility.getItem<Account[]>(cacheKey) || [])
+            const cachedAccounts = (this.localStorageUtility.getItem<Account[]>(cacheKey, undefined, false) || [])
                 .filter(a => !!(a && a.accountId));
 
             if (!account || !account.accountId) {

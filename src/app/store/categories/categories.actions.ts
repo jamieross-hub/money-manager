@@ -1,6 +1,7 @@
 import { createAction, props } from '@ngrx/store';
 import { Budget, Category } from '../../util/models';
 import { TransactionType } from 'src/app/util/config/enums';
+import { CategoriesContext } from './categories.state';
 
 // Load Categories
 export const loadCategories = createAction(
@@ -10,7 +11,7 @@ export const loadCategories = createAction(
 
 export const loadCategoriesSuccess = createAction(
   '[Categories] Load Categories Success',
-  props<{ categories: Category[] }>()
+  props<{ categories: Category[]; context?: CategoriesContext }>()
 );
 
 export const loadCategoriesFailure = createAction(
@@ -33,7 +34,7 @@ export const createCategory = createAction(
 
 export const createCategorySuccess = createAction(
   '[Categories] Create Category Success',
-  props<{ category: Category }>()
+  props<{ category: Category; context?: CategoriesContext }>()
 );
 
 export const createCategoryFailure = createAction(
@@ -60,7 +61,7 @@ export const updateCategory = createAction(
 
 export const updateCategorySuccess = createAction(
   '[Categories] Update Category Success',
-  props<{ category: Category }>()
+  props<{ category: Category; context?: CategoriesContext }>()
 );
 
 export const updateCategoryFailure = createAction(
@@ -76,7 +77,7 @@ export const deleteCategory = createAction(
 
 export const deleteCategorySuccess = createAction(
   '[Categories] Delete Category Success',
-  props<{ categoryId: string }>()
+  props<{ categoryId: string; context?: CategoriesContext }>()
 );
 
 export const deleteCategoryFailure = createAction(
@@ -103,4 +104,10 @@ export const removeFromParentCategoryFailure = createAction(
 );
 
 // Clear State
-export const clearCategories = createAction('[Categories] Clear Categories'); 
+export const clearCategories = createAction('[Categories] Clear Categories');
+
+// Switch active context (personal ↔ family) without clearing data
+export const setCategoriesContext = createAction(
+  '[Categories] Set Context',
+  props<{ context: CategoriesContext }>()
+);

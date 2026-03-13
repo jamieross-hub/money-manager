@@ -8,7 +8,7 @@ import { INTENTS } from '../../models/intent-config';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import { selectAllTransactions } from 'src/app/store/transactions/transactions.selectors';
-import { selectAccountsState } from 'src/app/store/accounts/accounts.selectors';
+import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
 import { take, map } from 'rxjs/operators';
 import { TransactionType, AccountType } from 'src/app/util/config/enums';
 import { CurrencyService } from '../../../currency.service';
@@ -26,14 +26,13 @@ export class QueryIntentHandler implements IntentHandler {
     handle(context: IntentContext): HandlerResult {
         return combineLatest([
             this.store.select(selectAllTransactions),
-            this.store.select(selectAccountsState)
+            this.store.select(selectAllAccounts)
         ]).pipe(
             take(1),
-            map(([transactions, accountsState]) => {
+            map(([transactions, accounts]) => {
                 const lowerText = context.lowerText || '';
 
                 if (context.intent === INTENTS.CHECK_BALANCE) {
-                    const accounts = accountsState.ids.map(id => accountsState.entities[id]).filter(Boolean);
                     if (!accounts || accounts.length === 0) {
                          return ResponseBuilder.create().html('You have no accounts setup yet.').build();
                     }

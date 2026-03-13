@@ -93,6 +93,11 @@ export class CategoryService implements OnDestroy {
         return isFamilyMode ? (this.familyService.activeFamilyId() || undefined) : undefined;
     }
 
+    /** Returns which NgRx bucket should receive incoming data */
+    protected getActiveContext(): 'personal' | 'family' {
+        return this.getFamilyId() ? 'family' : 'personal';
+    }
+
     private getUserCategoriesCollection(userId: string) {
         return collection(this.firestore, this.getCategoriesPath(userId));
     }
@@ -118,7 +123,7 @@ export class CategoryService implements OnDestroy {
             switchMap(() => {
                 // 1. Emit cached categories immediately
                 const cacheKey = this.getCategoriesCacheKey(userId);
-                const cachedCategories = this.localStorageUtility.getItem<Category[]>(cacheKey) || [];
+                const cachedCategories = this.localStorageUtility.getItem<Category[]>(cacheKey, undefined, false) || [];
                 
                 if (cachedCategories.length > 0) {
                     this.categoriesSubject.next(cachedCategories);
@@ -153,7 +158,10 @@ export class CategoryService implements OnDestroy {
                     const firestoreCategories: Category[] = [];
                     querySnapshot.forEach((docSnap) => {
                         const data: any = docSnap.data();
-                        if (data && (data.name || docSnap.id)) {
+                        // Require both an id and a name — the old guard
+                        // `(data.name || docSnap.id)` was always true since every
+                        // Firestore document has an id, letting ghost docs through.
+                        if (data && docSnap.id && data.name) {
                             const category: Category = {
                                 id: docSnap.id,
                                 ...data
@@ -167,10 +175,13 @@ export class CategoryService implements OnDestroy {
                         if (cat.id) this.categories[cat.id] = cat;
                     });
 
-                    // Update cache, subject and Store
+                    // Update cache, subject and Store — include context so data goes into the correct bucket
                     this.localStorageUtility.setItem(cacheKey, firestoreCategories);
                     this.categoriesSubject.next(firestoreCategories);
-                    this.store.dispatch(CategoriesActions.loadCategoriesSuccess({ categories: firestoreCategories }));
+                    this.store.dispatch(CategoriesActions.loadCategoriesSuccess({
+                        categories: firestoreCategories,
+                        context: this.getActiveContext()
+                    }));
                     
                     observer.next();
                 },
@@ -208,7 +219,9 @@ export class CategoryService implements OnDestroy {
                 const categories: Category[] = [];
                 querySnapshot.forEach((docSnap: any) => {
                     const data: any = docSnap.data();
-                    if (data && (data.name || docSnap.id)) {
+                    // Require both an id and a name — consistent with listenToCategories.
+                    // The old guard `(data.name || docSnap.id)` was always true.
+                    if (data && docSnap.id && data.name) {
                         const category: Category = {
                             id: docSnap.id,
                             name: data?.name,
@@ -224,6 +237,8 @@ export class CategoryService implements OnDestroy {
                             isSystem: data?.isSystem || false
                         };
                         categories.push(category);
+                    } else if (docSnap.id) {
+                        console.warn('[CategoryService] Skipping invalid/empty category document:', docSnap.id, { hasName: !!data?.name });
                     }
                 });
 
@@ -232,8 +247,11 @@ export class CategoryService implements OnDestroy {
                 // Update cache
                 this.localStorageUtility.setItem(this.getCategoriesCacheKey(userId), categories);
                 
-                // Update NgRx state
-                this.store.dispatch(CategoriesActions.loadCategoriesSuccess({ categories }));
+                // Update NgRx state — include context so data goes into the correct bucket
+                this.store.dispatch(CategoriesActions.loadCategoriesSuccess({
+                    categories,
+                    context: this.getActiveContext()
+                }));
             }),
             map(() => undefined),
             catchError(error => {
@@ -706,7 +724,7 @@ export class CategoryService implements OnDestroy {
     protected updateCategoryCache(userId: string, operation: 'create' | 'update' | 'delete', category?: Category): void {
         try {
             const cacheKey = this.getCategoriesCacheKey(userId);
-            const cachedCategories = (this.localStorageUtility.getItem<Category[]>(cacheKey) || [])
+            const cachedCategories = (this.localStorageUtility.getItem<Category[]>(cacheKey, undefined, false) || [])
                 .filter(c => !!(c && (c.id || c.name)));
 
             if (!category || (!category.id && !category.name)) {

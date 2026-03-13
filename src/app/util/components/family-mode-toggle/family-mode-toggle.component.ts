@@ -112,21 +112,18 @@ export class FamilyModeToggleComponent implements OnInit {
         clearTimeout(timeoutTimer);
         this.notificationService.info(`Family mode ${enabled ? 'enabled' : 'disabled'}`);
         
-        // Clear all stores for personal/family switch to avoid data mixing
-        // We do this on SUCCESS to ensure we don't clear if update fails
+        // Switch the active context in the store — this instantly shows the correct
+        // data for the new mode without clearing anything. Both buckets stay warm
+        // in memory so switching back is also instant (no Firestore round-trip).
+        const newContext = enabled ? 'family' : 'personal';
+        this.store.dispatch(AccountsActions.setAccountsContext({ context: newContext }));
+        this.store.dispatch(CategoriesActions.setCategoriesContext({ context: newContext }));
+
+        // Transactions and budgets/goals don't have dual-bucket state yet — clear them
+        // so stale data from the previous mode doesn't show while the sync reloads.
         this.store.dispatch(TransactionsActions.clearTransactions());
-        this.store.dispatch(AccountsActions.clearAccounts());
-        this.store.dispatch(CategoriesActions.clearCategories());
         this.store.dispatch(BudgetsActions.clearBudgets());
         this.store.dispatch(GoalsActions.clearGoals());
-
-        // Re-load data for the new mode
-        const userId = profile.uid;
-        this.store.dispatch(TransactionsActions.loadTransactions({ userId }));
-        this.store.dispatch(AccountsActions.loadAccounts({ userId }));
-        this.store.dispatch(CategoriesActions.loadCategories({ userId }));
-        this.store.dispatch(BudgetsActions.loadBudgets({ userId }));
-        this.store.dispatch(GoalsActions.loadGoals({ userId }));
 
         //add vibration
         this.notificationService.buttonClick();
