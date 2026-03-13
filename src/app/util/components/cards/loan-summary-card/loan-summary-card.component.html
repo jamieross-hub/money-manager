@@ -50,7 +50,7 @@
       <!-- Loan Tabs (only when >1) -->
       @if (loans().length > 1) {
         <div class="loan-tabs">
-          @for (item of summary().items; track item.name; let i = $index) {
+          @for (item of summary().items; track item.accountId; let i = $index) {
             <button
               class="loan-tab"
               [ngClass]="{ active: selectedLoanIndex() === i }"
@@ -62,7 +62,7 @@
       }
       <!-- Per-Loan Cards -->
       <div class="loan-cards-grid">
-        @for (item of summary().items; track item.name; let i = $index) {
+        @for (item of summary().items; track item.accountId; let i = $index) {
           <div
             class="loan-card"
           [ngClass]="{

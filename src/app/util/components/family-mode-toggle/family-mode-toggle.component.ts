@@ -125,9 +125,7 @@ export class FamilyModeToggleComponent implements OnInit {
         this.store.dispatch(BudgetsActions.clearBudgets());
         this.store.dispatch(GoalsActions.clearGoals());
 
-        //add vibration
-        this.notificationService.buttonClick();
-
+       
         // Determine the target route based on the new state
         const activeId = changes.activeFamilyId || profile.preferences?.activeFamilyId;
         const targetRoute = enabled 
@@ -184,6 +182,10 @@ export class FamilyModeToggleComponent implements OnInit {
       this.isUpdating.set(false);
       this.pendingState.set(null);
     }
+
+     //add vibration
+    this.notificationService.buttonClick();
+
   }
 
   private applyPreferenceChanges(changes: Partial<UserPreferences>): void {
