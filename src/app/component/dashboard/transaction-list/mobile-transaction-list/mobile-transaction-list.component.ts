@@ -204,7 +204,7 @@ export class MobileTransactionListComponent
 
   // Long press handling
   private longPressTimeout: any;
-  private readonly LONG_PRESS_DURATION = 500; // ms
+  private readonly LONG_PRESS_DURATION = 800; // ms (Standard Android-style deliberate long press)
   private isLongPressing = false;
   private historyPushedForSelection = false;
 
