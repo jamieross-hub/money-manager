@@ -152,12 +152,4 @@
 
 .chat-container {
   overflow-y: auto;
-  scrollbar-width: thin;
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: var(--neutral-300);
-    border-radius: 10px;
-  }
 }

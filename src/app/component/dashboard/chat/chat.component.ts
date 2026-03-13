@@ -1,5 +1,4 @@
-import { Component, ElementRef, ViewChild, ChangeDetectorRef, AfterViewInit, OnInit, OnDestroy, ChangeDetectionStrategy, inject } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, ElementRef, ViewChild, ChangeDetectorRef, OnInit, OnDestroy, ChangeDetectionStrategy, inject, effect, untracked } from '@angular/core';
 import { TransactionType } from 'src/app/util/config/enums';
 import { Category } from 'src/app/util/models';
 import { ChatFacadeService } from 'src/app/util/service/ai-chat/chat-facade-service';
@@ -83,7 +82,7 @@ import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
+export class ChatComponent implements OnInit, OnDestroy {
   public readonly chatFacadeService = inject(ChatFacadeService);
   public readonly breakpointService = inject(BreakpointService);
   private readonly audioRecordingService = inject(AudioRecordingService);
@@ -118,9 +117,18 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
 
 
   @ViewChild('scrollContainer') chatScrollContainer!: ElementRef<HTMLElement>;
-  private scrollSubscription?: Subscription;
-
-  constructor() { }
+  private isInitialLoad = true;
+  
+  constructor() {
+    effect(() => {
+      // Access signals to track changes
+      this.chatFacadeService.messages();
+      this.chatFacadeService.isTyping();
+      
+      // Scroll to bottom untracked to avoid potential cycles
+      untracked(() => this.scrollToBottom());
+    });
+  }
 
   ngOnInit() {
     this.placeholders = [...this.greetingFacade.getChatPlaceholders()];
@@ -140,7 +148,6 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.scrollSubscription?.unsubscribe();
     if (this.typingTimeout) {
       clearTimeout(this.typingTimeout);
     }
@@ -182,35 +189,17 @@ export class ChatComponent implements AfterViewInit, OnInit, OnDestroy {
     this.typingTimeout = setTimeout(() => this.animatePlaceholder(), typeSpeed);
   }
 
-  private isInitialLoad = true;
-
-  ngAfterViewInit() {
-    this.scrollSubscription = this.chatFacadeService.scrollToTop.subscribe(() => {
-      this.scrollToBottom();
-    });
-
-    // Initial scroll to bottom when component loads
-    setTimeout(() => this.scrollToBottom(), 200);
-  }
-
   private scrollToBottom() {
-    if (this.chatScrollContainer) {
-      const nativeElement = this.chatScrollContainer.nativeElement;
-      const behavior = this.isInitialLoad ? 'auto' : 'smooth';
-      
-      // Use requestAnimationFrame to ensure the DOM has updated
-      requestAnimationFrame(() => {
-        nativeElement.scrollTo({
-          top: nativeElement.scrollHeight,
-          behavior: behavior as ScrollBehavior
-        });
-        
-        if (this.isInitialLoad) {
-          // Keep it 'auto' for a bit longer to catch all initial messages
-          setTimeout(() => this.isInitialLoad = false, 500);
-        }
+    const el = this.chatScrollContainer?.nativeElement;
+    if (!el) return;
+
+    requestAnimationFrame(() => {
+      el.scrollTo({
+        top: el.scrollHeight,
+        behavior: this.isInitialLoad ? 'auto' : 'smooth'
       });
-    }
+      this.isInitialLoad = false;
+    });
   }
 
   sendMessage(input: HTMLInputElement) {

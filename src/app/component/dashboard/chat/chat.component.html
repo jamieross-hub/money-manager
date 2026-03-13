@@ -1,8 +1,8 @@
 <section class="relative h-full md:h-full md:max-h-full max-w-screen-xl mx-auto ">
-  <div class="flex flex-col  ">
+  <div class="flex flex-col h-full">
 
 
-    <div #scrollContainer class="flex-1 chat-container px-4 space-y-2 pt-4 pb-28 md:pb-4 flex"
+    <div #scrollContainer class="flex-1 chat-container px-4 space-y-2 pt-4 pb-28 md:pb-4 flex no-scrollbar"
       [ngStyle]="{'max-height': breakpointService.device.isMobile ? 'calc(78dvh - 100px)' : '70vh'}">
       <div class="max-w-screen-xl mx-auto w-full">
         @for (msg of chatFacadeService.messages(); track msg.id) {
@@ -52,7 +52,7 @@
         }
 
         <!-- Typing Loader -->
-        @if (chatFacadeService.isTyping) {
+        @if (chatFacadeService.isTyping()) {
           <div class="flex justify-start fade-in">
             <div class="chat-bubble-bot px-4 py-2 rounded-2xl rounded-bl-md shadow-sm ">
               <span class="typing-dots">

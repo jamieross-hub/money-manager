@@ -41,7 +41,7 @@ import { GreetingFacadeService } from "../greeting-facade.service";
 @Injectable()
 export class ChatFacadeService implements OnDestroy {
     messages = signal<Message[]>([]);
-    isTyping = false;
+    isTyping = signal(false);
     private destroy$ = new Subject<void>();
     defaultBankAccount: Account | null = null;
 
@@ -124,7 +124,6 @@ export class ChatFacadeService implements OnDestroy {
         this.destroy$.complete();
     }
 
-    public scrollToTop = new Subject<void>();
 
     private initWelcomeMessage() {
         if (this.breakpointService.device.isMobile || this.breakpointService.device.isLaptop) {
@@ -144,12 +143,10 @@ export class ChatFacadeService implements OnDestroy {
         const message: Message = { sender: 'user', text, type, id: this.generateId() };
         this.messages.update((msgs: Message[]) => [...msgs, message]);
         this.limitHistory();
-        this.scrollToBottom();
     }
 
     startBotReply(userText: string) {
-        this.isTyping = true;
-        this.scrollToBottom();
+        this.isTyping.set(true);
         const userId = this.userService.getCurrentUserId();
 
         if (userId) {
@@ -311,8 +308,7 @@ export class ChatFacadeService implements OnDestroy {
         if (!message.id) message.id = this.generateId();
         
         if (delay > 0) {
-            this.isTyping = true;
-            this.scrollToBottom();
+            this.isTyping.set(true);
         }
 
         setTimeout(() => {
@@ -323,8 +319,7 @@ export class ChatFacadeService implements OnDestroy {
             }
 
             this.limitHistory(pushAtTop);
-            this.isTyping = false;
-            this.scrollToBottom();
+            this.isTyping.set(false);
         }, delay);
     }
 
@@ -345,12 +340,6 @@ export class ChatFacadeService implements OnDestroy {
         }
     }
 
-    private scrollToBottom() {
-        // Debounce or slightly delay scroll to ensure DOM has updated
-        setTimeout(() => {
-            this.scrollToTop.next();
-        }, 50);
-    }
 
     // Called by UI dropdown or text input
     handleCategorySelection(selectedCategory: Category, account: any, amount: number, txType?: TransactionType) {
