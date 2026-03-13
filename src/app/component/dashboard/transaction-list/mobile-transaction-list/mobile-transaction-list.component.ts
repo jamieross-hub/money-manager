@@ -206,7 +206,15 @@ export class MobileTransactionListComponent
   private longPressTimeout: any;
   private readonly LONG_PRESS_DURATION = 500; // ms
   private isLongPressing = false;
+  private historyPushedForSelection = false;
 
+  @HostListener('window:popstate', ['$event'])
+  onPopState(event: PopStateEvent) {
+    if (this.historyPushedForSelection) {
+      this.historyPushedForSelection = false;
+      this.clearSelection(false);
+    }
+  }
 
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
 
@@ -541,7 +549,11 @@ export class MobileTransactionListComponent
     });
   }
 
-  ngOnDestroy() {}
+  ngOnDestroy() {
+    if (this.historyPushedForSelection) {
+      window.history.back();
+    }
+  }
 
 
   onCategoryChange(category: string) {
@@ -694,13 +706,25 @@ export class MobileTransactionListComponent
     }
     this.selectedTxIds.set(current);
     
+    if (current.size > 0 && !this.historyPushedForSelection) {
+      window.history.pushState({ multiSelect: true }, '');
+      this.historyPushedForSelection = true;
+    } else if (current.size === 0 && this.historyPushedForSelection) {
+      this.historyPushedForSelection = false;
+      window.history.back();
+    }
+
     if (current.size === 0) {
       this.isLongPressing = false;
     }
   }
 
-  clearSelection() {
+  clearSelection(shouldPopHistory = true) {
     this.selectedTxIds.set(new Set());
+    if (shouldPopHistory && this.historyPushedForSelection) {
+      this.historyPushedForSelection = false;
+      window.history.back();
+    }
   }
 
   selectAll() {
@@ -708,10 +732,18 @@ export class MobileTransactionListComponent
       .filter(tx => tx.id && !tx.id.startsWith('upcoming-') && !(tx as any)._isDeleted)
       .map(tx => tx.id!);
     this.selectedTxIds.set(new Set(allIds));
+    
+    if (allIds.length > 0 && !this.historyPushedForSelection) {
+      window.history.pushState({ multiSelect: true }, '');
+      this.historyPushedForSelection = true;
+    }
   }
 
   onLongPressStart(transaction: Transaction) {
     if (transaction.id?.startsWith('upcoming-') || (transaction as any)._isDeleted) return;
+    
+    // Ignore long press if the card is already expanded
+    if (this.selectedTx?.id === transaction.id) return;
 
     this.isLongPressing = false;
     this.longPressTimeout = setTimeout(() => {
