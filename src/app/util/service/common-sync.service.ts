@@ -1,7 +1,7 @@
 import { Injectable, Inject, PLATFORM_ID, Injector, signal, OnDestroy, computed, Signal } from '@angular/core';
 import { BehaviorSubject, Observable, fromEvent, interval, from, of, Subject, combineLatest, merge, forkJoin, Subscription } from 'rxjs';
 import { map, switchMap, catchError, tap, take, filter, distinctUntilChanged, takeUntil, delay, startWith, timeout } from 'rxjs/operators';
-import { Firestore, collection, doc, writeBatch, serverTimestamp } from '@angular/fire/firestore';
+import { Firestore, collection, doc, writeBatch, serverTimestamp, Timestamp } from '@angular/fire/firestore';
 import { Auth, getAuth } from '@angular/fire/auth';
 import { SwUpdate } from '@angular/service-worker';
 import { isPlatformServer } from '@angular/common';
@@ -637,11 +637,11 @@ export class CommonSyncService implements OnDestroy {
     try {
       let validationResult = this.validateSyncItem(item);
 
-      // If transaction is going for deletion and data is invalid then update undefined to empty and allow to go forward
-      if (!validationResult.isValid && item.type === 'transaction' && item.operation === 'delete') {
-        console.warn('[CommonSyncService] Transaction delete item is invalid, fixing undefined fields to empty strings', item.id, validationResult.errors);
-        item.data = this.convertUndefinedToEmpty(item.data);
-        // After fixing, we consider it valid for the purpose of proceeding with the deletion
+      // If transaction is going for deletion or being marked as deleted, and data is invalid, allow it to proceed.
+      // We check for operation 'delete' or operation 'update' with status 'deleted' (soft delete).
+      if (!validationResult.isValid && item.type === 'transaction' && 
+          (item.operation === 'delete' || (item.operation === 'update' && item.data?.status === 'deleted'))) {
+        console.warn('[CommonSyncService] Transaction delete/soft-delete item is invalid, allowing it to proceed anyway', item.id, validationResult.errors);
         validationResult = { isValid: true, errors: [] };
       }
 
@@ -882,7 +882,7 @@ export class CommonSyncService implements OnDestroy {
     const dataToWrite = this.scrubUndefined({ ...item.data });
     if ('syncStatus' in dataToWrite && item.operation !== 'delete') {
       dataToWrite.syncStatus = 'synced';
-      dataToWrite.lastSyncedAt = new Date();
+      dataToWrite.lastSyncedAt = Timestamp.now();
     }
 
     const transactionRef = doc(this.firestore, `${basePath}/${recordId}`);
@@ -1015,7 +1015,7 @@ export class CommonSyncService implements OnDestroy {
 
       if (item.type === 'transaction') {
         this.store.dispatch(TransactionsActions.updateTransactionSuccess({
-          transaction: { ...item.data, syncStatus: status, lastSyncedAt: new Date() } as Transaction
+          transaction: { ...item.data, syncStatus: status, lastSyncedAt: Timestamp.now() } as Transaction
         }));
 
         const itemKey = LocalStorageKeyHelper.getTransactionItemKey(recordId, familyId);
@@ -1023,11 +1023,11 @@ export class CommonSyncService implements OnDestroy {
         this.storageService.setItem(itemKey, {
           ...(existing || item.data),
           syncStatus: status as any,
-          lastSyncedAt: new Date()
+          lastSyncedAt: Timestamp.now()
         }, 'transactions');
       } 
       else if (item.type === 'budget') {
-        const budget = { ...item.data, syncStatus: status, lastSyncedAt: new Date() };
+        const budget = { ...item.data, syncStatus: status, lastSyncedAt: Timestamp.now() };
         this.store.dispatch(BudgetsActions.updateBudgetSuccess({ budget }));
         
         const cacheKey = LocalStorageKeyHelper.getBudgetsCacheKey(userId, familyId);
@@ -1039,7 +1039,7 @@ export class CommonSyncService implements OnDestroy {
         }
       }
       else if (item.type === 'account') {
-        const account = { ...item.data, syncStatus: status, lastSyncAt: new Date() };
+        const account = { ...item.data, syncStatus: status, lastSyncAt: Timestamp.now() };
         this.store.dispatch(AccountsActions.updateAccountSuccess({ account }));
         
         const cacheKey = LocalStorageKeyHelper.getAccountsCacheKey(userId, familyId);
@@ -1051,7 +1051,7 @@ export class CommonSyncService implements OnDestroy {
         }
       }
       else if (item.type === 'goal') {
-        const goal = { ...item.data, syncStatus: status, lastSyncedAt: new Date() };
+        const goal = { ...item.data, syncStatus: status, lastSyncedAt: Timestamp.now() };
         this.store.dispatch(GoalsActions.updateGoalSuccess({ goal }));
         
         const cacheKey = LocalStorageKeyHelper.getGoalsCacheKey(userId);
@@ -1399,7 +1399,7 @@ export class CommonSyncService implements OnDestroy {
   }
 
   private scrubUndefined(obj: any): any {
-    if (obj === null || typeof obj !== 'object' || obj instanceof Date) return obj;
+    if (obj === null || typeof obj !== 'object' || obj instanceof Date || obj instanceof Timestamp) return obj;
     if (Array.isArray(obj)) return obj.map(item => this.scrubUndefined(item));
 
     const result: any = {};
@@ -1423,7 +1423,7 @@ export class CommonSyncService implements OnDestroy {
    * Recursively convert undefined values to empty strings
    */
   private convertUndefinedToEmpty(obj: any): any {
-    if (obj === null || typeof obj !== 'object' || obj instanceof Date) return obj;
+    if (obj === null || typeof obj !== 'object' || obj instanceof Date || obj instanceof Timestamp) return obj;
     if (Array.isArray(obj)) return obj.map(item => this.convertUndefinedToEmpty(item));
 
     const result: any = {};

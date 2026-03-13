@@ -245,7 +245,7 @@
             }
           </button>
           
-          @if (isFamilyMode() && isSplitMode()) {
+          <!-- @if (isFamilyMode() && isSplitMode()) { -->
             <button mat-menu-item [class.active-menu-item]="selectedRange() === 'deleted'"
               (click)="onDateRangeChange('deleted')">
               <mat-icon class="text-red-500">delete_outline</mat-icon>
@@ -254,7 +254,7 @@
                 <mat-icon class="check-icon">check</mat-icon>
               }
             </button>
-          }
+          <!-- } -->
           <button mat-menu-item [class.active-menu-item]="selectedRange() === 'this-week'"
             (click)="onDateRangeChange('this-week')">
             <mat-icon>calendar_view_week</mat-icon>

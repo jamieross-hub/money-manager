@@ -380,8 +380,8 @@ export class MobileTransactionListComponent
    * - Transactions linked to a settlement CANNOT be edited (to prevent data inconsistency).
    */
   canEdit(tx: Transaction): boolean {
-      if (!this.isFamilyMode()) return true;
-    if (tx.settlementId || tx.categoryId === 'adjustment' || tx.status === 'pending') return false;
+      if (!this.isFamilyMode()) return tx.syncStatus !== SyncStatus.PENDING;
+    if (tx.settlementId || tx.categoryId === 'adjustment' || tx.status === 'pending' || tx.syncStatus === SyncStatus.PENDING) return false;
     return this.canPerformAction(tx);
   }
 
@@ -405,6 +405,7 @@ export class MobileTransactionListComponent
   }
 
   private canPerformAction(tx: Transaction): boolean {
+    if (tx.syncStatus === SyncStatus.PENDING) return false;
     if (!this.isFamilyMode()) return true;
     const uid = this.currentUserId;
     if (!uid) return false;

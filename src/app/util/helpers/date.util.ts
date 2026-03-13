@@ -11,7 +11,9 @@ export class DateUtil {
       if (!timestamp) return null;
 
       // 1. Handle Date object
-      if (timestamp instanceof Date) return timestamp;
+      if (timestamp instanceof Date) {
+        return isNaN(timestamp.getTime()) ? null : timestamp;
+      }
 
       // 2. Handle Firestore Timestamp (Structural Clone or Object Literal)
       // Check for seconds property which is characteristic of Firestore Timestamps

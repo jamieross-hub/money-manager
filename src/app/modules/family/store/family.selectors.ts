@@ -1,6 +1,6 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { FamilyState } from './family.state';
-import { TransactionStatus } from 'src/app/util/config/enums';
+import { TransactionStatus, SyncStatus } from 'src/app/util/config/enums';
 
 export const selectFamilyState = createFeatureSelector<FamilyState>('family');
 
@@ -10,7 +10,7 @@ export const selectRawTransactions = createSelector(selectFamilyState, s => s?.t
 
 export const selectFamilyTransactions = createSelector(
   selectRawTransactions,
-  txs => txs.filter(tx => tx.status !== TransactionStatus.DELETED)
+  txs => txs.filter(tx => tx.status !== TransactionStatus.DELETED || tx.syncStatus === SyncStatus.PENDING)
 );
 
 export const selectRawFamilyTransactions = createSelector(

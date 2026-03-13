@@ -546,6 +546,9 @@
                         calendar_today
                       </mat-icon>
                     </div>
+                    @if(getRecurringStartDateError() && transactionForm.get('recurringStartDate')?.touched) {
+                      <p class="text-red-500 text-sm mt-1">{{ getRecurringStartDateError() }}</p>
+                    }
                   </div>
 
                   <!-- End Date -->
@@ -562,6 +565,9 @@
                         calendar_today
                       </mat-icon>
                     </div>
+                    @if(getRecurringEndDateError() && transactionForm.get('recurringEndDate')?.touched) {
+                      <p class="text-red-500 text-sm mt-1">{{ getRecurringEndDateError() }}</p>
+                    }
                     <p class="text-xs text-gray-500 mt-1">Leave empty for unlimited recurrence</p>
                   </div>
 

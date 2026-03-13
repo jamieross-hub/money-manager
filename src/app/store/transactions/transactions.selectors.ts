@@ -1,7 +1,7 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { TransactionsState } from './transactions.state';
 import { Timestamp } from '@angular/fire/firestore';
-import { TransactionType, TransactionStatus } from '../../util/config/enums';
+import { TransactionType, TransactionStatus, SyncStatus } from '../../util/config/enums';
 import * as ProfileSelectors from '../profile/profile.selectors';
 import * as FamilySelectors from '../../modules/family/store/family.selectors';
 import { Transaction } from '../../util/models/transaction.model';
@@ -36,7 +36,7 @@ export const selectAllTransactions = createSelector(
     return state.ids
       .map(id => state.entities[id])
       .filter(Boolean)
-      .filter(t => t.status !== TransactionStatus.DELETED);
+      .filter(t => t.status !== TransactionStatus.DELETED || t.syncStatus === SyncStatus.PENDING);
   }
 );
 

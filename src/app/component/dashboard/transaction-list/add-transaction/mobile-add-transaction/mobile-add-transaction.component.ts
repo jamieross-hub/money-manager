@@ -1,5 +1,6 @@
 import { Component, Inject, inject, ViewChild, ElementRef, AfterViewInit, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, effect, ChangeDetectorRef } from '@angular/core';
 import dayjs from 'dayjs';
+import { Timestamp } from '@angular/fire/firestore';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -232,7 +233,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     this.transactionForm = this.fb.group({
 
       amount: ['', this.validationService.getTransactionAmountValidators()],
-      date: [this.dateService.toLocalISOString(new Date()), Validators.required],
+      date: [this.dateService.toLocalISOString(new Date()), this.validationService.getTransactionDateValidators()],
       description: [''],
       categoryId: ['', Validators.required],
       categoryName: ['', Validators.required],
@@ -245,8 +246,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       // Recurring fields
       isRecurring: [false],
       recurringInterval: [RecurringInterval.MONTHLY],
-      recurringStartDate: [this.dateService.toLocalISOString(new Date())],
-      recurringEndDate: [this.dateService.toLocalISOString(nextYear)],
+      recurringStartDate: [this.dateService.toLocalISOString(new Date()), this.validationService.getTransactionDateValidators()],
+      recurringEndDate: [this.dateService.toLocalISOString(nextYear), this.validationService.getTransactionDateValidators()],
       recurringAmount: [0],
       recurringNotes: [''],
       recurringCategoryId: [''],
@@ -791,7 +792,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           createdAt: this.dialogData?.createdAt,
           createdBy: this.dialogData?.createdBy,
           updatedBy: this.userId,
-          updatedAt: new Date(),
+          updatedAt: Timestamp.now(),
           familyId: this.isFamilyMode() ? (this.familyService.activeFamilyId() || '') : '',
         };
 
@@ -989,10 +990,17 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
   getDateError(): string {
     const dateControl = this.transactionForm.get('date');
-    if (dateControl?.hasError('required')) {
-      return 'Date is required';
-    }
-    return '';
+    return dateControl ? this.validationService.getTransactionDateError(dateControl) : '';
+  }
+
+  getRecurringStartDateError(): string {
+    const control = this.transactionForm.get('recurringStartDate');
+    return control ? this.validationService.getTransactionDateError(control) : '';
+  }
+
+  getRecurringEndDateError(): string {
+    const control = this.transactionForm.get('recurringEndDate');
+    return control ? this.validationService.getTransactionDateError(control) : '';
   }
 
   openNewAccountDialog(): void {

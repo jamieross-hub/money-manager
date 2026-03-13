@@ -73,12 +73,12 @@ export class TransactionsService extends BaseService {
      */
     createTransaction(userId: string, transaction: Transaction): Observable<void> {
         const transactionId = transaction.id || this.generateId();
-        const now = new Date();
+        const now = Timestamp.now();
         const isOnline = this.commonSyncService.isCurrentlyOnline();
         const transactionData: Transaction = this.scrubUndefined({
             ...transaction,
             id: transactionId,
-            date: this.dateService.toDate(transaction.date) || now,
+            date: this.dateService.toDate(transaction.date) || now.toDate(),
             createdAt: now,
             updatedAt: now,
             createdBy: userId,
@@ -190,7 +190,7 @@ export class TransactionsService extends BaseService {
 
                     const updateData = this.scrubUndefined({
                         ...updatedTransaction,
-                        updatedAt: new Date(),
+                        updatedAt: Timestamp.now(),
                         updatedBy: userId,
                         syncStatus: this.commonSyncService.isCurrentlyOnline() ? SyncStatus.SYNCED : SyncStatus.PENDING
                     });
@@ -297,7 +297,13 @@ export class TransactionsService extends BaseService {
             
             let transactionWithDeletedStatus: Transaction | undefined;
             if (transactionToDelete) {
-                transactionWithDeletedStatus = this.scrubUndefined({ ...transactionToDelete, status: TransactionStatus.DELETED, updatedAt: new Date() }) as Transaction;
+                const isOnline = this.commonSyncService.isCurrentlyOnline();
+                transactionWithDeletedStatus = this.scrubUndefined({ 
+                    ...transactionToDelete, 
+                    status: TransactionStatus.DELETED, 
+                    updatedAt: Timestamp.now(),
+                    syncStatus: isOnline ? SyncStatus.SYNCED : SyncStatus.PENDING
+                }) as Transaction;
                 
                 this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ 
                     transactionId, 
@@ -320,10 +326,7 @@ export class TransactionsService extends BaseService {
             // 4. Always add to sync queue (it handles online/offline internally)
             if (transactionId) {
                 this.addToSyncQueue('update', { 
-                  id: transactionId, 
-                  status: TransactionStatus.DELETED, 
-                  updatedAt: new Date(), 
-                  familyId: transactionToDelete?.familyId 
+                    ...transactionWithDeletedStatus
                 }, userId).catch(error => {
                     console.error('Failed to add to sync queue:', error);
                 });

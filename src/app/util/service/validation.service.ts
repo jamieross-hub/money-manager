@@ -3,6 +3,7 @@ import { IValidationService } from './interfaces';
 import { APP_CONFIG, ERROR_MESSAGES } from '../config/config';
 import { Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { CurrencyService } from './currency.service';
+import { DateUtil } from '../helpers/date.util';
 
 /**
  * Validation result interface
@@ -247,6 +248,17 @@ export class ValidationService implements IValidationService {
   /**
    * Budget validation methods
    */
+  getTransactionDateValidators() {
+    return [
+      Validators.required,
+      (control: AbstractControl): ValidationErrors | null => {
+        if (!control.value) return null;
+        const date = new Date(control.value);
+        return isNaN(date.getTime()) ? { invalidDate: true } : null;
+      }
+    ];
+  }
+
   getBudgetAmountValidators() {
     return [
       Validators.required,
@@ -458,6 +470,16 @@ export class ValidationService implements IValidationService {
     return '';
   }
 
+  getTransactionDateError(control: AbstractControl): string {
+    if (control?.hasError('required')) {
+      return 'Date is required';
+    }
+    if (control?.hasError('invalidDate')) {
+      return ERROR_MESSAGES.VALIDATION.INVALID_DATE;
+    }
+    return '';
+  }
+
   /**
    * Validate email address
    */
@@ -554,12 +576,14 @@ export class ValidationService implements IValidationService {
   /**
    * Validate date
    */
-  validateDate(date: Date): boolean {
-    if (!date || !(date instanceof Date)) {
+  validateDate(date: any): boolean {
+    if (!date) {
       return false;
     }
 
-    return !isNaN(date.getTime());
+    // Try converting using DateUtil to handle various formats (strings, timestamps, etc.)
+    const parsedDate = DateUtil.toDate(date);
+    return parsedDate !== null && !isNaN(parsedDate.getTime());
   }
 
   /**

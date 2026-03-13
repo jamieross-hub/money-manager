@@ -75,23 +75,26 @@ export class DateService {
     
     // Parse form date components
     const [year, month, day] = formDate.split('-').map(Number);
+    const now = new Date();
+    let result: Date;
     
     // If we have an existing date, use its time components
     const d = this.toDate(existingDate);
     if (d) {
-      return new Date(year, month - 1, day, d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
-    }
-
-    const now = new Date();
-    if (preserveTime) {
+      result = new Date(year, month - 1, day, d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
+    } else if (preserveTime) {
       // Only preserve current time if the date is today
       const isToday = year === now.getFullYear() && (month - 1) === now.getMonth() && day === now.getDate();
       if (isToday) {
-        return new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+        result = new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+      } else {
+        result = new Date(year, month - 1, day, 0, 0, 0, 0);
       }
+    } else {
+      result = new Date(year, month - 1, day, 0, 0, 0, 0);
     }
     
-    return new Date(year, month - 1, day, 0, 0, 0, 0);
+    return isNaN(result.getTime()) ? new Date() : result;
   }
 
   /**
