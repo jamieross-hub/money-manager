@@ -128,6 +128,9 @@ export class FamilyModeToggleComponent implements OnInit {
         this.store.dispatch(BudgetsActions.loadBudgets({ userId }));
         this.store.dispatch(GoalsActions.loadGoals({ userId }));
 
+        //add vibration
+        this.notificationService.buttonClick();
+
         // Determine the target route based on the new state
         const activeId = changes.activeFamilyId || profile.preferences?.activeFamilyId;
         const targetRoute = enabled 

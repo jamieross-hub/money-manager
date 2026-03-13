@@ -6,7 +6,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { Store } from '@ngrx/store';
 import { NotificationService } from 'src/app/util/service/notification.service';
-import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { CategoryBudgetService } from 'src/app/util/service/category-budget.service';
 import { DateService } from 'src/app/util/service/date.service';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
@@ -28,7 +27,6 @@ describe('CategoryComponent', () => {
   let mockDialog: jasmine.SpyObj<MatDialog>;
   let mockStore: jasmine.SpyObj<Store>;
   let mockNotificationService: jasmine.SpyObj<NotificationService>;
-  let mockHapticFeedback: jasmine.SpyObj<HapticFeedbackService>;
   let mockBreakpointObserver: jasmine.SpyObj<BreakpointObserver>;
   let mockBudgetService: jasmine.SpyObj<CategoryBudgetService>;
   let mockDateService: jasmine.SpyObj<DateService>;
@@ -90,7 +88,8 @@ describe('CategoryComponent', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: 'test-user-id',
-      updatedBy: 'test-user-id'
+      updatedBy: 'test-user-id',
+      familyId: ''
     },
     {
       id: '2',
@@ -107,7 +106,8 @@ describe('CategoryComponent', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: 'test-user-id',
-      updatedBy: 'test-user-id'
+      updatedBy: 'test-user-id',
+      familyId: ''
     }
   ];
 
@@ -115,8 +115,7 @@ describe('CategoryComponent', () => {
     const authSpy = jasmine.createSpyObj('Auth', [], { currentUser: Promise.resolve(mockUser) });
     const dialogSpy = jasmine.createSpyObj('MatDialog', ['open']);
     const storeSpy = jasmine.createSpyObj('Store', ['dispatch', 'select']);
-    const notificationSpy = jasmine.createSpyObj('NotificationService', ['success', 'error']);
-    const hapticSpy = jasmine.createSpyObj('HapticFeedbackService', ['light']);
+    const notificationSpy = jasmine.createSpyObj('NotificationService', ['success', 'error', 'lightVibration', 'successVibration']);
     const breakpointSpy = jasmine.createSpyObj('BreakpointObserver', ['observe']);
     const budgetSpy = jasmine.createSpyObj('CategoryBudgetService', [
       'calculateBudget',
@@ -142,7 +141,6 @@ describe('CategoryComponent', () => {
         { provide: MatDialog, useValue: dialogSpy },
         { provide: Store, useValue: storeSpy },
         { provide: NotificationService, useValue: notificationSpy },
-        { provide: HapticFeedbackService, useValue: hapticSpy },
         { provide: BreakpointObserver, useValue: breakpointSpy },
         { provide: CategoryBudgetService, useValue: budgetSpy },
         { provide: DateService, useValue: dateSpy },
@@ -156,7 +154,6 @@ describe('CategoryComponent', () => {
     mockDialog = TestBed.inject(MatDialog) as jasmine.SpyObj<MatDialog>;
     mockStore = TestBed.inject(Store) as jasmine.SpyObj<Store>;
     mockNotificationService = TestBed.inject(NotificationService) as jasmine.SpyObj<NotificationService>;
-    mockHapticFeedback = TestBed.inject(HapticFeedbackService) as jasmine.SpyObj<HapticFeedbackService>;
     mockBreakpointObserver = TestBed.inject(BreakpointObserver) as jasmine.SpyObj<BreakpointObserver>;
     mockBudgetService = TestBed.inject(CategoryBudgetService) as jasmine.SpyObj<CategoryBudgetService>;
     mockDateService = TestBed.inject(DateService) as jasmine.SpyObj<DateService>;

@@ -14,7 +14,6 @@ import { ParentCategorySelectorDialogComponent, ParentCategorySelectorData } fro
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
 import { NotificationService } from '../notification.service';
 import { CommonSyncService, SyncItem } from '../common-sync.service';
-import { HapticFeedbackService } from '../haptic-feedback.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { UserService } from './user.service';
 import { FamilyService } from 'src/app/modules/family/services/family.service';
@@ -32,10 +31,9 @@ export class CategoryService implements OnDestroy {
     constructor(
         private firestore: Firestore,
         private auth: Auth,
-        protected store: Store<AppState>,
+        private store: Store<AppState>,
         private dialog: MatDialog,
         private notificationService: NotificationService,
-        private hapticFeedback: HapticFeedbackService,
         private localStorageUtility: LocalIndexDBStorageService,
         protected userService: UserService,
         private commonSyncService: CommonSyncService,
@@ -772,7 +770,7 @@ export class CategoryService implements OnDestroy {
                 }));
 
                 this.notificationService.info('Category deleted successfully');
-                this.hapticFeedback.successVibration();
+                this.notificationService.successVibration();
             }
         });
     }

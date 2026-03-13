@@ -10,7 +10,6 @@ import {
 } from '@angular/material/dialog';
 import { MatBottomSheet, MatBottomSheetModule } from '@angular/material/bottom-sheet';
 import { Router } from '@angular/router';
-import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { ValidationService } from 'src/app/util/service/validation.service';
 
@@ -149,7 +148,6 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
     private auth: Auth,
     private notificationService: NotificationService,
     private router: Router,
-    private hapticFeedback: HapticFeedbackService,
     private dialog: MatDialog,
     private bottomSheet: MatBottomSheet,
     public breakpointService: BreakpointService,
@@ -211,7 +209,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
           icon: suggestion.icon,
           color: suggestion.color.toUpperCase()
         }, { emitEvent: true });
-        this.hapticFeedback.lightVibration();
+        this.notificationService.lightVibration();
       }
     });
   }
@@ -275,7 +273,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
           })
         );
         this.notificationService.info('Category added successfully');
-        this.hapticFeedback.successVibration();
+        this.notificationService.successVibration();
       }
 
       this.dialogRef.close(formValue);
@@ -328,7 +326,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
       .subscribe((selectedIcon: string) => {
         if (selectedIcon) {
           this.categoryForm.patchValue({ icon: selectedIcon });
-          this.hapticFeedback.lightVibration();
+          this.notificationService.lightVibration();
         }
       });
   }

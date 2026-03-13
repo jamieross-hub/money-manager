@@ -2,7 +2,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CategoryCardComponent } from './category-card.component';
 import { MatDialog } from '@angular/material/dialog';
 import { NotificationService } from 'src/app/util/service/notification.service';
-import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { CategoryService } from 'src/app/util/service/db/category.service';
 import { CategoryBudgetService } from 'src/app/util/service/category-budget.service';
 import { Store } from '@ngrx/store';
@@ -52,7 +51,8 @@ describe('CategoryCardComponent', () => {
       createdAt: new Date() as any,
       updatedAt: new Date() as any,
       createdBy: 'user1',
-      updatedBy: 'user1'
+      updatedBy: 'user1',
+      familyId: ''
     },
     {
       id: 'tx2',
@@ -69,7 +69,8 @@ describe('CategoryCardComponent', () => {
       createdAt: new Date() as any,
       updatedAt: new Date() as any,
       createdBy: 'user1',
-      updatedBy: 'user1'
+      updatedBy: 'user1',
+      familyId: ''
     }
   ];
 
@@ -82,7 +83,6 @@ describe('CategoryCardComponent', () => {
       providers: [
         { provide: MatDialog, useValue: {} },
         { provide: NotificationService, useValue: {} },
-        { provide: HapticFeedbackService, useValue: {} },
         { provide: CategoryService, useValue: {} },
         { provide: CategoryBudgetService, useValue: {} },
         { provide: Store, useValue: {} },

@@ -6,7 +6,6 @@ import { Subject, Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import { NotificationService } from 'src/app/util/service/notification.service';
-import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { FeedbackService } from 'src/app/util/service/feedback.service';
 import { APP_CONFIG } from 'src/app/util/config/config';
 
@@ -53,7 +52,6 @@ export class FeedbackComponent implements OnInit, OnDestroy {
   private breakpointObserver = inject(BreakpointObserver);
   private store = inject(Store<AppState>);
   private notificationService = inject(NotificationService);
-  private hapticFeedback = inject(HapticFeedbackService);
   private feedbackService = inject(FeedbackService);
 
   feedbackForm: FormGroup;
@@ -140,7 +138,7 @@ export class FeedbackComponent implements OnInit, OnDestroy {
   public setRating(rating: number): void {
     this.feedbackForm.patchValue({ rating });
     if (this.isMobile) {
-      this.hapticFeedback.lightVibration();
+      this.notificationService.lightVibration();
     }
   }
 
@@ -160,7 +158,7 @@ export class FeedbackComponent implements OnInit, OnDestroy {
     this.isSubmitting = true;
 
     if (this.isMobile) {
-      this.hapticFeedback.lightVibration();
+      this.notificationService.lightVibration();
     }
 
     try {

@@ -6,7 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { CommonSyncService, NetworkStatus } from '../../../util/service/common-sync.service';
 import { MatDialog } from '@angular/material/dialog';
-import { HapticFeedbackService } from '../../../util/service/haptic-feedback.service';
+import { NotificationService } from '../../../util/service/notification.service';
 import { filter, map } from 'rxjs/operators';
 import { MobileAddTransactionComponent } from '../transaction-list/add-transaction/mobile-add-transaction/mobile-add-transaction.component';
 import { AddAccountDialogComponent } from '../accounts/add-account-dialog/add-account-dialog.component';
@@ -31,7 +31,7 @@ export class FooterComponent {
   private commonSyncService = inject(CommonSyncService);
   private router = inject(Router);
   private _dialog = inject(MatDialog);
-  private hapticFeedback = inject(HapticFeedbackService);
+  private notificationService = inject(NotificationService);
   public breakpointService = inject(BreakpointService);
   private store = inject(Store<AppState>);
   public familyService = inject(FamilyService);
@@ -100,7 +100,7 @@ export class FooterComponent {
   });
 
   onAddFabClick() {
-    this.hapticFeedback.buttonClick();
+    this.notificationService.buttonClick();
     const action = this.addConfig().action;
     if (action === 'account') {
       this.addAccount();
@@ -134,7 +134,7 @@ export class FooterComponent {
   }
 
   addTransaction() {
-    this.hapticFeedback.buttonClick();
+    this.notificationService.buttonClick();
     this._dialog.open(MobileAddTransactionComponent, {
       panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
     });
@@ -158,7 +158,7 @@ export class FooterComponent {
   }
 
   navigateTo(route: string) {
-    this.hapticFeedback.buttonClick();
+    this.notificationService.buttonClick();
     this.router.navigate([route]);
   }
 }

@@ -23,7 +23,6 @@ import { ACCOUNT_GROUPS, AccountGroup, getAccountGroup } from 'src/app/util/conf
 import { Transaction } from 'src/app/util/models/transaction.model';
 import * as ProfileSelectors from '../../../store/profile/profile.selectors';
 import { BehaviorSubject, combineLatest, map, distinctUntilChanged } from 'rxjs';
-import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { CurrencyService } from 'src/app/util/service/currency.service';
 
 interface AccountViewModel {
@@ -121,13 +120,12 @@ export class AccountsComponent implements OnInit, OnDestroy {
     private readonly auth: Auth,
     private readonly router: Router,
     private readonly dialog: MatDialog,
-    private readonly notificationService: NotificationService,
     private readonly store: Store<AppState>,
     public readonly dateService: DateService,
     public readonly breakpointService: BreakpointService,
     private readonly userService: UserService,
     private readonly cdr: ChangeDetectorRef,
-    private readonly hapticFeedback: HapticFeedbackService,
+    private readonly notificationService: NotificationService,
     private readonly currencyService: CurrencyService
   ) {
 
@@ -512,7 +510,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
       this.expandedAccount = null;
     } else {
       this.expandedAccount = account;
-      this.hapticFeedback.lightVibration();
+      this.notificationService.lightVibration();
     }
   }
 

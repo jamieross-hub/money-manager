@@ -6,7 +6,6 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Subject, Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { take, takeUntil, map, startWith, distinctUntilChanged, debounceTime } from 'rxjs/operators';
 import { NotificationService } from 'src/app/util/service/notification.service';
-import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { MobileCategoryAddEditPopupComponent } from './mobile-category-add-edit-popup/mobile-category-add-edit-popup.component';
 
 import { Category, Budget } from 'src/app/util/models';
@@ -126,7 +125,6 @@ export class CategoryComponent implements OnInit, OnDestroy {
     private auth: Auth,
     private dialog: MatDialog,
     private notificationService: NotificationService,
-    private hapticFeedback: HapticFeedbackService,
     private breakpointObserver: BreakpointObserver,
     private store: Store<AppState>,
     private budgetService: CategoryBudgetService,
@@ -401,7 +399,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
   public openAddMobileDialog(): void {
     if (this.breakpointService.device.isMobile) {
-      this.hapticFeedback.lightVibration();
+      this.notificationService.lightVibration();
     }
     this.openMobileDialog();
   }
@@ -421,7 +419,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
     } else {
       this.selectedCategoryId = category.id || null;
       if (this.selectedCategoryId && this.breakpointService.device.isMobile) {
-        this.hapticFeedback.lightVibration();
+        this.notificationService.lightVibration();
       }
     }
   }

@@ -5,7 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ReportsComponent } from 'src/app/modules/features/component/reports/reports.component';
 import { QuickActionsFabComponent, QuickAction, QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
-import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
+import { NotificationService } from 'src/app/util/service/notification.service';
 import { MobileCategoryAddEditPopupComponent } from '../category/mobile-category-add-edit-popup/mobile-category-add-edit-popup.component';
 import { AddAccountDialogComponent } from '../accounts/add-account-dialog/add-account-dialog.component';
 import { Router } from '@angular/router';
@@ -64,13 +64,13 @@ export class SummaryComponent {
     constructor(
         public breakpointService: BreakpointService,
         private dialog: MatDialog,
-        private hapticFeedback: HapticFeedbackService,
+        private notificationService: NotificationService,
         private router: Router
     ) { }
 
     onFabAction(action: QuickAction): void {
         if (this.breakpointService.device.isMobile) {
-            this.hapticFeedback.lightVibration();
+            this.notificationService.lightVibration();
         }
 
         switch (action.id) {
@@ -79,7 +79,7 @@ export class SummaryComponent {
                     panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
                     data: { category: null, isEdit: false, allCategories: [] }
                 }).afterClosed().subscribe(() => {
-                    this.hapticFeedback.lightVibration();
+                    this.notificationService.lightVibration();
                     this.router.navigate(['/dashboard/category']);
                 });
                 break;
@@ -89,7 +89,7 @@ export class SummaryComponent {
                     panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
                     data: null
                 }).afterClosed().subscribe(() => {
-                    this.hapticFeedback.lightVibration();
+                    this.notificationService.lightVibration();
                     this.router.navigate(['/dashboard/accounts']);
                 });
                 break;

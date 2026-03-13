@@ -12,7 +12,6 @@ import { AppState } from 'src/app/store/app.state';
 import { Store } from '@ngrx/store';
 import { UserService } from '../../../../service/db/user.service';
 import { NotificationService } from '../../../notification.service';
-import { HapticFeedbackService } from '../../../haptic-feedback.service';
 import { Account, Category, Transaction } from "src/app/util/models";
 import * as TransactionsActions from 'src/app/store/transactions/transactions.actions';
 import { EntityExtractorService } from '../../extractors/entity-extractor.service';
@@ -31,7 +30,6 @@ export class TransactionIntentHandler implements IntentHandler {
         private store: Store<AppState>,
         private userService: UserService,
         private notificationService: NotificationService,
-        private hapticFeedback: HapticFeedbackService,
         private extractor: EntityExtractorService,
         private currencyService: CurrencyService
     ) { }
@@ -84,7 +82,7 @@ export class TransactionIntentHandler implements IntentHandler {
         try {
             await this.store.dispatch(TransactionsActions.createTransaction({ userId, transaction: transactionData }));
             this.notificationService.info('Transaction added successfully');
-            this.hapticFeedback.successVibration();
+            this.notificationService.successVibration();
             return `${type === TransactionType.INCOME ? 'Income' : 'Expense'} added: ${this.currencyService.formatAmount(amount)}`;
         } catch (error) {
             console.error(`Failed to add ${type} transaction`, error);

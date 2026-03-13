@@ -6,7 +6,6 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
-import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { ValidationService } from 'src/app/util/service/validation.service';
 import { Account } from 'src/app/util/models/account.model';
@@ -166,7 +165,6 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<AddAccountDialogComponent>,
     private notificationService: NotificationService,
-    private hapticFeedback: HapticFeedbackService,
     private validationService: ValidationService,
     private transactionsService: TransactionsService,
     private categoryService: CategoryService,
@@ -531,7 +529,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
         } else {
           this.notificationService.info('Account added successfully');
         }
-        this.hapticFeedback.successVibration();
+        this.notificationService.successVibration();
       }
 
       this.dialogRef.close(true);
@@ -641,7 +639,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
       .subscribe((selectedIcon: string) => {
         if (selectedIcon) {
           this.accountForm.patchValue({ icon: selectedIcon });
-          this.hapticFeedback.lightVibration();
+          this.notificationService.lightVibration();
         }
       });
   }

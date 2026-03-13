@@ -20,7 +20,6 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { TranslateModule } from '@ngx-translate/core';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import { Router } from '@angular/router';
-import { HapticFeedbackService } from 'src/app/util/service/haptic-feedback.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { ValidationService } from 'src/app/util/service/validation.service';
 import { AddAccountDialogComponent } from 'src/app/component/dashboard/accounts/add-account-dialog/add-account-dialog.component';
@@ -183,7 +182,6 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     public dialogRef: MatDialogRef<MobileAddTransactionComponent>,
     private notificationService: NotificationService,
     private router: Router,
-    private hapticFeedback: HapticFeedbackService,
     private dialog: MatDialog,
     private loaderService: LoaderService,
     private dateService: DateService,
@@ -941,7 +939,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           }
 
           this.notificationService.info('Transaction added successfully');
-          this.hapticFeedback.successVibration();
+          this.notificationService.successVibration();
         }
 
         this.router.navigate(['/dashboard/transactions']).catch(() => {
@@ -976,7 +974,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     this.viewMode.set(false);
     this.editMode.set(true);
     this.transactionForm.enable();
-    this.hapticFeedback.lightVibration();
+    this.notificationService.lightVibration();
   }
 
   onClose(): void {
