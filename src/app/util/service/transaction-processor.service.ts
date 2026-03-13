@@ -322,7 +322,24 @@ export class TransactionProcessorService {
 
     // Member filter (family split mode)
     if (filters.selectedMember) {
-      filtered = filtered.filter((t: any) => t.userId === filters.selectedMember || t.createdBy === filters.selectedMember);
+      const memberId = filters.selectedMember;
+      filtered = filtered.filter((t: any) => {
+        // 1. Direct involvement as primary user, creator, or payer
+        if (t.userId === memberId || t.createdBy === memberId || t.splitData?.paidByUserId === memberId) return true;
+
+        // 2. Part of a split transaction
+        if (t.splitData) {
+          const sd = t.splitData;
+          if (sd.paidByUserId === memberId) return true;
+          if (sd.paidBy && sd.paidBy.some((p: any) => p.userId === memberId)) return true;
+          if (sd.splitBetween && sd.splitBetween.some((s: any) => s.userId === memberId)) return true;
+        }
+
+        // 3. Part of a settlement
+        if (t.settlementFromUserId === memberId || t.settlementToUserId === memberId) return true;
+
+        return false;
+      });
     }
 
     // Merging Logic
@@ -421,28 +438,49 @@ export class TransactionProcessorService {
         // the expensive object creation is skipped.
         const txView = cached;
         let dateKey: string;
+        const memberId = filters.selectedMember;
+        let involvementPrefix = '';
+        if (memberId) {
+          const isDirect = tx.splitData 
+            ? (tx.splitData.paidByUserId === memberId || (tx.splitData.paidBy && tx.splitData.paidBy.some((p: any) => p.userId === memberId)))
+            : (tx.userId === memberId || tx.createdBy === memberId);
+          involvementPrefix = isDirect ? 'direct_' : 'involved_';
+        }
+
         if (txView._isUpcoming && txView._isOverdue) {
-          dateKey = 'overdue';
+          dateKey = involvementPrefix + 'overdue';
         } else if (txView._isUpcoming && range !== 'upcoming') {
-          dateKey = 'upcoming';
+          dateKey = involvementPrefix + 'upcoming';
+        } else if (memberId) {
+          // Flatten into one group per involvement type
+          dateKey = involvementPrefix + 'flat';
         } else if ((range === 'this-year' || range === null) && !dayjs(toDate(tx.date)).isSame(today, 'day') && !dayjs(toDate(tx.date)).isSame(yesterday, 'day')) {
-          dateKey = dayjs(toDate(tx.date)).format('YYYY-MM');
+          dateKey = involvementPrefix + dayjs(toDate(tx.date)).format('YYYY-MM');
         } else {
-          dateKey = dayjs(toDate(tx.date)).format('YYYY-MM-DD');
+          dateKey = involvementPrefix + dayjs(toDate(tx.date)).format('YYYY-MM-DD');
         }
         if (isRecurringMode && txView._isUpcoming) return;
         let group = groupsMap.get(dateKey);
         if (!group) {
           let header = dateHeaderCache.get(dateKey);
           if (!header) {
+            // Base header logic
+            let baseHeader = '';
+            const pureDateKey = involvementPrefix ? dateKey.replace(involvementPrefix, '') : dateKey;
             const dObj = dayjs(toDate(tx.date));
-            if (dateKey === 'overdue') header = 'Overdue Recurring';
-            else if (dateKey === 'upcoming') header = 'Upcoming';
-            else if (dObj.isSame(today, 'day')) header = 'Today';
-            else if (dObj.isSame(yesterday, 'day')) header = 'Yesterday';
-            else if (range === 'this-year' || range === null) header = dObj.format('MMMM YYYY');
-            else if (isDateSort) header = dObj.format('dddd, DD MMM YYYY');
-            else header = dObj.format('DD MMM YYYY');
+            
+            if (pureDateKey === 'overdue') baseHeader = 'Overdue Recurring';
+            else if (pureDateKey === 'upcoming') baseHeader = 'Upcoming';
+            else if (memberId && pureDateKey === 'flat') {
+              baseHeader = involvementPrefix === 'direct_' ? 'Direct Involvement' : 'Part of Transactions';
+            }
+            else if (dObj.isSame(today, 'day')) baseHeader = 'Today';
+            else if (dObj.isSame(yesterday, 'day')) baseHeader = 'Yesterday';
+            else if (range === 'this-year' || range === null) baseHeader = dObj.format('MMMM YYYY');
+            else if (isDateSort) baseHeader = dObj.format('dddd, DD MMM YYYY');
+            else baseHeader = dObj.format('DD MMM YYYY');
+
+            header = baseHeader;
             dateHeaderCache.set(dateKey, header);
           }
           group = { date: dateKey, dateHeader: header, transactions: [], isUpcomingGroup: txView._isUpcoming };
@@ -495,14 +533,28 @@ export class TransactionProcessorService {
       this.txViewCache.set(tx, txView);
 
       let dateKey: string;
+      const memberId = filters.selectedMember;
+      
+      // When filtering by a member, we group by "Direct" involvement vs "Involved in"
+      let involvementPrefix = '';
+      if (memberId) {
+        const isDirect = tx.splitData 
+          ? (tx.splitData.paidByUserId === memberId || (tx.splitData.paidBy && tx.splitData.paidBy.some((p: any) => p.userId === memberId)))
+          : (tx.userId === memberId || tx.createdBy === memberId);
+        involvementPrefix = isDirect ? 'direct_' : 'involved_';
+      }
+
       if (txView._isUpcoming && txView._isOverdue) {
-        dateKey = 'overdue';
+        dateKey = involvementPrefix + 'overdue';
       } else if (txView._isUpcoming && range !== 'upcoming') {
-        dateKey = 'upcoming';
+        dateKey = involvementPrefix + 'upcoming';
+      } else if (memberId) {
+        // Flatten into one group per involvement type
+        dateKey = involvementPrefix + 'flat';
       } else if ((range === 'this-year' || range === null) && !dateObj.isSame(today, 'day') && !dateObj.isSame(yesterday, 'day')) {
-        dateKey = dateObj.format('YYYY-MM');
+        dateKey = involvementPrefix + dateObj.format('YYYY-MM');
       } else {
-        dateKey = dateObj.format('YYYY-MM-DD');
+        dateKey = involvementPrefix + dateObj.format('YYYY-MM-DD');
       }
 
       if (isRecurringMode && txView._isUpcoming) {
@@ -513,13 +565,22 @@ export class TransactionProcessorService {
       if (!group) {
         let header = dateHeaderCache.get(dateKey);
         if (!header) {
-          if (dateKey === 'overdue') header = 'Overdue Recurring';
-          else if (dateKey === 'upcoming') header = 'Upcoming';
-          else if (dateObj.isSame(today, 'day')) header = 'Today';
-          else if (dateObj.isSame(yesterday, 'day')) header = 'Yesterday';
-          else if (range === 'this-year' || range === null) header = dateObj.format('MMMM YYYY');
-          else if (isDateSort) header = dateObj.format('dddd, DD MMM YYYY');
-          else header = dateObj.format('DD MMM YYYY');
+          // Base header logic
+          let baseHeader = '';
+          const pureDateKey = involvementPrefix ? dateKey.replace(involvementPrefix, '') : dateKey;
+          
+          if (pureDateKey === 'overdue') baseHeader = 'Overdue Recurring';
+          else if (pureDateKey === 'upcoming') baseHeader = 'Upcoming';
+          else if (memberId && pureDateKey === 'flat') {
+            baseHeader = involvementPrefix === 'direct_' ? 'Direct Involvement' : 'Part of Transactions';
+          }
+          else if (dateObj.isSame(today, 'day')) baseHeader = 'Today';
+          else if (dateObj.isSame(yesterday, 'day')) baseHeader = 'Yesterday';
+          else if (range === 'this-year' || range === null) baseHeader = dateObj.format('MMMM YYYY');
+          else if (isDateSort) baseHeader = dateObj.format('dddd, DD MMM YYYY');
+          else baseHeader = dateObj.format('DD MMM YYYY');
+
+          header = baseHeader;
           dateHeaderCache.set(dateKey, header);
         }
         group = { date: dateKey, dateHeader: header, transactions: [], isUpcomingGroup: txView._isUpcoming };
@@ -537,6 +598,10 @@ export class TransactionProcessorService {
         if (b.dateHeader === 'Overdue Recurring' && a.dateHeader !== 'Overdue Recurring') return 1;
         if (a.dateHeader === 'Upcoming' && b.dateHeader !== 'Upcoming') return -1; 
         if (b.dateHeader === 'Upcoming' && a.dateHeader !== 'Upcoming') return 1;
+
+        // Involvement sorting (Direct first, then Involved/Part of)
+        if (a.date.startsWith('direct_') && b.date.startsWith('involved_')) return -1;
+        if (a.date.startsWith('involved_') && b.date.startsWith('direct_')) return 1;
 
         return sort === 'date-asc'
           ? a.date.localeCompare(b.date)
