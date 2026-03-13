@@ -457,7 +457,7 @@ export class TransactionProcessorService {
         } else if (memberId) {
           // Flatten into one group per involvement type
           dateKey = involvementPrefix + 'flat';
-        } else if ((range === 'this-year' || range === null) && !dayjs(toDate(tx.date)).isSame(today, 'day') && !dayjs(toDate(tx.date)).isSame(yesterday, 'day')) {
+        } else if ((range === 'this-year' || range === null) && !dayjs(toDate(tx.date)).isAfter(today, 'day') && !dayjs(toDate(tx.date)).isSame(today, 'day') && !dayjs(toDate(tx.date)).isSame(yesterday, 'day')) {
           dateKey = involvementPrefix + dayjs(toDate(tx.date)).format('YYYY-MM');
         } else {
           dateKey = involvementPrefix + dayjs(toDate(tx.date)).format('YYYY-MM-DD');
@@ -479,6 +479,10 @@ export class TransactionProcessorService {
             }
             else if (dObj.isSame(today, 'day')) baseHeader = 'Today';
             else if (dObj.isSame(yesterday, 'day')) baseHeader = 'Yesterday';
+            else if (dObj.isAfter(today, 'day')) {
+              if (dObj.isSame(today.add(1, 'day'), 'day')) baseHeader = 'Tomorrow';
+              else baseHeader = dObj.format('dddd, DD MMM YYYY');
+            }
             else if (range === 'this-year' || range === null) baseHeader = dObj.format('MMMM YYYY');
             else if (isDateSort) baseHeader = dObj.format('dddd, DD MMM YYYY');
             else baseHeader = dObj.format('DD MMM YYYY');
@@ -563,7 +567,7 @@ export class TransactionProcessorService {
       } else if (memberId) {
         // Flatten into one group per involvement type
         dateKey = involvementPrefix + 'flat';
-      } else if ((range === 'this-year' || range === null) && !dateObj.isSame(today, 'day') && !dateObj.isSame(yesterday, 'day')) {
+      } else if ((range === 'this-year' || range === null) && !dateObj.isAfter(today, 'day') && !dateObj.isSame(today, 'day') && !dateObj.isSame(yesterday, 'day')) {
         dateKey = involvementPrefix + dateObj.format('YYYY-MM');
       } else {
         dateKey = involvementPrefix + dateObj.format('YYYY-MM-DD');
@@ -588,6 +592,10 @@ export class TransactionProcessorService {
           }
           else if (dateObj.isSame(today, 'day')) baseHeader = 'Today';
           else if (dateObj.isSame(yesterday, 'day')) baseHeader = 'Yesterday';
+          else if (dateObj.isAfter(today, 'day')) {
+            if (dateObj.isSame(today.add(1, 'day'), 'day')) baseHeader = 'Tomorrow';
+            else baseHeader = dateObj.format('dddd, DD MMM YYYY');
+          }
           else if (range === 'this-year' || range === null) baseHeader = dateObj.format('MMMM YYYY');
           else if (isDateSort) baseHeader = dateObj.format('dddd, DD MMM YYYY');
           else baseHeader = dateObj.format('DD MMM YYYY');
