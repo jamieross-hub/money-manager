@@ -389,7 +389,7 @@ export class UserService implements OnDestroy {
       this.storageService.removeItem('guest-data-initialized');
       this.store.dispatch(ProfileActions.clearProfile());
     } else {
-      await this.auth.signOut();
+      await this.signOut();
     }
   }
 

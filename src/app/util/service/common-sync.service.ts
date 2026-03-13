@@ -175,8 +175,13 @@ export class CommonSyncService implements OnDestroy {
    * Initialize all services
    */
   private async initializeServices(): Promise<void> {
+    const isGuest = this.userService.isGuestModeEnabled() || this.userService.getCurrentUserId() === 'offline-guest';
+
+    if (!isGuest) {
+      this.initializeNetworkMonitoring();
+    }
+
     await Promise.all([
-      this.initializeNetworkMonitoring(),
       this.initializeBackgroundSync(),
       this.loadSyncQueue()
     ]);
@@ -208,16 +213,18 @@ export class CommonSyncService implements OnDestroy {
     const verifyConnection = async (retryCount = 0) => {
       if (navigator.onLine) {
         const isOnline = await this.checkFirebaseConnection();
-        this.updateNetworkStatus({ online: isOnline });
         
         // If the browser reports online but the server is unreachable, 
         // retry for a bit because DNS/Websockets take time to reconnect after switching networks.
-        if (!isOnline && retryCount < 5) {
+        if (!isOnline && retryCount < 3) {
           clearTimeout(checkTimeout);
           checkTimeout = setTimeout(() => {
             verifyConnection(retryCount + 1);
           }, 3000);
+          return; // Wait for retries before marking as offline to prevent offline-then-online notification flicker
         }
+        
+        this.updateNetworkStatus({ online: isOnline });
       } else {
         this.updateNetworkStatus({ online: false });
       }
@@ -444,7 +451,7 @@ export class CommonSyncService implements OnDestroy {
    */
   private showOfflineNotification(): void {
     console.log('You are offline', 'Changes will be saved locally and synced when you reconnect.');
-    this.notificationService.warning('You are offline. Working in local mode.');
+    this.notificationService.warning('You are offline.');
   }
 
   /**
