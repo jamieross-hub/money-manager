@@ -976,6 +976,9 @@ export class MobileTransactionListComponent
     const container = event.target as HTMLElement;
     if (!container) return;
 
+    // Cancel any pending long press while scrolling
+    this.onLongPressEnd();
+
     // Show indicator
     this.showScrollIndicator.set(true);
     

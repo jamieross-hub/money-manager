@@ -413,6 +413,7 @@
               [class.grayscale]="item.syncStatus === 'pending'"
               (mousedown)="onLongPressStart(item)"
               (touchstart)="onLongPressStart(item)"
+              (touchmove)="onLongPressEnd()"
               (mouseup)="onLongPressEnd()"
               (touchend)="onLongPressEnd()"
               (click)="onTransactionClick(item, cardElement)">
