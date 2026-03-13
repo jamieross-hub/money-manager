@@ -405,7 +405,6 @@
           @for (item of group.transactions; track trackById($index, item)) {
           <div class="w-full px-2">
             <div class="transaction-card mb-2" #cardElement
-              [@popIn]="item._popState"
               [class.selected]="selectedTx?.id === item.id || selectedTxIds().has(item.id!)"
               [class.multi-selected]="selectedTxIds().has(item.id!)"
               [class.upcoming]="item._isUpcoming"
@@ -428,11 +427,11 @@
                         </button>
                       }
                       
-                      <!-- @if (!canEdit(item) && !item.settlementId && item.categoryId !== 'adjustment' && isFamilyMode() && isSplitMode()) {
+                      @if (!canEdit(item) && !item.settlementId && item.categoryId !== 'adjustment' && isFamilyMode() && isSplitMode()) {
                          <button mat-icon-button class="overlay-action-btn adjust" (click)="onAdjustTransaction(item); cancelActions($event)">
                           <mat-icon>tune</mat-icon>
                         </button>
-                      } -->
+                      }
 
                       @if (canDelete(item)) {
                         <button mat-flat-button (click)="onDeleteTransaction(item); cancelActions($event)">

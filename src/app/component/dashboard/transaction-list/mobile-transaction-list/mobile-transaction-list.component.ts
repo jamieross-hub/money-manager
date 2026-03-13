@@ -110,29 +110,7 @@ interface SortOption {
     ImageFallbackDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [
-    trigger('popIn', [
-      transition('void => new', [
-        style({ 
-          opacity: 0, 
-          height: 0,
-          marginBottom: 0,
-          transform: 'scale(0.92) translateY(15px)',
-          overflow: 'hidden'
-        }),
-        // First, expand the space for the card gracefully
-        animate('350ms cubic-bezier(0.4, 0, 0.2, 1)', style({ 
-          height: '*', 
-          marginBottom: '8px' 
-        })),
-        // Then, pop the card content in with a natural bounce
-        animate('650ms cubic-bezier(0.175, 0.885, 0.32, 1.275)', style({ 
-          opacity: 1, 
-          transform: 'scale(1) translateY(0)' 
-        }))
-      ])
-    ])
-  ]
+  animations: []
 })
 export class MobileTransactionListComponent
   implements OnInit, OnDestroy {
@@ -698,7 +676,7 @@ export class MobileTransactionListComponent
       // Scroll into view with a slight delay to allow expansion rendering
       setTimeout(() => {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 150);
+      }, 250);
     }
   }
 
