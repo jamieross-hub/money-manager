@@ -728,7 +728,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           categoryId: formData.categoryId,
           categoryType: formData.categoryType as TransactionType,
           type: formData.categoryType as TransactionType,
-          date: this.dateService.getLocalDateTimeFromForm(formData.date, true),
+          date: this.dateService.getLocalDateTimeFromForm(formData.date, true, this.dialogData?.date),
           notes: formData.description,
           taxAmount: formData.taxAmount || 0,
           taxPercentage: formData.taxPercentage || 0,
@@ -737,11 +737,11 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           isRecurring: formData.isRecurring || false,
           payee: formData.description || this.dialogData?.payee || '', // Carry over payee if available
           recurringInterval: formData.recurringInterval || RecurringInterval.MONTHLY,
-          recurringEndDate: formData.recurringEndDate ? this.dateService.getLocalDateTimeFromForm(formData.recurringEndDate) : null,
+          recurringEndDate: formData.recurringEndDate ? this.dateService.getLocalDateTimeFromForm(formData.recurringEndDate, false, this.dialogData?.recurringEndDate) : null,
           nextOccurrence: formData.isRecurring ? (() => {
             const startStr = formData.recurringStartDate || formData.date;
-            const startDate = this.dateService.getLocalDateTimeFromForm(startStr);
-            const transactionDate = this.dateService.getLocalDateTimeFromForm(formData.date);
+            const startDate = this.dateService.getLocalDateTimeFromForm(startStr, false, this.dialogData?.recurringStartDate || this.dialogData?.date);
+            const transactionDate = this.dateService.getLocalDateTimeFromForm(formData.date, false, this.dialogData?.date);
             
             // For existing transactions being converted to recurring
             const referenceDate = (this.dialogData?.id && this.dialogData.date) 
@@ -788,6 +788,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           splitData: this.isSplitGroupMode() ? this.buildSplitData() : null,
           userDisplayName: this.userProfile()?.displayName || '',
           userPhotoURL: this.userProfile()?.photoURL || '',
+          createdAt: this.dialogData?.createdAt,
+          createdBy: this.dialogData?.createdBy,
           updatedBy: this.userId,
           updatedAt: new Date(),
           familyId: this.isFamilyMode() ? (this.familyService.activeFamilyId() || '') : '',

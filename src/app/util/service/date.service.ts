@@ -63,17 +63,26 @@ export class DateService {
 
   /**
    * Converts a form date string (YYYY-MM-DD) to a local Date object.
-   * If preserveTime is true, it keeps the current hour, minute, and second.
+   * If existingDate is provided, it preserves the hours, minutes, seconds, and milliseconds from it.
+   * If preserveTime is true and no existingDate is provided, it keeps the current hour, minute, and second.
    * @param formDate - string in YYYY-MM-DD format
    * @param preserveTime - boolean to preserve current time
+   * @param existingDate - optional existing Date object to preserve time from
    * @returns Date object in local time
    */
-  getLocalDateTimeFromForm(formDate: string, preserveTime: boolean = false): Date {
+  getLocalDateTimeFromForm(formDate: string, preserveTime: boolean = false, existingDate: any = null): Date {
     if (!formDate) return new Date();
     
+    // Parse form date components
     const [year, month, day] = formDate.split('-').map(Number);
-    const now = new Date();
     
+    // If we have an existing date, use its time components
+    const d = this.toDate(existingDate);
+    if (d) {
+      return new Date(year, month - 1, day, d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
+    }
+
+    const now = new Date();
     if (preserveTime) {
       // Only preserve current time if the date is today
       const isToday = year === now.getFullYear() && (month - 1) === now.getMonth() && day === now.getDate();
