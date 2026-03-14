@@ -1,6 +1,6 @@
 import { Injectable, Inject, PLATFORM_ID, Injector, signal, OnDestroy, computed, Signal } from '@angular/core';
 import { BehaviorSubject, Observable, fromEvent, interval, from, of, Subject, combineLatest, merge, forkJoin, Subscription } from 'rxjs';
-import { map, switchMap, catchError, tap, take, filter, distinctUntilChanged, takeUntil, delay, startWith, timeout } from 'rxjs/operators';
+import { map, switchMap, catchError, tap, take, filter, distinctUntilChanged, takeUntil, delay, startWith, timeout, debounceTime } from 'rxjs/operators';
 import { Firestore, collection, doc, writeBatch, serverTimestamp, Timestamp, getDoc, getDocFromServer } from '@angular/fire/firestore';
 import { Auth, getAuth } from '@angular/fire/auth';
 import { SwUpdate } from '@angular/service-worker';
@@ -602,7 +602,8 @@ export class CommonSyncService implements OnDestroy {
     ]).pipe(
       takeUntil(this.destroy$),
       filter((result): result is [any, string | null] => !!result[0] && result[0].uid !== 'offline-guest'),
-      distinctUntilChanged((prev, curr) => 
+      debounceTime<[any, string | null]>(500),
+      distinctUntilChanged<[any, string | null]>((prev, curr) => 
         prev[0]?.uid === curr[0]?.uid && 
         prev[0]?.preferences?.isFamilyMode === curr[0]?.preferences?.isFamilyMode &&
         prev[1] === curr[1]

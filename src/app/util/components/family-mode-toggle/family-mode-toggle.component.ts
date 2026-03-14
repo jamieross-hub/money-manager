@@ -1,6 +1,6 @@
 import { Actions, ofType } from '@ngrx/effects';
 import { Router } from '@angular/router';
-import { Component, OnInit, ChangeDetectionStrategy, signal, inject, Input, input, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, signal, inject, Input, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -24,7 +24,7 @@ import { CommonSyncService } from '../../service/common-sync.service';
 import { NotificationService } from '../../service/notification.service';
 import { User, UserPreferences } from '../../models';
 import { Family } from '../../models/family.model';
-import { filter, take, delay } from 'rxjs';
+import { filter, take, delay, Subject, takeUntil } from 'rxjs';
 import * as FamilyActions from '../../../modules/family/store/family.actions';
 import { FamilyProcessorService } from '../../service/family-processor.service';
 
@@ -36,7 +36,7 @@ import { FamilyProcessorService } from '../../service/family-processor.service';
   styleUrl: './family-mode-toggle.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FamilyModeToggleComponent implements OnInit {
+export class FamilyModeToggleComponent implements OnInit, OnDestroy {
   private readonly store = inject(Store<AppState>);
   private readonly actions$ = inject(Actions);
   private readonly userService = inject(UserService);
@@ -58,7 +58,9 @@ export class FamilyModeToggleComponent implements OnInit {
 
   readonly familyGroup = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null });
   readonly isUpdating = signal(false);
+  private isProcessing = false;
   private readonly pendingState = signal<boolean | null>(null);
+  private readonly destroy$ = new Subject<void>();
 
   // Optimistic UI state
   readonly displayFamilyMode = computed(() => {
@@ -81,33 +83,37 @@ export class FamilyModeToggleComponent implements OnInit {
 
   async toggleFamilyMode(enabled: boolean): Promise<void> {
     const profile = this.userProfile();
-    if (!profile || this.isUpdating()) return;
+    // Guard against rapid clicks or missing profile
+    if (!profile || this.isUpdating() || this.isProcessing) return;
 
-    // Optimistic update
+    // 1. Immediate UI Feedback (Vibration & Loading state)
+    this.notificationService.buttonClick();
     this.isUpdating.set(true);
+    this.isProcessing = true;
     this.pendingState.set(enabled);
 
     try {
-      // 1. Prepare subscriptions BEFORE dispatching to avoid race conditions
+      // 2. Prepare subscriptions for background result
       const success$ = this.actions$.pipe(
         ofType(ProfileActions.updatePreferencesSuccess),
         filter((action: any) => action.profile.preferences?.isFamilyMode === enabled),
-        take(1)
+        take(1),
+        takeUntil(this.destroy$)
       );
 
       const failure$ = this.actions$.pipe(
         ofType(ProfileActions.updatePreferencesFailure),
-        take(1)
+        take(1),
+        takeUntil(this.destroy$)
       );
 
-      // 2. Set up safety timeout
       const timeoutTimer = setTimeout(() => {
           this.isUpdating.set(false);
+          this.isProcessing = false;
           this.pendingState.set(null);
-          console.warn('Family mode toggle timed out');
-      }, 10000); // 10s fallback
+      }, 10000);
 
-      // 5. Determine changes
+      // 3. Determine changes
       let changes: Partial<UserPreferences> = {
         isFamilyMode: enabled,
       };
@@ -115,49 +121,45 @@ export class FamilyModeToggleComponent implements OnInit {
       if (enabled && !profile.preferences?.activeFamilyId) {
         const families = this.familyService.getCachedFamiliesSync();
         if (families && families.length > 0) {
-          changes = {
-            ...changes,
-            activeFamilyId: families[0].id
-          };
+          changes.activeFamilyId = families[0].id;
         }
       }
 
       const activeIdForNavigation = changes.activeFamilyId || profile.preferences?.activeFamilyId;
 
+      // 4. Dispatch the preference update (Optimistic in reducer)
+      this.applyPreferenceChanges(changes);
+
+      // 5. OPTIMISTIC UI SWITCH: Load family data and switch context immediately
       if (enabled && activeIdForNavigation) {
         this.store.dispatch(FamilyActions.loadFamily({ familyId: activeIdForNavigation }));
         this.familyProcessor.loadFamilyData(activeIdForNavigation);
       }
 
-      // 6. Dispatch the preference update (now optimistic in reducer)
-      this.applyPreferenceChanges(changes);
-
-      // 7. OPTIMISTIC UI SWITCH: Perform the switch immediately for offline support
       const newContext = enabled ? 'family' : 'personal';
-      
       this.store.dispatch(AccountsActions.setAccountsContext({ context: newContext }));
       this.store.dispatch(CategoriesActions.setCategoriesContext({ context: newContext }));
 
-      // Clear non-dual-context stores so they re-fetch from the correct source
+      // Clear non-dual-context stores
       this.store.dispatch(TransactionsActions.clearTransactions());
       this.store.dispatch(BudgetsActions.clearBudgets());
       this.store.dispatch(GoalsActions.clearGoals());
 
-      // Navigate immediately
+      // 6. Navigate immediately
       const targetRoute = enabled 
         ? (activeIdForNavigation ? `/dashboard/family/dashboard/${activeIdForNavigation}` : '/dashboard/groups')
         : '/dashboard/home';
 
-      this.router.navigate([targetRoute]).then(() => {
-        this.isUpdating.set(false);
-        this.pendingState.set(null);
-      }).catch(err => {
-        this.isUpdating.set(false);
-        this.pendingState.set(null);
+      await this.router.navigate([targetRoute]).catch(err => {
         if (err?.message !== 'Transition was skipped') throw err;
       });
 
-      // 8. Background result handling (for notifications and state correction on failure)
+      // 7. Cleanup optimistic state
+      this.isUpdating.set(false);
+      this.isProcessing = false;
+      this.pendingState.set(null);
+
+      // 8. Background result handling
       success$.subscribe(() => {
         clearTimeout(timeoutTimer);
         this.notificationService.info(`Family mode ${enabled ? 'enabled' : 'disabled'}`);
@@ -167,8 +169,6 @@ export class FamilyModeToggleComponent implements OnInit {
         clearTimeout(timeoutTimer);
         console.error('Failed to update family mode preference:', error);
         this.notificationService.error('Failed to update family mode preference');
-        
-        // On failure, we might need to reset the context back if the user hasn't switched again
         if (profile.uid) {
            this.store.dispatch(ProfileActions.loadProfile({ userId: profile.uid }));
         }
@@ -178,12 +178,9 @@ export class FamilyModeToggleComponent implements OnInit {
       console.error('Error toggling family mode:', error);
       this.notificationService.error('Failed to toggle family mode');
       this.isUpdating.set(false);
+      this.isProcessing = false;
       this.pendingState.set(null);
     }
-
-     //add vibration
-    this.notificationService.buttonClick();
-
   }
 
   private applyPreferenceChanges(changes: Partial<UserPreferences>): void {
@@ -214,5 +211,10 @@ export class FamilyModeToggleComponent implements OnInit {
         isFamilyMode: changes.isFamilyMode
       }
     }));
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
