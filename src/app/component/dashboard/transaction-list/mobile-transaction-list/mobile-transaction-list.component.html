@@ -406,7 +406,7 @@
             </div>
           </div>
           @for (item of group.transactions; track trackById($index, item)) {
-          <div class="w-full px-2">
+          <div class="w-full px-2" [id]="'tx-' + item.id">
             <div class="transaction-card mb-2" #cardElement
               [class.selected]="selectedTx?.id === item.id || selectedTxIds().has(item.id!)"
               [class.multi-selected]="selectedTxIds().has(item.id!)"
@@ -414,6 +414,7 @@
               [class.deleted]="item._isDeleted"
               [class.opacity-50]="item.syncStatus === 'pending'"
               [class.grayscale]="item.syncStatus === 'pending'"
+              [class.newly-added]="item.id === newlyAddedTxId()"
               (mousedown)="onLongPressStart(item)"
               (touchstart)="onLongPressStart(item)"
               (touchmove)="onLongPressEnd()"

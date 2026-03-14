@@ -144,6 +144,7 @@ export class MobileTransactionListComponent
   selectedTxForActions = signal<Transaction | null>(null);
   selectedTxIds = signal<Set<string>>(new Set());
   isSelectionMode = computed(() => this.selectedTxIds().size > 0);
+  newlyAddedTxId = signal<string | null>(null);
   showFilters: boolean = false;
 
   // Signals defined below...
@@ -201,6 +202,7 @@ export class MobileTransactionListComponent
   public currentScrollHeader = signal<string>('');
   public showScrollIndicator = signal<boolean>(false);
   private scrollTimeout: any;
+  private previousTxIds = new Set<string>();
 
   // Long press handling
   private longPressTimeout: any;
@@ -537,6 +539,50 @@ export class MobileTransactionListComponent
       if (this.isRecurring() || this.isFamilyMode()) {
         this.onDateRangeChange(null);
       }
+    });
+
+    // Detect newly added transactions to scroll and highlight
+    effect(() => {
+      const transactions = this.allActiveTransactions();
+      const currentIds = new Set(transactions.map(t => t.id).filter(Boolean) as string[]);
+      
+      // Find IDs that are in currentIds but were NOT in previousTxIds
+      const newIds = [...currentIds].filter(id => !this.previousTxIds.has(id));
+      
+      // Only act if there's exactly one new ID (to avoid bulk load highlighting)
+      // and if the list was already populated (to avoid first load highlighting)
+      if (newIds.length === 1 && this.previousTxIds.size > 0) {
+        const newId = newIds[0];
+        const newTx = transactions.find(t => t.id === newId);
+        
+        // If the transaction was created very recently (within last 30s)
+        const createdAt = newTx?.createdAt;
+        const createdDate = createdAt ? (createdAt instanceof Date ? createdAt : (createdAt as any).toDate?.() || new Date(createdAt as any)) : null;
+        const isRecent = createdDate && (Date.now() - createdDate.getTime()) < 30000;
+
+        if (isRecent) {
+          this.newlyAddedTxId.set(newId);
+          
+          // Scroll to the new transaction after a short delay for rendering
+          setTimeout(() => {
+            const element = document.getElementById(`tx-${newId}`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            
+            // Clear the highlight after 5 seconds
+            setTimeout(() => {
+              if (this.newlyAddedTxId() === newId) {
+                this.newlyAddedTxId.set(null);
+                this.cdr.markForCheck();
+              }
+            }, 5000);
+          }, 100);
+        }
+      }
+      
+      // Update the previous set for next time
+      this.previousTxIds = currentIds;
     });
 
 
