@@ -353,28 +353,33 @@ export class TransactionsService extends BaseService {
 
         /**
          * ⚠️ ARCHITECTURE ALIGNMENT: Source of Truth = IndexedDB
-         * 
-         * Components should not have a direct connection to Firebase. 
-         * Instead, they subscribe to this.transactionsSubject which is kept updated by 
-         * the central background sync listener (CommonSyncService -> listenToTransactions).
-         */
-        /**
-         * ⚠️ ARCHITECTURE ALIGNMENT: Source of Truth = IndexedDB
+         *
+         * Always wait for IndexedDB to be ready before deciding whether the
+         * cache is empty. On first load the DB may not have finished hydrating
+         * in-memory caches yet, so an apparent miss is not a real miss.
          */
         const cached = this.getCachedTransactions(userId);
         if (cached.length > 0) {
             this.transactionsSubject.next(cached);
             // Hydrate personal store immediately
             this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: cached }));
-        }else{
-            //pull trasaction from firebase
-            this.pullFromFirestore(userId).subscribe();
         }
 
         return this.localStorageUtility.isReady$.pipe(
             switchMap(() => {
                 const refreshed = this.getCachedTransactions(userId);
-                this.transactionsSubject.next(refreshed);
+                if (refreshed.length > 0) {
+                    // Cache is hot — emit immediately and let the Firestore listener provide updates.
+                    this.transactionsSubject.next(refreshed);
+                    this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: refreshed }));
+                } else {
+                    // Cache is genuinely empty after DB ready — attempt pull only if online.
+                    // When offline this returns of(undefined) silently; the Firestore
+                    // listener (listenToTransactions) has its own offline fallback.
+                    if (this.commonSyncService.isCurrentlyOnline()) {
+                        this.pullFromFirestore(userId).subscribe();
+                    }
+                }
                 return this.transactionsSubject.asObservable();
             }),
             startWith(this.transactionsSubject.value)
@@ -647,8 +652,31 @@ export class TransactionsService extends BaseService {
                     observer.next();
                 },
                 (error) => {
-                    console.error('[TransactionsService] Real-time listener failed:', error);
-                    observer.error(error);
+                    console.warn('[TransactionsService] Real-time listener error (may be offline):', error);
+
+                    // OFFLINE FALLBACK: When Firestore is unreachable the listener
+                    // errors immediately. Instead of propagating the error (which
+                    // would terminate the merged stream and leave the store empty),
+                    // emit whatever is already cached in IndexedDB so the UI still
+                    // has data while offline.
+                    const fallback = this.getCachedTransactions(userId, familyId);
+                    if (fallback.length > 0) {
+                        console.log(`[TransactionsService] Offline fallback: dispatching ${fallback.length} cached transactions.`);
+                        this.transactionsSubject.next(fallback);
+                        if (effectiveFamilyId) {
+                            this.store.dispatch(FamilyActions.loadTransactionsSuccess({ transactions: fallback }));
+                        } else {
+                            this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: fallback }));
+                        }
+                        // Complete the observer (don't error) so the upstream
+                        // catchError in CommonSyncService keeps the stream alive.
+                        observer.next();
+                        observer.complete();
+                    } else {
+                        // Nothing cached yet — complete gracefully without error
+                        // so the outer merge stream stays alive for retries.
+                        observer.complete();
+                    }
                 }
             );
 
