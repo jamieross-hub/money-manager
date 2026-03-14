@@ -70,12 +70,14 @@ export class SideBarComponent implements AfterViewInit, OnDestroy {
   }
 
   closeDrawer() {
-    // Delay drawer closure slightly to ensure router navigation fires reliably on older Android devices
+    // Defer drawer closure to the next event loop cycle.
+    // This allows router navigation to fire reliably on older Android devices
+    // without the noticeable UI lag of a hardcoded 100ms delay.
     setTimeout(() => {
       if (this.drawer) {
         this.drawer.close();
       }
-    }, 100);
+    }, 0);
   }
 
   ngAfterViewInit() {
