@@ -1,6 +1,6 @@
 import { Injectable, Inject, PLATFORM_ID, Injector, signal, OnDestroy, computed, Signal } from '@angular/core';
 import { BehaviorSubject, Observable, fromEvent, interval, from, of, Subject, combineLatest, merge, forkJoin, Subscription } from 'rxjs';
-import { map, switchMap, catchError, tap, take, first, filter, distinctUntilChanged, takeUntil, delay, startWith, timeout, debounceTime } from 'rxjs/operators';
+import { map, switchMap, catchError, tap, take, first, filter, distinctUntilChanged, takeUntil, delay, startWith, timeout, debounceTime, finalize } from 'rxjs/operators';
 import { Firestore, collection, doc, writeBatch, serverTimestamp, Timestamp, getDoc, getDocFromServer } from '@angular/fire/firestore';
 import { Auth, getAuth } from '@angular/fire/auth';
 import { SwUpdate } from '@angular/service-worker';
@@ -586,18 +586,19 @@ export class CommonSyncService implements OnDestroy {
       tap(() => {
         console.log('[CommonSyncService] syncAll: Pull complete for all services');
         console.log('✅ Sync completed successfully');
-        this.updateSyncStatus({ isFullSyncing: false });
       }),
       catchError(error => {
-        if (error.name === 'TimeoutError') {
+        if (error?.name === 'TimeoutError') {
           console.warn('⚠️ Sync timed out: Continuing in offline mode');
-        } else if (error.code === 'unavailable' || error.message?.includes('network')) {
+        } else if (error?.code === 'unavailable' || error?.message?.includes('network')) {
           console.warn('⚠️ Firestore unavailable: Continuing in offline mode');
         } else {
           console.error('❌ Sync failed:', error);
         }
-        this.updateSyncStatus({ isFullSyncing: false });
         return of(null);
+      }),
+      finalize(() => {
+        this.updateSyncStatus({ isFullSyncing: false });
       })
     );
   }
