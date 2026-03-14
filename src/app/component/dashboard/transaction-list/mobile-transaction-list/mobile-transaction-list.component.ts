@@ -680,7 +680,7 @@ export class MobileTransactionListComponent
       startDate = dayjs().startOf('day').toDate();
       const unit = appView === 'WEEKLY' ? 'week' : (appView === 'YEARLY' ? 'year' : 'month');
       endDate = dayjs().add(1, unit).endOf('day').toDate();
-    } else if (range === 'deleted' || range === 'settlement') {
+    } else if (range === 'deleted' || range === 'settlement' || range === 'no-settlement') {
       this.filterService.clearSelectedDate();
       return;
     } else {

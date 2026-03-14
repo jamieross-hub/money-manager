@@ -263,6 +263,15 @@
                 <mat-icon class="check-icon">check</mat-icon>
               }
             </button>
+
+            <button mat-menu-item [class.active-menu-item]="selectedRange() === 'no-settlement'"
+              (click)="onDateRangeChange('no-settlement')">
+              <mat-icon class="text-orange-500">receipt</mat-icon>
+              <span>Exclude Settlements</span>
+              @if (selectedRange() === 'no-settlement') {
+                <mat-icon class="check-icon">check</mat-icon>
+              }
+            </button>
           <!-- } -->
           <button mat-menu-item [class.active-menu-item]="selectedRange() === 'this-week'"
             (click)="onDateRangeChange('this-week')">

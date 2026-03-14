@@ -329,6 +329,8 @@ export class TransactionProcessorService {
     // Settlement range filter
     if (range === 'settlement') {
       filtered = filtered.filter((t: any) => !!t.settlementId);
+    } else if (range === 'no-settlement') {
+      filtered = filtered.filter((t: any) => !t.settlementId);
     }
 
     // Member filter (family split mode)
