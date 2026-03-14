@@ -117,7 +117,18 @@ export class CategoryService implements OnDestroy {
         if (familyId) {
             return this.localStorageUtility.getCategoriesByFamilyIdSync(familyId) as Category[];
         }
-        return this.localStorageUtility.getPersonalCategoriesSync(userId) as Category[];
+        const categories = this.localStorageUtility.getPersonalCategoriesSync(userId) as Category[];
+
+        // Proactive migration: Ensure personal categories have userId field for future indexing
+        categories.forEach(c => {
+            if (!c.userId && c.id) {
+                c.userId = userId;
+                const key = LocalStorageKeyHelper.getCategoryItemKey(c.id, undefined);
+                this.localStorageUtility.setCategory(key, c);
+            }
+        });
+
+        return categories;
     }
 
     /**
@@ -229,6 +240,7 @@ export class CategoryService implements OnDestroy {
                         if (data && docSnap.id && data.name) {
                             const category: Category = {
                                 id: docSnap.id,
+                                userId: userId,
                                 ...data
                             };
                             firestoreCategories.push(category);
@@ -290,6 +302,7 @@ export class CategoryService implements OnDestroy {
                     if (data && docSnap.id && data.name) {
                         const category: Category = {
                             id: docSnap.id,
+                            userId: userId,
                             name: data?.name,
                             type: data?.type,
                             icon: data?.icon || 'category',
@@ -389,6 +402,7 @@ export class CategoryService implements OnDestroy {
         const categoryId = this.generateCategoryId();
         const categoryData: Category = {
             id: categoryId,
+            userId,
             name,
             type,
             icon,

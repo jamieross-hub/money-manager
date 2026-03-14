@@ -42,7 +42,9 @@ export class LocalIndexDBStorageService {
 
     // Family-id indices for accounts/categories stores
     private accountsFamilyIdIndex = new Map<string, Set<string>>();   // familyId -> Set of account keys
+    private accountsUserIdIndex = new Map<string, Set<string>>();     // userId   -> Set of account keys
     private categoriesFamilyIdIndex = new Map<string, Set<string>>(); // familyId -> Set of category keys
+    private categoriesUserIdIndex = new Map<string, Set<string>>();   // userId   -> Set of category keys
 
     private isInitialized = false;
     private isCleaningUp = false;
@@ -156,11 +158,16 @@ export class LocalIndexDBStorageService {
      */
     getTransactionsByUserIdSync(userId: string): any[] {
         const keys = this.userIdIndex.get(userId);
-        if (!keys) return [];
-        // Personal mode: Filter out family transactions (Set logic ensures O(1) lookup vs linear filter)
-        return Array.from(keys)
-            .map(key => this.transactionsCache.get(key))
+        const indexed = (keys ? Array.from(keys).map(key => this.transactionsCache.get(key)) : [])
             .filter(tx => tx && tx.userId === userId && !tx.familyId);
+            
+        // Fallback for legacy transactions without userId field or index issues
+        if (indexed.length === 0) {
+            return Array.from(this.transactionsCache.values()).filter(tx => 
+                tx && !tx.familyId && (!tx.userId || tx.userId === userId)
+            );
+        }
+        return indexed;
     }
 
     /**
@@ -245,7 +252,17 @@ export class LocalIndexDBStorageService {
      * Get personal accounts (no familyId) for a userId
      */
     getPersonalAccountsSync(userId: string): any[] {
-        return Array.from(this.accountsCache.values()).filter(a => a && a.userId === userId && !a.familyId);
+        const keys = this.accountsUserIdIndex.get(userId);
+        const indexed = (keys ? Array.from(keys).map(key => this.accountsCache.get(key)) : [])
+            .filter(a => a && !a.familyId);
+            
+        // Fallback for legacy accounts without userId field
+        if (indexed.length === 0) {
+            return Array.from(this.accountsCache.values()).filter(a => 
+                a && !a.familyId && (!a.userId || a.userId === userId)
+            );
+        }
+        return indexed;
     }
 
     /**
@@ -262,8 +279,26 @@ export class LocalIndexDBStorageService {
             if (!index.has(id)) index.set(id, new Set());
             index.get(id)!.add(key);
         };
-        if (oldValue) removeFromIdx(this.accountsFamilyIdIndex, oldValue.familyId);
-        if (newValue) addToIdx(this.accountsFamilyIdIndex, newValue.familyId);
+
+        const getIdsFromValue = (val: any, k: string) => {
+            if (!val) return { fid: undefined, uid: undefined };
+            // Family accounts use key format: familyId_accountId
+            const fidFromKey = k.includes('_') ? k.split('_')[0] : undefined;
+            // Only treat as familyId if it doesn't look like a standard prefix (acc_)
+            const effectiveFid = (val.familyId || (fidFromKey && !fidFromKey.startsWith('acc_'))) ? (val.familyId || fidFromKey) : undefined;
+            return { fid: effectiveFid, uid: val.userId };
+        };
+
+        if (oldValue) {
+            const oldIds = getIdsFromValue(oldValue, key);
+            removeFromIdx(this.accountsFamilyIdIndex, oldIds.fid);
+            removeFromIdx(this.accountsUserIdIndex, oldIds.uid);
+        }
+        if (newValue) {
+            const newIds = getIdsFromValue(newValue, key);
+            addToIdx(this.accountsFamilyIdIndex, newIds.fid);
+            addToIdx(this.accountsUserIdIndex, newIds.uid);
+        }
     }
 
     // ==========================================
@@ -339,7 +374,17 @@ export class LocalIndexDBStorageService {
      * Get personal categories (no familyId) for a userId
      */
     getPersonalCategoriesSync(userId: string): any[] {
-        return Array.from(this.categoriesCache.values()).filter(c => c && c.userId === userId && !c.familyId);
+        const keys = this.categoriesUserIdIndex.get(userId);
+        const indexed = (keys ? Array.from(keys).map(key => this.categoriesCache.get(key)) : [])
+            .filter(c => c && !c.familyId);
+            
+        // Fallback for legacy categories without userId field
+        if (indexed.length === 0) {
+            return Array.from(this.categoriesCache.values()).filter(c => 
+                c && !c.familyId && (!c.userId || c.userId === userId)
+            );
+        }
+        return indexed;
     }
 
     /**
@@ -356,8 +401,26 @@ export class LocalIndexDBStorageService {
             if (!index.has(id)) index.set(id, new Set());
             index.get(id)!.add(key);
         };
-        if (oldValue) removeFromIdx(this.categoriesFamilyIdIndex, oldValue.familyId);
-        if (newValue) addToIdx(this.categoriesFamilyIdIndex, newValue.familyId);
+
+        const getIdsFromValue = (val: any, k: string) => {
+            if (!val) return { fid: undefined, uid: undefined };
+            // Family categories use key format: familyId_categoryId
+            const fidFromKey = k.includes('_') ? k.split('_')[0] : undefined;
+            // Only treat as familyId if it doesn't look like a standard prefix (cat_)
+            const effectiveFid = (val.familyId || (fidFromKey && !fidFromKey.startsWith('cat_'))) ? (val.familyId || fidFromKey) : undefined;
+            return { fid: effectiveFid, uid: val.userId };
+        };
+
+        if (oldValue) {
+            const oldIds = getIdsFromValue(oldValue, key);
+            removeFromIdx(this.categoriesFamilyIdIndex, oldIds.fid);
+            removeFromIdx(this.categoriesUserIdIndex, oldIds.uid);
+        }
+        if (newValue) {
+            const newIds = getIdsFromValue(newValue, key);
+            addToIdx(this.categoriesFamilyIdIndex, newIds.fid);
+            addToIdx(this.categoriesUserIdIndex, newIds.uid);
+        }
     }
 
     /**
@@ -459,7 +522,9 @@ export class LocalIndexDBStorageService {
         this.accountsCache.clear();
         this.categoriesCache.clear();
         this.accountsFamilyIdIndex.clear();
+        this.accountsUserIdIndex.clear();
         this.categoriesFamilyIdIndex.clear();
+        this.categoriesUserIdIndex.clear();
     }
 
     /**

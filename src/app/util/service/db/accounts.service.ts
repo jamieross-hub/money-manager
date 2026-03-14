@@ -92,7 +92,18 @@ export class AccountsService {
         if (familyId) {
             return this.localStorageUtility.getAccountsByFamilyIdSync(familyId) as Account[];
         }
-        return this.localStorageUtility.getPersonalAccountsSync(userId) as Account[];
+        const accounts = this.localStorageUtility.getPersonalAccountsSync(userId) as Account[];
+        
+        // Proactive migration: Ensure personal accounts have userId field for future indexing
+        accounts.forEach(a => {
+            if (!a.userId && a.accountId) {
+                a.userId = userId;
+                const key = LocalStorageKeyHelper.getAccountItemKey(a.accountId, undefined);
+                this.localStorageUtility.setAccount(key, a);
+            }
+        });
+        
+        return accounts;
     }
 
     /**
@@ -245,7 +256,7 @@ export class AccountsService {
                         const data = docSnap.data();
                         // Require a name — consistent with pullFromFirestore.
                         if (data && docSnap.id && data['name']) {
-                            firestoreAccounts.push({ accountId: docSnap.id, ...data } as Account);
+                            firestoreAccounts.push({ accountId: docSnap.id, userId, ...data } as Account);
                         }
                     });
                     
@@ -299,7 +310,7 @@ export class AccountsService {
                     const data = docSnap.data();
                     const accountId = docSnap.id || data?.accountId;
                     if (data && accountId && data.name) {
-                        accounts.push({ accountId, ...data } as Account);
+                        accounts.push({ accountId, userId, ...data } as Account);
                     } else {
                         console.warn('[AccountsService] Skipping invalid/empty account document:', docSnap.id, { hasData: !!data, hasName: !!data?.name });
                     }
