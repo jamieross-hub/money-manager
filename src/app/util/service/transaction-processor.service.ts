@@ -121,12 +121,33 @@ export class TransactionProcessorService {
       isFamilyMode,
       currentUserId
     } = data;
+    const memberId = filters.selectedMember;
 
     if (!transactions) {
       return { filteredTransactions: [], flattenedTransactions: [], groupedTransactions: [], totalIncome: 0, totalExpenses: 0, totalSettlement: 0, filteredCount: 0 };
     }
 
     // 1. Helper: Map creation — memoised by array reference so we only iterate
+    const getMemberAmount = (tx: any, mId: string, type: 'paid' | 'share'): number => {
+      const amount = Number(tx.amount) || 0;
+      const sd = tx.splitData;
+      if (!sd) {
+        return (tx.userId === mId || tx.createdBy === mId) ? amount : 0;
+      }
+      if (type === 'paid') {
+        if (sd.paidByUserId === 'multiple' && sd.paidBy?.length) {
+          return Number(sd.paidBy.find((p: any) => p.userId === mId)?.amount) || 0;
+        }
+        const payerId = sd.paidByUserId || tx.userId;
+        return (payerId === mId) ? amount : 0;
+      } else {
+        if (sd.splitBetween && sd.splitBetween.length > 0) {
+          return Number(sd.splitBetween.find((s: any) => s.userId === mId)?.amount) || 0;
+        }
+        return (tx.userId === mId) ? amount : 0;
+      }
+    };
+
     // categories/accounts when they actually change (rare vs. transaction updates).
     if (categories !== this._lastCategories) {
       this._categoryMap = new Map();
@@ -410,10 +431,10 @@ export class TransactionProcessorService {
     // 6. Totals (settlement transactions are excluded from both income and expense totals)
     const totalIncome = mergedData
       .filter((t: any) => t.type === 'income' && !t.id?.startsWith('upcoming-') && !t.settlementId)
-      .reduce((sum: number, t: any) => sum + t.amount, 0);
+      .reduce((sum: number, t: any) => sum + (memberId ? getMemberAmount(t, memberId, 'share') : t.amount), 0);
     const totalExpenses = mergedData
       .filter((t: any) => t.type === 'expense' && !t.id?.startsWith('upcoming-') && !t.settlementId)
-      .reduce((sum: number, t: any) => sum + t.amount, 0);
+      .reduce((sum: number, t: any) => sum + (memberId ? getMemberAmount(t, memberId, 'share') : t.amount), 0);
     const totalSettlement = mergedData
       .filter((t: any) => !!t.settlementId && !t.id?.startsWith('upcoming-'))
       .reduce((sum: number, t: any) => sum + t.amount, 0);
@@ -516,9 +537,13 @@ export class TransactionProcessorService {
           groupsMap.set(dateKey, group);
         }
         group.transactions.push(txView);
-        if (!txView._isUpcoming) {
-          if (txView._isIncome) group.totalIncome += txView.amount;
-          else group.totalExpenses += txView.amount;
+        if (!txView._isUpcoming && !tx.settlementId) {
+          let amt = tx.amount;
+          if (memberId) {
+            amt = getMemberAmount(tx, memberId, involvementPrefix === 'direct_' ? 'paid' : 'share');
+          }
+          if (txView._isIncome) group.totalIncome += amt;
+          else group.totalExpenses += amt;
         }
         return;
       }
@@ -538,9 +563,10 @@ export class TransactionProcessorService {
         _syncStatusInfo: tx.syncStatus === 'failed' ? 'Sync failed' : (tx.syncStatus === 'pending' ? 'Pending sync' : 'Synced'),
         _recurringInfo: tx.isRecurring ? `Repeats ${tx.recurringInterval?.toLowerCase()}` : '',
         _isIncome: (() => {
+          const targetId = memberId || currentUserId;
           if (tx.settlementId) {
-            if (currentUserId === tx.settlementToUserId) return true;
-            if (currentUserId === tx.settlementFromUserId) return false;
+            if (targetId === tx.settlementToUserId) return true;
+            if (targetId === tx.settlementFromUserId) return false;
           }
           return tx.type === 'income';
         })(),
@@ -566,13 +592,12 @@ export class TransactionProcessorService {
       this.txViewCache.set(tx, txView);
 
       let dateKey: string;
-      const memberId = filters.selectedMember;
       
       // When filtering by a member, we group by "Direct" involvement vs "Involved in"
       let involvementPrefix = '';
       if (memberId) {
         const isDirect = tx.splitData 
-          ? (tx.splitData.paidByUserId === memberId || (tx.splitData.paidBy && tx.splitData.paidBy.some((p: any) => p.userId === memberId)))
+          ? (tx.splitData.paidByUserId === memberId || (tx.splitData.paidBy && tx.splitData.paidBy.some((p: any) => p.userId === memberId)) || (!tx.splitData.paidByUserId && tx.userId === memberId))
           : (tx.settlementFromUserId === memberId || tx.settlementToUserId === memberId || tx.userId === memberId || tx.createdBy === memberId);
         involvementPrefix = isDirect ? 'direct_' : 'involved_';
       }
@@ -631,9 +656,13 @@ export class TransactionProcessorService {
         groupsMap.set(dateKey, group);
       }
       group.transactions.push(txView);
-      if (!txView._isUpcoming) {
-        if (txView._isIncome) group.totalIncome += txView.amount;
-        else group.totalExpenses += txView.amount;
+      if (!txView._isUpcoming && !tx.settlementId) {
+        let amt = tx.amount;
+        if (memberId) {
+          amt = getMemberAmount(tx, memberId, involvementPrefix === 'direct_' ? 'paid' : 'share');
+        }
+        if (txView._isIncome) group.totalIncome += amt;
+        else group.totalExpenses += amt;
       }
     });
 

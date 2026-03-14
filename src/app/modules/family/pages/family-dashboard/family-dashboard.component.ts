@@ -68,7 +68,7 @@ import { FamilyJoinDialogComponent } from '../../dialogs/family-join-dialog/fami
 import { FamilyMembersComponent } from '../family-members/family-members.component';
 
 // Pipes & Directives
-import { CurrencyPipe, AppDatePipe } from 'src/app/util/pipes';
+import { CurrencyPipe, AppDatePipe, TruncatePipe } from 'src/app/util/pipes';
 import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 
 @Component({
@@ -93,6 +93,7 @@ import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.d
     // App
     CurrencyPipe,
     AppDatePipe,
+    TruncatePipe,
     ImageFallbackDirective,
   ],
   templateUrl: './family-dashboard.component.html',
