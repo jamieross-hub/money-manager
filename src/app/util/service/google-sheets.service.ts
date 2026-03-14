@@ -95,32 +95,32 @@ export class GoogleSheetsService extends BaseService {
   /**
    * Pull connections from Firestore and update local cache
    */
-  pullFromFirestore(userId: string): Observable<void> {
-    const collectionRef = this.getCollectionRef(this.COLLECTION_NAME);
+  // pullFromFirestore(userId: string): Observable<void> {
+  //   const collectionRef = this.getCollectionRef(this.COLLECTION_NAME);
 
-    console.log(`[GoogleSheetsService] Pulling connections for user: ${userId}`);
+  //   console.log(`[GoogleSheetsService] Pulling connections for user: ${userId}`);
 
-    return from(getDocs(collectionRef)).pipe(
-      tap(snapshot => {
-        const connections = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data() as any
-        } as GoogleSheetsConnection));
+  //   return from(getDocs(collectionRef)).pipe(
+  //     tap(snapshot => {
+  //       const connections = snapshot.docs.map(doc => ({
+  //         id: doc.id,
+  //         ...doc.data() as any
+  //       } as GoogleSheetsConnection));
 
-        console.log(`[GoogleSheetsService] Pulled ${connections.length} connections from Firestore`);
+  //       console.log(`[GoogleSheetsService] Pulled ${connections.length} connections from Firestore`);
 
-        // Cache the fresh data
-        this.storageService.setItem(LocalStorageKeyHelper.getGoogleSheetsCacheKey(userId), connections);
+  //       // Cache the fresh data
+  //       this.storageService.setItem(LocalStorageKeyHelper.getGoogleSheetsCacheKey(userId), connections);
         
-        // Note: Dispatched to store if googleSheets integration exists in store
-      }),
-      map(() => undefined),
-      catchError(error => {
-        console.error('[GoogleSheetsService] Pull failed:', error);
-        return of(undefined);
-      })
-    );
-  }
+  //       // Note: Dispatched to store if googleSheets integration exists in store
+  //     }),
+  //     map(() => undefined),
+  //     catchError(error => {
+  //       console.error('[GoogleSheetsService] Pull failed:', error);
+  //       return of(undefined);
+  //     })
+  //   );
+  // }
 
   /**
    * Create a new Google Sheets connection

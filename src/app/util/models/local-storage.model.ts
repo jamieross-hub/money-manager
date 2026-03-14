@@ -163,6 +163,24 @@ export class LocalStorageKeyHelper {
     }
 
     /**
+     * Get individual account item key
+     * Personal: accountId
+     * Family:   familyId_accountId
+     */
+    static getAccountItemKey(accountId: string, familyId?: string): string {
+        return familyId ? `${familyId}_${accountId}` : accountId;
+    }
+
+    /**
+     * Get individual category item key
+     * Personal: categoryId
+     * Family:   familyId_categoryId
+     */
+    static getCategoryItemKey(categoryId: string, familyId?: string): string {
+        return familyId ? `${familyId}_${categoryId}` : categoryId;
+    }
+
+    /**
      * Get settlements cache key
      */
     static getSettlementsCacheKey(familyId: string): string {

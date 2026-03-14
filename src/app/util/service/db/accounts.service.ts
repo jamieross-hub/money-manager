@@ -56,14 +56,7 @@ export class AccountsService {
     }
 
     /**
-     * Get the cache key for accounts
-     */
-    protected getAccountsCacheKey(userId: string): string {
-        return LocalStorageKeyHelper.getAccountsCacheKey(userId, this.getFamilyId());
-    }
-
-    /**
-     * Get the family ID for cache key
+     * Get the family ID
      */
     protected getFamilyId(): string | undefined {
         const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
@@ -74,6 +67,69 @@ export class AccountsService {
     /** Returns which NgRx bucket should receive incoming data */
     protected getActiveContext(): 'personal' | 'family' {
         return this.getFamilyId() ? 'family' : 'personal';
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Individual-item store helpers
+    // key = accountId (personal) | familyId_accountId (family)
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Build the store key for an account
+     */
+    private getAccountStoreKey(accountId: string, familyId?: string): string {
+        return LocalStorageKeyHelper.getAccountItemKey(accountId, familyId ?? this.getFamilyId());
+    }
+
+    /**
+     * Read all accounts for the current context from the individual-item cache.
+     * • Family mode  → accounts whose key is prefixed with familyId_
+     * • Personal mode → accounts that belong to userId without a familyId field
+     */
+    private readAccountsFromStore(userId: string): Account[] {
+        const familyId = this.getFamilyId();
+        if (familyId) {
+            return this.localStorageUtility.getAccountsByFamilyIdSync(familyId) as Account[];
+        }
+        return this.localStorageUtility.getPersonalAccountsSync(userId) as Account[];
+    }
+
+    /**
+     * Persist an array of accounts into the individual-item store.
+     * Existing accounts NOT in the provided list are NOT purged here —
+     * use removeAccount for explicit deletes.
+     */
+    private writeAccountsToStore(accounts: Account[]): void {
+        const familyId = this.getFamilyId();
+        accounts.forEach(account => {
+            if (!account?.accountId) return;
+            const key = LocalStorageKeyHelper.getAccountItemKey(account.accountId, familyId);
+            this.localStorageUtility.setAccount(key, account);
+        });
+    }
+
+    /**
+     * Replace the entire set of accounts for the current context with a fresh list.
+     * Removes stale keys that are no longer in the new list.
+     */
+    private replaceAccountsInStore(accounts: Account[]): void {
+        const familyId = this.getFamilyId();
+        const newIds = new Set(accounts.map(a => a.accountId));
+
+        // Remove stale entries
+        const existing = familyId
+            ? this.localStorageUtility.getAccountsByFamilyIdSync(familyId) as Account[]
+            : this.localStorageUtility.getPersonalAccountsSync(this.userService.getCurrentUserId() || '') as Account[];
+
+        existing.forEach(acc => {
+            if (acc?.accountId && !newIds.has(acc.accountId)) {
+                const staleKey = LocalStorageKeyHelper.getAccountItemKey(acc.accountId, familyId);
+                this.localStorageUtility.removeAccount(staleKey);
+            }
+        });
+
+        // Upsert all new accounts
+        this.writeAccountsToStore(accounts);
     }
 
     // 🔹 Create a new account for the logged-in user
@@ -100,7 +156,7 @@ export class AccountsService {
             // 1. Dispatch store updates immediately (Optimistic)
             this.store.dispatch(AccountsActions.createAccountSuccess({ account }));
             
-            // 2. Update cache immediately
+            // 2. Update individual-item store immediately
             this.updateAccountCache(userId, 'create', account);
 
             // 3. Complete observer immediately
@@ -126,24 +182,23 @@ export class AccountsService {
         }
 
         /**
-         * ⚠️ ARCHITECTURE ALIGNMENT: Source of Truth = IndexedDB
-         * 
-         * Components should not have a direct connection to Firebase. 
-         * Instead, they subscribe to this.accountsSubject which is kept updated by 
+         * ⚠️ ARCHITECTURE ALIGNMENT: Source of Truth = IndexedDB (individual-item store)
+         *
+         * Components should not have a direct connection to Firebase.
+         * Instead, they subscribe to this.accountsSubject which is kept updated by
          * the central background sync listener (CommonSyncService -> listenToAccounts).
          */
         return this.localStorageUtility.isReady$.pipe(
             switchMap(() => {
-                // 1. Emit cached accounts immediately from the current context (family vs personal)
-                const cacheKey = this.getAccountsCacheKey(userId);
-                const cachedAccounts = (this.localStorageUtility.getItem<Account[]>(cacheKey, undefined, false) || [])
+                // 1. Emit cached accounts immediately from the individual-item store
+                const cachedAccounts = this.readAccountsFromStore(userId)
                     .filter(a => !!(a && a.accountId));
                 
                 if (cachedAccounts.length > 0) {
                     this.accountsSubject.next(cachedAccounts);
                 }
 
-                // 2. Return reactive subject. Updates will be pushed here by 
+                // 2. Return reactive subject. Updates will be pushed here by
                 // listenToAccounts() when the background sync detects changes.
                 return this.accountsSubject.asObservable();
             })
@@ -159,7 +214,6 @@ export class AccountsService {
 
         return new Observable<void>(observer => {
             const currentPath = this.getAccountsPath(userId);
-            const cacheKey = this.getAccountsCacheKey(userId);
             
             console.log(`[AccountsService] 🔌 Starting real-time listener for path: ${currentPath}`);
 
@@ -174,14 +228,13 @@ export class AccountsService {
                     querySnapshot.forEach((docSnap) => {
                         const data = docSnap.data();
                         // Require a name — consistent with pullFromFirestore.
-                        // The old guard (`data['name'] !== undefined || docSnap.id`) accepted every document regardless of completeness.
                         if (data && docSnap.id && data['name']) {
                             firestoreAccounts.push({ accountId: docSnap.id, ...data } as Account);
                         }
                     });
                     
-                    // Update cache
-                    this.localStorageUtility.setItem(cacheKey, firestoreAccounts);
+                    // Replace individual-item store entries for the current context
+                    this.replaceAccountsInStore(firestoreAccounts);
                     
                     // Update subject and Store — include context so data goes into the correct bucket
                     this.accountsSubject.next(firestoreAccounts);
@@ -228,10 +281,6 @@ export class AccountsService {
                 const accounts: Account[] = [];
                 querySnapshot.forEach((docSnap: any) => {
                     const data = docSnap.data();
-                    // Use docSnap.id as the authoritative accountId (consistent with
-                    // listenToAccounts). Family accounts store the ID only as the
-                    // document ID, not as a field — checking data.accountId caused
-                    // ALL family accounts to be skipped with the old guard.
                     const accountId = docSnap.id || data?.accountId;
                     if (data && accountId && data.name) {
                         accounts.push({ accountId, ...data } as Account);
@@ -242,8 +291,8 @@ export class AccountsService {
 
                 console.log(`[AccountsService] Pulled ${accounts.length} accounts from Firestore`);
 
-                // Update cache
-                this.localStorageUtility.setItem(this.getAccountsCacheKey(userId), accounts);
+                // Replace individual-item store with fresh data
+                this.replaceAccountsInStore(accounts);
                 
                 // Update NgRx state — include context so data goes into the correct bucket
                 this.store.dispatch(AccountsActions.loadAccountsSuccess({
@@ -271,10 +320,9 @@ export class AccountsService {
         }
 
         return new Observable<Account | undefined>(observer => {
-            // Reads from IndexedDB first
-            const cacheKey = this.getAccountsCacheKey(userId);
-            const cachedAccounts = this.localStorageUtility.getItem<Account[]>(cacheKey, undefined, false) || [];
-            const cached = cachedAccounts.find(a => a.accountId === accountId);
+            // Reads from individual-item store first
+            const key = this.getAccountStoreKey(accountId);
+            const cached = this.localStorageUtility.getAccount<Account>(key, false);
 
             if (cached) {
                 observer.next(cached);
@@ -307,7 +355,7 @@ export class AccountsService {
                         loanDetails: data.loanDetails || null,
                         creditCardDetails: data.creditCardDetails || null
                     };
-                    // Update cache
+                    // Update individual-item store
                     this.updateAccountCache(userId, 'update', account);
                     observer.next(account);
                 } else {
@@ -351,7 +399,7 @@ export class AccountsService {
             // 1. Dispatch store updates immediately (Optimistic)
             this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { accountId, ...sanitizedData } as any }));
             
-            // 2. Update cache immediately
+            // 2. Update individual-item store immediately
             this.updateAccountCache(userId, 'update', { accountId, ...sanitizedData } as any);
 
             // 3. Complete observer immediately
@@ -379,7 +427,7 @@ export class AccountsService {
             // 1. Dispatch store updates immediately (Optimistic)
             this.store.dispatch(AccountsActions.deleteAccountSuccess({ accountId }));
 
-            // 2. Update cache immediately
+            // 2. Remove from individual-item store immediately
             this.updateAccountCache(userId, 'delete', { accountId } as any);
 
             // 3. Complete observer immediately
@@ -407,33 +455,34 @@ export class AccountsService {
         // 1. Optimistic Update
         const isGuest = userId === 'offline-guest';
         let accounts: Account[] = [];
-        const cacheKey = LocalStorageKeyHelper.getAccountsCacheKey(userId);
 
         if (isGuest) {
             accounts = this.localStorageUtility.getEntities<Account>('accounts');
         } else {
-            accounts = this.localStorageUtility.getItem<Account[]>(cacheKey, undefined, false) || [];
+            accounts = this.readAccountsFromStore(userId);
         }
 
         const index = accounts.findIndex(a => (a as any).accountId === accountId);
         
         if (index !== -1) {
-            const account = accounts[index];
+            // Shallow-clone so we never mutate a NgRx-frozen object
+            const account: Account = { ...accounts[index] };
+            if (account.loanDetails) account.loanDetails = { ...account.loanDetails };
             let balanceChange = 0;
             let loanRemainingBalanceChange = 0;
 
             const getEffect = (t: Transaction) => {
-            // ONLY COMPLETED transactions should affect the current balance.
-            if ((t as any).isPending || t.status === 'pending') return 0;
-            const amount = Number(t.amount) || 0;
-            return t.type === 'income' ? amount : -amount;
-        };
-        const getLoanEffect = (t: Transaction) => {
-            // ONLY COMPLETED transactions should affect the remaining balance.
-            if ((t as any).isPending || t.status === 'pending') return 0;
-            const amount = Number(t.amount) || 0;
-            return t.type === 'expense' ? -amount : 0;
-        };
+                // ONLY COMPLETED transactions should affect the current balance.
+                if ((t as any).isPending || t.status === 'pending') return 0;
+                const amount = Number(t.amount) || 0;
+                return t.type === 'income' ? amount : -amount;
+            };
+            const getLoanEffect = (t: Transaction) => {
+                // ONLY COMPLETED transactions should affect the remaining balance.
+                if ((t as any).isPending || t.status === 'pending') return 0;
+                const amount = Number(t.amount) || 0;
+                return t.type === 'expense' ? -amount : 0;
+            };
 
             if (transactionType === 'create' && newTransaction) {
                 balanceChange = getEffect(newTransaction);
@@ -464,7 +513,9 @@ export class AccountsService {
             if (isGuest) {
                 this.localStorageUtility.saveEntities('accounts', accounts);
             } else {
-                this.localStorageUtility.setItem(cacheKey, accounts);
+                // Write updated individual account to store
+                const key = this.getAccountStoreKey(accountId);
+                this.localStorageUtility.setAccount(key, account);
             }
             this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...account } as any }));
         }
@@ -494,43 +545,51 @@ export class AccountsService {
         // 1. Optimistic Update
         const isGuest = userId === 'offline-guest';
         let accounts: Account[] = [];
-        const cacheKey = LocalStorageKeyHelper.getAccountsCacheKey(userId);
         const updatedAccountsMap = new Map<string, any>();
 
         if (isGuest) {
             accounts = this.localStorageUtility.getEntities<Account>('accounts');
         } else {
-            accounts = this.localStorageUtility.getItem<Account[]>(cacheKey, undefined, false) || [];
+            accounts = this.readAccountsFromStore(userId);
         }
         
         transactions.forEach((t: any) => {
-        const index = accounts.findIndex(a => (a as any).accountId === t.accountId);
-        if (index !== -1) {
-            // ONLY COMPLETED transactions should affect the current balance.
-            if (!t.isPending && t.status !== 'pending') {
-                const account = accounts[index];
-                const amount = Number(t.amount) || 0;
-                const balanceChange = t.type === 'income' ? amount : -amount;
-                account.balance = (Number(account.balance) || 0) + balanceChange;
-                if (account.type === 'loan' && account.loanDetails && t.type === 'expense') {
-                    account.loanDetails.remainingBalance = (Number(account.loanDetails.remainingBalance) || 0) - amount;
+            const index = accounts.findIndex(a => (a as any).accountId === t.accountId);
+            if (index !== -1) {
+                // ONLY COMPLETED transactions should affect the current balance.
+                if (!t.isPending && t.status !== 'pending') {
+                    // Shallow-clone so we never mutate a NgRx-frozen object
+                    const account: Account = { ...accounts[index] };
+                    if (account.loanDetails) account.loanDetails = { ...account.loanDetails };
+                    accounts[index] = account; // put the new mutable ref back
+                    const amount = Number(t.amount) || 0;
+                    const balanceChange = t.type === 'income' ? amount : -amount;
+                    account.balance = (Number(account.balance) || 0) + balanceChange;
+                    if (account.type === 'loan' && account.loanDetails && t.type === 'expense') {
+                        account.loanDetails.remainingBalance = (Number(account.loanDetails.remainingBalance) || 0) - amount;
+                    }
+                    account.updatedAt = new Date() as any;
+                    this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...account } as any }));
+                    
+                    updatedAccountsMap.set(account.accountId, {
+                        balance: account.balance,
+                        updatedAt: account.updatedAt,
+                        loanDetails: account.type === 'loan' ? account.loanDetails : undefined
+                    });
                 }
-                account.updatedAt = new Date() as any;
-                this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...account } as any }));
-                
-                updatedAccountsMap.set(account.accountId, {
-                    balance: account.balance,
-                    updatedAt: account.updatedAt,
-                    loanDetails: account.type === 'loan' ? account.loanDetails : undefined
-                });
             }
-        }
-    });
+        });
 
         if (isGuest) {
             this.localStorageUtility.saveEntities('accounts', accounts);
         } else {
-            this.localStorageUtility.setItem(cacheKey, accounts);
+            // Write each updated account individually
+            accounts.forEach(acc => {
+                if (acc?.accountId && updatedAccountsMap.has(acc.accountId)) {
+                    const key = this.getAccountStoreKey(acc.accountId);
+                    this.localStorageUtility.setAccount(key, acc);
+                }
+            });
         }
         
         if (this.isGuest()) {
@@ -560,21 +619,23 @@ export class AccountsService {
         // 1. Optimistic Update
         const isGuest = userId === 'offline-guest';
         let accounts: Account[] = [];
-        const cacheKey = LocalStorageKeyHelper.getAccountsCacheKey(userId);
         const updatesToSync: any[] = [];
 
         if (isGuest) {
             accounts = this.localStorageUtility.getEntities<Account>('accounts');
         } else {
-            accounts = this.localStorageUtility.getItem<Account[]>(cacheKey, undefined, false) || [];
+            accounts = this.readAccountsFromStore(userId);
         }
 
         const oldIndex = accounts.findIndex(a => (a as any).accountId === oldAccountId);
         const newIndex = accounts.findIndex(a => (a as any).accountId === newAccountId);
 
         if (oldIndex !== -1 && newIndex !== -1) {
-            const oldAccount = accounts[oldIndex];
-            const newAccount = accounts[newIndex];
+            // Shallow-clone so we never mutate a NgRx-frozen object
+            const oldAccount: Account = { ...accounts[oldIndex] };
+            if (oldAccount.loanDetails) oldAccount.loanDetails = { ...oldAccount.loanDetails };
+            const newAccount: Account = { ...accounts[newIndex] };
+            if (newAccount.loanDetails) newAccount.loanDetails = { ...newAccount.loanDetails };
             const amount = Number(transaction.amount) || 0;
             const transactionEffect = transaction.type === 'income' ? amount : -amount;
 
@@ -596,7 +657,13 @@ export class AccountsService {
             if (isGuest) {
                 this.localStorageUtility.saveEntities('accounts', accounts);
             } else {
-                this.localStorageUtility.setItem(cacheKey, accounts);
+                // Write each updated account individually
+                [oldAccount, newAccount].forEach(acc => {
+                    if (acc?.accountId) {
+                        const key = this.getAccountStoreKey(acc.accountId);
+                        this.localStorageUtility.setAccount(key, acc);
+                    }
+                });
             }
             this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...oldAccount } as any }));
             this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...newAccount } as any }));
@@ -658,13 +725,12 @@ export class AccountsService {
     }
 
     /**
-     * Update account cache when accounts are created, updated, or deleted
+     * Update the individual-item store when accounts are created, updated, or deleted.
+     * Replaces the old bulk-array updateAccountCache pattern.
      */
     protected updateAccountCache(userId: string, operation: 'create' | 'update' | 'delete', account?: Account): void {
         try {
-            const cacheKey = this.getAccountsCacheKey(userId);
-            const cachedAccounts = (this.localStorageUtility.getItem<Account[]>(cacheKey, undefined, false) || [])
-                .filter(a => !!(a && a.accountId));
+            const familyId = this.getFamilyId();
 
             if (!account || !account.accountId) {
                 if (operation !== 'delete') return;
@@ -673,30 +739,28 @@ export class AccountsService {
             switch (operation) {
                 case 'create':
                     if (account && account.accountId) {
-                        cachedAccounts.push(account);
+                        const key = LocalStorageKeyHelper.getAccountItemKey(account.accountId, familyId);
+                        this.localStorageUtility.setAccount(key, account);
                     }
                     break;
+
                 case 'update':
                     if (account && account.accountId) {
-                        const index = cachedAccounts.findIndex(a => a.accountId === account.accountId);
-                        if (index !== -1) {
-                            cachedAccounts[index] = { ...cachedAccounts[index], ...account };
-                        } else {
-                            cachedAccounts.push(account);
-                        }
+                        const key = LocalStorageKeyHelper.getAccountItemKey(account.accountId, familyId);
+                        // Merge with existing so partial updates don't wipe other fields
+                        const existing = this.localStorageUtility.getAccount<Account>(key, false);
+                        const merged = existing ? { ...existing, ...account } : account;
+                        this.localStorageUtility.setAccount(key, merged);
                     }
                     break;
+
                 case 'delete':
                     if (account && account.accountId) {
-                        const index = cachedAccounts.findIndex(a => a.accountId === account.accountId);
-                        if (index !== -1) {
-                            cachedAccounts.splice(index, 1);
-                        }
+                        const key = LocalStorageKeyHelper.getAccountItemKey(account.accountId, familyId);
+                        this.localStorageUtility.removeAccount(key);
                     }
                     break;
             }
-
-            this.localStorageUtility.setItem(cacheKey, cachedAccounts);
         } catch (error) {
             console.error('Error updating account cache:', error);
         }

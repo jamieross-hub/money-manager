@@ -24,17 +24,26 @@ export class LocalIndexDBStorageService {
     private readonly DB_NAME = 'MoneyManagerDB';
     private readonly STORE_NAME = 'keyValueStore';
     private readonly TRANSACTIONS_STORE = 'transactions';
-    private readonly DB_VERSION = 4;
+    private readonly ACCOUNTS_STORE = 'accounts';
+    private readonly CATEGORIES_STORE = 'categories';
+    private readonly DB_VERSION = 5;
     private db: IDBDatabase | null = null;
 
     // In-memory caches for synchronous access
     private keyValueCache = new Map<string, any>();
     private transactionsCache = new Map<string, any>();
-    
+    private accountsCache = new Map<string, any>();   // key = accountId | familyId_accountId
+    private categoriesCache = new Map<string, any>(); // key = categoryId | familyId_categoryId
+
     // Secondary in-memory indices for O(1) synchronous lookups
     private familyIdIndex = new Map<string, Set<string>>(); // familyId -> Set of transaction keys
-    private userIdIndex = new Map<string, Set<string>>();   // userId -> Set of transaction keys
+    private userIdIndex = new Map<string, Set<string>>();   // userId   -> Set of transaction keys
     private accountIdIndex = new Map<string, Set<string>>(); // accountId -> Set of transaction keys
+
+    // Family-id indices for accounts/categories stores
+    private accountsFamilyIdIndex = new Map<string, Set<string>>();   // familyId -> Set of account keys
+    private categoriesFamilyIdIndex = new Map<string, Set<string>>(); // familyId -> Set of category keys
+
     private isInitialized = false;
     private isCleaningUp = false;
     private readonly initializedSubject = new BehaviorSubject<boolean>(false);
@@ -163,6 +172,194 @@ export class LocalIndexDBStorageService {
         return Array.from(keys).map(key => this.transactionsCache.get(key)).filter(Boolean);
     }
 
+    // ==========================================
+    // Accounts Store (individual-item pattern)
+    // key = accountId (personal) | familyId_accountId (family)
+    // ==========================================
+
+    /**
+     * Store a single account.
+     * key should be built with LocalStorageKeyHelper.getAccountItemKey()
+     */
+    setAccount<T>(key: string, value: T): void {
+        if (this.isCleaningUp) {
+            console.warn(`⚠️ Blocked write to accounts store for key "${key}" - Service is cleaning up.`);
+            return;
+        }
+        // Always store a plain clone — prevents NgRx-frozen objects from entering the cache
+        const safeValue = structuredClone(value);
+        const oldValue = this.accountsCache.get(key);
+        this.accountsCache.set(key, safeValue);
+        this.updateAccountsSecondaryIndices(key, safeValue, oldValue);
+        this.persistItem(key, safeValue, this.ACCOUNTS_STORE).catch(err =>
+            console.error(`Error persisting account key "${key}":`, err)
+        );
+    }
+
+    /**
+     * Get a single account synchronously
+     */
+    getAccount<T>(key: string, clone = true): T | null {
+        const value = this.accountsCache.get(key);
+        if (value === undefined || value === null) return null;
+        return clone ? structuredClone(value) as T : value as T;
+    }
+
+    /**
+     * Remove a single account
+     */
+    removeAccount(key: string): void {
+        if (this.isCleaningUp) return;
+        const oldValue = this.accountsCache.get(key);
+        this.accountsCache.delete(key);
+        if (oldValue) this.updateAccountsSecondaryIndices(key, null, oldValue);
+        this.deleteItem(key, this.ACCOUNTS_STORE).catch(err =>
+            console.error(`Error deleting account key "${key}":`, err)
+        );
+    }
+
+    /**
+     * Get all accounts (synchronous)
+     */
+    getAllAccountsSync(): any[] {
+        return Array.from(this.accountsCache.values());
+    }
+
+    /**
+     * Get all account keys (synchronous)
+     */
+    getAccountKeys(): string[] {
+        return Array.from(this.accountsCache.keys());
+    }
+
+    /**
+     * Get accounts by familyId (Sync via Cache)
+     */
+    getAccountsByFamilyIdSync(familyId: string): any[] {
+        const keys = this.accountsFamilyIdIndex.get(familyId);
+        if (!keys) return [];
+        return Array.from(keys).map(key => this.accountsCache.get(key)).filter(Boolean);
+    }
+
+    /**
+     * Get personal accounts (no familyId) for a userId
+     */
+    getPersonalAccountsSync(userId: string): any[] {
+        return Array.from(this.accountsCache.values()).filter(a => a && a.userId === userId && !a.familyId);
+    }
+
+    /**
+     * Update secondary indices for accounts store
+     */
+    private updateAccountsSecondaryIndices(key: string, newValue: any, oldValue?: any): void {
+        const removeFromIdx = (index: Map<string, Set<string>>, id: string | undefined) => {
+            if (!id) return;
+            const set = index.get(id);
+            if (set) { set.delete(key); if (set.size === 0) index.delete(id); }
+        };
+        const addToIdx = (index: Map<string, Set<string>>, id: string | undefined) => {
+            if (!id) return;
+            if (!index.has(id)) index.set(id, new Set());
+            index.get(id)!.add(key);
+        };
+        if (oldValue) removeFromIdx(this.accountsFamilyIdIndex, oldValue.familyId);
+        if (newValue) addToIdx(this.accountsFamilyIdIndex, newValue.familyId);
+    }
+
+    // ==========================================
+    // Categories Store (individual-item pattern)
+    // key = categoryId (personal) | familyId_categoryId (family)
+    // ==========================================
+
+    /**
+     * Store a single category.
+     * key should be built with LocalStorageKeyHelper.getCategoryItemKey()
+     */
+    setCategory<T>(key: string, value: T): void {
+        if (this.isCleaningUp) {
+            console.warn(`⚠️ Blocked write to categories store for key "${key}" - Service is cleaning up.`);
+            return;
+        }
+        // Always store a plain clone — prevents NgRx-frozen objects from entering the cache
+        const safeValue = structuredClone(value);
+        const oldValue = this.categoriesCache.get(key);
+        this.categoriesCache.set(key, safeValue);
+        this.updateCategoriesSecondaryIndices(key, safeValue, oldValue);
+        this.persistItem(key, safeValue, this.CATEGORIES_STORE).catch(err =>
+            console.error(`Error persisting category key "${key}":`, err)
+        );
+    }
+
+    /**
+     * Get a single category synchronously
+     */
+    getCategory<T>(key: string, clone = true): T | null {
+        const value = this.categoriesCache.get(key);
+        if (value === undefined || value === null) return null;
+        return clone ? structuredClone(value) as T : value as T;
+    }
+
+    /**
+     * Remove a single category
+     */
+    removeCategory(key: string): void {
+        if (this.isCleaningUp) return;
+        const oldValue = this.categoriesCache.get(key);
+        this.categoriesCache.delete(key);
+        if (oldValue) this.updateCategoriesSecondaryIndices(key, null, oldValue);
+        this.deleteItem(key, this.CATEGORIES_STORE).catch(err =>
+            console.error(`Error deleting category key "${key}":`, err)
+        );
+    }
+
+    /**
+     * Get all categories (synchronous)
+     */
+    getAllCategoriesSync(): any[] {
+        return Array.from(this.categoriesCache.values());
+    }
+
+    /**
+     * Get all category keys (synchronous)
+     */
+    getCategoryKeys(): string[] {
+        return Array.from(this.categoriesCache.keys());
+    }
+
+    /**
+     * Get categories by familyId (Sync via Cache)
+     */
+    getCategoriesByFamilyIdSync(familyId: string): any[] {
+        const keys = this.categoriesFamilyIdIndex.get(familyId);
+        if (!keys) return [];
+        return Array.from(keys).map(key => this.categoriesCache.get(key)).filter(Boolean);
+    }
+
+    /**
+     * Get personal categories (no familyId) for a userId
+     */
+    getPersonalCategoriesSync(userId: string): any[] {
+        return Array.from(this.categoriesCache.values()).filter(c => c && c.userId === userId && !c.familyId);
+    }
+
+    /**
+     * Update secondary indices for categories store
+     */
+    private updateCategoriesSecondaryIndices(key: string, newValue: any, oldValue?: any): void {
+        const removeFromIdx = (index: Map<string, Set<string>>, id: string | undefined) => {
+            if (!id) return;
+            const set = index.get(id);
+            if (set) { set.delete(key); if (set.size === 0) index.delete(id); }
+        };
+        const addToIdx = (index: Map<string, Set<string>>, id: string | undefined) => {
+            if (!id) return;
+            if (!index.has(id)) index.set(id, new Set());
+            index.get(id)!.add(key);
+        };
+        if (oldValue) removeFromIdx(this.categoriesFamilyIdIndex, oldValue.familyId);
+        if (newValue) addToIdx(this.categoriesFamilyIdIndex, newValue.familyId);
+    }
+
     /**
      * Get transactions by userId (Async via IndexedDB Index)
      */
@@ -175,25 +372,25 @@ export class LocalIndexDBStorageService {
     }
 
     /**
-     * Helper to query any index
+     * Helper to query any index on any store
      */
-    private async queryIndex(indexName: string, value: any): Promise<any[]> {
+    private async queryIndex(indexName: string, value: any, storeName: string = this.TRANSACTIONS_STORE): Promise<any[]> {
         if (!this.db) return [];
 
         return new Promise((resolve) => {
             try {
-                const transaction = this.db!.transaction([this.TRANSACTIONS_STORE], 'readonly');
-                const store = transaction.objectStore(this.TRANSACTIONS_STORE);
+                const transaction = this.db!.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
                 const index = store.index(indexName);
                 const request = index.getAll(value);
 
                 request.onsuccess = () => resolve(request.result || []);
                 request.onerror = () => {
-                    console.error(`IndexedDB Index Error (${indexName}):`, request.error);
+                    console.error(`IndexedDB Index Error (${storeName}/${indexName}):`, request.error);
                     resolve([]);
                 };
             } catch (error) {
-                console.error(`Error querying ${indexName} index:`, error);
+                console.error(`Error querying ${storeName}/${indexName} index:`, error);
                 resolve([]);
             }
         });
@@ -203,27 +400,54 @@ export class LocalIndexDBStorageService {
      * Get transactions by familyId (Async via IndexedDB Index)
      */
     async getTransactionsByFamilyId(familyId: string): Promise<any[]> {
-        if (!this.db) {
-            return this.getTransactionsByFamilyIdSync(familyId);
-        }
+        if (!this.db) return this.getTransactionsByFamilyIdSync(familyId);
+        return this.queryIndex('familyId', familyId, this.TRANSACTIONS_STORE);
+    }
 
-        return new Promise((resolve) => {
-            try {
-                const transaction = this.db!.transaction([this.TRANSACTIONS_STORE], 'readonly');
-                const store = transaction.objectStore(this.TRANSACTIONS_STORE);
-                const index = store.index('familyId');
-                const request = index.getAll(familyId);
+    // ──────────────────────────────────────────────────────────────────────────
+    // Async Index Queries — Accounts Store
+    // ──────────────────────────────────────────────────────────────────────────
 
-                request.onsuccess = () => resolve(request.result || []);
-                request.onerror = () => {
-                    console.error('IndexedDB Index Error:', request.error);
-                    resolve(this.getTransactionsByFamilyIdSync(familyId));
-                };
-            } catch (error) {
-                console.error('Error querying familyId index:', error);
-                resolve(this.getTransactionsByFamilyIdSync(familyId));
-            }
-        });
+    /**
+     * Get accounts by familyId (Async via IndexedDB Index).
+     * Falls back to the in-memory index when DB is unavailable.
+     */
+    async getAccountsByFamilyIdAsync(familyId: string): Promise<any[]> {
+        if (!this.db) return this.getAccountsByFamilyIdSync(familyId);
+        return this.queryIndex('familyId', familyId, this.ACCOUNTS_STORE);
+    }
+
+    /**
+     * Get accounts by userId (Async via IndexedDB Index).
+     * Returns only personal accounts (no familyId field).
+     */
+    async getAccountsByUserIdAsync(userId: string): Promise<any[]> {
+        if (!this.db) return this.getPersonalAccountsSync(userId);
+        const all = await this.queryIndex('userId', userId, this.ACCOUNTS_STORE);
+        return all.filter((a: any) => a && !a.familyId);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Async Index Queries — Categories Store
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Get categories by familyId (Async via IndexedDB Index).
+     * Falls back to the in-memory index when DB is unavailable.
+     */
+    async getCategoriesByFamilyIdAsync(familyId: string): Promise<any[]> {
+        if (!this.db) return this.getCategoriesByFamilyIdSync(familyId);
+        return this.queryIndex('familyId', familyId, this.CATEGORIES_STORE);
+    }
+
+    /**
+     * Get categories by userId (Async via IndexedDB Index).
+     * Returns only personal categories (no familyId field).
+     */
+    async getCategoriesByUserIdAsync(userId: string): Promise<any[]> {
+        if (!this.db) return this.getPersonalCategoriesSync(userId);
+        const all = await this.queryIndex('userId', userId, this.CATEGORIES_STORE);
+        return all.filter((c: any) => c && !c.familyId);
     }
 
     /**
@@ -232,6 +456,10 @@ export class LocalIndexDBStorageService {
     clearMemoryCache(): void {
         this.keyValueCache.clear();
         this.transactionsCache.clear();
+        this.accountsCache.clear();
+        this.categoriesCache.clear();
+        this.accountsFamilyIdIndex.clear();
+        this.categoriesFamilyIdIndex.clear();
     }
 
     /**
@@ -289,9 +517,13 @@ export class LocalIndexDBStorageService {
         this.isCleaningUp = true;
         this.keyValueCache.clear();
         this.transactionsCache.clear();
+        this.accountsCache.clear();
+        this.categoriesCache.clear();
         this.familyIdIndex.clear();
         this.userIdIndex.clear();
         this.accountIdIndex.clear();
+        this.accountsFamilyIdIndex.clear();
+        this.categoriesFamilyIdIndex.clear();
 
         try {
             await this.clearDb();
@@ -375,6 +607,42 @@ export class LocalIndexDBStorageService {
                 if (!transactionStore.indexNames.contains('categoryId')) {
                     transactionStore.createIndex('categoryId', 'categoryId', { unique: false });
                 }
+
+                // ── Dedicated Accounts Store ──────────────────────────────────────
+                // key = accountId (personal) | familyId_accountId (family)
+                let accountsStore: IDBObjectStore;
+                if (!db.objectStoreNames.contains(this.ACCOUNTS_STORE)) {
+                    accountsStore = db.createObjectStore(this.ACCOUNTS_STORE);
+                    console.log('📦 Created accounts object store');
+                } else {
+                    accountsStore = request.transaction!.objectStore(this.ACCOUNTS_STORE);
+                }
+                if (!accountsStore.indexNames.contains('familyId')) {
+                    accountsStore.createIndex('familyId', 'familyId', { unique: false });
+                    console.log('📦 Created familyId index on accounts store');
+                }
+                if (!accountsStore.indexNames.contains('userId')) {
+                    accountsStore.createIndex('userId', 'userId', { unique: false });
+                    console.log('📦 Created userId index on accounts store');
+                }
+
+                // ── Dedicated Categories Store ────────────────────────────────────
+                // key = categoryId (personal) | familyId_categoryId (family)
+                let categoriesStore: IDBObjectStore;
+                if (!db.objectStoreNames.contains(this.CATEGORIES_STORE)) {
+                    categoriesStore = db.createObjectStore(this.CATEGORIES_STORE);
+                    console.log('📦 Created categories object store');
+                } else {
+                    categoriesStore = request.transaction!.objectStore(this.CATEGORIES_STORE);
+                }
+                if (!categoriesStore.indexNames.contains('familyId')) {
+                    categoriesStore.createIndex('familyId', 'familyId', { unique: false });
+                    console.log('📦 Created familyId index on categories store');
+                }
+                if (!categoriesStore.indexNames.contains('userId')) {
+                    categoriesStore.createIndex('userId', 'userId', { unique: false });
+                    console.log('📦 Created userId index on categories store');
+                }
             };
         });
     }
@@ -386,9 +654,11 @@ export class LocalIndexDBStorageService {
             }
 
             try {
-                // Load from both stores
+                // Load from all stores
                 await this.loadStoreIntoCache(this.STORE_NAME);
                 await this.loadStoreIntoCache(this.TRANSACTIONS_STORE);
+                await this.loadStoreIntoCache(this.ACCOUNTS_STORE);
+                await this.loadStoreIntoCache(this.CATEGORIES_STORE);
                 resolve();
             } catch (error) {
                 reject(error);
@@ -412,6 +682,12 @@ export class LocalIndexDBStorageService {
                     if (storeName === this.TRANSACTIONS_STORE) {
                         this.transactionsCache.set(cursor.key as string, cursor.value);
                         this.updateSecondaryIndices(cursor.key as string, cursor.value);
+                    } else if (storeName === this.ACCOUNTS_STORE) {
+                        this.accountsCache.set(cursor.key as string, cursor.value);
+                        this.updateAccountsSecondaryIndices(cursor.key as string, cursor.value);
+                    } else if (storeName === this.CATEGORIES_STORE) {
+                        this.categoriesCache.set(cursor.key as string, cursor.value);
+                        this.updateCategoriesSecondaryIndices(cursor.key as string, cursor.value);
                     } else {
                         this.keyValueCache.set(cursor.key as string, cursor.value);
                     }
@@ -653,6 +929,50 @@ export class LocalIndexDBStorageService {
                 };
             } catch (error) {
                 console.error('❌ Failed to start clear transactions transaction:', error);
+                reject(error);
+            }
+        });
+    }
+
+    /**
+     * Clear only accounts data (individual-item store)
+     */
+    async clearAccountsStore(): Promise<void> {
+        this.accountsCache.clear();
+        this.accountsFamilyIdIndex.clear();
+
+        return new Promise((resolve, reject) => {
+            if (!this.db) return resolve();
+            try {
+                if (!this.db.objectStoreNames.contains(this.ACCOUNTS_STORE)) return resolve();
+                const tx = this.db.transaction([this.ACCOUNTS_STORE], 'readwrite');
+                tx.objectStore(this.ACCOUNTS_STORE).clear();
+                tx.oncomplete = () => { console.log('✅ Accounts store cleared'); resolve(); };
+                tx.onerror = () => { console.error('❌ Error clearing accounts store:', tx.error); reject(tx.error); };
+            } catch (error) {
+                console.error('❌ Failed to clear accounts store:', error);
+                reject(error);
+            }
+        });
+    }
+
+    /**
+     * Clear only categories data (individual-item store)
+     */
+    async clearCategoriesStore(): Promise<void> {
+        this.categoriesCache.clear();
+        this.categoriesFamilyIdIndex.clear();
+
+        return new Promise((resolve, reject) => {
+            if (!this.db) return resolve();
+            try {
+                if (!this.db.objectStoreNames.contains(this.CATEGORIES_STORE)) return resolve();
+                const tx = this.db.transaction([this.CATEGORIES_STORE], 'readwrite');
+                tx.objectStore(this.CATEGORIES_STORE).clear();
+                tx.oncomplete = () => { console.log('✅ Categories store cleared'); resolve(); };
+                tx.onerror = () => { console.error('❌ Error clearing categories store:', tx.error); reject(tx.error); };
+            } catch (error) {
+                console.error('❌ Failed to clear categories store:', error);
                 reject(error);
             }
         });

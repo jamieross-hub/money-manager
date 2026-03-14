@@ -78,13 +78,6 @@ export class CategoryService implements OnDestroy {
     }
 
     /**
-     * Get the cache key for categories
-     */
-    protected getCategoriesCacheKey(userId: string): string {
-        return LocalStorageKeyHelper.getCategoriesCacheKey(userId, this.getFamilyId());
-    }
-
-    /**
      * Get the family ID for cache key
      */
     protected getFamilyId(): string | undefined {
@@ -102,6 +95,67 @@ export class CategoryService implements OnDestroy {
         return collection(this.firestore, this.getCategoriesPath(userId));
     }
 
+    // ──────────────────────────────────────────────────────────────────────────
+    // Individual-item store helpers
+    // key = categoryId (personal) | familyId_categoryId (family)
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Build the store key for a category
+     */
+    private getCategoryStoreKey(categoryId: string, familyId?: string): string {
+        return LocalStorageKeyHelper.getCategoryItemKey(categoryId, familyId ?? this.getFamilyId());
+    }
+
+    /**
+     * Read all categories for the current context from the individual-item cache.
+     * • Family mode  → categories whose familyId matches
+     * • Personal mode → categories that belong to userId without a familyId field
+     */
+    private readCategoriesFromStore(userId: string): Category[] {
+        const familyId = this.getFamilyId();
+        if (familyId) {
+            return this.localStorageUtility.getCategoriesByFamilyIdSync(familyId) as Category[];
+        }
+        return this.localStorageUtility.getPersonalCategoriesSync(userId) as Category[];
+    }
+
+    /**
+     * Persist an array of categories into the individual-item store.
+     */
+    private writeCategoriesToStore(categories: Category[], familyId?: string): void {
+        const fid = familyId ?? this.getFamilyId();
+        categories.forEach(category => {
+            if (!category?.id) return;
+            const key = LocalStorageKeyHelper.getCategoryItemKey(category.id, fid);
+            this.localStorageUtility.setCategory(key, category);
+        });
+    }
+
+    /**
+     * Replace the entire set of categories for the current context with a fresh list.
+     * Removes stale keys that are no longer in the new list.
+     */
+    private replaceCategoriesInStore(categories: Category[]): void {
+        const familyId = this.getFamilyId();
+        const newIds = new Set(categories.map(c => c.id));
+
+        // Remove stale entries
+        const existing = familyId
+            ? this.localStorageUtility.getCategoriesByFamilyIdSync(familyId) as Category[]
+            : this.localStorageUtility.getPersonalCategoriesSync(this.userService.getCurrentUserId() || '') as Category[];
+
+        existing.forEach(cat => {
+            if (cat?.id && !newIds.has(cat.id)) {
+                const staleKey = LocalStorageKeyHelper.getCategoryItemKey(cat.id, familyId);
+                this.localStorageUtility.removeCategory(staleKey);
+            }
+        });
+
+        // Upsert all new categories
+        this.writeCategoriesToStore(categories, familyId);
+    }
+
     /** 
      * Get all categories with real-time sync.
      * Reacts automatically to changes in the user's family mode preference.
@@ -114,16 +168,15 @@ export class CategoryService implements OnDestroy {
         }
 
         /**
-         * ⚠️ ARCHITECTURE ALIGNMENT: IndexedDB as Source of Truth
-         * 
-         * Components subscribe to categoriesSubject which is updated by the 
+         * ⚠️ ARCHITECTURE ALIGNMENT: Source of Truth = IndexedDB (individual-item store)
+         *
+         * Components subscribe to categoriesSubject which is updated by the
          * central background sync listener.
          */
         return this.localStorageUtility.isReady$.pipe(
             switchMap(() => {
-                // 1. Emit cached categories immediately
-                const cacheKey = this.getCategoriesCacheKey(userId);
-                const cachedCategories = this.localStorageUtility.getItem<Category[]>(cacheKey, undefined, false) || [];
+                // 1. Emit cached categories immediately from the individual-item store
+                const cachedCategories = this.readCategoriesFromStore(userId);
                 
                 if (cachedCategories.length > 0) {
                     this.categoriesSubject.next(cachedCategories);
@@ -144,7 +197,6 @@ export class CategoryService implements OnDestroy {
 
         return new Observable<void>(observer => {
             const currentPath = this.getCategoriesPath(userId);
-            const cacheKey = this.getCategoriesCacheKey(userId);
             
             console.log(`[CategoryService] 🔌 Starting real-time listener for path: ${currentPath}`);
 
@@ -175,8 +227,10 @@ export class CategoryService implements OnDestroy {
                         if (cat.id) this.categories[cat.id] = cat;
                     });
 
-                    // Update cache, subject and Store — include context so data goes into the correct bucket
-                    this.localStorageUtility.setItem(cacheKey, firestoreCategories);
+                    // Replace individual-item store entries for the current context
+                    this.replaceCategoriesInStore(firestoreCategories);
+
+                    // Update subject and Store — include context so data goes into the correct bucket
                     this.categoriesSubject.next(firestoreCategories);
                     this.store.dispatch(CategoriesActions.loadCategoriesSuccess({
                         categories: firestoreCategories,
@@ -220,7 +274,6 @@ export class CategoryService implements OnDestroy {
                 querySnapshot.forEach((docSnap: any) => {
                     const data: any = docSnap.data();
                     // Require both an id and a name — consistent with listenToCategories.
-                    // The old guard `(data.name || docSnap.id)` was always true.
                     if (data && docSnap.id && data.name) {
                         const category: Category = {
                             id: docSnap.id,
@@ -244,8 +297,8 @@ export class CategoryService implements OnDestroy {
 
                 console.log(`[CategoryService] Pulled ${categories.length} categories from Firestore`);
 
-                // Update cache
-                this.localStorageUtility.setItem(this.getCategoriesCacheKey(userId), categories);
+                // Replace individual-item store with fresh data
+                this.replaceCategoriesInStore(categories);
                 
                 // Update NgRx state — include context so data goes into the correct bucket
                 this.store.dispatch(CategoriesActions.loadCategoriesSuccess({
@@ -334,14 +387,12 @@ export class CategoryService implements OnDestroy {
         }
 
         return new Observable<string>(observer => {
-            const categoryRef = doc(this.firestore, this.getCategoryPath(userId, categoryId));
-            
             // 1. Dispatch store updates immediately (Optimistic)
             this.store.dispatch(CategoriesActions.createCategorySuccess({
                 category: categoryData
             }));
 
-            // 2. Update cache immediately
+            // 2. Update individual-item store immediately
             this.updateCategoryCache(userId, 'create', categoryData);
 
             // 3. Complete observer immediately with the new ID
@@ -417,12 +468,10 @@ export class CategoryService implements OnDestroy {
         }
 
         return new Observable<void>(observer => {
-            const categoryRef = doc(this.firestore, this.getCategoryPath(userId, categoryId));
-            
             // 1. Dispatch store updates immediately (Optimistic)
             this.store.dispatch(CategoriesActions.updateCategorySuccess({ category: updatedCategory }));
 
-            // 2. Update cache immediately
+            // 2. Update individual-item store immediately
             this.updateCategoryCache(userId, 'update', updatedCategory);
 
             // 3. Complete observer immediately
@@ -547,7 +596,7 @@ export class CategoryService implements OnDestroy {
             }
             this.store.dispatch(CategoriesActions.deleteCategorySuccess({ categoryId }));
 
-            // 2. Update cache immediately
+            // 2. Remove from individual-item store immediately
             this.updateCategoryCache(userId, 'delete', { id: categoryId } as Category);
 
             // 3. Complete observer immediately
@@ -565,7 +614,7 @@ export class CategoryService implements OnDestroy {
                                 await this.addToSyncQueue('update', { id: parent.id, subCategories: updatedSubCats }, userId);
                             }
                         } else if (categoryData.subCategories && categoryData.subCategories.length > 0) {
-                            // Sub-categories will be deleted by the cloud function/backend if implemented, 
+                            // Sub-categories will be deleted by the cloud function/backend if implemented,
                             // but here we queue explicit deletes for each.
                             for (const subId of categoryData.subCategories) {
                                 await this.addToSyncQueue('delete', { id: subId }, userId);
@@ -719,13 +768,12 @@ export class CategoryService implements OnDestroy {
     }
 
     /**
-     * Update category cache when categories are created, updated, or deleted
+     * Update the individual-item store when categories are created, updated, or deleted.
+     * Replaces the old bulk-array updateCategoryCache pattern.
      */
     protected updateCategoryCache(userId: string, operation: 'create' | 'update' | 'delete', category?: Category): void {
         try {
-            const cacheKey = this.getCategoriesCacheKey(userId);
-            const cachedCategories = (this.localStorageUtility.getItem<Category[]>(cacheKey, undefined, false) || [])
-                .filter(c => !!(c && (c.id || c.name)));
+            const familyId = this.getFamilyId();
 
             if (!category || (!category.id && !category.name)) {
                 if (operation !== 'delete') return;
@@ -734,30 +782,28 @@ export class CategoryService implements OnDestroy {
             switch (operation) {
                 case 'create':
                     if (category && (category.id || category.name)) {
-                        cachedCategories.push(category);
+                        const key = LocalStorageKeyHelper.getCategoryItemKey(category.id!, familyId);
+                        this.localStorageUtility.setCategory(key, category);
                     }
                     break;
+
                 case 'update':
                     if (category && category.id) {
-                        const index = cachedCategories.findIndex(c => c.id === category.id);
-                        if (index !== -1) {
-                            cachedCategories[index] = { ...cachedCategories[index], ...category };
-                        } else {
-                            cachedCategories.push(category);
-                        }
+                        const key = LocalStorageKeyHelper.getCategoryItemKey(category.id, familyId);
+                        // Merge with existing so partial updates don't wipe other fields
+                        const existing = this.localStorageUtility.getCategory<Category>(key, false);
+                        const merged = existing ? { ...existing, ...category } : category;
+                        this.localStorageUtility.setCategory(key, merged);
                     }
                     break;
+
                 case 'delete':
                     if (category && category.id) {
-                        const index = cachedCategories.findIndex(c => c.id === category.id);
-                        if (index !== -1) {
-                            cachedCategories.splice(index, 1);
-                        }
+                        const key = LocalStorageKeyHelper.getCategoryItemKey(category.id, familyId);
+                        this.localStorageUtility.removeCategory(key);
                     }
                     break;
             }
-
-            this.localStorageUtility.setItem(cacheKey, cachedCategories);
         } catch (error) {
             console.error('Error updating category cache:', error);
         }
