@@ -210,10 +210,10 @@ bootstrapApplication(AppComponent, appConfig)
     console.log('✅ App bootstrapped successfully');
 
     // Defer non-critical PWA features until after initial render
-    setTimeout(() => {
+    // setTimeout(() => {
       console.log('⏱️ Initializing deferred features...');
       initializePwaFeatures();
       initializeCacheManagement();
-    }, 1000); // Wait 1s after bootstrap
+    // }, 1000); // Wait 1s after bootstrap
   })
   .catch(err => console.error(err));

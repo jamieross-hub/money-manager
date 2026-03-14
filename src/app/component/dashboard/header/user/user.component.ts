@@ -222,8 +222,6 @@ export class UserComponent {
     `;
     document.body.appendChild(overlay);
 
-    // Increase delay slightly to ensure the overlay is fully visible
-    // and to let existing Firebase operations settle.
     setTimeout(async () => {
       try {
         // 1. Clear known browser storage that might hold old state
@@ -261,7 +259,7 @@ export class UserComponent {
         console.error('Update reload sequence failed:', error);
         window.location.reload();
       }
-    }, 1500);
+    }, 0);
   }
 
   openHelp(): void {

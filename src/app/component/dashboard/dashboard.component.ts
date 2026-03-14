@@ -58,11 +58,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.invitationPopupService.showInvitationsAfterLogin();
 
     // Check for due recurring transactions after a short delay
-    setTimeout(() => {
-      this.recurringTransactionService.checkDueRecurringTransactions()
-        .pipe(takeUntil(this.destroy$))
-        .subscribe();
-    }, 2000);
+    //  setTimeout(() => {
+    this.recurringTransactionService.checkDueRecurringTransactions()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe();
+    // }, 2000);
 
     // Redirect to family dashboard on app start if family mode is enabled
     // this.userService.userAuth$.pipe(
