@@ -1,6 +1,6 @@
 import { Injectable, Inject, PLATFORM_ID, Injector, signal, OnDestroy, computed, Signal } from '@angular/core';
 import { BehaviorSubject, Observable, fromEvent, interval, from, of, Subject, combineLatest, merge, forkJoin, Subscription } from 'rxjs';
-import { map, switchMap, catchError, tap, take, filter, distinctUntilChanged, takeUntil, delay, startWith, timeout, debounceTime } from 'rxjs/operators';
+import { map, switchMap, catchError, tap, take, first, filter, distinctUntilChanged, takeUntil, delay, startWith, timeout, debounceTime } from 'rxjs/operators';
 import { Firestore, collection, doc, writeBatch, serverTimestamp, Timestamp, getDoc, getDocFromServer } from '@angular/fire/firestore';
 import { Auth, getAuth } from '@angular/fire/auth';
 import { SwUpdate } from '@angular/service-worker';
@@ -536,6 +536,12 @@ export class CommonSyncService implements OnDestroy {
     }
 
     // 2. Handle Network Offline
+    // Fast check first: browser API is synchronous and reliable when offline
+    if (!navigator.onLine) {
+      console.log('🔄 Sync skipped: navigator.onLine is false (Device is Offline)');
+      return of(null);
+    }
+    // Slower check: confirmed real connectivity state
     if (!this.isCurrentlyOnline()) {
       console.log('🔄 Sync skipped: Device is Offline');
       return of(null);
@@ -623,7 +629,14 @@ export class CommonSyncService implements OnDestroy {
       ),
       tap(([user, familyId]) => console.log(`🔄 Sync context changed for user: ${user.uid}, Mode: ${user.preferences?.isFamilyMode ? 'Family' : 'Personal'}, FamilyId: ${familyId}`)),
       switchMap(([user, familyId]) => {
-        const initialSync$ = this.syncAll(familyId);
+        // Wait for network status to be confirmed before attempting the initial sync.
+        // This prevents the "Refreshing..." spinner from showing at startup when
+        // the device is offline (navigator.onLine can be true even without real internet,
+        // and the async Firebase check takes up to ~5s to resolve).
+        const initialSync$ = this.isOnline$.pipe(
+          first(),
+          switchMap(isOnline => isOnline ? this.syncAll(familyId) : of(null))
+        );
         
         const transactionsService = this.injector.get(TransactionsFacadeService);
         const accountsService = this.injector.get(AccountsFacadeService);
