@@ -686,14 +686,23 @@ export class CategoryService implements OnDestroy {
 
         return new Observable<void>(observer => {
             // Optimistic update
-            const updatedCategory = { ...currentCategory, parentCategoryId: undefined, isSubCategory: false };
+            const updatedCategory = { 
+                ...currentCategory, 
+                parentCategoryId: undefined, 
+                isSubCategory: false,
+                syncStatus: SyncStatus.PENDING
+            };
             this.updateCategoryCache(userId, 'update', updatedCategory);
             this.store.dispatch(CategoriesActions.updateCategorySuccess({ category: updatedCategory }));
 
             const parentCategory = this.categories[currentCategory.parentCategoryId!];
             if (parentCategory) {
                 const updatedSubCats = (parentCategory.subCategories || []).filter(id => id !== categoryId);
-                const updatedParent = { ...parentCategory, subCategories: updatedSubCats };
+                const updatedParent = { 
+                    ...parentCategory, 
+                    subCategories: updatedSubCats,
+                    syncStatus: SyncStatus.PENDING
+                };
                 this.updateCategoryCache(userId, 'update', updatedParent);
                 this.store.dispatch(CategoriesActions.updateCategorySuccess({ category: updatedParent }));
             }

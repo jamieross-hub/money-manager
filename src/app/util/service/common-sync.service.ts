@@ -784,8 +784,9 @@ export class CommonSyncService implements OnDestroy {
     this.updateSyncStatus({ isSyncing: true });
 
     const batch = writeBatch(this.firestore);
-    const processedItems: string[] = [];
-    const failedItems: string[] = [];
+    const itemsToProcess: SyncItem[] = [];
+    const processedIds: string[] = [];
+    const failedIds: string[] = [];
 
     for (const item of this.syncQueue) {
       try {
@@ -801,34 +802,39 @@ export class CommonSyncService implements OnDestroy {
           case 'user': await this.processUserSync(item, batch, userId); break;
         }
 
-        processedItems.push(item.id);
-        await this.updateItemSyncStatus(item, 'synced');
+        itemsToProcess.push(item);
       } catch (error) {
         console.error(`Failed to process sync item ${item.id}:`, error);
 
         item.retryCount++;
         if (item.retryCount >= (item.maxRetries || 3)) {
-          failedItems.push(item.id);
+          failedIds.push(item.id);
           await this.updateItemSyncStatus(item, 'failed');
         }
       }
     }
 
-    if (processedItems.length > 0) {
+    if (itemsToProcess.length > 0) {
       try {
         await batch.commit();
 
-        this.syncQueue = this.syncQueue.filter(item => !processedItems.includes(item.id));
+        // ⚠️ ONLY update UI/Cache status AFTER successful batch commit
+        for (const item of itemsToProcess) {
+          await this.updateItemSyncStatus(item, 'synced');
+          processedIds.push(item.id);
+        }
+
+        this.syncQueue = this.syncQueue.filter(item => !processedIds.includes(item.id));
         await this.saveSyncQueue();
 
         this.updateSyncStatus({
           lastSyncTime: Date.now(),
           pendingItems: this.syncQueue.length,
-          failedItems: failedItems.length,
+          failedItems: failedIds.length,
           isSyncing: false
         });
 
-        console.log(`✅ Processed ${processedItems.length} sync items`);
+        console.log(`✅ Processed ${processedIds.length} sync items`);
       } catch (error) {
         console.error('Failed to commit sync operations:', error);
         this.updateSyncStatus({ isSyncing: false });
@@ -964,11 +970,16 @@ export class CommonSyncService implements OnDestroy {
     if (!recordId) return;
     
     const budgetRef = doc(this.firestore, `${basePath}/${recordId}`);
-
+    const dataToWrite = this.scrubUndefined({ ...item.data });
+    if ('syncStatus' in dataToWrite && item.operation !== 'delete') {
+      dataToWrite.syncStatus = 'synced';
+      dataToWrite.lastSyncedAt = Timestamp.now();
+    }
+    
     switch (item.operation) {
       case 'create':
       case 'update':
-        batch.set(budgetRef, this.scrubUndefined(item.data), { merge: true });
+        batch.set(budgetRef, dataToWrite, { merge: true });
         break;
       case 'delete':
         batch.delete(budgetRef);
@@ -982,11 +993,16 @@ export class CommonSyncService implements OnDestroy {
     if (!recordId) return;
     
     const accountRef = doc(this.firestore, `${basePath}/${recordId}`);
+    const dataToWrite = this.scrubUndefined({ ...item.data });
+    if ('syncStatus' in dataToWrite && item.operation !== 'delete') {
+      dataToWrite.syncStatus = 'synced';
+      dataToWrite.lastSyncAt = Timestamp.now();
+    }
 
     switch (item.operation) {
       case 'create':
       case 'update':
-        batch.set(accountRef, this.scrubUndefined(item.data), { merge: true });
+        batch.set(accountRef, dataToWrite, { merge: true });
         break;
       case 'delete':
         batch.delete(accountRef);
@@ -996,15 +1012,20 @@ export class CommonSyncService implements OnDestroy {
 
   private async processCategorySync(item: SyncItem, batch: any, userId: string): Promise<void> {
     const basePath = item.collectionPath || `users/${userId}/categories`;
+    const dataToWrite = this.scrubUndefined({ ...item.data });
+    if ('syncStatus' in dataToWrite && item.operation !== 'delete') {
+      dataToWrite.syncStatus = 'synced';
+      dataToWrite.lastSyncedAt = Timestamp.now();
+    }
 
     switch (item.operation) {
       case 'create':
         const categoryRef = doc(this.firestore, `${basePath}/${item.data.id}`);
-        batch.set(categoryRef, this.scrubUndefined(item.data));
+        batch.set(categoryRef, dataToWrite);
         break;
       case 'update':
         const updateRef = doc(this.firestore, `${basePath}/${item.data.id}`);
-        batch.set(updateRef, this.scrubUndefined(item.data), { merge: true });
+        batch.set(updateRef, dataToWrite, { merge: true });
         break;
       case 'delete':
         const deleteRef = doc(this.firestore, `${basePath}/${item.data.id}`);
@@ -1019,11 +1040,16 @@ export class CommonSyncService implements OnDestroy {
     if (!recordId) return;
     
     const goalRef = doc(this.firestore, `${basePath}/${recordId}`);
+    const dataToWrite = this.scrubUndefined({ ...item.data });
+    if ('syncStatus' in dataToWrite && item.operation !== 'delete') {
+      dataToWrite.syncStatus = 'synced';
+      dataToWrite.lastSyncedAt = Timestamp.now();
+    }
 
     switch (item.operation) {
       case 'create':
       case 'update':
-        batch.set(goalRef, this.scrubUndefined(item.data), { merge: true });
+        batch.set(goalRef, dataToWrite, { merge: true });
         break;
       case 'delete':
         batch.delete(goalRef);

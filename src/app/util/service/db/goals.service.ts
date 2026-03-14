@@ -303,6 +303,7 @@ export class GoalsService {
             if (index !== -1) {
                 const currentAmount = goals[index].currentAmount || 0;
                 goals[index].currentAmount = currentAmount + amount;
+                goals[index].syncStatus = SyncStatus.PENDING;
                 newAmount = goals[index].currentAmount;
                 goalToUpdate = goals[index];
                 this.localStorageUtility.setItem(cacheKey, goals);

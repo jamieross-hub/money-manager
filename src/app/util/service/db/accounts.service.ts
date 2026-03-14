@@ -427,10 +427,11 @@ export class AccountsService {
             };
 
             // 1. Dispatch store updates immediately (Optimistic)
-            this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { accountId, ...sanitizedData } as any }));
+            const updatedAccount = { accountId, ...sanitizedData, syncStatus: SyncStatus.PENDING } as any;
+            this.store.dispatch(AccountsActions.updateAccountSuccess({ account: updatedAccount }));
             
             // 2. Update individual-item store immediately
-            this.updateAccountCache(userId, 'update', { accountId, ...sanitizedData } as any);
+            this.updateAccountCache(userId, 'update', updatedAccount);
 
             // 3. Complete observer immediately
             observer.next();

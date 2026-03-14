@@ -83,7 +83,7 @@ export class TransactionsService extends BaseService {
             updatedAt: now,
             createdBy: userId,
             updatedBy: userId,
-            syncStatus: isOnline ? SyncStatus.SYNCED : SyncStatus.PENDING
+            syncStatus: this.isGuest() ? SyncStatus.SYNCED : SyncStatus.PENDING
         });
 
         if (this.isGuest()) {
@@ -192,7 +192,7 @@ export class TransactionsService extends BaseService {
                         ...updatedTransaction,
                         updatedAt: Timestamp.now(),
                         updatedBy: userId,
-                        syncStatus: this.commonSyncService.isCurrentlyOnline() ? SyncStatus.SYNCED : SyncStatus.PENDING
+                        syncStatus: this.isGuest() ? SyncStatus.SYNCED : SyncStatus.PENDING
                     });
 
                     const newTransaction = { ...oldTransaction, ...updateData } as Transaction;
@@ -297,12 +297,11 @@ export class TransactionsService extends BaseService {
             
             let transactionWithDeletedStatus: Transaction | undefined;
             if (transactionToDelete) {
-                const isOnline = this.commonSyncService.isCurrentlyOnline();
                 transactionWithDeletedStatus = this.scrubUndefined({ 
                     ...transactionToDelete, 
                     status: TransactionStatus.DELETED, 
                     updatedAt: Timestamp.now(),
-                    syncStatus: isOnline ? SyncStatus.SYNCED : SyncStatus.PENDING
+                    syncStatus: this.isGuest() ? SyncStatus.SYNCED : SyncStatus.PENDING
                 }) as Transaction;
                 
                 this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ 

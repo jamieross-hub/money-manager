@@ -288,6 +288,7 @@ export class BudgetsService {
       const index = budgets.findIndex(b => b.budgetId === budgetId);
       if (index !== -1) {
         budgets[index].spent = (budgets[index].spent || 0) + amount;
+        budgets[index].syncStatus = SyncStatus.PENDING;
         currentSpent = budgets[index].spent;
         budgetToUpdate = budgets[index];
         this.localStorageUtility.setItem(cacheKey, budgets);
