@@ -188,17 +188,25 @@ export class CommonSyncService implements OnDestroy {
     ]);
   }
 
-  private async checkFirebaseConnection(): Promise<boolean> {
+  private async checkFirebaseConnection(timeoutMs: number = 2500): Promise<boolean> {
     try {
       const ref = doc(this.firestore, "health", "ping");
       // Use getDocFromServer to bypass cache and enforce real network request
       const pingPromise = getDocFromServer(ref);
-      const timeoutPromise = new Promise<boolean>((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000));
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('timeout')), timeoutMs)
+      );
+
       await Promise.race([pingPromise, timeoutPromise]);
       return true;
     } catch (e: any) {
-      // Treat permission-denied as online since we reached the server
-      if (e?.code === 'permission-denied' || e?.message?.includes('Missing or insufficient permissions')) {
+      // Treat specific errors as "online" since we reached the server
+      if (
+        e?.code === 'permission-denied' || 
+        e?.message?.includes('Missing or insufficient permissions') ||
+        e?.code === 'unauthenticated' ||
+        e?.code === 'resource-exhausted'
+      ) {
         return true;
       }
       return false;
@@ -212,23 +220,27 @@ export class CommonSyncService implements OnDestroy {
 
     let checkTimeout: any;
     const verifyConnection = async (retryCount = 0) => {
-      if (navigator.onLine) {
-        const isOnline = await this.checkFirebaseConnection();
-        
-        // If the browser reports online but the server is unreachable, 
-        // retry for a bit because DNS/Websockets take time to reconnect after switching networks.
-        if (!isOnline && retryCount < 3) {
-          clearTimeout(checkTimeout);
-          checkTimeout = setTimeout(() => {
-            verifyConnection(retryCount + 1);
-          }, 3000);
-          return; // Wait for retries before marking as offline to prevent offline-then-online notification flicker
-        }
-        
-        this.updateNetworkStatus({ online: isOnline });
-      } else {
+      // Immediate exit if browser says we are offline
+      if (!navigator.onLine) {
         this.updateNetworkStatus({ online: false });
+        return;
       }
+
+      // Use a tight timeout for the first check, slightly longer for retries
+      const timeout = retryCount === 0 ? 2000 : 3000;
+      const isOnline = await this.checkFirebaseConnection(timeout);
+      
+      // If the browser reports online but the server is unreachable, 
+      // retry once quickly because DNS/Websockets might be taking a moment.
+      if (!isOnline && retryCount < 1) {
+        clearTimeout(checkTimeout);
+        checkTimeout = setTimeout(() => {
+          verifyConnection(retryCount + 1);
+        }, 1000); // 1s wait before single retry
+        return;
+      }
+      
+      this.updateNetworkStatus({ online: isOnline });
     };
 
     // Capture initial connection status
