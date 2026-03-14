@@ -456,7 +456,7 @@ export class CommonSyncService implements OnDestroy {
    */
   private showOnlineNotification(): void {
     console.log('You are back online!', 'Your data will sync automatically.');
-    this.notificationService.info('Back online. Sync resumed.');
+    //this.notificationService.info('Back online. Sync resumed.');
   }
 
   /**
@@ -464,7 +464,7 @@ export class CommonSyncService implements OnDestroy {
    */
   private showOfflineNotification(): void {
     console.log('You are offline', 'Changes will be saved locally and synced when you reconnect.');
-    this.notificationService.warning('You are offline.');
+    //this.notificationService.warning('You are offline.');
   }
 
   /**
@@ -472,7 +472,7 @@ export class CommonSyncService implements OnDestroy {
    */
   private showSlowConnectionNotification(): void {
     console.warn('Internet connection is slow. Switching to pure offline mode for better performance.');
-    this.notificationService.warning('Slow internet detected. Switching to offline mode for better performance.');
+    //this.notificationService.warning('Slow internet detected. Switching to offline mode for better performance.');
   }
   // #endregion
 
