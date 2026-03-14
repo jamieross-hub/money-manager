@@ -19,6 +19,7 @@ import { Store } from '@ngrx/store';
 import { Observable, of, from, BehaviorSubject } from 'rxjs';
 import { map, catchError, tap, timeout, switchMap } from 'rxjs/operators';
 import { CommonSyncService, SyncItem } from '../common-sync.service';
+import { SyncStatus } from '../../config/enums';
 
 import { AppState } from 'src/app/store/app.state';
 import * as BudgetsActions from 'src/app/store/budgets/budgets.actions';
@@ -38,6 +39,8 @@ export interface Budget {
   spent: number;         // Accumulated spent amount
   startDate: Timestamp;  // Start of the budget period
   endDate: Timestamp;    // End of the budget period
+  syncStatus?: string;
+  lastSyncedAt?: any;
 }
 
 @Injectable({
@@ -170,7 +173,7 @@ export class BudgetsService {
    * Creates a new budget.
    */
   async createBudget(userId: string, budget: Budget): Promise<void> {
-    const newBudget = { ...budget, spent: 0 };
+    const newBudget = { ...budget, spent: 0, syncStatus: SyncStatus.PENDING };
     
     // 1. Optimistic Update (Cache & NgRx)
     if (this.isGuest(userId)) {
@@ -213,7 +216,7 @@ export class BudgetsService {
       const budgets = this.localStorageUtility.getItem<Budget[]>(cacheKey) || [];
       const index = budgets.findIndex(b => b.budgetId === budgetId);
       if (index !== -1) {
-        budgets[index] = { ...budgets[index], ...updatedBudget };
+        budgets[index] = { ...budgets[index], ...updatedBudget, syncStatus: SyncStatus.PENDING };
         currentBudget = budgets[index];
         this.localStorageUtility.setItem(cacheKey, budgets);
       }

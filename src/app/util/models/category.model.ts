@@ -14,6 +14,8 @@ export interface Category {
   subCategories?: Array<string>;
   group?: string;
   isSystem?: boolean;
+  syncStatus?: string;
+  lastSyncAt?: any;
 }
 
 export interface Budget {

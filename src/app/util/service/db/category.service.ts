@@ -3,7 +3,7 @@ import { Firestore, collection, addDoc, doc, updateDoc, deleteDoc, collectionDat
 import { Auth } from '@angular/fire/auth';
 import { Observable, Subject, takeUntil, BehaviorSubject } from 'rxjs';
 import { Category } from 'src/app/util/models';
-import { TransactionType } from '../../config/enums';
+import { TransactionType, SyncStatus } from '../../config/enums';
 import { AppState } from 'src/app/store/app.state';
 import { Store } from '@ngrx/store';
 import * as CategoriesActions from 'src/app/store/categories/categories.actions';
@@ -395,7 +395,8 @@ export class CategoryService implements OnDestroy {
             color,
             group: group || undefined,
             isSystem,
-            createdAt: Date.now() as any
+            createdAt: Date.now() as any,
+            syncStatus: SyncStatus.PENDING
         };
 
         if (this.isGuest()) {
@@ -441,7 +442,8 @@ export class CategoryService implements OnDestroy {
             budget: budgetData !== undefined ? budgetData : currentCategory?.budget,
             parentCategoryId: parentCategoryId !== undefined ? (parentCategoryId === null ? undefined : parentCategoryId) : currentCategory?.parentCategoryId,
             isSubCategory: isSubCategory !== undefined ? isSubCategory : currentCategory?.isSubCategory,
-            isSystem: isSystem !== undefined ? isSystem : currentCategory?.isSystem
+            isSystem: isSystem !== undefined ? isSystem : currentCategory?.isSystem,
+            syncStatus: SyncStatus.PENDING
         };
 
         if (this.isGuest()) {

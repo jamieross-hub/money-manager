@@ -13,6 +13,7 @@ import * as TransactionsActions from '../../store/transactions/transactions.acti
 import * as BudgetsActions from '../../store/budgets/budgets.actions';
 import * as AccountsActions from '../../store/accounts/accounts.actions';
 import * as GoalsActions from '../../store/goals/goals.actions';
+import * as CategoriesActions from '../../store/categories/categories.actions';
 import { Transaction } from '../models/transaction.model';
 import { APP_CONFIG } from '../config/config';
 import { LocalIndexDBStorageService } from './indexdb-storage.service';
@@ -1095,6 +1096,18 @@ export class CommonSyncService implements OnDestroy {
         if (index !== -1) {
           goals[index] = { ...goals[index], ...goal };
           this.storageService.setItem(cacheKey, goals);
+        }
+      }
+      else if (item.type === 'category') {
+        const category = { ...item.data, syncStatus: status, lastSyncAt: Timestamp.now() };
+        this.store.dispatch(CategoriesActions.updateCategorySuccess({ category }));
+        
+        const cacheKey = LocalStorageKeyHelper.getCategoriesCacheKey(userId, familyId);
+        const categories = this.storageService.getItem<any[]>(cacheKey) || [];
+        const index = categories.findIndex(c => c.id === recordId);
+        if (index !== -1) {
+          categories[index] = { ...categories[index], ...category };
+          this.storageService.setItem(cacheKey, categories);
         }
       }
       

@@ -4,6 +4,7 @@ import { Auth } from '@angular/fire/auth';
 import { Observable, of, from, BehaviorSubject } from 'rxjs';
 import { map, catchError, tap, timeout, switchMap } from 'rxjs/operators';
 import { CommonSyncService, SyncItem } from '../common-sync.service';
+import { SyncStatus } from '../../config/enums';
 import { DateService } from '../date.service';
 import { LocalIndexDBStorageService } from '../indexdb-storage.service';
 import { LocalStorageKeyHelper } from '../../models/local-storage.model';
@@ -19,6 +20,8 @@ export interface Goal {
     targetAmount: number;
     currentAmount: number;
     deadline: Timestamp;
+    syncStatus?: string;
+    lastSyncedAt?: any;
 }
 
 @Injectable({
@@ -38,7 +41,7 @@ export class GoalsService {
 
     async createGoal(userId: string, goal: Goal): Promise<void> {
         const isGuest = userId === 'offline-guest';
-        const newGoal = { ...goal, currentAmount: 0 };
+        const newGoal = { ...goal, currentAmount: 0, syncStatus: SyncStatus.PENDING };
 
         // 1. Optimistic Update (Cache & NgRx)
         if (isGuest) {
@@ -228,7 +231,7 @@ export class GoalsService {
             const goals = this.localStorageUtility.getItem<Goal[]>(cacheKey) || [];
             const index = goals.findIndex(g => g.goalId === goalId);
             if (index !== -1) {
-                goals[index] = { ...goals[index], ...updatedGoal };
+                goals[index] = { ...goals[index], ...updatedGoal, syncStatus: SyncStatus.PENDING };
                 currentGoal = goals[index];
                 this.localStorageUtility.setItem(cacheKey, goals);
             }
