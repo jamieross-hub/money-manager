@@ -492,6 +492,27 @@
                 <div class="transaction-details">
                   <div class="transaction-title">{{ item.category | titlecase }}</div>
 
+                  @if (item.splitData?.splitBetween?.length) {
+                    <div class="split-members-avatars">
+                      @for (member of item.splitData.splitBetween.slice(0, 5); track member.userId) {
+                        @if (member.photoURL) {
+                          <div class="member-avatar-small">
+                            <img [src]="member.photoURL" appImageFallback alt="Member">
+                          </div>
+                        } @else {
+                          <div class="member-avatar-small member-avatar-small--fallback">
+                            {{ member.displayName.charAt(0).toUpperCase() }}
+                          </div>
+                        }
+                      }
+                      @if (item.splitData.splitBetween.length > 5) {
+                        <div class="member-avatar-small member-avatar-small--fallback">
+                          +{{ item.splitData.splitBetween.length - 5 }}
+                        </div>
+                      }
+                    </div>
+                  }
+
                   @if (item.isRecurring || (item.isSplitTransaction && !(isFamilyMode() && isSplitMode())) || item._isDeleted) {
                     <div class="transaction-meta-row">
                       @if(item.isRecurring) {

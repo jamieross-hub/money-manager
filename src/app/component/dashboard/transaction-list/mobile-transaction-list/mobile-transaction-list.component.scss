@@ -1211,6 +1211,49 @@
   gap: 3px;
 }
 
+.split-members-avatars {
+  display: flex;
+  align-items: center;
+  margin-top: 1px;
+  margin-bottom: 2px;
+  padding-left: 2px;
+  
+  .member-avatar-small {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid var(--surface-50);
+    overflow: hidden;
+    background: var(--surface-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-left: -6px;
+    position: relative;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+
+    &:first-child {
+      margin-left: 0;
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    &--fallback {
+      font-size: 8px;
+      font-weight: 800;
+      color: var(--primary-700);
+      background: var(--primary-100);
+      border-color: var(--primary-200);
+    }
+  }
+}
+
 .transaction-title {
   font-family: 'Outfit', 'Inter', system-ui, sans-serif;
   font-weight: 600;
