@@ -569,8 +569,18 @@
     border-color: var(--error-200);
     mat-icon { color: var(--error-500); }
     .stat-value { color: var(--error-700); }
+  }
 
-    
+  &.settlement {
+    border-color: var(--primary-200);
+    mat-icon { color: var(--primary-500); }
+    .stat-value { color: var(--primary-700); }
+
+    [data-theme='dark'] & {
+      border-color: rgba(var(--primary-400-rgb), 0.2);
+      mat-icon { color: var(--primary-400); }
+      .stat-value { color: var(--primary-300); }
+    }
   }
 }
 

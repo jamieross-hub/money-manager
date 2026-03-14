@@ -17,6 +17,7 @@ export interface ProcessorOutput {
   groupedTransactions: any[];
   totalIncome: number;
   totalExpenses: number;
+  totalSettlement: number;
   filteredCount: number;
 }
 
@@ -34,6 +35,7 @@ export class TransactionProcessorService {
     groupedTransactions: [],
     totalIncome: 0,
     totalExpenses: 0,
+    totalSettlement: 0,
     filteredCount: 0
   });
 
@@ -44,6 +46,7 @@ export class TransactionProcessorService {
   public groupedTransactions = computed(() => this._output().groupedTransactions);
   public totalIncome = computed(() => this._output().totalIncome);
   public totalExpenses = computed(() => this._output().totalExpenses);
+  public totalSettlement = computed(() => this._output().totalSettlement);
   public filteredCount = computed(() => this._output().filteredCount);
   public isProcessing = computed(() => this._isProcessing());
 
@@ -115,11 +118,12 @@ export class TransactionProcessorService {
       appView,
       isRecurringMode,
       isDeletedMode,
+      isFamilyMode,
       currentUserId
     } = data;
 
     if (!transactions) {
-      return { filteredTransactions: [], flattenedTransactions: [], groupedTransactions: [], totalIncome: 0, totalExpenses: 0, filteredCount: 0 };
+      return { filteredTransactions: [], flattenedTransactions: [], groupedTransactions: [], totalIncome: 0, totalExpenses: 0, totalSettlement: 0, filteredCount: 0 };
     }
 
     // 1. Helper: Map creation — memoised by array reference so we only iterate
@@ -322,6 +326,11 @@ export class TransactionProcessorService {
       filtered = filtered.filter((t: any) => !!t.isRecurring === filters.isRecurring);
     }
 
+    // Settlement range filter
+    if (range === 'settlement') {
+      filtered = filtered.filter((t: any) => !!t.settlementId);
+    }
+
     // Member filter (family split mode)
     if (filters.selectedMember) {
       const memberId = filters.selectedMember;
@@ -344,7 +353,7 @@ export class TransactionProcessorService {
 
     // Merging Logic
     let mergedData = filtered;
-    if (range !== 'upcoming' && range !== null && !isRecurringMode && !isDeletedMode) {
+    if (range !== 'upcoming' && range !== 'settlement' && range !== null && !isRecurringMode && !isDeletedMode && !isFamilyMode) {
       const endOfCheck = dayjs().add(3, 'day').endOf('day').toDate();
       const templates = (recurringTemplates || []).map((t: any) => ({ ...t, isRecurring: true }));
       const dueSoon = generateUpcomingTransactions(
@@ -403,6 +412,9 @@ export class TransactionProcessorService {
     const totalExpenses = mergedData
       .filter((t: any) => t.type === 'expense' && !t.id?.startsWith('upcoming-') && !t.settlementId)
       .reduce((sum: number, t: any) => sum + t.amount, 0);
+    const totalSettlement = mergedData
+      .filter((t: any) => !!t.settlementId && !t.id?.startsWith('upcoming-'))
+      .reduce((sum: number, t: any) => sum + t.amount, 0);
 
     // 7. Grouping and View Models
     interface Group {
@@ -410,9 +422,10 @@ export class TransactionProcessorService {
       dateHeader: string;
       transactions: any[];
       isUpcomingGroup?: boolean;
-      totalAmount: number;
-      totalFormatted?: string;
-      totalClass?: string;
+      totalIncome: number;
+      totalExpenses: number;
+      incomeFormatted?: string;
+      expenseFormatted?: string;
     }
 
     const groupsMap = new Map<string, Group>();
@@ -495,13 +508,15 @@ export class TransactionProcessorService {
             dateHeader: header, 
             transactions: [], 
             isUpcomingGroup: txView._isUpcoming,
-            totalAmount: 0
+            totalIncome: 0,
+            totalExpenses: 0
           };
           groupsMap.set(dateKey, group);
         }
         group.transactions.push(txView);
         if (!txView._isUpcoming) {
-          group.totalAmount += txView._isIncome ? txView.amount : -txView.amount;
+          if (txView._isIncome) group.totalIncome += txView.amount;
+          else group.totalExpenses += txView.amount;
         }
         return;
       }
@@ -608,13 +623,15 @@ export class TransactionProcessorService {
           dateHeader: header, 
           transactions: [], 
           isUpcomingGroup: txView._isUpcoming,
-          totalAmount: 0
+          totalIncome: 0,
+          totalExpenses: 0
         };
         groupsMap.set(dateKey, group);
       }
       group.transactions.push(txView);
       if (!txView._isUpcoming) {
-        group.totalAmount += txView._isIncome ? txView.amount : -txView.amount;
+        if (txView._isIncome) group.totalIncome += txView.amount;
+        else group.totalExpenses += txView.amount;
       }
     });
 
@@ -623,9 +640,12 @@ export class TransactionProcessorService {
     // Set totals and classes (except upcoming)
     groups.forEach(group => {
       if (!group.isUpcomingGroup && group.transactions.length > 0) {
-        const amt = group.totalAmount;
-        group.totalFormatted = this.currencyService.formatAmount(Math.abs(amt), { round: true });
-        group.totalClass = amt >= 0 ? 'income-text' : 'expense-text';
+        if (group.totalIncome > 0) {
+          group.incomeFormatted = this.currencyService.formatAmount(group.totalIncome, { round: true });
+        }
+        if (group.totalExpenses > 0) {
+          group.expenseFormatted = this.currencyService.formatAmount(group.totalExpenses, { round: true });
+        }
       }
     });
 
@@ -654,7 +674,9 @@ export class TransactionProcessorService {
       flattened.push({
         _isHeader: true,
         dateHeader: group.dateHeader,
-        id: `header-${group.date}`
+        id: `header-${group.date}`,
+        incomeFormatted: group.incomeFormatted,
+        expenseFormatted: group.expenseFormatted
       });
       group.transactions.forEach((tx: any) => {
         flattened.push(tx);  // reference, no spread alloc
@@ -667,6 +689,7 @@ export class TransactionProcessorService {
       groupedTransactions: finalGroups,
       totalIncome,
       totalExpenses,
+      totalSettlement,
       filteredCount
     };
   }

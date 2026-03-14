@@ -254,6 +254,15 @@
                 <mat-icon class="check-icon">check</mat-icon>
               }
             </button>
+
+            <button mat-menu-item [class.active-menu-item]="selectedRange() === 'settlement'"
+              (click)="onDateRangeChange('settlement')">
+              <mat-icon class="text-indigo-500">handshake</mat-icon>
+              <span>Settlements</span>
+              @if (selectedRange() === 'settlement') {
+                <mat-icon class="check-icon">check</mat-icon>
+              }
+            </button>
           <!-- } -->
           <button mat-menu-item [class.active-menu-item]="selectedRange() === 'this-week'"
             (click)="onDateRangeChange('this-week')">
@@ -279,15 +288,16 @@
               <mat-icon class="check-icon">check</mat-icon>
             }
           </button>
-          <!-- //upcoming button -->
-          <button mat-menu-item [class.active-menu-item]="selectedRange() === 'upcoming'"
-            (click)="onDateRangeChange('upcoming')">
-            <mat-icon>calendar_today</mat-icon>
-            <span>Upcoming</span>
-            @if (selectedRange() === 'upcoming') {
-              <mat-icon class="check-icon">check</mat-icon>
-            }
-          </button>
+          @if (!isFamilyMode()) {
+            <button mat-menu-item [class.active-menu-item]="selectedRange() === 'upcoming'"
+              (click)="onDateRangeChange('upcoming')">
+              <mat-icon>calendar_today</mat-icon>
+              <span>Upcoming</span>
+              @if (selectedRange() === 'upcoming') {
+                <mat-icon class="check-icon">check</mat-icon>
+              }
+            </button>
+          }
           <button mat-menu-item [class.active-menu-item]="selectedRange() === 'this-year'"
             (click)="onDateRangeChange('this-year')">
             <mat-icon>calendar_today</mat-icon>
@@ -336,6 +346,14 @@
             <span class="stat-value">-{{ totalExpenses() | currency:{round:true} }}</span>
           </div>
         </div>
+        @if (totalSettlement() > 0) {
+          <div class="stat-item settlement">
+            <mat-icon>handshake</mat-icon>
+            <div class="stat-content">
+              <span class="stat-value">{{ totalSettlement() | currency:{round:true} }}</span>
+            </div>
+          </div>
+        }
       </div>
     </div>
   }
@@ -400,8 +418,18 @@
           <div class="date-header-row sticky top-0 z-20 w-full px-2 py-2 pointer-events-none">
             <div class="date-header-pill" [attr.data-header]="group.dateHeader">
               <span class="header-title !text-[10px]">{{ group.dateHeader }}</span>
-              @if (group.totalFormatted) {
-                <span class="header-total" [ngClass]="group.totalClass">({{ group.totalFormatted }})</span>
+              @if (group.incomeFormatted || group.expenseFormatted) {
+                <span class="header-totals flex items-center gap-1 text-[10px]">
+                  @if (group.incomeFormatted) {
+                    <span class="header-total income-text">+{{ group.incomeFormatted }}</span>
+                  }
+                  @if (group.incomeFormatted && group.expenseFormatted) {
+                    <span class="opacity-30">|</span>
+                  }
+                  @if (group.expenseFormatted) {
+                    <span class="header-total expense-text">-{{ group.expenseFormatted }}</span>
+                  }
+                </span>
               }
             </div>
           </div>

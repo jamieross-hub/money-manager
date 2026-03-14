@@ -247,6 +247,7 @@ export class MobileTransactionListComponent
   groupedTransactions = this.processorService.groupedTransactions;
   totalIncome = this.processorService.totalIncome;
   totalExpenses = this.processorService.totalExpenses;
+  totalSettlement = this.processorService.totalSettlement;
   filteredCount = this.processorService.filteredCount;
   isProcessing = this.processorService.isProcessing;
 
@@ -679,6 +680,9 @@ export class MobileTransactionListComponent
       startDate = dayjs().startOf('day').toDate();
       const unit = appView === 'WEEKLY' ? 'week' : (appView === 'YEARLY' ? 'year' : 'month');
       endDate = dayjs().add(1, unit).endOf('day').toDate();
+    } else if (range === 'deleted' || range === 'settlement') {
+      this.filterService.clearSelectedDate();
+      return;
     } else {
       const ranges: Record<string, () => [Date, Date]> = {
         'today': () => [dayjs().startOf('day').toDate(), dayjs().endOf('day').toDate()],
