@@ -552,6 +552,18 @@ export class TransactionsService extends BaseService {
         const effectiveFamilyId = familyId || (isFamilyMode ? this.getFamilyId() : undefined);
 
         return new Observable<void>(observer => {
+            // 0. Emit cached transactions immediately
+            // This ensures data is visible instantly without waiting for Firestore
+            const cachedList = this.getCachedTransactions(userId, familyId);
+            if (cachedList.length > 0) {
+                this.transactionsSubject.next(cachedList);
+                if (effectiveFamilyId) {
+                    this.store.dispatch(FamilyActions.loadTransactionsSuccess({ transactions: cachedList }));
+                } else {
+                    this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: cachedList }));
+                }
+            }
+
             // Track whether this is the first snapshot emission (full load) vs. incremental.
             let isFirstSnapshot = true;
 
@@ -652,31 +664,8 @@ export class TransactionsService extends BaseService {
                     observer.next();
                 },
                 (error) => {
-                    console.warn('[TransactionsService] Real-time listener error (may be offline):', error);
-
-                    // OFFLINE FALLBACK: When Firestore is unreachable the listener
-                    // errors immediately. Instead of propagating the error (which
-                    // would terminate the merged stream and leave the store empty),
-                    // emit whatever is already cached in IndexedDB so the UI still
-                    // has data while offline.
-                    const fallback = this.getCachedTransactions(userId, familyId);
-                    if (fallback.length > 0) {
-                        console.log(`[TransactionsService] Offline fallback: dispatching ${fallback.length} cached transactions.`);
-                        this.transactionsSubject.next(fallback);
-                        if (effectiveFamilyId) {
-                            this.store.dispatch(FamilyActions.loadTransactionsSuccess({ transactions: fallback }));
-                        } else {
-                            this.store.dispatch(TransactionsActions.loadTransactionsSuccess({ transactions: fallback }));
-                        }
-                        // Complete the observer (don't error) so the upstream
-                        // catchError in CommonSyncService keeps the stream alive.
-                        observer.next();
-                        observer.complete();
-                    } else {
-                        // Nothing cached yet — complete gracefully without error
-                        // so the outer merge stream stays alive for retries.
-                        observer.complete();
-                    }
+                    console.warn(`[TransactionsService] ⚠️ Real-time listener failed for user: ${userId} (may be offline):`, error);
+                    observer.complete();
                 }
             );
 

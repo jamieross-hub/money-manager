@@ -265,8 +265,8 @@ export class CategoryService implements OnDestroy {
                     observer.next();
                 },
                 (error) => {
-                    console.error(`[CategoryService] ❌ Real-time listener failed for ${currentPath}:`, error);
-                    observer.error(error);
+                    console.warn(`[CategoryService] ⚠️ Real-time listener failed for ${currentPath} (may be offline):`, error);
+                    observer.complete();
                 }
             );
 

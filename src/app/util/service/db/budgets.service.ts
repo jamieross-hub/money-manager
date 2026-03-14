@@ -107,19 +107,26 @@ export class BudgetsService {
 
       console.log(`[BudgetsService] 🔌 Starting real-time listener for user: ${userId}`);
 
+      // 0. Emit cached budgets immediately
+      const cacheKey = LocalStorageKeyHelper.getBudgetsCacheKey(userId);
+      const cachedBudgets = this.localStorageUtility.getItem<Budget[]>(cacheKey) || [];
+      if (cachedBudgets.length > 0) {
+        this.budgetsSubject.next(cachedBudgets);
+        this.store.dispatch(BudgetsActions.loadBudgetsSuccess({ budgets: cachedBudgets }));
+      }
+
       const unsubscribe = onSnapshot(budgetsRef, (snap) => {
         const budgets: Budget[] = [];
         snap.forEach(docSnap => budgets.push(docSnap.data() as Budget));
 
-        const cacheKey = LocalStorageKeyHelper.getBudgetsCacheKey(userId);
         this.localStorageUtility.setItem(cacheKey, budgets);
         this.budgetsSubject.next(budgets);
         this.store.dispatch(BudgetsActions.loadBudgetsSuccess({ budgets }));
         
         observer.next();
       }, (error) => {
-        console.error('[BudgetsService] Real-time listener failed:', error);
-        observer.error(error);
+        console.warn(`[BudgetsService] ⚠️ Real-time listener failed (may be offline):`, error);
+        observer.complete();
       });
 
       return () => unsubscribe();

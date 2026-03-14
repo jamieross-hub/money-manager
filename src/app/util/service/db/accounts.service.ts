@@ -273,8 +273,8 @@ export class AccountsService {
                     observer.next();
                 },
                 (error) => {
-                    console.error(`[AccountsService] ❌ Real-time listener failed for ${currentPath}:`, error);
-                    observer.error(error);
+                    console.warn(`[AccountsService] ⚠️ Real-time listener failed for ${currentPath} (may be offline):`, error);
+                    observer.complete();
                 }
             );
 

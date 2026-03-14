@@ -474,7 +474,8 @@ export class FamilyService implements OnDestroy {
 
             observer.next(families);
           }, (err) => {
-            console.error('Error in families listener:', err);
+            console.warn('[FamilyService] ⚠️ Families listener failed (may be offline):', err);
+            observer.complete();
           });
           return () => unsubscribe();
         });
@@ -688,7 +689,8 @@ export class FamilyService implements OnDestroy {
 
             observer.next(members);
           }, (err) => {
-            console.error('Members listener error:', err);
+            console.warn(`[FamilyService] ⚠️ Members listener failed for ${familyId} (may be offline):`, err);
+            observer.complete();
           });
           return () => unsubscribe();
         });
@@ -915,7 +917,8 @@ export class FamilyService implements OnDestroy {
 
             observer.next(settlements);
           }, (err) => {
-            console.error('Settlements listener error:', err);
+            console.warn(`[FamilyService] ⚠️ Settlements listener failed for ${familyId} (may be offline):`, err);
+            observer.complete();
           });
           return () => unsubscribe();
         });

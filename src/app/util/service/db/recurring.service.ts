@@ -138,27 +138,39 @@ export class RecurringService extends BaseService {
    * Fetch all recurring templates for a user
    */
   getRecurringTemplates(userId: string): Observable<RecurringTemplate[]> {
-  return this.localStorageUtility.isReady$.pipe(
-    switchMap(() => {
-      if (this.isGuest()) {
+    return this.localStorageUtility.isReady$.pipe(
+      switchMap(() => {
         const cacheKey = LocalStorageKeyHelper.getRecurringCacheKey(userId);
         const templates = this.localStorageUtility.getItem<RecurringTemplate[]>(cacheKey) || [];
-        this.recurringTemplatesSubject.next(templates);
-        return of(templates);
-      }
-
-      const recurringRef = query(collection(this.firestore, this.getRecurringPath(userId)));
-      return from(getDocs(recurringRef)).pipe(
-        map(snapshot => {
-          const templates: RecurringTemplate[] = [];
-          snapshot.forEach(doc => templates.push({ id: doc.id, ...doc.data() } as RecurringTemplate));
+        
+        // 1. Emit cached templates immediately
+        if (templates.length > 0) {
           this.recurringTemplatesSubject.next(templates);
-          return templates;
-        }),
-        catchError(err => this.handleError(err, 'getRecurringTemplates'))
-      );
-    })
-  );
+        }
+
+        // 2. Fetch from Firestore in the background if not guest
+        if (!this.isGuest()) {
+          const recurringRef = query(collection(this.firestore, this.getRecurringPath(userId)));
+          from(getDocs(recurringRef)).pipe(
+            timeout(15000)
+          ).subscribe({
+            next: (snapshot) => {
+              const fetchedTemplates: RecurringTemplate[] = [];
+              snapshot.forEach(doc => fetchedTemplates.push({ id: doc.id, ...doc.data() } as RecurringTemplate));
+              
+              this.localStorageUtility.setItem(cacheKey, fetchedTemplates);
+              this.recurringTemplatesSubject.next(fetchedTemplates);
+            },
+            error: (err) => {
+              console.warn(`[RecurringService] ⚠️ Fetch failed for ${userId} (may be offline):`, err);
+            }
+          });
+        }
+
+        // 3. Return reactive subject
+        return this.recurringTemplatesSubject.asObservable();
+      })
+    );
   }
 
   /**

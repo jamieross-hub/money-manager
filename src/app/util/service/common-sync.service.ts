@@ -556,15 +556,16 @@ export class CommonSyncService implements OnDestroy {
     const categoryService = this.injector.get(CategoryFacadeService);
     const budgetsService = this.injector.get(BudgetsService);
     const goalsService = this.injector.get(GoalsService);
-    const googleSheetsService = this.injector.get(GoogleSheetsService);
     const subscriptionService = this.injector.get(SubscriptionService);
     const feedbackService = this.injector.get(FeedbackService);
     const contactService = this.injector.get(ContactService);
 
+    const abort$ = this.isOnline$.pipe(filter(online => !online));
+
     // 1. Push pending changes first
     return from(this.manualSync()).pipe(
-      timeout(15000),
-      switchMap(() => from(new Promise<void>(resolve => setTimeout(resolve, 1500)))),
+      timeout(10000), // Reduced timeout
+      switchMap(() => from(new Promise<void>(resolve => setTimeout(resolve, 1000)))),
       // 2. Pull changes from all collections
       switchMap(() => {
         return forkJoin([
@@ -573,16 +574,16 @@ export class CommonSyncService implements OnDestroy {
           categoryService.pullFromFirestore(userId),
           budgetsService.pullFromFirestore(userId),
           goalsService.pullFromFirestore(userId),
-          // googleSheetsService.pullFromFirestore(userId),
           subscriptionService.pullFromFirestore(userId),
           this.userService.pullFromFirestore(userId),
           this.familyService.pullFromFirestore(userId),
           feedbackService.pullFromFirestore(),
           contactService.pullFromFirestore()
         ]).pipe(
-          timeout(30000)
+          timeout(20000) // Reduced timeout
         );
       }),
+      takeUntil(abort$), // Abort immediately if network drops
       tap(() => {
         console.log('[CommonSyncService] syncAll: Pull complete for all services');
         console.log('✅ Sync completed successfully');

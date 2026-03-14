@@ -104,6 +104,14 @@ export class GoalsService {
             );
 
             console.log(`[GoalsService] 🔌 Starting real-time listener for user: ${userId}`);
+            
+            // 0. Emit cached goals immediately
+            const cacheKey = LocalStorageKeyHelper.getGoalsCacheKey(userId);
+            const cachedGoals = this.localStorageUtility.getItem<Goal[]>(cacheKey) || [];
+            if (cachedGoals.length > 0) {
+                this.goalsSubject.next(cachedGoals);
+                this.store.dispatch(GoalsActions.loadGoalsSuccess({ goals: cachedGoals }));
+            }
 
             const unsubscribe = onSnapshot(goalsRef, (snap) => {
                 const goals: Goal[] = [];
@@ -114,15 +122,14 @@ export class GoalsService {
                     }
                 });
 
-                const cacheKey = LocalStorageKeyHelper.getGoalsCacheKey(userId);
                 this.localStorageUtility.setItem(cacheKey, goals);
                 this.goalsSubject.next(goals);
                 this.store.dispatch(GoalsActions.loadGoalsSuccess({ goals }));
                 
                 observer.next();
             }, (error) => {
-                console.error('[GoalsService] Real-time listener failed:', error);
-                observer.error(error);
+                console.warn(`[GoalsService] ⚠️ Real-time listener failed (may be offline):`, error);
+                observer.complete();
             });
 
             return () => unsubscribe();
