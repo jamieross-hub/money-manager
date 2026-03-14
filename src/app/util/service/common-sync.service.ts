@@ -617,26 +617,18 @@ export class CommonSyncService implements OnDestroy {
         const budgetsService = this.injector.get<BudgetsService>(BudgetsService);
         const goalsService = this.injector.get<GoalsService>(GoalsService);
 
-        const realTimeSync$ = this.isOnline$.pipe(
-          delay(10000),
-          switchMap(online => {
-            if (online) {
-              console.log('🌐 Online: Enabling real-time sync listeners (Full Set)');
-              return merge(
-                  transactionsService.listenToTransactions(user.uid).pipe(catchError(() => of(null))),
-                  accountsService.listenToAccounts(user.uid).pipe(catchError(() => of(null))),
-                  categoryService.listenToCategories(user.uid).pipe(catchError(() => of(null))),
-                  budgetsService.listenToBudgets(user.uid).pipe(catchError(() => of(null))),
-                  goalsService.listenToGoals(user.uid).pipe(catchError(() => of(null)))
-              );
-            } else {
-              console.log('📴 Offline: Real-time sync disabled (using IndexedDB)');
-              return of(null);
-            }
-          })
+        // ALWAYS enable listeners, even when offline.
+        // They provide immediate cache emission and resume when online.
+        console.log(`[CommonSyncService] 🔌 Activating listeners for ${user.uid} (${familyId ? 'Family' : 'Personal'})`);
+        const listeners$ = merge(
+            transactionsService.listenToTransactions(user.uid).pipe(catchError(() => of(null))),
+            accountsService.listenToAccounts(user.uid).pipe(catchError(() => of(null))),
+            categoryService.listenToCategories(user.uid).pipe(catchError(() => of(null))),
+            budgetsService.listenToBudgets(user.uid).pipe(catchError(() => of(null))),
+            goalsService.listenToGoals(user.uid).pipe(catchError(() => of(null)))
         );
 
-        return merge(initialSync$, realTimeSync$);
+        return merge(initialSync$, listeners$);
       })
     ).subscribe();
 

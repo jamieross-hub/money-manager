@@ -101,8 +101,12 @@ export const profileReducer = createReducer(
   })),
   
   // Update preferences
-  on(ProfileActions.updatePreferences, (state) => ({
+  on(ProfileActions.updatePreferences, (state, { preferences }) => ({
     ...state,
+    profile: state.profile ? { 
+        ...state.profile, 
+        preferences: { ...state.profile.preferences, ...preferences } 
+    } : state.profile,
     loading: true,
     error: null
   })),

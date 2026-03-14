@@ -107,52 +107,6 @@ export class FamilyModeToggleComponent implements OnInit {
           console.warn('Family mode toggle timed out');
       }, 10000); // 10s fallback
 
-      // 3. Handle success
-      success$.subscribe(() => {
-        clearTimeout(timeoutTimer);
-        this.notificationService.info(`Family mode ${enabled ? 'enabled' : 'disabled'}`);
-        
-        // Switch the active context in the store — this instantly shows the correct
-        // data for the new mode without clearing anything. Both buckets stay warm
-        // in memory so switching back is also instant (no Firestore round-trip).
-        const newContext = enabled ? 'family' : 'personal';
-        this.store.dispatch(AccountsActions.setAccountsContext({ context: newContext }));
-        this.store.dispatch(CategoriesActions.setCategoriesContext({ context: newContext }));
-
-        // Transactions and budgets/goals don't have dual-bucket state yet — clear them
-        // so stale data from the previous mode doesn't show while the sync reloads.
-        this.store.dispatch(TransactionsActions.clearTransactions());
-        this.store.dispatch(BudgetsActions.clearBudgets());
-        this.store.dispatch(GoalsActions.clearGoals());
-
-       
-        // Determine the target route based on the new state
-        const activeId = changes.activeFamilyId || profile.preferences?.activeFamilyId;
-        const targetRoute = enabled 
-          ? (activeId ? `/dashboard/family/dashboard/${activeId}` : '/dashboard/groups')
-          : '/dashboard/home';
-
-        // Give store a moment to propagate state before clearing loader/pending UI
-        this.isUpdating.set(false);
-        this.pendingState.set(null);
-        
-        this.router.navigate([targetRoute]).catch(err => {
-          if (err?.message !== 'Transition was skipped') throw err;
-        });
-      });
-
-      // 4. Handle failure
-      failure$.subscribe((error) => {
-        clearTimeout(timeoutTimer);
-        console.error('Failed to update family mode preference:', error);
-        this.notificationService.error('Failed to update family mode preference');
-        this.isUpdating.set(false);
-        this.pendingState.set(null);
-        if (profile.uid) {
-           this.store.dispatch(ProfileActions.loadProfile({ userId: profile.uid }));
-        }
-      });
-
       // 5. Determine changes
       let changes: Partial<UserPreferences> = {
         isFamilyMode: enabled,
@@ -168,13 +122,57 @@ export class FamilyModeToggleComponent implements OnInit {
         }
       }
 
-      if (enabled && changes.activeFamilyId) {
-        this.store.dispatch(FamilyActions.loadFamily({ familyId: changes.activeFamilyId }));
-        this.familyProcessor.loadFamilyData(changes.activeFamilyId);
+      const activeIdForNavigation = changes.activeFamilyId || profile.preferences?.activeFamilyId;
+
+      if (enabled && activeIdForNavigation) {
+        this.store.dispatch(FamilyActions.loadFamily({ familyId: activeIdForNavigation }));
+        this.familyProcessor.loadFamilyData(activeIdForNavigation);
       }
 
-      // 6. Finally dispatch
+      // 6. Dispatch the preference update (now optimistic in reducer)
       this.applyPreferenceChanges(changes);
+
+      // 7. OPTIMISTIC UI SWITCH: Perform the switch immediately for offline support
+      const newContext = enabled ? 'family' : 'personal';
+      
+      this.store.dispatch(AccountsActions.setAccountsContext({ context: newContext }));
+      this.store.dispatch(CategoriesActions.setCategoriesContext({ context: newContext }));
+
+      // Clear non-dual-context stores so they re-fetch from the correct source
+      this.store.dispatch(TransactionsActions.clearTransactions());
+      this.store.dispatch(BudgetsActions.clearBudgets());
+      this.store.dispatch(GoalsActions.clearGoals());
+
+      // Navigate immediately
+      const targetRoute = enabled 
+        ? (activeIdForNavigation ? `/dashboard/family/dashboard/${activeIdForNavigation}` : '/dashboard/groups')
+        : '/dashboard/home';
+
+      this.router.navigate([targetRoute]).then(() => {
+        this.isUpdating.set(false);
+        this.pendingState.set(null);
+      }).catch(err => {
+        this.isUpdating.set(false);
+        this.pendingState.set(null);
+        if (err?.message !== 'Transition was skipped') throw err;
+      });
+
+      // 8. Background result handling (for notifications and state correction on failure)
+      success$.subscribe(() => {
+        clearTimeout(timeoutTimer);
+        this.notificationService.info(`Family mode ${enabled ? 'enabled' : 'disabled'}`);
+      });
+
+      failure$.subscribe((error) => {
+        clearTimeout(timeoutTimer);
+        console.error('Failed to update family mode preference:', error);
+        this.notificationService.error('Failed to update family mode preference');
+        
+        // On failure, we might need to reset the context back if the user hasn't switched again
+        if (profile.uid) {
+           this.store.dispatch(ProfileActions.loadProfile({ userId: profile.uid }));
+        }
+      });
 
     } catch (error) {
       console.error('Error toggling family mode:', error);
