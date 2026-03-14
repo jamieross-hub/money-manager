@@ -196,6 +196,19 @@ export class CategoryService implements OnDestroy {
         if (this.isGuest()) return of(undefined);
 
         return new Observable<void>(observer => {
+            // 0. Emit cached categories immediately from the individual-item store
+            // This ensures the UI feels instant when switching contexts (Personal <-> Family)
+            const cachedCategories = this.readCategoriesFromStore(userId);
+            
+            if (cachedCategories.length > 0) {
+                console.log(`[CategoryService] 💨 Emitting ${cachedCategories.length} cached categories before listener starts`);
+                this.categoriesSubject.next(cachedCategories);
+                this.store.dispatch(CategoriesActions.loadCategoriesSuccess({
+                    categories: cachedCategories,
+                    context: this.getActiveContext()
+                }));
+            }
+
             const currentPath = this.getCategoriesPath(userId);
             
             console.log(`[CategoryService] 🔌 Starting real-time listener for path: ${currentPath}`);
@@ -300,6 +313,14 @@ export class CategoryService implements OnDestroy {
                 // Replace individual-item store with fresh data
                 this.replaceCategoriesInStore(categories);
                 
+                // Update internal categories map
+                categories.forEach(cat => {
+                    if (cat.id) this.categories[cat.id] = cat;
+                });
+
+                // Update Subject so UI reflects the fresh data immediately
+                this.categoriesSubject.next(categories);
+
                 // Update NgRx state — include context so data goes into the correct bucket
                 this.store.dispatch(CategoriesActions.loadCategoriesSuccess({
                     categories,

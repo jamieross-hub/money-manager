@@ -213,6 +213,20 @@ export class AccountsService {
         if (this.isGuest()) return of(undefined);
 
         return new Observable<void>(observer => {
+            // 0. Emit cached accounts immediately from the individual-item store
+            // This ensures the UI feels instant when switching contexts (Personal <-> Family)
+            const cachedAccounts = this.readAccountsFromStore(userId)
+                .filter(a => !!(a && a.accountId));
+            
+            if (cachedAccounts.length > 0) {
+                console.log(`[AccountsService] 💨 Emitting ${cachedAccounts.length} cached accounts before listener starts`);
+                this.accountsSubject.next(cachedAccounts);
+                this.store.dispatch(AccountsActions.loadAccountsSuccess({
+                    accounts: cachedAccounts,
+                    context: this.getActiveContext()
+                }));
+            }
+
             const currentPath = this.getAccountsPath(userId);
             
             console.log(`[AccountsService] 🔌 Starting real-time listener for path: ${currentPath}`);
@@ -293,6 +307,9 @@ export class AccountsService {
 
                 // Replace individual-item store with fresh data
                 this.replaceAccountsInStore(accounts);
+                
+                // Update Subject so UI reflects the fresh data immediately
+                this.accountsSubject.next(accounts);
                 
                 // Update NgRx state — include context so data goes into the correct bucket
                 this.store.dispatch(AccountsActions.loadAccountsSuccess({
