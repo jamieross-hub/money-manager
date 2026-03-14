@@ -931,10 +931,11 @@ export class CommonSyncService implements OnDestroy {
   }
 
   private async processBudgetSync(item: SyncItem, batch: any, userId: string): Promise<void> {
+    const basePath = item.collectionPath || `users/${userId}/budgets`;
     const recordId = this.getRecordId(item);
     if (!recordId) return;
     
-    const budgetRef = doc(this.firestore, `users/${userId}/budgets/${recordId}`);
+    const budgetRef = doc(this.firestore, `${basePath}/${recordId}`);
 
     switch (item.operation) {
       case 'create':
@@ -948,10 +949,11 @@ export class CommonSyncService implements OnDestroy {
   }
 
   private async processAccountSync(item: SyncItem, batch: any, userId: string): Promise<void> {
+    const basePath = item.collectionPath || `users/${userId}/accounts`;
     const recordId = this.getRecordId(item);
     if (!recordId) return;
     
-    const accountRef = doc(this.firestore, `users/${userId}/accounts/${recordId}`);
+    const accountRef = doc(this.firestore, `${basePath}/${recordId}`);
 
     switch (item.operation) {
       case 'create':
@@ -984,10 +986,11 @@ export class CommonSyncService implements OnDestroy {
   }
 
   private async processGoalSync(item: SyncItem, batch: any, userId: string): Promise<void> {
+    const basePath = item.collectionPath || `users/${userId}/goals`;
     const recordId = this.getRecordId(item);
     if (!recordId) return;
     
-    const goalRef = doc(this.firestore, `users/${userId}/goals/${recordId}`);
+    const goalRef = doc(this.firestore, `${basePath}/${recordId}`);
 
     switch (item.operation) {
       case 'create':

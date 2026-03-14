@@ -16,6 +16,7 @@ import { CommonSyncService, SyncItem } from '../common-sync.service';
 import { FamilyService } from 'src/app/modules/family/services/family.service';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { switchMap, distinctUntilChanged } from 'rxjs/operators';
+import { SyncStatus } from '../../config/enums';
 
 @Injectable({
     providedIn: 'root'
@@ -141,7 +142,8 @@ export class AccountsService {
             ...accountData,
             balance: Number(accountData.balance) || 0,
             createdAt: new Date() as any, // Firebase Timestamp
-            isActive: true
+            isActive: true,
+            syncStatus: SyncStatus.PENDING
         };
 
         if (this.isGuest()) {
