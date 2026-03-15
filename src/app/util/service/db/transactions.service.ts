@@ -497,9 +497,8 @@ export class TransactionsService extends BaseService {
                 const localTransactions = this.getCachedTransactions(userId, familyId);
                 const merged = this.mergeFirestoreAndLocal(firestoreTransactions, localTransactions);
 
-                // Persist the merged list back to local cache.
-                // 1. Update cache with individual objects
-                merged.forEach(tx => this.updateTransactionCache(userId, 'update', tx));
+                // Persist the merged list back to local cache efficiently
+                this.bulkUpdateTransactionCache(userId, merged);
 
                 // 2. Re-read from IndexedDB cache (Source of Truth)
                 const updatedFromCache = this.getCachedTransactions(userId, familyId);
@@ -592,8 +591,8 @@ export class TransactionsService extends BaseService {
                         const localTransactions = this.getCachedTransactions(userId, familyId);
                         const merged = this.mergeFirestoreAndLocal(firestoreTransactions, localTransactions);
 
-                        // Persist merged list to IndexedDB.
-                        merged.forEach(tx => this.updateTransactionCache(userId, 'update', tx));
+                        // Persist merged list to IndexedDB efficiently
+                        this.bulkUpdateTransactionCache(userId, merged);
 
                         // Re-read sorted list from IndexedDB (Source of Truth).
                         const updatedFromCache = this.getCachedTransactions(userId, familyId);
@@ -845,6 +844,26 @@ export class TransactionsService extends BaseService {
             }
         } catch (error) {
             console.error('Error updating transaction cache:', error);
+        }
+    }
+
+    /**
+     * Update multiple transactions in cache efficiently (Bulk)
+     */
+    protected bulkUpdateTransactionCache(userId: string, transactions: Transaction[]): void {
+        try {
+            const itemsToSet: { key: string; value: Transaction }[] = [];
+            for (const tx of transactions) {
+                if (!tx.id) continue;
+                const itemKey = LocalStorageKeyHelper.getTransactionItemKey(tx.id, tx.familyId);
+                const existing = this.localStorageUtility.getItem<Transaction>(itemKey, 'transactions');
+                itemsToSet.push({ key: itemKey, value: { ...existing, ...tx } });
+            }
+            if (itemsToSet.length > 0) {
+                this.localStorageUtility.setTransactions(itemsToSet);
+            }
+        } catch (error) {
+            console.error('Error in bulkUpdateTransactionCache:', error);
         }
     }
 

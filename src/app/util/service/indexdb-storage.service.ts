@@ -131,6 +131,29 @@ export class LocalIndexDBStorageService {
     }
 
     /**
+     * Set multiple transaction items in a single IndexedDB transaction (Bulk sync)
+     */
+    setTransactions(items: { key: string; value: any }[]): void {
+        if (this.isCleaningUp || items.length === 0) return;
+
+        const persistedItems: { key: string; value: any }[] = [];
+
+        // 1. Update Correct Cache Synchronously
+        for (const item of items) {
+            const { key, value } = item;
+            const oldValue = this.transactionsCache.get(key);
+            this.transactionsCache.set(key, value);
+            this.updateSecondaryIndices(key, value, oldValue);
+            persistedItems.push(item);
+        }
+
+        // 2. Persist to DB in a single batch readwrite transaction
+        this.persistItems(persistedItems, this.TRANSACTIONS_STORE).catch(err => {
+            console.error(`Error persisting multiple items to ${this.TRANSACTIONS_STORE}:`, err);
+        });
+    }
+
+    /**
      * Get all transaction keys (synchronous)
      */
     getTransactionKeys(): string[] {
@@ -908,6 +931,32 @@ export class LocalIndexDBStorageService {
 
             transaction.oncomplete = () => resolve();
             transaction.onerror = () => reject(transaction.error);
+        });
+    }
+
+    private persistItems(items: { key: string; value: any }[], storeName: string): Promise<void> {
+        if (this.isCleaningUp || items.length === 0) return Promise.resolve();
+
+        return new Promise((resolve, reject) => {
+            if (!this.db) return resolve();
+
+            if (!this.db.objectStoreNames.contains(storeName)) {
+                return reject(new Error(`Store "${storeName}" not found`));
+            }
+
+            try {
+                const transaction = this.db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                
+                for (const item of items) {
+                    store.put(item.value, item.key);
+                }
+
+                transaction.oncomplete = () => resolve();
+                transaction.onerror = () => reject(transaction.error);
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 

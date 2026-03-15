@@ -117,6 +117,7 @@ export class CommonSyncService implements OnDestroy {
   private observersInitialized = false;
   private serviceWorkerRegistration: ServiceWorkerRegistration | null = null;
   private syncQueue: SyncItem[] = [];
+  private readonly triggerFullSync$ = new Subject<void>();
 
   private networkStatusSignal = signal<NetworkStatus>({
     online: typeof navigator !== 'undefined' ? navigator.onLine : true,
@@ -686,6 +687,19 @@ export class CommonSyncService implements OnDestroy {
         }
       })
     ).subscribe();
+
+    // Listen for manual triggers for full sync (e.g., after item registered)
+    this.triggerFullSync$.pipe(
+      takeUntil(this.destroy$),
+      debounceTime(2000), // group multi triggers (e.g. bulk creates)
+      switchMap(() => {
+        console.log('🔄 Triggering full sync due to manual trigger (e.g., after creation)');
+        const userId = this.userService.getCurrentUserId();
+        const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
+        const effectiveFamilyId = profile?.preferences?.activeFamilyId || undefined;
+        return this.syncAll(effectiveFamilyId);
+      })
+    ).subscribe();
   }
   // #endregion
 
@@ -761,6 +775,7 @@ export class CommonSyncService implements OnDestroy {
 
       if (this.isCurrentlyOnline()) {
         await this.processSyncQueue();
+        this.triggerFullSync$.next(); // Trigger a full sync immediately (pull other details)
       } else {
         await this.triggerBackgroundSync('sync-all-data');
       }
