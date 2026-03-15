@@ -286,6 +286,15 @@
           <span class="filter-btn-text">{{ currentDateLabel() }}</span>
         </button>
         <mat-menu #dateMenu="matMenu" class="filter-menu">
+          <button mat-menu-item [class.active-menu-item]="selectedRange() === 'category'"
+            (click)="onDateRangeChange('category')">
+            <mat-icon>category</mat-icon>
+            <span>Category View</span>
+            @if (selectedRange() === 'category') {
+              <mat-icon class="check-icon">check</mat-icon>
+            }
+          </button>
+
           <button mat-menu-item [class.active-menu-item]="selectedRange() === null"
             (click)="onDateRangeChange(null)">
             <mat-icon>all_inclusive</mat-icon>
@@ -474,24 +483,26 @@
 
       @for (group of groupedTransactions(); track group.date) {
         <div class="transaction-group relative w-full">
-          <div class="date-header-row sticky top-0 z-20 w-full px-2 py-2 pointer-events-none">
-            <div class="date-header-pill" [attr.data-header]="group.dateHeader">
-              <span class="header-title !text-[10px]">{{ group.dateHeader }}</span>
-              @if (group.incomeFormatted || group.expenseFormatted) {
-                <span class="header-totals flex items-center gap-1 text-[10px]">
-                  @if (group.incomeFormatted) {
-                    <span class="header-total income-text">+{{ group.incomeFormatted }}</span>
-                  }
-                  @if (group.incomeFormatted && group.expenseFormatted) {
-                    <span class="opacity-30">|</span>
-                  }
-                  @if (group.expenseFormatted) {
-                    <span class="header-total expense-text">-{{ group.expenseFormatted }}</span>
-                  }
-                </span>
-              }
+          @if (selectedRange() !== 'category') {
+            <div class="date-header-row sticky top-0 z-20 w-full px-2 py-2 pointer-events-none">
+              <div class="date-header-pill" [attr.data-header]="group.dateHeader">
+                <span class="header-title !text-[10px]">{{ group.dateHeader }}</span>
+                @if (group.incomeFormatted || group.expenseFormatted) {
+                  <span class="header-totals flex items-center gap-1 text-[10px]">
+                    @if (group.incomeFormatted) {
+                      <span class="header-total income-text">+{{ group.incomeFormatted }}</span>
+                    }
+                    @if (group.incomeFormatted && group.expenseFormatted) {
+                      <span class="opacity-30">|</span>
+                    }
+                    @if (group.expenseFormatted) {
+                      <span class="header-total expense-text">-{{ group.expenseFormatted }}</span>
+                    }
+                  </span>
+                }
+              </div>
             </div>
-          </div>
+          }
           @for (item of group.transactions; track trackById($index, item)) {
           <div class="w-full px-2" [id]="'tx-' + item.id">
             <div class="transaction-card mb-2 bg-surface-50 dark:bg-surface-200" #cardElement
@@ -521,7 +532,7 @@
                       </div>
                     }
 
-                    @if(isFamilyMode() && isSplitMode()) {
+                    @if(isFamilyMode() && isSplitMode() && !item._isSummary) {
                       <div class="member-pic-stack">
                         @if(item.categoryId === 'adjustment') {
                           <div class="member-pic-wrapper">
@@ -541,10 +552,10 @@
                       </div>
                     } @else {
                       <mat-icon [style.color]="item._categoryColor">{{ item._categoryIcon }}</mat-icon>
-                      @if(item.isSplitTransaction) {
+                      @if(item.isSplitTransaction && !item._isSummary) {
                         <mat-icon class="split-transaction">bookmark</mat-icon>
                       }
-                      @if(item.isCategorySplit) {
+                      @if(item.isCategorySplit && !item._isSummary) {
                         <mat-icon class="category-split-transaction">category</mat-icon>
                       }
                     }
@@ -555,7 +566,7 @@
                 <div class="transaction-details">
                   <div class="transaction-title">{{ item.category | titlecase }}</div>
 
-                  @if (item.splitData?.splitBetween?.length) {
+                  @if (item.splitData?.splitBetween?.length && !item._isSummary) {
                     <div class="split-members-avatars">
                       @for (member of item.splitData.splitBetween.slice(0, 5); track member.userId) {
                         @if (member.photoURL) {
@@ -576,7 +587,7 @@
                     </div>
                   }
 
-                  @if (item.isRecurring || (item.isSplitTransaction && !(isFamilyMode() && isSplitMode())) || item._isDeleted) {
+                  @if (!item._isSummary && (item.isRecurring || (item.isSplitTransaction && !(isFamilyMode() && isSplitMode())) || item._isDeleted)) {
                     <div class="transaction-meta-row">
                       @if(item.isRecurring) {
                         <span class="tx-chip tx-chip--recurring">
@@ -603,13 +614,15 @@
                   <div class="amount-value" [ngClass]="item._isIncome ? 'income-text' : 'expense-text'">
                     {{ item._isIncome ? '+' : '-' }}{{ item.amount | currency }}
                   </div>
-                  <div class="amount-type">
-                    @if (selectedRange() === null) {
-                      {{ item.date | appDate:'short-time' }}
-                    } @else {
-                      {{ item.date | appDate:'time-only' }}
-                    }
-                  </div>
+                  @if (selectedRange() !== 'category') {
+                    <div class="amount-type">
+                      @if (selectedRange() === null) {
+                        {{ item.date | appDate:'short-time' }}
+                      } @else {
+                        {{ item.date | appDate:'time-only' }}
+                      }
+                    </div>
+                  }
                 </div>
               </div>
 

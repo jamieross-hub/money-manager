@@ -363,7 +363,7 @@ export class TransactionProcessorService {
     // Settlement range filter
     if (range === 'settlement') {
       filtered = filtered.filter((t: any) => !!t.settlementId);
-    } else if (range === 'no-settlement') {
+    } else if (range === 'no-settlement' || range === 'category') {
       filtered = filtered.filter((t: any) => !t.settlementId);
     }
 
@@ -503,6 +503,9 @@ export class TransactionProcessorService {
           dateKey = involvementPrefix + 'overdue';
         } else if (txView._isUpcoming && range !== 'upcoming') {
           dateKey = involvementPrefix + 'upcoming';
+        } else if (range === 'category') {
+          // Group by Category ID
+          dateKey = involvementPrefix + (tx.categoryId || 'unknown');
         } else if (memberId) {
           // Flatten into one group per involvement type
           dateKey = involvementPrefix + 'flat';
@@ -511,6 +514,9 @@ export class TransactionProcessorService {
         } else {
           dateKey = involvementPrefix + dayjs(toDate(tx.date)).format('YYYY-MM-DD');
         }
+
+        const pureDateKey = involvementPrefix ? dateKey.replace(involvementPrefix, '') : dateKey;
+
         if (isRecurringMode && txView._isUpcoming) return;
         let group = groupsMap.get(dateKey);
         if (!group) {
@@ -518,7 +524,6 @@ export class TransactionProcessorService {
           if (!header) {
             // Base header logic
             let baseHeader = '';
-            const pureDateKey = involvementPrefix ? dateKey.replace(involvementPrefix, '') : dateKey;
             const dObj = dayjs(toDate(tx.date));
             
             if (pureDateKey === 'overdue') baseHeader = 'Overdue Recurring';
@@ -549,7 +554,27 @@ export class TransactionProcessorService {
           };
           groupsMap.set(dateKey, group);
         }
-        group.transactions.push(txView);
+        if (range === 'category') {
+          // In category view, we only want ONE summary transaction per group
+          let summaryTx = group.transactions[0];
+          if (!summaryTx) {
+            summaryTx = {
+              ...txView,
+              id: `summary-${pureDateKey}`,
+              notes: 'Multiple transactions',
+              _isSummary: true,
+              _txCount: 0,
+              amount: 0
+            };
+            group.transactions.push(summaryTx);
+          }
+          summaryTx.amount += tx.amount;
+          summaryTx._txCount++;
+          summaryTx.notes = `${summaryTx._txCount} transactions`;
+        } else {
+          group.transactions.push(txView);
+        }
+        
         if (!txView._isUpcoming && !tx.settlementId) {
           let amt = tx.amount;
           if (memberId) {
@@ -619,6 +644,9 @@ export class TransactionProcessorService {
         dateKey = involvementPrefix + 'overdue';
       } else if (txView._isUpcoming && range !== 'upcoming') {
         dateKey = involvementPrefix + 'upcoming';
+      } else if (range === 'category') {
+        // Group by Category ID
+        dateKey = involvementPrefix + (tx.categoryId || 'unknown');
       } else if (memberId) {
         // Flatten into one group per involvement type
         dateKey = involvementPrefix + 'flat';
@@ -627,6 +655,8 @@ export class TransactionProcessorService {
       } else {
         dateKey = involvementPrefix + dateObj.format('YYYY-MM-DD');
       }
+
+      const pureDateKey = involvementPrefix ? dateKey.replace(involvementPrefix, '') : dateKey;
 
       if (isRecurringMode && txView._isUpcoming) {
         return; 
@@ -638,10 +668,13 @@ export class TransactionProcessorService {
         if (!header) {
           // Base header logic
           let baseHeader = '';
-          const pureDateKey = involvementPrefix ? dateKey.replace(involvementPrefix, '') : dateKey;
           
           if (pureDateKey === 'overdue') baseHeader = 'Overdue Recurring';
           else if (pureDateKey === 'upcoming') baseHeader = 'Upcoming';
+          else if (range === 'category') {
+            const cat = categoryMap.get(pureDateKey);
+            baseHeader = cat ? cat.name : 'Unknown Category';
+          }
           else if (memberId && pureDateKey === 'flat') {
             baseHeader = involvementPrefix === 'direct_' ? 'Direct Involvement' : 'Part of Transactions';
           }
@@ -668,7 +701,27 @@ export class TransactionProcessorService {
         };
         groupsMap.set(dateKey, group);
       }
-      group.transactions.push(txView);
+      if (range === 'category') {
+        // In category view, we only want ONE summary transaction per group
+        let summaryTx = group.transactions[0];
+        if (!summaryTx) {
+          summaryTx = {
+            ...txView,
+            id: `summary-${pureDateKey}`,
+            notes: 'Multiple transactions',
+            _isSummary: true,
+            _txCount: 0,
+            amount: 0
+          };
+          group.transactions.push(summaryTx);
+        }
+        summaryTx.amount += tx.amount;
+        summaryTx._txCount++;
+        summaryTx.notes = `${summaryTx._txCount} transactions`;
+      } else {
+        group.transactions.push(txView);
+      }
+
       if (!txView._isUpcoming && !tx.settlementId) {
         let amt = tx.amount;
         if (memberId) {
@@ -694,7 +747,7 @@ export class TransactionProcessorService {
     });
 
     let finalGroups = groups;
-    if (isDateSort) {
+    if (isDateSort || range === 'category') {
       finalGroups = groups.sort((a, b) => {
         if (a.dateHeader === 'Overdue Recurring' && b.dateHeader !== 'Overdue Recurring') return -1;
         if (b.dateHeader === 'Overdue Recurring' && a.dateHeader !== 'Overdue Recurring') return 1;
@@ -704,6 +757,13 @@ export class TransactionProcessorService {
         // Involvement sorting (Direct first, then Involved/Part of)
         if (a.date.startsWith('direct_') && b.date.startsWith('involved_')) return -1;
         if (a.date.startsWith('involved_') && b.date.startsWith('direct_')) return 1;
+
+        if (range === 'category') {
+          // Sort by highest absolute volume (Income + Expense)
+          const volA = a.totalIncome + a.totalExpenses;
+          const volB = b.totalIncome + b.totalExpenses;
+          return volB - volA; // Highest volume first
+        }
 
         return sort === 'date-asc'
           ? a.date.localeCompare(b.date)

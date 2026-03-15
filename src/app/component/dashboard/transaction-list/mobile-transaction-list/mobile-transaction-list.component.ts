@@ -405,6 +405,7 @@ export class MobileTransactionListComponent
    * - Transactions linked to a settlement CANNOT be edited (to prevent data inconsistency).
    */
   canEdit(tx: Transaction): boolean {
+      if ((tx as any)._isSummary) return false;
       if (!this.isFamilyMode()) return tx.syncStatus !== SyncStatus.PENDING;
     if (tx.settlementId || tx.categoryId === 'adjustment' || tx.status === 'pending' || tx.syncStatus === SyncStatus.PENDING) return false;
     return this.canPerformAction(tx);
@@ -415,6 +416,7 @@ export class MobileTransactionListComponent
    * - Settlement transactions can be deleted by: creator, sender, or receiver.
    */
   canDelete(tx: Transaction): boolean {
+    if ((tx as any)._isSummary) return false;
     if (tx.settlementId) {
       const uid = this.currentUserId;
       if (!uid) return false;
@@ -442,6 +444,7 @@ export class MobileTransactionListComponent
   }
 
   canAdjust(tx: Transaction): boolean {
+    if ((tx as any)._isSummary) return false;
     return !this.canEdit(tx) && 
            !tx.settlementId && 
            tx.categoryId !== 'adjustment' && 
@@ -731,7 +734,7 @@ export class MobileTransactionListComponent
       startDate = dayjs().startOf('day').toDate();
       const unit = appView === 'WEEKLY' ? 'week' : (appView === 'YEARLY' ? 'year' : 'month');
       endDate = dayjs().add(1, unit).endOf('day').toDate();
-    } else if (range === 'deleted' || range === 'settlement' || range === 'no-settlement') {
+    } else if (range === 'deleted' || range === 'settlement' || range === 'no-settlement' || range === 'category') {
       this.filterService.clearSelectedDate();
       return;
     } else {
