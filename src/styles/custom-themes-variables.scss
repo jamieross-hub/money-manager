@@ -50,8 +50,14 @@
 
   --primary-50: #{mat.get-theme-color(emerald.$emerald-theme, primary, 99)};
   --primary-100: #{mat.get-theme-color(emerald.$emerald-theme, primary, 98)};
+  --primary-200: #{mat.get-theme-color(emerald.$emerald-theme, primary, 95)};
   --primary-300: #{mat.get-theme-color(emerald.$emerald-theme, primary, 90)};
+  --primary-400: #{mat.get-theme-color(emerald.$emerald-theme, primary, 90)};
   --primary-500: #{mat.get-theme-color(emerald.$emerald-theme, primary, 80)};
+  --primary-600: #{mat.get-theme-color(emerald.$emerald-theme, primary, 70)};
+  --primary-700: #{mat.get-theme-color(emerald.$emerald-theme, primary, 60)};
+  --primary-800: #{mat.get-theme-color(emerald.$emerald-theme, primary, 50)};
+  --primary-900: #{mat.get-theme-color(emerald.$emerald-theme, primary, 40)};
 
   --neutral-50: #{mat.get-theme-color(emerald.$emerald-theme, neutral, 10)};
   --neutral-100: #{mat.get-theme-color(emerald.$emerald-theme, neutral, 20)};
@@ -71,7 +77,14 @@
 
   --primary-50: #{mat.get-theme-color(nordic.$nordic-theme, primary, 98)};
   --primary-100: #{mat.get-theme-color(nordic.$nordic-theme, primary, 95)};
+  --primary-200: #{mat.get-theme-color(nordic.$nordic-theme, primary, 90)};
   --primary-300: #{mat.get-theme-color(nordic.$nordic-theme, primary, 80)};
+  --primary-400: #{mat.get-theme-color(nordic.$nordic-theme, primary, 70)};
+  --primary-500: #{mat.get-theme-color(nordic.$nordic-theme, primary, 40)};
+  --primary-600: #{mat.get-theme-color(nordic.$nordic-theme, primary, 30)};
+  --primary-700: #{mat.get-theme-color(nordic.$nordic-theme, primary, 20)};
+  --primary-800: #{mat.get-theme-color(nordic.$nordic-theme, primary, 10)};
+  --primary-900: #{mat.get-theme-color(nordic.$nordic-theme, primary, 0)};
 
   --neutral-50: #{mat.get-theme-color(nordic.$nordic-theme, neutral, 99)};
   --neutral-100: #{mat.get-theme-color(nordic.$nordic-theme, neutral, 95)};
@@ -93,6 +106,14 @@
 
   --primary-50: #{mat.get-theme-color(sunset.$sunset-theme, primary, 98)};
   --primary-100: #{mat.get-theme-color(sunset.$sunset-theme, primary, 95)};
+  --primary-200: #{mat.get-theme-color(sunset.$sunset-theme, primary, 90)};
+  --primary-300: #{mat.get-theme-color(sunset.$sunset-theme, primary, 80)};
+  --primary-400: #{mat.get-theme-color(sunset.$sunset-theme, primary, 70)};
+  --primary-500: #{mat.get-theme-color(sunset.$sunset-theme, primary, 40)};
+  --primary-600: #{mat.get-theme-color(sunset.$sunset-theme, primary, 30)};
+  --primary-700: #{mat.get-theme-color(sunset.$sunset-theme, primary, 20)};
+  --primary-800: #{mat.get-theme-color(sunset.$sunset-theme, primary, 10)};
+  --primary-900: #{mat.get-theme-color(sunset.$sunset-theme, primary, 0)};
 
   --neutral-50: #{mat.get-theme-color(sunset.$sunset-theme, neutral, 99)};
   --neutral-100: #{mat.get-theme-color(sunset.$sunset-theme, neutral, 95)};
@@ -112,6 +133,14 @@
 
   --primary-50: #{mat.get-theme-color(drac.$dracula-theme, primary, 99)};
   --primary-100: #{mat.get-theme-color(drac.$dracula-theme, primary, 98)};
+  --primary-200: #{mat.get-theme-color(drac.$dracula-theme, primary, 95)};
+  --primary-300: #{mat.get-theme-color(drac.$dracula-theme, primary, 90)};
+  --primary-400: #{mat.get-theme-color(drac.$dracula-theme, primary, 90)};
+  --primary-500: #{mat.get-theme-color(drac.$dracula-theme, primary, 80)};
+  --primary-600: #{mat.get-theme-color(drac.$dracula-theme, primary, 70)};
+  --primary-700: #{mat.get-theme-color(drac.$dracula-theme, primary, 60)};
+  --primary-800: #{mat.get-theme-color(drac.$dracula-theme, primary, 50)};
+  --primary-900: #{mat.get-theme-color(drac.$dracula-theme, primary, 40)};
 
   --neutral-50: #{mat.get-theme-color(drac.$dracula-theme, neutral, 10)};
   --neutral-100: #{mat.get-theme-color(drac.$dracula-theme, neutral, 20)};
