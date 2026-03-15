@@ -8,11 +8,11 @@ import { PerformanceMetricsService, PerformanceMetrics } from 'src/app/util/serv
   imports: [CommonModule],
   templateUrl: './performance-dashboard.component.html',
   styleUrl: './performance-dashboard.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PerformanceDashboardComponent implements OnDestroy {
   private metricsService = inject(PerformanceMetricsService);
   public metrics: Signal<PerformanceMetrics> = this.metricsService.metrics;
+  public isVisible = this.metricsService.showDashboard;
 
   constructor() {
     console.log('PerformanceDashboardComponent: Created');

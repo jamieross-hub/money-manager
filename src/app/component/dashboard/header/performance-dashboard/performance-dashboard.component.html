@@ -1,37 +1,54 @@
-<div class="performance-overlay" (click)="$event.stopPropagation()">
-  <div class="header-row">
-    <h3>Performance Metrics</h3>
-    <button class="close-btn" (click)="resetNetwork()">Reset Net</button>
+<div class="performance-bar multi-row" [class.visible]="isVisible()" (click)="$event.stopPropagation()">
+  <!-- Row 1: Real-time Performance -->
+  <div class="row">
+    <div class="metric-item fps" [class.low-fps]="metrics().fps < 30">
+      <span class="val">{{ metrics().fps }}</span>
+      <span class="unit">FPS</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="metric-item cpu">
+      <span class="val">{{ metrics().cpuLoad || 0 }}</span>
+      <span class="unit">%CPU</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="metric-item network">
+      <span class="val">{{ metrics().networkRequests }}</span>
+      <span class="unit">REQ</span>
+    </div>
+    
+    <div class="divider"></div>
+
+    <button class="reset-mini" (click)="resetNetwork()" title="Reset Metrics">
+      <span class="icon">↺</span>
+    </button>
   </div>
 
-  <div class="metrics-grid">
-    <div class="metric-card" [class.low-fps]="metrics().fps < 30">
-      <span class="label">FPS</span>
-      <span class="value">{{ metrics().fps }}</span>
-      <div class="fps-bar-container">
-        <div class="fps-bar" [style.width.%]="(metrics().fps / 60) * 100"></div>
-      </div>
+  <!-- Row 2: Memory & System -->
+  <div class="row secondary">
+    <div class="metric-item memory" *ngIf="metrics().memoryUsage">
+      <span class="unit">MEM:</span>
+      <span class="val">{{ metrics().memoryUsage }}</span>
+      <span class="unit">MB</span>
+      <span class="percent" [class.warn]="(metrics().memoryUsagePercent || 0) > 80">({{ metrics().memoryUsagePercent }}%)</span>
     </div>
 
-    <div class="metric-card" *ngIf="metrics().memoryUsage">
-      <span class="label">Memory</span>
-      <span class="value">{{ metrics().memoryUsage }} MB</span>
-      <span class="sub-value">Total: {{ metrics().totalJSHeapSize }} MB</span>
+    <div class="divider" *ngIf="metrics().jsHeapSizeLimit"></div>
+
+    <div class="metric-item limit" *ngIf="metrics().jsHeapSizeLimit">
+      <span class="unit">LIM:</span>
+      <span class="val">{{ metrics().jsHeapSizeLimit }}</span>
+      <span class="unit">MB</span>
     </div>
 
-    <div class="metric-card">
-      <span class="label">Network</span>
-      <span class="value">{{ metrics().networkRequests }}</span>
-      <span class="sub-value">Resource Requests</span>
-    </div>
+    <div class="divider"></div>
 
-    <div class="metric-card" [class.sw-active]="metrics().swStatus === 'Activated'">
-      <span class="label">SW Status</span>
-      <span class="value">{{ metrics().swStatus }}</span>
+    <div class="metric-item sw">
+      <span class="sw-dot" [class.active]="metrics().swStatus === 'Activated'"></span>
+      <span class="val text-[9px]">{{ metrics().swStatus }}</span>
     </div>
-  </div>
-
-  <div class="footer-info">
-    <span>CPU: Estimated based on FPS stability</span>
   </div>
 </div>

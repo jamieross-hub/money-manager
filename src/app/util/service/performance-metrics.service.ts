@@ -7,6 +7,9 @@ export interface PerformanceMetrics {
   memoryUsage?: number;
   totalJSHeapSize?: number;
   usedJSHeapSize?: number;
+  jsHeapSizeLimit?: number;
+  memoryUsagePercent?: number;
+  cpuLoad?: number;
   networkRequests: number;
   swStatus: string;
 }
@@ -34,6 +37,7 @@ export class PerformanceMetricsService implements OnDestroy {
   constructor() {
     this.startFPSCounter();
     this.startMemoryMonitoring();
+    this.startCPUMonitoring();
     this.startNetworkMonitoring();
     this.checkServiceWorkerStatus();
   }
@@ -63,14 +67,42 @@ export class PerformanceMetricsService implements OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe(() => {
           const mem = (performance as any).memory;
+          const used = mem.usedJSHeapSize;
+          const limit = mem.jsHeapSizeLimit;
           this.metricsSignal.update(m => ({
             ...m,
-            memoryUsage: Math.round(mem.usedJSHeapSize / (1024 * 1024)),
+            memoryUsage: Math.round(used / (1024 * 1024)),
             totalJSHeapSize: Math.round(mem.totalJSHeapSize / (1024 * 1024)),
-            usedJSHeapSize: Math.round(mem.usedJSHeapSize / (1024 * 1024))
+            usedJSHeapSize: Math.round(used / (1024 * 1024)),
+            jsHeapSizeLimit: Math.round(limit / (1024 * 1024)),
+            memoryUsagePercent: Math.round((used / limit) * 100)
           }));
         });
     }
+  }
+
+  private startCPUMonitoring(): void {
+    let lastTime = performance.now();
+    let smoothedLoad = 0;
+    const alpha = 0.2; // Smoothing factor (lower = smoother)
+
+    const checkLoad = () => {
+      const now = performance.now();
+      const delta = now - lastTime;
+      lastTime = now;
+
+      // Expecting ~100ms interval. Anything above that is "lag".
+      const lag = Math.max(0, delta - 100);
+      const instantLoad = Math.min(100, Math.round((lag / 100) * 100));
+      
+      // Apply Exponential Moving Average (EMA)
+      smoothedLoad = (instantLoad * alpha) + (smoothedLoad * (1 - alpha));
+      
+      this.metricsSignal.update(m => ({ ...m, cpuLoad: Math.round(smoothedLoad) }));
+      
+      setTimeout(checkLoad, 100);
+    };
+    setTimeout(checkLoad, 100);
   }
 
   private startNetworkMonitoring(): void {
