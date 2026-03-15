@@ -421,12 +421,12 @@
   <div class="transaction-list-container" #scrollContainer 
     (scroll)="onScroll($event)">
 
-    @if (isFullSyncing() && flattenedTransactions().length > 0) {
+    <!-- @if (isFullSyncing() && flattenedTransactions().length > 0) {
       <div class="sync-indicator-floating">
         <mat-icon class="spin-animation">sync</mat-icon>
         <span>Refreshing...</span>
       </div>
-    }
+    } -->
 
     <div class="transaction-scroll">
       <!-- Loading Skeletons -->
