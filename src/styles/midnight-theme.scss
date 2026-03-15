@@ -1,0 +1,165 @@
+@use 'sass:map';
+@use '@angular/material' as mat;
+
+// Note: Color palettes are generated from a refined Midnight Blue Sapphire
+$_palettes: (
+  primary: (
+    0: #000000,
+    10: #001233,
+    20: #002466,
+    25: #002c80,
+    30: #0038a8,
+    35: #0043c4,
+    40: #004fe6,
+    50: #3373ff,
+    60: #6697ff,
+    70: #99bbff,
+    80: #ccddee,
+    90: #e6eeff,
+    95: #f2f6ff,
+    98: #f8fbff,
+    99: #fbfeff,
+    100: #ffffff,
+  ),
+  secondary: (
+    0: #000000,
+    10: #080a15,
+    20: #181c2e,
+    25: #23283c,
+    30: #2e344b,
+    35: #3a415a,
+    40: #464e6a,
+    50: #5e6888,
+    60: #7882a6,
+    70: #959fc3,
+    80: #b2bce1,
+    90: #cfd7f8,
+    95: #dfe4fc,
+    98: #edf0ff,
+    99: #f5f7ff,
+    100: #ffffff,
+  ),
+  tertiary: (
+    0: #000000,
+    10: #170033,
+    20: #2b0059,
+    25: #380070,
+    30: #46008c,
+    35: #5500a8,
+    40: #6400c8,
+    50: #8020e6,
+    60: #9c4df2,
+    70: #b879f9,
+    80: #d4a6ff,
+    90: #ebd6ff,
+    95: #f4e8ff,
+    98: #f9f2ff,
+    99: #fdfaff,
+    100: #ffffff,
+  ),
+  neutral: (
+    0: #000000,
+    4: #05070a,
+    6: #0a0d14,
+    10: #141a29,
+    12: #181f30,
+    17: #222b40,
+    20: #26324a,
+    22: #2b3852,
+    24: #2f3e5b,
+    25: #31405e,
+    30: #3b4e70,
+    35: #465c82,
+    40: #516a94,
+    50: #6c84ab,
+    60: #899dc1,
+    70: #a7b7d7,
+    80: #c5d1eb,
+    87: #dadfe8,
+    90: #e3e8f4,
+    92: #e9eef7,
+    94: #eff2fb,
+    95: #f2f5fb,
+    96: #f5f7fc,
+    98: #fafbfc,
+    99: #fcfdfe,
+    100: #ffffff,
+  ),
+  neutral-variant: (
+    0: #000000,
+    10: #11141c,
+    20: #242938,
+    25: #2e3447,
+    30: #394056,
+    35: #444c66,
+    40: #505976,
+    50: #687394,
+    60: #818cb3,
+    70: #9ea8d0,
+    80: #bbc4ed,
+    90: #dde1f8,
+    95: #edf0ff,
+    98: #f5f7ff,
+    99: #fafbff,
+    100: #ffffff,
+  ),
+  error: (
+    0: #000000,
+    10: #410002,
+    20: #690005,
+    25: #7e0007,
+    30: #93000a,
+    35: #a80710,
+    40: #ba1a1a,
+    50: #de3730,
+    60: #ff5449,
+    70: #ff897d,
+    80: #ffb4ab,
+    90: #ffdad6,
+    95: #ffedea,
+    98: #fff8f7,
+    99: #fffbff,
+    100: #ffffff,
+  ),
+);
+
+$_rest: (
+  secondary: map.get($_palettes, secondary),
+  neutral: map.get($_palettes, neutral),
+  neutral-variant: map.get($_palettes, neutral-variant),
+  error: map.get($_palettes, error),
+);
+$_primary: map.merge(map.get($_palettes, primary), $_rest);
+$_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
+
+$midnight-theme: mat.define-theme(
+  (
+    color: (
+      theme-type: dark,
+      primary: $_primary,
+      tertiary: $_tertiary,
+    ),
+  )
+);
+
+.midnight-theme {
+  @include mat.all-component-themes($midnight-theme);
+
+  background-color: #060913;
+  color: #eff2fb;
+
+  .text-brand {
+    color: #4477ff;
+  }
+
+  .mat-mdc-card {
+    background-color: #0d1222 !important;
+    border: 1px solid #1c243c;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .mat-mdc-dialog-container {
+    background-color: #0c101e !important;
+    border: 1px solid #1f2945;
+  }
+}

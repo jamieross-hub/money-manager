@@ -208,11 +208,14 @@ export class ProfileComponent {
 
   // ─── Theme Selection ──────────────────────────────────────────────
   readonly themePreference = this.themeSwitchingService.themePreference;
+  readonly isSpecialTheme = computed(() => {
+    return !['light-theme', 'dark-theme', 'system'].includes(this.themePreference() || '');
+  });
 
-  async selectTheme(theme: 'light-theme' | 'dark-theme' | 'system'): Promise<void> {
+  async selectTheme(theme: 'light-theme' | 'dark-theme' | 'midnight-theme' | 'system'): Promise<void> {
     this.themeSwitchingService.setTheme(theme);
     await this.applyPreferenceChanges({ theme: theme });
-    this.notificationService.info(`Theme set to ${theme === 'system' ? 'System' : theme === 'dark-theme' ? 'Dark' : 'Light'}`);
+    this.notificationService.info(`Theme set to ${theme === 'system' ? 'System' : theme === 'dark-theme' ? 'Dark' : theme === 'midnight-theme' ? 'Midnight' : 'Light'}`);
   }
 
   // ─── Reactive Form ────────────────────────────────────────────────

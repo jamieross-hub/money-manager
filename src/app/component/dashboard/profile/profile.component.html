@@ -449,6 +449,7 @@
                 </div>
               </div>
 
+              <!-- System Theme -->
               <div (click)="selectTheme('system')"
                 class="theme-card flex flex-col items-center p-4 rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer transition-all duration-300"
                 [class.active-theme]="themePreference() === 'system'">
@@ -473,6 +474,31 @@
                   <span class="text-xs font-medium">System</span>
                 </div>
               </div>
+            </div>
+
+            <!-- More Accent Themes -->
+            <div class="mt-4 flex items-center justify-between border-t border-gray-100 dark:border-gray-800/60 pt-4 flex-wrap gap-2">
+              <div class="flex items-center gap-2">
+                <mat-icon class="!text-[18px] !w-[18px] !h-[18px] text-gray-400">color_lens</mat-icon>
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Other Specialty Themes</span>
+              </div>
+              <mat-form-field appearance="outline" class="!mb-0 scale-90 origin-right max-w-[180px]">
+                <mat-select [value]="isSpecialTheme() ? themePreference() : 'none'" (selectionChange)="selectTheme($event.value)">
+                  <mat-option value="none" disabled>Choose Theme</mat-option>
+                  <mat-option value="midnight-theme">
+                    <div class="flex items-center gap-2">
+                      <div class="w-3 h-3 rounded-full bg-[#004fe6] shadow-sm"></div>
+                      <span class="text-sm">Midnight Blue</span>
+                    </div>
+                  </mat-option>
+                  <mat-option value="monochrome-theme">
+                    <div class="flex items-center gap-2">
+                      <div class="w-3 h-3 rounded-full bg-[#111111] border border-gray-400 shadow-sm"></div>
+                      <span class="text-sm">Monochrome</span>
+                    </div>
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
             </div>
           </div>
         </mat-expansion-panel>

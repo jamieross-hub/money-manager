@@ -1,0 +1,165 @@
+@use 'sass:map';
+@use '@angular/material' as mat;
+
+// Note: Color palettes are generated for a high-contrast Black & White Monochromatic theme
+$_palettes: (
+  primary: (
+    0: #000000,
+    10: #1a1a1a,
+    20: #333333,
+    25: #404040,
+    30: #4d4d4d,
+    35: #595959,
+    40: #666666,
+    50: #808080,
+    60: #999999,
+    70: #b3b3b3,
+    80: #cccccc,
+    90: #e6e6e6,
+    95: #f2f2f2,
+    98: #f9f9f9,
+    99: #fcfcfc,
+    100: #ffffff,
+  ),
+  secondary: (
+    0: #000000,
+    10: #111111,
+    20: #222222,
+    25: #2c2c2c,
+    30: #383838,
+    35: #444444,
+    40: #505050,
+    50: #6b6b6b,
+    60: #858585,
+    70: #a0a0a0,
+    80: #bababa,
+    90: #d6d6d6,
+    95: #e6e6e6,
+    98: #f5f5f5,
+    99: #fafafa,
+    100: #ffffff,
+  ),
+  tertiary: (
+    0: #000000,
+    10: #1f1f1f,
+    20: #3b3b3b,
+    25: #4a4a4a,
+    30: #595959,
+    35: #686868,
+    40: #787878,
+    50: #969696,
+    60: #b5b5b5,
+    70: #d4d4d4,
+    80: #f2f2f2,
+    90: #f7f7f7,
+    95: #fcfcfc,
+    98: #fdfdfd,
+    99: #ffffff,
+    100: #ffffff,
+  ),
+  neutral: (
+    0: #000000,
+    4: #080808,
+    6: #0d0d0d,
+    10: #171717,
+    12: #1e1e1e,
+    17: #2a2a2a,
+    20: #303030,
+    22: #363636,
+    24: #3c3c3c,
+    25: #404040,
+    30: #4d4d4d,
+    35: #595959,
+    40: #666666,
+    50: #808080,
+    60: #999999,
+    70: #b3b3b3,
+    80: #cccccc,
+    87: #e0e0e0,
+    90: #e6e6e6,
+    92: #f0f0f0,
+    94: #f4f4f4,
+    95: #f7f7f7,
+    96: #f9f9f9,
+    98: #fcfcfc,
+    99: #fefefe,
+    100: #ffffff,
+  ),
+  neutral-variant: (
+    0: #000000,
+    10: #1a1a1a,
+    20: #333333,
+    25: #404040,
+    30: #4d4d4d,
+    35: #5a5a5a,
+    40: #666666,
+    50: #808080,
+    60: #999999,
+    70: #b3b3b3,
+    80: #cccccc,
+    90: #e6e6e6,
+    95: #f2f2f2,
+    98: #f9f9f9,
+    99: #fdfdfd,
+    100: #ffffff,
+  ),
+  error: (
+    0: #000000,
+    10: #410002,
+    20: #690005,
+    25: #7e0007,
+    30: #93000a,
+    35: #a80710,
+    40: #ba1a1a,
+    50: #de3730,
+    60: #ff5449,
+    70: #ff897d,
+    80: #ffb4ab,
+    90: #ffdad6,
+    95: #ffedea,
+    98: #fff8f7,
+    99: #fffbff,
+    100: #ffffff,
+  ),
+);
+
+$_rest: (
+  secondary: map.get($_palettes, secondary),
+  neutral: map.get($_palettes, neutral),
+  neutral-variant: map.get($_palettes, neutral-variant),
+  error: map.get($_palettes, error),
+);
+$_primary: map.merge(map.get($_palettes, primary), $_rest);
+$_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
+
+$monochrome-theme: mat.define-theme(
+  (
+    color: (
+      theme-type: light,
+      primary: $_primary,
+      tertiary: $_tertiary,
+    ),
+  )
+);
+
+.monochrome-theme {
+  @include mat.all-component-themes($monochrome-theme);
+
+  background-color: #ffffff;
+  color: #111111;
+
+  .text-brand {
+    color: #000000;
+  }
+
+  .mat-mdc-card {
+    background-color: #fcfcfc !important;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  .mat-mdc-dialog-container {
+    background-color: #ffffff !important;
+    border: 1px solid #dcdcdc;
+  }
+}
