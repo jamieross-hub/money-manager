@@ -17,6 +17,9 @@ export class ThemeSwitchingService implements OnDestroy {
 
   private themeSignal = signal<ThemeType>('light-theme');
   public readonly currentTheme = this.themeSignal.asReadonly();
+
+  private preferenceSignal = signal<ThemeType | 'system'>('system');
+  public readonly themePreference = this.preferenceSignal.asReadonly();
   
   private previousClass: ThemeType = 'light-theme';
 
@@ -43,12 +46,18 @@ export class ThemeSwitchingService implements OnDestroy {
     // Run after first paint to avoid Android PWA wrong value
     requestAnimationFrame(() => {
       // 1. Immediately apply the locally cached preferred theme (if exists) so there is no layout shift
-      const cachedTheme = this.userService.storageService.getItem<ThemeType>('app_theme_preference');
-      if (cachedTheme) {
-        this.applyTheme(cachedTheme);
-      } else {
+      let cachedTheme = this.userService.storageService.getItem<ThemeType | 'system'>('app_theme_preference');
+      
+      if (!cachedTheme) {
+        cachedTheme = 'system';
+      }
+      this.preferenceSignal.set(cachedTheme);
+
+      if (cachedTheme === 'system') {
         const systemTheme = this.getSystemTheme();
         this.applyTheme(systemTheme);
+      } else {
+        this.applyTheme(cachedTheme as ThemeType);
       }
 
       // 2. Subscribe to user preferences to sync if they log in from another device
@@ -56,7 +65,7 @@ export class ThemeSwitchingService implements OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe(user => {
           if (user && user.preferences && user.preferences.theme) {
-            this.setTheme(user.preferences.theme as ThemeType);
+            this.setTheme(user.preferences.theme as ThemeType | 'system');
           }
         });
     });
@@ -68,9 +77,9 @@ export class ThemeSwitchingService implements OnDestroy {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
     const handler = () => {
-      // Don't auto-switch if user has explicitly saved a preference locally
-      const cachedTheme = this.userService.storageService.getItem<ThemeType>('app_theme_preference');
-      if (cachedTheme) {
+      // Don't auto-switch if user has explicitly saved a preference locally that is NOT system
+      const cachedTheme = this.userService.storageService.getItem<ThemeType | 'system'>('app_theme_preference');
+      if (cachedTheme && cachedTheme !== 'system') {
         return;
       }
 
@@ -121,10 +130,16 @@ export class ThemeSwitchingService implements OnDestroy {
     this.meta.updateTag({ name: 'theme-color', content: themeColor });
   }
 
-  public setTheme(theme: ThemeType) {
+  public setTheme(theme: ThemeType | 'system') {
     // Save to the ultra-fast synchronous cache to prevent blinking on refresh
     this.userService.storageService.setItem('app_theme_preference', theme);
-    this.applyTheme(theme);
+    this.preferenceSignal.set(theme);
+    
+    if (theme === 'system') {
+      this.applyTheme(this.getSystemTheme());
+    } else {
+      this.applyTheme(theme as ThemeType);
+    }
   }
 }
 

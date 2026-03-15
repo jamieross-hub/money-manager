@@ -48,7 +48,7 @@ import { map, switchMap, of, combineLatest } from 'rxjs';
     TranslateModule,
     ClickOutsideDirective,
     MatDialogModule,
-    ThemeToggleComponent,
+    // ThemeToggleComponent,
     FamilyModeToggleComponent,
     ImageFallbackDirective,
   ],

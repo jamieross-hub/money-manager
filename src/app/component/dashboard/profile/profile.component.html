@@ -401,33 +401,81 @@
                   </div>
                 }
               </div>
-              <!-- Theme Toggle Section -->
-              <div class="preference-item border-t border-gray-100 pt-4 mt-2 ">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <span class="toggle-label !font-medium text-secondary-600">App Theme</span>
-                    <p class="preference-description">Switch between light and dark mode</p>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <div class="flex items-center gap-1.5">
-                      <mat-icon class="!w-4 !h-4 !text-[16px]"
-                        [class.text-yellow-500]="currentTheme() === 'light-theme'"
-                        [class.text-blue-300]="currentTheme() === 'dark-theme'">
-                        {{ currentTheme() === 'dark-theme' ? 'dark_mode' : 'light_mode' }}
-                      </mat-icon>
-                      <span class="text-xs font-medium text-gray-700 dark:text-gray-200">
-                        {{ currentTheme() === 'dark-theme' ? 'Dark' : 'Light' }}
-                      </span>
-                    </div>
-                    <div class="scale-90 origin-right">
-                      <app-theme-toggle [hideIcons]="true"></app-theme-toggle>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </mat-expansion-panel>
         }
+
+        <!-- Appearance Section -->
+        <mat-expansion-panel [expanded]="breakpointService.device.isMobile ? false : true"
+          class="form-section-panel mt-6">
+          <mat-expansion-panel-header>
+            <mat-panel-title class="flex items-center gap-2">
+              <mat-icon class="section-icon">palette</mat-icon>
+              <p class="text-sm font-medium text-gray-700 !mb-0 dark:text-gray-200">Appearance</p>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+
+          <div class="pt-4">
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Choose how the app looks to you.</p>
+            
+            <div class="grid grid-cols-3 gap-4">
+              <!-- Light Theme -->
+              <div (click)="selectTheme('light-theme')"
+                class="theme-card flex flex-col items-center p-4 rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer transition-all duration-300"
+                [class.active-theme]="themePreference() === 'light-theme'">
+                <div class="theme-preview bg-gray-50 rounded-lg p-2 w-full h-20 mb-2 flex flex-col gap-1 shadow-sm">
+                  <div class="h-4 bg-white rounded shadow-sm"></div>
+                  <div class="h-2 bg-gray-300 rounded w-2/3"></div>
+                  <div class="h-2 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div class="flex items-center gap-1.5 mt-1">
+                  <mat-icon class="!text-[16px] !w-4 !h-4 text-yellow-500">light_mode</mat-icon>
+                  <span class="text-xs font-medium">Light</span>
+                </div>
+              </div>
+
+              <!-- Dark Theme -->
+              <div (click)="selectTheme('dark-theme')"
+                class="theme-card flex flex-col items-center p-4 rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer transition-all duration-300"
+                [class.active-theme]="themePreference() === 'dark-theme'">
+                <div class="theme-preview bg-gray-800 rounded-lg p-2 w-full h-20 mb-2 flex flex-col gap-1 shadow-sm">
+                  <div class="h-4 bg-gray-700 rounded shadow-sm"></div>
+                  <div class="h-2 bg-gray-600 rounded w-2/3"></div>
+                  <div class="h-2 bg-gray-700 rounded w-1/2"></div>
+                </div>
+                <div class="flex items-center gap-1.5 mt-1">
+                  <mat-icon class="!text-[16px] !w-4 !h-4 text-blue-300">dark_mode</mat-icon>
+                  <span class="text-xs font-medium">Dark</span>
+                </div>
+              </div>
+
+              <div (click)="selectTheme('system')"
+                class="theme-card flex flex-col items-center p-4 rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer transition-all duration-300"
+                [class.active-theme]="themePreference() === 'system'">
+                <div class="theme-preview rounded-lg overflow-hidden w-full h-20 mb-2 relative shadow-sm">
+                  <!-- Base Light Layout -->
+                  <div class="absolute inset-0 bg-gray-50 p-2 flex flex-col gap-1">
+                    <div class="h-4 bg-white rounded shadow-sm"></div>
+                    <div class="h-2 bg-gray-300 rounded w-2/3"></div>
+                    <div class="h-2 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                  <!-- Overlay Dark Layout (Clipped 50%) -->
+                  <div class="absolute inset-0 bg-gray-800 p-2 flex flex-col gap-1" style="clip-path: inset(0 0 0 50%)">
+                    <div class="h-4 bg-gray-700 rounded shadow-sm"></div>
+                    <div class="h-2 bg-gray-600 rounded w-2/3"></div>
+                    <div class="h-2 bg-gray-700 rounded w-1/2"></div>
+                  </div>
+                  <!-- Center Split Divider Line -->
+                  <div class="absolute inset-0 w-1/2 border-r border-gray-300 dark:border-gray-600 pointer-events-none"></div>
+                </div>
+                <div class="flex items-center gap-1.5 mt-1">
+                  <mat-icon class="!text-[16px] !w-4 !h-4 text-gray-500">brightness_auto</mat-icon>
+                  <span class="text-xs font-medium">System</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-expansion-panel>
         <!-- Family Group Section -->
         @defer {
         @if (!isGuestMode()) {

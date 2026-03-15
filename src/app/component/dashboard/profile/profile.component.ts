@@ -206,6 +206,15 @@ export class ProfileComponent {
     return family ? family.name : null;
   });
 
+  // ─── Theme Selection ──────────────────────────────────────────────
+  readonly themePreference = this.themeSwitchingService.themePreference;
+
+  async selectTheme(theme: 'light-theme' | 'dark-theme' | 'system'): Promise<void> {
+    this.themeSwitchingService.setTheme(theme);
+    await this.applyPreferenceChanges({ theme: theme });
+    this.notificationService.info(`Theme set to ${theme === 'system' ? 'System' : theme === 'dark-theme' ? 'Dark' : 'Light'}`);
+  }
+
   // ─── Reactive Form ────────────────────────────────────────────────
   readonly profileForm: FormGroup;
 
