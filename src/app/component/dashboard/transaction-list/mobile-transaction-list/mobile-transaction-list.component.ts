@@ -795,7 +795,7 @@ export class MobileTransactionListComponent
   }
 
   onTransactionClick(transaction: Transaction, element: HTMLElement) {
-    if (this.isLongPressing) return;
+    if (this.isLongPressing || this.selectedRange() === 'category') return;
     
     if (this.isSelectionMode()) {
       this.toggleSelection(transaction);
@@ -864,7 +864,7 @@ export class MobileTransactionListComponent
   }
 
   onLongPressStart(transaction: Transaction) {
-    if (transaction.id?.startsWith('upcoming-') || (transaction as any)._isDeleted) return;
+    if (transaction.id?.startsWith('upcoming-') || (transaction as any)._isDeleted || this.selectedRange() === 'category') return;
     
     // Ignore long press if the card is already expanded
     if (this.selectedTx?.id === transaction.id) return;

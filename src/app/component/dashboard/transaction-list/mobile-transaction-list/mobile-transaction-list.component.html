@@ -513,6 +513,7 @@
               [class.opacity-50]="item.syncStatus === 'pending'"
               [class.grayscale]="item.syncStatus === 'pending'"
               [class.newly-added]="item.id === newlyAddedTxId()"
+              [class.no-interaction]="selectedRange() === 'category'"
               (mousedown)="onLongPressStart(item)"
               (touchstart)="onLongPressStart(item)"
               (touchmove)="onLongPressEnd()"
