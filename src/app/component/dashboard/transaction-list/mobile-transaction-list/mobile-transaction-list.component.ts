@@ -193,12 +193,12 @@ export class MobileTransactionListComponent
   selectedAccounts = this.filterService.accountFilter;
   selectedAccountTypes = this.filterService.accountTypeFilter;
   
-  selectedSort = signal<string>('date-desc');
+  selectedSort = this.filterService.selectedSort;
   showActiveFilterDetails = signal<boolean>(false);
   showSearchInput = signal<boolean>(false);
-  public selectedRange = signal<string | null>(null);
+  public selectedRange = this.filterService.selectedRange;
   /** null = All Members; a userId string = filter to that member */
-  public selectedMember = signal<string | null>(null);
+  public selectedMember = this.filterService.selectedMember;
   private sessionStartTime = Date.now();
 
   // Scroll tracking signals
@@ -286,6 +286,8 @@ export class MobileTransactionListComponent
     if (this.selectedDate() || this.selectedDateRange()) count++;
     if (this.selectedAccounts().length > 0) count++;
     if (this.selectedAccountTypes().length > 0) count++;
+    if (this.selectedRange()) count++;
+    if (this.selectedMember()) count++;
     return count;
   });
 
@@ -352,7 +354,7 @@ export class MobileTransactionListComponent
     this.onSearchChange('');
   }
 
-  clearFilter(type: 'search' | 'category' | 'type' | 'date' | 'account' | 'accountType') {
+  clearFilter(type: 'search' | 'category' | 'type' | 'date' | 'account' | 'accountType' | 'range' | 'member') {
     switch (type) {
       case 'search':
         this.onSearchChange('');
@@ -371,6 +373,12 @@ export class MobileTransactionListComponent
         break;
       case 'accountType':
         this.filterService.clearAccountTypeFilter();
+        break;
+      case 'range':
+        this.onDateRangeChange(null);
+        break;
+      case 'member':
+        this.onMemberChange(null);
         break;
     }
   }
@@ -459,11 +467,24 @@ export class MobileTransactionListComponent
     return option ? option.label : 'Sort';
   });
 
+  currentSortIcon = computed(() => {
+    const option = this.sortOptions.find(opt => opt.value === this.selectedSort());
+    return option ? option.icon : 'sort';
+  });
+
   currentTypeLabel = computed(() => {
     switch (this.selectedType()) {
       case 'income': return 'Income';
       case 'expense': return 'Expense';
       default: return 'All Types';
+    }
+  });
+
+  currentTypeIcon = computed(() => {
+    switch (this.selectedType()) {
+      case 'income': return 'trending_up';
+      case 'expense': return 'trending_down';
+      default: return 'account_balance_wallet';
     }
   });
 
@@ -476,6 +497,10 @@ export class MobileTransactionListComponent
     return member.userId === this.currentUserId ? 'You' : member.displayName;
   });
 
+  currentMemberIcon = computed(() => {
+    return this.selectedMember() ? 'person' : 'group';
+  });
+
   currentCategoryLabel = computed(() => {
     const cats = this.selectedCategory();
     if (cats.includes('all')) return 'All Categories';
@@ -484,6 +509,15 @@ export class MobileTransactionListComponent
       return category ? category.name : 'Unknown Category';
     }
     return `${cats.length} Categories`;
+  });
+
+  currentCategoryIcon = computed(() => {
+    const cats = this.selectedCategory();
+    if (!cats.includes('all') && cats.length === 1) {
+      const category = this.categories().find(cat => cat.id === cats[0]);
+      return category ? category.icon : 'category';
+    }
+    return 'list';
   });
 
   currentDateLabel = computed(() => {
@@ -497,6 +531,43 @@ export class MobileTransactionListComponent
       return `${start} - ${end}`;
     }
     return 'All Dates';
+  });
+
+  currentDateIcon = computed(() => {
+    const range = this.selectedRange();
+    if (!range) return 'calendar_today';
+    
+    switch (range) {
+      case 'category': return 'category';
+      case 'deleted': return 'delete_outline';
+      case 'settlement': return 'handshake';
+      case 'no-settlement': return 'receipt';
+      case 'this-week': return 'calendar_view_week';
+      case 'this-month': return 'calendar_month';
+      case 'last-month': return 'calendar_view_month';
+      case 'this-year': return 'calendar_today';
+      case 'upcoming': return 'calendar_today';
+      case 'custom': return 'date_range';
+      default: return 'calendar_today';
+    }
+  });
+  
+  currentRangeLabel = computed(() => {
+    const range = this.selectedRange();
+    if (!range) return null;
+    
+    switch (range) {
+      case 'category': return 'Category View';
+      case 'deleted': return 'Deleted';
+      case 'settlement': return 'Settlements';
+      case 'no-settlement': return 'Exclude Settlements';
+      case 'this-week': return 'This Week';
+      case 'this-month': return 'This Month';
+      case 'last-month': return 'Last Month';
+      case 'this-year': return 'This Year';
+      case 'upcoming': return 'Upcoming';
+      default: return range.charAt(0).toUpperCase() + range.slice(1);
+    }
   });
 
   currentAccountLabel = computed(() => {
@@ -516,6 +587,23 @@ export class MobileTransactionListComponent
       return types[0].charAt(0).toUpperCase() + types[0].slice(1);
     }
     return `${types.length} Types`;
+  });
+
+  currentAccountIcon = computed(() => {
+    const accs = this.selectedAccounts();
+    const types = this.selectedAccountTypes();
+    
+    if (accs.length === 1) {
+      const account = this.accounts().find(a => a.accountId === accs[0]);
+      return account?.icon || 'account_balance_wallet';
+    }
+    
+    if (types.length === 1) {
+      const option = this.accountTypeOptions.find(opt => opt.value === types[0]);
+      return option ? option.icon : 'account_balance';
+    }
+    
+    return 'account_balance';
   });
 
 
@@ -569,12 +657,6 @@ export class MobileTransactionListComponent
       });
     });
 
-    // Watch for Input changes and hook into filterService
-    effect(() => {
-      if (this.isRecurring() || this.isFamilyMode()) {
-        this.onDateRangeChange(null);
-      }
-    });
 
     // Detect newly added transactions to scroll and highlight
     effect(() => {
@@ -645,10 +727,18 @@ export class MobileTransactionListComponent
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(({ view, isFamilyMode }) => {
       if (this.isRecurring() || isFamilyMode) {
-        this.onDateRangeChange(null);
+        // Only set to null if we current have a date-specific range that shouldn't persist in these modes
+        // but preserve special views like 'category', 'deleted', 'settlement' etc.
+        const dateSpecificRanges = ['this-month', 'this-week', 'this-year', 'last-month', 'today', 'yesterday', 'last-week', 'upcoming'];
+        if (dateSpecificRanges.includes(this.selectedRange() || '')) {
+           this.onDateRangeChange(null);
+        }
       } else {
-        const ranges: Record<string, string> = { 'WEEKLY': 'this-week', 'YEARLY': 'this-year' };
-        this.onDateRangeChange(ranges[view] || 'this-month');
+        // Only apply default if no range is currently selected (meaning nothing was loaded from storage)
+        if (this.selectedRange() === null) {
+          const ranges: Record<string, string> = { 'WEEKLY': 'this-week', 'YEARLY': 'this-year' };
+          this.onDateRangeChange(ranges[view] || 'this-month');
+        }
       }
     });
   }

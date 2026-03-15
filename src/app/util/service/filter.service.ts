@@ -1,5 +1,5 @@
 
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, effect } from '@angular/core';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map, distinctUntilChanged } from 'rxjs/operators';
 import dayjs from 'dayjs';
@@ -40,6 +40,9 @@ export interface TransactionFilter {
   statusFilter: string[];
   tags: string[];
   isRecurring?: boolean | null;
+  selectedSort: string;
+  selectedRange: string | null;
+  selectedMember: string | null;
 }
 
 export interface FilterPreset {
@@ -74,6 +77,9 @@ export class FilterService {
   public statusFilter = signal<string[]>([]);
   public tags = signal<string[]>([]);
   public isRecurring = signal<boolean | null>(null);
+  public selectedSort = signal<string>('date-desc');
+  public selectedRange = signal<string | null>(null);
+  public selectedMember = signal<string | null>(null);
 
   // Filter history and presets
   public filterHistory = signal<FilterHistory[]>([]);
@@ -94,7 +100,10 @@ export class FilterService {
     amountRange: this.amountRange(),
     statusFilter: this.statusFilter(),
     tags: this.tags(),
-    isRecurring: this.isRecurring()
+    isRecurring: this.isRecurring(),
+    selectedSort: this.selectedSort(),
+    selectedRange: this.selectedRange(),
+    selectedMember: this.selectedMember()
   }));
 
   // Computed filters
@@ -108,6 +117,40 @@ export class FilterService {
   constructor(private localStorageService: LocalIndexDBStorageService) {
     // Initialize presets from localStorage
     this.initializePresets();
+    this.loadFilterState();
+
+    // Auto-save filter state when it changes
+    effect(() => {
+      const state = this.filterState();
+      this.saveFilterState(state);
+    });
+  }
+
+  private loadFilterState(): void {
+    try {
+      const savedState = this.localStorageService.getItem<TransactionFilter>(LocalStorageKey.CURRENT_FILTER_STATE);
+      if (savedState) {
+        // Convert dates back to Date objects if they were stringified
+        if (savedState.selectedDate) {
+          savedState.selectedDate = new Date(savedState.selectedDate);
+        }
+        if (savedState.selectedDateRange) {
+          savedState.selectedDateRange.startDate = new Date(savedState.selectedDateRange.startDate);
+          savedState.selectedDateRange.endDate = new Date(savedState.selectedDateRange.endDate);
+        }
+        this.applyFilterState(savedState);
+      }
+    } catch (error) {
+      console.warn('Failed to load filter state:', error);
+    }
+  }
+
+  private saveFilterState(state: TransactionFilter): void {
+    try {
+      this.localStorageService.setItem(LocalStorageKey.CURRENT_FILTER_STATE, state);
+    } catch (error) {
+      console.warn('Failed to save filter state:', error);
+    }
   }
 
   // ===== DATE FILTER METHODS =====
@@ -347,6 +390,14 @@ export class FilterService {
     this.isRecurring.set(null);
   }
 
+  clearSelectedRange(): void {
+    this.selectedRange.set(null);
+  }
+
+  clearSelectedMember(): void {
+    this.selectedMember.set(null);
+  }
+
   // ===== CLEAR ALL FILTERS =====
   clearAllFilters(): void {
     this.clearSelectedDate();
@@ -361,6 +412,8 @@ export class FilterService {
     this.clearStatusFilter();
     this.clearTags();
     this.clearIsRecurring();
+    this.clearSelectedRange();
+    this.clearSelectedMember();
     this.activePreset.set(null);
   }
 
@@ -433,8 +486,7 @@ export class FilterService {
       state.searchTerm ||
       !state.selectedCategory.includes('all') ||
       state.selectedType !== 'all' ||
-      state.selectedDate ||
-      state.selectedDateRange ||
+      (state.selectedDate || state.selectedDateRange || state.selectedYear || state.selectedRange) ||
       state.categoryFilter ||
       (state.accountFilter && state.accountFilter.length > 0) ||
       (state.accountTypeFilter && state.accountTypeFilter.length > 0) ||
@@ -442,8 +494,8 @@ export class FilterService {
       state.amountRange.max !== null ||
       state.statusFilter.length > 0 ||
       state.tags.length > 0 ||
-      state.selectedYear ||
-      (state.isRecurring !== null && state.isRecurring !== undefined)
+      (state.isRecurring !== null && state.isRecurring !== undefined) ||
+      state.selectedMember !== null
     );
   }
 
@@ -453,16 +505,15 @@ export class FilterService {
     if (state.searchTerm) count++;
     if (!state.selectedCategory.includes('all')) count++;
     if (state.selectedType !== 'all') count++;
-    if (state.selectedDate) count++;
-    if (state.selectedDateRange) count++;
+    if (state.selectedDate || state.selectedDateRange || state.selectedYear || state.selectedRange) count++;
     if (state.categoryFilter) count++;
     if (state.accountFilter && state.accountFilter.length > 0) count++;
     if (state.accountTypeFilter && state.accountTypeFilter.length > 0) count++;
     if (state.amountRange.min !== null || state.amountRange.max !== null) count++;
     if (state.statusFilter.length > 0) count++;
     if (state.tags.length > 0) count++;
-    if (state.selectedYear) count++;
     if (state.isRecurring !== null && state.isRecurring !== undefined) count++;
+    if (state.selectedMember) count++;
 
     return count;
   }
@@ -483,6 +534,9 @@ export class FilterService {
     if (filterState.statusFilter !== undefined) this.setStatusFilter(filterState.statusFilter);
     if (filterState.tags !== undefined) this.setTags(filterState.tags);
     if (filterState.isRecurring !== undefined) this.setIsRecurring(filterState.isRecurring ?? null);
+    if (filterState.selectedSort !== undefined) this.selectedSort.set(filterState.selectedSort);
+    if (filterState.selectedRange !== undefined) this.selectedRange.set(filterState.selectedRange);
+    if (filterState.selectedMember !== undefined) this.selectedMember.set(filterState.selectedMember);
   }
 
   resetToDefaults(): void {
@@ -504,7 +558,10 @@ export class FilterService {
       amountRange: { min: null, max: null },
       statusFilter: [],
       tags: [],
-      isRecurring: null
+      isRecurring: null,
+      selectedSort: 'date-desc',
+      selectedRange: null,
+      selectedMember: null
     };
   }
 
@@ -719,7 +776,10 @@ export class FilterService {
       accountTypeFilter: filters.accountTypeFilter || [],
       amountRange: filters.amountRange || { min: null, max: null },
       statusFilter: filters.statusFilter || [],
-      tags: filters.tags || []
+      tags: filters.tags || [],
+      selectedSort: 'date-desc',
+      selectedRange: null,
+      selectedMember: null
     };
 
     return this.filterTransactions(transactions, filterState);

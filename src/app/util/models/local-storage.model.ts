@@ -65,6 +65,7 @@ export enum LocalStorageKey {
     GOOGLE_SHEETS_CACHE = 'google-sheets-cache',
     FAMILIES_CACHE = 'families-cache',
     RECURRING_CACHE = 'recurring-cache',
+    CURRENT_FILTER_STATE = 'current-filter-state',
 }
 
 /**

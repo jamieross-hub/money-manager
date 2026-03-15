@@ -117,6 +117,20 @@
                   </div>
                 }
               }
+              @if (selectedMember()) {
+                <div class="filter-chip">
+                  <mat-icon>group</mat-icon>
+                  <span class="chip-text">{{ currentMemberLabel() }}</span>
+                  <button (click)="clearFilter('member'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
+                </div>
+              }
+              @if (selectedRange()) {
+                <div class="filter-chip">
+                  <mat-icon>{{ selectedRange() === 'category' ? 'category' : 'calendar_today' }}</mat-icon>
+                  <span class="chip-text">{{ currentRangeLabel() }}</span>
+                  <button (click)="clearFilter('range'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
+                </div>
+              }
             </div>
           </div>
         }
@@ -127,7 +141,7 @@
         <button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="sortMenu"
           [ngClass]="{'active': selectedSort() !== 'date-desc'}" matTooltip="{{ currentSortLabel() }}"
           aria-label="Sort transactions">
-          <mat-icon>sort</mat-icon>
+          <mat-icon>{{ currentSortIcon() }}</mat-icon>
           <span class="filter-btn-text">{{ currentSortLabel() }}</span>
         </button>
         <mat-menu #sortMenu="matMenu" class="filter-menu">
@@ -147,7 +161,7 @@
           <button mat-icon-button class="filter-menu-btn" [ngClass]="{'active': selectedType() !== 'all'}"
             [matMenuTriggerFor]="typeMenu" matTooltip="{{ currentTypeLabel() }}"
             aria-label="Filter by transaction type">
-            <mat-icon>account_balance_wallet</mat-icon>
+            <mat-icon>{{ currentTypeIcon() }}</mat-icon>
             <span class="filter-btn-text">{{ currentTypeLabel() }}</span>
           </button>
           <mat-menu #typeMenu="matMenu" class="filter-menu">
@@ -181,7 +195,7 @@
           <button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="accountMenu"
             [ngClass]="{'active': selectedAccounts().length > 0 || selectedAccountTypes().length > 0}"
             matTooltip="Filter by account" aria-label="Filter by account">
-            <mat-icon>account_balance</mat-icon>
+            <mat-icon>{{ currentAccountIcon() }}</mat-icon>
             <span class="filter-btn-text">{{ selectedAccountTypes().length > 0 ? currentAccountTypeLabel() : currentAccountLabel() }}</span>
           </button>
           <mat-menu #accountMenu="matMenu" class="filter-menu">
@@ -215,7 +229,7 @@
           <button mat-icon-button class="filter-menu-btn" [ngClass]="{'active': selectedMember() !== null}"
             [matMenuTriggerFor]="memberMenu" matTooltip="{{ currentMemberLabel() }}"
             aria-label="Filter by member">
-            <mat-icon>group</mat-icon>
+            <mat-icon>{{ currentMemberIcon() }}</mat-icon>
             <span class="filter-btn-text">{{ currentMemberLabel() }}</span>
           </button>
           <mat-menu #memberMenu="matMenu" class="filter-menu">
@@ -254,7 +268,7 @@
         <button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="categoryMenu"
           matTooltip="{{ currentCategoryLabel() }}" aria-label="Filter by category"
           [ngClass]="{'active': !(selectedCategory() | includes:'all')}">
-          <mat-icon>category</mat-icon>
+          <mat-icon>{{ currentCategoryIcon() }}</mat-icon>
           <span class="filter-btn-text">{{ currentCategoryLabel() }}</span>
         </button>
         <mat-menu #categoryMenu="matMenu" class="filter-menu">
@@ -282,7 +296,7 @@
         <button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="dateMenu"
           [ngClass]="{'active': selectedDateRange() !== null}" matTooltip="{{ currentDateLabel() }}"
           aria-label="Filter by date range">
-          <mat-icon>calendar_today</mat-icon>
+          <mat-icon>{{ currentDateIcon() }}</mat-icon>
           <span class="filter-btn-text">{{ currentDateLabel() }}</span>
         </button>
         <mat-menu #dateMenu="matMenu" class="filter-menu">
@@ -297,7 +311,7 @@
 
           <button mat-menu-item [class.active-menu-item]="selectedRange() === null"
             (click)="onDateRangeChange(null)">
-            <mat-icon>all_inclusive</mat-icon>
+            <mat-icon>calendar_today</mat-icon>
             <span>All Time</span>
             @if (selectedRange() === null) {
               <mat-icon class="check-icon">check</mat-icon>

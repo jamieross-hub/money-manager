@@ -214,7 +214,10 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
         accountFilter: this.filterService.accountFilter(),
         amountRange: this.filterService.amountRange(),
         statusFilter: this.filterService.statusFilter(),
-        tags: this.filterService.tags()
+        tags: this.filterService.tags(),
+        selectedSort: this.filterService.selectedSort(),
+        selectedRange: this.filterService.selectedRange(),
+        selectedMember: this.filterService.selectedMember()
       });
       return filtered.length > 0;
     };
