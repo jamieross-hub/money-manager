@@ -11,14 +11,18 @@ addEventListener('message', ({ data }) => {
   if (type === 'PROCESS_FAMILY_DATA') {
     const { transactions, members, settlements, currentUserId, sessionStartTime, fingerprint, fid, mode } = payload;
     
+    const startTime = performance.now();
+    
     const stats = computeStats(transactions, members, mode || 'common');
     const balances = computeBalances(transactions, members, settlements, mode || 'common');
     const activities = processActivities(transactions, settlements, members, currentUserId, sessionStartTime);
     const currentUserStats = computeCurrentUserStats(stats, balances, currentUserId);
 
+    const durationMs = performance.now() - startTime;
+
     postMessage({
       type: 'FAMILY_DATA_PROCESSED',
-      payload: { stats, balances, activities, currentUserStats, fingerprint, fid }
+      payload: { stats, balances, activities, currentUserStats, fingerprint, fid, durationMs }
     });
   }
 });

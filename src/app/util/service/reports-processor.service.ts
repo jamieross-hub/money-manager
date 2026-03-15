@@ -91,6 +91,7 @@ export class ReportsProcessorService {
     public yearEndPrediction = computed(() => this._output().yearEndPrediction);
     
     public isProcessing = signal<boolean>(false);
+    private lastFingerprint = '';
 
     constructor() {
         this.initWorker();
@@ -103,6 +104,9 @@ export class ReportsProcessorService {
             this.worker.onmessage = ({ data }) => {
                 this._output.set(data);
                 this.isProcessing.set(false);
+                if (data.durationMs) {
+                    console.log(`[ReportsProcessorWorker] Processed in ${data.durationMs.toFixed(2)}ms`);
+                }
             };
 
             this.worker.onerror = (err) => {
@@ -130,8 +134,29 @@ export class ReportsProcessorService {
         }
         if (!data.transactions) return;
 
+        const fingerprint = this.generateFingerprint(data);
+        if (fingerprint === this.lastFingerprint) return;
+        this.lastFingerprint = fingerprint;
+
         this.isProcessing.set(true);
         this.worker.postMessage(data);
+    }
+
+    private generateFingerprint(data: any): string {
+        let sumTs = 0;
+        for (const tx of data.transactions) {
+            const u = tx.updatedAt;
+            const ts = u ? (u instanceof Date ? u.getTime() : ((u as any).seconds || 0)) : 0;
+            sumTs += ts;
+        }
+        return JSON.stringify({
+            txCount: data.transactions.length,
+            sumTs,
+            period: data.selectedPeriod,
+            year: data.selectedYear,
+            month: data.selectedMonth,
+            uid: data.currentUserId
+        });
     }
 
     destroy() {

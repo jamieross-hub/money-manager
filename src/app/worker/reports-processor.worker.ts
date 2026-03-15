@@ -65,6 +65,8 @@ addEventListener('message', ({ data }) => {
         categoryColorMap
     } = data;
 
+    const startTime = performance.now();
+
     if (!transactions || transactions.length === 0) {
         postMessage({
             monthlySummaries: [],
@@ -140,12 +142,10 @@ addEventListener('message', ({ data }) => {
         avgMonthlySpending,
         highestSpendingCategory,
         overallSavingsRate,
-        currentPeriodSummary,
-        previousPeriodSummary,
-        filteredMonthlySummaries,
         nextMonthPrediction,
         next3MonthsPrediction,
-        yearEndPrediction
+        yearEndPrediction,
+        durationMs: performance.now() - startTime
     });
 });
 

@@ -150,6 +150,7 @@ export class FamilyProcessorService {
             this.currentUserStats.set(payload.currentUserStats);
           }
           this.isProcessing.set(false);
+          console.log(`[FamilyProcessorWorker] Processed ${payload.fid} in ${payload.durationMs?.toFixed(2)}ms`);
         }
       };
       this.worker.onerror = (err) => {
@@ -164,11 +165,17 @@ export class FamilyProcessorService {
   private debounceTimer: any;
 
   private generateFingerprint(input: FamilyProcessorInput): string {
-    const lastTx = input.transactions[0];
+    let sumTs = 0;
+    for (const tx of input.transactions) {
+      const u = tx.updatedAt;
+      const ts = u ? (u instanceof Date ? u.getTime() : ((u as any).seconds || 0)) : 0;
+      sumTs += ts;
+    }
+
     return JSON.stringify({
       fid: input.familyId,
       mode: input.mode,
-      tFingerprint: input.transactions.length > 0 ? `${input.transactions.length}_${lastTx?.id}_${lastTx?.updatedAt}` : 'empty',
+      tFingerprint: `${input.transactions.length}_${sumTs}`,
       mCount: input.members.length,
       sCount: input.settlements.length,
       uid: input.currentUserId || 'guest'
