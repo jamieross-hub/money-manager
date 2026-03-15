@@ -347,6 +347,19 @@ export class TransactionProcessorService {
       filtered = filtered.filter((t: any) => !!t.isRecurring === filters.isRecurring);
     }
 
+    // Account filter
+    if (filters.accountFilter && filters.accountFilter.length > 0) {
+      filtered = filtered.filter((t: any) => filters.accountFilter.includes(t.accountId));
+    }
+
+    // Account Type filter
+    if (filters.accountTypeFilter && filters.accountTypeFilter.length > 0) {
+      filtered = filtered.filter((t: any) => {
+        const account = accountMap.get(t.accountId);
+        return account && filters.accountTypeFilter.includes(account.type);
+      });
+    }
+
     // Settlement range filter
     if (range === 'settlement') {
       filtered = filtered.filter((t: any) => !!t.settlementId);

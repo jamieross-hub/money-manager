@@ -65,6 +65,7 @@ import { CurrencyService } from 'src/app/util/service/currency.service';
 import { ThemeSwitchingService } from 'src/app/util/service/theme-switching.service';
 import { AppViewService } from 'src/app/util/service/app-view.service';
 import { UserService } from 'src/app/util/service/db/user.service';
+import { ACCOUNT_TYPE_OPTIONS } from 'src/app/util/config/config';
 
 import { TransactionsService } from 'src/app/util/service/db/transactions.service';
 import { RecurringService } from 'src/app/util/service/db/recurring.service';
@@ -159,8 +160,8 @@ export class MobileTransactionListComponent
   ];
 
   showChart: boolean = false;
-  // private chartRoot: am5.Root | null = null;
-  
+  accountTypeOptions = ACCOUNT_TYPE_OPTIONS;
+
   // Base signals from Store
   allActiveTransactions = this.store.selectSignal<Transaction[]>(selectSortedAllTransactions);
   deletedTransactions = this.store.selectSignal<Transaction[]>(selectSortedDeletedTransactions);
@@ -189,6 +190,8 @@ export class MobileTransactionListComponent
   selectedDate = this.filterService.selectedDate;
   selectedDateRange = this.filterService.selectedDateRange;
   isRecurringFilter = this.filterService.isRecurring;
+  selectedAccounts = this.filterService.accountFilter;
+  selectedAccountTypes = this.filterService.accountTypeFilter;
   
   selectedSort = signal<string>('date-desc');
   showActiveFilterDetails = signal<boolean>(false);
@@ -281,6 +284,8 @@ export class MobileTransactionListComponent
     if (this.selectedType() !== 'all') count++;
     if (!this.selectedCategory().includes('all')) count++;
     if (this.selectedDate() || this.selectedDateRange()) count++;
+    if (this.selectedAccounts().length > 0) count++;
+    if (this.selectedAccountTypes().length > 0) count++;
     return count;
   });
 
@@ -348,7 +353,7 @@ export class MobileTransactionListComponent
     this.onSearchChange('');
   }
 
-  clearFilter(type: 'search' | 'category' | 'type' | 'date') {
+  clearFilter(type: 'search' | 'category' | 'type' | 'date' | 'account' | 'accountType') {
     switch (type) {
       case 'search':
         this.onSearchChange('');
@@ -361,6 +366,12 @@ export class MobileTransactionListComponent
         break;
       case 'date':
         this.onDateRangeChange(null);
+        break;
+      case 'account':
+        this.filterService.clearAccountFilter();
+        break;
+      case 'accountType':
+        this.filterService.clearAccountTypeFilter();
         break;
     }
   }
@@ -486,6 +497,25 @@ export class MobileTransactionListComponent
     return 'All Dates';
   });
 
+  currentAccountLabel = computed(() => {
+    const accs = this.selectedAccounts();
+    if (accs.length === 0) return 'All Accounts';
+    if (accs.length === 1) {
+      const account = this.accounts().find(a => a.accountId === accs[0]);
+      return account ? account.name : 'Unknown Account';
+    }
+    return `${accs.length} Accounts`;
+  });
+
+  currentAccountTypeLabel = computed(() => {
+    const types = this.selectedAccountTypes();
+    if (types.length === 0) return 'All Account Types';
+    if (types.length === 1) {
+      return types[0].charAt(0).toUpperCase() + types[0].slice(1);
+    }
+    return `${types.length} Types`;
+  });
+
 
 
   constructor() {
@@ -521,7 +551,9 @@ export class MobileTransactionListComponent
           selectedDate,
           selectedDateRange,
           isRecurring: isRecurringFilter,
-          selectedMember
+          selectedMember,
+          accountFilter: this.selectedAccounts(),
+          accountTypeFilter: this.selectedAccountTypes()
         },
         sort: selectedSort,
         range: selectedRange,
@@ -659,6 +691,26 @@ export class MobileTransactionListComponent
 
   onTypeChange(type: string) {
     this.filterService.setSelectedType(type);
+  }
+
+  onAccountTypeChange(type: string) {
+    let currentTypes = this.selectedAccountTypes();
+    if (currentTypes.includes(type)) {
+      currentTypes = currentTypes.filter(t => t !== type);
+    } else {
+      currentTypes = [...currentTypes, type];
+    }
+    this.filterService.setAccountTypeFilter(currentTypes);
+  }
+
+  onAccountIdChange(accountId: string) {
+    let currentAccounts = this.selectedAccounts();
+    if (currentAccounts.includes(accountId)) {
+      currentAccounts = currentAccounts.filter(id => id !== accountId);
+    } else {
+      currentAccounts = [...currentAccounts, accountId];
+    }
+    this.filterService.setAccountFilter(currentAccounts);
   }
 
   onMemberChange(userId: string | null) {

@@ -34,7 +34,8 @@ export interface TransactionFilter {
   selectedDateRange: DateRange | null;
   selectedYear: YearRange | null;
   categoryFilter: CategoryFilter | null;
-  accountFilter: string[];
+  accountFilter?: string[];
+  accountTypeFilter?: string[];
   amountRange: { min: number | null; max: number | null };
   statusFilter: string[];
   tags: string[];
@@ -68,6 +69,7 @@ export class FilterService {
   public selectedCategory = signal<string[]>(['all']);
   public selectedType = signal<string>('all');
   public accountFilter = signal<string[]>([]);
+  public accountTypeFilter = signal<string[]>([]);
   public amountRange = signal<{ min: number | null; max: number | null }>({ min: null, max: null });
   public statusFilter = signal<string[]>([]);
   public tags = signal<string[]>([]);
@@ -88,6 +90,7 @@ export class FilterService {
     selectedYear: this.selectedYear(),
     categoryFilter: this.categoryFilter(),
     accountFilter: this.accountFilter(),
+    accountTypeFilter: this.accountTypeFilter(),
     amountRange: this.amountRange(),
     statusFilter: this.statusFilter(),
     tags: this.tags(),
@@ -238,6 +241,19 @@ export class FilterService {
     return this.accountFilter();
   }
 
+  // ===== ACCOUNT TYPE FILTER METHODS =====
+  setAccountTypeFilter(types: string[]): void {
+    if (!Array.isArray(types)) {
+      console.warn('Invalid types array provided');
+      return;
+    }
+    this.accountTypeFilter.set(types);
+  }
+
+  getAccountTypeFilter(): string[] {
+    return this.accountTypeFilter();
+  }
+
   // ===== AMOUNT RANGE FILTER METHODS =====
   setAmountRange(min: number | null, max: number | null): void {
     this.amountRange.set({ min, max });
@@ -311,6 +327,10 @@ export class FilterService {
     this.accountFilter.set([]);
   }
 
+  clearAccountTypeFilter(): void {
+    this.accountTypeFilter.set([]);
+  }
+
   clearAmountRange(): void {
     this.amountRange.set({ min: null, max: null });
   }
@@ -336,6 +356,7 @@ export class FilterService {
     this.clearSelectedCategory();
     this.clearSelectedType();
     this.clearAccountFilter();
+    this.clearAccountTypeFilter();
     this.clearAmountRange();
     this.clearStatusFilter();
     this.clearTags();
@@ -415,7 +436,8 @@ export class FilterService {
       state.selectedDate ||
       state.selectedDateRange ||
       state.categoryFilter ||
-      state.accountFilter.length > 0 ||
+      (state.accountFilter && state.accountFilter.length > 0) ||
+      (state.accountTypeFilter && state.accountTypeFilter.length > 0) ||
       state.amountRange.min !== null ||
       state.amountRange.max !== null ||
       state.statusFilter.length > 0 ||
@@ -434,7 +456,8 @@ export class FilterService {
     if (state.selectedDate) count++;
     if (state.selectedDateRange) count++;
     if (state.categoryFilter) count++;
-    if (state.accountFilter.length > 0) count++;
+    if (state.accountFilter && state.accountFilter.length > 0) count++;
+    if (state.accountTypeFilter && state.accountTypeFilter.length > 0) count++;
     if (state.amountRange.min !== null || state.amountRange.max !== null) count++;
     if (state.statusFilter.length > 0) count++;
     if (state.tags.length > 0) count++;
@@ -455,6 +478,7 @@ export class FilterService {
     if (filterState.selectedYear !== undefined && filterState.selectedYear) this.setSelectedYear(filterState.selectedYear.startYear, filterState.selectedYear.endYear);
     if (filterState.categoryFilter !== undefined) this.categoryFilter.set(filterState.categoryFilter);
     if (filterState.accountFilter !== undefined) this.setAccountFilter(filterState.accountFilter);
+    if (filterState.accountTypeFilter !== undefined) this.setAccountTypeFilter(filterState.accountTypeFilter);
     if (filterState.amountRange !== undefined) this.setAmountRange(filterState.amountRange.min, filterState.amountRange.max);
     if (filterState.statusFilter !== undefined) this.setStatusFilter(filterState.statusFilter);
     if (filterState.tags !== undefined) this.setTags(filterState.tags);
@@ -476,6 +500,7 @@ export class FilterService {
       selectedYear: null,
       categoryFilter: null,
       accountFilter: [],
+      accountTypeFilter: [],
       amountRange: { min: null, max: null },
       statusFilter: [],
       tags: [],
@@ -525,7 +550,8 @@ export class FilterService {
     if (filterState.selectedDate) parts.push(`Date: ${filterState.selectedDate.toLocaleDateString()}`);
     if (filterState.selectedDateRange) parts.push(`Date Range: ${filterState.selectedDateRange.startDate.toLocaleDateString()} - ${filterState.selectedDateRange.endDate.toLocaleDateString()}`);
     if (filterState.categoryFilter) parts.push(`Category Filter: ${filterState.categoryFilter.categoryId} (${filterState.categoryFilter.monthName} ${filterState.categoryFilter.year})`);
-    if (filterState.selectedYear) parts.push(`Year Range: ${filterState.selectedYear.startYear} - ${filterState.selectedYear.endYear}`);
+    if (filterState.accountFilter && filterState.accountFilter.length > 0) parts.push(`Accounts: ${filterState.accountFilter.length}`);
+    if (filterState.accountTypeFilter && filterState.accountTypeFilter.length > 0) parts.push(`Account Types: ${filterState.accountTypeFilter.join(', ')}`);
     if (filterState.isRecurring !== null && filterState.isRecurring !== undefined) parts.push(`Is Recurring: ${filterState.isRecurring}`);
 
     return parts.length > 0 ? parts.join(', ') : 'No filters applied';
@@ -621,9 +647,11 @@ export class FilterService {
     // Apply account filter
     if (state.accountFilter && state.accountFilter.length > 0) {
       filtered = filtered.filter(transaction =>
-        state.accountFilter.includes(transaction.accountId)
+        state.accountFilter!.includes(transaction.accountId)
       );
     }
+
+
 
     // Apply amount range filter
     if (state.amountRange) {
@@ -674,6 +702,7 @@ export class FilterService {
     selectedDate?: Date | null;
     selectedDateRange?: { startDate: Date; endDate: Date } | null;
     accountFilter?: string[];
+    accountTypeFilter?: string[];
     amountRange?: { min: number | null; max: number | null };
     statusFilter?: string[];
     tags?: string[];
@@ -687,6 +716,7 @@ export class FilterService {
       selectedYear: null, // Custom filters don't have a year filter
       categoryFilter: null,
       accountFilter: filters.accountFilter || [],
+      accountTypeFilter: filters.accountTypeFilter || [],
       amountRange: filters.amountRange || { min: null, max: null },
       statusFilter: filters.statusFilter || [],
       tags: filters.tags || []

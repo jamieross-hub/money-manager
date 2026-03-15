@@ -101,6 +101,22 @@
                   <button (click)="clearFilter('date'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
                 </div>
               }
+              @if (!isFamilyMode()) {
+                @if (selectedAccountTypes().length > 0) {
+                  <div class="filter-chip">
+                    <mat-icon>account_balance</mat-icon>
+                    <span class="chip-text">{{ currentAccountTypeLabel() }}</span>
+                    <button (click)="clearFilter('accountType'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
+                  </div>
+                }
+                @if (selectedAccounts().length > 0) {
+                  <div class="filter-chip">
+                    <mat-icon>account_balance_wallet</mat-icon>
+                    <span class="chip-text">{{ currentAccountLabel() }}</span>
+                    <button (click)="clearFilter('account'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
+                  </div>
+                }
+              }
             </div>
           </div>
         }
@@ -158,6 +174,40 @@
                 <mat-icon class="check-icon">check</mat-icon>
               }
             </button>
+          </mat-menu>
+        }
+        <!-- Account Menu -->
+        @if (!isFamilyMode()) {
+          <button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="accountMenu"
+            [ngClass]="{'active': selectedAccounts().length > 0 || selectedAccountTypes().length > 0}"
+            matTooltip="Filter by account" aria-label="Filter by account">
+            <mat-icon>account_balance</mat-icon>
+            <span class="filter-btn-text">{{ selectedAccountTypes().length > 0 ? currentAccountTypeLabel() : currentAccountLabel() }}</span>
+          </button>
+          <mat-menu #accountMenu="matMenu" class="filter-menu">
+            <div class="menu-section-label px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-500 opacity-70">Account Types</div>
+            @for (type of accountTypeOptions; track type.value) {
+              <button mat-menu-item [class.active-menu-item]="selectedAccountTypes().includes(type.value)"
+                (click)="onAccountTypeChange(type.value); $event.stopPropagation()">
+                <mat-icon>{{ type.icon }}</mat-icon>
+                <span>{{ type.label }}</span>
+                @if (selectedAccountTypes().includes(type.value)) {
+                  <mat-icon class="check-icon">check</mat-icon>
+                }
+              </button>
+            }
+            <mat-divider></mat-divider>
+            <div class="menu-section-label px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-500 opacity-70">Specific Accounts</div>
+            @for (account of accounts(); track account.accountId) {
+               <button mat-menu-item [class.active-menu-item]="selectedAccounts().includes(account.accountId)"
+                (click)="onAccountIdChange(account.accountId); $event.stopPropagation()">
+                <mat-icon>{{ account.icon || 'account_balance_wallet' }}</mat-icon>
+                <span>{{ account.name }}</span>
+                @if (selectedAccounts().includes(account.accountId)) {
+                  <mat-icon class="check-icon">check</mat-icon>
+                }
+              </button>
+            }
           </mat-menu>
         }
         <!-- Member Menu (family split mode only) -->

@@ -1,5 +1,5 @@
 import { Category } from '../models';
-import { CurrencyCode, LanguageCode, ThemeType, DateRangePreset, TransactionType } from './enums';
+import { CurrencyCode, LanguageCode, ThemeType, DateRangePreset, TransactionType, AccountType } from './enums';
 
 /**
  * Application configuration constants
@@ -1056,4 +1056,12 @@ export const defaultCategoriesForNewUser: Category[] = [
     icon: 'rule',
     createdAt: Date.now(),
   },
+];
+
+export const ACCOUNT_TYPE_OPTIONS = [
+  { value: AccountType.BANK, label: 'Bank', icon: 'account_balance' },
+  { value: AccountType.CASH, label: 'Cash', icon: 'payments' },
+  { value: AccountType.CREDIT, label: 'Credit Card', icon: 'credit_card' },
+  { value: AccountType.LOAN, label: 'Loan', icon: 'money' },
+  { value: AccountType.INVESTMENT, label: 'Investment', icon: 'trending_up' }
 ];
