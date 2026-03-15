@@ -25,6 +25,9 @@ import { PwaInstallPromptComponent } from './util/components/pwa-install-prompt/
 import { LoaderComponent } from './util/components/loader/loader.component';
 import { PinLockComponent } from './util/components/pin-lock/pin-lock.component';
 import { TransactionProcessorService } from './util/service/transaction-processor.service';
+import { PerformanceDashboardComponent } from './component/dashboard/header/performance-dashboard/performance-dashboard.component';
+import { PerformanceMetricsService } from './util/service/performance-metrics.service';
+import { inject } from '@angular/core';
 
 
 @Component({
@@ -37,11 +40,14 @@ import { TransactionProcessorService } from './util/service/transaction-processo
     RouterModule,
     PwaInstallPromptComponent,
     LoaderComponent,
-    PinLockComponent
+    PinLockComponent,
+    PerformanceDashboardComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent implements OnInit, OnDestroy {
+  private metricsService = inject(PerformanceMetricsService);
+  public showPerformanceDashboard = this.metricsService.showDashboard;
   public title = APP_CONFIG.APP_NAME;
   public isLocked = this.securityService.isLocked;
   isOnline = false; // Will be set properly in ngOnInit

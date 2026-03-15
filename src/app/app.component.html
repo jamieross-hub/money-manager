@@ -14,5 +14,7 @@
   <router-outlet></router-outlet>
 </div>
 
+<app-performance-dashboard *ngIf="showPerformanceDashboard()"></app-performance-dashboard>
+
 <!-- PIN Lock Component -->
 <app-pin-lock></app-pin-lock>
