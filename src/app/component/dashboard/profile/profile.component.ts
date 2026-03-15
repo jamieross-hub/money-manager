@@ -89,7 +89,7 @@ import { MatDividerModule } from '@angular/material/divider';
     MatSlideToggleModule,
     TranslateModule,
     MatExpansionModule,
-    ThemeToggleComponent,
+    // ThemeToggleComponent,
     MatBottomSheetModule,
     RouterLink,
     MatMenuModule,
