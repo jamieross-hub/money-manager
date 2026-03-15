@@ -59,7 +59,8 @@
             <div class="settle-card" 
                  [class.owe-mode]="b | iOwe : currentUserId()"
                  [class.receive-mode]="b | owedToMe : currentUserId()"
-                 (click)="openSettleDialog(b)" 
+                 [class.row-expanded]="expandedBalanceId() === (b.fromUserId + '::' + b.toUserId)"
+                 (click)="toggleExpandBalance(b)" 
                  matRipple>
               
               <!-- Avatar Display -->
@@ -113,8 +114,11 @@
         <h2 class="section-label">Other Pending Balances</h2>
         <div class="flex flex-col">
           @for (b of otherBalances(); track trackByEntry($index, b)) {
-            <div class="settle-card border-dashed">
-              <div class="avatar-stack scale-75 -ml-2 shrink-0">
+            <div class="settle-card border-dashed"
+                 [class.row-expanded]="expandedBalanceId() === (b.fromUserId + '::' + b.toUserId)"
+                 (click)="toggleExpandBalance(b)" 
+                 matRipple>
+              <div class="avatar-stack shrink-0">
                 <div class="avatar-wrap" [style.background-color]="b.fromUserId | settleAvatarColor">
                   <img [src]="b.fromPhotoURL" appImageFallback alt="from" />
                 </div>
@@ -145,16 +149,32 @@
         <h2 class="section-label">Settlement Archive</h2>
         <div class="history-container shadow-sm">
           @for (s of settlements(); track trackBySettlement($index, s)) {
-            <div class="history-row">
-              <div class="history-avatar" [style.background-color]="s.fromUserId | settleAvatarColor">
-                <img [src]="s.fromPhotoURL" appImageFallback alt="avatar" />
+            <div class="history-row" 
+                 (click)="toggleExpand(s.id)" 
+                 [class.row-expanded]="s.id ? expandedSettlementId() === s.id : false"
+                 style="cursor: pointer;">
+              <div class="avatar-stack shrink-0">
+                <div class="avatar-wrap" [style.background-color]="s.fromUserId | settleAvatarColor">
+                  <img [src]="s.fromPhotoURL" appImageFallback alt="from" />
+                </div>
+                <div class="stack-connector">
+                  <mat-icon class="!text-[12px]">chevron_right</mat-icon>
+                </div>
+                <div class="avatar-wrap" [style.background-color]="s.toUserId | settleAvatarColor">
+                  <img [src]="s.toPhotoURL" appImageFallback alt="to" />
+                </div>
               </div>
               <div class="history-text">
-                <p class="history-title truncate">
-                  {{ s.fromDisplayName }} paid {{ s.toDisplayName }}
+                <p class="history-title" [class.truncate]="s.id ? expandedSettlementId() !== s.id : true">
+                  <span>{{ s.fromDisplayName }}</span>
+                  <span class="text-neutral-400 font-normal text-xs mx-0.5">→</span>
+                  <span>{{ s.toDisplayName }}</span>
+                  @if (s.id && expandedSettlementId() === s.id) {
+                    <span class="method-badge">{{ s.method | methodLabel }}</span>
+                  }
                 </p>
                 <p class="history-meta">
-                  {{ s.settledAt | settleDate }} · {{ s.method | methodLabel }}
+                  {{ s.settledAt | settleDate }}
                   @if (s.note) { <span class="italic font-normal"> · "{{ s.note }}"</span> }
                 </p>
               </div>

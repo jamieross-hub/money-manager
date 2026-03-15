@@ -102,14 +102,11 @@
 }
 
 .section-label {
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--neutral-500);
+  @apply text-xs;
+  color: var(--neutral-700);
   letter-spacing: 0.08em;
   margin-bottom: 12px;
   padding-left: 4px;
-  opacity: 0.8;
 }
 
 /* ── Settle Card (Premium Look) ─────── */
@@ -140,6 +137,18 @@
 
   &.receive-mode {
     border-left: 4px solid var(--success-500);
+  }
+
+  &.row-expanded {
+    align-items: flex-start !important;
+    background-color: var(--surface-50) !important;
+    border-color: var(--primary-300) !important;
+
+    .name-label {
+      white-space: normal !important;
+      overflow: visible !important;
+      text-overflow: unset !important;
+    }
   }
 }
 
@@ -236,6 +245,14 @@
     background-color: var(--surface-100);
   }
 
+  &.row-expanded {
+    align-items: flex-start !important;
+    background-color: var(--surface-50) !important;
+    padding-top: 18px;
+    padding-bottom: 18px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.02);
+  }
+
   .history-avatar {
     width: 38px;
     height: 38px;
@@ -260,6 +277,27 @@
       font-weight: 700;
       color: var(--neutral-900);
       margin-bottom: 2px;
+
+      .method-badge {
+        font-size: 10px;
+        font-weight: 800;
+        padding: 2px 6px;
+        border-radius: 6px;
+        margin-left: 6px;
+        background-color: var(--surface-300);
+        color: var(--neutral-500);
+        display: inline-flex;
+        align-items: center;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        border: 1px solid var(--surface-400);
+
+        :host-context(.dark-theme) & {
+          background-color: var(--surface-100);
+          color: var(--neutral-400);
+          border-color: var(--surface-200);
+        }
+      }
     }
 
     .history-meta {

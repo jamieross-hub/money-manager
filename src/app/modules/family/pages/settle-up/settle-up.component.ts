@@ -1,6 +1,6 @@
 import {
   Component, inject, OnInit, ChangeDetectionStrategy,
-  computed, effect, DestroyRef, untracked
+  computed, effect, DestroyRef, untracked, signal
 } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Actions, ofType } from '@ngrx/effects';
@@ -153,6 +153,13 @@ export class SettleUpComponent implements OnInit {
   totalOwedToMe = computed(() => this.processedData().owedToMe);
 
   readonly familyId = computed(() => this.family()?.id);
+  expandedSettlementId = signal<string | null>(null);
+  expandedBalanceId = signal<string | null>(null);
+
+  toggleExpandBalance(b: BalanceEntry) {
+    const id = `${b.fromUserId}::${b.toUserId}`;
+    this.expandedBalanceId.set(this.expandedBalanceId() === id ? null : id);
+  }
 
   constructor() {
     // When family ID changes, fetch its relevant sub-collections
@@ -193,6 +200,11 @@ export class SettleUpComponent implements OnInit {
         this.familyService.recordSettlement(req);
       }
     });
+  }
+
+  toggleExpand(id: string | undefined) {
+    if (!id) return;
+    this.expandedSettlementId.set(this.expandedSettlementId() === id ? null : id);
   }
 
   trackByEntry(_: number, b: BalanceEntry) {
