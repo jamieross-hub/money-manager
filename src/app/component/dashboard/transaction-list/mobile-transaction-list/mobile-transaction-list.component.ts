@@ -142,7 +142,7 @@ export class MobileTransactionListComponent
   isRecurring = input<boolean>(false);
 
   selectedTx: Transaction | null = null;
-  selectedTxForActions = signal<Transaction | null>(null);
+
   selectedTxIds = signal<Set<string>>(new Set());
   isSelectionMode = computed(() => this.selectedTxIds().size > 0);
   newlyAddedTxId = signal<string | null>(null);
@@ -326,10 +326,9 @@ export class MobileTransactionListComponent
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
-    if (this.selectedTxForActions() || this.isSelectionMode()) {
+    if (this.selectedTx || this.isSelectionMode()) {
       const target = event.target as HTMLElement;
       if (!target.closest('.transaction-card') && !target.closest('.selection-toolbar')) {
-        this.selectedTxForActions.set(null);
         this.clearSelection();
       }
     }
@@ -800,10 +799,7 @@ export class MobileTransactionListComponent
       return;
     }
 
-    if (this.selectedTxForActions()) {
-      this.selectedTxForActions.set(null);
-      return;
-    }
+
     if (transaction.id?.startsWith('upcoming-')) return;
 
     if (this.selectedTx?.id === transaction.id) {
@@ -885,10 +881,7 @@ export class MobileTransactionListComponent
     }
   }
 
-  cancelActions(event?: Event) {
-    if (event) event.stopPropagation();
-    this.selectedTxForActions.set(null);
-  }
+
 
   onEditTransaction(transaction: Transaction) {
     this.editTransaction.emit(transaction);
