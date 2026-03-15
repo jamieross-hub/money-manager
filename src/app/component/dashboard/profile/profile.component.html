@@ -1,8 +1,8 @@
 <!-- <app-quick-actions-fab [config]="fabConfig"></app-quick-actions-fab> -->
-@if (breakpointService.device.isMobile) {
+<!-- @if (breakpointService.device.isMobile) {
   <app-quick-actions-fab [config]="quickActionsFabConfig()">
   </app-quick-actions-fab>
-}
+} -->
 
 
 <div class="profile-container">
@@ -99,13 +99,7 @@
 
       <!-- Right side: Actions -->
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <button mat-stroked-button color="primary" (click)="isEditing() ? cancelEdit() : toggleEdit()"
-          [disabled]="isLoading()"
-          class="!h-[42px] !rounded-lg !border-gray-200 dark:!border-gray-700 !bg-white dark:!bg-gray-800">
-          <mat-icon class="!text-[18px] !w-[18px] !h-[18px] mr-1">{{ isEditing() ? 'close' : 'edit'
-          }}</mat-icon>
-          {{ (isEditing() ? 'COMMON.CANCEL_EDIT' : 'PROFILE.EDIT_PROFILE') | translate }}
-        </button>
+
 
         <!-- Google Action Buttons (Mobile specifically) -->
         @if (isGuestMode() && breakpointService.device.isMobile) {
@@ -144,7 +138,7 @@
   <!-- Profile Content -->
   @if (userProfile()) {
     <div class="profile-content">
-      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="profile-form">
+      <form [formGroup]="profileForm" class="profile-form">
         <mat-accordion [multi]="!breakpointService.device.isMobile">
           <!-- Personal Information Section -->
           <mat-expansion-panel [expanded]="breakpointService.device.isMobile ? false : true"
@@ -155,6 +149,7 @@
                 <p class="text-sm font-medium  text-gray-700 !mb-0 dark:text-gray-200">{{
                 'PROFILE.PERSONAL_INFO' | translate }}</p>
               </mat-panel-title>
+
             </mat-expansion-panel-header>
             <div class="form-grid pt-4">
               <!-- First Name -->
@@ -222,7 +217,7 @@
                 <input matInput [matDatepicker]="dobPicker" formControlName="dateOfBirth"
                   autocomplete="bday" />
                 <mat-datepicker-toggle matSuffix [for]="dobPicker"
-                [disabled]="!isEditing()"></mat-datepicker-toggle>
+                [disabled]="!isEditingPersonal()"></mat-datepicker-toggle>
                 <mat-datepicker #dobPicker></mat-datepicker>
               </mat-form-field>
               <!-- Occupation -->
@@ -244,6 +239,22 @@
                 }
               </mat-form-field>
             </div>
+            <div class="flex justify-end gap-2 mt-4 px-2 pb-2">
+              @if (!isEditingPersonal()) {
+                <button mat-stroked-button (click)="toggleEdit('personal')" class="!h-9">
+                  <mat-icon class="!text-[18px]">edit</mat-icon>
+                  Edit
+                </button>
+              } @else {
+                <button mat-stroked-button (click)="cancelEdit('personal')" class="!h-9">
+                  Cancel
+                </button>
+                <button mat-flat-button color="primary" (click)="saveProfile('personal')" class="!h-9">
+                  <mat-icon class="!text-[18px]">save</mat-icon>
+                  Save Changes
+                </button>
+              }
+            </div>
           </mat-expansion-panel>
           <!-- Preferences Section -->
           @defer {
@@ -255,6 +266,7 @@
                 <p class="text-sm font-medium text-gray-700 !mb-0 dark:text-gray-200">{{
                 'PROFILE.PREFERENCES' | translate }}</p>
               </mat-panel-title>
+
             </mat-expansion-panel-header>
             <div class="form-grid pt-4">
               <!-- ₹ -->
@@ -310,6 +322,22 @@
                 </mat-select>
               </mat-form-field>
             </div>
+            <div class="flex justify-end gap-2 mt-4 px-2 pb-4 border-b border-gray-100 dark:border-gray-700">
+              @if (!isEditingPreferences()) {
+                <button mat-stroked-button (click)="toggleEdit('preferences')" class="!h-9">
+                  <mat-icon class="!text-[18px]">edit</mat-icon>
+                  Edit
+                </button>
+              } @else {
+                <button mat-stroked-button (click)="cancelEdit('preferences')" class="!h-9">
+                  Cancel
+                </button>
+                <button mat-flat-button color="primary" (click)="saveProfile('preferences')" class="!h-9">
+                  <mat-icon class="!text-[18px]">save</mat-icon>
+                  Save Changes
+                </button>
+              }
+            </div>
             <!-- Notification Preferences -->
             <div class="preferences-grid">
               <div class="preference-item">
@@ -341,22 +369,20 @@
               <div class="preference-item border-t border-gray-100 dark:border-gray-700 pt-4 mt-2">
                 <div class="flex items-center justify-between mb-2">
                   <span class="toggle-label !font-medium">PIN Lock</span>
-                  @if (isEditing()) {
-                    <button mat-stroked-button color="primary" type="button" size="small"
-                      (click)="showPinSetup.set(!showPinSetup())"
-                      class="!text-xs !h-8 !px-3">
-                      <mat-icon class="!text-sm !w-4 !h-4">{{ showPinSetup() ? 'close' : 'lock'
-                      }}</mat-icon>
-                      {{ (userProfile()?.preferences?.pinHash ? 'Change PIN' : 'Set PIN') }}
-                    </button>
-                  }
+                  <button mat-stroked-button color="primary" type="button" size="small"
+                    (click)="showPinSetup.set(!showPinSetup())"
+                    class="!text-xs !h-8 !px-3">
+                    <mat-icon class="!text-sm !w-4 !h-4">{{ showPinSetup() ? 'close' : 'lock'
+                    }}</mat-icon>
+                    {{ (userProfile()?.preferences?.pinHash ? 'Change PIN' : 'Set PIN') }}
+                  </button>
                 </div>
                 <mat-slide-toggle formControlName="pinEnabled" color="primary">
                   <span class="toggle-label text-xs">Enable PIN lock on startup</span>
                 </mat-slide-toggle>
                 <p class="preference-description">Require a 4-digit PIN to open the app</p>
                 <!-- PIN Setup Inline -->
-                @if (showPinSetup() && isEditing()) {
+                @if (showPinSetup()) {
                   <div
                     class="mt-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2">
                     <p class="text-xs font-medium mb-3">Enter New 4-Digit PIN</p>
@@ -511,24 +537,7 @@
         }
       }
     </mat-accordion>
-    <!-- Action Buttons -->
-    @if (isEditing()) {
-      <div class="form-actions">
-        <button type="button" mat-stroked-button (click)="cancelEdit()" [disabled]="isLoading()"
-          class="cancel-btn">
-          {{ 'COMMON.CANCEL' | translate }}
-        </button>
-        <button type="submit" mat-raised-button color="primary" [disabled]="isLoading()" class="save-btn">
-          @if (isLoading()) {
-            <mat-icon>hourglass_empty</mat-icon>
-          }
-          @if (!isLoading()) {
-            <mat-icon>save</mat-icon>
-          }
-          {{ (isLoading() ? 'COMMON.SAVING' : 'COMMON.SAVE_CHANGES') | translate }}
-        </button>
-      </div>
-    }
+
   </form>
   <!-- Account Actions Section -->
   @defer {

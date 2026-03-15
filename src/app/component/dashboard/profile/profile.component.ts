@@ -1,5 +1,5 @@
-import { Component, ChangeDetectionStrategy, signal, computed, inject, effect } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, effect, WritableSignal } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { Action } from '@ngrx/store';
 import { Actions, ofType } from '@ngrx/effects';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
@@ -24,7 +24,7 @@ import * as AccountsActions from '../../../store/accounts/accounts.actions';
 import * as CategoriesActions from '../../../store/categories/categories.actions';
 import * as BudgetsActions from '../../../store/budgets/budgets.actions';
 import * as GoalsActions from '../../../store/goals/goals.actions';
-import { filter, take, delay, Subscription } from 'rxjs';
+import { filter, take, delay, Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 import {
   APP_CONFIG,
   ERROR_MESSAGES,
@@ -63,6 +63,9 @@ import { QuickActionsFabComponent } from 'src/app/util/components/floating-actio
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { ThemeToggleComponent } from 'src/app/util/components/theme-toggle/theme-toggle.component';
 import { SsrService } from 'src/app/util/service/ssr.service';
+import { of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { DestroyRef } from '@angular/core';
 
 import { CommonSyncService } from 'src/app/util/service/common-sync.service';
 import { MatMenuModule } from '@angular/material/menu';
@@ -85,7 +88,6 @@ import { MatDividerModule } from '@angular/material/divider';
     MatProgressSpinnerModule,
     MatSlideToggleModule,
     TranslateModule,
-    QuickActionsFabComponent,
     MatExpansionModule,
     ThemeToggleComponent,
     MatBottomSheetModule,
@@ -115,37 +117,69 @@ export class ProfileComponent {
   private readonly securityService = inject(SecurityService);
   private readonly ssrService = inject(SsrService);
   private readonly syncService = inject(CommonSyncService);
+  private readonly destroyRef = inject(DestroyRef);
 
   // ─── Signals (State) ───────────────────────────────────────────────
+  private readonly storeProfile = toSignal(this.store.select(ProfileSelectors.selectProfile));
+  private readonly storeLoading = toSignal(this.store.select(ProfileSelectors.selectProfileLoading), { initialValue: false });
+  private readonly storeError = toSignal(this.store.select(ProfileSelectors.selectProfileError), { initialValue: null });
+
   private ignoreLoader = false;
-  readonly isLoading = signal(false);
-  readonly isGoogleLoading = signal(false);
-  readonly isLogoutLoading = signal(false);
-  readonly isEditing = signal(false);
-  readonly userProfile = signal<User | null>(null);
-  readonly familyGroups = signal<Family[]>([]);
+  readonly isLoading = computed(() => (this.storeLoading() && !this.ignoreLoader) || this.isActionLoading());
+  private readonly isActionLoading: WritableSignal<boolean> = signal(false);
+
+  readonly isGoogleLoading: WritableSignal<boolean> = signal(false);
+  readonly isLogoutLoading: WritableSignal<boolean> = signal(false);
+  readonly isEditingPersonal: WritableSignal<boolean> = signal(false);
+  readonly isEditingPreferences: WritableSignal<boolean> = signal(false);
+  readonly userProfile: WritableSignal<User | null> = signal<User | null>(null);
+  readonly familyGroups: WritableSignal<Family[]> = signal<Family[]>([]);
   readonly activeFamilyId = this.familyService.activeFamilyId;
-  readonly familyMembers = signal<any[]>([]);
-  readonly isFamilyLoading = signal(false);
+  readonly familyMembers: WritableSignal<any[]> = signal<any[]>([]);
+  readonly isFamilyLoading: WritableSignal<boolean> = signal(false);
   readonly currentTheme = this.themeSwitchingService.currentTheme;
-  readonly showPinSetup = signal(false);
-  readonly isFamilyMode = signal(false);
+  readonly showPinSetup: WritableSignal<boolean> = signal(false);
+  readonly isFamilyMode: WritableSignal<boolean> = signal(false);
   readonly newPinControl = new FormControl('', [Validators.required, Validators.pattern(/^\d{4}$/)]);
+
+  private readonly PREFERENCE_TOGGLES = [
+    'notifications',
+    'emailUpdates',
+    'budgetAlerts',
+    'categoryListViewMode',
+    'pinEnabled'
+  ];
+
+  private readonly BASIC_INFO_FIELDS = [
+    'firstName',
+    'lastName',
+    'phone',
+    'dateOfBirth',
+    'occupation',
+    'monthlyIncome'
+  ];
+
+  private readonly EDITABLE_PREFERENCES = [
+    'defaultCurrency',
+    'timezone',
+    'language',
+    'country',
+    'appView'
+  ];
 
 
 
   readonly quickActionsFabConfig = signal<QuickActionsFabConfig>({
     title: 'Profile',
-    mainButtonIcon: 'edit',
+    mainButtonIcon: 'settings',
     mainButtonColor: 'primary',
-    mainButtonTooltip: 'Edit Profile',
+    mainButtonTooltip: 'Settings',
     showLabels: false,
     animations: true,
     autoHide: false,
     autoHideDelay: 3000,
     theme: 'auto',
     actions: [],
-    onMainButtonClick: () => this.isEditing() ? this.saveProfile() : this.toggleEdit(),
   });
 
   // ─── Computed Signals ──────────────────────────────────────────────
@@ -189,10 +223,18 @@ export class ProfileComponent {
     currency: (config as any).currency
   })).sort((a, b) => a.countryName.localeCompare(b.countryName));
 
-  readonly languages = Object.values(APP_CONFIG.REGIONAL.COUNTRY_MAPPING)
-    .flatMap(config => (config as any).languages || [])
-    .filter((v, i, a) => a.findIndex(t => t.code === v.code) === i)
-    .sort((a, b) => a.name.localeCompare(b.name));
+  readonly languages = (() => {
+    const allLangs = Object.values(APP_CONFIG.REGIONAL.COUNTRY_MAPPING)
+      .flatMap(config => (config as any).languages || []);
+    const seen = new Set<string>();
+    return allLangs
+      .filter(lang => {
+        if (seen.has(lang.code)) return false;
+        seen.add(lang.code);
+        return true;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+  })();
 
   readonly appViewOptions = [
     { value: 'WEEKLY', label: 'PROFILE.APP_VIEW_WEEKLY' },
@@ -227,7 +269,7 @@ export class ProfileComponent {
     });
 
 
-    // Dispatch profile load — uid sourced from store (or guest fallback)
+    // Dispatch profile load
     const uid = this.userService.isGuestUser()
       ? 'offline-guest'
       : (this.store.selectSignal(ProfileSelectors.selectProfile)()?.uid ?? null);
@@ -235,54 +277,85 @@ export class ProfileComponent {
       this.store.dispatch(ProfileActions.loadProfile({ userId: uid }));
     }
 
-    // React to store profile changes
-    this.store.select(ProfileSelectors.selectProfile).pipe(
-      takeUntilDestroyed()
-    ).subscribe(profile => {
+    // Effect for store profile updates
+    effect(() => {
+      const profile = this.storeProfile();
       if (profile) {
         const mappedProfile = this.mapUserToProfile(profile);
         this.userProfile.set(mappedProfile);
         this.isFamilyMode.set(mappedProfile.preferences?.isFamilyMode || false);
-        this.populateForm();
+        this.populateForm(mappedProfile);
       }
     });
 
-    // React to store loading changes
-    this.store.select(ProfileSelectors.selectProfileLoading).pipe(
-      takeUntilDestroyed()
-    ).subscribe(loading => {
-      if (!this.ignoreLoader) {
-        this.isLoading.set(loading);
-      }
-      if (!loading) {
-        this.ignoreLoader = false;
-      }
-    });
-
-    // React to store error changes
-    this.store.select(ProfileSelectors.selectProfileError).pipe(
-      takeUntilDestroyed()
-    ).subscribe(error => {
+    // Effect for error handling
+    effect(() => {
+      const error = this.storeError();
       if (error) {
         console.error('Error loading profile:', error);
         this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
       }
     });
 
-    // Listen to userAuth$ for direct updates (important for guests)
+    // Auth state monitoring
     this.userService.userAuth$.pipe(
       takeUntilDestroyed()
     ).subscribe(user => {
       if (user) {
         if (this.userService.isGuestUser() && !this.userProfile()) {
-          this.userProfile.set(this.mapUserToProfile(user));
-          this.populateForm();
+          const mapped = this.mapUserToProfile(user);
+          this.userProfile.set(mapped);
+          this.populateForm(mapped);
         }
         this.loadFamilies();
       }
     });
 
+    this.setupPreferencesAutoSaveListeners();
+    this.enablePreferenceToggles();
+  }
 
+  /**
+   * Enables specific preference controls that should stay interactable even in view mode.
+   */
+  private enablePreferenceToggles(): void {
+    this.PREFERENCE_TOGGLES.forEach(controlName => {
+      const control = this.profileForm.get(`preferences.${controlName}`);
+      if (control) {
+        const isPin = controlName === 'pinEnabled';
+        const hasPinHash = !!this.userProfile()?.preferences?.pinHash;
+        
+        if (isPin && !hasPinHash) {
+          control.disable({ emitEvent: false });
+        } else {
+          control.enable({ emitEvent: false });
+        }
+      }
+    });
+  }
+
+  /**
+   * Sets up value-change listeners to auto-save specific settings when changed in view mode.
+   */
+  private setupPreferencesAutoSaveListeners(): void {
+    this.PREFERENCE_TOGGLES.forEach(controlName => {
+      const control = this.profileForm.get(`preferences.${controlName}`);
+      if (control) {
+        control.valueChanges.pipe(
+          takeUntilDestroyed(),
+          debounceTime(500),
+          distinctUntilChanged()
+        ).subscribe(value => {
+          if (!this.isEditingPreferences()) {
+            const profile = this.userProfile();
+            // Only save if the value is actually different from the current profile state
+            if (profile && profile.preferences?.[controlName as keyof UserPreferences] !== value) {
+              this.applyPreferenceChanges({ [controlName]: value });
+            }
+          }
+        });
+      }
+    });
   }
 
 
@@ -295,23 +368,25 @@ export class ProfileComponent {
   private loadFamilies(): void {
     this.isFamilyLoading.set(true);
     this.familiesSubscription?.unsubscribe();
-    
+
     this.familiesSubscription = this.familyService.getMyFamilies()
-      .subscribe({
-        next: (families) => {
+      .pipe(
+        switchMap(families => {
           this.familyGroups.set(families);
           const activeId = this.activeFamilyId();
           if (activeId) {
-            this.familyService.getMembers(activeId).pipe(take(1)).subscribe(members => {
-              this.familyMembers.set(members);
-              this.isFamilyLoading.set(false);
-            });
-          } else {
-            this.isFamilyLoading.set(false);
+            return this.familyService.getMembers(activeId).pipe(take(1));
           }
+          return of([]);
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: (members) => {
+          this.familyMembers.set(members);
+          this.isFamilyLoading.set(false);
         },
         error: () => {
-          this.familyGroups.set([]);
           this.isFamilyLoading.set(false);
         }
       });
@@ -320,7 +395,7 @@ export class ProfileComponent {
     const profile = this.userProfile();
     if (!profile || (this.activeFamilyId() === familyId && this.isFamilyMode())) return;
 
-    this.isLoading.set(true);
+    this.isActionLoading.set(true);
     try {
       this.familyService.setActiveFamily(familyId);
 
@@ -334,20 +409,20 @@ export class ProfileComponent {
       // Clear stores and sync
       this.clearLocalStores();
       this.syncService.syncAll().subscribe({
-        complete: () => this.isLoading.set(false),
-        error: () => this.isLoading.set(false)
+        complete: () => this.isActionLoading.set(false),
+        error: () => this.isActionLoading.set(false)
       });
     } catch (error) {
       console.error('Error switching family:', error);
       this.notificationService.error('Failed to switch family');
-      this.isLoading.set(false);
+      this.isActionLoading.set(false);
     }
   }
 
   async switchToPersonalMode(): Promise<void> {
     if (!this.isFamilyMode()) return;
 
-    this.isLoading.set(true);
+    this.isActionLoading.set(true);
     try {
       await this.applyPreferenceChanges({
         isFamilyMode: false
@@ -357,13 +432,13 @@ export class ProfileComponent {
 
       this.clearLocalStores();
       this.syncService.syncAll().subscribe({
-        complete: () => this.isLoading.set(false),
-        error: () => this.isLoading.set(false)
+        complete: () => this.isActionLoading.set(false),
+        error: () => this.isActionLoading.set(false)
       });
     } catch (error) {
       console.error('Error switching to personal mode:', error);
       this.notificationService.error('Failed to switch mode');
-      this.isLoading.set(false);
+      this.isActionLoading.set(false);
     }
   }
 
@@ -380,7 +455,7 @@ export class ProfileComponent {
     ref.afterClosed().subscribe(async result => {
       if (result) {
         try {
-          this.isLoading.set(true);
+          this.isActionLoading.set(true);
           const family = await this.familyService.createFamily(result);
           this.loadFamilies();
           this.notificationService.info('Family created! Share the invite code with family members.');
@@ -388,7 +463,7 @@ export class ProfileComponent {
         } catch (error: any) {
           this.notificationService.error(error?.message || ERROR_MESSAGES.NETWORK.SERVER_ERROR);
         } finally {
-          this.isLoading.set(false);
+          this.isActionLoading.set(false);
         }
       }
     });
@@ -400,7 +475,7 @@ export class ProfileComponent {
       if (code) {
         if (code) {
           try {
-            this.isLoading.set(true);
+            this.isActionLoading.set(true);
             const family = await this.familyService.joinByCode(code);
             // After successfully joining, switch to the new family
             if (family.id) {
@@ -412,7 +487,7 @@ export class ProfileComponent {
           } catch (error: any) {
             this.notificationService.error(error?.message || ERROR_MESSAGES.NETWORK.SERVER_ERROR);
           } finally {
-            this.isLoading.set(false);
+            this.isActionLoading.set(false);
           }
         }
       }
@@ -440,7 +515,7 @@ export class ProfileComponent {
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
         try {
-          this.isLoading.set(true);
+          this.isActionLoading.set(true);
           await this.familyService.deleteFamily(family.id!);
           this.familyService.setActiveFamily(null);
           await this.applyPreferenceChanges({
@@ -457,7 +532,7 @@ export class ProfileComponent {
           console.error('Error deleting family:', error);
           this.notificationService.error(error?.message || 'Failed to delete family wallet');
         } finally {
-          this.isLoading.set(false);
+          this.isActionLoading.set(false);
         }
       }
     });
@@ -522,8 +597,7 @@ export class ProfileComponent {
     };
   }
 
-  private populateForm(): void {
-    const profile = this.userProfile();
+  private populateForm(profile: User | null): void {
     if (profile) {
       this.profileForm.patchValue({
         firstName: profile.firstName,
@@ -538,14 +612,13 @@ export class ProfileComponent {
           timezone: profile.preferences?.timezone || 'UTC',
           language: profile.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT,
           country: profile.preferences?.country || this.deriveCountryFromLanguage(profile.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT),
-          notifications: profile.preferences?.notifications || true,
-          emailUpdates: profile.preferences?.emailUpdates || true,
-          budgetAlerts: profile.preferences?.budgetAlerts || true,
-          categoryListViewMode: profile.preferences?.categoryListViewMode || false,
           appView: profile.preferences?.appView || 'MONTHLY',
           pinEnabled: profile.preferences?.pinEnabled || false,
         },
-      });
+      }, { emitEvent: false });
+
+      // Ensure preference toggles remain enabled
+      this.enablePreferenceToggles();
 
 
 
@@ -563,27 +636,43 @@ export class ProfileComponent {
 
   // ─── Edit / Save ──────────────────────────────────────────────────
 
-  toggleEdit(): void {
-    if (this.isEditing()) {
-      this.saveProfile();
+  // ─── Edit / Save / Cancel Logic ───────────────────────────────────
+
+  toggleEdit(section: 'personal' | 'preferences'): void {
+    if (section === 'personal') {
+      this.isEditingPersonal.set(true);
+      this.BASIC_INFO_FIELDS.forEach(field => this.profileForm.get(field)?.enable());
     } else {
-      this.isEditing.set(true);
-      this.profileForm.enable();
-      // Keep pinEnabled disabled if no PIN hash exists
-      if (!this.userProfile()?.preferences?.pinHash) {
-        this.profileForm.get('preferences.pinEnabled')?.disable();
-      }
-      this.quickActionsFabConfig.update(config => ({
-        ...config,
-        mainButtonIcon: 'save',
-        mainButtonTooltip: 'Save Profile'
-      }));
+      this.isEditingPreferences.set(true);
+      this.EDITABLE_PREFERENCES.forEach(field => this.profileForm.get(`preferences.${field}`)?.enable());
     }
   }
 
+  cancelEdit(section: 'personal' | 'preferences'): void {
+    const profile = this.userProfile();
+    if (profile) {
+      if (section === 'personal') {
+        this.isEditingPersonal.set(false);
+        // Reset only personal fields
+        this.BASIC_INFO_FIELDS.forEach(field => {
+          const val = (profile as any)[field];
+          this.profileForm.get(field)?.patchValue(val, { emitEvent: false });
+          this.profileForm.get(field)?.disable({ emitEvent: false });
+        });
+      } else {
+        this.isEditingPreferences.set(false);
+        // Reset only preference fields
+        this.EDITABLE_PREFERENCES.forEach(field => {
+          const val = (profile.preferences as any)?.[field];
+          this.profileForm.get(`preferences.${field}`)?.patchValue(val, { emitEvent: false });
+          this.profileForm.get(`preferences.${field}`)?.disable({ emitEvent: false });
+        });
+      }
+    }
+  }
 
-
-  async saveProfile(): Promise<void> {
+  async saveProfile(section: 'personal' | 'preferences'): Promise<void> {
+    // Check validation for the relevant section if needed, but since we save whole form:
     if (this.profileForm.invalid) {
       this.profileForm.markAllAsTouched();
       this.notificationService.warning(ERROR_MESSAGES.VALIDATION.REQUIRED_FIELD);
@@ -591,7 +680,7 @@ export class ProfileComponent {
     }
 
     try {
-      this.isLoading.set(true);
+      this.isActionLoading.set(true);
       const formValue = this.profileForm.value;
       const profile = this.userProfile();
 
@@ -624,43 +713,33 @@ export class ProfileComponent {
           this.translationService.setLanguage(updatedUser.preferences.language as Language);
         }
 
-        this.isEditing.set(false);
-        this.profileForm.disable();
-
-        this.quickActionsFabConfig.update(config => ({
-          ...config,
-          mainButtonIcon: 'edit',
-          mainButtonTooltip: 'Edit Profile'
-        }));
+        if (section === 'personal') {
+          this.isEditingPersonal.set(false);
+          this.BASIC_INFO_FIELDS.forEach(field => this.profileForm.get(field)?.disable({ emitEvent: false }));
+        } else {
+          this.isEditingPreferences.set(false);
+          this.EDITABLE_PREFERENCES.forEach(field => this.profileForm.get(`preferences.${field}`)?.disable({ emitEvent: false }));
+        }
+        
+        // Ensure preference toggles remain enabled
+        this.enablePreferenceToggles();
       }
     } catch (error) {
       console.error('Error saving profile:', error);
       this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
     } finally {
-      this.isLoading.set(false);
+      this.isActionLoading.set(false);
     }
   }
 
-  cancelEdit(): void {
-    this.populateForm();
-    this.isEditing.set(false);
-    this.profileForm.disable();
 
-    this.quickActionsFabConfig.update(config => ({
-      ...config,
-      mainButtonIcon: 'edit',
-      mainButtonTooltip: 'Edit Profile'
-    }));
-
-    this.notificationService.info('Changes cancelled');
-  }
 
   // ─── Auth Actions ──────────────────────────────────────────────────
 
   async signInWithGoogle(): Promise<void> {
     try {
       this.isGoogleLoading.set(true);
-      this.isLoading.set(true);
+      this.isActionLoading.set(true);
       await this.userService.signInWithGoogle();
       this.notificationService.info('Successfully signed in with Google');
       window.location.reload();
@@ -669,24 +748,39 @@ export class ProfileComponent {
       this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
     } finally {
       this.isGoogleLoading.set(false);
-      this.isLoading.set(false);
+      this.isActionLoading.set(false);
     }
   }
 
   async logout(): Promise<void> {
-    try {
-      this.isLogoutLoading.set(true);
-      this.isLoading.set(true);
-      await this.userService.logout();
-      this.notificationService.info('Logged out successfully');
-      window.location.reload();
-    } catch (error) {
-      console.error('Error logging out:', error);
-      this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
-    } finally {
-      this.isLogoutLoading.set(false);
-      this.isLoading.set(false);
-    }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Sign Out',
+        message: 'Are you sure you want to log out from your account?',
+        confirmText: 'Sign Out',
+        cancelText: 'Cancel',
+        type: 'info'
+      },
+    });
+
+    dialogRef.afterClosed().subscribe(async (result) => {
+      if (result) {
+        try {
+          this.isLogoutLoading.set(true);
+          this.isActionLoading.set(true);
+          await this.userService.logout();
+          this.notificationService.info('Logged out successfully');
+          window.location.reload();
+        } catch (error) {
+          console.error('Error logging out:', error);
+          this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
+        } finally {
+          this.isLogoutLoading.set(false);
+          this.isActionLoading.set(false);
+        }
+      }
+    });
   }
 
   async deleteAccount(): Promise<void> {
@@ -732,7 +826,7 @@ export class ProfileComponent {
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
         try {
-          this.isLoading.set(true);
+          this.isActionLoading.set(true);
           // Use Auth directly for the Firebase account deletion call
           await this.auth.currentUser?.delete();
           this.notificationService.info('Account deleted successfully');
@@ -741,7 +835,7 @@ export class ProfileComponent {
           console.error('Error deleting account:', error);
           this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
         } finally {
-          this.isLoading.set(false);
+          this.isActionLoading.set(false);
         }
       }
     });
@@ -775,7 +869,7 @@ export class ProfileComponent {
     if (!file) return;
 
     event.target.value = '';
-    this.isLoading.set(true);
+    this.isActionLoading.set(true);
 
     this.backupRestoreService.handleRestore(file).subscribe({
       next: (result) => {
@@ -784,12 +878,12 @@ export class ProfileComponent {
         } else if (result.message) {
           this.notificationService.error(result.message);
         }
-        this.isLoading.set(false);
+        this.isActionLoading.set(false);
       },
       error: (error) => {
         console.error('Restore failed:', error);
         this.notificationService.error('BACKUP.IMPORT_FAILED');
-        this.isLoading.set(false);
+        this.isActionLoading.set(false);
       }
     });
   }
@@ -830,7 +924,7 @@ export class ProfileComponent {
           const updatedProfile: User = { ...profile, photoURL: base64Image, updatedAt: new Date() };
           this.userProfile.set(updatedProfile);
           
-          this.isLoading.set(true);
+          this.isActionLoading.set(true);
           try {
             if (this.userService.isGuestUser()) {
               this.userService.storageService.setItem(`user-data-${updatedProfile.uid}`, updatedProfile);
@@ -847,7 +941,7 @@ export class ProfileComponent {
             console.error('Error saving profile picture:', error);
             this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);
           } finally {
-            this.isLoading.set(false);
+            this.isActionLoading.set(false);
           }
         }
       };
@@ -859,39 +953,14 @@ export class ProfileComponent {
 
   // ─── Utility Methods ──────────────────────────────────────────────
 
-  getTimezoneLabel(timezoneValue: string): string {
-    const timezone = this.timezones.find((t) => t.value === timezoneValue);
-    return timezone ? timezone.label : timezoneValue;
-  }
-
-  getLanguageName(languageCode: string): string {
-    const language = Object.values(APP_CONFIG.REGIONAL.COUNTRY_MAPPING)
-      .flatMap(config => (config as any).languages || [])
-      .find(l => l.code === languageCode);
-    return language?.name || languageCode;
-  }
-
   private deriveCountryFromLanguage(language: string): string {
-    const entry = Object.entries(APP_CONFIG.REGIONAL.COUNTRY_MAPPING).find(([code, c]) =>
-      (c as any).languages?.some((l: any) => l.code === language)
-    );
-    return entry ? entry[0] : 'IN';
+    return this.countries.find(c => c.language === language)?.code || 'IN';
   }
 
-  getFormattedDate(date: any): string {
-    if (!date) return 'N/A';
-    if (date?.seconds) {
-      return dayjs(date.seconds * 1000).format('MMM DD, YYYY');
-    }
-    return dayjs(date).format('MMM DD, YYYY');
-  }
 
-  onlyNumbers(event: any): boolean {
-    const charCode = (event.which) ? event.which : event.keyCode;
-    if (charCode > 31 && (charCode < 48 || charCode > 57)) {
-      return false;
-    }
-    return true;
+  onlyNumbers(event: KeyboardEvent): boolean {
+    const charCode = event.which || event.keyCode;
+    return charCode <= 31 || (charCode >= 48 && charCode <= 57);
   }
 
   async updatePin(): Promise<void> {
@@ -904,8 +973,8 @@ export class ProfileComponent {
         pinEnabled: true
       });
 
-      this.profileForm.get('preferences.pinEnabled')?.setValue(true);
-      this.profileForm.get('preferences.pinEnabled')?.enable();
+      this.profileForm.get('preferences.pinEnabled')?.setValue(true, { emitEvent: false });
+      this.profileForm.get('preferences.pinEnabled')?.enable({ emitEvent: false });
       this.newPinControl.reset();
       this.showPinSetup.set(false);
       this.notificationService.success('PIN updated successfully. Remember to save your changes.');
