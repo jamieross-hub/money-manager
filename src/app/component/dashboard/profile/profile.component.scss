@@ -813,7 +813,7 @@ button {
     background-color: var(--primary-50) !important;
     box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
 
-    [data-theme='dark'] &, .dark-theme &, .midnight-theme & {
+    [data-theme='dark'] &, .dark-theme &, .midnight-theme &, .cyberpunk-theme &, .emerald-theme &, .dracula-theme & {
       background-color: rgba(var(--primary-rgb), 0.1) !important;
       border-color: var(--primary-400) !important;
     }
@@ -822,7 +822,7 @@ button {
       color: var(--primary-700) !important;
       font-weight: 600 !important;
 
-      [data-theme='dark'] &, .dark-theme &, .midnight-theme & {
+      [data-theme='dark'] &, .dark-theme &, .midnight-theme &, .cyberpunk-theme &, .emerald-theme &, .dracula-theme & {
         color: var(--primary-300) !important;
       }
     }
@@ -832,7 +832,7 @@ button {
 .theme-preview {
   transition: border-color 0.3s ease;
   
-  [data-theme='dark'] &, .dark-theme &, .midnight-theme & {
+  [data-theme='dark'] &, .dark-theme &, .midnight-theme &, .cyberpunk-theme &, .emerald-theme &, .dracula-theme & {
     border-color: var(--neutral-800);
   }
 }

@@ -1,0 +1,78 @@
+@use 'sass:map';
+@use '@angular/material' as mat;
+
+$_palettes: (
+  primary: (
+    0: #000000, 10: #001e30, 20: #00344f, 25: #004161, 30: #004d73, 35: #005a85, 
+    40: #006697, 50: #007fb9, 60: #0099dc, 70: #33b3ff, 80: #66ccff, 90: #b8e6ff, 
+    95: #dcfffb, 98: #f0faff, 99: #f8fcff, 100: #ffffff,
+  ),
+  secondary: (
+    0: #000000, 10: #001f29, 20: #003643, 25: #004252, 30: #004f62, 35: #005c71, 
+    40: #006981, 50: #0085a3, 60: #00a2c5, 70: #33bee6, 80: #66dbff, 90: #bdf1ff, 
+    95: #def8ff, 98: #f0faff, 99: #f8fcff, 100: #ffffff,
+  ),
+  tertiary: (
+    0: #000000, 10: #0f1831, 20: #252e47, 25: #303954, 30: #3b4560, 35: #47516d, 
+    40: #535d79, 50: #6c7694, 60: #858faf, 70: #a0aacc, 80: #bbc6e9, 90: #dce1f8, 
+    95: #edf0ff, 98: #f5f7ff, 99: #fafbff, 100: #ffffff,
+  ),
+  neutral: (
+    0: #000000, 4: #050608, 6: #0a0d11, 10: #141a21, 12: #181f28, 17: #222c37, 
+    20: #26313e, 22: #2b3846, 24: #2f3e4e, 25: #314051, 30: #3b4e61, 35: #465c71, 
+    40: #516a82, 50: #6c88a4, 60: #88a5c6, 70: #a5c3e7, 80: #c2e0ff, 87: #daf1ff, 
+    90: #e6f6ff, 92: #ebf8ff, 94: #f1faff, 95: #f4fcff, 96: #f7fcff, 98: #fcfdfe, 
+    99: #fdfefe, 100: #ffffff,
+  ),
+  neutral-variant: (
+    0: #000000, 10: #131d25, 20: #27323b, 25: #313d47, 30: #3c4853, 35: #48545f, 
+    40: #54606b, 50: #6c7987, 60: #8693a1, 70: #a0aebd, 80: #bbc9d9, 90: #d7e4f6, 
+    95: #e6f1ff, 98: #f5faff, 99: #fdfefe, 100: #ffffff,
+  ),
+  error: (
+    0: #000000, 10: #410002, 20: #690005, 25: #7e0007, 30: #93000a, 35: #a80710, 
+    40: #ba1a1a, 50: #de3730, 60: #ff5449, 70: #ff897d, 80: #ffb4ab, 90: #ffdad6, 
+    95: #ffedea, 98: #fff8f7, 99: #fffbff, 100: #ffffff,
+  ),
+);
+
+$_rest: (
+  secondary: map.get($_palettes, secondary),
+  neutral: map.get($_palettes, neutral),
+  neutral-variant: map.get($_palettes, neutral-variant),
+  error: map.get($_palettes, error),
+);
+$_primary: map.merge(map.get($_palettes, primary), $_rest);
+$_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
+
+$nordic-theme: mat.define-theme(
+  (
+    color: (
+      theme-type: light,
+      primary: $_primary,
+      tertiary: $_tertiary,
+    ),
+  )
+);
+
+.nordic-theme {
+  @include mat.all-component-themes($nordic-theme);
+
+  background-color: #f7ffff;
+  color: #2b3846;
+
+  .text-brand {
+    color: #007fb9;
+  }
+
+  .mat-mdc-card {
+    background-color: #ffffff !important;
+    border: 1px solid #e0f0f8;
+    box-shadow: 0 4px 15px rgba(0, 127, 185, 0.05) !important;
+  }
+
+  .mat-mdc-dialog-container {
+    background-color: #fafdff !important;
+    border: 1px solid #c8e0f0;
+  }
+}

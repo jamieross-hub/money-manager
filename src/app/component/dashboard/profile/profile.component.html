@@ -146,7 +146,7 @@
             <mat-expansion-panel-header>
               <mat-panel-title class="flex items-center gap-2">
                 <mat-icon class="section-icon">person</mat-icon>
-                <p class="text-sm font-medium  text-gray-700 !mb-0 dark:text-gray-200">{{
+                <p class="text-sm font-medium  text-neutral-900 !mb-0">{{
                 'PROFILE.PERSONAL_INFO' | translate }}</p>
               </mat-panel-title>
 
@@ -263,7 +263,7 @@
             <mat-expansion-panel-header>
               <mat-panel-title class="flex items-center gap-2">
                 <mat-icon class="section-icon">settings</mat-icon>
-                <p class="text-sm font-medium text-gray-700 !mb-0 dark:text-gray-200">{{
+                <p class="text-sm font-medium !mb-0">{{
                 'PROFILE.PREFERENCES' | translate }}</p>
               </mat-panel-title>
 
@@ -411,7 +411,7 @@
           <mat-expansion-panel-header>
             <mat-panel-title class="flex items-center gap-2">
               <mat-icon class="section-icon">palette</mat-icon>
-              <p class="text-sm font-medium text-gray-700 !mb-0 dark:text-gray-200">Appearance</p>
+              <p class="text-sm font-medium !mb-0">Appearance</p>
             </mat-panel-title>
           </mat-expansion-panel-header>
 
@@ -497,6 +497,38 @@
                       <span class="text-sm">Monochrome</span>
                     </div>
                   </mat-option>
+                  
+                  <!-- 5 Trending specialty Themes -->
+                  <mat-option value="cyberpunk-theme">
+                    <div class="flex items-center gap-2">
+                      <div class="w-3 h-3 rounded-full bg-[#ecaef5] shadow-sm"></div>
+                      <span class="text-sm">Cyberpunk Neon</span>
+                    </div>
+                  </mat-option>
+                  <mat-option value="emerald-theme">
+                    <div class="flex items-center gap-2">
+                      <div class="w-3 h-3 rounded-full bg-[#00de91] shadow-sm"></div>
+                      <span class="text-sm">Emerald Forest</span>
+                    </div>
+                  </mat-option>
+                  <mat-option value="nordic-theme">
+                    <div class="flex items-center gap-2">
+                      <div class="w-3 h-3 rounded-full bg-[#0099dc] border border-gray-100 shadow-sm"></div>
+                      <span class="text-sm">Nordic Slate</span>
+                    </div>
+                  </mat-option>
+                  <mat-option value="sunset-theme">
+                    <div class="flex items-center gap-2">
+                      <div class="w-3 h-3 rounded-full bg-[#fbb308] shadow-sm"></div>
+                      <span class="text-sm">Sunset Warmth</span>
+                    </div>
+                  </mat-option>
+                  <mat-option value="dracula-theme">
+                    <div class="flex items-center gap-2">
+                      <div class="w-3 h-3 rounded-full bg-[#a55cff] shadow-sm"></div>
+                      <span class="text-sm">Dracula Violet</span>
+                    </div>
+                  </mat-option>
                 </mat-select>
               </mat-form-field>
             </div>
@@ -510,7 +542,7 @@
             <mat-expansion-panel-header>
               <mat-panel-title class="flex items-center gap-2">
                 <mat-icon class="section-icon">family_restroom</mat-icon>
-                <p class="text-sm font-medium text-gray-700 !mb-0 dark:text-gray-200">
+                <p class="text-sm font-medium !mb-0">
                   Family Group
                 </p>
               </mat-panel-title>
@@ -621,7 +653,7 @@
       <mat-expansion-panel-header>
         <mat-panel-title class="flex items-center gap-2">
           <mat-icon class="section-icon">security</mat-icon>
-          <p class="text-sm font-medium text-gray-700 !mb-0 dark:text-gray-200">{{
+          <p class="text-sm font-medium !mb-0">{{
           'PROFILE.ACCOUNT_ACTIONS' | translate }}</p>
         </mat-panel-title>
       </mat-expansion-panel-header>

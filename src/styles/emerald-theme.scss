@@ -1,0 +1,78 @@
+@use 'sass:map';
+@use '@angular/material' as mat;
+
+$_palettes: (
+  primary: (
+    0: #000000, 10: #002113, 20: #003822, 25: #00452a, 30: #005334, 35: #00603d, 
+    40: #006e46, 50: #008959, 60: #00a46b, 70: #00c17e, 80: #00de91, 90: #00fca5, 
+    95: #adffd8, 98: #e0fff0, 99: #f0fff6, 100: #ffffff,
+  ),
+  secondary: (
+    0: #000000, 10: #00201a, 20: #00372e, 25: #004439, 30: #005144, 35: #005f50, 
+    40: #006c5c, 50: #008773, 60: #00a38b, 70: #0bbf9f, 80: #3edaba, 90: #66f6d6, 
+    95: #adffeb, 98: #e0fff6, 99: #f0fffa, 100: #ffffff,
+  ),
+  tertiary: (
+    0: #000000, 10: #001f28, 20: #003544, 25: #004153, 30: #004e63, 35: #005a72, 
+    40: #006782, 50: #0081a2, 60: #009cc2, 70: #00b9e2, 80: #00d5ff, 90: #66e5ff, 
+    95: #adfbff, 98: #e0fdff, 99: #f0feff, 100: #ffffff,
+  ),
+  neutral: (
+    0: #000000, 4: #030605, 6: #080b09, 10: #101512, 12: #141a16, 17: #1c241f, 
+    20: #202b25, 22: #25312a, 24: #29372e, 25: #2c3931, 30: #35453b, 35: #3f5246, 
+    40: #495e51, 50: #627b6c, 60: #7a9686, 70: #93b2a0, 80: #adcfbb, 87: #c4e4d1, 
+    90: #ccecda, 92: #d1f1df, 94: #d7f6e4, 95: #daf9e7, 96: #ddfce9, 98: #e4ffef, 
+    99: #f4fffa, 100: #ffffff,
+  ),
+  neutral-variant: (
+    0: #000000, 10: #051911, 20: #132d22, 25: #1d382c, 30: #274436, 35: #31503f, 
+    40: #3c5d4a, 50: #547661, 60: #6d907a, 70: #87ab94, 80: #a1c7ae, 90: #bce3c9, 
+    95: #caedd7, 98: #dcf7e7, 99: #e6fdf1, 100: #ffffff,
+  ),
+  error: (
+    0: #000000, 10: #410002, 20: #690005, 25: #7e0007, 30: #93000a, 35: #a80710, 
+    40: #ba1a1a, 50: #de3730, 60: #ff5449, 70: #ff897d, 80: #ffb4ab, 90: #ffdad6, 
+    95: #ffedea, 98: #fff8f7, 99: #fffbff, 100: #ffffff,
+  ),
+);
+
+$_rest: (
+  secondary: map.get($_palettes, secondary),
+  neutral: map.get($_palettes, neutral),
+  neutral-variant: map.get($_palettes, neutral-variant),
+  error: map.get($_palettes, error),
+);
+$_primary: map.merge(map.get($_palettes, primary), $_rest);
+$_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
+
+$emerald-theme: mat.define-theme(
+  (
+    color: (
+      theme-type: dark,
+      primary: $_primary,
+      tertiary: $_tertiary,
+    ),
+  )
+);
+
+.emerald-theme {
+  @include mat.all-component-themes($emerald-theme);
+
+  background-color: #030605;
+  color: #adcfbb;
+
+  .text-brand {
+    color: #00de91;
+  }
+
+  .mat-mdc-card {
+    background-color: #101512 !important;
+    border: 1px solid #1c241f;
+    box-shadow: 0 4px 20px rgba(0, 222, 145, 0.05) !important;
+  }
+
+  .mat-mdc-dialog-container {
+    background-color: #0a0e0c !important;
+    border: 1px solid #141a16;
+  }
+}

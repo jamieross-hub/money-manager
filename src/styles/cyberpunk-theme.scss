@@ -1,0 +1,78 @@
+@use 'sass:map';
+@use '@angular/material' as mat;
+
+$_palettes: (
+  primary: (
+    0: #000000, 10: #1b0021, 20: #330040, 25: #440055, 30: #55006a, 35: #660080, 
+    40: #770094, 50: #a333c8, 60: #bb66d8, 70: #d499e8, 80: #ecaef5, 90: #f8dbfa, 
+    95: #fdf2fb, 98: #fef8fc, 99: #fffbfd, 100: #ffffff,
+  ),
+  secondary: (
+    0: #000000, 10: #001f24, 20: #00363d, 25: #00424b, 30: #004f5a, 35: #005c69, 
+    40: #006978, 50: #008496, 60: #00a0b6, 70: #33bcd0, 80: #66d8ea, 90: #99edf7, 
+    95: #ccf6fb, 98: #e6fafc, 99: #f2fdfd, 100: #ffffff,
+  ),
+  tertiary: (
+    0: #000000, 10: #2a0017, 20: #4a0029, 25: #5e0034, 30: #6e003d, 35: #7f0048, 
+    40: #900052, 50: #c11f77, 60: #d65c9c, 70: #e88dc0, 80: #f6bce0, 90: #fde4f2, 
+    95: #fef2f8, 98: #fef8fb, 99: #fffbfc, 100: #ffffff,
+  ),
+  neutral: (
+    0: #000000, 4: #05020a, 6: #0a0412, 10: #140924, 12: #190b2d, 17: #230f3f, 
+    20: #29124a, 22: #2f1454, 24: #35175f, 25: #381864, 30: #441d7a, 35: #512290, 
+    40: #5d28a7, 50: #7a3bcd, 60: #9661db, 70: #b38ae4, 80: #cfb2ed, 87: #e2cff4, 
+    90: #e9dbf7, 92: #eedffa, 94: #f3e6fb, 95: #f6eafc, 96: #f8effd, 98: #fdf5fe, 
+    99: #fefaff, 100: #ffffff,
+  ),
+  neutral-variant: (
+    0: #000000, 10: #160a25, 20: #2b153f, 25: #351c4b, 30: #402358, 35: #4a2965, 
+    40: #552f71, 50: #6d428e, 60: #865bad, 70: #a179c9, 80: #bd9ce5, 90: #dbcdfb, 
+    95: #ebdefd, 98: #f5effe, 99: #faf7ff, 100: #ffffff,
+  ),
+  error: (
+    0: #000000, 10: #410002, 20: #690005, 25: #7e0007, 30: #93000a, 35: #a80710, 
+    40: #ba1a1a, 50: #de3730, 60: #ff5449, 70: #ff897d, 80: #ffb4ab, 90: #ffdad6, 
+    95: #ffedea, 98: #fff8f7, 99: #fffbff, 100: #ffffff,
+  ),
+);
+
+$_rest: (
+  secondary: map.get($_palettes, secondary),
+  neutral: map.get($_palettes, neutral),
+  neutral-variant: map.get($_palettes, neutral-variant),
+  error: map.get($_palettes, error),
+);
+$_primary: map.merge(map.get($_palettes, primary), $_rest);
+$_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
+
+$cyberpunk-theme: mat.define-theme(
+  (
+    color: (
+      theme-type: dark,
+      primary: $_primary,
+      tertiary: $_tertiary,
+    ),
+  )
+);
+
+.cyberpunk-theme {
+  @include mat.all-component-themes($cyberpunk-theme);
+
+  background-color: #06020e;
+  color: #fdf2fb;
+
+  .text-brand {
+    color: #ecaef5;
+  }
+
+  .mat-mdc-card {
+    background-color: #0c0419 !important;
+    border: 1px solid #330040;
+    box-shadow: 0 4px 25px rgba(187, 102, 216, 0.15) !important;
+  }
+
+  .mat-mdc-dialog-container {
+    background-color: #0a0314 !important;
+    border: 1px solid #440055;
+  }
+}

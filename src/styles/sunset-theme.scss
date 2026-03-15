@@ -1,0 +1,77 @@
+@use 'sass:map';
+@use '@angular/material' as mat;
+
+$_palettes: (
+  primary: (
+    0: #000000, 10: #291800, 20: #452b00, 25: #533500, 30: #624000, 35: #714a00, 
+    40: #815500, 50: #9e6b00, 60: #bc8200, 70: #db9a00, 80: #fbb308, 90: #ffdfa2, 
+    95: #ffeed3, 98: #fff8f0, 99: #fffbff, 100: #ffffff,
+  ),
+  secondary: (
+    0: #000000, 10: #2b1710, 20: #442a22, 25: #51352c, 30: #5f4136, 35: #6c4d41, 
+    40: #7a5a4c, 50: #947264, 60: #af8b7c, 70: #cba796, 80: #e8c2b1, 90: #ffdfd1, 
+    95: #ffeed3, 98: #fff5ef, 99: #fffbff, 100: #ffffff,
+  ),
+  tertiary: (
+    0: #000000, 10: #261917, 20: #3b2c2a, 25: #473835, 30: #534340, 35: #5f4f4c, 
+    40: #6c5c58, 50: #867470, 60: #9f8d88, 70: #baaba5, 80: #d6c6c1, 90: #f2e2dc, 
+    95: #fcf1eb, 98: #fffaf7, 99: #fffbff, 100: #ffffff,
+  ),
+  neutral: (
+    0: #000000, 4: #080605, 6: #0d0a09, 10: #171311, 12: #1c1815, 17: #26211e, 
+    20: #2b2622, 22: #302b27, 24: #35302b, 25: #38322e, 30: #443c37, 35: #504740, 
+    40: #5c524b, 70: #aa9c95, 80: #c9bcba, 87: #e2d6d4, 90: #eadfdd, 92: #f0e5e3, 
+    94: #f4eae9, 95: #f7eee9, 96: #f9f2ed, 98: #fbefe6, 99: #fffaee, 100: #ffffff,
+  ),
+  neutral-variant: (
+    0: #000000, 10: #201b17, 20: #352f2a, 25: #403a35, 30: #4a4540, 35: #554f4b, 
+    40: #615a56, 50: #7a736d, 60: #948d86, 70: #aaa29b, 80: #c8bfba, 90: #e4dbd6, 
+    95: #f2eee9, 98: #f9f5f0, 99: #fffcf8, 100: #ffffff,
+  ),
+  error: (
+    0: #000000, 10: #410002, 20: #690005, 25: #7e0007, 30: #93000a, 35: #a80710, 
+    40: #ba1a1a, 50: #de3730, 60: #ff5449, 70: #ff897d, 80: #ffb4ab, 90: #ffdad6, 
+    95: #ffedea, 98: #fff8f7, 99: #fffbff, 100: #ffffff,
+  ),
+);
+
+$_rest: (
+  secondary: map.get($_palettes, secondary),
+  neutral: map.get($_palettes, neutral),
+  neutral-variant: map.get($_palettes, neutral-variant),
+  error: map.get($_palettes, error),
+);
+$_primary: map.merge(map.get($_palettes, primary), $_rest);
+$_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
+
+$sunset-theme: mat.define-theme(
+  (
+    color: (
+      theme-type: light,
+      primary: $_primary,
+      tertiary: $_tertiary,
+    ),
+  )
+);
+
+.sunset-theme {
+  @include mat.all-component-themes($sunset-theme);
+
+  background-color: #fff9f2;
+  color: #3b2c2a;
+
+  .text-brand {
+    color: #bc8200;
+  }
+
+  .mat-mdc-card {
+    background-color: #ffffff !important;
+    border: 1px solid #f2e2dc;
+    box-shadow: 0 4px 15px rgba(188, 130, 0, 0.04) !important;
+  }
+
+  .mat-mdc-dialog-container {
+    background-color: #fffaf4 !important;
+    border: 1px solid #f5dfbe;
+  }
+}

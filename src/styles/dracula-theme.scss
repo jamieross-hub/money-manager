@@ -1,0 +1,78 @@
+@use 'sass:map';
+@use '@angular/material' as mat;
+
+$_palettes: (
+  primary: (
+    0: #000000, 10: #20004c, 20: #38007a, 25: #450095, 30: #5200af, 35: #5e00c8, 
+    40: #6b00df, 50: #8928f5, 60: #a55cff, 70: #c18aff, 80: #dbb8ff, 90: #f1dbff, 
+    95: #f9edff, 98: #fdf7ff, 99: #fefbff, 100: #ffffff,
+  ),
+  secondary: (
+    0: #000000, 10: #1b1120, 20: #302436, 25: #3c2e42, 30: #47394e, 35: #54455b, 
+    40: #605167, 50: #7a6a81, 60: #94839b, 70: #af9db6, 80: #cbb8d1, 90: #e8d4ed, 
+    95: #f6e2fb, 98: #fff0ff, 99: #fefeef, 100: #ffffff,
+  ),
+  tertiary: (
+    0: #000000, 10: #251412, 20: #3c2724, 25: #49322e, 30: #563d39, 35: #634844, 
+    40: #71544f, 50: #8c6c66, 60: #a8857f, 70: #c49f99, 80: #e1bab3, 90: #ffdcd4, 
+    95: #ffede8, 98: #fff8f6, 99: #fffbff, 100: #ffffff,
+  ),
+  neutral: (
+    0: #000000, 4: #080310, 6: #0d0617, 10: #160c25, 12: #1b0f2e, 17: #25163f, 
+    20: #2b1a4a, 22: #321e56, 24: #382161, 25: #3a2265, 30: #462a79, 35: #52318d, 
+    40: #5e39a2, 50: #7a50ca, 60: #956ddf, 70: #b18eed, 80: #cdb2fa, 87: #e0ceff, 
+    90: #e9dbff, 92: #eedeff, 94: #f3e6ff, 95: #f6eaff, 96: #f8efff, 98: #fcf5ff, 
+    99: #fdfaff, 100: #ffffff,
+  ),
+  neutral-variant: (
+    0: #000000, 10: #1a0f2e, 20: #301f4a, 25: #3c285a, 30: #48326a, 35: #543c7b, 
+    40: #61468c, 50: #795da5, 60: #9377be, 70: #ad91d8, 80: #c9acf2, 90: #e6c8ff, 
+    95: #f3e2ff, 98: #faf2ff, 99: #fffaff, 100: #ffffff,
+  ),
+  error: (
+    0: #000000, 10: #410002, 20: #690005, 25: #7e0007, 30: #93000a, 35: #a80710, 
+    40: #ba1a1a, 50: #de3730, 60: #ff5449, 70: #ff897d, 80: #ffb4ab, 90: #ffdad6, 
+    95: #ffedea, 98: #fff8f7, 99: #fffbff, 100: #ffffff,
+  ),
+);
+
+$_rest: (
+  secondary: map.get($_palettes, secondary),
+  neutral: map.get($_palettes, neutral),
+  neutral-variant: map.get($_palettes, neutral-variant),
+  error: map.get($_palettes, error),
+);
+$_primary: map.merge(map.get($_palettes, primary), $_rest);
+$_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
+
+$dracula-theme: mat.define-theme(
+  (
+    color: (
+      theme-type: dark,
+      primary: $_primary,
+      tertiary: $_tertiary,
+    ),
+  )
+);
+
+.dracula-theme {
+  @include mat.all-component-themes($dracula-theme);
+
+  background-color: #0c0716;
+  color: #dbb8ff;
+
+  .text-brand {
+    color: #a55cff;
+  }
+
+  .mat-mdc-card {
+    background-color: #160c25 !important;
+    border: 1px solid #301f4a;
+    box-shadow: 0 4px 20px rgba(165, 92, 255, 0.05) !important;
+  }
+
+  .mat-mdc-dialog-container {
+    background-color: #12091e !important;
+    border: 1px solid #25163f;
+  }
+}

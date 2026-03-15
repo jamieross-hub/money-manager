@@ -3,6 +3,7 @@
 @use './dark-theme' as dark;
 @use './midnight-theme' as midnight;
 @use './monochrome-theme' as mono;
+@use './custom-themes-variables';
 
 @use './notification.scss';
 @use './dialog.scss';
