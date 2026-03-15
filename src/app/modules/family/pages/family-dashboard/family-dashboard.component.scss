@@ -1,12 +1,22 @@
 .header-section {
   background: repeating-linear-gradient(
     135deg,
-    var(--primary-300),
-    var(--primary-200) 4px,
-    var(--primary-300) 15px,
-    var(--primary-300) 13px);
+    var(--surface-100),
+    var(--surface-200) 4px,
+    var(--surface-300) 15px,
+    var(--surface-300) 13px);
   background-size: cover;
   background-position: center;
+
+  // :host-context(.dark-theme) & {
+  //   background: repeating-linear-gradient(
+  //     135deg,
+  //     var(--surface-100),
+  //     color-mix(in srgb, var(--primary-900), transparent 50%) 4px,
+  //     var(--surface-100) 15px,
+  //     color-mix(in srgb, var(--primary-800), transparent 70%) 13px
+  //   );
+  // }
 
   &.has-banner {
     background-size: cover;
