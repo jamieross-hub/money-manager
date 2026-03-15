@@ -82,7 +82,10 @@ export class FamilyCreateDialogComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
-    this.mobileBackButtonService.openModal('family-create', () => this.close());
+    const ref = this.bottomSheetRef || this.dialogRef;
+    if (ref) {
+      this.mobileBackButtonService.openModal('family-create', ref);
+    }
     
     if (this.isEditMode()) {
       const family = this.data.family;
@@ -101,7 +104,6 @@ export class FamilyCreateDialogComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.mobileBackButtonService.closeModal('family-create');
   }
 
   selectIcon(icon: string): void {

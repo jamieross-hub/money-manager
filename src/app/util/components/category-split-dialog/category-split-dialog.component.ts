@@ -17,6 +17,7 @@ import { CategorySplit } from '../../models/transaction.model';
 import { AppState } from '../../../store/app.state';
 import { NotificationService } from '../../service/notification.service';
 import * as CategoriesSelectors from '../../../store/categories/categories.selectors';
+import { MobileBackButtonService } from '../../service/mobile-back-button.service';
 
 @Component({
   selector: 'app-category-split-dialog',
@@ -55,7 +56,8 @@ export class CategorySplitDialogComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<CategorySplitDialogComponent>,
     private store: Store<AppState>,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private mobileBackButtonService: MobileBackButtonService
   ) {
     this.totalAmount = data.totalAmount;
     this.categories$ = this.store.select(CategoriesSelectors.selectAllCategories);
@@ -71,6 +73,7 @@ export class CategorySplitDialogComponent implements OnInit, OnDestroy {
 
 
   ngOnInit(): void {
+    this.mobileBackButtonService.openModal('category-split', this.dialogRef);
     if (this.data.existingSplits && this.data.existingSplits.length > 0) {
       this.data.existingSplits.forEach(split => {
         this.addSplit(split);

@@ -220,9 +220,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
     this.userId.set(this.userService.getCurrentUserId() || '');
 
     // Register mobile back button interceptor
-    this.mobileBackButtonService.openModal('category-add-edit', () => {
-      this.dialogRef.close();
-    });
+    this.mobileBackButtonService.openModal('category-add-edit', this.dialogRef, { allowBackNavigation: false });
 
     if (this.dialogData) {
       this.categoryForm.patchValue({
@@ -374,7 +372,6 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.mobileBackButtonService.closeModal('category-add-edit');
   }
 }
 

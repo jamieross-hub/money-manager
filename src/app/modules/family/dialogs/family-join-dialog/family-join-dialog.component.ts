@@ -28,11 +28,13 @@ export class FamilyJoinDialogComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
-    this.mobileBackButtonService.openModal('family-join', () => this.close());
+    const ref = this.bottomSheetRef || this.dialogRef;
+    if (ref) {
+      this.mobileBackButtonService.openModal('family-join', ref);
+    }
   }
 
   ngOnDestroy() {
-    this.mobileBackButtonService.closeModal('family-join');
   }
 
   onCodeInput(event: any) {

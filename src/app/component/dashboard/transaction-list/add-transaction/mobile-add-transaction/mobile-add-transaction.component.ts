@@ -125,6 +125,9 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   public recurringMaxDate: string;
   public categorySplits: CategorySplit[] = [];
   public isCategorySplit = signal(false);
+  private categoryDialogRef: MatDialogRef<MobileCategoryAddEditPopupComponent> | null = null;
+  private accountDialogRef: MatDialogRef<AddAccountDialogComponent> | null = null;
+  private categorySplitDialogRef: MatDialogRef<CategorySplitDialogComponent> | null = null;
   private readonly _store = inject(Store<AppState>);
   private readonly familyService = inject(FamilyService);
   public isFamilyMode = toSignal(
@@ -265,10 +268,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     this.isMobile = this.breakpointObserver.isMatched('(max-width: 640px)');
 
     // Intercept hardware back button on mobile
-    this.mobileBackButtonService.openModal('add-transaction', () => {
-      this.dialogRef.close();
-    });
-
+    this.mobileBackButtonService.openModal('add-transaction', this.dialogRef, { allowBackNavigation: false });
+    
     // Handle disabled state for reserved categories or view mode
     effect(() => {
       const isReserved = this.isReservedCategory();
@@ -1018,11 +1019,14 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   }
 
   openNewAccountDialog(): void {
-    this.dialog.open(AddAccountDialogComponent, {
+    this.accountDialogRef = this.dialog.open(AddAccountDialogComponent, {
       data: null, // null for new account
       disableClose: true,
+      closeOnNavigation: false,
       panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
-    }).afterClosed().subscribe((account: any) => {
+    });
+    
+    this.accountDialogRef.afterClosed().subscribe((account: any) => {
       if (account) {
         this.store.dispatch(loadAccounts({ userId: this.userId }));
       }
@@ -1030,21 +1034,23 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   }
 
   openEditAccountDialog(account: any): void {
-    this.dialog.open(AddAccountDialogComponent, {
+    this.accountDialogRef = this.dialog.open(AddAccountDialogComponent, {
       data: account, // existing account data
       disableClose: true,
+      closeOnNavigation: false,
       panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
     });
   }
 
   openNewCategoryDialog(): void {
-    const dialogRef = this.dialog.open(MobileCategoryAddEditPopupComponent, {
+    this.categoryDialogRef = this.dialog.open(MobileCategoryAddEditPopupComponent, {
       data: null, // null for new category
       disableClose: true,
+      closeOnNavigation: false,
       panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
     });
 
-    dialogRef.afterClosed().subscribe((result: any) => {
+    this.categoryDialogRef.afterClosed().subscribe((result: any) => {
       if (result && typeof result === 'object' && result.name) {
         // Wait for the store to update the categories list, then select it
         this.categoryList$.pipe(
@@ -1371,9 +1377,10 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
 
   openCategorySplitDialog(): void {
-    const dialogRef = this.dialog.open(CategorySplitDialogComponent, {
+    this.categorySplitDialogRef = this.dialog.open(CategorySplitDialogComponent, {
       width: '600px',
       maxWidth: '90vw',
+      closeOnNavigation: false,
       data: {
         totalAmount: this.transactionForm.get('amount')?.value || 0,
         existingSplits: this.categorySplits,
@@ -1381,7 +1388,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       }
     });
 
-    dialogRef.afterClosed().subscribe((result: CategorySplit[] | undefined) => {
+    this.categorySplitDialogRef.afterClosed().subscribe((result: CategorySplit[] | undefined) => {
       if (result) {
         this.categorySplits = result;
         this.isCategorySplit.set(true);
@@ -1415,8 +1422,6 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   }
 
   ngOnDestroy() {
-    this.mobileBackButtonService.closeModal('add-transaction');
-
     this._onDestroy.next();
     this._onDestroy.complete();
   }

@@ -200,13 +200,10 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.currentUserId.set(this.userService.getCurrentUserId() || '');
-    this.mobileBackButtonService.openModal('add-account', () => {
-      this.dialogRef.close();
-    });
+    this.mobileBackButtonService.openModal('add-account', this.dialogRef);
   }
 
   ngOnDestroy(): void {
-    this.mobileBackButtonService.closeModal('add-account');
     this.destroy$.next();
     this.destroy$.complete();
   }
