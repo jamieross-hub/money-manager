@@ -7,7 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 
-import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
+
 
 @Component({
   selector: 'app-family-join-dialog',
@@ -17,22 +17,17 @@ import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button
   templateUrl: './family-join-dialog.component.html',
   styleUrls: ['./family-join-dialog.component.scss']
 })
-export class FamilyJoinDialogComponent implements OnInit, OnDestroy {
+export class FamilyJoinDialogComponent implements OnDestroy {
   private fb = inject(FormBuilder);
   private dialogRef = inject(MatDialogRef<FamilyJoinDialogComponent>, { optional: true });
   private bottomSheetRef = inject(MatBottomSheetRef<FamilyJoinDialogComponent>, { optional: true });
-  private mobileBackButtonService = inject(MobileBackButtonService);
+
 
   form = this.fb.group({
     inviteCode: ['', [Validators.required, Validators.pattern(/^[A-Z0-9]{4}$/)]],
   });
 
-  ngOnInit() {
-    const ref = this.bottomSheetRef || this.dialogRef;
-    if (ref) {
-      this.mobileBackButtonService.openModal('family-join', ref);
-    }
-  }
+
 
   ngOnDestroy() {
   }

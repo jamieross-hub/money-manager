@@ -57,7 +57,7 @@ import { FamilyService } from 'src/app/modules/family/services/family.service';
 import { FamilyMember, SplitBetweenMember, PaidByMember } from 'src/app/util/models/family.model';
 import { MultiplePaidBySheetComponent } from './multiple-paid-by-sheet/multiple-paid-by-sheet.component';
 import { SplitConfigSheetComponent, SplitConfigSheetData, SplitMode } from './split-config-sheet/split-config-sheet.component';
-import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
+
 import { ImageFallbackDirective } from 'src/app/util/directives';
 import { APP_CONFIG } from 'src/app/util/config/config';
 import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
@@ -195,7 +195,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     private currencyService: CurrencyService,
     private bottomSheet: MatBottomSheet,
     private cdr: ChangeDetectorRef,
-    private mobileBackButtonService: MobileBackButtonService,
+
     private recurringService: RecurringService
   ) {
     this.isGuestUser = this.userService.isGuestUser();
@@ -267,8 +267,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
     this.isMobile = this.breakpointObserver.isMatched('(max-width: 640px)');
 
-    // Intercept hardware back button on mobile
-    this.mobileBackButtonService.openModal('add-transaction', this.dialogRef, { allowBackNavigation: false });
+
     
     // Handle disabled state for reserved categories or view mode
     effect(() => {

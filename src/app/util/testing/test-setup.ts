@@ -23,7 +23,7 @@ import { LocalIndexDBStorageService } from '../service/indexdb-storage.service';
 import { SwUpdate } from '@angular/service-worker';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { OverlayContainer } from '@angular/cdk/overlay';
-import { MobileBackButtonService } from '../service/mobile-back-button.service';
+
 import { FamilyNotificationService } from '../../modules/family/services/family-notification.service';
 import { TransactionProcessorService } from '../service/transaction-processor.service';
 import { SsrService } from '../service/ssr.service';
@@ -251,9 +251,7 @@ export class TestSetup {
     };
   }
 
-  static getMockMobileBackButtonService() {
-    return jasmine.createSpyObj('MobileBackButtonService', ['hasOpenModals', 'popModal']);
-  }
+
 
   static getMockSsrService() {
     return jasmine.createSpyObj('SsrService', ['isClientSide'], {
@@ -324,7 +322,7 @@ export class TestSetup {
       { provide: SecurityService, useValue: TestSetup.getMockSecurityService() },
       { provide: LocalIndexDBStorageService, useValue: TestSetup.getMockLocalStorageService() },
       { provide: SwUpdate, useValue: TestSetup.getMockSwUpdate() },
-      { provide: MobileBackButtonService, useValue: TestSetup.getMockMobileBackButtonService() },
+
       { provide: SsrService, useValue: TestSetup.getMockSsrService() },
       { provide: PwaNavigationService, useValue: TestSetup.getMockPwaNavigationService() },
       { provide: ThemeSwitchingService, useValue: TestSetup.getMockThemeSwitchingService() },

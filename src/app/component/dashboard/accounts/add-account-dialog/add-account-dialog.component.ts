@@ -17,7 +17,7 @@ import { CATEGORY_COLORS, CATEGORY_ICONS, ACCOUNT_ICONS, CategoryIcon } from 'sr
 import { MatBottomSheet, MatBottomSheetModule } from '@angular/material/bottom-sheet';
 import { IconSelectorDialogComponent } from '../../category/icon-selector-dialog/icon-selector-dialog.component';
 import { Transaction } from 'src/app/util/models/transaction.model';
-import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
+
 import { Observable, of, Subject, takeUntil, firstValueFrom, forkJoin } from 'rxjs';
 import { switchMap, map, startWith } from 'rxjs/operators';
 import { getAccountGroup } from 'src/app/util/config/account.config';
@@ -170,7 +170,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
     private categoryService: CategoryService,
     private accountsService: AccountsService,
     private userService: UserService,
-    private mobileBackButtonService: MobileBackButtonService,
+
     private bottomSheet: MatBottomSheet,
   ) {
     this.accountForm = this.buildForm();
@@ -200,8 +200,8 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.currentUserId.set(this.userService.getCurrentUserId() || '');
-    this.mobileBackButtonService.openModal('add-account', this.dialogRef);
   }
+
 
   ngOnDestroy(): void {
     this.destroy$.next();

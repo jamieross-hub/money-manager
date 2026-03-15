@@ -13,7 +13,7 @@ import { SidebarNavParent, getAllNavigationItems } from '../../../util/config/si
 import { UserService } from 'src/app/util/service/db/user.service';
 import { User } from 'src/app/util/models';
 import { Observable, Subscription } from 'rxjs';
-import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
+
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -43,7 +43,7 @@ export class SideBarComponent implements AfterViewInit, OnDestroy {
   /** True when the user has family mode enabled — drives familyOnly nav items */
   readonly isFamilyMode = toSignal(this.store.select(selectIsFamilyMode), { initialValue: false });
 
-  private drawerSub?: Subscription;
+
   private boundDocumentClick: (event: Event) => void;
 
   constructor(
@@ -51,7 +51,7 @@ export class SideBarComponent implements AfterViewInit, OnDestroy {
     public router: Router,
     private elementRef: ElementRef,
     public userService: UserService,
-    private mobileBackButtonService: MobileBackButtonService,
+
     private store: Store<AppState>
   ) {
     this.navigationSections = getAllNavigationItems();
@@ -84,23 +84,11 @@ export class SideBarComponent implements AfterViewInit, OnDestroy {
     // Add click listener to document after view is initialized
     document.addEventListener('click', this.boundDocumentClick);
 
-    // Subscribe to drawer open state changes to handle history on mobile
-    this.drawerSub = this.drawer.openedChange.subscribe((isOpen: boolean) => {
-      if (isOpen) {
-        this.mobileBackButtonService.openModal('sidebar', () => {
-          this.drawer.close();
-        });
-      } else {
-        this.mobileBackButtonService.closeModal('sidebar');
-      }
-    });
+
   }
 
   ngOnDestroy() {
     document.removeEventListener('click', this.boundDocumentClick);
-    if (this.drawerSub) {
-      this.drawerSub.unsubscribe();
-    }
   }
 
   @HostListener('document:keydown', ['$event'])

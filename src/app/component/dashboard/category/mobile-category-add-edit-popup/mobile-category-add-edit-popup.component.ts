@@ -60,7 +60,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { APP_CONFIG } from 'src/app/util/config/config';
-import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
+
 import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { OpenaiService } from 'src/app/util/service/ai-chat/openai.service';
 
@@ -154,7 +154,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
     private validationService: ValidationService,
     private ssrService: SsrService,
     private userService: UserService,
-    private mobileBackButtonService: MobileBackButtonService,
+
     private openaiService: OpenaiService
   ) {
     this.categoryForm = this.fb.group({
@@ -220,7 +220,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
     this.userId.set(this.userService.getCurrentUserId() || '');
 
     // Register mobile back button interceptor
-    this.mobileBackButtonService.openModal('category-add-edit', this.dialogRef, { allowBackNavigation: false });
+
 
     if (this.dialogData) {
       this.categoryForm.patchValue({

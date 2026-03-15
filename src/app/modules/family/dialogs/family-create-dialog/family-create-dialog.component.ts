@@ -11,7 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { CreateFamilyRequest } from 'src/app/util/models/family.model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
+
 import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 
 export const GROUP_ICON_OPTIONS: { icon: string; label: string }[] = [
@@ -52,7 +52,7 @@ export class FamilyCreateDialogComponent implements OnInit, OnDestroy {
   private dialogRef = inject(MatDialogRef<FamilyCreateDialogComponent>, { optional: true });
   private bottomSheetRef = inject(MatBottomSheetRef<FamilyCreateDialogComponent>, { optional: true });
   public data = inject(MAT_DIALOG_DATA, { optional: true });
-  private mobileBackButtonService = inject(MobileBackButtonService);
+
 
   readonly iconOptions = GROUP_ICON_OPTIONS;
 
@@ -82,10 +82,7 @@ export class FamilyCreateDialogComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
-    const ref = this.bottomSheetRef || this.dialogRef;
-    if (ref) {
-      this.mobileBackButtonService.openModal('family-create', ref);
-    }
+
     
     if (this.isEditMode()) {
       const family = this.data.family;

@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { FamilyMember, PaidByMember } from 'src/app/util/models/family.model';
 import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
-import { MobileBackButtonService } from 'src/app/util/service/mobile-back-button.service';
+
 
 export interface MultiplePaidBySheetData {
   members: FamilyMember[];
@@ -71,11 +71,11 @@ export class MultiplePaidBySheetComponent implements OnInit {
   constructor(
     public bottomSheetRef: MatBottomSheetRef<MultiplePaidBySheetComponent>,
     @Inject(MAT_BOTTOM_SHEET_DATA) public data: MultiplePaidBySheetData,
-    private mobileBackButtonService: MobileBackButtonService
+
   ) {}
 
   ngOnInit(): void {
-    this.mobileBackButtonService.openModal('paid-by-sheet', this.bottomSheetRef);
+
     if (this.data) {
       this.members.set(this.data.members || []);
       this.totalAmount.set(this.data.totalAmount || 0);

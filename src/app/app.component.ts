@@ -18,7 +18,7 @@ import { SwUpdate } from '@angular/service-worker';
 import { MatDialog } from '@angular/material/dialog';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { OverlayContainer } from '@angular/cdk/overlay';
-import { MobileBackButtonService } from './util/service/mobile-back-button.service';
+
 import { FamilyNotificationService } from './modules/family/services/family-notification.service';
 import { PwaInstallPromptComponent } from './util/components/pwa-install-prompt/pwa-install-prompt.component';
 import { LoaderComponent } from './util/components/loader/loader.component';
@@ -65,7 +65,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private bottomSheet: MatBottomSheet,
     private overlayContainer: OverlayContainer,
-    private mobileBackButtonService: MobileBackButtonService,
+
     private familyNotificationService: FamilyNotificationService,
     private transactionProcessorService: TransactionProcessorService
   ) {
@@ -108,16 +108,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.commonSyncService.startSync();
     this.refreshFcmToken();
 
-    // Map back button logic
-    if (this.ssrService.isClientSide()) {
-      window.addEventListener('popstate', (event) => {
-        const isMobile = window.innerWidth <= 768; // Mobile breakpoint
-        if (isMobile && this.mobileBackButtonService.hasOpenModals()) {
-          // Instruct mobile back button service to close top modal/sidebar
-          this.mobileBackButtonService.popModal();
-        }
-      });
-    }
+
   }
 
 

@@ -202,11 +202,11 @@
             <!-- Custom "Multiple People" Virtual Member -->
             @if(transactionForm.get('paidByUserId')?.value === 'multiple') {
               <button type="button" (click)="!viewMode() && openMultiplePaidBySheet()" [disabled]="viewMode()"
-                class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl border transition-all duration-150 text-left border-primary-500 bg-primary-50">
+                class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl border transition-all duration-150 text-left border-surface-500 bg-surface-200">
                 <!-- Avatar -->
                 <div class="relative shrink-0">
                   <div
-                    class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ring-2 bg-primary-500 text-white ring-primary-400">
+                    class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ring-2 bg-surface-200 text-white ring-primary-400">
                     M
                   </div>
                 </div>
@@ -232,8 +232,8 @@
                 (click)="!viewMode() && transactionForm.patchValue({ paidByUserId: member.userId, paidBy: [] })"
                 [disabled]="viewMode()"
                 class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl border transition-all duration-150 text-left"
-                [class.border-primary-500]="isMemberPaidBy(member.userId)"
-                [class.bg-primary-50]="isMemberPaidBy(member.userId)"
+                [class.border-primary-50]="isMemberPaidBy(member.userId)"
+                [class.bg-surface-500]="isMemberPaidBy(member.userId)"
                 [class.border-gray-200]="!isMemberPaidBy(member.userId)"
                 [class.dark:border-gray-700]="!isMemberPaidBy(member.userId)">
                 <!-- Avatar -->
