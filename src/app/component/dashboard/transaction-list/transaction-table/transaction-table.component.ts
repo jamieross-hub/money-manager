@@ -169,10 +169,12 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   private loadAccounts(): void {
-    this.store.select(selectAllAccounts).subscribe((accounts: Account[]) => {
-      this.accounts = accounts;
-      this.cdr.markForCheck();
-    });
+    this.subscription.add(
+      this.store.select(selectAllAccounts).subscribe((accounts: Account[]) => {
+        this.accounts = accounts;
+        this.cdr.markForCheck();
+      })
+    );
   }
 
   private updateColumnVisibility() {
@@ -402,12 +404,14 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   private loadCategories(): void {
     const userId = this.userService.getCurrentUserId();
     if (userId) {
-      this.store.select(selectAllCategories).subscribe((categories: Category[]) => {
-        for (const category of categories) {
-          (this.categories as { [key: string]: Category })[category.id as string] = category;
-        }
-        this.cdr.markForCheck();
-      });
+      this.subscription.add(
+        this.store.select(selectAllCategories).subscribe((categories: Category[]) => {
+          for (const category of categories) {
+            (this.categories as { [key: string]: Category })[category.id as string] = category;
+          }
+          this.cdr.markForCheck();
+        })
+      );
     }
   }
 

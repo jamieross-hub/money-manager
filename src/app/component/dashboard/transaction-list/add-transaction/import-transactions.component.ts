@@ -109,7 +109,7 @@ export class ImportTransactionsComponent implements OnDestroy {
     this.loadAccountsAndCategories();
 
     // Initialize filtered categories for ngx-mat-select-search
-    this.categories$.subscribe(categories => {
+    this.categories$.pipe(takeUntil(this._onDestroy)).subscribe(categories => {
       this.filteredCategories.next(categories.slice());
     });
 
@@ -167,7 +167,7 @@ export class ImportTransactionsComponent implements OnDestroy {
 
     try {
       // Load accounts
-      this.store.select(selectAllAccounts).subscribe(accounts => {
+      this.store.select(selectAllAccounts).pipe(takeUntil(this._onDestroy)).subscribe(accounts => {
         this.accounts = accounts;
         if (accounts.length > 0) {
           this.defaultAccountId = accounts[0].accountId;

@@ -74,7 +74,7 @@ export class GoogleSheetsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadConnections();
-    this.store.select(selectAllCategories).subscribe((categories) => {
+    this.store.select(selectAllCategories).pipe(takeUntil(this.destroy$)).subscribe((categories) => {
       this.allCategories = categories;
     });
   }
