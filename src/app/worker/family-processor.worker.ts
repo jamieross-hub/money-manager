@@ -14,10 +14,11 @@ addEventListener('message', ({ data }) => {
     const stats = computeStats(transactions, members, mode || 'common');
     const balances = computeBalances(transactions, members, settlements, mode || 'common');
     const activities = processActivities(transactions, settlements, members, currentUserId, sessionStartTime);
+    const currentUserStats = computeCurrentUserStats(stats, balances, currentUserId);
 
     postMessage({
       type: 'FAMILY_DATA_PROCESSED',
-      payload: { stats, balances, activities, fingerprint, fid }
+      payload: { stats, balances, activities, currentUserStats, fingerprint, fid }
     });
   }
 });
@@ -378,4 +379,32 @@ function processActivities(
     // 2. Last fallback: Database creation time
     return (b._createdTime || 0) - (a._createdTime || 0);
   });
+}
+
+function computeCurrentUserStats(stats: FamilyStats, balances: BalanceEntry[], currentUserId?: string) {
+  if (!currentUserId) {
+    return { currentUserExpense: 0, currentUserSharePercentage: 0, myNetSettleBalance: 0, currentUserPaid: 0 };
+  }
+
+  const memberStats = stats.memberBreakdown.find(m => m.userId === currentUserId);
+  const currentUserExpense = memberStats?.totalExpense ?? 0;
+  const currentUserPaid = memberStats?.totalPaid ?? 0;
+  
+  const totalExpense = stats.totalExpense;
+  const currentUserSharePercentage = totalExpense > 0 ? (currentUserExpense / totalExpense) * 100 : 0;
+
+  let owedByMe = 0;
+  let owedToMe = 0;
+  for (const b of balances) {
+    if (b.fromUserId === currentUserId) owedByMe += b.amount;
+    if (b.toUserId === currentUserId) owedToMe += b.amount;
+  }
+  const myNetSettleBalance = owedToMe - owedByMe;
+
+  return {
+    currentUserExpense,
+    currentUserSharePercentage,
+    myNetSettleBalance,
+    currentUserPaid
+  };
 }

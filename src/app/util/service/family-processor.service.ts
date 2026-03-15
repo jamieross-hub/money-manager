@@ -11,6 +11,13 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { distinctUntilChanged, debounceTime } from 'rxjs/operators';
 
 
+export interface CurrentUserStats {
+  currentUserExpense: number;
+  currentUserSharePercentage: number;
+  myNetSettleBalance: number;
+  currentUserPaid: number;
+}
+
 export interface FamilyProcessorInput {
   transactions: Transaction[];
   members: FamilyMember[];
@@ -25,6 +32,7 @@ export interface FamilyProcessorOutput {
   stats: FamilyStats | null;
   balances: BalanceEntry[];
   activities: any[];
+  currentUserStats?: CurrentUserStats;
   fingerprint?: string;
 }
 
@@ -36,6 +44,12 @@ export class FamilyProcessorService {
   readonly stats = signal<FamilyStats | null>(null);
   readonly balances = signal<BalanceEntry[]>([]);
   readonly activities = signal<any[]>([]);
+  readonly currentUserStats = signal<CurrentUserStats>({
+    currentUserExpense: 0,
+    currentUserSharePercentage: 0,
+    myNetSettleBalance: 0,
+    currentUserPaid: 0
+  });
   readonly isProcessing = signal<boolean>(false);
 
   private readonly store = inject(Store<AppState>);
@@ -132,6 +146,9 @@ export class FamilyProcessorService {
           this.stats.set(payload.stats);
           this.balances.set(payload.balances);
           this.activities.set(payload.activities);
+          if (payload.currentUserStats) {
+            this.currentUserStats.set(payload.currentUserStats);
+          }
           this.isProcessing.set(false);
         }
       };

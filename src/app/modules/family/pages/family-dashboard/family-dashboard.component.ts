@@ -175,41 +175,12 @@ export class FamilyDashboardComponent implements OnInit {
     return fromStore;
   });
 
-  readonly currentUserExpense = computed(() => {
-    const s = this.stats();
-    const uid = this.currentUserId();
-    if (!s || !uid) return 0;
-    return s.memberBreakdown.find(m => m.userId === uid)?.totalExpense ?? 0;
-  });
+  private readonly currentUserStats = this.familyProcessor.currentUserStats;
 
-  readonly currentUserSharePercentage = computed(() => {
-    const total = this.stats()?.totalExpense ?? 0;
-    if (total <= 0) return 0;
-    return (this.currentUserExpense() / total) * 100;
-  });
-
-  readonly myNetSettleBalance = computed(() => {
-    const uid = this.currentUserId();
-    if (!uid) return 0;
-    const balances = this.settleBalances();
-    
-    let owedByMe = 0;
-    let owedToMe = 0;
-
-    for (const b of balances) {
-      if (b.fromUserId === uid) owedByMe += b.amount;
-      if (b.toUserId === uid) owedToMe += b.amount;
-    }
-    
-    return owedToMe - owedByMe;
-  });
-
-  readonly currentUserPaid = computed(() => {
-    const s = this.stats();
-    const uid = this.currentUserId();
-    if (!s || !uid) return 0;
-    return s.memberBreakdown.find(m => m.userId === uid)?.totalPaid ?? 0;
-  });
+  readonly currentUserExpense = computed(() => this.currentUserStats().currentUserExpense);
+  readonly currentUserSharePercentage = computed(() => this.currentUserStats().currentUserSharePercentage);
+  readonly myNetSettleBalance = computed(() => this.currentUserStats().myNetSettleBalance);
+  readonly currentUserPaid = computed(() => this.currentUserStats().currentUserPaid);
 
   // ─── Getters ─────────────────────────────────────────────────────────────────
   // No longer needed: using signal currentUserId instead

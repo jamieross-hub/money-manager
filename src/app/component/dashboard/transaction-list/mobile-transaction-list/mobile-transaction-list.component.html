@@ -396,20 +396,20 @@
         <div class="stat-item income">
           <mat-icon>trending_up</mat-icon>
           <div class="stat-content">
-            <span class="stat-value">+{{ totalIncome() | currency:{round:true} }}</span>
+            <span class="stat-value">+{{ totalIncome() | currency:{round:true , compact:true} }}</span>
           </div>
         </div>
         <div class="stat-item expense">
           <mat-icon>trending_down</mat-icon>
           <div class="stat-content">
-            <span class="stat-value">-{{ totalExpenses() | currency:{round:true} }}</span>
+            <span class="stat-value">-{{ totalExpenses() | currency:{round:true, compact:true} }}</span>
           </div>
         </div>
         @if (totalSettlement() > 0) {
           <div class="stat-item settlement">
             <mat-icon>handshake</mat-icon>
             <div class="stat-content">
-              <span class="stat-value">{{ totalSettlement() | currency:{round:true} }}</span>
+              <span class="stat-value">{{ totalSettlement() | currency:{round:true, compact:true} }}</span>
             </div>
           </div>
         }
