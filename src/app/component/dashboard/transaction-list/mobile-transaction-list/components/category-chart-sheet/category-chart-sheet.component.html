@@ -17,7 +17,10 @@
         <!-- Center Hole (Donut style) -->
         <div class="center-hole absolute inset-12 rounded-full bg-surface-50 dark:bg-surface-300 flex flex-col items-center justify-center shadow-inner transition-all duration-200">
           @if (hoveredCategory()) {
-            <span class="text-3xl font-extrabold text-neutral-800 dark:text-neutral-100 tracking-tight">
+            <mat-icon class="!text-3xl mb-1 flex items-center justify-center scale-105" [style.color]="hoveredCategory().categoryColor">
+              {{ hoveredCategory().categoryIcon || 'category' }}
+            </mat-icon>
+            <span class="text-4xl font-extrabold text-neutral-800 dark:text-neutral-100 tracking-tight leading-none">
               {{ hoveredCategory().percentage | number:'1.0-0' }}%
             </span>
             <span class="text-[11px] font-bold uppercase tracking-wider truncate max-w-[120px] mt-0.5" [style.color]="hoveredCategory().categoryColor">
@@ -27,7 +30,7 @@
               {{ hoveredCategory().amount | currency:{compact:true} }}
             </span>
           } @else {
-            <span class="text-2xl font-extrabold text-neutral-800 dark:text-neutral-100 tracking-tight">
+            <span class="text-3xl font-extrabold text-neutral-800 dark:text-neutral-100 tracking-tight">
               {{ totalExpenses() | currency:{compact:true} }}
             </span>
             <span class="text-[10px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400 font-bold mt-0.5">Total Expenses</span>
@@ -43,7 +46,11 @@
                [class.shadow-md]="hoveredCategory()?.categoryId === item.categoryId"
                [style.background-color]="hoveredCategory()?.categoryId === item.categoryId ? item.categoryColor + '15' : ''"
                (mouseenter)="hoveredCategory.set(item)" (mouseleave)="hoveredCategory.set(null)">
-            <div class="w-3 h-3 rounded-full shrink-0 shadow-sm" [style.background-color]="item.categoryColor"></div>
+            <div class="w-6 h-6 rounded-full flex items-center justify-center shrink-0 shadow-sm" [style.background-color]="item.categoryColor + '20'">
+              <mat-icon class="!text-[12px] !w-3 !h-3" [style.color]="item.categoryColor">
+                {{ item.categoryIcon || 'category' }}
+              </mat-icon>
+            </div>
             <span class="flex-1 text-[11px] font-medium truncate text-neutral-700 dark:text-neutral-200">{{ item.categoryName }}</span>
             <span class="text-[11px] font-bold text-neutral-800 dark:text-neutral-100">{{ item.percentage | number:'1.0-0' }}%</span>
           </div>

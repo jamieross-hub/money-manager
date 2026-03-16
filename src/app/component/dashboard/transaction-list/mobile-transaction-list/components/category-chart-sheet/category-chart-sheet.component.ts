@@ -226,11 +226,24 @@ export class CategoryChartSheetComponent implements AfterViewInit {
     ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
     ctx.fill();
 
-    // 3. Glass Reflection
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+    // 2b. Inner Cutout Shadow (Shadow from center hole falling outwards on chart)
+    const innerCutoutGrad = ctx.createRadialGradient(centerX, centerY, radius * 0.38, centerX, centerY, radius * 0.48);
+    innerCutoutGrad.addColorStop(0, 'rgba(0, 0, 0, 0.25)'); // Peak inside edge cutout
+    innerCutoutGrad.addColorStop(0.3, 'rgba(0, 0, 0, 0.06)');
+    innerCutoutGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = innerCutoutGrad;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, radius - 2, -Math.PI, 0, false);
-    ctx.bezierCurveTo(centerX + radius * 0.3, centerY - radius * 0.4, centerX - radius * 0.3, centerY - radius * 0.4, centerX - radius + 2, centerY);
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // 3. Glass Reflection (Soft radial light highlight for roundness instead of flat bezier cut)
+    const glassGrad = ctx.createRadialGradient(centerX - radius * 0.3, centerY - radius * 0.3, 0, centerX - radius * 0.3, centerY - radius * 0.3, radius * 0.8);
+    glassGrad.addColorStop(0, 'rgba(255, 255, 255, 0.35)'); // Bright spark top left
+    glassGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.12)');
+    glassGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = glassGrad;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius - 2, 0, 2 * Math.PI);
     ctx.fill();
 
     // 4. (Removed inner percentage labels to make a Pure Clean Donut)
@@ -257,6 +270,17 @@ export class CategoryChartSheetComponent implements AfterViewInit {
 
     const dx = x - centerX;
     const dy = y - centerY;
+
+    // 3D Tilt calculation (Keep subtle to avoid elliptical distortion)
+    const tiltX = (dx / centerX) * 4; // Rotation on Y
+    const tiltY = -(dy / centerY) * 4; // Rotation on X
+    
+    const container = this.canvas.nativeElement.parentElement;
+    if (container) {
+      container.style.setProperty('--tilt-x', `${tiltX}deg`);
+      container.style.setProperty('--tilt-y', `${tiltY}deg`);
+    }
+
     const dist = Math.sqrt(dx*dx + dy*dy);
     const radius = Math.min(rect.width, rect.height) / 2;
 
@@ -284,6 +308,13 @@ export class CategoryChartSheetComponent implements AfterViewInit {
 
   onCanvasMouseLeave() {
     this.hoveredCategory.set(null);
+    if (this.canvas) {
+      const container = this.canvas.nativeElement.parentElement;
+      if (container) {
+        container.style.setProperty('--tilt-x', '0deg');
+        container.style.setProperty('--tilt-y', '0deg');
+      }
+    }
   }
 
   dismiss() {
