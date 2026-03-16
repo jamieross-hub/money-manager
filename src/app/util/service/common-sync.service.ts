@@ -798,63 +798,75 @@ export class CommonSyncService implements OnDestroy {
 
     this.updateSyncStatus({ isSyncing: true });
 
-    const batch = writeBatch(this.firestore);
-    const itemsToProcess: SyncItem[] = [];
-    const processedIds: string[] = [];
-    const failedIds: string[] = [];
+    try {
+      while (this.syncQueue.length > 0) {
+        const batch = writeBatch(this.firestore);
+        const currentBatchItems = this.syncQueue.slice(0, 500); // Firestore max limit
+        const itemsToProcess: SyncItem[] = [];
+        const processedIds: string[] = [];
+        const failedIds: string[] = [];
 
-    for (const item of this.syncQueue) {
-      try {
-        const userId = this.getCurrentUserId();
-        if (!userId) continue;
+        for (const item of currentBatchItems) {
+          try {
+            const userId = this.getCurrentUserId();
+            if (!userId) continue;
 
-        switch (item.type) {
-          case 'transaction': await this.processTransactionSync(item, batch, userId); break;
-          case 'budget': await this.processBudgetSync(item, batch, userId); break;
-          case 'account': await this.processAccountSync(item, batch, userId); break;
-          case 'goal': await this.processGoalSync(item, batch, userId); break;
-          case 'category': await this.processCategorySync(item, batch, userId); break;
-          case 'user': await this.processUserSync(item, batch, userId); break;
+            switch (item.type) {
+              case 'transaction': await this.processTransactionSync(item, batch, userId); break;
+              case 'budget': await this.processBudgetSync(item, batch, userId); break;
+              case 'account': await this.processAccountSync(item, batch, userId); break;
+              case 'goal': await this.processGoalSync(item, batch, userId); break;
+              case 'category': await this.processCategorySync(item, batch, userId); break;
+              case 'user': await this.processUserSync(item, batch, userId); break;
+            }
+
+            itemsToProcess.push(item);
+          } catch (error) {
+            console.error(`Failed to process sync item ${item.id}:`, error);
+
+            item.retryCount++;
+            if (item.retryCount >= (item.maxRetries || 3)) {
+              failedIds.push(item.id);
+              await this.updateItemSyncStatus(item, 'failed');
+            }
+          }
         }
 
-        itemsToProcess.push(item);
-      } catch (error) {
-        console.error(`Failed to process sync item ${item.id}:`, error);
+        if (itemsToProcess.length > 0) {
+          try {
+            await batch.commit();
 
-        item.retryCount++;
-        if (item.retryCount >= (item.maxRetries || 3)) {
-          failedIds.push(item.id);
-          await this.updateItemSyncStatus(item, 'failed');
-        }
-      }
-    }
+            for (const item of itemsToProcess) {
+              await this.updateItemSyncStatus(item, 'synced');
+              processedIds.push(item.id);
+            }
 
-    if (itemsToProcess.length > 0) {
-      try {
-        await batch.commit();
-
-        // ⚠️ ONLY update UI/Cache status AFTER successful batch commit
-        for (const item of itemsToProcess) {
-          await this.updateItemSyncStatus(item, 'synced');
-          processedIds.push(item.id);
+            console.log(`✅ Processed ${processedIds.length} sync items batch`);
+          } catch (error) {
+            console.error('Failed to commit sync operations batch:', error);
+            break; // Break loop to avoid infinite failure loop
+          }
         }
 
-        this.syncQueue = this.syncQueue.filter(item => !processedIds.includes(item.id));
+        // Remove processed and permanently failed items from the main queue
+        this.syncQueue = this.syncQueue.filter(item => 
+          !processedIds.includes(item.id) && !failedIds.includes(item.id)
+        );
         await this.saveSyncQueue();
 
         this.updateSyncStatus({
           lastSyncTime: Date.now(),
           pendingItems: this.syncQueue.length,
-          failedItems: failedIds.length,
-          isSyncing: false
+          failedItems: failedIds.length
         });
 
-        console.log(`✅ Processed ${processedIds.length} sync items`);
-      } catch (error) {
-        console.error('Failed to commit sync operations:', error);
-        this.updateSyncStatus({ isSyncing: false });
+        // Safeguard to prevent infinite loops if items are stuck (e.g., missing userId)
+        if (itemsToProcess.length === 0 && failedIds.length === 0) {
+            console.warn('[CommonSyncService] Sync queue draining stalled, breaking loop');
+            break;
+        }
       }
-    } else {
+    } finally {
       this.updateSyncStatus({ isSyncing: false });
     }
   }
