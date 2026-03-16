@@ -51,22 +51,22 @@ export class CategoryChartSheetComponent implements AfterViewInit {
       });
     });
 
-    const VIBRANT_COLORS = [
-      '#6366f1', // Indigo
-      '#ec4899', // Pink
-      '#14b8a6', // Teal
-      '#f59e0b', // Amber
-      '#10b981', // Emerald
-      '#3b82f6', // Blue
-      '#8b5cf6', // Violet
-      '#f43f5e', // Rose
+    const PREMIUM_COLORS = [
+      '#818cf8', // Soft Indigo
+      '#2dd4bf', // Mint Teal
+      '#fb923c', // Soft Amber/Peach
+      '#f472b6', // Pastel Pink
+      '#38bdf8', // Luminous Cyan
+      '#a78bfa', // Soft Purple
+      '#4ade80', // Emerald Green
+      '#fb7185', // Coral Blush
     ];
 
     const sortedList = list.sort((a, b) => b.amount - a.amount);
     
-    // Assign vibrant colors sequentially to sorted list for maximum contrast
+    // Assign premium colors sequentially to sorted list max contrast
     sortedList.forEach((item, index) => {
-      item.categoryColor = VIBRANT_COLORS[index % VIBRANT_COLORS.length];
+      item.categoryColor = PREMIUM_COLORS[index % PREMIUM_COLORS.length];
     });
 
     return sortedList;
@@ -122,7 +122,11 @@ export class CategoryChartSheetComponent implements AfterViewInit {
     const width = this.canvas.nativeElement.width = rect.width * 2; // High DPI support
     const height = this.canvas.nativeElement.height = rect.height * 2;
 
-    const radius = Math.min(width, height) / 2 - 40; // Space for callout lines
+    // Get theme background color for gap stroke
+    const parent = this.canvas.nativeElement.parentElement;
+    const bgColor = parent ? window.getComputedStyle(parent).backgroundColor : '#ffffff';
+
+    const radius = Math.min(width, height) / 2 - 58; // Expand padding clearance for deeper shadow bounds
     const centerX = width / 2;
     const centerY = height / 2;
 
@@ -147,6 +151,17 @@ export class CategoryChartSheetComponent implements AfterViewInit {
 
     let currentAngle = -Math.PI / 2; // Start from top
 
+    // 0. Backplate Base with Drop Shadow for lifting effect (Centered Glow)
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+    ctx.shadowBlur = 35;
+    ctx.shadowOffsetY = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.fillStyle = (bgColor && bgColor !== 'rgba(0, 0, 0, 0)') ? bgColor : '#ffffff';
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.shadowBlur = 0; // Reset for slices !
+
     // 1. Draw Slices
     breakdown.forEach((item, index) => {
       const sliceAngle = (item.percentage / 100) * 2 * Math.PI;
@@ -157,14 +172,46 @@ export class CategoryChartSheetComponent implements AfterViewInit {
       ctx.moveTo(centerX, centerY);
       ctx.arc(centerX, centerY, sliceRadius, currentAngle, currentAngle + sliceAngle);
       ctx.closePath();
-      ctx.fillStyle = item.categoryColor;
+
+      // Shaded radial gradients inside slice for 3D Volume Spark
+      const adjustBrightness = (hex: string, percent: number) => {
+        let num = parseInt(hex.replace('#',''), 16), amt = Math.round(2.55 * percent), R = (num >> 16) + amt, G = (num >> 8 & 0x00FF) + amt, B = (num & 0x0000FF) + amt;
+        return '#' + (0x1000000 + (R<255?R<0?0:R:255)*0x10000 + (G<255?G<0?0:G:255)*0x100 + (B<255?B<0?0:B:255)).toString(16).slice(1);
+      };
+
+      try {
+        const grad = ctx.createRadialGradient(centerX, centerY, radius * 0.35, centerX, centerY, sliceRadius);
+        grad.addColorStop(0, adjustBrightness(item.categoryColor, 20)); 
+        grad.addColorStop(0.5, item.categoryColor);
+        grad.addColorStop(1, adjustBrightness(item.categoryColor, -15)); 
+        ctx.fillStyle = grad;
+      } catch {
+        ctx.fillStyle = item.categoryColor; // Fallback
+      }
       
       if (isHighlighted) {
-        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowColor = 'rgba(0,0,0,0.35)';
         ctx.shadowBlur = 20;
+      } else {
+        ctx.shadowColor = 'rgba(0,0,0,0.18)';
+        ctx.shadowBlur = 10;
       }
       
       ctx.fill();
+
+      // SPECULAR 3D LIGHT SHIMMER (Outer rim specular light)
+      ctx.shadowBlur = 0; // Reset shadow BEFORE white stroke overlay!
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, sliceRadius - 1, currentAngle, currentAngle + sliceAngle);
+      ctx.stroke();
+      
+      // Add gap separating slices matching theme backdrop
+      ctx.strokeStyle = (bgColor && bgColor !== 'rgba(0, 0, 0, 0)') ? bgColor : '#ffffff';
+      ctx.lineWidth = 4; // Gap width in pixels
+      ctx.stroke();
+
       ctx.shadowBlur = 0; // Reset
       currentAngle += sliceAngle;
     });
@@ -191,7 +238,7 @@ export class CategoryChartSheetComponent implements AfterViewInit {
 
     // 5. Outer Stroke for crispness
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
     ctx.stroke();
