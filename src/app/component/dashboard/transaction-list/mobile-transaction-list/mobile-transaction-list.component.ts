@@ -39,6 +39,7 @@ import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.d
 
 
 import { MatDialog } from '@angular/material/dialog';
+import { MatBottomSheetModule, MatBottomSheet } from '@angular/material/bottom-sheet';
 import { Transaction } from '../../../../util/models/transaction.model';
 import { Subject, Subscription, Observable } from 'rxjs';
 import dayjs from 'dayjs';
@@ -79,6 +80,8 @@ import { AppView } from 'src/app/util/service/app-view.service';
 import { RecurringTemplate } from 'src/app/util/models/recurring.model';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+import { CategoryChartSheetComponent } from './components/category-chart-sheet/category-chart-sheet.component';
+
 dayjs.extend(weekOfYear);
 
 interface SortOption {
@@ -109,6 +112,7 @@ interface SortOption {
     FormsModule,
     MatDividerModule,
     ImageFallbackDirective,
+    MatBottomSheetModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   animations: []
@@ -138,6 +142,7 @@ export class MobileTransactionListComponent
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly auth = inject(Auth);
   private readonly destroyRef = inject(DestroyRef);
+  public  readonly bottomSheet = inject(MatBottomSheet);
 
   isRecurring = input<boolean>(false);
 
@@ -272,6 +277,17 @@ export class MobileTransactionListComponent
   }
 
   isGuest = computed(() => this.userService.isGuestUser());
+
+  openCategoryChart() {
+    this.bottomSheet.open(CategoryChartSheetComponent, {
+      data: {
+        filteredTransactions: this.filteredTransactions(),
+        categoryMap: this.categoryMap(),
+        totalExpenses: this.totalExpenses()
+      },
+      panelClass: 'category-chart-sheet-panel'
+    });
+  }
   activeFiltersCount = computed(() => {
     // We can rely on service or compute locally if needed, keeping service for now but wrapping in signal if needed or just property
     // But since `activeFiltersCount` was a property updated manually, let's use the service call inside an effect or just update it when filters change.

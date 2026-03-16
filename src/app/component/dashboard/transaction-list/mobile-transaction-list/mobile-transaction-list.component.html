@@ -410,7 +410,10 @@
         </button>
       </mat-menu>
       <!-- Chart Button -->
-      <!-- Chart Button Removed -->
+      <button mat-icon-button class="filter-menu-btn" (click)="openCategoryChart()" matTooltip="Category Overview">
+        <mat-icon>pie_chart</mat-icon>
+      </button>
+  
     </div>
   </div>
   }
@@ -672,6 +675,10 @@
                   } @else {
                   {{ item.date | appDate:'time-only' }}
                   }
+                </div>
+                } @else {
+                <div class="amount-type !text-[10px] text-neutral-400">
+                  {{ (item.amount / ((item._isIncome ? totalIncome() : totalExpenses()) || 1)) * 100 | number:'1.0-0' }}%
                 </div>
                 }
               </div>
