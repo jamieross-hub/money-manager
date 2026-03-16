@@ -96,7 +96,7 @@ export class CategorySelectionSheetComponent implements OnInit {
                 let filtered = categories.filter(c => !c.isSystem);
 
                 if (search) {
-                    filtered = filtered.filter(c => c.name.toLowerCase().includes(search));
+                    filtered = filtered.filter(c => c.name.toLowerCase().startsWith(search));
                 }
 
                 // Sort by frequency (most used first) then by name
