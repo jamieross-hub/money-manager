@@ -15,7 +15,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { TransactionType } from 'src/app/util/config/enums';
 import { DateService } from 'src/app/util/service/date.service';
-import { APP_CONFIG } from 'src/app/util/config/config';
+import { APP_CONFIG, CATEGORY_ICONS, CATEGORY_COLORS } from 'src/app/util/config/config';
+import { createCategory } from 'src/app/store/categories/categories.actions';
+import { filter, take } from 'rxjs';
+import { NgClass } from '@angular/common';
+import { UserService } from 'src/app/util/service/db/user.service';
 
 @Component({
     selector: 'app-category-selection-sheet',
@@ -30,7 +34,8 @@ import { APP_CONFIG } from 'src/app/util/config/config';
         MatBottomSheetModule,
         MatFormFieldModule,
         MatInputModule,
-        ReactiveFormsModule
+        ReactiveFormsModule,
+        NgClass
     ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -40,12 +45,14 @@ export class CategorySelectionSheetComponent implements OnInit {
     filteredCategories$!: Observable<Category[]>;
     searchControl = new FormControl('');
     transactionType: TransactionType = TransactionType.EXPENSE; // Default
+    userId: string | null = null;
 
     constructor(
         private _bottomSheetRef: MatBottomSheetRef<CategorySelectionSheetComponent>,
         @Inject(MAT_BOTTOM_SHEET_DATA) public data: { selectedCategoryId: string, transactionType: TransactionType },
         private store: Store<AppState>,
-        private dateService: DateService
+        private dateService: DateService,
+        private userService: UserService
     ) {
         this.categories$ = this.store.select(selectAllCategories).pipe(
             map(categories => {
@@ -55,6 +62,8 @@ export class CategorySelectionSheetComponent implements OnInit {
         );
         this.transactions$ = this.store.select(selectAllTransactions);
         this.transactionType = data?.transactionType || TransactionType.EXPENSE;
+        
+        this.userId = this.userService.getCurrentUserId();
     }
 
     ngOnInit(): void {
@@ -106,6 +115,56 @@ export class CategorySelectionSheetComponent implements OnInit {
 
     selectCategory(category: Category): void {
         this._bottomSheetRef.dismiss(category);
+    }
+
+    createAndSelectCategory(name: string): void {
+        if (!this.userId || !name.trim()) return;
+
+        const { icon, color } = this.suggestIconAndColor(name.trim());
+        
+        this.store.dispatch(createCategory({
+            userId: this.userId,
+            name: name.trim(),
+            categoryType: this.transactionType,
+            icon: icon,
+            color: color
+        }));
+
+        this.categories$.pipe(
+            map(categories => categories.find(c => c.name.toLowerCase() === name.trim().toLowerCase() && c.type === this.transactionType)),
+            filter(c => !!c && !!c.id),
+            take(1)
+        ).subscribe(category => {
+            if (category) {
+                this._bottomSheetRef.dismiss(category);
+            }
+        });
+    }
+
+    private suggestIconAndColor(name: string): { icon: string, color: string } {
+        const lowerName = name.toLowerCase();
+        
+        let foundIcon = CATEGORY_ICONS.find(i => i.name.toLowerCase().includes(lowerName) || lowerName.includes(i.name.toLowerCase()));
+        
+        if (!foundIcon) {
+            foundIcon = CATEGORY_ICONS.find(i => i.group?.toLowerCase().includes(lowerName) || lowerName.includes(i.group?.toLowerCase() || ''));
+        }
+        
+        const icon = foundIcon ? foundIcon.icon : 'category';
+        const hash = this.stringHash(name);
+        const colorIndex = Math.abs(hash) % CATEGORY_COLORS.length;
+        const color = CATEGORY_COLORS[colorIndex].value;
+        
+        return { icon, color };
+    }
+
+    private stringHash(str: string): number {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = (hash << 5) - hash + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return hash;
     }
 
     close(): void {
