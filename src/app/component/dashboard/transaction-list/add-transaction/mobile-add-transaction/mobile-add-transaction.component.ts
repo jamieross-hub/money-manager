@@ -1142,7 +1142,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         initialPaidBy: this.transactionForm.get('paidBy')?.value || [],
         currencySymbol: '₹'
       },
-      panelClass: 'bg-transparent'
+      panelClass: 'bg-transparent',
+      disableClose: true
     });
 
     sheetRef.afterDismissed().subscribe((result: PaidByMember[] | undefined) => {
@@ -1226,7 +1227,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
     const bottomSheetRef = this.bottomSheet.open(SplitConfigSheetComponent, {
        data: data,
-       panelClass: 'bg-transparent'
+       panelClass: 'bg-transparent',
+       disableClose: true
     });
 
     bottomSheetRef.afterDismissed().pipe(
