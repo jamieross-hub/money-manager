@@ -328,22 +328,10 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           }
         }
 
-        // Generate initial note if in split mode
-        if (this.isSplitGroupMode()) {
-          this.updateSplitDefaultNote();
-        }
+
       });
 
-    // Watch for split-related changes to update default note
-    merge(
-      this.transactionForm.get('paidByUserId')!.valueChanges,
-      this.transactionForm.get('splitBetween')!.valueChanges
-    ).pipe(
-      takeUntil(this._onDestroy),
-      debounceTime(200)
-    ).subscribe(() => {
-      this.updateSplitDefaultNote();
-    });
+
   }
 
   /** Toggles a member in/out of the splitBetween list */
@@ -1171,7 +1159,6 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           // Multiple paid
           this.transactionForm.patchValue({ paidByUserId: 'multiple', paidBy: result });
         }
-        this.updateSplitDefaultNote();
         this.cdr.markForCheck();
       }
     });
@@ -1211,7 +1198,6 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         });
 
         this.transactionForm.get('splitBetween')?.setValue(updatedSplits, { emitEvent: false });
-        this.updateSplitDefaultNote();
       }
     }
   }
@@ -1250,71 +1236,12 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           this.splitConfigMode.set(result.mode);
           this.transactionForm.patchValue({ splitBetween: result.splits });
           this.transactionForm.get('splitBetween')?.markAsDirty();
-          this.updateSplitDefaultNote();
           this.cdr.markForCheck();
        }
     });
   }
 
-  /**
-   * Generates a default note summarize splitting details
-   */
-  private updateSplitDefaultNote(): void {
-    if (!this.isSplitGroupMode() || this.editMode() || this.viewMode()) return;
 
-    const currentNotes = this.transactionForm.get('description')?.value || '';
-    // Only update if notes is empty OR already contains an auto-generated "Paid by" note
-    if (currentNotes.trim() !== '' && !currentNotes.startsWith('Paid by')) return;
-
-    const paidByUserId = this.transactionForm.get('paidByUserId')?.value;
-    const splitBetween = this.transactionForm.get('splitBetween')?.value || [];
-    const members = this.familyMembers();
-
-    if (members.length === 0) return;
-
-    let paidByName = '';
-    if (paidByUserId === 'multiple') {
-      const paidBy = this.transactionForm.get('paidBy')?.value || [];
-      if (paidBy.length > 0) {
-        const names = paidBy.map((p: any) => p.displayName || p.userId);
-        if (names.length > 1) {
-          const last = names.pop();
-          paidByName = names.join(', ') + ' and ' + last;
-        } else {
-          paidByName = names[0];
-        }
-      } else {
-        paidByName = 'Multiple People';
-      }
-    } else {
-      const pm = members.find(m => m.userId === (paidByUserId || this.userId));
-      paidByName = pm?.displayName || 'Someone';
-    }
-
-    let splitNames = '';
-    if (splitBetween && splitBetween.length > 0) {
-      const names = splitBetween.map((s: any) => {
-        if (typeof s === 'string') {
-          return members.find(m => m.userId === s)?.displayName || s;
-        }
-        return s.displayName || s.userId || 'Unknown';
-      });
-      
-      if (names.length > 1) {
-        const last = names.pop();
-        splitNames = names.join(', ') + ' and ' + last;
-      } else {
-        splitNames = names[0];
-      }
-    }
-
-    if (paidByName && splitNames) {
-      const note = `Paid by ${paidByName} and split between ${splitNames}`;
-      if (currentNotes !== note) {
-        this.transactionForm.patchValue({ description: note }, { emitEvent: false });
-      }
-    }
-  }
 
   /**
    * Consolidate tax calculations
