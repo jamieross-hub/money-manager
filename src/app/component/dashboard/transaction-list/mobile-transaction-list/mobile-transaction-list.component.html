@@ -572,6 +572,12 @@
             [class.no-interaction]="selectedRange() === 'category'" (mousedown)="onLongPressStart(item)"
             (touchstart)="onLongPressStart(item)" (touchmove)="onLongPressEnd()" (mouseup)="onLongPressEnd()"
             (touchend)="onLongPressEnd()" (click)="onTransactionClick(item, cardElement)">
+            @if (selectedRange() === 'category') {
+            <div class="category-progress-bg" 
+                 [style.width.%]="(item.amount / ((item._isIncome ? totalIncome() : totalExpenses()) || 1)) * 100"
+                 [style.background]="'linear-gradient(90deg, ' + item._categoryBgColor + ' 0%, transparent 100%)'">
+            </div>
+            }
             <!-- Main Transaction Content -->
             <div class="transaction-main">
               <!-- Icon -->
