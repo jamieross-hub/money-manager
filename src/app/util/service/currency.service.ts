@@ -139,8 +139,8 @@ export class CurrencyService implements OnDestroy {
       ? 0
       : (decimalPlaces !== undefined ? decimalPlaces : configDecimalPlaces);
 
-    // Auto-compact if >= 1,000,000 (6 digits/millions)
-    const isAutoCompact = Math.abs(roundedValue) >= 1000000;
+    // Auto-compact if value >= 100,000 (1 Lakh)
+    const isAutoCompact = Math.abs(roundedValue) >= 100000;
     const finalCompact = compact || isAutoCompact;
 
     const formatOptions: Intl.NumberFormatOptions = {
