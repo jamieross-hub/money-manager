@@ -19,6 +19,9 @@ export interface ProcessorOutput {
   totalExpenses: number;
   totalSettlement: number;
   filteredCount: number;
+  userIncome?: number;
+  userExpenses?: number;
+  userPaid?: number;
 }
 
 @Injectable({
@@ -36,7 +39,10 @@ export class TransactionProcessorService {
     totalIncome: 0,
     totalExpenses: 0,
     totalSettlement: 0,
-    filteredCount: 0
+    filteredCount: 0,
+    userIncome: 0,
+    userExpenses: 0,
+    userPaid: 0
   });
 
   private readonly _isProcessing = signal<boolean>(false);
@@ -48,6 +54,9 @@ export class TransactionProcessorService {
   public totalExpenses = computed(() => this._output().totalExpenses);
   public totalSettlement = computed(() => this._output().totalSettlement);
   public filteredCount = computed(() => this._output().filteredCount);
+  public userIncome = computed(() => this._output().userIncome || 0);
+  public userExpenses = computed(() => this._output().userExpenses || 0);
+  public userPaid = computed(() => this._output().userPaid || 0);
   public isProcessing = computed(() => this._isProcessing());
 
   private debounceTimer: any;
@@ -452,6 +461,24 @@ export class TransactionProcessorService {
       .filter((t: any) => !!t.settlementId && !t.id?.startsWith('upcoming-'))
       .reduce((sum: number, t: any) => sum + t.amount, 0);
 
+    const userIncome = currentUserId ? mergedData
+      .filter((t: any) => t.type === 'income' && !t.id?.startsWith('upcoming-') && !t.settlementId)
+      .reduce((sum: number, t: any) => sum + getMemberAmount(t, currentUserId, 'share'), 0) : 0;
+    
+    const userExpenses = currentUserId ? mergedData
+      .filter((t: any) => t.type === 'expense' && !t.id?.startsWith('upcoming-') && !t.settlementId)
+      .reduce((sum: number, t: any) => sum + getMemberAmount(t, currentUserId, 'share'), 0) : 0;
+
+    const userPaidIncome = currentUserId ? mergedData
+      .filter((t: any) => t.type === 'income' && !t.id?.startsWith('upcoming-') && !t.settlementId)
+      .reduce((sum: number, t: any) => sum + getMemberAmount(t, currentUserId, 'paid'), 0) : 0;
+
+    const userPaidExpense = currentUserId ? mergedData
+      .filter((t: any) => t.type === 'expense' && !t.id?.startsWith('upcoming-') && !t.settlementId)
+      .reduce((sum: number, t: any) => sum + getMemberAmount(t, currentUserId, 'paid'), 0) : 0;
+
+    const userPaid = userPaidExpense - userPaidIncome;
+
     // 7. Grouping and View Models
     interface Group {
       date: string;
@@ -460,6 +487,8 @@ export class TransactionProcessorService {
       isUpcomingGroup?: boolean;
       totalIncome: number;
       totalExpenses: number;
+      totalShare: number;
+      totalCost: number;
       incomeFormatted?: string;
       expenseFormatted?: string;
     }
@@ -550,7 +579,9 @@ export class TransactionProcessorService {
             transactions: [], 
             isUpcomingGroup: txView._isUpcoming,
             totalIncome: 0,
-            totalExpenses: 0
+            totalExpenses: 0,
+            totalShare: 0,
+            totalCost: 0
           };
           groupsMap.set(dateKey, group);
         }
@@ -577,11 +608,17 @@ export class TransactionProcessorService {
         
         if (!txView._isUpcoming && !tx.settlementId) {
           let amt = tx.amount;
+          let shareAmt = 0;
           if (memberId) {
             amt = getMemberAmount(tx, memberId, involvementPrefix === 'direct_' ? 'paid' : 'share');
+            shareAmt = getMemberAmount(tx, memberId, 'share');
           }
           if (txView._isIncome) group.totalIncome += amt;
-          else group.totalExpenses += amt;
+          else {
+            group.totalExpenses += amt;
+            group.totalShare += shareAmt;
+            group.totalCost += tx.amount;
+          }
         }
         return;
       }
@@ -697,7 +734,9 @@ export class TransactionProcessorService {
           transactions: [], 
           isUpcomingGroup: txView._isUpcoming,
           totalIncome: 0,
-          totalExpenses: 0
+          totalExpenses: 0,
+          totalShare: 0,
+          totalCost: 0
         };
         groupsMap.set(dateKey, group);
       }
@@ -724,11 +763,17 @@ export class TransactionProcessorService {
 
       if (!txView._isUpcoming && !tx.settlementId) {
         let amt = tx.amount;
+        let shareAmt = 0;
         if (memberId) {
           amt = getMemberAmount(tx, memberId, involvementPrefix === 'direct_' ? 'paid' : 'share');
+          shareAmt = getMemberAmount(tx, memberId, 'share');
         }
         if (txView._isIncome) group.totalIncome += amt;
-        else group.totalExpenses += amt;
+        else {
+          group.totalExpenses += amt;
+          group.totalShare += shareAmt;
+          group.totalCost += tx.amount;
+        }
       }
     });
 
@@ -737,11 +782,21 @@ export class TransactionProcessorService {
     // Set totals and classes (except upcoming)
     groups.forEach(group => {
       if (!group.isUpcomingGroup && group.transactions.length > 0) {
+        if (group.date.startsWith('involved_') && group.totalCost > 0) {
+          group.totalExpenses = group.totalCost;
+        }
+
         if (group.totalIncome > 0) {
           group.incomeFormatted = this.currencyService.formatAmount(group.totalIncome, { round: true });
         }
         if (group.totalExpenses > 0) {
           group.expenseFormatted = this.currencyService.formatAmount(group.totalExpenses, { round: true });
+        }
+        if (group.totalShare > 0 && group.date.startsWith('direct_')) {
+          group.dateHeader += ` (Share: ${this.currencyService.formatAmount(group.totalShare, { round: true })})`;
+        }
+        if (group.totalShare > 0 && group.date.startsWith('involved_')) {
+          group.dateHeader += ` (Share: ${this.currencyService.formatAmount(group.totalShare, { round: true })})`;
         }
       }
     });
@@ -794,7 +849,10 @@ export class TransactionProcessorService {
       totalIncome,
       totalExpenses,
       totalSettlement,
-      filteredCount
+      filteredCount,
+      userIncome,
+      userExpenses,
+      userPaid
     };
   }
 

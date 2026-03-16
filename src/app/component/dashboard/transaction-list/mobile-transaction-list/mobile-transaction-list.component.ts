@@ -251,6 +251,9 @@ export class MobileTransactionListComponent
   totalIncome = this.processorService.totalIncome;
   totalExpenses = this.processorService.totalExpenses;
   totalSettlement = this.processorService.totalSettlement;
+  userIncome = this.processorService.userIncome;
+  userExpenses = this.processorService.userExpenses;
+  userPaid = this.processorService.userPaid;
   filteredCount = this.processorService.filteredCount;
   isProcessing = this.processorService.isProcessing;
 
@@ -499,6 +502,13 @@ export class MobileTransactionListComponent
 
   currentMemberIcon = computed(() => {
     return this.selectedMember() ? 'person' : 'group';
+  });
+
+  currentMemberPhoto = computed(() => {
+    const memberId = this.selectedMember();
+    if (!memberId) return null;
+    const member = this.familyMembers().find(m => m.userId === memberId);
+    return member?.photoURL || null;
   });
 
   currentCategoryLabel = computed(() => {

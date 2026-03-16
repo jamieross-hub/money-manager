@@ -534,8 +534,9 @@
 
   .stat-content {
     display: flex;
-    align-items: baseline;
-    gap: 1px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0px;
     overflow: hidden;
     min-width: 0;
   }
