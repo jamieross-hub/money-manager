@@ -23,7 +23,7 @@
           <span class="text-md sm:text-sm font-semibold leading-none truncate"
             [class.text-success-600]="(summary.totalIncome - summary.totalExpense) >= 0"
             [class.text-error-600]="(summary.totalIncome - summary.totalExpense) < 0">
-            {{ (summary.totalIncome - summary.totalExpense) | currency:{round:true} }}
+            {{ (summary.totalIncome - summary.totalExpense) | currency }}
           </span>
           <span class="text-xs text-neutral-400">net flow</span>
         </div>
@@ -47,7 +47,7 @@
           </div>
           <div class="flex items-center justify-between mt-1">
             <div class="font-medium text-md text-success-600">
-              {{ summary.totalIncome | currency:{round:true} }}
+              {{ summary.totalIncome | currency }}
             </div>
             @if (summary.incomeChange !== 0) {
               <div class="percentage-change flex items-center">
@@ -79,7 +79,7 @@
           </div>
           <div class="flex items-center justify-between mt-1">
             <div class="font-medium text-md text-error-600">
-              {{ summary.totalExpense | currency:{round:true} }}
+              {{ summary.totalExpense | currency}}
             </div>
             @if (summary.expenseChange !== 0) {
               <div class="percentage-change flex items-center">

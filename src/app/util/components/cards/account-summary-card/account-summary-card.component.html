@@ -23,7 +23,7 @@
         <span class="text-md sm:text-sm font-semibold leading-none truncate"
           [class.text-success-600]="totalBalance() >= 0"
           [class.text-error-600]="totalBalance() < 0" aria-label="Total balance">
-          {{ totalBalance() | currency:{round:true} }}
+          {{ totalBalance() | currency }}
         </span>
         <span class="text-xs text-neutral-400">as of today</span>
       </div>
@@ -46,7 +46,7 @@
             <span class="text-xs text-neutral-500 truncate">{{ positiveAccounts().length }} accounts</span>
           </div>
           <div class="font-medium text-md text-success-600 whitespace-nowrap ml-4" aria-label="Assets total">
-            {{ totalPositiveBalance() | currency:{round:true} }}
+            {{ totalPositiveBalance() | currency }}
           </div>
         </div>
       </div>
@@ -63,7 +63,7 @@
             <span class="text-xs text-neutral-500 truncate">{{ negativeAccounts().length }} accounts</span>
           </div>
           <div class="font-medium text-md text-error-600 whitespace-nowrap ml-4" aria-label="Liabilities total">
-            {{ totalNegativeBalance() | currency:{round:true} }}
+            {{ totalNegativeBalance() | currency }}
           </div>
         </div>
       </div>

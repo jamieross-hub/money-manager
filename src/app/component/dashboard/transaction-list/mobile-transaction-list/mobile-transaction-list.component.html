@@ -142,6 +142,10 @@
     </div>
     <!-- Filter Menu Buttons -->
     <div class="filter-menu-container md:justify-center">
+        <!-- Chart Button -->
+      <button mat-icon-button class="filter-menu-btn" (click)="openCategoryChart()" matTooltip="Category Overview">
+        <mat-icon>pie_chart</mat-icon>
+      </button>
       <!-- Sort Menu -->
       <button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="sortMenu"
         [ngClass]="{'active': selectedSort() !== 'date-desc'}" matTooltip="{{ currentSortLabel() }}"
@@ -409,10 +413,7 @@
           }
         </button>
       </mat-menu>
-      <!-- Chart Button -->
-      <button mat-icon-button class="filter-menu-btn" (click)="openCategoryChart()" matTooltip="Category Overview">
-        <mat-icon>pie_chart</mat-icon>
-      </button>
+    
   
     </div>
   </div>
@@ -472,13 +473,13 @@
       <div class="stat-item income">
         <mat-icon>trending_up</mat-icon>
         <div class="stat-content">
-          <span class="stat-value">+{{ totalIncome() | currency:{round:true , compact:true} }}</span>
+          <span class="stat-value">+{{ totalIncome() | currency:{compact:true} }}</span>
         </div>
       </div>
       <div class="stat-item expense">
         <mat-icon>trending_down</mat-icon>
         <div class="stat-content">
-          <span class="stat-value">-{{ totalExpenses() | currency:{round:true, compact:true} }}</span>
+          <span class="stat-value">-{{ totalExpenses() | currency:{compact:true} }}</span>
         </div>
       </div>
       }
