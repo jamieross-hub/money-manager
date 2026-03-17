@@ -149,6 +149,7 @@ export class MobileTransactionListComponent
   selectedTx: Transaction | null = null;
 
   selectedTxIds = signal<Set<string>>(new Set());
+  selectedSpecialRange = signal<string | null>(null);
   isSelectionMode = computed(() => this.selectedTxIds().size > 0);
   newlyAddedTxId = signal<string | null>(null);
   showFilters: boolean = false;
@@ -648,6 +649,7 @@ export class MobileTransactionListComponent
       const isRecurringFilter = this.isRecurringFilter();
       const selectedSort = this.selectedSort();
       const selectedRange = this.selectedRange();
+      const selectedSpecialRange = this.selectedSpecialRange();
       const selectedMember = this.selectedMember();
       const appView = this.appView();
       const isRecurringMode = this.isRecurring();
@@ -672,12 +674,12 @@ export class MobileTransactionListComponent
           accountTypeFilter: this.selectedAccountTypes()
         },
         sort: selectedSort,
-        range: selectedRange,
+        range: selectedSpecialRange || selectedRange,
         sessionStartTime: this.sessionStartTime,
         appView,
         isRecurringMode,
         isFamilyMode,
-        isDeletedMode: selectedRange === 'deleted',
+        isDeletedMode: (selectedSpecialRange || selectedRange) === 'deleted',
         currentUserId: this.currentUserId,
         familyId: activeFamilyId
       });
@@ -836,6 +838,15 @@ export class MobileTransactionListComponent
   }
 
   onDateRangeChange(range: string | null) {
+    if (range === 'category' || range === 'deleted' || range === 'settlement' || range === 'no-settlement') {
+      if (this.selectedSpecialRange() === range) {
+        this.selectedSpecialRange.set(null);
+      } else {
+        this.selectedSpecialRange.set(range);
+      }
+      return;
+    }
+
     this.selectedRange.set(range);
     if (!range) {
       this.filterService.clearSelectedDate();
@@ -850,9 +861,6 @@ export class MobileTransactionListComponent
       startDate = dayjs().startOf('day').toDate();
       const unit = appView === 'WEEKLY' ? 'week' : (appView === 'YEARLY' ? 'year' : 'month');
       endDate = dayjs().add(1, unit).endOf('day').toDate();
-    } else if (range === 'deleted' || range === 'settlement' || range === 'no-settlement' || range === 'category') {
-      this.filterService.clearSelectedDate();
-      return;
     } else {
       const ranges: Record<string, () => [Date, Date]> = {
         'today': () => [dayjs().startOf('day').toDate(), dayjs().endOf('day').toDate()],

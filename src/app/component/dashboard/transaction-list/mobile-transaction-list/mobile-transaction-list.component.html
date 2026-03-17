@@ -129,9 +129,20 @@
             <button (click)="clearFilter('member'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
           </div>
           }
+          @if (selectedSpecialRange()) {
+          <div class="filter-chip">
+            <mat-icon>{{ selectedSpecialRange() === 'category' ? 'category' : 'visibility' }}</mat-icon>
+            <span class="chip-text">
+              {{ selectedSpecialRange() === 'category' ? 'Category View' :
+                 selectedSpecialRange() === 'deleted' ? 'Deleted' :
+                 selectedSpecialRange() === 'settlement' ? 'Settlements' : 'Exclude Settlements' }}
+            </span>
+            <button (click)="selectedSpecialRange.set(null); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
+          </div>
+          }
           @if (selectedRange()) {
           <div class="filter-chip">
-            <mat-icon>{{ selectedRange() === 'category' ? 'category' : 'calendar_today' }}</mat-icon>
+            <mat-icon>calendar_today</mat-icon>
             <span class="chip-text">{{ currentRangeLabel() }}</span>
             <button (click)="clearFilter('range'); $event.stopPropagation()"><mat-icon>close</mat-icon></button>
           </div>
@@ -150,7 +161,7 @@
       <button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="sortMenu"
         [ngClass]="{'active': selectedSort() !== 'date-desc'}" matTooltip="{{ currentSortLabel() }}"
         aria-label="Sort transactions">
-        <mat-icon>{{ currentSortIcon() }}</mat-icon>
+        <mat-icon> filter_alt</mat-icon>
         <span class="filter-btn-text">{{ currentSortLabel() }}</span>
       </button>
       <mat-menu #sortMenu="matMenu" class="filter-menu">
@@ -165,73 +176,56 @@
         </button>
         }
       </mat-menu>
-      <!-- Type Menu (hidden in family split mode) -->
+      <!-- Combined Account & Type Menu -->
       @if (!(isFamilyMode() && isSplitMode())) {
-      <button mat-icon-button class="filter-menu-btn" [ngClass]="{'active': selectedType() !== 'all'}"
-        [matMenuTriggerFor]="typeMenu" matTooltip="{{ currentTypeLabel() }}" aria-label="Filter by transaction type">
-        <mat-icon>{{ currentTypeIcon() }}</mat-icon>
-        <span class="filter-btn-text">{{ currentTypeLabel() }}</span>
+      <button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="combinedMenu"
+        [ngClass]="{'active': selectedAccounts().length > 0 || selectedType() !== 'all'}"
+        matTooltip="Filter by Account or Type">
+        <mat-icon>{{ selectedType() !== 'all' ? currentTypeIcon() : currentAccountIcon() }}</mat-icon>
+        <span class="filter-btn-text">
+          @if (selectedType() !== 'all' && selectedAccounts().length > 0) {
+            Filters
+          } @else if (selectedType() !== 'all') {
+            {{ currentTypeLabel() }}
+          } @else {
+            {{ currentAccountLabel() }}
+          }
+        </span>
       </button>
-      <mat-menu #typeMenu="matMenu" class="filter-menu">
+
+      <mat-menu #combinedMenu="matMenu" class="filter-menu">
+        <div class="menu-section-label px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-500 opacity-70">
+          Transaction Type
+        </div>
         <button mat-menu-item [class.active-menu-item]="selectedType() === 'all'" (click)="onTypeChange('all')">
           <mat-icon>list</mat-icon>
           <span>All Types</span>
-          @if (selectedType() === 'all') {
-          <mat-icon class="check-icon">check</mat-icon>
-          }
+          @if (selectedType() === 'all') { <mat-icon class="check-icon">check</mat-icon> }
         </button>
         <button mat-menu-item [class.active-menu-item]="selectedType() === 'income'" (click)="onTypeChange('income')">
           <mat-icon class="income-icon">trending_up</mat-icon>
           <span>Income</span>
-          @if (selectedType() === 'income') {
-          <mat-icon class="check-icon">check</mat-icon>
-          }
+          @if (selectedType() === 'income') { <mat-icon class="check-icon">check</mat-icon> }
         </button>
         <button mat-menu-item [class.active-menu-item]="selectedType() === 'expense'" (click)="onTypeChange('expense')">
           <mat-icon class="expense-icon">trending_down</mat-icon>
           <span>Expense</span>
-          @if (selectedType() === 'expense') {
-          <mat-icon class="check-icon">check</mat-icon>
-          }
+          @if (selectedType() === 'expense') { <mat-icon class="check-icon">check</mat-icon> }
         </button>
-      </mat-menu>
-      }
-      <!-- Account Menu -->
-      @if (!isFamilyMode()) {
-      <button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="accountMenu"
-        [ngClass]="{'active': selectedAccounts().length > 0 || selectedAccountTypes().length > 0}"
-        matTooltip="Filter by account" aria-label="Filter by account">
-        <mat-icon>{{ currentAccountIcon() }}</mat-icon>
-        <span class="filter-btn-text">{{ selectedAccountTypes().length > 0 ? currentAccountTypeLabel() :
-          currentAccountLabel() }}</span>
-      </button>
-      <mat-menu #accountMenu="matMenu" class="filter-menu">
-        <div
-          class="menu-section-label px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-500 opacity-70">
-          Account Types</div>
-        @for (type of accountTypeOptions; track type.value) {
-        <button mat-menu-item [class.active-menu-item]="selectedAccountTypes().includes(type.value)"
-          (click)="onAccountTypeChange(type.value); $event.stopPropagation()">
-          <mat-icon>{{ type.icon }}</mat-icon>
-          <span>{{ type.label }}</span>
-          @if (selectedAccountTypes().includes(type.value)) {
-          <mat-icon class="check-icon">check</mat-icon>
-          }
-        </button>
-        }
+
+        @if (!isFamilyMode()) {
         <mat-divider></mat-divider>
-        <div
-          class="menu-section-label px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-500 opacity-70">
-          Specific Accounts</div>
+        <div class="menu-section-label px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-500 opacity-70">
+          Specific Accounts
+        </div>
         @for (account of accounts(); track account.accountId) {
         <button mat-menu-item [class.active-menu-item]="selectedAccounts().includes(account.accountId)"
           (click)="onAccountIdChange(account.accountId); $event.stopPropagation()">
           <mat-icon>{{ account.icon || 'account_balance_wallet' }}</mat-icon>
           <span>{{ account.name }}</span>
-          @if (selectedAccounts().includes(account.accountId)) {
-          <mat-icon class="check-icon">check</mat-icon>
-          }
+          @if (selectedAccounts().includes(account.accountId)) { <mat-icon class="check-icon">check</mat-icon> }
         </button>
+        }
         }
       </mat-menu>
       }
@@ -316,14 +310,45 @@
         <span class="filter-btn-text">{{ currentDateLabel() }}</span>
       </button>
       <mat-menu #dateMenu="matMenu" class="filter-menu">
-        <button mat-menu-item [class.active-menu-item]="selectedRange() === 'category'"
-          (click)="onDateRangeChange('category')">
-          <mat-icon>category</mat-icon>
+        <button mat-menu-item [class.active-menu-item]="selectedSpecialRange() === 'category'"
+          (click)="onDateRangeChange('category'); $event.stopPropagation()">
+          <mat-icon>layers</mat-icon>
           <span>Category View</span>
-          @if (selectedRange() === 'category') {
+          @if (selectedSpecialRange() === 'category') {
           <mat-icon class="check-icon">check</mat-icon>
           }
         </button>
+
+        <button mat-menu-item [class.active-menu-item]="selectedSpecialRange() === 'deleted'"
+          (click)="onDateRangeChange('deleted'); $event.stopPropagation()">
+          <mat-icon class="text-red-500">delete_outline</mat-icon>
+          <span>Deleted</span>
+          @if (selectedSpecialRange() === 'deleted') {
+          <mat-icon class="check-icon">check</mat-icon>
+          }
+        </button>
+
+        @if (isFamilyMode() && isSplitMode()) {
+        <button mat-menu-item [class.active-menu-item]="selectedSpecialRange() === 'settlement'"
+          (click)="onDateRangeChange('settlement'); $event.stopPropagation()">
+          <mat-icon class="text-indigo-500">handshake</mat-icon>
+          <span>Settlements</span>
+          @if (selectedSpecialRange() === 'settlement') {
+          <mat-icon class="check-icon">check</mat-icon>
+          }
+        </button>
+
+        <button mat-menu-item [class.active-menu-item]="selectedSpecialRange() === 'no-settlement'"
+          (click)="onDateRangeChange('no-settlement'); $event.stopPropagation()">
+          <mat-icon class="text-orange-500">receipt</mat-icon>
+          <span>Exclude Settlements</span>
+          @if (selectedSpecialRange() === 'no-settlement') {
+          <mat-icon class="check-icon">check</mat-icon>
+          }
+        </button>
+        }
+
+        <mat-divider></mat-divider>
 
         <button mat-menu-item [class.active-menu-item]="selectedRange() === null" (click)="onDateRangeChange(null)">
           <mat-icon>calendar_today</mat-icon>
@@ -332,35 +357,12 @@
           <mat-icon class="check-icon">check</mat-icon>
           }
         </button>
+     
 
-        <!-- @if (isFamilyMode() && isSplitMode()) { -->
-        <button mat-menu-item [class.active-menu-item]="selectedRange() === 'deleted'"
-          (click)="onDateRangeChange('deleted')">
-          <mat-icon class="text-red-500">delete_outline</mat-icon>
-          <span>Deleted</span>
-          @if (selectedRange() === 'deleted') {
-          <mat-icon class="check-icon">check</mat-icon>
-          }
-        </button>
+      
 
-        <button mat-menu-item [class.active-menu-item]="selectedRange() === 'settlement'"
-          (click)="onDateRangeChange('settlement')">
-          <mat-icon class="text-indigo-500">handshake</mat-icon>
-          <span>Settlements</span>
-          @if (selectedRange() === 'settlement') {
-          <mat-icon class="check-icon">check</mat-icon>
-          }
-        </button>
+      
 
-        <button mat-menu-item [class.active-menu-item]="selectedRange() === 'no-settlement'"
-          (click)="onDateRangeChange('no-settlement')">
-          <mat-icon class="text-orange-500">receipt</mat-icon>
-          <span>Exclude Settlements</span>
-          @if (selectedRange() === 'no-settlement') {
-          <mat-icon class="check-icon">check</mat-icon>
-          }
-        </button>
-        <!-- } -->
         <button mat-menu-item [class.active-menu-item]="selectedRange() === 'this-week'"
           (click)="onDateRangeChange('this-week')">
           <mat-icon>calendar_view_week</mat-icon>
@@ -543,7 +545,7 @@
 
       @for (group of groupedTransactions(); track group.date) {
       <div class="transaction-group relative w-full">
-        @if (selectedRange() !== 'category') {
+        @if (selectedSpecialRange() !== 'category') {
         <div class="date-header-row sticky top-0 z-20 w-full px-2 py-2 pointer-events-none">
           <div class="date-header-pill" [attr.data-header]="group.dateHeader">
             <span class="header-title !text-[10px]">{{ group.dateHeader }}</span>
@@ -570,13 +572,13 @@
             [class.multi-selected]="selectedTxIds().has(item.id!)" [class.upcoming]="item._isUpcoming"
             [class.deleted]="item._isDeleted" [class.opacity-50]="item.syncStatus === 'pending'"
             [class.grayscale]="item.syncStatus === 'pending'" [class.newly-added]="item.id === newlyAddedTxId()"
-            [class.no-interaction]="selectedRange() === 'category'" (mousedown)="onLongPressStart(item)"
+            [class.no-interaction]="selectedSpecialRange() === 'category'" (mousedown)="onLongPressStart(item)"
             (touchstart)="onLongPressStart(item)" (touchmove)="onLongPressEnd()" (mouseup)="onLongPressEnd()"
             (touchend)="onLongPressEnd()" (click)="onTransactionClick(item, cardElement)">
-            @if (selectedRange() === 'category') {
+            @if (selectedSpecialRange() === 'category') {
             <div class="category-progress-bg" 
                  [style.width.%]="(item.amount / ((item._isIncome ? totalIncome() : totalExpenses()) || 1)) * 100"
-                 [style.background]="'linear-gradient(90deg, ' + item._categoryBgColor + ' 0%, transparent 100%)'">
+                 [style.background]="'linear-gradient(90deg, ' + item._categoryColor + '40 0%, ' + item._categoryColor + '05 100%)'">
             </div>
             }
             <!-- Main Transaction Content -->
