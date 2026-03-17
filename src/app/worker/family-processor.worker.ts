@@ -44,6 +44,7 @@ function computeStats(transactions: Transaction[], members: FamilyMember[], mode
       totalPaid: 0,
       netBalance: 0,
       transactionCount: 0,
+      paidCount: 0,
       isActive: m.isActive,
     });
   });
@@ -75,6 +76,7 @@ function computeStats(transactions: Transaction[], members: FamilyMember[], mode
         if (mStats) {
           const pAmt = Number(p.amount) || 0;
           mStats.totalPaid += isIncome ? -pAmt : pAmt;
+          mStats.paidCount++;
         }
       });
     } else {
@@ -82,6 +84,7 @@ function computeStats(transactions: Transaction[], members: FamilyMember[], mode
       const mStats = memberMap.get(payerId);
       if (mStats) {
         mStats.totalPaid += isIncome ? -amount : amount;
+        mStats.paidCount++;
       }
     }
 

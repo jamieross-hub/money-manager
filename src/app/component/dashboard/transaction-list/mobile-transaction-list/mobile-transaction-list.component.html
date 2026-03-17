@@ -45,9 +45,11 @@
           }
         </div>
         } @else {
-        <div class="filter-summary-content" (click)="toggleFilterDetails($event)">
+        <div class="filter-summary-content" (click)="activeFiltersCount() === 0 ? toggleSearch($event) : toggleFilterDetails($event)">
           <span class="filter-text">
-            @if (activeFiltersCount() > 0) {
+            @if (activeFiltersCount() === 1 && searchTerm() && !showActiveFilterDetails()) {
+            {{ searchTerm() }}
+            } @else if (activeFiltersCount() > 0) {
             {{ activeFiltersCount() }} active {{ activeFiltersCount() === 1 ? 'filter' : 'filters' }}
             } @else {
             Search Transactions

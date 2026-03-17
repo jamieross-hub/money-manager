@@ -119,6 +119,7 @@ interface SortOption {
 })
 export class MobileTransactionListComponent
   implements OnInit, OnDestroy {
+  @ViewChild('searchInput') searchInput!: ElementRef;
   @Output() editTransaction = new EventEmitter<Transaction>();
   @Output() deleteTransaction = new EventEmitter<Transaction>();
   @Output() addTransaction = new EventEmitter<void>();
@@ -343,6 +344,10 @@ export class MobileTransactionListComponent
     this.showSearchInput.set(!this.showSearchInput());
     if (!this.showSearchInput()) {
       this.onSearchChange('');
+    } else {
+      setTimeout(() => {
+        this.searchInput?.nativeElement?.focus();
+      }, 0);
     }
   }
 

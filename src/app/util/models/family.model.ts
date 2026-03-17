@@ -55,6 +55,7 @@ export interface FamilyMemberStats {
   totalPaid: number;
   netBalance: number;
   transactionCount: number;
+  paidCount: number;
   isActive: boolean;
 }
 

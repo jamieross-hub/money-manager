@@ -782,6 +782,7 @@ export class FamilyService implements OnDestroy {
         totalPaid: 0,
         netBalance: 0,
         transactionCount: 0,
+        paidCount: 0,
         isActive: m.isActive,
       });
     });
@@ -816,6 +817,7 @@ export class FamilyService implements OnDestroy {
           if (mStats) {
             const pAmt = Number(p.amount) || 0;
             mStats.totalPaid += isIncome ? -pAmt : pAmt;
+            mStats.paidCount++;
           }
         });
       } else {
@@ -823,6 +825,7 @@ export class FamilyService implements OnDestroy {
         const mStats = memberMap.get(payerId);
         if (mStats) {
           mStats.totalPaid += isIncome ? -amount : amount;
+          mStats.paidCount++;
         }
       }
 
