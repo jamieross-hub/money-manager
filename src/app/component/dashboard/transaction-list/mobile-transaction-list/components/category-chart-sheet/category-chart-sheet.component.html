@@ -1,55 +1,84 @@
-<div class="category-chart-sheet p-5 bg-surface-100 dark:bg-surface-200 rounded-t-xl">
+<div class="category-chart-sheet pt-5 px-5 pb-2 bg-surface-100 dark:bg-surface-200 rounded-t-xl">
   <div class="sheet-header flex justify-between items-center mb-5 pb-3 border-b border-surface-200 dark:border-surface-300">
     <h3 class="text-base font-bold text-neutral-800 dark:text-neutral-100 flex items-center gap-2">
       <mat-icon class="text-primary-500">pie_chart</mat-icon>
-      Category Breakdown
+      {{ isFamilyMode() ? (familyName() || 'Family') : 'Category Breakdown' }}
     </h3>
     <button mat-icon-button (click)="dismiss()" >
       <mat-icon >close</mat-icon>
     </button>
   </div>
   
-  <div class="flex flex-col items-center gap-6">
-    @if (categoryBreakdown().length > 0) {
+  <div class="flex flex-col items-center gap-4">
+    @if (isFamilyMode() && isSplitMode()) {
+      <div class="flex gap-1.5 p-1 rounded-xl bg-surface-200 dark:bg-surface-300 w-full max-w-[260px] mx-auto mb-1 shrink-0 shadow-sm border border-surface-300 dark:border-surface-100">
+        <button class="flex-1 py-1.5 px-3 rounded-lg text-xs font-extrabold transition-all cursor-pointer"
+          [class.bg-white]="viewMode() === 'category'" [class.dark:bg-surface-100]="viewMode() === 'category'"
+          [class.shadow-sm]="viewMode() === 'category'" [class.!text-primary-600]="viewMode() === 'category'"
+          (click)="viewMode.set('category')">Category</button>
+        <button class="flex-1 py-1.5 px-3 rounded-lg text-xs font-extrabold transition-all cursor-pointer"
+          [class.bg-white]="viewMode() === 'member'" [class.dark:bg-surface-100]="viewMode() === 'member'"
+          [class.shadow-sm]="viewMode() === 'member'" [class.!text-primary-600]="viewMode() === 'member'"
+          (click)="viewMode.set('member')">Members</button>
+      </div>
+    }
+
+    @if (activeBreakdown().length > 0) {
       <div class="pie-chart-container relative w-[280px] h-[280px] flex items-center justify-center mx-auto">
         <!-- Pie Chart Canvas -->
         <canvas #pieCanvas class="pie-chart w-full h-full" (mousemove)="onCanvasMouseMove($event)" (mouseleave)="onCanvasMouseLeave()"></canvas>
         <!-- Center Hole (Donut style) -->
-        <div class="center-hole absolute inset-12 rounded-full bg-surface-50 dark:bg-surface-300 flex flex-col items-center justify-center shadow-inner transition-all duration-200">
-          @if (hoveredCategory()) {
-            <mat-icon class="!text-3xl mb-1 flex items-center justify-center scale-105" [style.color]="hoveredCategory().categoryColor">
-              {{ hoveredCategory().categoryIcon || 'category' }}
-            </mat-icon>
-            <span class="text-4xl font-extrabold text-neutral-800 dark:text-neutral-100 tracking-tight leading-none">
-              {{ hoveredCategory().percentage | number:'1.0-0' }}%
-            </span>
-            <span class="text-[11px] font-bold uppercase tracking-wider truncate max-w-[120px] mt-0.5" [style.color]="hoveredCategory().categoryColor">
-              {{ hoveredCategory().categoryName }}
-            </span>
-            <span class="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium">
-              {{ hoveredCategory().amount | currency:{compact:true} }}
-            </span>
-          } @else {
-            <span class="text-3xl font-extrabold text-neutral-800 dark:text-neutral-100 tracking-tight">
-              {{ totalExpenses() | currency:{compact:true} }}
-            </span>
-            <span class="text-[10px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400 font-bold mt-0.5">Total Expenses</span>
+        <div class="center-hole absolute inset-12 rounded-full overflow-hidden bg-surface-50 dark:bg-surface-300 flex flex-col items-center justify-center shadow-inner transition-all duration-200"
+             [style.background-color]="hoveredCategory() && !hoveredCategory().photoURL ? hoveredCategory().categoryColor : ''">
+          
+          <!-- Full background image if hovering a member with a photo -->
+          @if (hoveredCategory()?.photoURL) {
+            <img [src]="hoveredCategory().photoURL" class="absolute inset-0 w-full h-full object-cover">
+            <div class="absolute inset-0 bg-black/40"></div> <!-- Dark overlay for text readability -->
           }
+
+          <div class="relative z-10 flex flex-col items-center justify-center w-full h-full">
+            @if (hoveredCategory()) {
+              @if (!hoveredCategory().photoURL) {
+                <mat-icon class="!text-3xl mb-1 flex items-center justify-center scale-105 text-white">
+                  {{ hoveredCategory().categoryIcon || 'category' }}
+                </mat-icon>
+              }
+              <span class="text-4xl font-extrabold text-white tracking-tight leading-none">
+                {{ hoveredCategory().percentage | number:'1.0-0' }}%
+              </span>
+              <span class="text-[11px] font-bold uppercase tracking-wider truncate max-w-[120px] mt-0.5" [class.text-white/95]="true">
+                {{ hoveredCategory().categoryName }}
+              </span>
+              <span class="text-sm font-bold text-white/80">
+                {{ hoveredCategory().amount | currency:{compact:true} }}
+              </span>
+            } @else {
+              <span class="text-3xl font-extrabold text-neutral-800 dark:text-neutral-100 tracking-tight">
+                {{ totalExpenses() | currency:{compact:true} }}
+              </span>
+              <span class="text-[10px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400 font-bold mt-0.5">Total Expenses</span>
+            }
+          </div>
         </div>
       </div>
 
-      <!-- Legend Grid -->
-      <div class="legend-list w-full grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-1">
-        @for (item of fullCategoryBreakdown(); track item.categoryId) {
-          <div class="legend-item flex items-center gap-2 p-2 rounded-lg bg-surface-50 dark:bg-surface-300 border border-surface-200 dark:border-surface-100 cursor-pointer transition-all duration-200"
+      <!-- Legend List (Horizontal Scroll) -->
+      <div class="legend-list w-full flex flex-row flex-nowrap overflow-x-auto gap-2 pb-2 min-h-0">
+        @for (item of activeBreakdown(); track item.categoryId) {
+          <div class="legend-item flex items-center gap-2 p-2 rounded-lg bg-surface-50 dark:bg-surface-300 border border-surface-200 dark:border-surface-100 cursor-pointer transition-all duration-200 shrink-0 min-w-[130px] m-1"
                [class.!border-neutral-400]="hoveredCategory()?.categoryId === item.categoryId"
                [class.shadow-md]="hoveredCategory()?.categoryId === item.categoryId"
                [style.background-color]="hoveredCategory()?.categoryId === item.categoryId ? item.categoryColor + '15' : ''"
                (mouseenter)="hoveredCategory.set(item)" (mouseleave)="hoveredCategory.set(null)">
-            <div class="w-6 h-6 rounded-full flex items-center justify-center shrink-0 shadow-sm" [style.background-color]="item.categoryColor + '20'">
-              <mat-icon class="!text-[12px] !w-3 !h-3" [style.color]="item.categoryColor">
-                {{ item.categoryIcon || 'category' }}
-              </mat-icon>
+            <div class="w-6 h-6 rounded-full flex items-center justify-center shrink-0 shadow-sm overflow-hidden" [style.background-color]="item.categoryColor + '20'">
+              @if (item.photoURL) {
+                <img [src]="item.photoURL" class="w-full h-full object-cover">
+              } @else {
+                <mat-icon class="!text-[12px] !w-3 !h-3" [style.color]="item.categoryColor">
+                  {{ item.categoryIcon || 'category' }}
+                </mat-icon>
+              }
             </div>
             <span class="flex-1 text-[11px] font-medium truncate text-neutral-700 dark:text-neutral-200">{{ item.categoryName }}</span>
             <span class="text-[11px] font-bold text-neutral-800 dark:text-neutral-100">{{ item.percentage | number:'1.0-0' }}%</span>

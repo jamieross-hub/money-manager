@@ -285,7 +285,11 @@ export class MobileTransactionListComponent
       data: {
         filteredTransactions: this.filteredTransactions(),
         categoryMap: this.categoryMap(),
-        totalExpenses: this.totalExpenses()
+        totalExpenses: this.totalExpenses(),
+        isFamilyMode: this.isFamilyMode(),
+        isSplitMode: this.isSplitMode(),
+        familyName: this.activeFamily()?.name,
+        members: this.familyMembers()
       },
       panelClass: 'category-chart-sheet-panel'
     });

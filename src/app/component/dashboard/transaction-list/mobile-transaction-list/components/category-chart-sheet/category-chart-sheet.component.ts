@@ -23,6 +23,69 @@ export class CategoryChartSheetComponent implements AfterViewInit {
   filteredTransactions = computed(() => this.data.filteredTransactions || []);
   categoryMap = computed(() => this.data.categoryMap || new Map());
   totalExpenses = computed(() => this.data.totalExpenses || 0);
+  isFamilyMode = computed(() => this.data.isFamilyMode || false);
+  isSplitMode = computed(() => this.data.isSplitMode || false);
+  familyName = computed(() => this.data.familyName || '');
+  members = computed(() => this.data.members || []);
+
+  viewMode = signal<'category' | 'member'>('category');
+
+  fullMemberBreakdown = computed(() => {
+    const txs = this.filteredTransactions();
+    const map = new Map<string, number>();
+    let totalExpense = 0;
+
+    txs.forEach((t: any) => {
+      if (t.type === 'expense' && !t._isUpcoming && !t.settlementId) {
+        const amt = Number(t.amount) || 0;
+        totalExpense += amt;
+
+        if (t.splitData?.splitBetween && t.splitData.splitBetween.length > 0) {
+          t.splitData.splitBetween.forEach((share: any) => {
+            const shareAmt = Number(share.amount) || 0;
+            map.set(share.userId, (map.get(share.userId) || 0) + shareAmt);
+          });
+        } else {
+          // fallback to recorder
+          const uid = t.userId || t.payerId;
+          if (uid) {
+            map.set(uid, (map.get(uid) || 0) + amt);
+          }
+        }
+      }
+    });
+
+    const list: any[] = [];
+    const memberColor = (userId: string) => {
+      const COLORS = ['#818cf8', '#2dd4bf', '#fb923c', '#f472b6', '#38bdf8', '#a78bfa', '#4ade80', '#fb7185'];
+      let hash = 0;
+      for (let i = 0; i < userId.length; i++) {
+        hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return COLORS[Math.abs(hash) % COLORS.length];
+    };
+
+    map.forEach((amount, userId) => {
+      if (amount <= 0) return;
+      const pct = totalExpense > 0 ? (amount / totalExpense) * 100 : 0;
+      if (Math.round(pct) === 0) return;
+
+      const member = this.members().find((m: any) => m.userId === userId);
+      list.push({
+        categoryId: userId, // Reusing ID key for ease of integration
+        categoryName: member?.displayName || 'Unknown',
+        categoryColor: memberColor(userId),
+        categoryIcon: 'person', 
+        amount,
+        percentage: pct,
+        photoURL: member?.photoURL
+      });
+    });
+
+    return list.sort((a, b) => b.amount - a.amount);
+  });
+
+  activeBreakdown = computed(() => this.viewMode() === 'category' ? this.fullCategoryBreakdown() : this.fullMemberBreakdown());
 
   fullCategoryBreakdown = computed(() => {
     const txs = this.filteredTransactions();
@@ -40,6 +103,10 @@ export class CategoryChartSheetComponent implements AfterViewInit {
 
     const list: any[] = [];
     map.forEach((amount, catId) => {
+      if (amount <= 0) return; // Skip 0% / empty categories
+      const percentage = totalExpense > 0 ? (amount / totalExpense) * 100 : 0;
+      if (Math.round(percentage) === 0) return; // Skip if rounds to 0%
+      
       const cat = this.categoryMap().get(catId);
       list.push({
         categoryId: catId,
@@ -47,7 +114,7 @@ export class CategoryChartSheetComponent implements AfterViewInit {
         categoryColor: cat?.color || '#3b82f6',
         categoryIcon: cat?.icon || 'category',
         amount,
-        percentage: totalExpense > 0 ? (amount / totalExpense) * 100 : 0
+        percentage
       });
     });
 
@@ -100,7 +167,7 @@ export class CategoryChartSheetComponent implements AfterViewInit {
 
   constructor() {
     effect(() => {
-      const breakdown = this.categoryBreakdown();
+      const breakdown = this.activeBreakdown();
       const hover = this.hoveredCategory();
       this.drawPieChart(breakdown, hover);
     });
@@ -109,7 +176,7 @@ export class CategoryChartSheetComponent implements AfterViewInit {
   ngAfterViewInit() {
     // Canvas might not be drawn if view list is empty initially, redraw when ready
     setTimeout(() => {
-      this.drawPieChart(this.categoryBreakdown());
+      this.drawPieChart(this.activeBreakdown());
     }, 0);
   }
 
@@ -295,7 +362,7 @@ export class CategoryChartSheetComponent implements AfterViewInit {
     if (normalizedAngle < 0) normalizedAngle += 2 * Math.PI;
 
     let currentAngle = 0;
-    const breakdown = this.categoryBreakdown();
+    const breakdown = this.activeBreakdown();
     for (const item of breakdown) {
       const sliceAngle = (item.percentage / 100) * 2 * Math.PI;
       if (normalizedAngle >= currentAngle && normalizedAngle < currentAngle + sliceAngle) {
