@@ -122,7 +122,7 @@ export class CurrencyService implements OnDestroy {
       showSymbol = true,
       showCode = false,
       decimalPlaces,
-      compact = false,
+      compact,
       signDisplay = 'auto',
       notation = 'standard',
       round = false
@@ -139,15 +139,22 @@ export class CurrencyService implements OnDestroy {
       ? 0
       : (decimalPlaces !== undefined ? decimalPlaces : configDecimalPlaces);
 
-    // Auto-compact if value >= 100,000 (1 Lakh)
-    const isAutoCompact = Math.abs(roundedValue) >= 100000;
-    const finalCompact = compact || isAutoCompact;
+    // 3-State Compact Logic:
+    // 1. true -> Compact always
+    // 2. false -> Standard always (Never compact)
+    // 3. undefined -> Auto-compact >= 100,000 threshold (for 1L)
+    let finalCompact = compact === true;
+    if (compact === undefined) {
+      finalCompact = Math.abs(numericValue) >= 100000;
+    }
+    let finalDecimalPlaces = effectiveDecimalPlaces;
+    
 
     const formatOptions: Intl.NumberFormatOptions = {
       style: 'currency',
       currency: currency,
       minimumFractionDigits: 0,
-      maximumFractionDigits: effectiveDecimalPlaces,
+      maximumFractionDigits: finalDecimalPlaces,
       signDisplay: signDisplay,
       notation: finalCompact ? 'compact' : notation
     };

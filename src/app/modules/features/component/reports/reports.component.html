@@ -103,7 +103,7 @@
                           class="text-xs text-neutral-400 font-medium leading-tight relative top-1">{{ spendingLabel }}</span>
                         </div>
                         <div class="text-xl font-bold text-neutral-500">
-                          {{ (currentPeriodSummary?.avgMonthlySpending ?? 0) | currency }}
+                          {{ (currentPeriodSummary?.avgMonthlySpending ?? 0) | currency:{ compact: false } }}
                         </div>
                       </div>
                       <!-- Top Category -->
