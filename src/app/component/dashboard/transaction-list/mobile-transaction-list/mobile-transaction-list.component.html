@@ -677,7 +677,7 @@
                 <div class="amount-value" [ngClass]="item._isIncome ? 'income-text' : 'expense-text'">
                   {{ item._isIncome ? '+' : '-' }}{{ item.amount | currency }}
                 </div>
-                @if (selectedRange() !== 'category') {
+                @if (selectedSpecialRange() !== 'category') {
                 <div class="amount-type">
                   @if (selectedRange() === null) {
                   {{ item.date | appDate:'short-time' }}
