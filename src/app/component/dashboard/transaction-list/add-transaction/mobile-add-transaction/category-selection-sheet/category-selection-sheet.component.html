@@ -14,7 +14,7 @@
   <!-- Search Bar -->
   <mat-form-field appearance="fill" class="w-full search-field">
     <mat-icon matPrefix class="text-gray-400 mr-2">search</mat-icon>
-    <input matInput [formControl]="searchControl" placeholder="Search categories...">
+    <input #searchInput matInput [formControl]="searchControl" placeholder="Search categories...">
     @if (searchControl.value) {
       <button matSuffix mat-icon-button aria-label="Clear"
         (click)="searchControl.setValue('')">
@@ -25,7 +25,7 @@
 </div>
 
 <!-- Category List -->
-<div class="overflow-y-auto px-2 pb-4">
+<div class="overflow-y-auto px-2 pb-4" (scroll)="searchInput.blur()">
   <mat-nav-list>
     @for (category of filteredCategories$ | async; track category.id) {
       <mat-list-item (click)="selectCategory(category)"
