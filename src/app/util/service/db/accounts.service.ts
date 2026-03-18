@@ -505,13 +505,23 @@ export class AccountsService {
             const getEffect = (t: Transaction) => {
                 // ONLY COMPLETED transactions should affect the current balance.
                 if ((t as any).isPending || t.status === 'pending') return 0;
+                // Ignore if this transaction doesn't involve this account
+                if (t.accountId !== accountId && t.toAccountId !== accountId) return 0;
                 const amount = Number(t.amount) || 0;
+                if (t.type === 'transfer') {
+                    return accountId === t.toAccountId ? amount : -amount;
+                }
                 return t.type === 'income' ? amount : -amount;
             };
             const getLoanEffect = (t: Transaction) => {
                 // ONLY COMPLETED transactions should affect the remaining balance.
                 if ((t as any).isPending || t.status === 'pending') return 0;
+                // Ignore if this transaction doesn't involve this account
+                if (t.accountId !== accountId && t.toAccountId !== accountId) return 0;
                 const amount = Number(t.amount) || 0;
+                if (t.type === 'transfer') {
+                    return accountId === t.toAccountId ? -amount : amount;
+                }
                 return t.type === 'expense' ? -amount : 0;
             };
 

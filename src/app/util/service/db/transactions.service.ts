@@ -93,13 +93,16 @@ export class TransactionsService extends BaseService {
                 transaction: transactionData
             }));
             // Update account balance
-            if (transaction.accountId) {
-                this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
-                    userId: userId,
-                    accountId: transaction.accountId,
-                    transactionType: 'create',
-                    newTransaction: transactionData
-                }));
+            if (transaction.accountId || transaction.toAccountId) {
+                const affectedAccounts = new Set([transaction.accountId, transaction.toAccountId].filter(Boolean));
+                affectedAccounts.forEach(accId => {
+                    this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
+                        userId: userId,
+                        accountId: accId as string,
+                        transactionType: 'create',
+                        newTransaction: transactionData
+                    }));
+                });
             }
             return of(undefined);
         }
@@ -108,13 +111,16 @@ export class TransactionsService extends BaseService {
             const createTransactionAsync = async () => {
                 try {
                     // 1. Dispatch store updates immediately (Optimistic)
-                    if (transaction.accountId) {
-                        this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
-                            userId: userId,
-                            accountId: transaction.accountId,
-                            transactionType: 'create',
-                            newTransaction: transactionData as Transaction
-                        }));
+                    if (transaction.accountId || transaction.toAccountId) {
+                        const affectedAccounts = new Set([transaction.accountId, transaction.toAccountId].filter(Boolean));
+                        affectedAccounts.forEach(accId => {
+                            this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
+                                userId: userId,
+                                accountId: accId as string,
+                                transactionType: 'create',
+                                newTransaction: transactionData as Transaction
+                            }));
+                        });
                     }
 
                     this.store.dispatch(TransactionsActions.createTransactionSuccess({
@@ -158,24 +164,29 @@ export class TransactionsService extends BaseService {
                     transaction: newTransaction as Transaction
                 }));
 
-                // Update account balance if amount or account changed
-                if ((updatedTransaction.amount || updatedTransaction.accountId) && oldTransaction.accountId) {
-                    if (updatedTransaction.accountId && updatedTransaction.accountId !== oldTransaction.accountId) {
-                        this.store.dispatch(AccountsActions.updateAccountBalanceForAccountTransfer({
-                            userId: userId,
-                            oldAccountId: oldTransaction.accountId,
-                            newAccountId: updatedTransaction.accountId,
-                            transaction: newTransaction as Transaction
-                        }));
-                    } else {
+                // Update account balance if amount, account, toAccount or type changed
+                const accountChanged = updatedTransaction.accountId && updatedTransaction.accountId !== oldTransaction.accountId;
+                const toAccountChanged = updatedTransaction.toAccountId !== undefined && updatedTransaction.toAccountId !== oldTransaction.toAccountId;
+                const amountChanged = updatedTransaction.amount !== undefined && updatedTransaction.amount !== oldTransaction.amount;
+                const typeChanged = updatedTransaction.type && updatedTransaction.type !== oldTransaction.type;
+                
+                if ((amountChanged || accountChanged || toAccountChanged || typeChanged) && oldTransaction.accountId) {
+                    const affectedAccounts = new Set([
+                        oldTransaction.accountId, 
+                        oldTransaction.toAccountId, 
+                        newTransaction.accountId, 
+                        newTransaction.toAccountId
+                    ].filter(Boolean));
+
+                    affectedAccounts.forEach(accId => {
                         this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
                             userId: userId,
-                            accountId: oldTransaction.accountId,
+                            accountId: accId as string,
                             transactionType: 'update',
                             oldTransaction: oldTransaction as Transaction,
                             newTransaction: newTransaction as Transaction
                         }));
-                    }
+                    });
                 }
             }
             return of(undefined);
@@ -198,25 +209,28 @@ export class TransactionsService extends BaseService {
                     const newTransaction = { ...oldTransaction, ...updateData } as Transaction;
 
                     const handleBalanceUpdate = () => {
-                        if (oldTransaction && oldTransaction.accountId && (updatedTransaction.amount !== undefined || (updatedTransaction.accountId && updatedTransaction.accountId !== oldTransaction.accountId))) {
-                            if (updatedTransaction.accountId && updatedTransaction.accountId !== oldTransaction.accountId) {
-                                // Account changed - use account transfer action
-                                this.store.dispatch(AccountsActions.updateAccountBalanceForAccountTransfer({
-                                    userId: userId,
-                                    oldAccountId: oldTransaction.accountId,
-                                    newAccountId: updatedTransaction.accountId,
-                                    transaction: newTransaction
-                                }));
-                            } else {
-                                // Only amount or other details changed - use standard update action
+                        const accountChanged = updatedTransaction.accountId && updatedTransaction.accountId !== oldTransaction?.accountId;
+                        const toAccountChanged = updatedTransaction.toAccountId !== undefined && updatedTransaction.toAccountId !== oldTransaction?.toAccountId;
+                        const amountChanged = updatedTransaction.amount !== undefined && updatedTransaction.amount !== oldTransaction?.amount;
+                        const typeChanged = updatedTransaction.type && updatedTransaction.type !== oldTransaction?.type;
+
+                        if (oldTransaction && oldTransaction.accountId && (amountChanged || accountChanged || toAccountChanged || typeChanged)) {
+                            const affectedAccounts = new Set([
+                                oldTransaction.accountId, 
+                                oldTransaction.toAccountId, 
+                                newTransaction.accountId, 
+                                newTransaction.toAccountId
+                            ].filter(Boolean));
+
+                            affectedAccounts.forEach(accId => {
                                 this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
                                     userId: userId,
-                                    accountId: oldTransaction.accountId,
+                                    accountId: accId as string,
                                     transactionType: 'update',
                                     oldTransaction: oldTransaction,
                                     newTransaction: newTransaction
                                 }));
-                            }
+                            });
                         }
                     };
 
@@ -263,13 +277,16 @@ export class TransactionsService extends BaseService {
                     transaction: updatedTx 
                 }));
                 // Update account balance
-                if (transactionToDelete.accountId) {
-                    this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
-                        userId: userId,
-                        accountId: transactionToDelete.accountId,
-                        transactionType: 'delete',
-                        oldTransaction: transactionToDelete
-                    }));
+                if (transactionToDelete.accountId || transactionToDelete.toAccountId) {
+                    const affectedAccounts = new Set([transactionToDelete.accountId, transactionToDelete.toAccountId].filter(Boolean));
+                    affectedAccounts.forEach(accId => {
+                        this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
+                            userId: userId,
+                            accountId: accId as string,
+                            transactionType: 'delete',
+                            oldTransaction: transactionToDelete
+                        }));
+                    });
                 }
                 return of(updatedTx as Transaction);
             }
@@ -282,13 +299,16 @@ export class TransactionsService extends BaseService {
             const transactionToDelete = cachedTransactions.find(t => t.id === transactionId);
 
             const handleBalanceDeletion = () => {
-                if (transactionToDelete && transactionToDelete.accountId) {
-                    this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
-                        userId: userId,
-                        accountId: transactionToDelete.accountId,
-                        transactionType: 'delete',
-                        oldTransaction: transactionToDelete
-                    }));
+                if (transactionToDelete && (transactionToDelete.accountId || transactionToDelete.toAccountId)) {
+                    const affectedAccounts = new Set([transactionToDelete.accountId, transactionToDelete.toAccountId].filter(Boolean));
+                    affectedAccounts.forEach(accId => {
+                        this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
+                            userId: userId,
+                            accountId: accId as string,
+                            transactionType: 'delete',
+                            oldTransaction: transactionToDelete
+                        }));
+                    });
                 }
             };
 

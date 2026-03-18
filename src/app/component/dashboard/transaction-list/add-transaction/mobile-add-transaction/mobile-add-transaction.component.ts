@@ -62,6 +62,8 @@ import { ImageFallbackDirective } from 'src/app/util/directives';
 import { APP_CONFIG } from 'src/app/util/config/config';
 import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { RecurringService } from 'src/app/util/service/db/recurring.service';
+import { CategoryService } from 'src/app/util/service/db/category.service';
+import { firstValueFrom } from 'rxjs';
 
 
 
@@ -195,8 +197,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     private currencyService: CurrencyService,
     private bottomSheet: MatBottomSheet,
     private cdr: ChangeDetectorRef,
-
-    private recurringService: RecurringService
+    private recurringService: RecurringService,
+    private categoryService: CategoryService
   ) {
     this.isGuestUser = this.userService.isGuestUser();
     const tomorrow = new Date();
@@ -263,6 +265,10 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       paidByUserId: [''],
       paidBy: [[] as PaidByMember[]],
       splitBetween: [[] as string[]], // array of selected member userIds
+      
+      // Transfer fields
+      isTransferMode: [false],
+      toAccountId: [''],
     });
 
     this.isMobile = this.breakpointObserver.isMatched('(max-width: 640px)');
@@ -279,6 +285,54 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         categoryIdControl?.disable({ emitEvent: false });
       } else {
         categoryIdControl?.enable({ emitEvent: false });
+      }
+    });
+
+    // Handle Transfer Mode
+    this.transactionForm.get('isTransferMode')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(isTransfer => {
+      const categoryIdCtrl = this.transactionForm.get('categoryId');
+      const categoryNameCtrl = this.transactionForm.get('categoryName');
+      const categoryTypeCtrl = this.transactionForm.get('categoryType');
+      const toAccountIdCtrl = this.transactionForm.get('toAccountId');
+
+      if (isTransfer) {
+        categoryIdCtrl?.clearValidators();
+        categoryNameCtrl?.clearValidators();
+        categoryTypeCtrl?.clearValidators();
+        toAccountIdCtrl?.setValidators([Validators.required]);
+        
+        // Temporarily set valid values for category so form is valid
+        categoryIdCtrl?.setValue('transfer_temp', { emitEvent: false });
+        categoryNameCtrl?.setValue('Transfer', { emitEvent: false });
+        categoryTypeCtrl?.setValue(TransactionType.TRANSFER, { emitEvent: false });
+      } else {
+        categoryIdCtrl?.setValidators([Validators.required]);
+        categoryNameCtrl?.setValidators([Validators.required]);
+        categoryTypeCtrl?.setValidators([Validators.required]);
+        toAccountIdCtrl?.clearValidators();
+        
+        if (categoryIdCtrl?.value === 'transfer_temp') {
+          categoryIdCtrl?.setValue('', { emitEvent: false });
+          categoryNameCtrl?.setValue('', { emitEvent: false });
+          categoryTypeCtrl?.setValue('', { emitEvent: false });
+        }
+      }
+
+      categoryIdCtrl?.updateValueAndValidity({ emitEvent: false });
+      categoryNameCtrl?.updateValueAndValidity({ emitEvent: false });
+      categoryTypeCtrl?.updateValueAndValidity({ emitEvent: false });
+      toAccountIdCtrl?.updateValueAndValidity({ emitEvent: false });
+      this.cdr.markForCheck();
+    });
+
+    // Ensure toAccountId doesn't match accountId when accountId changes
+    this.transactionForm.get('accountId')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(accountId => {
+      const isTransfer = this.transactionForm.get('isTransferMode')?.value;
+      const toAccountIdCtrl = this.transactionForm.get('toAccountId');
+      if (isTransfer && accountId && toAccountIdCtrl?.value === accountId) {
+        toAccountIdCtrl?.setValue('');
+        toAccountIdCtrl?.markAsTouched();
+        this.cdr.markForCheck();
       }
     });
   }
@@ -531,6 +585,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       paidByUserId: transaction.splitData?.paidByUserId || '',
       paidBy: transaction.splitData?.paidBy || [],
       splitBetween: transaction.splitData?.splitBetween || [],
+      isTransferMode: transaction.type === TransactionType.TRANSFER,
+      toAccountId: transaction.toAccountId || '',
     });
 
     if (transaction.isCategorySplit) {
@@ -589,6 +645,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         taxPercentage: 0,
         taxes: [],
         paymentMethod: '',
+        isTransferMode: false,
+        toAccountId: '',
       });
 
       combineLatest([
@@ -715,6 +773,13 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       return;
     }
 
+    // Additional validation for transfer transactions
+    if (this.transactionForm.get('isTransferMode')?.value && 
+        this.transactionForm.get('accountId')?.value === this.transactionForm.get('toAccountId')?.value) {
+      this.notificationService.error('Source and destination accounts cannot be the same');
+      return;
+    }
+
     if (this.transactionForm.valid && !this.isSubmitting()) {
       this.isSubmitting.set(true);
 
@@ -723,14 +788,36 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
         const formData = this.transactionForm.value;
 
+        let finalCategoryId = formData.categoryId;
+        let finalCategoryName = formData.categoryName;
+        let finalCategoryType = formData.categoryType as TransactionType;
+        
+        if (formData.isTransferMode) {
+          finalCategoryType = TransactionType.TRANSFER;
+          finalCategoryName = 'Transfer';
+          try {
+            finalCategoryId = await firstValueFrom(this.categoryService.findOrCreateSystemCategory(
+              this.userId,
+              'Transfer',
+              TransactionType.TRANSFER,
+              'swap_horiz',
+              '#8b5cf6'
+            ));
+          } catch (e) {
+            console.error('Error creating transfer category', e);
+            finalCategoryId = 'transfer_system';
+          }
+        }
+
         const transactionData = {
 
           accountId: formData.accountId,
+          toAccountId: formData.isTransferMode ? formData.toAccountId : undefined,
           amount: parseFloat(formData.amount),
-          category: formData.categoryName,
-          categoryId: formData.categoryId,
-          categoryType: formData.categoryType as TransactionType,
-          type: formData.categoryType as TransactionType,
+          category: finalCategoryName,
+          categoryId: finalCategoryId,
+          categoryType: finalCategoryType,
+          type: finalCategoryType,
           date: this.dateService.getLocalDateTimeFromForm(formData.date, true, this.dialogData?.date),
           notes: formData.description,
           taxAmount: formData.taxAmount || 0,

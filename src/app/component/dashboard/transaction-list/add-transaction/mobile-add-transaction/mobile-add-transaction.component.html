@@ -66,6 +66,7 @@
     <!-- Category and Date Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <!-- Category Field -->
+      @if (!transactionForm.get('isTransferMode')?.value) {
       <div>
         <div class="flex items-center justify-between mb-2">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -152,6 +153,7 @@
           <mat-error class="text-xs mt-1 ml-1">Category is required</mat-error>
         }
       </div>
+      }
 
       <!-- Date Field -->
       <div>
@@ -373,10 +375,13 @@
         <!-- Account and Payment Method Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <!-- Account Field -->
-          <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm h-full">
+          <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm h-full flex flex-col">
+            
+
+
             <div class="flex items-center justify-between mb-2">
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Account *
+                {{ transactionForm.get('isTransferMode')?.value ? 'From Account *' : 'Account *' }}
               </label>
               @if (!viewMode()) {
                 <button type="button" (click)="openNewAccountDialog()"
@@ -403,10 +408,37 @@
                 }
               </mat-form-field>
             </div>
+
+            <!-- Transfer Option Inside Account -->
+            <div class="flex items-center justify-between mt-1 pt-2 border-t border-gray-100 dark:border-gray-700">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Transfer to another account
+              </label>
+              <mat-slide-toggle formControlName="isTransferMode"></mat-slide-toggle>
+            </div>
+            @if (transactionForm.get('isTransferMode')?.value) {
+              <!-- To Account Field -->
+              <div class="pt-3  border-gray-100 dark:border-gray-700">
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>Select destination account</mat-label>
+                  <mat-select formControlName="toAccountId">
+                    @for (account of accountList$ | async; track account.accountId) {
+                      <mat-option [value]="account.accountId" [disabled]="account.accountId === transactionForm.get('accountId')?.value">{{ account.name }} ({{ account.type | titlecase
+                      }})</mat-option>
+                    }
+                  </mat-select>
+
+                  @if(transactionForm.get('toAccountId')?.hasError('required') &&
+                    transactionForm.get('toAccountId')?.touched) {
+                    <mat-error>Destination account is required</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+            }
           </div>
 
           <!-- Payment Method Field -->
-          @if (this.transactionForm.get('type')?.value === TransactionType.EXPENSE) {
+          @if (!transactionForm.get('isTransferMode')?.value && (this.transactionForm.get('type')?.value === TransactionType.EXPENSE || this.transactionForm.get('categoryType')?.value === TransactionType.EXPENSE)) {
             <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm h-full"
               >
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

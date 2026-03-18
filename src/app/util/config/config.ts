@@ -62,7 +62,8 @@ export const APP_CONFIG = {
     RESERVED_CATEGORY_NAMES: {
       'loan payment': 'is a reserved name for Loan Account category',
       'settlement': 'is a reserved name for Family Group settlements',
-      'adjustment': 'is a reserved name for Ledger adjustments'
+      'adjustment': 'is a reserved name for Ledger adjustments',
+      'transfer': 'is a reserved name for Transfer between accounts'
     }
   },
 
