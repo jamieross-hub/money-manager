@@ -303,7 +303,10 @@ export class TransactionProcessorService {
       );
     } else {
       if (isRecurringMode) {
-        sourceData = recurringTemplates || [];
+        sourceData = (recurringTemplates || []).map((t: any) => ({
+          ...t,
+          date: t.nextOccurrence || t.createdAt || new Date()
+        }));
       } else {
         sourceData = transactions;
       }
@@ -334,7 +337,7 @@ export class TransactionProcessorService {
     }
 
     // Date Range
-    if (range !== 'upcoming') {
+    if (range !== 'upcoming' && !isRecurringMode) {
       if (filters.selectedDateRange) {
         const start = dayjs(filters.selectedDateRange.startDate).startOf('day');
         const end = dayjs(filters.selectedDateRange.endDate).endOf('day');
