@@ -33,6 +33,7 @@ export interface PeriodSummary {
     savings: number;
     savingsRate: number;
     avgMonthlySpending: number;
+    avgMonthlyIncome: number;
     topCategory: CategoryBreakdownItem | null;
     categoryBreakdown: CategoryBreakdownItem[];
     expenseGrowth: number | null;
@@ -334,6 +335,7 @@ function aggregatePeriod(months: MonthlySummary[], label: string, iconMap: any, 
     const savings = income - expense;
     const savingsRate = income > 0 ? (savings / income) * 100 : 0;
     const avgMonthlySpending = expense / (months.length || 1);
+    const avgMonthlyIncome = income / (months.length || 1);
 
     const catMap = new Map<string, CategoryBreakdownItem>();
     for (const m of months) {
@@ -357,7 +359,7 @@ function aggregatePeriod(months: MonthlySummary[], label: string, iconMap: any, 
     if (expense > 0) categories.forEach(c => c.percentage = (c.amount / expense) * 100);
 
     return {
-        label, income, expense, savings, savingsRate, avgMonthlySpending,
+        label, income, expense, savings, savingsRate, avgMonthlySpending, avgMonthlyIncome,
         topCategory: categories.length > 0 ? categories[0] : null,
         categoryBreakdown: categories,
         expenseGrowth: null

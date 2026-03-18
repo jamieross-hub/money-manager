@@ -29,6 +29,7 @@ export interface PeriodSummary {
     savings: number;
     savingsRate: number;
     avgMonthlySpending: number;
+    avgMonthlyIncome: number;
     topCategory: CategoryBreakdownItem | null;
     categoryBreakdown: CategoryBreakdownItem[];
     expenseGrowth: number | null;
