@@ -181,7 +181,7 @@ export class MobileTransactionListComponent
   isLoading = computed(() => this.isLoadingTransactions() || this.isProcessing() || (this.isSyncing() && this.allTransactions().length === 0));
   
   allTransactions = computed(() => {
-    if (this.selectedRange() === 'deleted') {
+    if (this.selectedRange() === 'deleted' || this.selectedSpecialRange() === 'deleted') {
       return this.deletedTransactions();
     }
     return this.allActiveTransactions();
@@ -311,7 +311,7 @@ export class MobileTransactionListComponent
     if (this.selectedDate() || this.selectedDateRange()) count++;
     if (this.selectedAccounts().length > 0) count++;
     if (this.selectedAccountTypes().length > 0) count++;
-    if (this.selectedRange()) count++;
+    if (this.selectedRange() || this.selectedSpecialRange()) count++;
     if (this.selectedMember()) count++;
     return count;
   });
@@ -570,7 +570,7 @@ export class MobileTransactionListComponent
   });
 
   currentDateIcon = computed(() => {
-    const range = this.selectedRange();
+    const range = this.selectedSpecialRange() || this.selectedRange();
     if (!range) return 'calendar_today';
     
     switch (range) {
@@ -589,7 +589,7 @@ export class MobileTransactionListComponent
   });
   
   currentRangeLabel = computed(() => {
-    const range = this.selectedRange();
+    const range = this.selectedSpecialRange() || this.selectedRange();
     if (!range) return null;
     
     switch (range) {
@@ -924,7 +924,7 @@ export class MobileTransactionListComponent
   }
 
   hasActiveFilters(): boolean {
-    return this.filterService.hasActiveFilters();
+    return this.filterService.hasActiveFilters() || !!this.selectedSpecialRange();
   }
 
   onTransactionClick(transaction: Transaction, element: HTMLElement) {
