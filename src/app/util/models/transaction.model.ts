@@ -4,7 +4,7 @@ import {
   RecurringInterval,
   SyncStatus,
   TransactionStatus,
-  PaymentMethod,
+
 } from '../config/enums';
 
 /**
@@ -93,7 +93,7 @@ export interface Transaction extends Auditable, RecurrenceInfo {
   date: Date | Timestamp;
   notes?: string;
   status: TransactionStatus;
-  paymentMethod?: PaymentMethod;
+
   tags?: string[];
   isSplitTransaction?: boolean;
   splitGroupId?: string;
@@ -168,7 +168,7 @@ export interface TransactionBaseRequest {
   date: Date;
   notes?: string;
   note?: string;      // Compatibility with family 'note' field
-  paymentMethod?: PaymentMethod;
+
   tags?: string[];
   isRecurring?: boolean;
   recurringInterval?: RecurringInterval;
@@ -217,7 +217,7 @@ export interface TransactionFilter {
   payee?: string;
   tags?: string[];
   status?: TransactionStatus[];
-  paymentMethods?: PaymentMethod[];
+
   isRecurring?: boolean;
 }
 

@@ -2,7 +2,7 @@ import { Timestamp } from '@angular/fire/firestore';
 import { 
   TransactionType, 
   RecurringInterval, 
-  PaymentMethod,
+
   SyncStatus
 } from '../config/enums';
 import { Auditable } from './transaction.model';
@@ -25,7 +25,7 @@ export interface RecurringTemplate extends Auditable {
   recurringEndDate?: Date | Timestamp | null;
   nextOccurrence: Date | Timestamp;
   notes?: string;
-  paymentMethod?: PaymentMethod;
+
   tags?: string[];
   isActive: boolean;
   isRecurring: boolean;

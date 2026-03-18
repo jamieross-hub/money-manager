@@ -9,7 +9,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormControl } 
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { ValidationService } from 'src/app/util/service/validation.service';
 import { Account } from 'src/app/util/models/account.model';
-import { AccountType, TransactionType, RecurringInterval, TransactionStatus, PaymentMethod } from 'src/app/util/config/enums';
+import { AccountType, TransactionType, RecurringInterval, TransactionStatus } from 'src/app/util/config/enums';
 import { TransactionsService } from 'src/app/util/service/db/transactions.service';
 import { CategoryService } from 'src/app/util/service/db/category.service';
 import { AccountsService } from 'src/app/util/service/db/accounts.service';
@@ -715,7 +715,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
             date: paymentDate,
             notes: `EMI payment for ${loanDetails.lenderName} loan (month ${i + 1})`,
             status: TransactionStatus.COMPLETED,
-            paymentMethod: PaymentMethod.BANK_TRANSFER,
+
             isRecurring: true,
             recurringInterval: loanDetails.repaymentFrequency === 'weekly' ? RecurringInterval.WEEKLY : RecurringInterval.MONTHLY,
             createdAt: new Date(),
@@ -764,7 +764,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
           date: nextDueDateAsDate,
           notes: `Monthly payment for ${loanDetails.lenderName} loan`,
           status: TransactionStatus.PENDING,
-          paymentMethod: PaymentMethod.BANK_TRANSFER,
+
           isRecurring: true,
           recurringInterval: loanDetails.repaymentFrequency === 'weekly' ? RecurringInterval.WEEKLY : RecurringInterval.MONTHLY,
           recurringEndDate,

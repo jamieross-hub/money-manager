@@ -34,7 +34,7 @@ import * as TransactionsActions from '../../../../../store/transactions/transact
 import { loadAccounts } from 'src/app/store/accounts/accounts.actions';
 import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
-import { RecurringInterval, SyncStatus, TransactionStatus, TransactionType, PaymentMethod, AccountType } from 'src/app/util/config/enums';
+import { RecurringInterval, SyncStatus, TransactionStatus, TransactionType, AccountType } from 'src/app/util/config/enums';
 import { Category } from 'src/app/util/models';
 import { BreakpointObserver } from '@angular/cdk/layout';
 
@@ -110,13 +110,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   public isMobile: boolean = false;
   public currentCategoryIcon = signal('');
   public currentCategoryColor = signal('');
-  public paymentMethods = [
-    { value: PaymentMethod.CREDIT_CARD, label: 'Credit Card', icon: 'credit_card' },
-    { value: PaymentMethod.DEBIT_CARD, label: 'Debit Card', icon: 'credit_card' },
-    { value: PaymentMethod.BANK_TRANSFER, label: 'Bank Transfer', icon: 'account_balance' },
-    { value: PaymentMethod.CASH, label: 'Cash', icon: 'money' },
-    { value: PaymentMethod.DIGITAL_WALLET, label: 'Digital Wallet', icon: 'account_balance_wallet' },
-  ];
+
   public editMode = signal(false);
   public viewMode = signal(false);
   public TransactionType = TransactionType;
@@ -245,7 +239,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       taxAmount: [0, [Validators.min(0)]],
       taxPercentage: [0, [Validators.min(0), Validators.max(100)]],
       taxes: [[]],
-      paymentMethod: [''],
+
       // Recurring fields
       isRecurring: [false],
       recurringInterval: [RecurringInterval.MONTHLY],
@@ -577,7 +571,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       taxAmount: transaction.taxAmount || 0,
       taxPercentage: transaction.taxPercentage || 0,
       taxes: transaction.taxes || [],
-      paymentMethod: transaction.paymentMethod || '',
+
       isRecurring: transaction.isRecurring || false,
       recurringInterval: transaction.recurringInterval || RecurringInterval.MONTHLY,
       recurringStartDate: this.dateService.toLocalISOString(transaction.nextOccurrence || new Date()),
@@ -644,7 +638,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         taxAmount: 0,
         taxPercentage: 0,
         taxes: [],
-        paymentMethod: '',
+
         isTransferMode: false,
         toAccountId: '',
       });
@@ -823,7 +817,6 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           taxAmount: formData.taxAmount || 0,
           taxPercentage: formData.taxPercentage || 0,
           taxes: formData.taxes || [],
-          paymentMethod: formData.paymentMethod || '',
           isRecurring: formData.isRecurring || false,
           payee: formData.description || this.dialogData?.payee || '', // Carry over payee if available
           recurringInterval: formData.recurringInterval || RecurringInterval.MONTHLY,
@@ -1426,15 +1419,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   }
 
 
-  getPaymentMethodIcon(value: string): string {
-    const method = this.paymentMethods.find(m => m.value === value);
-    return method ? method.icon : 'payment';
-  }
 
-  getPaymentMethodLabel(value: string): string {
-    const method = this.paymentMethods.find(m => m.value === value);
-    return method ? method.label : 'None';
-  }
 
   ngOnDestroy() {
     this._onDestroy.next();

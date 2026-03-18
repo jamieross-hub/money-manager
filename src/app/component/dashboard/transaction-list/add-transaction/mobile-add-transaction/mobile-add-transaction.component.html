@@ -437,39 +437,7 @@
             }
           </div>
 
-          <!-- Payment Method Field -->
-          @if (!transactionForm.get('isTransferMode')?.value && (this.transactionForm.get('type')?.value === TransactionType.EXPENSE || this.transactionForm.get('categoryType')?.value === TransactionType.EXPENSE)) {
-            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm h-full"
-              >
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Payment Method
-              </label>
-              <mat-form-field appearance="fill" class="w-full">
-                <mat-label>Select payment method</mat-label>
-                <mat-select formControlName="paymentMethod">
-                  <mat-select-trigger>
-                    @if (transactionForm.get('paymentMethod')?.value) {
-                      <div class="flex items-center gap-2">
-                        <mat-icon class="text-sm">{{
-                          getPaymentMethodIcon(transactionForm.get('paymentMethod')?.value)
-                        }}</mat-icon>
-                        <span>{{ getPaymentMethodLabel(transactionForm.get('paymentMethod')?.value) }}</span>
-                      </div>
-                    }
-                  </mat-select-trigger>
-                  <mat-option value="">None</mat-option>
-                  @for (method of paymentMethods; track method.value) {
-                    <mat-option [value]="method.value">
-                      <div class="flex items-center gap-2">
-                        <mat-icon class="text-sm">{{ method.icon }}</mat-icon>
-                        <span>{{ method.label }}</span>
-                      </div>
-                    </mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
-            </div>
-          }
+
         </div>
 
         <!-- Notes Field -->

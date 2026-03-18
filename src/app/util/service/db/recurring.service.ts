@@ -241,7 +241,7 @@ export class RecurringService extends BaseService {
       type: template.type,
       date: date,
       notes: template.notes,
-      paymentMethod: template.paymentMethod,
+
       tags: template.tags,
       status: TransactionStatus.COMPLETED,
       syncStatus: SyncStatus.SYNCED,

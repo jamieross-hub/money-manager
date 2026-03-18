@@ -226,17 +226,6 @@ export enum SubscriptionPlan {
 }
 
 /**
- * Payment methods
- */
-export enum PaymentMethod {
-  CREDIT_CARD = 'credit_card',
-  DEBIT_CARD = 'debit_card',
-  BANK_TRANSFER = 'bank_transfer',
-  CASH = 'cash',
-  DIGITAL_WALLET = 'digital_wallet'
-}
-
-/**
  * Transaction status
  */
 export enum TransactionStatus {
