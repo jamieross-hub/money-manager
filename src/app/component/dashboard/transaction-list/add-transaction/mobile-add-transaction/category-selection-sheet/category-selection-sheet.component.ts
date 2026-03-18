@@ -91,16 +91,16 @@ export class CategorySelectionSheetComponent implements OnInit {
                     }
                 });
 
-                // Show all categories regardless of type, but hide system categories
-                // Base categories$ is already filtered for reserved names
-                let filtered = categories.filter(c => !c.isSystem);
+                // Show categories matching current type, hide system categories
+                let filtered = categories.filter(c => !c.isSystem && c.type === this.transactionType);
 
                 if (search) {
                     filtered = filtered.filter(c => c.name.toLowerCase().startsWith(search));
                 }
 
                 // Sort by frequency (most used first) then by name
-                return filtered.sort((a, b) => {
+                const sorted = filtered.sort((a, b) => {
+
                     const freqA = a.id ? (frequencyMap.get(a.id) || 0) : 0;
                     const freqB = b.id ? (frequencyMap.get(b.id) || 0) : 0;
 
@@ -108,6 +108,17 @@ export class CategorySelectionSheetComponent implements OnInit {
                         return freqB - freqA;
                     }
                     return a.name.localeCompare(b.name);
+                });
+
+                // De-duplicate by name (case-insensitive) to avoid visual duplicates
+                const seen = new Set<string>();
+                return sorted.filter(c => {
+                    const nameLower = (c.name || '').toLowerCase();
+                    if (seen.has(nameLower)) {
+                        return false;
+                    }
+                    seen.add(nameLower);
+                    return true;
                 });
             })
         );
