@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { MatIconModule } from '@angular/material/icon';
@@ -183,6 +183,30 @@ export class FooterComponent {
 
   quickExpense() {
     this.navigateTo('/dashboard/transactions');
+  }
+
+  private pressTimer: any;
+  private isLongPress = false;
+  readonly showSummaryInFamily = signal(false);
+
+  startPress() {
+    this.isLongPress = false;
+    this.pressTimer = setTimeout(() => {
+      this.isLongPress = true;
+      this.showSummaryInFamily.update((v: boolean) => !v);
+    }, 600);
+  }
+
+  endPress() {
+    if (this.pressTimer) {
+      clearTimeout(this.pressTimer);
+    }
+  }
+
+  handleSettleClick() {
+    if (this.isLongPress) return;
+    const route = this.showSummaryInFamily() ? '/dashboard/summary' : '/dashboard/family/settle';
+    this.navigateTo(route);
   }
 
   navigateTo(route: string) {

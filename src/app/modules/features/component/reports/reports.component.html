@@ -2,6 +2,7 @@
   <div class="max-w-7xl mx-auto">
 
     <!-- ═══════════ HEADER ═══════════ -->
+    @if (!isFamilyMode()) {
     <div class="mb-10 mt-6 group relative">
       <div class="grid items-start" style="grid-template-areas: 'stack';"
         (touchstart)="onSummaryTouchStart($event)" (touchend)="onSummaryTouchEnd($event)">
@@ -26,6 +27,7 @@
         </div>
       </div>
     </div>
+    }
     <!-- <mat-card class="mb-6 !rounded-xl">
     <mat-card-content>
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 pt-2">
@@ -53,9 +55,9 @@
     <!--                        TAB 1: PAST & CURRENT SUMMARY                         -->
     <!-- ############################################################################## -->
     <mat-tab>
-      <ng-template mat-tab-label>
+      <ng-template mat-tab-label >
         <mat-icon class="mr-2">bar_chart</mat-icon>
-        Current
+        <span>{{ isFamilyMode() ? activeFamilyName() : 'Current' }}</span>
       </ng-template>
       <ng-template matTabContent>
         <div class="pt-6">
@@ -147,7 +149,7 @@
                       ></div>
                     }
                     <!-- Row 2 (mobile) / Right half (desktop) -->
-                    @if (!breakpointService.device.isMobile) {
+                    @if (!isSplitwiseMode() && !breakpointService.device.isMobile) {
                       <div class="grid grid-cols-2 divide-x divide-surface-500 flex-1"
                         >
                         <!-- Savings Rate -->
@@ -202,7 +204,7 @@
                   </div>
                 </mat-card-content>
               </mat-card>
-              <div class="flex justify-center mt-10 ">
+              <div class="flex justify-center mt-10 " *ngIf="!isFamilyMode()">
                 <mat-button-toggle-group [value]="selectedPeriod()" (change)="selectPeriod($event.value)"
                   appearance="standard" class="period-toggle ">
                   @for (p of periodOptions; track p) {
@@ -477,6 +479,37 @@
           } @placeholder {
           <div class="h-48 bg-neutral-200 rounded-xl animate-pulse"></div>
         }
+
+        <!-- ═══════════ MEMBER CONTRIBUTION & BALANCES (SPLITWISE MODE) ═══════════ -->
+        @if (isSplitwiseMode() && familyStats()) {
+          <mat-card class="!rounded-xl !border-none mt-6">
+            <mat-card-content class="pt-4">
+              <p class="text-lg font-semibold text-neutral-500 mb-5 flex items-center gap-2">
+                <mat-icon class="text-primary-500">group</mat-icon>
+                Member Contributions
+              </p>
+              <div class="space-y-4">
+                @for (m of familyStats()!.memberBreakdown; track m.userId) {
+                  <div class="p-3 bg-surface-100 rounded-lg flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-full flex items-center justify-center bg-primary-100 text-primary-700 text-sm font-bold">
+                        {{ m.displayName.charAt(0).toUpperCase() }}
+                      </div>
+                      <div>
+                        <p class="text-sm font-medium text-neutral-800">{{ m.displayName }}</p>
+                        <p class="text-xs text-neutral-400">{{ m.transactionCount }} transactions</p>
+                      </div>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-sm font-semibold text-error-500">Share: {{ m.totalExpense | currency }}</p>
+                      <p class="text-xs text-success-500">Paid: {{ m.totalPaid | currency }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
       </div>
     }
   </div>
@@ -486,6 +519,7 @@
 <!-- ############################################################################## -->
 <!--                           TAB 2: PREDICTIONS                                  -->
 <!-- ############################################################################## -->
+@if (!isSplitwiseMode()) {
 <mat-tab>
   <ng-template mat-tab-label>
     <mat-icon class="mr-2">auto_graph</mat-icon>
@@ -803,6 +837,7 @@
 </div>
 </ng-template>
 </mat-tab>
+}
 </mat-tab-group>
 
 </div>

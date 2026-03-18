@@ -6,12 +6,15 @@ import { Store } from '@ngrx/store';
 import { AppState } from '../../../../store/app.state';
 import * as TransactionsSelectors from '../../../../store/transactions/transactions.selectors';
 import * as CategoriesSelectors from '../../../../store/categories/categories.selectors';
+import * as ProfileSelectors from '../../../../store/profile/profile.selectors';
+import * as FamilySelectors from '../../../../modules/family/store/family.selectors';
 import { UserService } from '../../../../util/service/db/user.service';
 import { CurrencyService } from '../../../../util/service/currency.service';
 import { DateService } from '../../../../util/service/date.service';
 import { AppViewService, AppView } from '../../../../util/service/app-view.service';
 import dayjs from 'dayjs';
 import { ReportsProcessorService, MonthlySummary, CategoryBreakdownItem, PeriodSummary, Prediction } from '../../../../util/service/reports-processor.service';
+import { FamilyProcessorService } from '../../../../util/service/family-processor.service';
 
 // Angular Material
 import { MatCardModule } from '@angular/material/card';
@@ -83,6 +86,16 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
     // Summary Cards
     activeSummaryCard: 'category' | 'account' = 'category';
+    
+    private readonly familyProcessor = inject(FamilyProcessorService);
+    
+    readonly isSplitwiseMode = computed(() => {
+        const conn = this.familyProcessor.connector();
+        return conn.ready && conn.mode === 'split';
+    });
+    
+    readonly familyStats = this.familyProcessor.stats;
+    readonly familyBalances = this.familyProcessor.balances;
 
     swapSummaryCard(): void {
         this.activeSummaryCard = this.activeSummaryCard === 'category' ? 'account' : 'category';
@@ -121,6 +134,14 @@ export class ReportsComponent implements OnInit, OnDestroy {
     // Store Signals
     readonly transactions = this.store.selectSignal(TransactionsSelectors.selectAllTransactions);
     readonly allCategories = this.store.selectSignal(CategoriesSelectors.selectAllCategories);
+    readonly isFamilyMode = this.store.selectSignal(ProfileSelectors.selectIsFamilyMode);
+    readonly activeFamily = this.store.selectSignal(FamilySelectors.selectFamily);
+    
+    readonly activeFamilyName = computed(() => {
+        const name = this.activeFamily()?.name;
+        if (!name) return 'Family';
+        return name.length > 10 ? `${name.substring(0, 8)}..` : name;
+    });
 
     // Data from ReportsProcessorService (Signals)
     monthlySummariesSignal = this.reportsProcessor.monthlySummaries;
