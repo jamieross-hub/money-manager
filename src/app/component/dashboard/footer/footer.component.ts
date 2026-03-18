@@ -16,6 +16,7 @@ import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AppState } from 'src/app/store/app.state';
 import * as fromProfile from 'src/app/store/profile/profile.selectors';
+import * as fromFamily from 'src/app/modules/family/store/family.selectors';
 import { FamilyService } from '../../../modules/family/services/family.service';
 
 
@@ -50,6 +51,33 @@ export class FooterComponent {
     ),
     { initialValue: false }
   );
+
+  readonly userFamilies = toSignal(
+    this.store.select(fromFamily.selectUserFamilies),
+    { initialValue: [] }
+  );
+
+  private readonly activeFamily = computed(() => {
+    const activeId = this.isFamilyMode() ? this.familyService.activeFamilyId() : null;
+    return activeId ? this.userFamilies().find(f => f.id === activeId) : null;
+  });
+
+  readonly activeFamilyIcon = computed(() => this.activeFamily()?.icon || 'family_restroom');
+  readonly activeFamilyName = computed(() => {
+    const name = this.activeFamily()?.name || 'Family';
+    if (name.length > 6) {
+      const words = name.trim().split(/\s+/).filter(w => w.length > 0);
+      if (words.length > 1) {
+        return words.map(w => w[0].toUpperCase()).join('').substring(0, 3);
+      }
+      return name.substring(0, 5) + '..';
+    }
+    return name;
+  });
+
+  isImageIcon(icon: string | null | undefined): boolean {
+    return !!icon && icon.startsWith('data:');
+  }
 
   readonly currentUrl = toSignal(
     this.router.events.pipe(

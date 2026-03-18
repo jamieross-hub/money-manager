@@ -10,11 +10,16 @@
           <button (click)="home()" class="group flex flex-col items-center gap-2 lg:gap-1">
             <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
               [ngClass]="isFamilyActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
-              <mat-icon class="text-xl lg:text-base relative bottom-1"
-              [ngClass]="isFamilyActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">family_restroom</mat-icon>
+              @if (isImageIcon(activeFamilyIcon())) {
+                <img [src]="activeFamilyIcon()" class="w-6 h-6 object-cover rounded-md mt-0.5"
+                     [ngClass]="isFamilyActive() ? '' : 'filter grayscale opacity-70'" alt="Family icon" />
+              } @else {
+                <mat-icon class="text-xl lg:text-base relative bottom-1"
+                [ngClass]="isFamilyActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">{{ activeFamilyIcon() }}</mat-icon>
+              }
             </div>
-            <span class="nav-label"
-            [ngClass]="isFamilyActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">Family</span>
+            <span class="nav-label truncate max-w-[68px] inline-block text-center w-full"
+            [ngClass]="isFamilyActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{activeFamilyName()}}</span>
           </button>
         } @else {
           <button (click)="home()" class="group flex flex-col items-center gap-2 lg:gap-1">
@@ -137,7 +142,7 @@
           <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
             [ngClass]="isProfileActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
             <mat-icon class="text-xl lg:text-base relative bottom-1"
-            [ngClass]="isProfileActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">person</mat-icon>
+            [ngClass]="isProfileActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">{{ isFamilyMode() ? 'group' : 'person' }}</mat-icon>
           </div>
           <span class="nav-label"
             [ngClass]="isProfileActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
