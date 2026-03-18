@@ -205,7 +205,7 @@ export class FooterComponent {
 
   handleSettleClick() {
     if (this.isLongPress) return;
-    const route = this.showSummaryInFamily() ? '/dashboard/summary' : '/dashboard/family/settle';
+    const route = this.showSummaryInFamily() ? '/dashboard/family/reports' : '/dashboard/family/settle';
     this.navigateTo(route);
   }
 

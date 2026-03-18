@@ -1,48 +1,122 @@
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
 
-  <!-- Header -->
-  <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 border-b border-gray-100 dark:border-gray-700 shadow-sm">
-    <h1 class="text-xl font-bold text-gray-900 dark:text-white">Family Reports</h1>
-    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-      {{ transactions().length }} transactions
-    </p>
-  </div>
+
 
   @if (loading() && !stats()) {
     <div class="flex justify-center py-16"><mat-spinner diameter="36"></mat-spinner></div>
   }
 
   @if (stats()) {
-    <div>
+    <div class="px-2 ">
+          <h2 class="text-sm font-semibold text-gray-700  mb-3">Group Summary</h2>
       <!-- Overall Summary -->
-      <div class="px-4 mt-4 grid grid-cols-2 gap-3">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
-          <p class="text-xs text-gray-500 dark:text-gray-400">Total Income</p>
-          <p class="text-xl font-bold text-green-600 dark:text-green-400 mt-1">
-            {{ stats()!.totalIncome | number:'1.0-0' }}
-          </p>
+      @if (family()?.mode === 'split') {
+        <div class="mt-4">
+          <div class="bg-surface-200 rounded-2xl p-2 shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden group transition-all">
+            
+            <!-- Decorative Watermark Icon -->
+            <div class="absolute -right-6 -bottom-6 opacity-[0.04] dark:opacity-[0.06] pointer-events-none group-hover:scale-110 transition-transform duration-500">
+              <mat-icon class="!text-[120px] !w-[120px] !h-[120px] text-gray-400 dark:text-gray-500">insights</mat-icon>
+            </div>
+
+            <!-- Top Row: Group Identity -->
+            <div class="border-b border-gray-100 dark:border-gray-800 pb-4 mb-4 flex items-center justify-between px-2 pt-4">
+              <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-surface-100 dark:bg-gray-800/40 flex items-center justify-center border border-gray-100 dark:border-gray-700 shadow-inner">
+                  <mat-icon class="!text-[20px] !w-5 !h-5 text-primary-500">{{ family()?.icon || 'roofing' }}</mat-icon>
+                </div>
+                <div>
+                  <h3 class="text-sm leading-tight">{{ family()?.name }}</h3>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                      <mat-icon class="!text-[12px] !w-3.5 !h-3.5 opacity-70">group</mat-icon>
+                      {{ members().length }} members
+                    </span>
+                    <span class="text-gray-300 dark:text-gray-600">|</span>
+                    <span class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                      <mat-icon class="!text-[12px] !w-3.5 !h-3.5 opacity-70">calendar_today</mat-icon>
+                      {{ dateRange() }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ledger Style Details -->
+            <div class="space-y-3 mb-4 px-2">
+              <div class="flex justify-between items-center text-xs">
+                <span class="text-gray-500 dark:text-gray-400 font-medium">Total Transactions</span>
+                <span class="font-bold text-gray-800 dark:text-gray-200">{{ transactions().length }} </span>
+              </div>
+
+               <div class="flex justify-between items-center text-xs">
+                <span class="text-gray-500 dark:text-gray-400 font-medium">Total Expenses</span>
+                <span class="font-bold text-gray-800 dark:text-gray-200">{{ stats()!.totalExpense | currency }}</span>
+              </div>
+
+            </div>
+
+            <!-- Smart Insights on glass but adapted to light/dark -->
+            <div class="bg-gray-50/80 dark:bg-gray-900/40 rounded-2xl px-3.5 py-3 border border-gray-100 dark:border-gray-800/80 shadow-inner">
+              <p class="text-[10px] font-black tracking-widest uppercase text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1.5">
+                <mat-icon class="!text-[13px] !w-3.5 !h-3.5 text-primary-500">auto_awesome</mat-icon>
+                Smart Insights
+              </p>
+              
+              <div class="space-y-1.5 text-xs">
+                @if (topSpender()) {
+                  <div class="flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
+                    <div class="w-1 h-1 rounded-full bg-primary-500"></div>
+                    <span>Top spender: <span class="font-bold text-gray-900 dark:text-white">{{ topSpender()!.name }}</span> with <span class="font-bold text-red-600 dark:text-red-400">{{ topSpender()!.amount | currency }}</span></span>
+                  </div>
+                }
+                @if (topCategory()) {
+                  <div class="flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
+                    <div class="w-1 h-1 rounded-full bg-amber-500"></div>
+                    <span>Most expenses: <span class="font-bold text-gray-900 dark:text-white">{{ topCategory()!.name }}</span> ({{ topCategory()!.percentage | number:'1.0-0' }}%)</span>
+                  </div>
+                }
+                @if (largestExpense()) {
+                  <div class="flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
+                    <div class="w-1 h-1 rounded-full bg-emerald-500"></div>
+                    <span>Largest expense: <span class="font-bold text-gray-900 dark:text-white truncate max-w-[100px] inline-block align-bottom">{{ largestExpense()!.note }}</span> <span class="font-bold text-red-600 dark:text-red-400">{{ largestExpense()!.amount | currency }}</span></span>
+                  </div>
+                }
+              </div>
+            </div>
+
+          </div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
-          <p class="text-xs text-gray-500 dark:text-gray-400">Total Expense</p>
-          <p class="text-xl font-bold text-red-600 dark:text-red-400 mt-1">
-            {{ stats()!.totalExpense | number:'1.0-0' }}
-          </p>
+      } @else {
+        <div class=" mt-4 grid grid-cols-2 gap-3">
+          <div class="bg-surface-200 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+            <p class="text-xs text-gray-500 dark:text-gray-400">Total Income</p>
+            <p class="text-xl font-bold text-green-600 dark:text-green-400 mt-1">
+              {{ stats()!.totalIncome | number:'1.0-0' }}
+            </p>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+            <p class="text-xs text-gray-500 dark:text-gray-400">Total Expense</p>
+            <p class="text-xl font-bold text-red-600 dark:text-red-400 mt-1">
+              {{ stats()!.totalExpense | number:'1.0-0' }}
+            </p>
+          </div>
+          <div class="col-span-2 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+            <p class="text-xs text-gray-500 dark:text-gray-400">Net Balance</p>
+            <p class="text-2xl font-black mt-1"
+              [class.text-green-600]="stats()!.netBalance >= 0"
+              [class.dark:text-green-400]="stats()!.netBalance >= 0"
+              [class.text-red-600]="stats()!.netBalance < 0"
+              [class.dark:text-red-400]="stats()!.netBalance < 0">
+              {{ stats()!.netBalance | number:'1.0-0' }}
+            </p>
+          </div>
         </div>
-        <div class="col-span-2 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
-          <p class="text-xs text-gray-500 dark:text-gray-400">Net Balance</p>
-          <p class="text-2xl font-black mt-1"
-            [class.text-green-600]="stats()!.netBalance >= 0"
-            [class.dark:text-green-400]="stats()!.netBalance >= 0"
-            [class.text-red-600]="stats()!.netBalance < 0"
-            [class.dark:text-red-400]="stats()!.netBalance < 0">
-            {{ stats()!.netBalance | number:'1.0-0' }}
-          </p>
-        </div>
-      </div>
+      }
       <!-- Category Breakdown -->
-      <div class="px-4 mt-5">
+      <div class="  mt-5">
         <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Expense by Category</h2>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
+        <div class="px-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
           @for (cat of categoryBreakdown(); track cat.category) {
             <div class="flex items-center gap-3 px-4 py-3">
               <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-primary-50 dark:bg-primary-900/30 flex-shrink-0">
@@ -55,7 +129,7 @@
                 </div>
               </div>
               <span class="text-sm font-semibold text-gray-800 dark:text-gray-100 flex-shrink-0">
-                {{ cat.amount | number:'1.0-0' }}
+                {{ cat.amount | currency }}
               </span>
             </div>
           }
@@ -67,9 +141,9 @@
         </div>
       </div>
       <!-- Member Breakdown -->
-      <div class="px-4 mt-5">
+      <div class="mt-5">
         <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Member Contribution</h2>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
+        <div class=" px-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
           @for (m of stats()!.memberBreakdown; track m.userId) {
             <div class="px-4 py-3">
               <div class="flex items-center justify-between mb-2">
@@ -83,13 +157,17 @@
                 <span class="text-xs text-gray-500">{{ m.transactionCount }} entries</span>
               </div>
               <div class="flex gap-4 text-xs">
-                <span class="text-green-600">↑ {{ m.totalIncome | number:'1.0-0' }}</span>
-                <span class="text-red-600">↓ {{ m.totalExpense | number:'1.0-0' }}</span>
-                <span class="font-semibold"
-                  [class.text-green-600]="m.netBalance >= 0"
-                  [class.text-red-600]="m.netBalance < 0">
-                  Net: {{ m.netBalance | number:'1.0-0' }}
-                </span>
+                @if (family()?.mode !== 'split') {
+                  <span class="text-green-600">↑ {{ m.totalIncome | currency }}</span>
+                  <span class="text-red-600">↓ {{ m.totalExpense | currency }}</span>
+                  <span class="font-semibold"
+                    [class.text-green-600]="m.netBalance >= 0"
+                    [class.text-red-600]="m.netBalance < 0">
+                    Net: {{ m.netBalance | currency }}
+                  </span>
+                } @else {
+                  <span class="text-gray-600 dark:text-gray-300">Expense: <span class="font-bold text-red-600 dark:text-red-400">{{ m.totalExpense | currency }}</span></span>
+                }
               </div>
             </div>
           }

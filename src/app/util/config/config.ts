@@ -1066,3 +1066,22 @@ export const ACCOUNT_TYPE_OPTIONS = [
   { value: AccountType.LOAN, label: 'Loan', icon: 'money' },
   { value: AccountType.INVESTMENT, label: 'Investment', icon: 'trending_up' }
 ];
+
+export const GROUP_ICON_OPTIONS: { icon: string; label: string }[] = [
+  { icon: 'family_restroom', label: 'Family' },
+  { icon: 'home', label: 'Home & Household' },
+  { icon: 'work', label: 'Work' },
+  { icon: 'groups', label: 'Friends' },
+  { icon: 'favorite', label: 'Loved Ones' },
+  { icon: 'school', label: 'Education' },
+  { icon: 'savings', label: 'Savings & Goals' },
+  { icon: 'account_balance', label: 'Bills & Payments' },
+  { icon: 'restaurant', label: 'Food & Dining' },
+  { icon: 'directions_car', label: 'Transport' },
+  { icon: 'flight', label: 'Travel' },
+  { icon: 'sports_soccer', label: 'Sports & Fitness' },
+  { icon: 'celebration', label: 'Events & Parties' },
+  { icon: 'volunteer_activism', label: 'Donations' },
+  { icon: 'pets', label: 'Pets' },
+  { icon: 'health_and_safety', label: 'Health' },
+];
