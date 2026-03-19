@@ -17,6 +17,7 @@ export interface Category {
   isSystem?: boolean;
   syncStatus?: string;
   lastSyncAt?: any;
+  familyId?: string;
 }
 
 export interface Budget {
@@ -28,5 +29,3 @@ export interface Budget {
   budgetAlertThreshold?: number; // percentage (e.g., 80 for 80%)
   budgetAlertEnabled?: boolean;
 }
-
-

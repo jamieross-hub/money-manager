@@ -37,7 +37,7 @@ export const categoriesReducer = createReducer(
       if (category.id) acc[category.id] = category;
       return acc;
     }, {} as { [id: string]: Category });
-    const ids = categories.map(c => c.id).filter((id): id is string => !!id);
+    const ids = [...new Set(categories.map(c => c.id).filter((id): id is string => !!id))];
     return updateBucket({ ...state, loading: false, error: null }, target, { entities, ids });
   }),
 

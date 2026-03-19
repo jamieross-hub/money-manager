@@ -42,6 +42,7 @@ export class CategoryService implements OnDestroy {
         this.store.select(CategoriesSelectors.selectAllCategories)
             .pipe(takeUntil(this.destroy$))
             .subscribe(categories => {
+            this.categories = {}; // Clear map to avoid accumulating stale entries from previous modes/contexts
             categories.forEach((category: Category) => {
                 if (category.id) {
                     this.categories[category.id] = category;
@@ -139,7 +140,8 @@ export class CategoryService implements OnDestroy {
         categories.forEach(category => {
             if (!category?.id) return;
             const key = LocalStorageKeyHelper.getCategoryItemKey(category.id, fid);
-            this.localStorageUtility.setCategory(key, category);
+            const categoryToSave = fid ? { ...category, familyId: fid } : category;
+            this.localStorageUtility.setCategory(key, categoryToSave);
         });
     }
 
@@ -247,7 +249,8 @@ export class CategoryService implements OnDestroy {
                         }
                     });
 
-                    // Update internal categories map
+                    // Update internal categories map - Clear first to remove cross-context stale data
+                    this.categories = {};
                     firestoreCategories.forEach(cat => {
                         if (cat.id) this.categories[cat.id] = cat;
                     });
@@ -326,7 +329,8 @@ export class CategoryService implements OnDestroy {
                 // Replace individual-item store with fresh data
                 this.replaceCategoriesInStore(categories);
                 
-                // Update internal categories map
+                // Update internal categories map - Clear first to remove cross-context stale data
+                this.categories = {};
                 categories.forEach(cat => {
                     if (cat.id) this.categories[cat.id] = cat;
                 });
@@ -829,7 +833,8 @@ export class CategoryService implements OnDestroy {
                 case 'create':
                     if (category && (category.id || category.name)) {
                         const key = LocalStorageKeyHelper.getCategoryItemKey(category.id!, familyId);
-                        this.localStorageUtility.setCategory(key, category);
+                        const categoryToSave = familyId ? { ...category, familyId: familyId } : category;
+                        this.localStorageUtility.setCategory(key, categoryToSave);
                     }
                     break;
 
@@ -839,7 +844,8 @@ export class CategoryService implements OnDestroy {
                         // Merge with existing so partial updates don't wipe other fields
                         const existing = this.localStorageUtility.getCategory<Category>(key, false);
                         const merged = existing ? { ...existing, ...category } : category;
-                        this.localStorageUtility.setCategory(key, merged);
+                        const categoryToSave = familyId ? { ...merged, familyId: familyId } : merged;
+                        this.localStorageUtility.setCategory(key, categoryToSave);
                     }
                     break;
 
