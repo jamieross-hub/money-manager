@@ -155,7 +155,8 @@ export class AccountsService {
             balance: Number(accountData.balance) || 0,
             createdAt: Timestamp.now() as any,
             isActive: true,
-            syncStatus: SyncStatus.PENDING
+            syncStatus: SyncStatus.PENDING,
+            familyId: this.getFamilyId() || ''
         };
 
         if (this.isGuest()) {
@@ -437,6 +438,7 @@ export class AccountsService {
                         currency: data.currency || 'USD',
                         isActive: data.isActive !== undefined ? data.isActive : true,
                         lastSyncAt: data.lastSyncAt || null,
+                        familyId: data.familyId || this.getFamilyId() || '',
                         syncStatus: data.syncStatus,
                         icon: data.icon || '',
                         color: data.color || '',

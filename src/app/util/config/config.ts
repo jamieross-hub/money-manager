@@ -942,6 +942,8 @@ export const defaultCategoriesForNewUser: Category[] = [
     color: '#40916c', // Emerald 500
     icon: 'work',
     createdAt: Date.now(),
+    isSystem: false,
+    familyId: '',
   },
   {
     name: 'Freelance',
@@ -949,6 +951,8 @@ export const defaultCategoriesForNewUser: Category[] = [
     color: '#40916c', // Teal 500
     icon: 'computer',
     createdAt: Date.now(),
+    isSystem: false,
+    familyId: '',
   },
   {
     name: 'Investments',
@@ -956,6 +960,8 @@ export const defaultCategoriesForNewUser: Category[] = [
     color: '#40916c', // Gold
     icon: 'trending_up',
     createdAt: Date.now(),
+    isSystem: false,
+    familyId: '',
   },
   {
     name: 'Gifts & Rewards',
@@ -963,6 +969,8 @@ export const defaultCategoriesForNewUser: Category[] = [
     color: '#40916c', // Fuchsia 500
     icon: 'card_giftcard',
     createdAt: Date.now(),
+    isSystem: false,
+    familyId: '',
   },
   {
     name: 'Other Income',
@@ -970,6 +978,8 @@ export const defaultCategoriesForNewUser: Category[] = [
     color: '#40916c', // Slate 500
     icon: 'attach_money',
     createdAt: Date.now(),
+    isSystem: false,
+    familyId: '',
   },
 
   // Expense Categories
@@ -979,6 +989,8 @@ export const defaultCategoriesForNewUser: Category[] = [
     color: '#40916c', // Amber 500
     icon: 'restaurant',
     createdAt: Date.now(),
+    isSystem: false,
+    familyId: '',
   },
   {
     name: 'Transport & Fuel',
@@ -986,6 +998,8 @@ export const defaultCategoriesForNewUser: Category[] = [
     color: '#40916c', // Orange 500
     icon: 'directions_car',
     createdAt: Date.now(),
+    isSystem: false,
+    familyId: '',
   },
   {
     name: 'Shopping',
@@ -993,6 +1007,8 @@ export const defaultCategoriesForNewUser: Category[] = [
     color: '#40916c', // Pink 500
     icon: 'shopping_cart',
     createdAt: Date.now(),
+    isSystem: false,
+    familyId: '',
   },
   {
     name: 'Bills & Utilities',
@@ -1000,6 +1016,8 @@ export const defaultCategoriesForNewUser: Category[] = [
     color: '#40916c', // Red 500
     icon: 'receipt_long',
     createdAt: Date.now(),
+    isSystem: false,
+    familyId: '',
   },
   {
     name: 'Healthcare',
@@ -1007,6 +1025,8 @@ export const defaultCategoriesForNewUser: Category[] = [
     color: '#40916c', // Sky 500
     icon: 'local_hospital',
     createdAt: Date.now(),
+    isSystem: false,
+    familyId: '',
   },
   {
     name: 'Entertainment',
@@ -1014,6 +1034,8 @@ export const defaultCategoriesForNewUser: Category[] = [
     color: '#40916c', // Violet 500
     icon: 'sports_esports',
     createdAt: Date.now(),
+    isSystem: false,
+    familyId: '',
   },
   {
     name: 'Education',
@@ -1021,6 +1043,8 @@ export const defaultCategoriesForNewUser: Category[] = [
     color: '#40916c', // Indigo 500
     icon: 'school',
     createdAt: Date.now(),
+    isSystem: false,
+    familyId: '',
   },
   {
     name: 'Travel',
@@ -1028,6 +1052,8 @@ export const defaultCategoriesForNewUser: Category[] = [
     color: '#40916c', // Blue 500
     icon: 'flight',
     createdAt: Date.now(),
+    isSystem: false,
+    familyId: '',
   },
   {
     name: 'Family & Kids',
@@ -1035,6 +1061,8 @@ export const defaultCategoriesForNewUser: Category[] = [
     color: '#40916c', // Lime 500
     icon: 'family_restroom',
     createdAt: Date.now(),
+    isSystem: false,
+    familyId: '',
   },
   {
     name: 'Charity',
@@ -1042,6 +1070,8 @@ export const defaultCategoriesForNewUser: Category[] = [
     color: '#40916c', // Yellow 500
     icon: 'volunteer_activism',
     createdAt: Date.now(),
+    isSystem: false,
+    familyId: '',
   },
   {
     name: 'Other Expenses',
@@ -1049,6 +1079,8 @@ export const defaultCategoriesForNewUser: Category[] = [
     color: '#40916c', // Slate 400
     icon: 'category',
     createdAt: Date.now(),
+    isSystem: false,
+    familyId: '',
   },
   {
     name: 'Adjustment',
@@ -1056,6 +1088,8 @@ export const defaultCategoriesForNewUser: Category[] = [
     color: '#64748B', // Slate 500
     icon: 'rule',
     createdAt: Date.now(),
+    isSystem: false,
+    familyId: '',
   },
 ];
 

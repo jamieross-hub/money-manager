@@ -328,7 +328,9 @@ export class FamilyService implements OnDestroy {
     const batch = writeBatch(this.firestore);
 
     // 1. Create Default Account
-    const accountId = 'acc_fam_' + Date.now();
+    const accountsColRef = collection(this.firestore, `family-groups/${familyId}/accounts`);
+    const accountId = doc(accountsColRef).id;
+    
     const accountData: Account = {
       accountId,
       userId: familyId, // Shared family account
@@ -339,22 +341,27 @@ export class FamilyService implements OnDestroy {
       institution: 'Family Bank',
       currency: 'INR',
       createdAt: new Date() as any,
-      isActive: true
+      isActive: true,
+      familyId: familyId
     };
     const accountRef = doc(this.firestore, `family-groups/${familyId}/accounts/${accountId}`);
     batch.set(accountRef, accountData);
 
     // 2. Create Default Categories
-    const categoriesToCreate = defaultCategoriesForNewUser // Just a subset for family
+    const categoriesColRef = collection(this.firestore, `family-groups/${familyId}/categories`);
+    const categoriesToCreate = defaultCategoriesForNewUser; // Just a subset for family
+    
     for (const cat of categoriesToCreate) {
-      const catId = 'cat_fam_' + Math.random().toString(36).substr(2, 9);
+      const catId = doc(categoriesColRef).id;
       const catData: Category = {
         id: catId,
         name: cat.name,
         type: cat.type,
         icon: cat.icon,
         color: cat.color,
-        createdAt: Date.now() as any
+        createdAt: Date.now() as any,
+        isSystem: false,
+        familyId: familyId
       };
       const catRef = doc(this.firestore, `family-groups/${familyId}/categories/${catId}`);
       batch.set(catRef, catData);
@@ -362,6 +369,7 @@ export class FamilyService implements OnDestroy {
 
     await batch.commit();
   }
+
 
   async joinByCode(inviteCode: string): Promise<Family> {
     const user = this.currentUser;

@@ -4,7 +4,7 @@ import { UserService } from 'src/app/util/service/db/user.service';
 import { MatDialog } from '@angular/material/dialog';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Subject, Observable, BehaviorSubject, combineLatest } from 'rxjs';
-import { take, takeUntil, map, startWith, distinctUntilChanged, debounceTime } from 'rxjs/operators';
+import { take, takeUntil, map, startWith, distinctUntilChanged, debounceTime, switchMap } from 'rxjs/operators';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { MobileCategoryAddEditPopupComponent } from './mobile-category-add-edit-popup/mobile-category-add-edit-popup.component';
 
@@ -139,9 +139,13 @@ export class CategoryComponent implements OnInit, OnDestroy {
     this.transactions$ = this.store.select(TransactionsSelectors.selectAllTransactions);
     this.userCurrency$ = this.store.select(ProfileSelectors.selectUserCurrency);
 
+    const categories$ = this.store.select(ProfileSelectors.selectIsFamilyMode).pipe(
+      switchMap(isFamilyMode => this.store.select(CategoriesSelectors.selectAllCategoriesByContext(isFamilyMode)))
+    );
+
     // Main ViewModel Stream
     this.vm$ = combineLatest([
-      this.store.select(CategoriesSelectors.selectAllCategories),
+      categories$,
       this.transactions$,
       this.appViewService.appView$,
       this.searchText$,
@@ -149,7 +153,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
       this.selectedGroup$,
       this.store.select(ProfileSelectors.selectIsFamilyMode)
     ]).pipe(
-      map(([categories, transactions, appView, searchText, filterType, selectedGroup, isFamilyMode]) => {
+      map(([categories, transactions, appView, searchText, filterType, selectedGroup, isFamilyMode]: [Category[], any[], any, any, any, any, any]) => {
         // ... existing processing ...
         // (skipped for brevity but included in full replacement)
         const processedCategories = categories.map(cat => {
@@ -179,7 +183,11 @@ export class CategoryComponent implements OnInit, OnDestroy {
           const matchesSearch = !searchText || category.name.toLowerCase().includes(searchText.toLowerCase());
           const matchesType = filterType === 'all' || category.type.toLowerCase() === filterType;
           const matchesGroup = !selectedGroup || category.group === selectedGroup;
-          return matchesSearch && matchesType && matchesGroup;
+          
+          // Added Family Mode context layout filter
+          const matchesContext = isFamilyMode ? !!category.familyId : !category.familyId;
+
+          return matchesSearch && matchesType && matchesGroup && matchesContext;
         }).sort((a, b) => {
           const aHasBudget = a.budget?.hasBudget ?? false;
           const bHasBudget = b.budget?.hasBudget ?? false;

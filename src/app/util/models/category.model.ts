@@ -14,10 +14,10 @@ export interface Category {
   isSubCategory?: boolean;
   subCategories?: Array<string>;
   group?: string;
-  isSystem?: boolean;
+  isSystem: boolean;
   syncStatus?: string;
   lastSyncAt?: any;
-  familyId?: string;
+  familyId: string;
 }
 
 export interface Budget {

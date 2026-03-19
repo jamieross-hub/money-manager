@@ -427,12 +427,15 @@ export class LocalIndexDBStorageService {
 
         const getIdsFromValue = (val: any, k: string) => {
             if (!val) return { fid: undefined, uid: undefined };
-            // Family categories use key format: familyId_categoryId
-            const fidFromKey = k.includes('_') ? k.split('_')[0] : undefined;
-            // Only treat as familyId if it doesn't look like a standard prefix (cat_)
-            const effectiveFid = (val.familyId || (fidFromKey && !fidFromKey.startsWith('cat_'))) ? (val.familyId || fidFromKey) : undefined;
-            return { fid: effectiveFid, uid: val.userId };
+            if (val.isSystem) return { fid: undefined, uid: val.userId }; // System categories don't belong to families
+            
+            if (val.familyId) {
+                return { fid: val.familyId, uid: undefined };
+            }
+            
+            return { fid: undefined, uid: val.userId };
         };
+
 
         if (oldValue) {
             const oldIds = getIdsFromValue(oldValue, key);

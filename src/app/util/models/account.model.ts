@@ -55,6 +55,7 @@ export interface Account {
 	color?: string;
 	lastSyncAt?: Timestamp | Date;
 	syncStatus?: SyncStatus;
+	familyId: string;
 	// Loan-specific properties (only used when type is 'loan')
 	loanDetails?: LoanDetails;
 	// Credit card-specific properties (only used when type is 'credit')

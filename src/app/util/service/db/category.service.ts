@@ -246,10 +246,16 @@ export class CategoryService implements OnDestroy {
                         isFirstSnapshot = false;
 
                         const firestoreCategories: Category[] = [];
-                        querySnapshot.forEach((docSnap) => {
-                            const data: any = docSnap.data();
-                            if (data && docSnap.id && data.name) {
-                                const category: Category = {
+                         querySnapshot.forEach((docSnap) => {
+                             const data: any = docSnap.data();
+                             const currentFamilyId = this.getFamilyId();
+
+                             if (currentFamilyId && !data?.familyId) {
+                                 data.familyId = currentFamilyId;
+                             }
+
+                             if (data && docSnap.id && data.name) {
+                                 const category: Category = {
                                     id: docSnap.id,
                                     userId: userId,
                                     ...data
@@ -261,16 +267,19 @@ export class CategoryService implements OnDestroy {
                         const localCategories = this.readCategoriesFromStore(userId);
                         const merged = this.mergeFirestoreAndLocal(firestoreCategories, localCategories);
 
-                        this.replaceCategoriesInStore(merged);
+                        const currentFamilyId = this.getFamilyId();
+                        const filteredMerged = merged.filter(c => currentFamilyId ? !!c.familyId : !c.familyId);
+
+                        this.replaceCategoriesInStore(filteredMerged);
 
                         this.categories = {};
-                        merged.forEach(cat => {
+                        filteredMerged.forEach(cat => {
                             if (cat.id) this.categories[cat.id] = cat;
                         });
 
-                        this.categoriesSubject.next(merged);
+                        this.categoriesSubject.next(filteredMerged);
                         this.store.dispatch(CategoriesActions.loadCategoriesSuccess({
-                            categories: merged,
+                            categories: filteredMerged,
                             context: this.getActiveContext()
                         }));
 
@@ -296,6 +305,12 @@ export class CategoryService implements OnDestroy {
                             this.localStorageUtility.removeCategory(itemKey);
                         } else {
                             const data = docSnap.data();
+                            const currentFamilyId = this.getFamilyId();
+
+                            if (currentFamilyId && !data?.['familyId']) {
+                                data['familyId'] = currentFamilyId;
+                            }
+
                             if (data && docSnap.id && data['name']) {
                                 const cat = { id: docSnap.id, userId: userId, ...data } as Category;
                                 const existing = catMap.get(cat.id!);
@@ -308,7 +323,9 @@ export class CategoryService implements OnDestroy {
                         }
                     });
 
-                    const updatedList = Array.from(catMap.values()).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                    const currentFamilyId = this.getFamilyId();
+                    const filtered = Array.from(catMap.values()).filter(c => currentFamilyId ? !!c.familyId : !c.familyId);
+                    const updatedList = filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
                     this.categories = {};
                     updatedList.forEach(c => { if (c.id) this.categories[c.id] = c; });
 
@@ -355,6 +372,12 @@ export class CategoryService implements OnDestroy {
                 const categories: Category[] = [];
                 querySnapshot.forEach((docSnap: any) => {
                     const data: any = docSnap.data();
+                    
+                    // If pulling for a family and missing familyId, assign it proactively
+                    if (familyId && !data?.familyId) {
+                         data.familyId = familyId;
+                    }
+
                     // Require both an id and a name — consistent with listenToCategories.
                     if (data && docSnap.id && data.name) {
                         const category: Category = {
@@ -370,7 +393,8 @@ export class CategoryService implements OnDestroy {
                             isSubCategory: data?.isSubCategory || false,
                             subCategories: data?.subCategories || [],
                             group: data?.group,
-                            isSystem: data?.isSystem || false
+                            isSystem: data?.isSystem || false,
+                            familyId: data?.familyId || familyId || ''
                         };
                         categories.push(category);
                     } else if (docSnap.id) {
@@ -383,22 +407,24 @@ export class CategoryService implements OnDestroy {
                 // Merge with local pending categories to protect offline writes
                 const localCategories = this.readCategoriesFromStore(userId);
                 const merged = this.mergeFirestoreAndLocal(categories, localCategories);
+                const currentFamilyId = this.getFamilyId();
+                const filteredMerged = merged.filter(c => currentFamilyId ? !!c.familyId : !c.familyId);
 
                 // Replace individual-item store with fresh data
-                this.replaceCategoriesInStore(merged);
+                this.replaceCategoriesInStore(filteredMerged);
                 
                 // Update internal categories map - Clear first to remove cross-context stale data
                 this.categories = {};
-                merged.forEach(cat => {
+                filteredMerged.forEach(cat => {
                     if (cat.id) this.categories[cat.id] = cat;
                 });
 
                 // Update Subject so UI reflects the fresh data immediately
-                this.categoriesSubject.next(merged);
+                this.categoriesSubject.next(filteredMerged);
 
                 // Update NgRx state — include context so data goes into the correct bucket
                 this.store.dispatch(CategoriesActions.loadCategoriesSuccess({
-                    categories: merged,
+                    categories: filteredMerged,
                     context: this.getActiveContext()
                 }));
             }),
@@ -482,7 +508,8 @@ export class CategoryService implements OnDestroy {
             group: group || undefined,
             isSystem,
             createdAt: Timestamp.now() as any,
-            syncStatus: SyncStatus.PENDING
+            syncStatus: SyncStatus.PENDING,
+            familyId: this.getFamilyId() || ''
         };
 
         if (this.isGuest()) {

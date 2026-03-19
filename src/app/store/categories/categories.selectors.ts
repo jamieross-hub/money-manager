@@ -19,6 +19,17 @@ export const selectAllCategories = createSelector(
       .filter((c): c is Category => !!c)
 );
 
+export const selectAllCategoriesByContext = (isFamilyMode: boolean) => createSelector(
+  selectCategoriesState,
+  (state): Category[] => {
+    const bucket = isFamilyMode ? state.family : state.personal;
+    const categories = bucket.ids.map(id => bucket.entities[id]).filter((c): c is Category => !!c);
+    
+    // Strict isolation filter
+    return categories.filter(c => isFamilyMode ? !!c.familyId : !c.familyId);
+  }
+);
+
 export const selectCategoriesLoading = createSelector(
   selectCategoriesState,
   (state) => state.loading
