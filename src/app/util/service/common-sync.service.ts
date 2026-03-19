@@ -274,7 +274,10 @@ export class CommonSyncService implements OnDestroy {
       const connection = (navigator as any).connection;
       if (connection) {
         fromEvent(connection, 'change')
-          .pipe(takeUntil(this.destroy$))
+          .pipe(
+            takeUntil(this.destroy$),
+            debounceTime(2000)
+          )
           .subscribe(() => {
             this.updateNetworkStatus({
               connectionType: connection.effectiveType,
