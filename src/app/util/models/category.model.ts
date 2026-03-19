@@ -3,7 +3,7 @@ import { TransactionType } from '../config/enums';
 
 export interface Category {
   id?: string;
-  userId?: string;
+  userId: string;
   name: string;
   type: TransactionType;
   icon: string;

@@ -944,6 +944,7 @@ export const defaultCategoriesForNewUser: Category[] = [
     createdAt: Date.now(),
     isSystem: false,
     familyId: '',
+    userId: '',
   },
   {
     name: 'Freelance',
@@ -953,6 +954,7 @@ export const defaultCategoriesForNewUser: Category[] = [
     createdAt: Date.now(),
     isSystem: false,
     familyId: '',
+    userId: '',
   },
   {
     name: 'Investments',
@@ -962,6 +964,7 @@ export const defaultCategoriesForNewUser: Category[] = [
     createdAt: Date.now(),
     isSystem: false,
     familyId: '',
+    userId: '',
   },
   {
     name: 'Gifts & Rewards',
@@ -971,6 +974,7 @@ export const defaultCategoriesForNewUser: Category[] = [
     createdAt: Date.now(),
     isSystem: false,
     familyId: '',
+    userId: '',
   },
   {
     name: 'Other Income',
@@ -980,6 +984,7 @@ export const defaultCategoriesForNewUser: Category[] = [
     createdAt: Date.now(),
     isSystem: false,
     familyId: '',
+    userId: '',
   },
 
   // Expense Categories
@@ -991,6 +996,7 @@ export const defaultCategoriesForNewUser: Category[] = [
     createdAt: Date.now(),
     isSystem: false,
     familyId: '',
+    userId: '',
   },
   {
     name: 'Transport & Fuel',
@@ -1000,6 +1006,7 @@ export const defaultCategoriesForNewUser: Category[] = [
     createdAt: Date.now(),
     isSystem: false,
     familyId: '',
+    userId: '',
   },
   {
     name: 'Shopping',
@@ -1009,6 +1016,7 @@ export const defaultCategoriesForNewUser: Category[] = [
     createdAt: Date.now(),
     isSystem: false,
     familyId: '',
+    userId: '',
   },
   {
     name: 'Bills & Utilities',
@@ -1018,6 +1026,7 @@ export const defaultCategoriesForNewUser: Category[] = [
     createdAt: Date.now(),
     isSystem: false,
     familyId: '',
+    userId: '',
   },
   {
     name: 'Healthcare',
@@ -1027,6 +1036,7 @@ export const defaultCategoriesForNewUser: Category[] = [
     createdAt: Date.now(),
     isSystem: false,
     familyId: '',
+    userId: '',
   },
   {
     name: 'Entertainment',
@@ -1036,6 +1046,7 @@ export const defaultCategoriesForNewUser: Category[] = [
     createdAt: Date.now(),
     isSystem: false,
     familyId: '',
+    userId: '',
   },
   {
     name: 'Education',
@@ -1045,6 +1056,7 @@ export const defaultCategoriesForNewUser: Category[] = [
     createdAt: Date.now(),
     isSystem: false,
     familyId: '',
+    userId: '',
   },
   {
     name: 'Travel',
@@ -1054,6 +1066,7 @@ export const defaultCategoriesForNewUser: Category[] = [
     createdAt: Date.now(),
     isSystem: false,
     familyId: '',
+    userId: '',
   },
   {
     name: 'Family & Kids',
@@ -1063,6 +1076,7 @@ export const defaultCategoriesForNewUser: Category[] = [
     createdAt: Date.now(),
     isSystem: false,
     familyId: '',
+    userId: '',
   },
   {
     name: 'Charity',
@@ -1072,6 +1086,7 @@ export const defaultCategoriesForNewUser: Category[] = [
     createdAt: Date.now(),
     isSystem: false,
     familyId: '',
+    userId: '',
   },
   {
     name: 'Other Expenses',
@@ -1081,6 +1096,7 @@ export const defaultCategoriesForNewUser: Category[] = [
     createdAt: Date.now(),
     isSystem: false,
     familyId: '',
+    userId: '',
   },
   {
     name: 'Adjustment',
@@ -1090,6 +1106,7 @@ export const defaultCategoriesForNewUser: Category[] = [
     createdAt: Date.now(),
     isSystem: false,
     familyId: '',
+    userId: '',
   },
 ];
 

@@ -355,6 +355,7 @@ export class FamilyService implements OnDestroy {
       const catId = doc(categoriesColRef).id;
       const catData: Category = {
         id: catId,
+        userId: userId,
         name: cat.name,
         type: cat.type,
         icon: cat.icon,

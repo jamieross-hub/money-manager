@@ -773,7 +773,10 @@ export class CategoryService implements OnDestroy {
 
     /** Get cached categories (synchronous) optionally filtered by type */
     public getCachedCategories(type?: TransactionType): Category[] {
-        const all = Object.values(this.categories) as Category[];
+        const familyId = this.getFamilyId();
+        const all = (Object.values(this.categories) as Category[])
+            .filter(c => familyId ? !!c.familyId : !c.familyId);
+            
         if (!type) return all;
         return all.filter(c => c.type === type);
     }
