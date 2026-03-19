@@ -234,10 +234,14 @@ export class UserComponent {
             } catch (cErr) { console.warn('Cache clear error:', cErr); }
           }
           
-          // Clear IndexedDB Transactions
+          // Clear IndexedDB Transactions, Accounts, and Categories
           try {
-            await this.localStorageService.clearTransactionsStore();
-          } catch (idbErr) { console.warn('IndexedDB transaction clear error:', idbErr); }
+            await Promise.all([
+              this.localStorageService.clearTransactionsStore(),
+              this.localStorageService.clearAccountsStore(),
+              this.localStorageService.clearCategoriesStore(),
+            ]);
+          } catch (idbErr) { console.warn('IndexedDB clearance error:', idbErr); }
 
           // Activate update if ready
           if (this.swUpdate.isEnabled && this.updateAvailable()) {
