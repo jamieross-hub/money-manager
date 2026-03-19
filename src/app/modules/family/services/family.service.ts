@@ -278,7 +278,7 @@ export class FamilyService implements OnDestroy {
     } as Omit<FamilyMember, 'id'>);
 
     // 3. Initialize defaults (categories/accounts)
-    await this.initializeFamilyDefaults(familyId, user.uid);
+    await this.initializeFamilyDefaults(familyId, user.uid, request.mode ?? 'common');
 
     // 4. Finally, update user's preferences with familyId
     // This completes the "Group Created" state transition for the user
@@ -324,7 +324,7 @@ export class FamilyService implements OnDestroy {
     } catch (e) {}
   }
 
-  private async initializeFamilyDefaults(familyId: string, userId: string): Promise<void> {
+  private async initializeFamilyDefaults(familyId: string, userId: string, mode: 'common' | 'split' = 'common'): Promise<void> {
     const batch = writeBatch(this.firestore);
 
     // 1. Create Default Account
@@ -349,7 +349,11 @@ export class FamilyService implements OnDestroy {
 
     // 2. Create Default Categories
     const categoriesColRef = collection(this.firestore, `family-groups/${familyId}/categories`);
-    const categoriesToCreate = defaultCategoriesForNewUser; // Just a subset for family
+    let categoriesToCreate = defaultCategoriesForNewUser; // Just a subset for family
+    
+    if (mode === 'split') {
+      categoriesToCreate = categoriesToCreate.filter(cat => cat.type === TransactionType.EXPENSE);
+    }
     
     for (const cat of categoriesToCreate) {
       const catId = doc(categoriesColRef).id;

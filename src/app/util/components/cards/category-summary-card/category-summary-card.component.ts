@@ -5,10 +5,12 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
-import { Store } from '@ngrx/store';
+import { Store, createSelector } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import * as CategoriesSelectors from 'src/app/store/categories/categories.selectors';
 import * as TransactionsSelectors from 'src/app/store/transactions/transactions.selectors';
+import * as FamilySelectors from 'src/app/modules/family/store/family.selectors';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import { AppViewService } from 'src/app/util/service/app-view.service';
 import { DateService } from 'src/app/util/service/date.service';
 import { TransactionType } from 'src/app/util/config/enums';
@@ -28,6 +30,12 @@ export interface CategorySummary {
     expenseChange: number;
     incomeChange: number;
 }
+
+const selectFamilyInMode = createSelector(
+    ProfileSelectors.selectIsFamilyMode,
+    FamilySelectors.selectFamily,
+    (isFamilyMode, family) => isFamilyMode ? family : null
+);
 
 @Component({
     selector: 'app-category-summary-card',
@@ -55,6 +63,7 @@ export class CategorySummaryCardComponent {
     private readonly categories = toSignal(this.store.select(CategoriesSelectors.selectAllCategories), { initialValue: [] });
     private readonly transactions = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions), { initialValue: [] });
     private readonly appView = toSignal(this.appViewService.appView$, { initialValue: 'MONTHLY' });
+    public readonly family = toSignal(this.store.select(selectFamilyInMode), { initialValue: null });
 
     public readonly summary = computed<CategorySummary>(() => {
         const categories = this.categories();

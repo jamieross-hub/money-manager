@@ -16,19 +16,21 @@
     <div class="main-content" [ngClass]="{'mobile-padding': breakpointService.device.isMobile}">
       <!-- Header -->
       <!-- Header Section -->
-      @if (vm && !vm.isFamilyMode) {
-      <header class="page-header max-w-8xl mx-auto">
+      <!-- @if (vm && !vm.isFamilyMode) { -->
         @if (!breakpointService.device.isMobile) {
+      <header class="page-header max-w-8xl mx-auto">
+       
           <div class="header-left">
             <p class="page-title dark:text-white">Categories</p>
             <p class="page-description dark:text-slate-400">Manage your budget categories</p>
           </div>
-        }
+        
         <button mat-flat-button color="primary" class="add-category-btn" (click)="openAddMobileDialog()">
           <mat-icon>add</mat-icon>
           Add Category
         </button>
       </header>
+    }
       <!-- Summary Cards -->
  
         <section class="summary-section">
@@ -36,7 +38,7 @@
             <app-category-summary-card></app-category-summary-card>
           }
         </section>
-      }
+      <!-- } -->
     <!-- Controls: Search & Filter -->
     <section class="controls-section">
       <mat-form-field appearance="fill" class="search-bar" subscriptSizing="dynamic">

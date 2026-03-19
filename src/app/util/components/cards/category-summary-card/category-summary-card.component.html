@@ -14,18 +14,18 @@
             Overview
           </p>
           <div class="summary-subtitle text-xs text-neutral-500">
-            {{ summary.expenseCount + summary.incomeCount }} categories
+            {{ summary.expenseCount + (family()?.mode !== 'split' ? summary.incomeCount : 0) }} categories
           </div>
         </div>
       </div>
       @if (!breakpointService.isMobile()) {
         <div class="flex flex-col items-center w-full sm:items-end mt-3 sm:mt-0 min-w-0">
           <span class="text-md sm:text-sm font-semibold leading-none truncate"
-            [class.text-success-600]="(summary.totalIncome - summary.totalExpense) >= 0"
-            [class.text-error-600]="(summary.totalIncome - summary.totalExpense) < 0">
-            {{ (summary.totalIncome - summary.totalExpense) | currency }}
+            [class.text-success-600]="family()?.mode !== 'split' ? (summary.totalIncome - summary.totalExpense) >= 0 : false"
+            [class.text-error-600]="family()?.mode !== 'split' ? (summary.totalIncome - summary.totalExpense) < 0 : true">
+            {{ (family()?.mode !== 'split' ? (summary.totalIncome - summary.totalExpense) : -summary.totalExpense) | currency }}
           </span>
-          <span class="text-xs text-neutral-400">net flow</span>
+          <span class="text-xs text-neutral-400">{{ family()?.mode !== 'split' ? 'net flow' : 'total expense' }}</span>
         </div>
       }
     </div>
@@ -35,37 +35,39 @@
 
     <!-- Breakdown -->
     <div class="text-sm flex flex-col gap-4">
-      <!-- Income Item -->
-      <div class="flex items-center gap-3">
-        <div class="income-icon-wrap rounded-lg p-2 flex items-center justify-center">
-          <mat-icon aria-hidden="true">arrow_upward</mat-icon>
-        </div>
-        <div class="w-full">
-          <div class="flex items-center justify-between">
-            <div class="breakdown-label font-medium text-neutral-700">Income</div>
-            <div class="text-xs text-neutral-500">{{ summary.incomeCount }} categories</div>
+      @if (family()?.mode !== 'split') {
+        <!-- Income Item -->
+        <div class="flex items-center gap-3">
+          <div class="income-icon-wrap rounded-lg p-2 flex items-center justify-center">
+            <mat-icon aria-hidden="true">arrow_upward</mat-icon>
           </div>
-          <div class="flex items-center justify-between mt-1">
-            <div class="font-medium text-md text-success-600">
-              {{ summary.totalIncome | currency }}
+          <div class="w-full">
+            <div class="flex items-center justify-between">
+              <div class="breakdown-label font-medium text-neutral-700">Income</div>
+              <div class="text-xs text-neutral-500">{{ summary.incomeCount }} categories</div>
             </div>
-            @if (summary.incomeChange !== 0) {
-              <div class="percentage-change flex items-center">
-                <mat-icon class="text-[16px] h-[16px] w-[16px] !leading-[16px]"
-                  [class.text-success-600]="summary.incomeChange > 0"
-                  [class.text-error-600]="summary.incomeChange < 0">
-                  {{ summary.incomeChange > 0 ? 'trending_up' : 'trending_down' }}
-                </mat-icon>
-                <span class="text-xs ml-1 font-medium" 
-                  [class.text-success-600]="summary.incomeChange > 0"
-                  [class.text-error-600]="summary.incomeChange < 0">
-                  {{ Math.abs(summary.incomeChange) | number:'1.0-1' }}%
-                </span>
+            <div class="flex items-center justify-between mt-1">
+              <div class="font-medium text-md text-success-600">
+                {{ summary.totalIncome | currency }}
               </div>
-            }
+              @if (summary.incomeChange !== 0) {
+                <div class="percentage-change flex items-center">
+                  <mat-icon class="text-[16px] h-[16px] w-[16px] !leading-[16px]"
+                    [class.text-success-600]="summary.incomeChange > 0"
+                    [class.text-error-600]="summary.incomeChange < 0">
+                    {{ summary.incomeChange > 0 ? 'trending_up' : 'trending_down' }}
+                  </mat-icon>
+                  <span class="text-xs ml-1 font-medium" 
+                    [class.text-success-600]="summary.incomeChange > 0"
+                    [class.text-error-600]="summary.incomeChange < 0">
+                    {{ Math.abs(summary.incomeChange) | number:'1.0-1' }}%
+                  </span>
+                </div>
+              }
+            </div>
           </div>
         </div>
-      </div>
+      }
 
       <!-- Expense Item -->
       <div class="flex items-center gap-3">
