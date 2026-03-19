@@ -227,6 +227,31 @@ export class LocalIndexDBStorageService {
     }
 
     /**
+     * Store multiple account items in a single IndexedDB transaction (Bulk sync)
+     */
+    setAccounts(items: { key: string; value: any }[]): void {
+        if (this.isCleaningUp || items.length === 0) return;
+
+        const persistedItems: { key: string; value: any }[] = [];
+
+        for (const item of items) {
+            const { key, value } = item;
+            // Always store a plain clone
+            const safeValue = structuredClone(value);
+            const oldValue = this.accountsCache.get(key);
+            this.accountsCache.set(key, safeValue);
+            this.updateAccountsSecondaryIndices(key, safeValue, oldValue);
+            persistedItems.push({ key, value: safeValue });
+        }
+
+        this.persistItems(persistedItems, this.ACCOUNTS_STORE).catch(err => {
+            console.error(`Error persisting multiple items to ${this.ACCOUNTS_STORE}:`, err);
+        });
+    }
+
+    /**
+
+    /**
      * Get a single account synchronously
      */
     getAccount<T>(key: string, clone = true): T | null {
@@ -305,12 +330,8 @@ export class LocalIndexDBStorageService {
 
         const getIdsFromValue = (val: any, k: string) => {
             if (!val) return { fid: undefined, uid: undefined };
-            // Family accounts use key format: familyId_accountId
-            const fidFromKey = k.includes('_') ? k.split('_')[0] : undefined;
-            // Only treat as familyId if it doesn't look like a standard prefix (acc_)
-            const effectiveFid = (val.familyId || (fidFromKey && !fidFromKey.startsWith('acc_'))) ? (val.familyId || fidFromKey) : undefined;
-            if (effectiveFid) {
-                return { fid: effectiveFid, uid: undefined };
+            if (val.familyId && typeof val.familyId === 'string' && val.familyId.trim() !== '') {
+                return { fid: val.familyId, uid: undefined };
             }
             return { fid: undefined, uid: val.userId };
         };
@@ -350,6 +371,31 @@ export class LocalIndexDBStorageService {
             console.error(`Error persisting category key "${key}":`, err)
         );
     }
+
+    /**
+     * Store multiple category items in a single IndexedDB transaction (Bulk sync)
+     */
+    setCategories(items: { key: string; value: any }[]): void {
+        if (this.isCleaningUp || items.length === 0) return;
+
+        const persistedItems: { key: string; value: any }[] = [];
+
+        for (const item of items) {
+            const { key, value } = item;
+            // Always store a plain clone
+            const safeValue = structuredClone(value);
+            const oldValue = this.categoriesCache.get(key);
+            this.categoriesCache.set(key, safeValue);
+            this.updateCategoriesSecondaryIndices(key, safeValue, oldValue);
+            persistedItems.push({ key, value: safeValue });
+        }
+
+        this.persistItems(persistedItems, this.CATEGORIES_STORE).catch(err => {
+            console.error(`Error persisting multiple items to ${this.CATEGORIES_STORE}:`, err);
+        });
+    }
+
+    /**
 
     /**
      * Get a single category synchronously
@@ -795,30 +841,42 @@ export class LocalIndexDBStorageService {
 
             const transaction = this.db.transaction([storeName], 'readonly');
             const store = transaction.objectStore(storeName);
-            const request = store.openCursor();
+            
+            const reqValues = store.getAll();
+            const reqKeys = store.getAllKeys();
 
-            request.onsuccess = (event: any) => {
-                const cursor = event.target.result;
-                if (cursor) {
-                    if (storeName === this.TRANSACTIONS_STORE) {
-                        this.transactionsCache.set(cursor.key as string, cursor.value);
-                        this.updateSecondaryIndices(cursor.key as string, cursor.value);
-                    } else if (storeName === this.ACCOUNTS_STORE) {
-                        this.accountsCache.set(cursor.key as string, cursor.value);
-                        this.updateAccountsSecondaryIndices(cursor.key as string, cursor.value);
-                    } else if (storeName === this.CATEGORIES_STORE) {
-                        this.categoriesCache.set(cursor.key as string, cursor.value);
-                        this.updateCategoriesSecondaryIndices(cursor.key as string, cursor.value);
-                    } else {
-                        this.keyValueCache.set(cursor.key as string, cursor.value);
+            let values: any[] = [];
+            let keys: any[] = [];
+            let count = 0;
+
+            const checkComplete = () => {
+                count++;
+                if (count === 2) {
+                    for (let i = 0; i < keys.length; i++) {
+                        const key = keys[i] as string;
+                        const value = values[i];
+
+                        if (storeName === this.TRANSACTIONS_STORE) {
+                            this.transactionsCache.set(key, value);
+                            this.updateSecondaryIndices(key, value);
+                        } else if (storeName === this.ACCOUNTS_STORE) {
+                            this.accountsCache.set(key, value);
+                            this.updateAccountsSecondaryIndices(key, value);
+                        } else if (storeName === this.CATEGORIES_STORE) {
+                            this.categoriesCache.set(key, value);
+                            this.updateCategoriesSecondaryIndices(key, value);
+                        } else {
+                            this.keyValueCache.set(key, value);
+                        }
                     }
-                    cursor.continue();
-                } else {
                     resolve();
                 }
             };
 
-            request.onerror = () => reject(request.error);
+            reqValues.onsuccess = () => { values = reqValues.result; checkComplete(); };
+            reqKeys.onsuccess = () => { keys = reqKeys.result; checkComplete(); };
+            reqValues.onerror = () => reject(reqValues.error);
+            reqKeys.onerror = () => reject(reqKeys.error);
         });
     }
 

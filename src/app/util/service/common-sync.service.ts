@@ -613,7 +613,7 @@ export class CommonSyncService implements OnDestroy {
         // and the async Firebase check takes up to ~5s to resolve).
         const initialSync$ = this.isOnline$.pipe(
           first(),
-          switchMap(isOnline => isOnline ? this.syncAll(familyId) : of(null))
+          switchMap(isOnline => isOnline ? this.syncAll() : of(null))
         );
         
         const transactionsService = this.injector.get(TransactionsFacadeService);

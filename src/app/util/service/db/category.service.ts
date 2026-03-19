@@ -122,13 +122,19 @@ export class CategoryService implements OnDestroy {
         const categories = this.localStorageUtility.getPersonalCategoriesSync(userId) as Category[];
 
         // Proactive migration: Ensure personal categories have userId field for future indexing
-        categories.forEach(c => {
-            if (!c.userId && c.id) {
+        const itemsToMigrate = categories
+            .filter(c => !c.userId && c.id)
+            .map(c => {
                 c.userId = userId;
-                const key = LocalStorageKeyHelper.getCategoryItemKey(c.id, undefined);
-                this.localStorageUtility.setCategory(key, c);
-            }
-        });
+                return {
+                    key: LocalStorageKeyHelper.getCategoryItemKey(c.id!, undefined),
+                    value: c
+                };
+            });
+            
+        if (itemsToMigrate.length > 0) {
+            this.localStorageUtility.setCategories(itemsToMigrate);
+        }
 
         return categories;
     }
@@ -138,12 +144,16 @@ export class CategoryService implements OnDestroy {
      */
     private writeCategoriesToStore(categories: Category[], familyId?: string): void {
         const fid = familyId ?? this.getFamilyId();
-        categories.forEach(category => {
-            if (!category?.id) return;
-            const key = LocalStorageKeyHelper.getCategoryItemKey(category.id, fid);
-            const categoryToSave = fid ? { ...category, familyId: fid } : category;
-            this.localStorageUtility.setCategory(key, categoryToSave);
-        });
+        const items = categories
+            .filter(category => category?.id)
+            .map(category => ({
+                key: LocalStorageKeyHelper.getCategoryItemKey(category.id!, fid),
+                value: fid ? { ...category, familyId: fid } : category
+            }));
+            
+        if (items.length > 0) {
+            this.localStorageUtility.setCategories(items);
+        }
     }
 
     /**
