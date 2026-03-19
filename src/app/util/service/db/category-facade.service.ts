@@ -18,8 +18,8 @@ export class CategoryFacadeService {
         return this.categoryService.getCategories(userId);
     }
 
-    pullFromFirestore(userId: string): Observable<void> {
-        return this.categoryService.pullFromFirestore(userId);
+    pullFromFirestore(userId: string, familyId?: string): Observable<void> {
+        return this.categoryService.pullFromFirestore(userId, familyId);
     }
 
     findOrCreateSystemCategory(

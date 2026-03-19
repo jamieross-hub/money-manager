@@ -38,10 +38,10 @@ export class AccountsService {
     /**
      * Get the accounts collection path
      */
-    protected getAccountsPath(userId: string): string {
-        const familyId = this.getFamilyId();
-        if (familyId) {
-            return `family-groups/${familyId}/accounts`;
+    protected getAccountsPath(userId: string, familyId?: string): string {
+        const fid = familyId || this.getFamilyId();
+        if (fid) {
+            return `family-groups/${fid}/accounts`;
         }
         return `users/${userId}/accounts`;
     }
@@ -343,7 +343,7 @@ export class AccountsService {
     /**
      * Pull accounts from Firestore and update local cache
      */
-    pullFromFirestore(userId: string): Observable<void> {
+    pullFromFirestore(userId: string, familyId?: string): Observable<void> {
         if (this.isGuest()) return of(undefined);
 
         // Ensure we have an active auth user before attempting pull
@@ -353,7 +353,7 @@ export class AccountsService {
             return of(undefined);
         }
 
-        const accountsRef = collection(this.firestore, this.getAccountsPath(userId));
+        const accountsRef = collection(this.firestore, this.getAccountsPath(userId, familyId));
 
         console.log(`[AccountsService] Pulling accounts for user: ${userId}`);
 

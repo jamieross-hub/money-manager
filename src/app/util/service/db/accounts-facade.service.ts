@@ -22,8 +22,8 @@ export class AccountsFacadeService {
         return this.accountsService.getAccounts(userId);
     }
 
-    pullFromFirestore(userId: string): Observable<void> {
-        return this.accountsService.pullFromFirestore(userId);
+    pullFromFirestore(userId: string, familyId?: string): Observable<void> {
+        return this.accountsService.pullFromFirestore(userId, familyId);
     }
 
     getAccount(userId: string, accountId: string): Observable<Account | undefined> {

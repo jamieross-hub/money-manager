@@ -55,10 +55,10 @@ export class CategoryService implements OnDestroy {
     /**
      * Get the categories collection path
      */
-    protected getCategoriesPath(userId: string): string {
-        const familyId = this.getFamilyId();
-        if (familyId) {
-            return `family-groups/${familyId}/categories`;
+    protected getCategoriesPath(userId: string, familyId?: string): string {
+        const fid = familyId || this.getFamilyId();
+        if (fid) {
+            return `family-groups/${fid}/categories`;
         }
         return `users/${userId}/categories`;
     }
@@ -93,8 +93,8 @@ export class CategoryService implements OnDestroy {
         return this.getFamilyId() ? 'family' : 'personal';
     }
 
-    private getUserCategoriesCollection(userId: string) {
-        return collection(this.firestore, this.getCategoriesPath(userId));
+    private getUserCategoriesCollection(userId: string, familyId?: string) {
+        return collection(this.firestore, this.getCategoriesPath(userId, familyId));
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -336,7 +336,7 @@ export class CategoryService implements OnDestroy {
     }
 
     /** Pull categories from Firestore once and update local cache */
-    pullFromFirestore(userId: string): Observable<void> {
+    pullFromFirestore(userId: string, familyId?: string): Observable<void> {
         if (this.isGuest()) return of(undefined);
 
         // Ensure we have an active auth user before attempting pull
@@ -346,7 +346,7 @@ export class CategoryService implements OnDestroy {
             return of(undefined);
         }
 
-        const categoriesRef = this.getUserCategoriesCollection(userId);
+        const categoriesRef = this.getUserCategoriesCollection(userId, familyId);
 
         console.log(`[CategoryService] Pulling categories for user: ${userId}`);
 
