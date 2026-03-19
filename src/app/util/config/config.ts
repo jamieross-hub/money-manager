@@ -1097,17 +1097,7 @@ export const defaultCategoriesForNewUser: Category[] = [
     isSystem: false,
     familyId: '',
     userId: '',
-  },
-  {
-    name: 'Adjustment',
-    type: TransactionType.EXPENSE,
-    color: '#64748B', // Slate 500
-    icon: 'rule',
-    createdAt: Date.now(),
-    isSystem: false,
-    familyId: '',
-    userId: '',
-  },
+  }
 ];
 
 export const ACCOUNT_TYPE_OPTIONS = [
