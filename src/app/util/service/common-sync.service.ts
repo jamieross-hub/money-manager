@@ -1,7 +1,7 @@
 import { Injectable, Inject, PLATFORM_ID, Injector, signal, OnDestroy, computed, Signal } from '@angular/core';
 import { BehaviorSubject, Observable, fromEvent, interval, from, of, Subject, combineLatest, merge, forkJoin, Subscription } from 'rxjs';
 import { map, switchMap, catchError, tap, take, first, filter, distinctUntilChanged, takeUntil, delay, startWith, timeout, debounceTime, finalize } from 'rxjs/operators';
-import { Firestore, collection, doc, serverTimestamp, Timestamp, getDoc, getDocFromServer, setDoc, deleteDoc } from '@angular/fire/firestore';
+import { Firestore, collection, doc, serverTimestamp, Timestamp, getDoc, getDocFromServer, setDoc, deleteDoc, writeBatch, WriteBatch } from '@angular/fire/firestore';
 import { Auth, getAuth } from '@angular/fire/auth';
 import { SwUpdate } from '@angular/service-worker';
 import { isPlatformServer } from '@angular/common';
@@ -778,7 +778,7 @@ export class CommonSyncService implements OnDestroy {
 
       if (this.isCurrentlyOnline()) {
         await this.processSyncQueue();
-        this.triggerFullSync$.next(); // Trigger a full sync immediately (pull other details)
+        // Removed triggerFullSync$ to avoid redundant pulls
       } else {
         await this.triggerBackgroundSync('sync-all-data');
       }
@@ -807,29 +807,72 @@ export class CommonSyncService implements OnDestroy {
         const itemsToProcess: SyncItem[] = [];
         const processedIds: string[] = [];
         const failedIds: string[] = [];
+        
+        const batch = writeBatch(this.firestore);
+        let batchCount = 0;
 
         for (const item of currentBatchItems) {
           try {
             const userId = this.getCurrentUserId();
             if (!userId) continue;
 
+            // Stage item for batch write
             switch (item.type) {
-              case 'transaction': await this.processTransactionSync(item, userId); break;
-              case 'budget': await this.processBudgetSync(item, userId); break;
-              case 'account': await this.processAccountSync(item, userId); break;
-              case 'goal': await this.processGoalSync(item, userId); break;
-              case 'category': await this.processCategorySync(item, userId); break;
-              case 'user': await this.processUserSync(item, userId); break;
+              case 'transaction': await this.processTransactionSync(item, userId, batch); break;
+              case 'budget': await this.processBudgetSync(item, userId, batch); break;
+              case 'account': await this.processAccountSync(item, userId, batch); break;
+              case 'goal': await this.processGoalSync(item, userId, batch); break;
+              case 'category': await this.processCategorySync(item, userId, batch); break;
+              case 'user': await this.processUserSync(item, userId, batch); break;
             }
 
             itemsToProcess.push(item);
+            batchCount++;
           } catch (error) {
-            console.error(`Failed to process sync item ${item.id}:`, error);
-
+            console.error(`Failed to stage sync item ${item.id} for batch:`, error);
             item.retryCount++;
             if (item.retryCount >= (item.maxRetries || 3)) {
               failedIds.push(item.id);
               await this.updateItemSyncStatus(item, 'failed');
+            }
+          }
+        }
+
+        if (batchCount > 0) {
+          try {
+            await batch.commit();
+            console.log(`✅ Batch committed successfully for ${batchCount} items`);
+          } catch (batchError: any) {
+            console.error('❌ Batch commit failed, falling back to sequential processing:', batchError);
+            
+            // Fallback: Clear processed list for this run
+            itemsToProcess.length = 0; 
+
+            // Process sequentially to isolate errors
+            for (const item of currentBatchItems) {
+              if (failedIds.includes(item.id)) continue; 
+              
+              try {
+                const userId = this.getCurrentUserId();
+                if (!userId) continue;
+
+                switch (item.type) {
+                  case 'transaction': await this.processTransactionSync(item, userId); break;
+                  case 'budget': await this.processBudgetSync(item, userId); break;
+                  case 'account': await this.processAccountSync(item, userId); break;
+                  case 'goal': await this.processGoalSync(item, userId); break;
+                  case 'category': await this.processCategorySync(item, userId); break;
+                  case 'user': await this.processUserSync(item, userId); break;
+                }
+                itemsToProcess.push(item);
+              } catch (itemError) {
+                console.error(`Failed to process sync item sequentially ${item.id}:`, itemError);
+                item.retryCount++;
+                if (item.retryCount >= (item.maxRetries || 3)) {
+                  failedIds.push(item.id);
+                  await this.updateItemSyncStatus(item, 'failed');
+                }
+              }
             }
           }
         }
@@ -963,7 +1006,7 @@ export class CommonSyncService implements OnDestroy {
   /**
    * Process transaction sync operations
    */
-  private async processTransactionSync(item: SyncItem, userId: string): Promise<void> {
+  private async processTransactionSync(item: SyncItem, userId: string, batch?: WriteBatch): Promise<void> {
     const basePath = item.collectionPath || `users/${userId}/transactions`;
     const recordId = this.getRecordId(item);
 
@@ -983,15 +1026,17 @@ export class CommonSyncService implements OnDestroy {
     switch (item.operation) {
       case 'create':
       case 'update':
-        await setDoc(transactionRef, dataToWrite, { merge: true });
+        if (batch) batch.set(transactionRef, dataToWrite, { merge: true });
+        else await setDoc(transactionRef, dataToWrite, { merge: true });
         break;
       case 'delete':
-        await deleteDoc(transactionRef);
+        if (batch) batch.delete(transactionRef);
+        else await deleteDoc(transactionRef);
         break;
     }
   }
 
-  private async processBudgetSync(item: SyncItem, userId: string): Promise<void> {
+  private async processBudgetSync(item: SyncItem, userId: string, batch?: WriteBatch): Promise<void> {
     const basePath = item.collectionPath || `users/${userId}/budgets`;
     const recordId = this.getRecordId(item);
     if (!recordId) return;
@@ -1006,15 +1051,17 @@ export class CommonSyncService implements OnDestroy {
     switch (item.operation) {
       case 'create':
       case 'update':
-        await setDoc(budgetRef, dataToWrite, { merge: true });
+        if (batch) batch.set(budgetRef, dataToWrite, { merge: true });
+        else await setDoc(budgetRef, dataToWrite, { merge: true });
         break;
       case 'delete':
-        await deleteDoc(budgetRef);
+        if (batch) batch.delete(budgetRef);
+        else await deleteDoc(budgetRef);
         break;
     }
   }
 
-  private async processAccountSync(item: SyncItem, userId: string): Promise<void> {
+  private async processAccountSync(item: SyncItem, userId: string, batch?: WriteBatch): Promise<void> {
     const basePath = item.collectionPath || `users/${userId}/accounts`;
     const recordId = this.getRecordId(item);
     if (!recordId) return;
@@ -1029,15 +1076,17 @@ export class CommonSyncService implements OnDestroy {
     switch (item.operation) {
       case 'create':
       case 'update':
-        await setDoc(accountRef, dataToWrite, { merge: true });
+        if (batch) batch.set(accountRef, dataToWrite, { merge: true });
+        else await setDoc(accountRef, dataToWrite, { merge: true });
         break;
       case 'delete':
-        await deleteDoc(accountRef);
+        if (batch) batch.delete(accountRef);
+        else await deleteDoc(accountRef);
         break;
     }
   }
 
-  private async processCategorySync(item: SyncItem, userId: string): Promise<void> {
+  private async processCategorySync(item: SyncItem, userId: string, batch?: WriteBatch): Promise<void> {
     const basePath = item.collectionPath || `users/${userId}/categories`;
     const dataToWrite = this.restoreTimestamps(this.scrubUndefined({ ...item.data }));
     if ('syncStatus' in dataToWrite && item.operation !== 'delete') {
@@ -1048,20 +1097,23 @@ export class CommonSyncService implements OnDestroy {
     switch (item.operation) {
       case 'create':
         const categoryRef = doc(this.firestore, `${basePath}/${item.data.id}`);
-        await setDoc(categoryRef, dataToWrite);
+        if (batch) batch.set(categoryRef, dataToWrite);
+        else await setDoc(categoryRef, dataToWrite);
         break;
       case 'update':
         const updateRef = doc(this.firestore, `${basePath}/${item.data.id}`);
-        await setDoc(updateRef, dataToWrite, { merge: true });
+        if (batch) batch.set(updateRef, dataToWrite, { merge: true });
+        else await setDoc(updateRef, dataToWrite, { merge: true });
         break;
       case 'delete':
         const deleteRef = doc(this.firestore, `${basePath}/${item.data.id}`);
-        await deleteDoc(deleteRef);
+        if (batch) batch.delete(deleteRef);
+        else await deleteDoc(deleteRef);
         break;
     }
   }
 
-  private async processGoalSync(item: SyncItem, userId: string): Promise<void> {
+  private async processGoalSync(item: SyncItem, userId: string, batch?: WriteBatch): Promise<void> {
     const basePath = item.collectionPath || `users/${userId}/goals`;
     const recordId = this.getRecordId(item);
     if (!recordId) return;
@@ -1076,26 +1128,31 @@ export class CommonSyncService implements OnDestroy {
     switch (item.operation) {
       case 'create':
       case 'update':
-        await setDoc(goalRef, dataToWrite, { merge: true });
+        if (batch) batch.set(goalRef, dataToWrite, { merge: true });
+        else await setDoc(goalRef, dataToWrite, { merge: true });
         break;
       case 'delete':
-        await deleteDoc(goalRef);
+        if (batch) batch.delete(goalRef);
+        else await deleteDoc(goalRef);
         break;
     }
   }
 
-  private async processUserSync(item: SyncItem, userId: string): Promise<void> {
+  private async processUserSync(item: SyncItem, userId: string, batch?: WriteBatch): Promise<void> {
     const userRef = doc(this.firestore, `users/${userId}`);
     const data = { ...item.data };
     delete data.uid;
 
     if (item.operation === 'update' || item.operation === 'create') {
-      await setDoc(userRef, {
+      const dataToWrite = {
         ...data,
         updatedAt: serverTimestamp()
-      }, { merge: true });
+      };
+      if (batch) batch.set(userRef, dataToWrite, { merge: true });
+      else await setDoc(userRef, dataToWrite, { merge: true });
     } else if (item.operation === 'delete') {
-      await deleteDoc(userRef);
+      if (batch) batch.delete(userRef);
+      else await deleteDoc(userRef);
     }
   }
   // #endregion
