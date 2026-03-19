@@ -552,7 +552,12 @@ export class CommonSyncService implements OnDestroy {
     this.updateSyncStatus({ isFullSyncing: true });
 
     // Resolve services lazily to avoid circular dependencies
-    const subscriptionService = this.injector.get(SubscriptionService);
+    const transactionsService = this.injector.get(TransactionsFacadeService);
+    const accountsService = this.injector.get(AccountsFacadeService);
+    const categoryService = this.injector.get(CategoryFacadeService);
+    const budgetsService = this.injector.get(BudgetsService);
+    const goalsService = this.injector.get(GoalsService);
+    //const subscriptionService = this.injector.get(SubscriptionService);
     const feedbackService = this.injector.get(FeedbackService);
     const contactService = this.injector.get(ContactService);
 
@@ -565,7 +570,12 @@ export class CommonSyncService implements OnDestroy {
       // 2. Pull changes from all collections
       switchMap(() => {
         return forkJoin([
-          // subscriptionService.pullFromFirestore(userId),
+          transactionsService.pullFromFirestore(userId, effectiveFamilyId),
+          accountsService.pullFromFirestore(userId),
+          categoryService.pullFromFirestore(userId),
+          budgetsService.pullFromFirestore(userId),
+          goalsService.pullFromFirestore(userId),
+          //subscriptionService.pullFromFirestore(userId),
           this.userService.pullFromFirestore(userId),
           this.familyService.pullFromFirestore(userId),
           feedbackService.pullFromFirestore(),
