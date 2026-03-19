@@ -234,13 +234,9 @@ export class UserComponent {
             } catch (cErr) { console.warn('Cache clear error:', cErr); }
           }
           
-          // Clear IndexedDB Transactions, Accounts, and Categories
+          // Clear ALL Local IndexedDB Caches safely
           try {
-            await Promise.all([
-              this.localStorageService.clearTransactionsStore(),
-              this.localStorageService.clearAccountsStore(),
-              this.localStorageService.clearCategoriesStore(),
-            ]);
+            await this.localStorageService.clear();
           } catch (idbErr) { console.warn('IndexedDB clearance error:', idbErr); }
 
           // Activate update if ready

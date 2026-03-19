@@ -23,6 +23,7 @@ import { SyncStatus } from '../../config/enums';
 })
 export class AccountsService {
     private accountsSubject = new BehaviorSubject<Account[]>([]);
+    private activeListenerPath: string | null = null;
     
     constructor(
         private firestore: Firestore,
@@ -225,6 +226,13 @@ export class AccountsService {
     listenToAccounts(userId: string): Observable<void> {
         if (this.isGuest()) return of(undefined);
 
+        const currentPath = this.getAccountsPath(userId);
+        if (this.activeListenerPath === currentPath) {
+            console.log(`[AccountsService] 🛡️ Listener already active for path: ${currentPath}`);
+            return of(undefined);
+        }
+        this.activeListenerPath = currentPath;
+
         return new Observable<void>(observer => {
             // 0. Emit cached accounts immediately from the individual-item store
             // This ensures the UI feels instant when switching contexts (Personal <-> Family)
@@ -240,7 +248,7 @@ export class AccountsService {
                 }));
             }
 
-            const currentPath = this.getAccountsPath(userId);
+            // currentPath is already defined at method scope
             
             console.log(`[AccountsService] 🔌 Starting real-time listener for path: ${currentPath}`);
 
@@ -326,6 +334,7 @@ export class AccountsService {
 
             return () => {
                 console.log(`[AccountsService] 🔌 Stopping listener for: ${currentPath}`);
+                this.activeListenerPath = null; // 🔌 Reset on unsubscribe
                 unsubscribe();
             };
         });

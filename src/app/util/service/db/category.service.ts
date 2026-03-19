@@ -27,6 +27,7 @@ export class CategoryService implements OnDestroy {
     private readonly destroy$ = new Subject<void>();
     private categories: { [key: string]: Category } = {};
     private categoriesSubject = new BehaviorSubject<Category[]>([]);
+    private activeListenerPath: string | null = null;
 
     constructor(
         private firestore: Firestore,
@@ -208,6 +209,13 @@ export class CategoryService implements OnDestroy {
     listenToCategories(userId: string): Observable<void> {
         if (this.isGuest()) return of(undefined);
 
+        const currentPath = this.getCategoriesPath(userId);
+        if (this.activeListenerPath === currentPath) {
+            console.log(`[CategoryService] 🛡️ Listener already active for path: ${currentPath}`);
+            return of(undefined);
+        }
+        this.activeListenerPath = currentPath;
+
         return new Observable<void>(observer => {
             // 0. Emit cached categories immediately from the individual-item store
             // This ensures the UI feels instant when switching contexts (Personal <-> Family)
@@ -321,6 +329,7 @@ export class CategoryService implements OnDestroy {
 
             return () => {
                 console.log(`[CategoryService] 🔌 Stopping listener for: ${currentPath}`);
+                this.activeListenerPath = null; // 🔌 Reset on unsubscribe
                 unsubscribe();
             };
         });

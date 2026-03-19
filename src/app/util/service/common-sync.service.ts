@@ -552,11 +552,6 @@ export class CommonSyncService implements OnDestroy {
     this.updateSyncStatus({ isFullSyncing: true });
 
     // Resolve services lazily to avoid circular dependencies
-    const transactionsService = this.injector.get(TransactionsFacadeService);
-    const accountsService = this.injector.get(AccountsFacadeService);
-    const categoryService = this.injector.get(CategoryFacadeService);
-    const budgetsService = this.injector.get(BudgetsService);
-    const goalsService = this.injector.get(GoalsService);
     const subscriptionService = this.injector.get(SubscriptionService);
     const feedbackService = this.injector.get(FeedbackService);
     const contactService = this.injector.get(ContactService);
@@ -570,12 +565,7 @@ export class CommonSyncService implements OnDestroy {
       // 2. Pull changes from all collections
       switchMap(() => {
         return forkJoin([
-          transactionsService.pullFromFirestore(userId, effectiveFamilyId),
-          accountsService.pullFromFirestore(userId),
-          categoryService.pullFromFirestore(userId),
-          budgetsService.pullFromFirestore(userId),
-          goalsService.pullFromFirestore(userId),
-          subscriptionService.pullFromFirestore(userId),
+          // subscriptionService.pullFromFirestore(userId),
           this.userService.pullFromFirestore(userId),
           this.familyService.pullFromFirestore(userId),
           feedbackService.pullFromFirestore(),
@@ -654,8 +644,8 @@ export class CommonSyncService implements OnDestroy {
             transactionsService.listenToTransactions(user.uid).pipe(catchError(() => of(null))),
             accountsService.listenToAccounts(user.uid).pipe(catchError(() => of(null))),
             categoryService.listenToCategories(user.uid).pipe(catchError(() => of(null))),
-            budgetsService.listenToBudgets(user.uid).pipe(catchError(() => of(null))),
-            goalsService.listenToGoals(user.uid).pipe(catchError(() => of(null)))
+            // budgetsService.listenToBudgets(user.uid).pipe(catchError(() => of(null))),
+            // goalsService.listenToGoals(user.uid).pipe(catchError(() => of(null)))
         );
 
         return merge(initialSync$, listeners$);
@@ -972,7 +962,7 @@ export class CommonSyncService implements OnDestroy {
       throw new Error('Missing transaction ID');
     }
 
-    const dataToWrite = this.scrubUndefined({ ...item.data });
+    const dataToWrite = this.restoreTimestamps(this.scrubUndefined({ ...item.data }));
     if ('syncStatus' in dataToWrite && item.operation !== 'delete') {
       dataToWrite.syncStatus = 'synced';
       dataToWrite.lastSyncedAt = Timestamp.now();
@@ -997,7 +987,7 @@ export class CommonSyncService implements OnDestroy {
     if (!recordId) return;
     
     const budgetRef = doc(this.firestore, `${basePath}/${recordId}`);
-    const dataToWrite = this.scrubUndefined({ ...item.data });
+    const dataToWrite = this.restoreTimestamps(this.scrubUndefined({ ...item.data }));
     if ('syncStatus' in dataToWrite && item.operation !== 'delete') {
       dataToWrite.syncStatus = 'synced';
       dataToWrite.lastSyncedAt = Timestamp.now();
@@ -1020,7 +1010,7 @@ export class CommonSyncService implements OnDestroy {
     if (!recordId) return;
     
     const accountRef = doc(this.firestore, `${basePath}/${recordId}`);
-    const dataToWrite = this.scrubUndefined({ ...item.data });
+    const dataToWrite = this.restoreTimestamps(this.scrubUndefined({ ...item.data }));
     if ('syncStatus' in dataToWrite && item.operation !== 'delete') {
       dataToWrite.syncStatus = 'synced';
       dataToWrite.lastSyncAt = Timestamp.now();
@@ -1039,7 +1029,7 @@ export class CommonSyncService implements OnDestroy {
 
   private async processCategorySync(item: SyncItem, batch: any, userId: string): Promise<void> {
     const basePath = item.collectionPath || `users/${userId}/categories`;
-    const dataToWrite = this.scrubUndefined({ ...item.data });
+    const dataToWrite = this.restoreTimestamps(this.scrubUndefined({ ...item.data }));
     if ('syncStatus' in dataToWrite && item.operation !== 'delete') {
       dataToWrite.syncStatus = 'synced';
       dataToWrite.lastSyncedAt = Timestamp.now();
@@ -1067,7 +1057,7 @@ export class CommonSyncService implements OnDestroy {
     if (!recordId) return;
     
     const goalRef = doc(this.firestore, `${basePath}/${recordId}`);
-    const dataToWrite = this.scrubUndefined({ ...item.data });
+    const dataToWrite = this.restoreTimestamps(this.scrubUndefined({ ...item.data }));
     if ('syncStatus' in dataToWrite && item.operation !== 'delete') {
       dataToWrite.syncStatus = 'synced';
       dataToWrite.lastSyncedAt = Timestamp.now();
@@ -1544,6 +1534,25 @@ export class CommonSyncService implements OnDestroy {
     if (scrubbedCount > 0) {
       console.log(`[CommonSyncService] Scrubbed ${scrubbedCount} undefined properties from object`, obj.id || '');
     }
+    return result;
+  }
+
+  /**
+   * Restore plain {seconds, nanoseconds} objects into valid Firestore Timestamps
+   */
+  private restoreTimestamps(obj: any): any {
+    if (obj === null || typeof obj !== 'object' || obj instanceof Date || obj instanceof Timestamp) return obj;
+
+    if ('seconds' in obj && 'nanoseconds' in obj && Object.keys(obj).length === 2) {
+      return new Timestamp(obj.seconds, obj.nanoseconds);
+    }
+
+    if (Array.isArray(obj)) return obj.map(item => this.restoreTimestamps(item));
+
+    const result: any = {};
+    Object.keys(obj).forEach(key => {
+      result[key] = this.restoreTimestamps(obj[key]);
+    });
     return result;
   }
 

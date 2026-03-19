@@ -50,6 +50,7 @@ export class BudgetsService {
   private readonly GUEST_USER_ID = 'offline-guest';
   private readonly COLLECTION_NAME = 'budgets';
   private budgetsSubject = new BehaviorSubject<Budget[]>([]);
+  private activeListenerPath: string | null = null;
 
   constructor(
     private readonly firestore: Firestore,
@@ -99,9 +100,16 @@ export class BudgetsService {
   listenToBudgets(userId: string): Observable<void> {
     if (this.isGuest(userId)) return of(undefined);
 
+    const currentPath = `users/${userId}/${this.COLLECTION_NAME}`;
+    if (this.activeListenerPath === currentPath) {
+      console.log(`[BudgetsService] 🛡️ Listener already active for path: ${currentPath}`);
+      return of(undefined);
+    }
+    this.activeListenerPath = currentPath;
+
     return new Observable<void>(observer => {
       const budgetsRef = query(
-        collection(this.firestore, `users/${userId}/${this.COLLECTION_NAME}`),
+        collection(this.firestore, currentPath),
         orderBy('category', 'asc')
       );
 
@@ -129,7 +137,10 @@ export class BudgetsService {
         observer.complete();
       });
 
-      return () => unsubscribe();
+      return () => {
+        this.activeListenerPath = null; // 🔌 Reset on unsubscribe
+        unsubscribe();
+      };
     });
   }
 

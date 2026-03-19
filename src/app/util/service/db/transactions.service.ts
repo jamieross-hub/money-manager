@@ -29,6 +29,7 @@ import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 })
 export class TransactionsService extends BaseService {
     private transactionsSubject = new BehaviorSubject<Transaction[]>([]);
+    private activeListenerPath: string | null = null;
 
     constructor(
         firestore: Firestore,
@@ -553,14 +554,22 @@ export class TransactionsService extends BaseService {
     listenToTransactions(userId: string, familyId?: string): Observable<void> {
         if (this.isGuest()) return of(undefined);
 
+        const currentPath = this.getTransactionsPath(userId, familyId);
+        if (this.activeListenerPath === currentPath) {
+            console.log(`[TransactionsService] 🛡️ Listener already active for path: ${currentPath}`);
+            return of(undefined);
+        }
+        this.activeListenerPath = currentPath;
+
         const currentUser = this.auth.currentUser;
         if (!currentUser || currentUser.uid !== userId) {
             console.warn(`[TransactionsService] Listener skipped: Auth mismatch (UID: ${currentUser?.uid}, expected: ${userId})`);
+            this.activeListenerPath = null; // 🔌 Reset since skipping
             return of(undefined);
         }
 
         const transactionsRef = query(
-            collection(this.firestore, this.getTransactionsPath(userId, familyId)),
+            collection(this.firestore, currentPath),
             orderBy('date', 'desc')
         );
 
@@ -689,6 +698,7 @@ export class TransactionsService extends BaseService {
 
             return () => {
                 console.log(`[TransactionsService] Stopping real-time listener for user: ${userId}`);
+                this.activeListenerPath = null; // 🔌 Reset on unsubscribe
                 unsubscribe();
             };
         });
