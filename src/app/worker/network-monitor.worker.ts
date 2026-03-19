@@ -13,6 +13,7 @@ let isVisible = true;
 let checkTimeout: any;
 let isChecking = false;
 let intervalId: any;
+let currentInterval = 30000; // Default background check frequency (30s)
 
 function getCurrentStatus(): Partial<NetworkStatus> {
   const status: Partial<NetworkStatus> = {
@@ -53,6 +54,7 @@ async function verifyConnection(retryCount = 0): Promise<void> {
 
   if (!navigator.onLine) {
     sendUpdate({ online: false });
+    updateInterval(false); // Speed up interval to check connection
     isChecking = false;
     return;
   }
@@ -75,6 +77,7 @@ async function verifyConnection(retryCount = 0): Promise<void> {
 
     // In 'no-cors' mode, if the request resolves (doesn't throw), the network is accessible.
     sendUpdate({ online: true });
+    updateInterval(true); // Slow down interval when online
     isChecking = false;
 
   } catch (error) {
@@ -86,7 +89,18 @@ async function verifyConnection(retryCount = 0): Promise<void> {
       return;
     }
     sendUpdate({ online: false });
+    updateInterval(false); // Speed up interval to check connection
     isChecking = false;
+  }
+}
+
+function updateInterval(online: boolean) {
+  const nextInterval = online ? 30000 : 5000; // 30s when online, 5s when offline
+  if (nextInterval !== currentInterval) {
+    currentInterval = nextInterval;
+    if (intervalId) {
+      startInterval(); // Restart with new timing
+    }
   }
 }
 
@@ -96,7 +110,7 @@ function startInterval() {
     if (isVisible) {
       verifyConnection();
     }
-  }, 10000);
+  }, currentInterval);
 }
 
 function stopInterval() {
