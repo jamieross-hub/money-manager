@@ -192,9 +192,9 @@ export class CategoryService implements OnDestroy {
                 // 1. Emit cached categories immediately from the individual-item store
                 const cachedCategories = this.readCategoriesFromStore(userId);
                 
-                if (cachedCategories.length > 0) {
-                    this.categoriesSubject.next(cachedCategories);
-                }
+                console.log(`[CategoryService] 💨 Emitting ${cachedCategories.length} cached categories in getCategories`);
+                this.categoriesSubject.next(cachedCategories);
+
 
                 // 2. Return reactive subject
                 return this.categoriesSubject.asObservable();
@@ -221,14 +221,13 @@ export class CategoryService implements OnDestroy {
             // This ensures the UI feels instant when switching contexts (Personal <-> Family)
             const cachedCategories = this.readCategoriesFromStore(userId);
             
-            if (cachedCategories.length > 0) {
-                console.log(`[CategoryService] 💨 Emitting ${cachedCategories.length} cached categories before listener starts`);
-                this.categoriesSubject.next(cachedCategories);
-                this.store.dispatch(CategoriesActions.loadCategoriesSuccess({
-                    categories: cachedCategories,
-                    context: this.getActiveContext()
-                }));
-            }
+            console.log(`[CategoryService] 💨 Emitting ${cachedCategories.length} cached categories before listener starts`);
+            this.categoriesSubject.next(cachedCategories);
+            this.store.dispatch(CategoriesActions.loadCategoriesSuccess({
+                categories: cachedCategories,
+                context: this.getActiveContext()
+            }));
+
 
             const currentPath = this.getCategoriesPath(userId);
             
