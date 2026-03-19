@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, writeBatch, onSnapshot, query, orderBy } from '@angular/fire/firestore';
+import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, writeBatch, onSnapshot, query, orderBy, Timestamp } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 import { Account, CreateAccountRequest, UpdateAccountRequest } from '../../models/account.model';
@@ -146,13 +146,13 @@ export class AccountsService {
 
     // 🔹 Create a new account for the logged-in user
     createAccount(userId: string, accountData: CreateAccountRequest): Observable<string> {
-        const accountId = this.generateAccountId();
+        const accountId = this.generateAccountId(userId);
         const account: Account = {
             accountId,
             userId,
             ...accountData,
             balance: Number(accountData.balance) || 0,
-            createdAt: new Date() as any, // Firebase Timestamp
+            createdAt: Timestamp.now() as any,
             isActive: true,
             syncStatus: SyncStatus.PENDING
         };
@@ -423,7 +423,7 @@ export class AccountsService {
             const accountRef = doc(this.firestore, this.getAccountPath(userId, accountId));
             const updateData = {
                 ...sanitizedData,
-                updatedAt: new Date() as any // Firebase Timestamp
+                updatedAt: Timestamp.now() as any
             };
 
             // 1. Dispatch store updates immediately (Optimistic)
@@ -540,7 +540,7 @@ export class AccountsService {
             if (account.type === 'loan' && account.loanDetails) {
                 account.loanDetails.remainingBalance = (Number(account.loanDetails.remainingBalance) || 0) + loanRemainingBalanceChange;
             }
-            account.updatedAt = new Date() as any;
+            account.updatedAt = Timestamp.now() as any;
             optimisticBalance = account.balance;
 
             updateDataToSync = {
@@ -609,7 +609,7 @@ export class AccountsService {
                     if (account.type === 'loan' && account.loanDetails && t.type === 'expense') {
                         account.loanDetails.remainingBalance = (Number(account.loanDetails.remainingBalance) || 0) - amount;
                     }
-                    account.updatedAt = new Date() as any;
+                    account.updatedAt = Timestamp.now() as any;
                     this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...account } as any }));
                     
                     updatedAccountsMap.set(account.accountId, {
@@ -692,8 +692,8 @@ export class AccountsService {
                 }
             }
 
-            oldAccount.updatedAt = new Date() as any;
-            newAccount.updatedAt = new Date() as any;
+            oldAccount.updatedAt = Timestamp.now() as any;
+            newAccount.updatedAt = Timestamp.now() as any;
             
             if (isGuest) {
                 this.localStorageUtility.saveEntities('accounts', accounts);
@@ -746,7 +746,7 @@ export class AccountsService {
      */
     private async addToSyncQueue(operation: 'create' | 'update' | 'delete', data: any, userId: string): Promise<void> {
         const syncItem: Omit<SyncItem, 'timestamp' | 'retryCount'> = {
-            id: data.accountId || this.generateAccountId(),
+            id: data.accountId || this.generateAccountId(userId),
             type: 'account',
             operation: operation,
             data: data,
@@ -761,8 +761,8 @@ export class AccountsService {
     }
 
     // 🔹 Generate a unique account ID
-    private generateAccountId(): string {
-        return 'acc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    private generateAccountId(userId: string): string {
+        return doc(collection(this.firestore, this.getAccountsPath(userId))).id;
     }
 
     /**

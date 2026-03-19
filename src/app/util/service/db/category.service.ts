@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { Firestore, collection, addDoc, doc, updateDoc, deleteDoc, collectionData, getDocs, getDoc, deleteField, setDoc, onSnapshot, query, orderBy } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, doc, updateDoc, deleteDoc, collectionData, getDocs, getDoc, deleteField, setDoc, onSnapshot, query, orderBy, Timestamp } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { Observable, Subject, takeUntil, BehaviorSubject } from 'rxjs';
 import { Category } from 'src/app/util/models';
@@ -396,14 +396,24 @@ export class CategoryService implements OnDestroy {
                     );
                 }
 
-                // Neither found, create new
-                return this.createCategory(userId, categoryName, type, icon, color, undefined, true);
+                // Neither found, create new with deterministic ID to prevent duplicates from race conditions
+                const systemId = `sys_${type}_${categoryName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+                return this.createCategory(userId, categoryName, type, icon, color, undefined, true, systemId);
             })
         );
     }
 
-    createCategory(userId: string, name: string, type: TransactionType, icon: string, color: string, group?: string, isSystem: boolean = false): Observable<string> {
-        const categoryId = this.generateCategoryId();
+    createCategory(
+        userId: string, 
+        name: string, 
+        type: TransactionType, 
+        icon: string, 
+        color: string, 
+        group?: string, 
+        isSystem: boolean = false,
+        id?: string
+    ): Observable<string> {
+        const categoryId = id || this.generateCategoryId(userId);
         const categoryData: Category = {
             id: categoryId,
             userId,
@@ -413,7 +423,7 @@ export class CategoryService implements OnDestroy {
             color,
             group: group || undefined,
             isSystem,
-            createdAt: Date.now() as any,
+            createdAt: Timestamp.now() as any,
             syncStatus: SyncStatus.PENDING
         };
 
@@ -796,7 +806,7 @@ export class CategoryService implements OnDestroy {
      */
     private async addToSyncQueue(operation: 'create' | 'update' | 'delete', data: any, userId: string): Promise<void> {
         const syncItem: Omit<SyncItem, 'timestamp' | 'retryCount'> = {
-            id: data.id || this.generateCategoryId(),
+            id: data.id || this.generateCategoryId(userId),
             type: 'category',
             operation: operation,
             data: data,
@@ -813,8 +823,8 @@ export class CategoryService implements OnDestroy {
     /**
      * Generate a unique category ID
      */
-    private generateCategoryId(): string {
-        return 'cat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    private generateCategoryId(userId: string): string {
+        return doc(collection(this.firestore, this.getCategoriesPath(userId))).id;
     }
 
     /**
