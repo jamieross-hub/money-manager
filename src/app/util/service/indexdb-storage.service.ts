@@ -26,7 +26,7 @@ export class LocalIndexDBStorageService {
     private readonly TRANSACTIONS_STORE = 'transactions';
     private readonly ACCOUNTS_STORE = 'accounts';
     private readonly CATEGORIES_STORE = 'categories';
-    private readonly DB_VERSION = 5;
+    private readonly DB_VERSION = 6;
     private db: IDBDatabase | null = null;
 
     // In-memory caches for synchronous access
@@ -182,7 +182,7 @@ export class LocalIndexDBStorageService {
     getTransactionsByUserIdSync(userId: string): any[] {
         const keys = this.userIdIndex.get(userId);
         const indexed = (keys ? Array.from(keys).map(key => this.transactionsCache.get(key)) : [])
-            .filter(tx => tx && tx.userId === userId && !tx.familyId);
+            .filter(Boolean);
             
         // Fallback for legacy transactions without userId field or index issues
         if (indexed.length === 0) {
@@ -277,7 +277,7 @@ export class LocalIndexDBStorageService {
     getPersonalAccountsSync(userId: string): any[] {
         const keys = this.accountsUserIdIndex.get(userId);
         const indexed = (keys ? Array.from(keys).map(key => this.accountsCache.get(key)) : [])
-            .filter(a => a && !a.familyId);
+            .filter(Boolean);
             
         // Fallback for legacy accounts without userId field
         if (indexed.length === 0) {
@@ -309,7 +309,10 @@ export class LocalIndexDBStorageService {
             const fidFromKey = k.includes('_') ? k.split('_')[0] : undefined;
             // Only treat as familyId if it doesn't look like a standard prefix (acc_)
             const effectiveFid = (val.familyId || (fidFromKey && !fidFromKey.startsWith('acc_'))) ? (val.familyId || fidFromKey) : undefined;
-            return { fid: effectiveFid, uid: val.userId };
+            if (effectiveFid) {
+                return { fid: effectiveFid, uid: undefined };
+            }
+            return { fid: undefined, uid: val.userId };
         };
 
         if (oldValue) {
@@ -399,7 +402,7 @@ export class LocalIndexDBStorageService {
     getPersonalCategoriesSync(userId: string): any[] {
         const keys = this.categoriesUserIdIndex.get(userId);
         const indexed = (keys ? Array.from(keys).map(key => this.categoriesCache.get(key)) : [])
-            .filter(c => c && !c.familyId);
+            .filter(Boolean);
             
         // Fallback for legacy categories without userId field
         if (indexed.length === 0) {
@@ -457,7 +460,8 @@ export class LocalIndexDBStorageService {
             return this.getTransactionsByUserIdSync(userId);
         }
 
-        return this.queryIndex('userId', userId);
+        const all = await this.queryIndex('userId', userId, this.TRANSACTIONS_STORE);
+        return all.filter((tx: any) => tx && !tx.familyId);
     }
 
     /**
@@ -685,6 +689,16 @@ export class LocalIndexDBStorageService {
                     console.log('📦 Created userId index on transactions store');
                 }
 
+                if (!transactionStore.indexNames.contains('userId_date')) {
+                    transactionStore.createIndex('userId_date', ['userId', 'date'], { unique: false });
+                    console.log('📦 Created userId_date composite index on transactions store');
+                }
+
+                if (!transactionStore.indexNames.contains('familyId_date')) {
+                    transactionStore.createIndex('familyId_date', ['familyId', 'date'], { unique: false });
+                    console.log('📦 Created familyId_date composite index on transactions store');
+                }
+
                 // Create date index for efficient sorting
                 if (!transactionStore.indexNames.contains('date')) {
                     transactionStore.createIndex('date', 'date', { unique: false });
@@ -716,6 +730,14 @@ export class LocalIndexDBStorageService {
                     accountsStore.createIndex('userId', 'userId', { unique: false });
                     console.log('📦 Created userId index on accounts store');
                 }
+                if (!accountsStore.indexNames.contains('familyId_type')) {
+                    accountsStore.createIndex('familyId_type', ['familyId', 'type'], { unique: false });
+                    console.log('📦 Created familyId_type composite index on accounts store');
+                }
+                if (!accountsStore.indexNames.contains('userId_type')) {
+                    accountsStore.createIndex('userId_type', ['userId', 'type'], { unique: false });
+                    console.log('📦 Created userId_type composite index on accounts store');
+                }
 
                 // ── Dedicated Categories Store ────────────────────────────────────
                 // key = categoryId (personal) | familyId_categoryId (family)
@@ -733,6 +755,14 @@ export class LocalIndexDBStorageService {
                 if (!categoriesStore.indexNames.contains('userId')) {
                     categoriesStore.createIndex('userId', 'userId', { unique: false });
                     console.log('📦 Created userId index on categories store');
+                }
+                if (!categoriesStore.indexNames.contains('familyId_type')) {
+                    categoriesStore.createIndex('familyId_type', ['familyId', 'type'], { unique: false });
+                    console.log('📦 Created familyId_type composite index on categories store');
+                }
+                if (!categoriesStore.indexNames.contains('userId_type')) {
+                    categoriesStore.createIndex('userId_type', ['userId', 'type'], { unique: false });
+                    console.log('📦 Created userId_type composite index on categories store');
                 }
             };
         });
@@ -898,17 +928,25 @@ export class LocalIndexDBStorageService {
             index.get(id)!.add(key);
         };
 
+        const getIdsFromValue = (val: any) => {
+            if (!val) return { fid: undefined, uid: undefined };
+            if (val.familyId) return { fid: val.familyId, uid: undefined };
+            return { fid: undefined, uid: val.userId };
+        };
+
         // Handle removals from old indices if updating or deleting
         if (oldValue) {
-            removeFromIndex(this.familyIdIndex, oldValue.familyId);
-            removeFromIndex(this.userIdIndex, oldValue.userId);
+            const oldIds = getIdsFromValue(oldValue);
+            removeFromIndex(this.familyIdIndex, oldIds.fid);
+            removeFromIndex(this.userIdIndex, oldIds.uid);
             removeFromIndex(this.accountIdIndex, oldValue.accountId);
         }
 
         // Handle additions to new indices if creating or updating
         if (newValue) {
-            addToIndex(this.familyIdIndex, newValue.familyId);
-            addToIndex(this.userIdIndex, newValue.userId);
+            const newIds = getIdsFromValue(newValue);
+            addToIndex(this.familyIdIndex, newIds.fid);
+            addToIndex(this.userIdIndex, newIds.uid);
             addToIndex(this.accountIdIndex, newValue.accountId);
         }
     }
