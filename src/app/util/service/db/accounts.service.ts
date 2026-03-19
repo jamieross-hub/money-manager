@@ -208,9 +208,9 @@ export class AccountsService {
                 const cachedAccounts = this.readAccountsFromStore(userId)
                     .filter(a => !!(a && a.accountId));
                 
-                if (cachedAccounts.length > 0) {
-                    this.accountsSubject.next(cachedAccounts);
-                }
+                console.log(`[AccountsService] 💨 Emitting ${cachedAccounts.length} cached accounts in getAccounts`);
+                this.accountsSubject.next(cachedAccounts);
+
 
                 // 2. Return reactive subject. Updates will be pushed here by
                 // listenToAccounts() when the background sync detects changes.
@@ -239,14 +239,13 @@ export class AccountsService {
             const cachedAccounts = this.readAccountsFromStore(userId)
                 .filter(a => !!(a && a.accountId));
             
-            if (cachedAccounts.length > 0) {
-                console.log(`[AccountsService] 💨 Emitting ${cachedAccounts.length} cached accounts before listener starts`);
-                this.accountsSubject.next(cachedAccounts);
-                this.store.dispatch(AccountsActions.loadAccountsSuccess({
-                    accounts: cachedAccounts,
-                    context: this.getActiveContext()
-                }));
-            }
+            console.log(`[AccountsService] 💨 Emitting ${cachedAccounts.length} cached accounts before listener starts`);
+            this.accountsSubject.next(cachedAccounts);
+            this.store.dispatch(AccountsActions.loadAccountsSuccess({
+                accounts: cachedAccounts,
+                context: this.getActiveContext()
+            }));
+
 
             // currentPath is already defined at method scope
             
