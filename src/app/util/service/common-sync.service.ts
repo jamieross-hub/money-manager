@@ -220,10 +220,15 @@ export class CommonSyncService implements OnDestroy {
     }
 
     let checkTimeout: any;
+    let isChecking = false;
     const verifyConnection = async (retryCount = 0) => {
+      if (isChecking && retryCount === 0) return;
+      isChecking = true;
+
       // Immediate exit if browser says we are offline
       if (!navigator.onLine) {
         this.updateNetworkStatus({ online: false });
+        isChecking = false;
         return;
       }
 
@@ -242,6 +247,7 @@ export class CommonSyncService implements OnDestroy {
       }
       
       this.updateNetworkStatus({ online: isOnline });
+      isChecking = false;
     };
 
     // Capture initial connection status
@@ -262,8 +268,14 @@ export class CommonSyncService implements OnDestroy {
     const online$ = fromEvent(window, 'online');
     const offline$ = fromEvent(window, 'offline');
 
-    // Combine online/offline events
-    merge(online$, offline$)
+    // Combine online/offline events and periodic heartbeat (every 10s)
+    merge(
+      online$, 
+      offline$,
+      interval(10000).pipe(
+        filter(() => document.visibilityState === 'visible')
+      )
+    )
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         verifyConnection();
