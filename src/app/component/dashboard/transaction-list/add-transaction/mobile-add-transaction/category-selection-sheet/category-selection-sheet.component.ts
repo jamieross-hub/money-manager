@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit , ChangeDetectionStrategy} from '@angular/core';
+import { Component, Inject, OnInit , ChangeDetectionStrategy, signal} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
@@ -17,9 +17,10 @@ import { TransactionType } from 'src/app/util/config/enums';
 import { DateService } from 'src/app/util/service/date.service';
 import { APP_CONFIG, CATEGORY_ICONS, CATEGORY_COLORS } from 'src/app/util/config/config';
 import { createCategory } from 'src/app/store/categories/categories.actions';
-import { filter, take } from 'rxjs';
+import { filter, take, catchError, of, finalize } from 'rxjs';
 import { NgClass } from '@angular/common';
 import { UserService } from 'src/app/util/service/db/user.service';
+import { OpenaiService } from 'src/app/util/service/ai-chat/openai.service';
 
 @Component({
     selector: 'app-category-selection-sheet',
@@ -46,13 +47,15 @@ export class CategorySelectionSheetComponent implements OnInit {
     searchControl = new FormControl('');
     transactionType: TransactionType = TransactionType.EXPENSE; // Default
     userId: string | null = null;
+    public isCreating = signal<boolean>(false);
 
     constructor(
         private _bottomSheetRef: MatBottomSheetRef<CategorySelectionSheetComponent>,
         @Inject(MAT_BOTTOM_SHEET_DATA) public data: { selectedCategoryId: string, transactionType: TransactionType },
         private store: Store<AppState>,
         private dateService: DateService,
-        private userService: UserService
+        private userService: UserService,
+        private openaiService: OpenaiService
     ) {
         this.categories$ = this.store.select(selectAllCategories).pipe(
             map(categories => {
@@ -129,26 +132,40 @@ export class CategorySelectionSheetComponent implements OnInit {
     }
 
     createAndSelectCategory(name: string): void {
-        if (!this.userId || !name.trim()) return;
+        if (!this.userId || !name.trim() || this.isCreating()) return;
 
-        const { icon, color } = this.suggestIconAndColor(name.trim());
-        
-        this.store.dispatch(createCategory({
-            userId: this.userId,
-            name: name.trim(),
-            categoryType: this.transactionType,
-            icon: icon,
-            color: color
-        }));
+        this.isCreating.set(true);
+        const fallback = this.suggestIconAndColor(name.trim());
 
-        this.categories$.pipe(
-            map(categories => categories.find(c => c.name.toLowerCase() === name.trim().toLowerCase() && c.type === this.transactionType)),
-            filter(c => !!c && !!c.id),
+        this.openaiService.suggestCategoryIconAndColor(
+            name.trim(),
+            CATEGORY_ICONS,
+            CATEGORY_COLORS
+        ).pipe(
+            catchError(() => of(fallback)),
+            finalize(() => this.isCreating.set(false)),
             take(1)
-        ).subscribe(category => {
-            if (category) {
-                this._bottomSheetRef.dismiss(category);
-            }
+        ).subscribe(suggestion => {
+            const icon = suggestion?.icon || fallback.icon;
+            const color = suggestion?.color || fallback.color;
+
+            this.store.dispatch(createCategory({
+                userId: this.userId!,
+                name: name.trim(),
+                categoryType: this.transactionType,
+                icon: icon,
+                color: color
+            }));
+
+            this.categories$.pipe(
+                map(categories => categories.find(c => c.name.toLowerCase() === name.trim().toLowerCase() && c.type === this.transactionType)),
+                filter(c => !!c && !!c.id),
+                take(1)
+            ).subscribe(category => {
+                if (category) {
+                    this._bottomSheetRef.dismiss(category);
+                }
+            });
         });
     }
 
