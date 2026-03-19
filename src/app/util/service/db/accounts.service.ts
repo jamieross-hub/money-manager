@@ -249,27 +249,73 @@ export class AccountsService {
                 orderBy('name', 'asc')
             );
 
+            let isFirstSnapshot = true;
+
             const unsubscribe = onSnapshot(accountsRef,
                 (querySnapshot) => {
-                    const firestoreAccounts: Account[] = [];
-                    querySnapshot.forEach((docSnap) => {
-                        const data = docSnap.data();
-                        // Require a name — consistent with pullFromFirestore.
-                        if (data && docSnap.id && data['name']) {
-                            firestoreAccounts.push({ accountId: docSnap.id, userId, ...data } as Account);
+                    if (isFirstSnapshot) {
+                        isFirstSnapshot = false;
+
+                        const firestoreAccounts: Account[] = [];
+                        querySnapshot.forEach((docSnap) => {
+                            const data = docSnap.data();
+                            if (data && docSnap.id && data['name']) {
+                                firestoreAccounts.push({ accountId: docSnap.id, userId, ...data } as Account);
+                            }
+                        });
+                        
+                        const localAccounts = this.readAccountsFromStore(userId);
+                        const merged = this.mergeFirestoreAndLocal(firestoreAccounts, localAccounts);
+
+                        this.replaceAccountsInStore(merged);
+                        
+                        this.accountsSubject.next(merged);
+                        this.store.dispatch(AccountsActions.loadAccountsSuccess({
+                            accounts: merged,
+                            context: this.getActiveContext()
+                        }));
+
+                        observer.next();
+                        return;
+                    }
+
+                    const changes = querySnapshot.docChanges();
+                    if (changes.length === 0) {
+                        observer.next();
+                        return;
+                    }
+
+                    const current = this.accountsSubject.getValue();
+                    const accMap = new Map<string, Account>(current.map(a => [a.accountId!, a]));
+
+                    changes.forEach((change) => {
+                        const docSnap = change.doc;
+                        if (change.type === 'removed') {
+                            accMap.delete(docSnap.id);
+                            const familyId = this.getFamilyId();
+                            const itemKey = LocalStorageKeyHelper.getAccountItemKey(docSnap.id, familyId);
+                            this.localStorageUtility.removeAccount(itemKey);
+                        } else {
+                            const data = docSnap.data();
+                            if (data && docSnap.id && data['name']) {
+                                const acc = { accountId: docSnap.id, userId, ...data } as Account;
+                                const existing = accMap.get(acc.accountId!);
+                                const isLocalPending = existing?.syncStatus === 'pending';
+                                if (!isLocalPending) {
+                                    accMap.set(acc.accountId!, acc);
+                                    this.updateAccountCache(userId, 'update', acc);
+                                }
+                            }
                         }
                     });
-                    
-                    // Replace individual-item store entries for the current context
-                    this.replaceAccountsInStore(firestoreAccounts);
-                    
-                    // Update subject and Store — include context so data goes into the correct bucket
-                    this.accountsSubject.next(firestoreAccounts);
+
+                    const updatedList = Array.from(accMap.values()).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                    this.accountsSubject.next(updatedList);
                     this.store.dispatch(AccountsActions.loadAccountsSuccess({
-                        accounts: firestoreAccounts,
+                        accounts: updatedList,
                         context: this.getActiveContext()
                     }));
-                    
+
                     observer.next();
                 },
                 (error) => {
@@ -318,15 +364,19 @@ export class AccountsService {
 
                 console.log(`[AccountsService] Pulled ${accounts.length} accounts from Firestore`);
 
+                // Merge with local pending accounts to protect offline writes
+                const localAccounts = this.readAccountsFromStore(userId);
+                const merged = this.mergeFirestoreAndLocal(accounts, localAccounts);
+
                 // Replace individual-item store with fresh data
-                this.replaceAccountsInStore(accounts);
+                this.replaceAccountsInStore(merged);
                 
                 // Update Subject so UI reflects the fresh data immediately
-                this.accountsSubject.next(accounts);
+                this.accountsSubject.next(merged);
                 
                 // Update NgRx state — include context so data goes into the correct bucket
                 this.store.dispatch(AccountsActions.loadAccountsSuccess({
-                    accounts,
+                    accounts: merged,
                     context: this.getActiveContext()
                 }));
             }),
@@ -805,5 +855,30 @@ export class AccountsService {
         } catch (error) {
             console.error('Error updating account cache:', error);
         }
+    }
+
+    /**
+     * Merge Firestore accounts with pending local changes to preserve offline writes
+     */
+    private mergeFirestoreAndLocal(firestoreAccounts: Account[], localAccounts: Account[]): Account[] {
+        const firestoreMap = new Map<string, Account>(
+            firestoreAccounts.map(a => [a.accountId!, a])
+        );
+
+        const pendingLocal = localAccounts.filter(localAcc => {
+            if (!localAcc.accountId) return false;
+            const inFirestore = firestoreMap.has(localAcc.accountId);
+            const isPending = localAcc.syncStatus === SyncStatus.PENDING;
+            return !inFirestore || isPending;
+        });
+
+        const pendingLocalMap = new Map<string, Account>(
+            pendingLocal.map(a => [a.accountId!, a])
+        );
+
+        return [
+            ...firestoreAccounts.map(a => pendingLocalMap.get(a.accountId!) ?? a),
+            ...pendingLocal.filter(a => !firestoreMap.has(a.accountId!))
+        ];
     }
 }

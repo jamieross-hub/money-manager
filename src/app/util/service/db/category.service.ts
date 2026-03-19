@@ -231,40 +231,86 @@ export class CategoryService implements OnDestroy {
                 orderBy('name', 'asc')
             );
 
+            let isFirstSnapshot = true;
+
             const unsubscribe = onSnapshot(categoriesRef,
                 (querySnapshot) => {
-                    const firestoreCategories: Category[] = [];
-                    querySnapshot.forEach((docSnap) => {
-                        const data: any = docSnap.data();
-                        // Require both an id and a name — the old guard
-                        // `(data.name || docSnap.id)` was always true since every
-                        // Firestore document has an id, letting ghost docs through.
-                        if (data && docSnap.id && data.name) {
-                            const category: Category = {
-                                id: docSnap.id,
-                                userId: userId,
-                                ...data
-                            };
-                            firestoreCategories.push(category);
+                    if (isFirstSnapshot) {
+                        isFirstSnapshot = false;
+
+                        const firestoreCategories: Category[] = [];
+                        querySnapshot.forEach((docSnap) => {
+                            const data: any = docSnap.data();
+                            if (data && docSnap.id && data.name) {
+                                const category: Category = {
+                                    id: docSnap.id,
+                                    userId: userId,
+                                    ...data
+                                };
+                                firestoreCategories.push(category);
+                            }
+                        });
+
+                        const localCategories = this.readCategoriesFromStore(userId);
+                        const merged = this.mergeFirestoreAndLocal(firestoreCategories, localCategories);
+
+                        this.replaceCategoriesInStore(merged);
+
+                        this.categories = {};
+                        merged.forEach(cat => {
+                            if (cat.id) this.categories[cat.id] = cat;
+                        });
+
+                        this.categoriesSubject.next(merged);
+                        this.store.dispatch(CategoriesActions.loadCategoriesSuccess({
+                            categories: merged,
+                            context: this.getActiveContext()
+                        }));
+
+                        observer.next();
+                        return;
+                    }
+
+                    const changes = querySnapshot.docChanges();
+                    if (changes.length === 0) {
+                        observer.next();
+                        return;
+                    }
+
+                    const current = this.categoriesSubject.getValue();
+                    const catMap = new Map<string, Category>(current.map(c => [c.id!, c]));
+
+                    changes.forEach((change) => {
+                        const docSnap = change.doc;
+                        if (change.type === 'removed') {
+                            catMap.delete(docSnap.id);
+                            const familyId = this.getFamilyId();
+                            const itemKey = LocalStorageKeyHelper.getCategoryItemKey(docSnap.id, familyId);
+                            this.localStorageUtility.removeCategory(itemKey);
+                        } else {
+                            const data = docSnap.data();
+                            if (data && docSnap.id && data['name']) {
+                                const cat = { id: docSnap.id, userId: userId, ...data } as Category;
+                                const existing = catMap.get(cat.id!);
+                                const isLocalPending = existing?.syncStatus === 'pending';
+                                if (!isLocalPending) {
+                                    catMap.set(cat.id!, cat);
+                                    this.updateCategoryCache(userId, 'update', cat);
+                                }
+                            }
                         }
                     });
 
-                    // Update internal categories map - Clear first to remove cross-context stale data
+                    const updatedList = Array.from(catMap.values()).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
                     this.categories = {};
-                    firestoreCategories.forEach(cat => {
-                        if (cat.id) this.categories[cat.id] = cat;
-                    });
+                    updatedList.forEach(c => { if (c.id) this.categories[c.id] = c; });
 
-                    // Replace individual-item store entries for the current context
-                    this.replaceCategoriesInStore(firestoreCategories);
-
-                    // Update subject and Store — include context so data goes into the correct bucket
-                    this.categoriesSubject.next(firestoreCategories);
+                    this.categoriesSubject.next(updatedList);
                     this.store.dispatch(CategoriesActions.loadCategoriesSuccess({
-                        categories: firestoreCategories,
+                        categories: updatedList,
                         context: this.getActiveContext()
                     }));
-                    
+
                     observer.next();
                 },
                 (error) => {
@@ -326,21 +372,25 @@ export class CategoryService implements OnDestroy {
 
                 console.log(`[CategoryService] Pulled ${categories.length} categories from Firestore`);
 
+                // Merge with local pending categories to protect offline writes
+                const localCategories = this.readCategoriesFromStore(userId);
+                const merged = this.mergeFirestoreAndLocal(categories, localCategories);
+
                 // Replace individual-item store with fresh data
-                this.replaceCategoriesInStore(categories);
+                this.replaceCategoriesInStore(merged);
                 
                 // Update internal categories map - Clear first to remove cross-context stale data
                 this.categories = {};
-                categories.forEach(cat => {
+                merged.forEach(cat => {
                     if (cat.id) this.categories[cat.id] = cat;
                 });
 
                 // Update Subject so UI reflects the fresh data immediately
-                this.categoriesSubject.next(categories);
+                this.categoriesSubject.next(merged);
 
                 // Update NgRx state — include context so data goes into the correct bucket
                 this.store.dispatch(CategoriesActions.loadCategoriesSuccess({
-                    categories,
+                    categories: merged,
                     context: this.getActiveContext()
                 }));
             }),
@@ -899,5 +949,30 @@ export class CategoryService implements OnDestroy {
                 this.notificationService.successVibration();
             }
         });
+    }
+
+    /**
+     * Merge Firestore categories with pending local changes to preserve offline writes
+     */
+    private mergeFirestoreAndLocal(firestoreCategories: Category[], localCategories: Category[]): Category[] {
+        const firestoreMap = new Map<string, Category>(
+            firestoreCategories.map(c => [c.id!, c])
+        );
+
+        const pendingLocal = localCategories.filter(localCat => {
+            if (!localCat.id) return false;
+            const inFirestore = firestoreMap.has(localCat.id);
+            const isPending = localCat.syncStatus === SyncStatus.PENDING;
+            return !inFirestore || isPending;
+        });
+
+        const pendingLocalMap = new Map<string, Category>(
+            pendingLocal.map(c => [c.id!, c])
+        );
+
+        return [
+            ...firestoreCategories.map(c => pendingLocalMap.get(c.id!) ?? c),
+            ...pendingLocal.filter(c => !firestoreMap.has(c.id!))
+        ];
     }
 }
