@@ -36,6 +36,7 @@ import { SubscriptionService } from './subscription.service';
 import { FeedbackService } from './feedback.service';
 import { ContactService } from './db/contact.service';
 import { NotificationService } from './notification.service';
+import { environment } from '@env/environment';
 
 /**
  * Interface and Types
@@ -118,6 +119,7 @@ export class CommonSyncService implements OnDestroy {
   private serviceWorkerRegistration: ServiceWorkerRegistration | null = null;
   private syncQueue: SyncItem[] = [];
   private readonly triggerFullSync$ = new Subject<void>();
+  private networkWorker: Worker | null = null;
 
   private networkStatusSignal = signal<NetworkStatus>({
     online: typeof navigator !== 'undefined' ? navigator.onLine : true,
@@ -168,6 +170,9 @@ export class CommonSyncService implements OnDestroy {
 
   ngOnDestroy(): void {
     this.stopSync();
+    if (this.networkWorker) {
+      this.networkWorker.terminate();
+    }
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -219,87 +224,42 @@ export class CommonSyncService implements OnDestroy {
       return;
     }
 
-    let checkTimeout: any;
-    let isChecking = false;
-    const verifyConnection = async (retryCount = 0) => {
-      if (isChecking && retryCount === 0) return;
-      isChecking = true;
+    if (typeof Worker !== 'undefined') {
+      try {
+        this.networkWorker = new Worker(new URL('../../worker/network-monitor.worker', import.meta.url));
+        
+        this.networkWorker.onmessage = ({ data }) => {
+          if (data && data.type === 'NETWORK_UPDATE') {
+            this.updateNetworkStatus(data.payload);
+          }
+        };
 
-      // Immediate exit if browser says we are offline
-      if (!navigator.onLine) {
-        this.updateNetworkStatus({ online: false });
-        isChecking = false;
-        return;
-      }
+        this.networkWorker.postMessage({
+          type: 'INITIALIZE',
+          payload: {
+            config: {
+              baseUrl: environment.baseUrl,
+              projectId: environment.firebaseConfig?.projectId
+            },
+            isVisible: document.visibilityState === 'visible'
+          }
+        });
 
-      // Use a tight timeout for the first check, slightly longer for retries
-      const timeout = retryCount === 0 ? 2000 : 3000;
-      const isOnline = await this.checkFirebaseConnection(timeout);
-      
-      // If the browser reports online but the server is unreachable, 
-      // retry once quickly because DNS/Websockets might be taking a moment.
-      if (!isOnline && retryCount < 1) {
-        clearTimeout(checkTimeout);
-        checkTimeout = setTimeout(() => {
-          verifyConnection(retryCount + 1);
-        }, 1000); // 1s wait before single retry
-        return;
-      }
-      
-      this.updateNetworkStatus({ online: isOnline });
-      isChecking = false;
-    };
-
-    // Capture initial connection status
-    if ('connection' in navigator) {
-      const connection = (navigator as any).connection;
-      this.updateNetworkStatus({
-        connectionType: connection.effectiveType,
-        effectiveType: connection.effectiveType,
-        downlink: connection.downlink,
-        rtt: connection.rtt
-      });
-    }
-
-    // Initial check
-    verifyConnection();
-
-    // Monitor online/offline events
-    const online$ = fromEvent(window, 'online');
-    const offline$ = fromEvent(window, 'offline');
-
-    // Combine online/offline events and periodic heartbeat (every 10s)
-    merge(
-      online$, 
-      offline$,
-      interval(10000).pipe(
-        filter(() => document.visibilityState === 'visible')
-      )
-    )
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        verifyConnection();
-      });
-
-    // Monitor connection quality if available
-    if ('connection' in navigator) {
-      const connection = (navigator as any).connection;
-      if (connection) {
-        fromEvent(connection, 'change')
-          .pipe(
-            takeUntil(this.destroy$),
-            debounceTime(2000)
-          )
+        // Mirror visibility changes to worker
+        fromEvent(document, 'visibilitychange')
+          .pipe(takeUntil(this.destroy$))
           .subscribe(() => {
-            this.updateNetworkStatus({
-              connectionType: connection.effectiveType,
-              effectiveType: connection.effectiveType,
-              downlink: connection.downlink,
-              rtt: connection.rtt
+            this.networkWorker?.postMessage({
+              type: 'VISIBILITY_CHANGE',
+              payload: document.visibilityState
             });
-            verifyConnection();
           });
+
+      } catch (error) {
+        console.error('Failed to initialize network monitoring worker:', error);
       }
+    } else {
+      console.warn('Web Workers are not supported in this environment for network monitoring.');
     }
   }
 
