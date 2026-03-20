@@ -22,18 +22,7 @@ export interface LoanAccount {
   updatedAt: Date;
 }
 
-/**
- * Credit Card Account interface for credit card-specific properties
- */
-export interface CreditCardDetails {
-  dueDate: number; // Day of month when payment is due (1-31)
-  billingCycleStart: number; // Day of month when billing cycle starts (1-31)
-  creditLimit: number;
-  minimumPayment: number;
-  showReminder: boolean;
-  nextDueDate?: Date; // Calculated next due date
-  nextBillingDate?: Date; // Calculated next billing date
-}
+
 
 /**
  * Account interface representing a financial account in the system
@@ -58,8 +47,6 @@ export interface Account {
 	familyId: string;
 	// Loan-specific properties (only used when type is 'loan')
 	loanDetails?: LoanDetails;
-	// Credit card-specific properties (only used when type is 'credit')
-	creditCardDetails?: CreditCardDetails;
 }
 export interface LoanDetails {
 	lenderName: string;

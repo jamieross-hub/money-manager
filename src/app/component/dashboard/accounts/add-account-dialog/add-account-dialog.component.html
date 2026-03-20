@@ -30,8 +30,8 @@
           <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1 px-1">
             Account Name *
           </label>
-          <input type="text" formControlName="name" [maxlength]="50" placeholder="e.g., Chase Checking"
-            class="w-full py-2.5 px-4 text-base font-semibold border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50/30 dark:bg-gray-900/30 focus:outline-none focus:ring-2 focus:ring-primary-600/20 focus:border-primary-600 dark:focus:border-primary-400 transition-all shadow-sm" />
+          <input type="text" formControlName="name" [maxlength]="50" placeholder="e.g., HDFC Bank"
+            class="w-full py-2.5 px-4 text-base border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50/30 dark:bg-gray-900/30 focus:outline-none focus:ring-2 focus:ring-primary-600/20 focus:border-primary-600 dark:focus:border-primary-400 transition-all shadow-sm" />
         </div>
       </div>
       
@@ -252,62 +252,7 @@
       </div>
     }
 
-    <!-- Credit Card Fields -->
-    @if(isCreditAccount()) {
-      <div class="space-y-4">
-        <!-- <div class="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800/30 rounded-xl p-4 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
-          <mat-icon>credit_card</mat-icon>
-        </div>
-        <div>
-          <p class="text-xs text-blue-700/60 font-semibold uppercase tracking-wider">Credit Card</p>
-          <p class="text-sm font-bold text-blue-900 dark:text-blue-100">Card Configuration</p>
-        </div>
-      </div> -->
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 space-y-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Billing Cycle</label>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-medium text-gray-500 mb-1">Due Date (Day)</label>
-              <input type="number" formControlName="dueDate" placeholder="15" min="1" max="31"
-                class="w-full py-2 px-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-transparent text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
-              @if(accountForm.get('dueDate')?.invalid && accountForm.get('dueDate')?.touched) {
-                <p class="text-red-500 text-[10px] mt-1">Must be 1-31</p>
-              }
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-500 mb-1">Start Day</label>
-              <input type="number" formControlName="billingCycleStart" placeholder="1" min="1" max="31"
-                class="w-full py-2 px-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-transparent text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
-              @if(accountForm.get('billingCycleStart')?.invalid && accountForm.get('billingCycleStart')?.touched) {
-                <p class="text-red-500 text-[10px] mt-1">Must be 1-31</p>
-              }
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 space-y-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Limits &amp; Payments</label>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-medium text-gray-500 mb-1">Credit Limit</label>
-              <input type="number" formControlName="creditLimit" placeholder="0.00"
-                class="w-full py-2 px-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-transparent text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-500 mb-1">Min. Pay</label>
-              <input type="number" formControlName="minimumPayment" placeholder="0.00"
-                class="w-full py-2 px-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-transparent text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-    </div>
-  }
 
   <div class="h-10"></div>
 </form>

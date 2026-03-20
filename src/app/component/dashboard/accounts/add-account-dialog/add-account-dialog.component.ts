@@ -236,11 +236,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
       customMonthlyPayment:    ['', [Validators.min(0)]],
       showReminder:            [true],
       createRecurringTransaction: [true],
-      // Credit card fields
-      dueDate:                 [15, [Validators.required, Validators.min(1), Validators.max(31)]],
-      billingCycleStart:       [1, [Validators.required, Validators.min(1), Validators.max(31)]],
-      creditLimit:             [0, [Validators.min(0)]],
-      minimumPayment:          [0, [Validators.min(0)]],
+
     });
   }
 
@@ -276,12 +272,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
         customMonthlyPayment:    account.loanDetails.monthlyPayment ?? 0,
         createRecurringTransaction: true,
       }),
-      ...(account.creditCardDetails && {
-        dueDate:                account.creditCardDetails.dueDate,
-        billingCycleStart:      account.creditCardDetails.billingCycleStart,
-        creditLimit:            account.creditCardDetails.creditLimit,
-        minimumPayment:         account.creditCardDetails.minimumPayment,
-      }),
+
     });
   }
 
@@ -377,8 +368,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
 
   private updateValidatorsForAccountType(type: string): void {
     const loanFields   = ['lenderName', 'loanAmount', 'interestRate', 'durationMonths', 'durationYears', 'nextDueDate', 'endDate', 'customMonthlyPayment'];
-    const creditFields = ['dueDate', 'billingCycleStart', 'creditLimit', 'minimumPayment'];
-    const allFields    = [...loanFields, ...creditFields];
+    const allFields    = [...loanFields];
 
     allFields.forEach(name => this.accountForm.get(name)?.clearValidators());
 
@@ -390,11 +380,6 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
       this.accountForm.get('nextDueDate')?.setValidators([Validators.required]);
       this.accountForm.get('endDate')?.setValidators([Validators.required]);
       this.accountForm.get('customMonthlyPayment')?.setValidators([Validators.required, Validators.min(0)]);
-    } else if (type === 'credit') {
-      this.accountForm.get('dueDate')?.setValidators([Validators.required, Validators.min(1), Validators.max(31)]);
-      this.accountForm.get('billingCycleStart')?.setValidators([Validators.required, Validators.min(1), Validators.max(31)]);
-      this.accountForm.get('creditLimit')?.setValidators([Validators.min(0)]);
-      this.accountForm.get('minimumPayment')?.setValidators([Validators.min(0)]);
     }
 
     allFields.forEach(name => this.accountForm.get(name)?.updateValueAndValidity());
@@ -571,15 +556,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
       };
     }
 
-    if (isCredit) {
-      accountData.creditCardDetails = {
-        dueDate: Number(formData.dueDate) || 15,
-        billingCycleStart: Number(formData.billingCycleStart) || 1,
-        creditLimit: Number(formData.creditLimit) || 0,
-        minimumPayment: Number(formData.minimumPayment) || 0,
-        nextDueDate: this.buildNextCreditCardDueDate(Number(formData.dueDate) || 15),
-      };
-    }
+
 
     return accountData;
   }
@@ -668,12 +645,7 @@ export class AddAccountDialogComponent implements OnInit, OnDestroy {
 
   // ─── Private Helpers ──────────────────────────────────────────────────────
 
-  private buildNextCreditCardDueDate(dayOfMonth: number): Date {
-    const today = new Date();
-    let next = new Date(today.getFullYear(), today.getMonth(), dayOfMonth);
-    if (next < today) next = new Date(today.getFullYear(), today.getMonth() + 1, dayOfMonth);
-    return next;
-  }
+
 
   private findOrCreateLoanPaymentCategory(userId: string): Observable<string> {
     return this.categoryService.findOrCreateSystemCategory(

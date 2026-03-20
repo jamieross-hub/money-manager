@@ -475,8 +475,7 @@ export class AccountsService {
                         syncStatus: data.syncStatus,
                         icon: data.icon || '',
                         color: data.color || '',
-                        loanDetails: data.loanDetails || null,
-                        creditCardDetails: data.creditCardDetails || null
+                        loanDetails: data.loanDetails || null
                     };
                     // Update individual-item store
                     this.updateAccountCache(userId, 'update', account);

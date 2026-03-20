@@ -405,9 +405,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
     return account.type === AccountType.CREDIT;
   }
 
-  public getCreditCardDetails(account: Account): any {
-    return account.creditCardDetails;
-  }
+
 
   public getDaySuffix(day: number): string {
     if (day >= 11 && day <= 13) return 'th';
@@ -419,47 +417,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
     }
   }
 
-  public calculateNextDueDate(account: Account): Date {
-    if (!account.creditCardDetails?.dueDate) {
-      return new Date();
-    }
 
-    const dueDate = account.creditCardDetails.dueDate;
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-
-    // Calculate next due date
-    let nextDueDate = new Date(currentYear, currentMonth, dueDate);
-
-    // If the due date has passed this month, move to next month
-    if (nextDueDate < today) {
-      nextDueDate = new Date(currentYear, currentMonth + 1, dueDate);
-    }
-
-    return nextDueDate;
-  }
-
-  public calculateNextBillingDate(account: Account): Date {
-    if (!account.creditCardDetails?.billingCycleStart) {
-      return new Date();
-    }
-
-    const billingCycleStart = account.creditCardDetails.billingCycleStart;
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-
-    // Calculate next billing date
-    let nextBillingDate = new Date(currentYear, currentMonth, billingCycleStart);
-
-    // If the billing date has passed this month, move to next month
-    if (nextBillingDate < today) {
-      nextBillingDate = new Date(currentYear, currentMonth + 1, billingCycleStart);
-    }
-
-    return nextBillingDate;
-  }
 
   /**
    * Handle account click to show/hide actions
@@ -624,7 +582,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
    * Get payment due status for an account
    */
   private getPaymentDueStatus(account: Account): { isPaymentDue: boolean, daysUntilDue?: number, paymentDueStatus?: 'overdue' | 'due-soon' | 'upcoming', nextDueDate?: Date } {
-    if (account.type !== AccountType.CREDIT && account.type !== AccountType.LOAN) {
+    if (account.type !== AccountType.LOAN) {
       return { isPaymentDue: false };
     }
 
@@ -633,8 +591,6 @@ export class AccountsComponent implements OnInit, OnDestroy {
     if (account.type === AccountType.LOAN && account.loanDetails?.nextDueDate) {
       const date = this.dateService.toDate(account.loanDetails.nextDueDate);
       nextDueDate = date || undefined;
-    } else if (account.type === AccountType.CREDIT) {
-      nextDueDate = this.calculateNextDueDate(account);
     }
 
     if (!nextDueDate) {
