@@ -80,6 +80,7 @@ import { AppView } from 'src/app/util/service/app-view.service';
 import { RecurringTemplate } from 'src/app/util/models/recurring.model';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+import { SandCanvasDirective } from '../../../../util/directives/sand-canvas.directive';
 import { CategoryChartSheetComponent } from './components/category-chart-sheet/category-chart-sheet.component';
 
 dayjs.extend(weekOfYear);
@@ -112,7 +113,8 @@ interface SortOption {
     FormsModule,
     MatDividerModule,
     ImageFallbackDirective,
-    MatBottomSheetModule
+    MatBottomSheetModule,
+    SandCanvasDirective
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   animations: []
@@ -151,6 +153,28 @@ export class MobileTransactionListComponent
 
   selectedTxIds = signal<Set<string>>(new Set());
   selectedSpecialRange = signal<string | null>(null);
+  
+  // Sand Movement Effect Signals
+  tiltX = signal<number>(0);
+  tiltY = signal<number>(0);
+  motionPermissionGranted = signal<boolean>(false);
+
+  @HostListener('window:deviceorientation', ['$event'])
+  onDeviceOrientation(event: DeviceOrientationEvent) {
+    if (this.selectedSpecialRange() !== 'category') return;
+
+    const gamma = event.gamma || 0; // -90 to 90 (Left/Right)
+    const beta = event.beta || 0;   // -180 to 180 (Front/Back)
+
+    // Smooth factor or multiplier (e.g., scale max offset to 20px)
+    // Map -90 to 90 to approximately -20 to 20
+    const x = (gamma / 45) * 15; // Max 15px at 45deg tilt
+    const y = ((beta + 45) / 45) * 15; // Offset beta assuming typical 45deg hold angle
+
+    this.tiltX.set(Math.max(-20, Math.min(20, x)));
+    this.tiltY.set(Math.max(-20, Math.min(20, y)));
+  }
+
   isSelectionMode = computed(() => this.selectedTxIds().size > 0);
   newlyAddedTxId = signal<string | null>(null);
   showFilters: boolean = false;
@@ -1266,5 +1290,19 @@ export class MobileTransactionListComponent
     }
   }
 
+  getSandGradient(item: any): string {
+    const color = item._categoryColor || '#cccccc';
+    const x = this.tiltX(); // -20 to 20
+    
+    // Base alphas (assuming Hex style #RRGGBB)
+    // 20 dec is 14 hex, 40 dec is 28 hex
+    const leftAlpha = Math.max(10, Math.min(60, 25 - Math.round(x))); 
+    const rightAlpha = Math.max(10, Math.min(80, 45 + Math.round(x * 1.5)));
+    
+    const leftHex = leftAlpha.toString(16).padStart(2, '0');
+    const rightHex = rightAlpha.toString(16).padStart(2, '0');
+    
+    return `linear-gradient(90deg, ${color}${leftHex} 0%, ${color}${rightHex} 100%)`;
+  }
 
 }

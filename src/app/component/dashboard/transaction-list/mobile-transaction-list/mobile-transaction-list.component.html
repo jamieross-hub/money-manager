@@ -578,10 +578,7 @@
             (touchstart)="onLongPressStart(item)" (touchmove)="onLongPressEnd()" (mouseup)="onLongPressEnd()"
             (touchend)="onLongPressEnd()" (click)="onTransactionClick(item, cardElement)">
             @if (selectedSpecialRange() === 'category') {
-            <div class="category-progress-bg" 
-                 [style.width.%]="(item.amount / ((item._isIncome ? totalIncome() : totalExpenses()) || 1)) * 100"
-                 [style.background]="'linear-gradient(90deg, ' + item._categoryColor + '40 0%, ' + item._categoryColor + '05 100%)'">
-            </div>
+            <canvas [appSandCanvas]="item._categoryColor" [tiltX]="tiltX()" [tiltY]="tiltY()" [percentage]="(item.amount / ((item._isIncome ? totalIncome() : totalExpenses()) || 1)) * 100"></canvas>
             }
             <!-- Main Transaction Content -->
             <div class="transaction-main">
