@@ -557,9 +557,6 @@ export class CommonSyncService implements OnDestroy {
       // 2. Pull changes from all collections
       switchMap(() => {
         return forkJoin([
-          transactionsService.pullFromFirestore(userId, effectiveFamilyId),
-          accountsService.pullFromFirestore(userId, effectiveFamilyId),
-          categoryService.pullFromFirestore(userId, effectiveFamilyId),
           budgetsService.pullFromFirestore(userId),
           goalsService.pullFromFirestore(userId),
           //subscriptionService.pullFromFirestore(userId),
