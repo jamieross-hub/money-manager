@@ -187,8 +187,8 @@ export class MobileTransactionListComponent
     return this.allActiveTransactions();
   });
 
-  categories = toSignal(this.store.select(selectAllCategories), { initialValue: [] as Category[] });
-  accounts = toSignal(this.store.select(selectAllAccounts), { initialValue: [] as Account[] });
+  categories = this.store.selectSignal(selectAllCategories);
+  accounts = this.store.selectSignal(selectAllAccounts);
 
   // Filter Signals
   searchTerm = this.filterService.searchTerm;
@@ -229,16 +229,12 @@ export class MobileTransactionListComponent
   }
 
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
+  appView = toSignal(this.appViewService.appView$, { initialValue: 'MONTHLY' as AppView });
 
   /** True when the user's preferences have isFamilyMode enabled */
-  isFamilyMode = toSignal(
-    this.store.select(ProfileSelectors.selectProfile).pipe(
-      map(profile => profile?.preferences?.isFamilyMode ?? false)
-    ),
-    { initialValue: false }
-  );
+  isFamilyMode = this.store.selectSignal(ProfileSelectors.selectIsFamilyMode);
 
-  appView = toSignal(this.appViewService.appView$, { initialValue: 'MONTHLY' as AppView });
+
 
   activeFamily = this.store.selectSignal<Family | null>(FamilySelectors.selectFamily);
   isSplitMode = computed(() => this.activeFamily()?.mode === 'split');
@@ -420,10 +416,7 @@ export class MobileTransactionListComponent
   get currentUserId(): string { return this.currentUserProfile()?.uid ?? ''; }
 
   /** Family members list (for role lookups) */
-  familyMembers = toSignal(
-    this.store.select(FamilySelectors.selectFamilyMembers),
-    { initialValue: [] as FamilyMember[] }
-  );
+  familyMembers = this.store.selectSignal(FamilySelectors.selectFamilyMembers);
 
   /** Family members sorted so the current user is always on top */
   sortedFamilyMembers = computed(() => {
