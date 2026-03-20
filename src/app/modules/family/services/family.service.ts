@@ -64,15 +64,15 @@ import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
 @Injectable({ providedIn: 'root' })
 export class FamilyService implements OnDestroy {
   private log(message: string, ...args: any[]): void {
-    this.log(`${message}`, ...args);
+    console.log(`[FamilyService] ${message}`, ...args);
   }
 
   private warn(message: string, ...args: any[]): void {
-    this.warn(`${message}`, ...args);
+    console.warn(`[FamilyService] ${message}`, ...args);
   }
 
   private error(message: string, ...args: any[]): void {
-    this.error(`${message}`, ...args);
+    console.error(`[FamilyService] ${message}`, ...args);
   }
 
   private readonly destroy$ = new Subject<void>();

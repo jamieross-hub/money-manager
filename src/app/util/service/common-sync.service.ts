@@ -100,15 +100,15 @@ export interface CacheItem<T = any> {
 })
 export class CommonSyncService implements OnDestroy {
   private log(message: string, ...args: any[]): void {
-    this.log(`${message}`, ...args);
+    console.log(`[CommonSyncService] ${message}`, ...args);
   }
 
   private warn(message: string, ...args: any[]): void {
-    this.warn(`${message}`, ...args);
+    console.warn(`[CommonSyncService] ${message}`, ...args);
   }
 
   private error(message: string, ...args: any[]): void {
-    this.error(`${message}`, ...args);
+    console.error(`[CommonSyncService] ${message}`, ...args);
   }
 
   // #region Properties & State

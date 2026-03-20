@@ -189,12 +189,12 @@ export class FamilyDashboardComponent implements OnInit {
   constructor() {
     // Effect 1: Load settlements when family resolves + manage global loader
     effect(() => {
-      const fam = this.family();
-      const isLoading = this.loading() && !fam;
+      const famId = this.family()?.id;
+      const isLoading = this.loading() && !famId;
 
-      if (fam?.id) {
+      if (famId) {
         untracked(() => {
-          this.store.dispatch(FamilyActions.loadSettlements({ familyId: fam.id! }));
+          this.store.dispatch(FamilyActions.loadSettlements({ familyId: famId }));
         });
       }
 
