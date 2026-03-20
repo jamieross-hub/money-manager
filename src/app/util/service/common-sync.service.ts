@@ -99,6 +99,18 @@ export interface CacheItem<T = any> {
   providedIn: 'root'
 })
 export class CommonSyncService implements OnDestroy {
+  private log(message: string, ...args: any[]): void {
+    this.log(`${message}`, ...args);
+  }
+
+  private warn(message: string, ...args: any[]): void {
+    this.warn(`${message}`, ...args);
+  }
+
+  private error(message: string, ...args: any[]): void {
+    this.error(`${message}`, ...args);
+  }
+
   // #region Properties & State
   private readonly destroy$ = new Subject<void>();
   private syncSubscription: Subscription | null = null;
@@ -256,10 +268,10 @@ export class CommonSyncService implements OnDestroy {
           });
 
       } catch (error) {
-        console.error('Failed to initialize network monitoring worker:', error);
+        this.error('Failed to initialize network monitoring worker:', error);
       }
     } else {
-      console.warn('Web Workers are not supported in this environment for network monitoring.');
+      this.warn('Web Workers are not supported in this environment for network monitoring.');
     }
   }
 
@@ -269,7 +281,7 @@ export class CommonSyncService implements OnDestroy {
   private async initializeBackgroundSync(): Promise<void> {
     try {
       if (!('serviceWorker' in navigator) || !('sync' in window)) {
-        console.warn('Background Sync API not supported');
+        this.warn('Background Sync API not supported');
         return;
       }
 
@@ -279,15 +291,15 @@ export class CommonSyncService implements OnDestroy {
       ) || null;
 
       if (!this.serviceWorkerRegistration) {
-        console.warn('Service worker not registered for background sync');
+        this.warn('Service worker not registered for background sync');
         return;
       }
 
-      console.log('Background sync initialized successfully');
+      this.log('Background sync initialized successfully');
       this.updateSyncStatus({ isOnline: this.isCurrentlyOnline() });
 
     } catch (error) {
-      console.error('Failed to initialize background sync:', error);
+      this.error('Failed to initialize background sync:', error);
     }
   }
 
@@ -390,7 +402,7 @@ export class CommonSyncService implements OnDestroy {
 
       return !!hasCachedData;
     } catch (error) {
-      console.error('Error checking offline capability:', error);
+      this.error('Error checking offline capability:', error);
       return false;
     }
   }
@@ -431,7 +443,7 @@ export class CommonSyncService implements OnDestroy {
    * Show online notification
    */
   private showOnlineNotification(): void {
-    console.log('You are back online!', 'Your data will sync automatically.');
+    this.log('You are back online!', 'Your data will sync automatically.');
     //this.notificationService.info('Back online. Sync resumed.');
   }
 
@@ -439,7 +451,7 @@ export class CommonSyncService implements OnDestroy {
    * Show offline notification
    */
   private showOfflineNotification(): void {
-    console.log('You are offline', 'Changes will be saved locally and synced when you reconnect.');
+    this.log('You are offline', 'Changes will be saved locally and synced when you reconnect.');
     //this.notificationService.warning('You are offline.');
   }
 
@@ -447,7 +459,7 @@ export class CommonSyncService implements OnDestroy {
    * Show slow connection notification
    */
   private showSlowConnectionNotification(): void {
-    console.warn('Internet connection is slow. Switching to pure offline mode for better performance.');
+    this.warn('Internet connection is slow. Switching to pure offline mode for better performance.');
     //this.notificationService.warning('Slow internet detected. Switching to offline mode for better performance.');
   }
   // #endregion
@@ -461,7 +473,7 @@ export class CommonSyncService implements OnDestroy {
       return;
     }
 
-    console.log('🔄 Starting Sync Service (Interval: 5m)');
+    this.log('🔄 Starting Sync Service (Interval: 5m)');
 
     this.initializeObservers();
 
@@ -470,7 +482,7 @@ export class CommonSyncService implements OnDestroy {
       filter(() => document.visibilityState === 'visible'), // Only sync if app is visible
       switchMap(() => this.syncAll()),
       catchError(error => {
-        console.error('❌ Periodic sync failed:', error);
+        this.error('❌ Periodic sync failed:', error);
         return of(null);
       })
     ).subscribe();
@@ -499,11 +511,11 @@ export class CommonSyncService implements OnDestroy {
           ? !!forcedFamilyId 
           : (profile?.preferences?.isFamilyMode ?? false);
 
-    console.log(`[CommonSyncService] syncAll started. UserId: ${userId}, Mode: ${isFamilyMode ? 'Family' : 'Personal'}, FamilyId: ${effectiveFamilyId}`);
+    this.log(`syncAll started. UserId: ${userId}, Mode: ${isFamilyMode ? 'Family' : 'Personal'}, FamilyId: ${effectiveFamilyId}`);
 
     // 1. Handle Guest Mode
     if (userId === 'offline-guest') {
-      console.log('🔄 Sync skipped: Guest Mode (Local Only)');
+      this.log('🔄 Sync skipped: Guest Mode (Local Only)');
       return of(null);
     }
 
@@ -514,16 +526,16 @@ export class CommonSyncService implements OnDestroy {
     // 2. Handle Network Offline
     // Fast check first: browser API is synchronous and reliable when offline
     if (!navigator.onLine) {
-      console.log('🔄 Sync skipped: navigator.onLine is false (Device is Offline)');
+      this.log('🔄 Sync skipped: navigator.onLine is false (Device is Offline)');
       return of(null);
     }
     // Slower check: confirmed real connectivity state
     if (!this.isCurrentlyOnline()) {
-      console.log('🔄 Sync skipped: Device is Offline');
+      this.log('🔄 Sync skipped: Device is Offline');
       return of(null);
     }
 
-    console.log('🔄 Performing full sync...');
+    this.log('🔄 Performing full sync...');
     this.updateSyncStatus({ isFullSyncing: true });
 
 
@@ -561,16 +573,16 @@ export class CommonSyncService implements OnDestroy {
       }),
       takeUntil(abort$), // Abort immediately if network drops
       tap(() => {
-        console.log('[CommonSyncService] syncAll: Pull complete for all services');
-        console.log('✅ Sync completed successfully');
+        this.log('syncAll: Pull complete for all services');
+        this.log('✅ Sync completed successfully');
       }),
       catchError(error => {
         if (error?.name === 'TimeoutError') {
-          console.warn('⚠️ Sync timed out: Continuing in offline mode');
+          this.warn('⚠️ Sync timed out: Continuing in offline mode');
         } else if (error?.code === 'unavailable' || error?.message?.includes('network')) {
-          console.warn('⚠️ Firestore unavailable: Continuing in offline mode');
+          this.warn('⚠️ Firestore unavailable: Continuing in offline mode');
         } else {
-          console.error('❌ Sync failed:', error);
+          this.error('❌ Sync failed:', error);
         }
         return of(null);
       }),
@@ -584,7 +596,7 @@ export class CommonSyncService implements OnDestroy {
    * Manual sync trigger
    */
   async manualSync(): Promise<void> {
-    console.log('Manual sync triggered');
+    this.log('Manual sync triggered');
     await this.processSyncQueue();
   }
 
@@ -605,7 +617,7 @@ export class CommonSyncService implements OnDestroy {
         prev[0]?.preferences?.isFamilyMode === curr[0]?.preferences?.isFamilyMode &&
         prev[1] === curr[1]
       ),
-      tap(([user, familyId]) => console.log(`🔄 Sync context changed for user: ${user.uid}, Mode: ${user.preferences?.isFamilyMode ? 'Family' : 'Personal'}, FamilyId: ${familyId}`)),
+      tap(([user, familyId]) => this.log(`🔄 Sync context changed for user: ${user.uid}, Mode: ${user.preferences?.isFamilyMode ? 'Family' : 'Personal'}, FamilyId: ${familyId}`)),
       switchMap(([user, familyId]) => {
         // Wait for network status to be confirmed before attempting the initial sync.
         // This prevents the "Refreshing..." spinner from showing at startup when
@@ -624,7 +636,7 @@ export class CommonSyncService implements OnDestroy {
 
         // ALWAYS enable listeners, even when offline.
         // They provide immediate cache emission and resume when online.
-        console.log(`[CommonSyncService] 🔌 Activating listeners for ${user.uid} (${familyId ? 'Family' : 'Personal'})`);
+        this.log(`🔌 Activating listeners for ${user.uid} (${familyId ? 'Family' : 'Personal'})`);
         const listeners$ = merge(
             transactionsService.listenToTransactions(user.uid).pipe(catchError(() => of(null))),
             accountsService.listenToAccounts(user.uid).pipe(catchError(() => of(null))),
@@ -642,7 +654,7 @@ export class CommonSyncService implements OnDestroy {
       takeUntil(this.destroy$),
       filter(triggered => triggered),
       switchMap(() => {
-        console.log('🔄 Triggering sync due to Background Sync SW Event');
+        this.log('🔄 Triggering sync due to Background Sync SW Event');
         return this.syncAll();
       })
     ).subscribe();
@@ -654,10 +666,10 @@ export class CommonSyncService implements OnDestroy {
       distinctUntilChanged(),
       tap(state => {
         if (state === 'hidden') {
-          console.log('💤 App went to passive state: Pausing Sync');
+          this.log('💤 App went to passive state: Pausing Sync');
           this.stopSync();
         } else {
-          console.log('✨ App resumed: Restarting Sync');
+          this.log('✨ App resumed: Restarting Sync');
           this.startSync();
         }
       })
@@ -668,7 +680,7 @@ export class CommonSyncService implements OnDestroy {
       takeUntil(this.destroy$),
       debounceTime(100), // Minimal debounce for instant feedback
       switchMap(() => {
-        console.log('🔄 Triggering full sync due to manual trigger (e.g., after creation)');
+        this.log('🔄 Triggering full sync due to manual trigger (e.g., after creation)');
         const userId = this.userService.getCurrentUserId();
         const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
         const effectiveFamilyId = profile?.preferences?.activeFamilyId || undefined;
@@ -690,12 +702,12 @@ export class CommonSyncService implements OnDestroy {
       // We check for operation 'delete' or operation 'update' with status 'deleted' (soft delete).
       if (!validationResult.isValid && item.type === 'transaction' && 
           (item.operation === 'delete' || (item.operation === 'update' && item.data?.status === 'deleted'))) {
-        console.warn('[CommonSyncService] Transaction delete/soft-delete item is invalid, allowing it to proceed anyway', item.id, validationResult.errors);
+        this.warn('Transaction delete/soft-delete item is invalid, allowing it to proceed anyway', item.id, validationResult.errors);
         validationResult = { isValid: true, errors: [] };
       }
 
       if (!validationResult.isValid) {
-        console.error('Invalid sync item data:', item.id, validationResult.errors);
+        this.error('Invalid sync item data:', item.id, validationResult.errors);
         this.updateSyncStatus({
           invalidItems: this.syncStatus.invalidItems + 1
         });
@@ -724,7 +736,7 @@ export class CommonSyncService implements OnDestroy {
             this.syncQueue.splice(existingIndex, 1);
             await this.saveSyncQueue();
             this.updateSyncStatus({ pendingItems: this.syncQueue.length });
-            console.log('Sync item optimized: create + delete removed from queue');
+            this.log('Sync item optimized: create + delete removed from queue');
             return { success: true };
           } else {
             this.syncQueue[existingIndex] = syncItem;
@@ -755,11 +767,11 @@ export class CommonSyncService implements OnDestroy {
         await this.triggerBackgroundSync('sync-all-data');
       }
 
-      console.log('Sync item registered:', syncItem.id);
+      this.log('Sync item registered:', syncItem.id);
       return { success: true };
 
     } catch (error) {
-      console.error('Failed to register sync item:', error);
+      this.error('Failed to register sync item:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to register sync item';
       return { success: false, errors: [errorMessage] };
     }
@@ -801,7 +813,7 @@ export class CommonSyncService implements OnDestroy {
             itemsToProcess.push(item);
             batchCount++;
           } catch (error) {
-            console.error(`Failed to stage sync item ${item.id} for batch:`, error);
+            this.error(`Failed to stage sync item ${item.id} for batch:`, error);
             item.retryCount++;
             if (item.retryCount >= (item.maxRetries || 3)) {
               failedIds.push(item.id);
@@ -813,9 +825,9 @@ export class CommonSyncService implements OnDestroy {
         if (batchCount > 0) {
           try {
             await batch.commit();
-            console.log(`✅ Batch committed successfully for ${batchCount} items`);
+            this.log(`✅ Batch committed successfully for ${batchCount} items`);
           } catch (batchError: any) {
-            console.error('❌ Batch commit failed, falling back to sequential processing:', batchError);
+            this.error('❌ Batch commit failed, falling back to sequential processing:', batchError);
             
             // Fallback: Clear processed list for this run
             itemsToProcess.length = 0; 
@@ -838,7 +850,7 @@ export class CommonSyncService implements OnDestroy {
                 }
                 itemsToProcess.push(item);
               } catch (itemError) {
-                console.error(`Failed to process sync item sequentially ${item.id}:`, itemError);
+                this.error(`Failed to process sync item sequentially ${item.id}:`, itemError);
                 item.retryCount++;
                 if (item.retryCount >= (item.maxRetries || 3)) {
                   failedIds.push(item.id);
@@ -856,9 +868,9 @@ export class CommonSyncService implements OnDestroy {
               processedIds.push(item.id);
             }
 
-            console.log(`✅ Processed ${processedIds.length} sync items`);
+            this.log(`✅ Processed ${processedIds.length} sync items`);
           } catch (error) {
-            console.error('Failed to update sync items status:', error);
+            this.error('Failed to update sync items status:', error);
             break; // Break loop to avoid infinite failure loop
           }
         }
@@ -877,7 +889,7 @@ export class CommonSyncService implements OnDestroy {
 
         // Safeguard to prevent infinite loops if items are stuck (e.g., missing userId)
         if (itemsToProcess.length === 0 && failedIds.length === 0) {
-            console.warn('[CommonSyncService] Sync queue draining stalled, breaking loop');
+            this.warn('Sync queue draining stalled, breaking loop');
             break;
         }
       }
@@ -891,7 +903,7 @@ export class CommonSyncService implements OnDestroy {
    */
   async triggerBackgroundSync(syncType?: string): Promise<void> {
     if (!this.serviceWorkerRegistration) {
-      console.warn('Service worker not available for background sync');
+      this.warn('Service worker not available for background sync');
       return;
     }
 
@@ -902,9 +914,9 @@ export class CommonSyncService implements OnDestroy {
       if ('sync' in this.serviceWorkerRegistration) {
         // @ts-ignore
         await (this.serviceWorkerRegistration as any).sync.register(syncTag);
-        console.log('Background sync triggered:', syncTag);
+        this.log('Background sync triggered:', syncTag);
       } else {
-        console.warn('Background Sync is not supported in this browser.');
+        this.warn('Background Sync is not supported in this browser.');
       }
 
       this.updateSyncStatus({
@@ -913,7 +925,7 @@ export class CommonSyncService implements OnDestroy {
       });
 
     } catch (error) {
-      console.error('Failed to trigger background sync:', error);
+      this.error('Failed to trigger background sync:', error);
       this.updateSyncStatus({ isSyncing: false });
     }
   }
@@ -926,9 +938,9 @@ export class CommonSyncService implements OnDestroy {
       navigator.serviceWorker.ready.then((swRegistration: any) => {
         return swRegistration.sync.register('sync-all-data');
       }).then(() => {
-        console.log('✅ Background sync "sync-all-data" registered');
+        this.log('✅ Background sync "sync-all-data" registered');
       }).catch((err) => {
-        console.warn('⚠️ Background sync registration failed:', err);
+        this.warn('⚠️ Background sync registration failed:', err);
       });
     }
   }
@@ -944,7 +956,7 @@ export class CommonSyncService implements OnDestroy {
         this.updateSyncStatus({ pendingItems: 0 });
       }
     } catch (error) {
-      console.error('Failed to load sync queue:', error);
+      this.error('Failed to load sync queue:', error);
       this.syncQueue = [];
       this.updateSyncStatus({ pendingItems: 0 });
     }
@@ -954,7 +966,7 @@ export class CommonSyncService implements OnDestroy {
     try {
       await this.cacheData(LocalStorageKey.SYNC_QUEUE, this.syncQueue);
     } catch (error) {
-      console.error('Failed to save sync queue:', error);
+      this.error('Failed to save sync queue:', error);
     }
   }
 
@@ -969,7 +981,7 @@ export class CommonSyncService implements OnDestroy {
         invalidItems: 0
       });
     } catch (error) {
-      console.error('Failed to clear completed items:', error);
+      this.error('Failed to clear completed items:', error);
     }
   }
   // #endregion
@@ -983,7 +995,7 @@ export class CommonSyncService implements OnDestroy {
     const recordId = this.getRecordId(item);
 
     if (!recordId) {
-      console.error('[CommonSyncService] Cannot process transaction sync: missing ID', item);
+      this.error('Cannot process transaction sync: missing ID', item);
       throw new Error('Missing transaction ID');
     }
 
@@ -1220,9 +1232,9 @@ export class CommonSyncService implements OnDestroy {
         }
       }
       
-      console.log(`[CommonSyncService] ${item.type} ${recordId} sync status updated to: ${status}`);
+      this.log(`${item.type} ${recordId} sync status updated to: ${status}`);
     } catch (error) {
-      console.error(`Failed to update ${item.type} sync status:`, error);
+      this.error(`Failed to update ${item.type} sync status:`, error);
     }
   }
 
@@ -1271,7 +1283,7 @@ export class CommonSyncService implements OnDestroy {
       await this.cleanupCache();
 
     } catch (error) {
-      console.error('Failed to cache data:', error);
+      this.error('Failed to cache data:', error);
     }
   }
 
@@ -1296,7 +1308,7 @@ export class CommonSyncService implements OnDestroy {
 
       return cacheItem.data;
     } catch (error) {
-      console.error('Failed to get cached data:', error);
+      this.error('Failed to get cached data:', error);
       return null;
     }
   }
@@ -1313,7 +1325,7 @@ export class CommonSyncService implements OnDestroy {
         this.removeFromIndexedDB(key)
       ]);
     } catch (error) {
-      console.error('Failed to remove cached data:', error);
+      this.error('Failed to remove cached data:', error);
     }
   }
 
@@ -1329,7 +1341,7 @@ export class CommonSyncService implements OnDestroy {
         this.clearIndexedDB()
       ]);
     } catch (error) {
-      console.error('Failed to clear cache:', error);
+      this.error('Failed to clear cache:', error);
     }
   }
 
@@ -1367,7 +1379,7 @@ export class CommonSyncService implements OnDestroy {
         indexedDBSize: indexedDBItems.length
       };
     } catch (error) {
-      console.error('Failed to get cache stats:', error);
+      this.error('Failed to get cache stats:', error);
       return { totalItems: 0, totalSize: 0, expiredItems: 0, cacheStorageSize: 0, indexedDBSize: 0 };
     }
   }
@@ -1381,7 +1393,7 @@ export class CommonSyncService implements OnDestroy {
         const response = new Response(JSON.stringify(cacheItem));
         await cache.put(key, response);
       } catch (error) {
-        console.warn('Failed to store in Cache Storage:', error);
+        this.warn('Failed to store in Cache Storage:', error);
       }
     }
   }
@@ -1390,7 +1402,7 @@ export class CommonSyncService implements OnDestroy {
     try {
       this.storageService.setItem(key, cacheItem);
     } catch (error) {
-      console.warn('Failed to store in IndexedDB:', error);
+      this.warn('Failed to store in IndexedDB:', error);
     }
   }
 
@@ -1401,7 +1413,7 @@ export class CommonSyncService implements OnDestroy {
         const response = await cache.match(key);
         if (response) return await response.json();
       } catch (error) {
-        console.warn('Failed to get from Cache Storage:', error);
+        this.warn('Failed to get from Cache Storage:', error);
       }
     }
     return null;
@@ -1411,7 +1423,7 @@ export class CommonSyncService implements OnDestroy {
     try {
       return this.storageService.getItem<CacheItem<T>>(key);
     } catch (error) {
-      console.warn('Failed to get from IndexedDB:', error);
+      this.warn('Failed to get from IndexedDB:', error);
     }
     return null;
   }
@@ -1422,7 +1434,7 @@ export class CommonSyncService implements OnDestroy {
         const cache = await caches.open('money-manager-data');
         await cache.delete(key);
       } catch (error) {
-        console.warn('Failed to remove from Cache Storage:', error);
+        this.warn('Failed to remove from Cache Storage:', error);
       }
     }
   }
@@ -1431,7 +1443,7 @@ export class CommonSyncService implements OnDestroy {
     try {
       this.storageService.removeItem(key);
     } catch (error) {
-      console.warn('Failed to remove from IndexedDB:', error);
+      this.warn('Failed to remove from IndexedDB:', error);
     }
   }
 
@@ -1441,7 +1453,7 @@ export class CommonSyncService implements OnDestroy {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
       } catch (error) {
-        console.warn('Failed to clear Cache Storage:', error);
+        this.warn('Failed to clear Cache Storage:', error);
       }
     }
   }
@@ -1450,7 +1462,7 @@ export class CommonSyncService implements OnDestroy {
     try {
       this.storageService.clear();
     } catch (error) {
-      console.warn('Failed to clear IndexedDB:', error);
+      this.warn('Failed to clear IndexedDB:', error);
     }
   }
 
@@ -1466,7 +1478,7 @@ export class CommonSyncService implements OnDestroy {
         }
         return items;
       } catch (error) {
-        console.warn('Failed to get all from Cache Storage:', error);
+        this.warn('Failed to get all from Cache Storage:', error);
       }
     }
     return [];
@@ -1482,7 +1494,7 @@ export class CommonSyncService implements OnDestroy {
       }
       return items;
     } catch (error) {
-      console.warn('Failed to get all from Local Storage:', error);
+      this.warn('Failed to get all from Local Storage:', error);
       return [];
     }
   }
@@ -1494,7 +1506,7 @@ export class CommonSyncService implements OnDestroy {
         const keys = await cache.keys();
         return keys.map(request => request.url);
       } catch (error) {
-        console.warn('Failed to get Cache Storage keys:', error);
+        this.warn('Failed to get Cache Storage keys:', error);
       }
     }
     return [];
@@ -1504,7 +1516,7 @@ export class CommonSyncService implements OnDestroy {
     try {
       return this.storageService.getAllKeys();
     } catch (error) {
-      console.warn('Failed to get Local Storage keys:', error);
+      this.warn('Failed to get Local Storage keys:', error);
       return [];
     }
   }
@@ -1571,7 +1583,7 @@ export class CommonSyncService implements OnDestroy {
     });
 
     if (scrubbedCount > 0) {
-      console.log(`[CommonSyncService] Scrubbed ${scrubbedCount} undefined properties from object`, obj.id || '');
+      this.log(`Scrubbed ${scrubbedCount} undefined properties from object`, obj.id || '');
     }
     return result;
   }
@@ -1665,7 +1677,7 @@ export class CommonSyncService implements OnDestroy {
         }
       }
     } catch (error) {
-      console.error('Failed to cleanup cache:', error);
+      this.error('Failed to cleanup cache:', error);
     }
   }
 
@@ -1678,7 +1690,7 @@ export class CommonSyncService implements OnDestroy {
       ]);
       return [...new Set([...cacheStorageKeys, ...indexedDBKeys])];
     } catch (error) {
-      console.error('Failed to get cache keys:', error);
+      this.error('Failed to get cache keys:', error);
       return [];
     }
   }

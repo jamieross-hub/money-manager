@@ -17,14 +17,17 @@ export class TranslationService {
     private translateService: TranslateService,
     private localStorageService: LocalIndexDBStorageService
   ) {
-    // Set default language
     this.translateService.setDefaultLang('en');
 
-    // Initialize language from user preferences
-    const initialLanguage = this.getInitialLanguage();
-    if (initialLanguage) {
-      this.setLanguage(initialLanguage);
-    }
+    // Wait for storage cache to load
+    this.localStorageService.isReady$.subscribe(ready => {
+      if (ready) {
+        const initialLanguage = this.getInitialLanguage();
+        if (initialLanguage) {
+          this.setLanguage(initialLanguage);
+        }
+      }
+    });
   }
 
   /**

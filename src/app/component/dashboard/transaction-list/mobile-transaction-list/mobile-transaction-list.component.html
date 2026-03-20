@@ -519,7 +519,7 @@
       }
 
       <!-- Empty State -->
-      @if (!isLoading() && !filteredTransactions().length) {
+      @if (!isLoading() && !isProcessing() && !filteredTransactions().length) {
       <div class="empty-state">
         <div class="empty-icon">
           <mat-icon>receipt_long</mat-icon>

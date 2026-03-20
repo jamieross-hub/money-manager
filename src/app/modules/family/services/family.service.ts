@@ -63,6 +63,18 @@ import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
 
 @Injectable({ providedIn: 'root' })
 export class FamilyService implements OnDestroy {
+  private log(message: string, ...args: any[]): void {
+    this.log(`${message}`, ...args);
+  }
+
+  private warn(message: string, ...args: any[]): void {
+    this.warn(`${message}`, ...args);
+  }
+
+  private error(message: string, ...args: any[]): void {
+    this.error(`${message}`, ...args);
+  }
+
   private readonly destroy$ = new Subject<void>();
 
   private readonly FAMILIES_COL = 'family-groups';
@@ -126,7 +138,7 @@ export class FamilyService implements OnDestroy {
                 this.storageService.removeItem(ACTIVE_FAMILY_ID_KEY);
               }
             } catch (e) {
-              console.error('Error persisting active family id to storage:', e);
+              this.error('Error persisting active family id to storage:', e);
             }
           }
         }
@@ -294,7 +306,7 @@ export class FamilyService implements OnDestroy {
         }
       }));
     } catch (e) {
-      console.warn('Could not update user preferences with activeFamilyId:', e);
+      this.warn('Could not update user preferences with activeFamilyId:', e);
       // We don't throw here as the family is already created, but the user might need to toggle it manually
     }
 
@@ -430,7 +442,7 @@ export class FamilyService implements OnDestroy {
         }));
       }
     } catch (e) {
-      console.warn('Could not update user preferences with activeFamilyId:', e);
+      this.warn('Could not update user preferences with activeFamilyId:', e);
     }
 
     return family;
@@ -465,7 +477,7 @@ export class FamilyService implements OnDestroy {
               observer.next(cached);
             }
           } catch (e) {
-            console.error('Error loading cached families:', e);
+            this.error('Error loading cached families:', e);
           }
 
           // 2. Real-time updates
@@ -482,12 +494,12 @@ export class FamilyService implements OnDestroy {
             try {
               this.storageService.setItem(cacheKey, families);
             } catch (e) {
-              console.error('Error caching families:', e);
+              this.error('Error caching families:', e);
             }
 
             observer.next(families);
           }, (err) => {
-            console.warn('[FamilyService] ⚠️ Families listener failed (may be offline):', err);
+            this.warn('⚠️ Families listener failed (may be offline):', err);
             observer.complete();
           });
           return () => unsubscribe();
@@ -533,7 +545,7 @@ export class FamilyService implements OnDestroy {
         const families = snap.docs.map(d => ({ id: d.id, ...d.data() as Omit<Family, 'id'> }));
         observer.next(families);
       }, (err) => {
-        console.error('Error in deleted families listener:', err);
+        this.error('Error in deleted families listener:', err);
         observer.next([]);
       });
       return () => unsubscribe();
@@ -573,7 +585,7 @@ export class FamilyService implements OnDestroy {
         }));
       }
     } catch (e) {
-      console.error('Error persisting active family id:', e);
+      this.error('Error persisting active family id:', e);
     }
   }
 
@@ -686,7 +698,7 @@ export class FamilyService implements OnDestroy {
               observer.next(cached);
             }
           } catch (e) {
-            console.error('Error loading cached members:', e);
+            this.error('Error loading cached members:', e);
           }
 
           const q = query(this.getMembersCol(familyId));
@@ -697,12 +709,12 @@ export class FamilyService implements OnDestroy {
             try {
               this.storageService.setItem(cacheKey, members);
             } catch (e) {
-              console.error('Error caching members:', e);
+              this.error('Error caching members:', e);
             }
 
             observer.next(members);
           }, (err) => {
-            console.warn(`[FamilyService] ⚠️ Members listener failed for ${familyId} (may be offline):`, err);
+            this.warn(`⚠️ Members listener failed for ${familyId} (may be offline):`, err);
             observer.complete();
           });
           return () => unsubscribe();
@@ -917,7 +929,7 @@ export class FamilyService implements OnDestroy {
               observer.next(cached);
             }
           } catch (e) {
-            console.error('Error loading cached settlements:', e);
+            this.error('Error loading cached settlements:', e);
           }
 
           const q = query(this.getSettlementsCol(familyId), orderBy('settledAt', 'desc'));
@@ -928,12 +940,12 @@ export class FamilyService implements OnDestroy {
             try {
               this.storageService.setItem(cacheKey, settlements);
             } catch (e) {
-              console.error('Error caching settlements:', e);
+              this.error('Error caching settlements:', e);
             }
 
             observer.next(settlements);
           }, (err) => {
-            console.warn(`[FamilyService] ⚠️ Settlements listener failed for ${familyId} (may be offline):`, err);
+            this.warn(`⚠️ Settlements listener failed for ${familyId} (may be offline):`, err);
             observer.complete();
           });
           return () => unsubscribe();
@@ -1046,7 +1058,7 @@ export class FamilyService implements OnDestroy {
       
       this.notificationService.success('Settlement & Transaction recorded ✔️');
     } catch (error) {
-      console.error('Failed to record settlement/transaction:', error);
+      this.error('Failed to record settlement/transaction:', error);
       this.notificationService.error('Error recording settlement');
       throw error;
     }
@@ -1058,7 +1070,7 @@ export class FamilyService implements OnDestroy {
       this.store.dispatch(FamilyActions.deleteSettlementSuccess({ settlementId, deletedTxIds }));
       this.notificationService.success('Settlement reverted');
     } catch (error) {
-      console.error('Failed to revert settlement:', error);
+      this.error('Failed to revert settlement:', error);
       this.notificationService.error('Failed to revert settlement');
     }
   }
@@ -1160,7 +1172,7 @@ export class FamilyService implements OnDestroy {
     // Balance corruption safety check
     const totalNet = Array.from(netBalances.values()).reduce((sum, v) => sum + v, 0);
     if (Math.abs(totalNet) > 0.1) {
-      console.error("Balance corruption detected: net balances do not sum to zero", totalNet);
+      this.error("Balance corruption detected: net balances do not sum to zero", totalNet);
     }
 
     // Separate into creditors (positive) and debtors (negative)
@@ -1239,14 +1251,14 @@ export class FamilyService implements OnDestroy {
         return void 0;
       }),
       catchError(err => {
-        console.error('[FamilyService] Failed to pull families:', err);
+        this.error('Failed to pull families:', err);
         return of(void 0);
       })
     );
 
     // 2. If an active family exists, pull its members and settlements as well
     if (familyId) {
-       console.log(`[FamilyService] Active family detected (${familyId}), pulling members and settlements...`);
+       this.log(`Active family detected (${familyId}), pulling members and settlements...`);
        
        const pullMembers$ = from(getDocs(this.getMembersCol(familyId))).pipe(
          tap(snap => {
@@ -1288,7 +1300,7 @@ export class FamilyService implements OnDestroy {
       }),
       map(() => void 0),
       catchError(err => {
-        console.error(`[FamilyService] Failed to pull settlements for ${familyId}:`, err);
+        this.error(`Failed to pull settlements for ${familyId}:`, err);
         return of(void 0);
       })
     );

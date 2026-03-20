@@ -555,18 +555,15 @@ export class TransactionsService extends BaseService {
         if (this.isGuest()) return of(undefined);
 
         const currentPath = this.getTransactionsPath(userId, familyId);
-        if (this.activeListenerPath === currentPath) {
-            console.log(`[TransactionsService] 🛡️ Listener already active for path: ${currentPath}`);
-            return of(undefined);
-        }
-        this.activeListenerPath = currentPath;
+        console.log(`[TransactionsService] 🔍 Checking listener for path: '${currentPath}' (Active: ${this.activeListenerPath ?? 'None'})`);
 
-        const currentUser = this.auth.currentUser;
-        if (!currentUser || currentUser.uid !== userId) {
-            console.warn(`[TransactionsService] Listener skipped: Auth mismatch (UID: ${currentUser?.uid}, expected: ${userId})`);
-            this.activeListenerPath = null; // 🔌 Reset since skipping
+        if (this.activeListenerPath === currentPath) {
+            console.log(`[TransactionsService] 🛡️ Listener setup SKIPPED - Already active for path: '${currentPath}'`);
             return of(undefined);
         }
+        
+        console.log(`[TransactionsService] 🚀 Initializing new real-time listener for path: '${currentPath}'`);
+        this.activeListenerPath = currentPath;
 
         const transactionsRef = query(
             collection(this.firestore, currentPath),
@@ -614,7 +611,7 @@ export class TransactionsService extends BaseService {
                             }
                         });
 
-                        console.log(`[TransactionsService] Real-time update (initial): ${firestoreTransactions.length} transactions`);
+                        console.log(`[TransactionsService] 📥 Initial snapshot received for '${currentPath}': ${firestoreTransactions.length} transactions`);
 
                         // Merge with local pending transactions to protect offline writes.
                         const localTransactions = this.getCachedTransactions(userId, familyId);
@@ -646,7 +643,7 @@ export class TransactionsService extends BaseService {
                         return;
                     }
 
-                    console.log(`[TransactionsService] Real-time incremental update: ${changes.length} change(s)`);
+                    console.log(`[TransactionsService] 📥 Incremental update for '${currentPath}': ${changes.length} change(s)`);
 
                     // Build a mutable map from the current in-memory list for O(1) patching.
                     const current = this.transactionsSubject.getValue();
@@ -691,14 +688,17 @@ export class TransactionsService extends BaseService {
                     observer.next();
                 },
                 (error) => {
-                    console.warn(`[TransactionsService] ⚠️ Real-time listener failed for user: ${userId} (may be offline):`, error);
+                    console.warn(`[TransactionsService] ⚠️ Real-time listener failed for path '${currentPath}' (may be offline):`, error);
                     observer.complete();
                 }
             );
 
             return () => {
-                console.log(`[TransactionsService] Stopping real-time listener for user: ${userId}`);
-                this.activeListenerPath = null; // 🔌 Reset on unsubscribe
+                console.log(`[TransactionsService] 🔌 Stopping real-time listener for path: '${currentPath}'`);
+                if (this.activeListenerPath === currentPath) {
+                    console.log(`[TransactionsService] 🔌 Clearing activeListenerPath for '${currentPath}'`);
+                    this.activeListenerPath = null;
+                }
                 unsubscribe();
             };
         });

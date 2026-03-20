@@ -178,7 +178,7 @@ export class MobileTransactionListComponent
   isSyncing = computed(() => this.syncStatus().isSyncing);
   isFullSyncing = computed(() => this.syncStatus().isFullSyncing);
 
-  isLoading = computed(() => this.isLoadingTransactions() || this.isProcessing() || (this.isSyncing() && this.allTransactions().length === 0));
+  isLoading = computed(() => (this.isLoadingTransactions() || this.isProcessing() || this.isSyncing()) && this.allTransactions().length === 0);
   
   allTransactions = computed(() => {
     if (this.selectedRange() === 'deleted' || this.selectedSpecialRange() === 'deleted') {
