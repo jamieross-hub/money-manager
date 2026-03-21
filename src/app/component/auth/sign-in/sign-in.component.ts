@@ -152,39 +152,6 @@ export class SignInComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Handle the result from a Google redirect sign-in (if any)
-    console.log('[SignIn] ngOnInit: calling handleRedirectResult...');
-    this.userService.handleRedirectResult()
-      .then(async () => {
-        console.log('[SignIn] handleRedirectResult resolved.');
-        const uid = this.userService.getCurrentUserId();
-        console.log('[SignIn] getCurrentUserId after redirect =', uid);
-
-        if (uid) {
-          console.log('[SignIn] UID found — loading data and navigating...');
-          this.isLoading.set(true);
-          try {
-            this.notificationService.success('Successfully signed in with Google!');
-            await this.loadUserData(uid);
-            await this.navigateAfterSignIn();
-          } finally {
-            this.isLoading.set(false);
-          }
-        } else {
-          console.log('[SignIn] No UID — no redirect was pending, showing sign-in page normally.');
-        }
-      })
-      .catch(error => {
-        console.error('[SignIn] handleRedirectResult threw an error:');
-        console.error('  code    :', error?.code);
-        console.error('  message :', error?.message);
-        console.error('  full    :', error);
-        // Only show UI error if it's a real Firebase failure
-        if (error?.code) {
-          this.handleGoogleSignInError(error);
-        }
-      });
-
     this.setupFormValidation();
 
     // Show security notice after main form is loaded for better LCP
@@ -390,57 +357,6 @@ export class SignInComponent implements OnInit, OnDestroy {
       this.isLoading.set(false);
     }
   }
-
-  /**
-   * Google sign-in — auto-selects popup (Safari/iOS) or redirect (Chrome/Android).
-   */
-  public async signInWithGoogleRedirect(): Promise<void> {
-    console.group('🔐 [SignIn] signInWithGoogleRedirect()');
-    console.log('[SignIn] isRateLimited =', this.isRateLimited());
-
-    if (this.isRateLimited()) {
-      console.warn('[SignIn] ⚠️ Blocked by rate limit');
-      this.notificationService.error('Too many sign-in attempts. Please wait before trying again.');
-      console.groupEnd();
-      return;
-    }
-
-    try {
-      this.isLoading.set(true);
-
-      this.securityService.logSecurityEvent(
-        SecurityEventType.LOGIN_ATTEMPT,
-        SecurityLevel.MEDIUM,
-        { method: 'google-adaptive', timestamp: new Date().toISOString() }
-      );
-
-      // On Safari/iOS: service uses signInWithPopup (resolves here with user signed in).
-      // On Chrome/Android: service uses signInWithRedirect (browser navigates away — no further code runs).
-      await this.userService.signInWithGoogleRedirect();
-
-      // ↓ Only reached on Safari/iOS popup path (redirect navigates away before this)
-      console.log('[SignIn] ✅ Popup sign-in resolved (Safari/iOS path). Loading data...');
-      const uid = this.userService.getCurrentUserId();
-      console.log('[SignIn] getCurrentUserId =', uid);
-
-      if (uid) {
-        this.notificationService.success('Successfully signed in with Google!');
-        await this.loadUserData(uid);
-        await this.navigateAfterSignIn();
-      } else {
-        console.warn('[SignIn] ⚠️ Popup resolved but no UID found — unexpected.');
-      }
-    } catch (error: any) {
-      console.error('[SignIn] ❌ signInWithGoogleRedirect threw:');
-      console.error('  code    :', error?.code);
-      console.error('  message :', error?.message);
-      this.handleGoogleSignInError(error);
-    } finally {
-      this.isLoading.set(false);
-      console.groupEnd();
-    }
-  }
-
 
   /**
    * Enhanced Google sign-in with security monitoring
