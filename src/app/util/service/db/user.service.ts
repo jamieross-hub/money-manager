@@ -10,6 +10,8 @@ import {
   GoogleAuthProvider,
   updateProfile,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   user,
   sendEmailVerification,
   sendPasswordResetEmail,
@@ -1048,6 +1050,148 @@ export class UserService implements OnDestroy {
         error: error instanceof Error ? error.message : 'Unknown error'
       });
       throw error;
+    }
+  }
+
+  /**
+   * Returns true if the current browser is Safari or any iOS browser.
+   * iOS Safari's ITP blocks the cookies Firebase uses for signInWithRedirect,
+   * so we must fall back to signInWithPopup on this platform.
+   */
+  private isSafariOrIOS(): boolean {
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+    const result = isIOS || isSafari;
+    console.log(`[GoogleAuth] isSafariOrIOS = ${result} (iOS: ${isIOS}, Safari: ${isSafari})`);
+    return result;
+  }
+
+  /**
+   * Sign in with Google — uses redirect on Chrome/Android, popup on Safari/iOS.
+   * Safari's ITP blocks third-party cookies required by signInWithRedirect,
+   * causing getRedirectResult to always return null.
+   */
+  public async signInWithGoogleRedirect(): Promise<void> {
+    console.group('🔐 [GoogleAuth] signInWithGoogle()');
+    try {
+      console.log('[GoogleAuth] Step 1: Checking rate limit...');
+      if (!this.checkRateLimit('google-signin')) {
+        console.error('[GoogleAuth] ❌ Rate limit exceeded.');
+        throw new Error('Too many Google sign-in attempts. Please try again later.');
+      }
+      console.log('[GoogleAuth] ✅ Rate limit OK');
+
+      const provider = new GoogleAuthProvider();
+      provider.addScope('email');
+      provider.addScope('profile');
+
+      if (this.isSafariOrIOS()) {
+        // ── Safari / iOS path ──────────────────────────────────────────────
+        // signInWithRedirect + getRedirectResult doesn't work on Safari due
+        // to ITP blocking third-party cookies. Use popup instead.
+        console.log('[GoogleAuth] 🍎 Safari/iOS detected → using signInWithPopup');
+        const result = await signInWithPopup(this.auth, provider);
+
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        if (credential?.accessToken) {
+          this.googleAccessToken$.next(credential.accessToken);
+          console.log('[GoogleAuth] ✅ Access Token captured (popup)');
+        }
+
+        this.storageService.setItem(LocalStorageKey.LAST_ACTIVE_UID, result.user.uid);
+        await this.handleGoogleSignInResult(result);
+
+        this.logAuditEvent('GOOGLE_LOGIN_SUCCESS', result.user.uid, {
+          email: result.user.email,
+          method: 'popup-safari-fallback',
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        // ── Chrome / Android / Desktop path ───────────────────────────────
+        console.log('[GoogleAuth] 🌐 Non-Safari detected → using signInWithRedirect');
+        await signInWithRedirect(this.auth, provider);
+        // Execution stops here — browser navigates away.
+        console.warn('[GoogleAuth] ⚠️ signInWithRedirect resolved without navigating — unexpected.');
+      }
+    } catch (error: any) {
+      console.error('[GoogleAuth] ❌ Error:');
+      console.error('  code    :', error?.code);
+      console.error('  message :', error?.message);
+      this.handleGoogleSignInError(error);
+      this.logAuditEvent('GOOGLE_LOGIN_REDIRECT_FAILED', undefined, {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        code: error?.code
+      });
+      throw error;
+    } finally {
+      console.groupEnd();
+    }
+  }
+
+
+  /**
+   * Handle the result when the user returns from the Google redirect.
+   * Call this once during app initialization (e.g., in ngOnInit of SignInComponent).
+   */
+  public async handleRedirectResult(): Promise<void> {
+    console.group('🔄 [GoogleRedirect] handleRedirectResult()');
+    try {
+      console.log('[GoogleRedirect] Step 1: Calling getRedirectResult...');
+      console.log('[GoogleRedirect] Auth instance =', this.auth);
+      console.log('[GoogleRedirect] Auth app name =', this.auth?.app?.name);
+
+      const result = await getRedirectResult(this.auth);
+
+      console.log('[GoogleRedirect] Step 2: getRedirectResult resolved. result =', result);
+
+      if (!result) {
+        console.log('[GoogleRedirect] ℹ️ No redirect result — this is a normal page load (not a redirect callback). Skipping.');
+        return;
+      }
+
+      console.log('[GoogleRedirect] ✅ Redirect result received!');
+      console.log('[GoogleRedirect]   user.uid   =', result.user?.uid);
+      console.log('[GoogleRedirect]   user.email =', result.user?.email);
+      console.log('[GoogleRedirect]   user.displayName =', result.user?.displayName);
+      console.log('[GoogleRedirect]   providerId =', result.providerId);
+      console.log('[GoogleRedirect]   operationType =', result.operationType);
+
+      // Extract Google Access Token
+      console.log('[GoogleRedirect] Step 3: Extracting credential...');
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      console.log('[GoogleRedirect]   credential =', credential);
+      if (credential?.accessToken) {
+        this.googleAccessToken$.next(credential.accessToken);
+        console.log('[GoogleRedirect] ✅ Google Access Token captured (length:', credential.accessToken.length, ')');
+      } else {
+        console.warn('[GoogleRedirect] ⚠️ No accessToken in credential. credential =', credential);
+      }
+
+      console.log('[GoogleRedirect] Step 4: Saving UID to storage and handling user...');
+      this.storageService.setItem(LocalStorageKey.LAST_ACTIVE_UID, result.user.uid);
+      await this.handleGoogleSignInResult(result);
+      console.log('[GoogleRedirect] ✅ handleGoogleSignInResult complete');
+
+      this.logAuditEvent('GOOGLE_LOGIN_SUCCESS', result.user.uid, {
+        email: result.user.email,
+        method: 'redirect',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error('[GoogleRedirect] ❌ Error in handleRedirectResult:');
+      console.error('  code    :', error?.code);
+      console.error('  message :', error?.message);
+      console.error('  full    :', error);
+      this.handleGoogleSignInError(error);
+      this.logAuditEvent('GOOGLE_LOGIN_FAILED', undefined, {
+        method: 'redirect',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        code: error?.code
+      });
+      throw error;
+    } finally {
+      console.groupEnd();
     }
   }
 
