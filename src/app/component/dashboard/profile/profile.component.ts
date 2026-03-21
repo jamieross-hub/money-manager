@@ -147,6 +147,7 @@ export class ProfileComponent {
     'emailUpdates',
     'budgetAlerts',
     'categoryListViewMode',
+    'hapticFeedback',
     'pinEnabled'
   ];
 
@@ -274,6 +275,7 @@ export class ProfileComponent {
         notifications: [{ value: true, disabled: true }],
         emailUpdates: [{ value: true, disabled: true }],
         budgetAlerts: [{ value: true, disabled: true }],
+        hapticFeedback: [{ value: true, disabled: true }],
         categoryListViewMode: [{ value: false, disabled: true }],
         appView: [{ value: 'MONTHLY', disabled: true }],
         pinEnabled: [{ value: false, disabled: true }],
@@ -595,6 +597,7 @@ export class ProfileComponent {
         notifications: user.preferences?.notifications || true,
         emailUpdates: user.preferences?.emailUpdates || true,
         budgetAlerts: user.preferences?.budgetAlerts || true,
+        hapticFeedback: user.preferences?.hapticFeedback ?? true,
         categoryListViewMode: user.preferences?.categoryListViewMode || false,
         appView: user.preferences?.appView || 'MONTHLY',
         pinEnabled: user.preferences?.pinEnabled || false,
@@ -624,6 +627,7 @@ export class ProfileComponent {
           timezone: profile.preferences?.timezone || 'UTC',
           language: profile.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT,
           country: profile.preferences?.country || this.deriveCountryFromLanguage(profile.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT),
+          hapticFeedback: profile.preferences?.hapticFeedback ?? true,
           appView: profile.preferences?.appView || 'MONTHLY',
           pinEnabled: profile.preferences?.pinEnabled || false,
         },

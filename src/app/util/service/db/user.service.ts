@@ -147,7 +147,12 @@ export class UserService implements OnDestroy {
     // Keep _currentUser snapshot in sync for synchronous consumers.
     this.userAuth$
       .pipe(takeUntil(this.destroy$))
-      .subscribe((u: User | null) => (this._currentUser = u));
+      .subscribe((u: User | null) => {
+        this._currentUser = u;
+        if (u) {
+          this.notificationService.setHapticPreference(u.preferences?.hapticFeedback ?? true);
+        }
+      });
 
     this.initializeAuthState();
   
@@ -377,6 +382,7 @@ export class UserService implements OnDestroy {
         notifications: false,
         emailUpdates: false,
         budgetAlerts: false,
+        hapticFeedback: true,
         theme: 'light-theme'
       }
     };
@@ -756,6 +762,7 @@ export class UserService implements OnDestroy {
             notifications: true,
             emailUpdates: true,
             budgetAlerts: true,
+            hapticFeedback: true,
             theme: 'light-theme'
           }
         };

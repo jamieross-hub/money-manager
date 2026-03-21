@@ -97,6 +97,8 @@
         "MEMBER_SINCE": "Member since",
         "EDIT_PROFILE": "Edit Profile",
         "NOTIFICATIONS_DESC": "Receive notifications about important updates",
+        "HAPTIC_FEEDBACK": "Haptic Feedback",
+        "HAPTIC_FEEDBACK_DESC": "Vibrate on success, error, and navigation actions",
         "EMAIL_UPDATES_DESC": "Receive weekly financial summaries via email",
         "BUDGET_ALERTS_DESC": "Get notified when you exceed budget limits",
         "VIEW_MODE_DESC": "Display categories in list view instead of grid view",

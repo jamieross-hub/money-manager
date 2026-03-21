@@ -52,6 +52,7 @@ export interface UserPreferences {
 	pinHash?: string;
 	isFamilyMode?: boolean;
 	activeFamilyId?: string | null;
+	hapticFeedback?: boolean;
 }
 
 

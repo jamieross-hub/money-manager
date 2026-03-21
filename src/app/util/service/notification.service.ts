@@ -15,6 +15,7 @@ export interface HapticFeedbackOptions {
 export class NotificationService {
   private isVibrationSupported: boolean;
   private isMobileVibrationDevice: boolean;
+  private hapticFeedbackEnabled: boolean = true;
 
   // Define a common snack bar config object using APP_CONFIG
   private defaultConfig: MatSnackBarConfig = {
@@ -44,7 +45,11 @@ export class NotificationService {
    * Check if haptic feedback is supported
    */
   public isHapticSupported(): boolean {
-    return this.isVibrationSupported && this.isMobileVibrationDevice;
+    return this.isVibrationSupported && this.isMobileVibrationDevice && this.hapticFeedbackEnabled;
+  }
+
+  public setHapticPreference(enabled: boolean): void {
+    this.hapticFeedbackEnabled = enabled;
   }
 
   // Show success message
