@@ -42,7 +42,6 @@ export interface UserPreferences {
 	country?: string;
 	notifications: boolean;
 	emailUpdates: boolean;
-	budgetAlerts: boolean;
 	openaiApiKey?: string;
 	geminiApiKey?: string;
 	categoryListViewMode?: boolean;

@@ -381,7 +381,6 @@ export class UserService implements OnDestroy {
         country: regionalConfig.country,
         notifications: false,
         emailUpdates: false,
-        budgetAlerts: false,
         hapticFeedback: true,
         theme: 'light-theme'
       }
@@ -759,9 +758,8 @@ export class UserService implements OnDestroy {
             timezone: regionalConfig.timezone,
             language: regionalConfig.language,
             country: regionalConfig.country,
-            notifications: true,
-            emailUpdates: true,
-            budgetAlerts: true,
+            notifications: false,
+            emailUpdates: false,
             hapticFeedback: true,
             theme: 'light-theme'
           }
@@ -1248,7 +1246,6 @@ export class UserService implements OnDestroy {
         country: regionalConfig.country,
         notifications: true,
         emailUpdates: true,
-        budgetAlerts: true,
         theme: 'light-theme'
       }
     };

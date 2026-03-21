@@ -141,8 +141,7 @@ export class RegistrationComponent implements OnInit {
 				timezone: ["UTC", Validators.required],
 				language: ["en", Validators.required],
 				notifications: [true],
-				emailUpdates: [true],
-				budgetAlerts: [true],
+				emailUpdates: [true]
 			}),
 		});
 	}

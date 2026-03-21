@@ -58,11 +58,6 @@ export const selectUserEmailUpdates = createSelector(
   (preferences) => preferences?.emailUpdates
 );
 
-export const selectUserBudgetAlerts = createSelector(
-  selectUserPreferences,
-  (preferences) => preferences?.budgetAlerts
-);
-
 export const selectUserMonthlyIncome = createSelector(
   selectProfile,
   (profile) => profile?.monthlyIncome || 0

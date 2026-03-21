@@ -194,8 +194,7 @@ export class FamilyModeToggleComponent implements OnInit, OnDestroy {
       defaultCurrency: changes.defaultCurrency ?? currentPrefs.defaultCurrency ?? 'INR',
       timezone: changes.timezone ?? currentPrefs.timezone ?? 'UTC',
       notifications: changes.notifications ?? currentPrefs.notifications ?? true,
-      emailUpdates: changes.emailUpdates ?? currentPrefs.emailUpdates ?? true,
-      budgetAlerts: changes.budgetAlerts ?? currentPrefs.budgetAlerts ?? true,
+      emailUpdates: changes.emailUpdates ?? currentPrefs.emailUpdates ?? true
     };
 
     const updatedUser: User = {

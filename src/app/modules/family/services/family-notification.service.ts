@@ -51,14 +51,6 @@ export class FamilyNotificationService {
     this.stopListener();
     this.currentFamilyId = familyId;
 
-    // Proactively request notification permission when setting up family notifications
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      if (Notification.permission === 'default') {
-        Notification.requestPermission().then(permission => {
-          console.log(`[FamilyNotificationService] Notification permission status: ${permission}`);
-        });
-      }
-    }
 
     // We listen for the most recent transactions
     const q = query(

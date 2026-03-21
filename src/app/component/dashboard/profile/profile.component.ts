@@ -145,7 +145,6 @@ export class ProfileComponent {
   private readonly PREFERENCE_TOGGLES = [
     'notifications',
     'emailUpdates',
-    'budgetAlerts',
     'categoryListViewMode',
     'hapticFeedback',
     'pinEnabled'
@@ -274,7 +273,6 @@ export class ProfileComponent {
         country: [{ value: 'IN', disabled: true }],
         notifications: [{ value: true, disabled: true }],
         emailUpdates: [{ value: true, disabled: true }],
-        budgetAlerts: [{ value: true, disabled: true }],
         hapticFeedback: [{ value: true, disabled: true }],
         categoryListViewMode: [{ value: false, disabled: true }],
         appView: [{ value: 'MONTHLY', disabled: true }],
@@ -596,7 +594,6 @@ export class ProfileComponent {
         country: user.preferences?.country || this.deriveCountryFromLanguage(user.preferences?.language || APP_CONFIG.REGIONAL.LANGUAGE_DEFAULT),
         notifications: user.preferences?.notifications || true,
         emailUpdates: user.preferences?.emailUpdates || true,
-        budgetAlerts: user.preferences?.budgetAlerts || true,
         hapticFeedback: user.preferences?.hapticFeedback ?? true,
         categoryListViewMode: user.preferences?.categoryListViewMode || false,
         appView: user.preferences?.appView || 'MONTHLY',
@@ -1019,7 +1016,6 @@ export class ProfileComponent {
       timezone: changes.timezone ?? currentPrefs.timezone ?? 'UTC',
       notifications: changes.notifications ?? currentPrefs.notifications ?? true,
       emailUpdates: changes.emailUpdates ?? currentPrefs.emailUpdates ?? true,
-      budgetAlerts: changes.budgetAlerts ?? currentPrefs.budgetAlerts ?? true,
     };
 
     // 2. Prepare updated user object
