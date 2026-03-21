@@ -52,7 +52,15 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         label: 'NAVIGATION.REPORTS',
         route: '/dashboard/reports',
         icon: 'analytics',
-        order: 4
+        order: 4,
+        hideInFamily: true
+      },
+      {
+        label: 'NAVIGATION.REPORTS',
+        route: '/dashboard/family/reports',
+        icon: 'analytics',
+        order: 4,
+        familyOnly: true
       },
       // {
       //   label: 'NAVIGATION.TRANSACTIONS',

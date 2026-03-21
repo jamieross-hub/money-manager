@@ -43,7 +43,7 @@ export class CategoriesEffects {
     this.actions$.pipe(
       ofType(CategoriesActions.updateCategory),
       mergeMap(
-        ({ userId, categoryId, name, categoryType, icon, color, budgetData, parentCategoryId, isSubCategory, group }) =>
+        ({ userId, categoryId, name, categoryType, icon, color, budgetData, parentCategoryId, isSubCategory, group, groupIcon }) =>
           this.categoryService
             .updateCategory(
               userId,
@@ -55,7 +55,8 @@ export class CategoriesEffects {
               budgetData,
               parentCategoryId,
               isSubCategory,
-              group
+              group,
+              groupIcon
             )
             .pipe(
               map(() => ({ type: '[Categories] Update Category Success (Handled by Service)' })),

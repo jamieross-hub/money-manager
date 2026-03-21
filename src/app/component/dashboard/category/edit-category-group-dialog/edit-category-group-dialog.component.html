@@ -1,0 +1,38 @@
+<div class="edit-group-container p-4 max-w-sm">
+  <div class="header mb-4">
+    <h2 mat-dialog-title class="!m-0 text-lg font-semibold dark:text-white">Edit Category Group</h2>
+  </div>
+
+  <form [formGroup]="groupForm" (ngSubmit)="onSubmit()">
+    <div mat-dialog-content class="space-y-4 !p-0">
+      <!-- Icon Selector -->
+      <div class="flex flex-col items-center justify-center py-3">
+        <button type="button" (click)="openIconSelector()" 
+          class="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center border-2 border-primary/20 hover:bg-primary/20 transition-colors shadow-inner">
+          <mat-icon class="!text-2xl !w-6 !h-6">{{ groupIcon() }}</mat-icon>
+        </button>
+        <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">Change Icon</span>
+      </div>
+
+      <!-- Group Name Input -->
+      <mat-form-field appearance="fill" class="w-full" subscriptSizing="dynamic">
+        <mat-label>Group Name</mat-label>
+        <input matInput formControlName="groupName" placeholder="e.g., Food">
+        @if (groupForm.get('groupName')?.hasError('required')) {
+          <mat-error>Group name is required</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <div mat-dialog-actions class="flex items-center justify-between gap-2 mt-6 !px-0 !pb-0">
+      <button type="button" mat-stroked-button color="warn" (click)="onDelete()" class="delete-btn !flex items-center gap-1">
+        <mat-icon class="!text-sm !w-3.5 !h-3.5">delete</mat-icon>
+        Ungroup
+      </button>
+      <div class="flex gap-2">
+        <button type="button" mat-button (click)="onCancel()">Cancel</button>
+        <button type="submit" mat-flat-button color="primary" [disabled]="groupForm.invalid">Save</button>
+      </div>
+    </div>
+  </form>
+</div>

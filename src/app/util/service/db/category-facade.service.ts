@@ -36,8 +36,8 @@ export class CategoryFacadeService {
         return this.categoryService.createCategory(userId, name, type, icon, color, group, isSystem);
     }
 
-    updateCategory(userId: string, categoryId: string, name: string, type: TransactionType, icon: string, color: string, budgetData?: any, parentCategoryId?: string | null, isSubCategory?: boolean, group?: string, isSystem?: boolean): Observable<void> {
-        return this.categoryService.updateCategory(userId, categoryId, name, type, icon, color, budgetData, parentCategoryId, isSubCategory, group, isSystem);
+    updateCategory(userId: string, categoryId: string, name: string, type: TransactionType, icon: string, color: string, budgetData?: any, parentCategoryId?: string | null, isSubCategory?: boolean, group?: string, groupIcon?: string, isSystem?: boolean): Observable<void> {
+        return this.categoryService.updateCategory(userId, categoryId, name, type, icon, color, budgetData, parentCategoryId, isSubCategory, group, groupIcon, isSystem);
     }
 
     deleteCategory(userId: string, categoryId: string): Observable<void> {

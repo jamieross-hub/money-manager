@@ -7,6 +7,7 @@ import { Subject, Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { take, takeUntil, map, startWith, distinctUntilChanged, debounceTime, switchMap } from 'rxjs/operators';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { MobileCategoryAddEditPopupComponent } from './mobile-category-add-edit-popup/mobile-category-add-edit-popup.component';
+import { EditCategoryGroupDialogComponent } from './edit-category-group-dialog/edit-category-group-dialog.component';
 
 import { Category, Budget } from 'src/app/util/models';
 import { CategoryBudgetService } from 'src/app/util/service/category-budget.service';
@@ -105,7 +106,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
       expenseChange: number;
       incomeChange: number;
     };
-    availableGroups: { name: string, count: number }[];
+    availableGroups: { name: string, count: number, icon: string }[];
     hasUngroupedCategories: boolean;
     isFamilyMode: boolean;
   }>;
@@ -119,6 +120,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
   public isListViewMode: boolean = false;
   public selectedCategoryId: string | null = null;
   public errorMessage: string = '';
+  private longPressTimer: any;
 
   // Local snapshot for dialogs and helpers
   private _categoriesSnapshot: any[] = [];
@@ -231,10 +233,14 @@ export class CategoryComponent implements OnInit, OnDestroy {
         const expenseCount = categories.filter(c => c.type === 'expense').length;
         const incomeCount = categories.filter(c => c.type === 'income').length;
         
-        const availableGroups = [...new Set(categories.map(c => c.group).filter(g => !!g))].map(groupName => ({
-          name: groupName as string,
-          count: categories.filter(c => c.group === groupName).length
-        }));
+        const availableGroups = [...new Set(categories.map(c => c.group).filter(g => !!g))].map(groupName => {
+          const matchingCategories = categories.filter(c => c.group === groupName);
+          return {
+            name: groupName as string,
+            count: matchingCategories.length,
+            icon: matchingCategories.find(c => c.groupIcon)?.groupIcon || 'category'
+          };
+        });
         
         const hasUngroupedCategories = processedCategories.some(c => !c.group && !c.isSystem && !c.isSubCategory);
         
@@ -401,6 +407,79 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
   public clearError(): void {
     this.errorMessage = '';
+  }
+
+  public onGroupPointerDown(event: PointerEvent, groupName: string): void {
+    if (this.longPressTimer) clearTimeout(this.longPressTimer);
+    this.longPressTimer = setTimeout(() => {
+      this.openEditCategoryGroupDialog(groupName);
+      this.longPressTimer = null;
+    }, 600);
+  }
+
+  public onGroupPointerUp(event: PointerEvent): void {
+    if (this.longPressTimer) {
+      clearTimeout(this.longPressTimer);
+      this.longPressTimer = null;
+    }
+  }
+
+  public openEditCategoryGroupDialog(groupName: string): void {
+    if (this.breakpointService.device.isMobile) {
+      this.notificationService.lightVibration();
+    }
+    const matchingCategories = this._categoriesSnapshot.filter(c => c.group === groupName);
+    const currentIcon = matchingCategories.find(c => c.groupIcon)?.groupIcon || 'category';
+
+    const dialogRef = this.dialog.open(EditCategoryGroupDialogComponent, {
+      panelClass: 'responsive-dialog',
+      data: { groupName, groupIcon: currentIcon }
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
+      if (!result) return;
+      
+      if (result.action === 'save') {
+        const newGroupName = result.groupName;
+        const newGroupIcon = result.groupIcon;
+        
+        matchingCategories.forEach(cat => {
+          this.store.dispatch(CategoriesActions.updateCategory({
+            userId: this.userId,
+            categoryId: cat.id!,
+            name: cat.name,
+            categoryType: cat.type,
+            icon: cat.icon,
+            color: cat.color,
+            budgetData: cat.budget,
+            parentCategoryId: cat.parentCategoryId,
+            isSubCategory: cat.isSubCategory,
+            group: newGroupName,
+            groupIcon: newGroupIcon
+          }));
+        });
+        
+        this.notificationService.success(`Group "${groupName}" updated successfully`);
+      } else if (result.action === 'delete') {
+         // Ungroup
+         matchingCategories.forEach(cat => {
+           this.store.dispatch(CategoriesActions.updateCategory({
+             userId: this.userId,
+             categoryId: cat.id!,
+             name: cat.name,
+             categoryType: cat.type,
+             icon: cat.icon,
+             color: cat.color,
+             budgetData: cat.budget,
+             parentCategoryId: cat.parentCategoryId,
+             isSubCategory: cat.isSubCategory,
+             group: '', // Clear group name
+             groupIcon: '' // Clear group icon
+           }));
+         });
+         this.notificationService.success(`Group "${groupName}" deleted (Categories ungrouped)`);
+      }
+    });
   }
 
   public openMobileDialog(category?: Category): void {
@@ -577,6 +656,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
           if (res.group) {
             const cat = ungrouped.find(c => c.id === res.id);
             if (cat) {
+              const existingGroupIcon = this._categoriesSnapshot.find(c => c.group === res.group)?.groupIcon;
               this.store.dispatch(CategoriesActions.updateCategory({
                 userId: this.userId,
                 categoryId: cat.id!,
@@ -587,7 +667,8 @@ export class CategoryComponent implements OnInit, OnDestroy {
                 budgetData: cat.budget,
                 parentCategoryId: cat.parentCategoryId,
                 isSubCategory: cat.isSubCategory,
-                group: res.group
+                group: res.group,
+                groupIcon: res.groupIcon || existingGroupIcon || 'category'
               }));
               updatedCount++;
             }

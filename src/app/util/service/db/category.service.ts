@@ -484,6 +484,7 @@ export class CategoryService implements OnDestroy {
                         legacy.parentCategoryId, 
                         legacy.isSubCategory, 
                         legacy.group, 
+                        undefined, // groupIcon
                         true // isSystem
                     ).pipe(
                         map(() => legacy.id!)
@@ -552,7 +553,7 @@ export class CategoryService implements OnDestroy {
     }
 
     /** Update a category */
-    updateCategory(userId: string, categoryId: string, name: string, type: TransactionType, icon: string, color: string, budgetData?: any, parentCategoryId?: string | null, isSubCategory?: boolean, group?: string, isSystem?: boolean): Observable<void> {
+    updateCategory(userId: string, categoryId: string, name: string, type: TransactionType, icon: string, color: string, budgetData?: any, parentCategoryId?: string | null, isSubCategory?: boolean, group?: string, groupIcon?: string, isSystem?: boolean): Observable<void> {
         const currentCategory = this.categories[categoryId];
         const updatedCategory: Category = {
             ...currentCategory,
@@ -562,6 +563,7 @@ export class CategoryService implements OnDestroy {
             icon,
             color,
             group: group !== undefined ? group : currentCategory?.group,
+            groupIcon: groupIcon !== undefined ? groupIcon : currentCategory?.groupIcon,
             budget: budgetData !== undefined ? budgetData : currentCategory?.budget,
             parentCategoryId: parentCategoryId !== undefined ? (parentCategoryId === null ? undefined : parentCategoryId) : currentCategory?.parentCategoryId,
             isSubCategory: isSubCategory !== undefined ? isSubCategory : currentCategory?.isSubCategory,

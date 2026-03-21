@@ -253,7 +253,7 @@ export class OpenaiService {
   categorizeCategories(
     items: { id: string; name: string }[],
     existingGroups: string[]
-  ): Observable<{ id: string; group: string }[]> {
+  ): Observable<{ id: string; group: string; groupIcon?: string }[]> {
     const systemMessage = SYSTEM_PROMPTS['autoCategorize'];
     const userMessage: OpenAIMessage = {
       role: 'user',

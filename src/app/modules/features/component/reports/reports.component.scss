@@ -115,13 +115,18 @@
         background-color: var(--surface-100);
       }
     }
+
+    .mat-mdc-footer-cell {
+      border-top: 1px solid var(--surface-400) !important;
+    }
   }
 }
 
 .compact-table {
   ::ng-deep {
     .mat-mdc-header-cell,
-    .mat-mdc-cell {
+    .mat-mdc-cell,
+    .mat-mdc-footer-cell {
       padding: 8px 10px;
       white-space: nowrap;
     }
@@ -130,7 +135,8 @@
       font-size: 0.7rem;
     }
 
-    .mat-mdc-row {
+    .mat-mdc-row,
+    .mat-mdc-footer-row {
       height: 40px;
     }
 

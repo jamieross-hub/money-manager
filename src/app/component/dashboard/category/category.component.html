@@ -71,7 +71,15 @@
           <mat-chip-option value="expense">Expense</mat-chip-option>
           <mat-chip-option value="income">Income</mat-chip-option>
           @for (group of vm.availableGroups; track group.name + '_' + group.count) {
-            <mat-chip-option [value]="group.name">{{ group.name }} ({{ group.count }})</mat-chip-option>
+            <mat-chip-option [value]="group.name"
+              (pointerdown)="onGroupPointerDown($event, group.name)" 
+              (pointerup)="onGroupPointerUp($event)"
+              (pointerleave)="onGroupPointerUp($event)">
+              <div class="flex items-center gap-1.5 h-full">
+                <mat-icon class="!text-[14px] !w-3.5 !h-3.5 opacity-70">{{ group.icon }}</mat-icon>
+                <span>{{ group.name }} ({{ group.count }})</span>
+              </div>
+            </mat-chip-option>
           }
         </mat-chip-listbox>
       </div>

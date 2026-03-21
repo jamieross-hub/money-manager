@@ -56,6 +56,7 @@ export const updateCategory = createAction(
     parentCategoryId?: string | null;
     isSubCategory?: boolean;
     group?: string;
+    groupIcon?: string;
   }>()
 );
 

@@ -282,7 +282,62 @@ function computePeriodSummaries(
             ((currentPeriodSummary.expense - previousPeriodSummary.expense) / previousPeriodSummary.expense) * 100;
     }
 
-    const filteredMonthlySummaries = monthlySummaries.filter(m => m.year === selectedYear);
+    let filteredHistory: MonthlySummary[] = [];
+
+    if (selectedPeriod === 'yearly') {
+        const yearGroups = new Map<number, MonthlySummary>();
+        for (const m of monthlySummaries) {
+            if (!yearGroups.has(m.year)) {
+                yearGroups.set(m.year, { 
+                    year: m.year, month: 0, label: m.year.toString(), 
+                    income: 0, expense: 0, savings: 0, savingsRate: 0, categoryBreakdown: [] 
+                });
+            }
+            const g = yearGroups.get(m.year)!;
+            g.income += m.income;
+            g.expense += m.expense;
+            g.savings += m.savings;
+        }
+        filteredHistory = Array.from(yearGroups.values()).map(g => ({
+            ...g,
+            savingsRate: g.income > 0 ? (g.savings / g.income) * 100 : 0
+        })).sort((a, b) => b.year - a.year);
+    } else if (selectedPeriod === 'weekly') {
+        const weekGroups = new Map<string, MonthlySummary & { date: Date }>();
+        const yearTxns = transactions.filter(t => {
+            const d = toDate(t.date);
+            return d && d.getFullYear() === selectedYear;
+        });
+
+        for (const t of yearTxns) {
+            const d = dayjs(toDate(t.date));
+            const startOfWeek = d.startOf('week');
+            const key = startOfWeek.format('YYYY-MM-DD');
+            if (!weekGroups.has(key)) {
+                weekGroups.set(key, { 
+                    label: startOfWeek.format('D MMM'), 
+                    income: 0, expense: 0, savings: 0, savingsRate: 0, 
+                    categoryBreakdown: [],
+                    month: startOfWeek.month(),
+                    year: startOfWeek.year(),
+                    date: startOfWeek.toDate()
+                });
+            }
+            const g = weekGroups.get(key)!;
+            if (t.type === 'income') g.income += t.amount;
+            else if (t.type === 'expense') g.expense += t.amount;
+            g.savings = g.income - g.expense;
+        }
+
+        filteredHistory = Array.from(weekGroups.values()).map(g => ({
+            ...g,
+            savingsRate: g.income > 0 ? (g.savings / g.income) * 100 : 0
+        })).sort((a, b) => b.date.getTime() - a.date.getTime());
+    } else {
+        filteredHistory = monthlySummaries.filter(m => m.year === selectedYear);
+    }
+
+    const filteredMonthlySummaries = filteredHistory;
 
     return { currentPeriodSummary, previousPeriodSummary, filteredMonthlySummaries };
 }

@@ -2,7 +2,6 @@
   <div class="max-w-7xl mx-auto">
 
     <!-- ═══════════ HEADER ═══════════ -->
-    @if (!isFamilyMode()) {
     <div class="mb-10 mt-6 group relative">
       <div class="grid items-start" style="grid-template-areas: 'stack';"
         (touchstart)="onSummaryTouchStart($event)" (touchend)="onSummaryTouchEnd($event)">
@@ -27,7 +26,6 @@
         </div>
       </div>
     </div>
-    }
     <!-- <mat-card class="mb-6 !rounded-xl">
     <mat-card-content>
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 pt-2">
@@ -57,7 +55,7 @@
     <mat-tab>
       <ng-template mat-tab-label >
         <mat-icon class="mr-2">bar_chart</mat-icon>
-        <span>{{ isFamilyMode() ? activeFamilyName() : 'Current' }}</span>
+        <span>Current</span>
       </ng-template>
       <ng-template matTabContent>
         <div class="pt-6">
@@ -149,7 +147,7 @@
                       ></div>
                     }
                     <!-- Row 2 (mobile) / Right half (desktop) -->
-                    @if (!isSplitwiseMode() && !breakpointService.device.isMobile) {
+                    @if (!breakpointService.device.isMobile) {
                       <div class="grid grid-cols-2 divide-x divide-surface-500 flex-1"
                         >
                         <!-- Savings Rate -->
@@ -204,7 +202,7 @@
                   </div>
                 </mat-card-content>
               </mat-card>
-              <div class="flex justify-center mt-10 " *ngIf="!isFamilyMode()">
+              <div class="flex justify-center mt-10 ">
                 <mat-button-toggle-group [value]="selectedPeriod()" (change)="selectPeriod($event.value)"
                   appearance="standard" class="period-toggle ">
                   @for (p of periodOptions; track p) {
@@ -302,23 +300,26 @@
                         </div>
                         <mat-divider></mat-divider>
                         <!-- Savings / Deficit -->
-                        <div class="flex justify-between items-center py-3 px-4 rounded-lg border border-surface-300 "
-                          [class.bg-neutral-200]="currentPeriodSummary.savings >= 0"
-                          [class.bg-error-100]="currentPeriodSummary.savings < 0">
-                          <span class="text-sm font-medium"
-                            [class.text-success-700]="currentPeriodSummary.savings >= 0"
-                            [class.text-error-700]="currentPeriodSummary.savings < 0">
-                            {{ currentPeriodSummary.savings >= 0 ? 'Savings' : 'Deficit' }}
-                          </span>
-                          <span class="font-bold"
-                            [class.text-success-600]="currentPeriodSummary.savings >= 0"
-                            [class.text-error-600]="currentPeriodSummary.savings < 0">
-                            {{ currentPeriodSummary.savings >= 0 ? '+' : '-' }}{{
-                            (currentPeriodSummary.savings | abs) | currency }}
-                            <span class="text-xs font-normal ml-1">
-                              ({{ currentPeriodSummary.savingsRate | number:'1.1-1' }}%)
+                        <div>
+                          <div class="flex justify-between text-sm mb-1">
+                            <span class="text-neutral-500">
+                              {{ currentPeriodSummary.savings >= 0 ? 'Savings' : 'Deficit' }}
                             </span>
-                          </span>
+                            <span class="font-semibold"
+                              [class.text-success-800]="currentPeriodSummary.savings >= 0"
+                              [class.text-error-600]="currentPeriodSummary.savings < 0">
+                              {{ currentPeriodSummary.savings >= 0 ? '+' : '-' }}{{ (currentPeriodSummary.savings | abs) | currency }}
+                              <span class="text-xs font-normal ml-1">
+                                ({{ currentPeriodSummary.savingsRate | number:'1.1-1' }}%)
+                              </span>
+                            </span>
+                          </div>
+                          <!-- <mat-progress-bar mode="determinate"
+                            [color]="currentPeriodSummary.savings >= 0 ? 'primary' : 'warn'"
+                            [value]="currentPeriodSummary.savingsRate >= 0 ? currentPeriodSummary.savingsRate : (currentPeriodSummary.savingsRate | abs)"
+                            class="!rounded-full !h-3"
+                            [ngClass]="currentPeriodSummary.savings >= 0 ? 'income-bar' : 'expense-bar'">
+                          </mat-progress-bar> -->
                         </div>
                       </div>
                       <!-- Previous Period Comparison -->
@@ -363,13 +364,13 @@
               </mat-card-content>
               @defer (on viewport) {
               <!-- ═══════════ CATEGORY BREAKDOWN ═══════════ -->
-              <div class="p-4  ">
-                <!-- <p
-                  class="text-md font-medium text-neutral-500  flex items-center gap-2 justify-center text-center sm:text-left flex-wrap">
-               {{ currentPeriodSummary?.label }}
-                </p> -->
+              <div class="p-4">
+                <p class="text-lg font-semibold text-neutral-500 mb-5 flex items-center justify-center md:justify-start gap-2">
+                  <mat-icon class="text-primary-500">pie_chart</mat-icon>
+                  Category Breakdown
+                </p>
                 <div>
-                  @for (cat of currentPeriodSummary?.categoryBreakdown; track cat.categoryId; let i = $index; let first = $first) {
+                  @for (cat of groupedCategoryBreakdown(); track cat.categoryId; let i = $index; let first = $first) {
                     <!-- <mat-divider *ngIf="!first"></mat-divider> -->
                     <div class="py-3 px-2 border-b border-neutral-100 flex items-center gap-4">
                       <!-- Left: Icon Box -->
@@ -377,8 +378,8 @@
                         [style.background-color]="cat.categoryColor + '20'"
                         [style.color]="cat.categoryColor">
                         <mat-icon
-                          class="category-icon !text-lg !w-[18px] !h-[18px] !leading-[18px]">{{
-                        cat.categoryIcon }}</mat-icon>
+                          class="category-icon !text-lg ">{{
+                        cat.groupIcon || cat.categoryIcon }}</mat-icon>
                       </div>
                       <!-- Right: Content Column -->
                       <div class="flex-1 min-w-0">
@@ -402,7 +403,7 @@
                         </div>
                         <!-- Progress Bar -->
                         <mat-progress-bar mode="determinate"
-                          [value]="cat.amount | math:'percentWidth':(currentPeriodSummary?.categoryBreakdown?.[0]?.amount || 1)"
+                          [value]="cat.amount | math:'percentWidth':(groupedCategoryBreakdown()[0]?.amount || 1)"
                           color="primary"
                           class="category-bar !rounded-full !h-1.5 w-full">
                         </mat-progress-bar>
@@ -422,22 +423,24 @@
           @defer (on viewport) {
           <!-- ═══════════ MONTHLY HISTORY ═══════════ -->
           @if (filteredMonthlySummaries.length > 0) {
-            <mat-card class="!rounded-xl !border-none">
+            <mat-card class="!rounded-xl !border-none ">
               <mat-card-content class="pt-4">
                 <p class="text-lg font-semibold text-neutral-500 mb-5 flex items-center gap-2">
-                  <mat-icon class="text-primary-500">calendar_month</mat-icon>
-                  Monthly History ({{ selectedYear() }})
+                  <mat-icon class="text-primary-500">{{ selectedPeriod() === 'weekly' ? 'view_week' : 'calendar_month' }}</mat-icon>
+                  {{ selectedPeriod() === 'weekly' ? 'Weekly' : selectedPeriod() === 'yearly' ? 'Yearly' : 'Monthly' }} History 
+                  <span *ngIf="selectedPeriod() !== 'yearly'">({{ selectedYear() }})</span>
                 </p>
                 <div class="overflow-x-auto rounded-lg mat-elevation-z1">
                   <table mat-table [dataSource]="filteredMonthlySummaries"
                     class="w-full history-table compact-table">
                     <!-- Month Column -->
                     <ng-container matColumnDef="month">
-                      <th mat-header-cell *matHeaderCellDef>Month</th>
+                      <th mat-header-cell *matHeaderCellDef>{{ selectedPeriod() === 'weekly' ? 'Week' : selectedPeriod() === 'yearly' ? 'Year' : 'Month' }}</th>
                       <td mat-cell *matCellDef="let m"
                         class="font-medium text-neutral-700 !text-xs sm:!text-sm">
                         {{ m.label }}
                       </td>
+                      <td mat-footer-cell *matFooterCellDef class="font-bold !text-xs sm:!text-sm">Total</td>
                     </ng-container>
                     <!-- Income Column -->
                     <ng-container matColumnDef="income">
@@ -446,6 +449,7 @@
                         class="!text-right text-success-500 font-medium !text-xs sm:!text-sm">
                         {{ m.income | currency:{ compact:true} }}
                       </td>
+                      <td mat-footer-cell *matFooterCellDef class="!text-right font-bold text-success-500 !text-xs sm:!text-sm">{{ totalHistory().income | currency:{ compact:true} }}</td>
                     </ng-container>
                     <!-- Expense Column -->
                     <ng-container matColumnDef="expense">
@@ -454,6 +458,7 @@
                         class="!text-right text-error-500 font-medium !text-xs sm:!text-sm">
                         {{ m.expense | currency:{ compact:true} }}
                       </td>
+                      <td mat-footer-cell *matFooterCellDef class="!text-right font-bold text-error-500 !text-xs sm:!text-sm">{{ totalHistory().expense | currency:{ compact:true} }}</td>
                     </ng-container>
                     <!-- Savings Column -->
                     <ng-container matColumnDef="savings">
@@ -464,6 +469,7 @@
                         [class.text-error-500]="m.savings < 0">
                         {{ m.savings >= 0 ? '+' : '-' }}{{ (m.savings | abs) | currency:{ compact:true} }}
                       </td>
+                      <td mat-footer-cell *matFooterCellDef class="!text-right font-bold !text-xs sm:!text-sm" [class.text-success-500]="totalHistory().savings >= 0" [class.text-error-500]="totalHistory().savings < 0">{{ totalHistory().savings >= 0 ? '+' : '-' }}{{ (totalHistory().savings | abs) | currency:{ compact:true} }}</td>
                     </ng-container>
                     <tr mat-header-row
                       *matHeaderRowDef="['month', 'income', 'expense', 'savings']">
@@ -471,44 +477,18 @@
                     <tr mat-row
                       *matRowDef="let row; columns: ['month', 'income', 'expense', 'savings'];">
                     </tr>
+                    <tr mat-footer-row
+                      *matFooterRowDef="['month', 'income', 'expense', 'savings']">
+                    </tr>
                   </table>
                 </div>
               </mat-card-content>
             </mat-card>
+
+            <div class="!mb-20"></div>
           }
           } @placeholder {
           <div class="h-48 bg-neutral-200 rounded-xl animate-pulse"></div>
-        }
-
-        <!-- ═══════════ MEMBER CONTRIBUTION & BALANCES (SPLITWISE MODE) ═══════════ -->
-        @if (isSplitwiseMode() && familyStats()) {
-          <mat-card class="!rounded-xl !border-none mt-6">
-            <mat-card-content class="pt-4">
-              <p class="text-lg font-semibold text-neutral-500 mb-5 flex items-center gap-2">
-                <mat-icon class="text-primary-500">group</mat-icon>
-                Member Contributions
-              </p>
-              <div class="space-y-4">
-                @for (m of familyStats()!.memberBreakdown; track m.userId) {
-                  <div class="p-3 bg-surface-100 rounded-lg flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                      <div class="w-8 h-8 rounded-full flex items-center justify-center bg-primary-100 text-primary-700 text-sm font-bold">
-                        {{ m.displayName.charAt(0).toUpperCase() }}
-                      </div>
-                      <div>
-                        <p class="text-sm font-medium text-neutral-800">{{ m.displayName }}</p>
-                        <p class="text-xs text-neutral-400">{{ m.transactionCount }} transactions</p>
-                      </div>
-                    </div>
-                    <div class="text-right">
-                      <p class="text-sm font-semibold text-error-500">Share: {{ m.totalExpense | currency }}</p>
-                      <p class="text-xs text-success-500">Paid: {{ m.totalPaid | currency }}</p>
-                    </div>
-                  </div>
-                }
-              </div>
-            </mat-card-content>
-          </mat-card>
         }
       </div>
     }
@@ -519,7 +499,6 @@
 <!-- ############################################################################## -->
 <!--                           TAB 2: PREDICTIONS                                  -->
 <!-- ############################################################################## -->
-@if (!isSplitwiseMode()) {
 <mat-tab>
   <ng-template mat-tab-label>
     <mat-icon class="mr-2">auto_graph</mat-icon>
@@ -837,7 +816,6 @@
 </div>
 </ng-template>
 </mat-tab>
-}
 </mat-tab-group>
 
 </div>

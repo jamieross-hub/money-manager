@@ -14,6 +14,7 @@ export interface Category {
   isSubCategory?: boolean;
   subCategories?: Array<string>;
   group?: string;
+  groupIcon?: string;
   isSystem: boolean;
   syncStatus?: string;
   lastSyncAt?: any;

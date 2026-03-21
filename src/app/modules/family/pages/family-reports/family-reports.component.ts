@@ -11,6 +11,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AppState } from 'src/app/store/app.state';
 import * as FamilySelectors from '../../store/family.selectors';
 import * as TransactionsSelectors from 'src/app/store/transactions/transactions.selectors';
+import * as CategoriesSelectors from 'src/app/store/categories/categories.selectors';
+import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import { FamilyMember, FamilyStats } from 'src/app/util/models/family.model';
 import { Transaction } from 'src/app/util/models/transaction.model';
 import { FamilyService } from '../../services/family.service';
@@ -40,6 +42,100 @@ export class FamilyReportsComponent implements OnInit {
 
   categoryBreakdown = computed(() => {
     return this.stats()?.categoryBreakdown || [];
+  });
+
+  allCategories = toSignal(this.store.select(CategoriesSelectors.selectAllCategories), { initialValue: [] });
+  categoryViewMode = signal<'single' | 'group'>('group');
+
+  groupedCategoryBreakdown = computed(() => {
+    const allCats = this.allCategories() || [];
+    if (this.categoryViewMode() === 'single') {
+      const txs = this.transactions() || [];
+      const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
+      const uid = profile?.uid;
+      if (!uid) return [];
+
+      const fam = this.family();
+      const mode = fam?.mode || 'common';
+      const mList = this.members() || [];
+      const activeMembers = mList.filter(m => m.isActive);
+
+      const categoryMap = new Map<string, number>();
+      let totalExpenseShare = 0;
+
+      for (const t of txs) {
+        const type = (t as any).type;
+        const isExpense = type !== 'income' && type !== 1 && type !== '1';
+        if (!isExpense) continue;
+
+        const amount = Number(t.amount) || 0;
+        if (amount <= 0) continue;
+
+        let shareAmt = 0;
+
+        // 1. Explicit Split
+        if (t.splitData?.splitBetween && t.splitData.splitBetween.length > 0) {
+          const share = t.splitData.splitBetween.find(s => s.userId === uid);
+          if (share) {
+            shareAmt = Number(share.amount) || 0;
+          }
+        } else {
+          // 2. Fallback based on mode
+          if (mode === 'common') {
+            const activeCount = activeMembers.length || 1;
+            shareAmt = Math.round((amount / activeCount) * 100) / 100;
+          } else { // 'split' fallback
+            if (t.userId === uid) {
+              shareAmt = amount;
+            }
+          }
+        }
+
+        if (shareAmt > 0) {
+          totalExpenseShare += shareAmt;
+          const cat = t.category || 'Uncategorized';
+          categoryMap.set(cat, (categoryMap.get(cat) || 0) + shareAmt);
+        }
+      }
+
+      const items = Array.from(categoryMap.entries()).map(([category, amount]) => {
+        const catObj = allCats.find(c => c.name.toLowerCase() === category.toLowerCase());
+        return {
+          category,
+          amount,
+          percentage: totalExpenseShare > 0 ? (amount / totalExpenseShare) * 100 : 0,
+          isGroup: false,
+          groupIcon: undefined as string | undefined,
+          group: catObj?.group
+        };
+      }).sort((a, b) => b.amount - a.amount);
+
+      return items;
+    }
+
+    const cats = this.categoryBreakdown() || [];
+    const groupMap = new Map<string, { category: string; amount: number; percentage: number; isGroup: boolean; groupIcon?: string; group?: string }>();
+
+    for (const c of cats) {
+      const catObj = allCats.find(cat => cat.name.toLowerCase() === c.category.toLowerCase());
+      const group = catObj?.group;
+      
+      if (group) {
+        if (!groupMap.has(group)) {
+          groupMap.set(group, { category: group, amount: 0, percentage: 0, isGroup: true, groupIcon: catObj?.groupIcon, group });
+        }
+        const g = groupMap.get(group)!;
+        g.amount += c.amount;
+      } else {
+        groupMap.set(c.category, { category: c.category, amount: c.amount, percentage: c.percentage, isGroup: false, group: undefined });
+      }
+    }
+
+    const total = this.stats()?.totalExpense || 1;
+    return Array.from(groupMap.values()).map(g => ({
+      ...g,
+      percentage: (g.amount / total) * 100
+    })).sort((a, b) => b.amount - a.amount);
   });
 
   dateRange = computed(() => {
