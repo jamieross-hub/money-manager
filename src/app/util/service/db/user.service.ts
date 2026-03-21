@@ -1027,6 +1027,9 @@ export class UserService implements OnDestroy {
         throw new Error('Too many Google sign-in attempts. Please try again later.');
       }
 
+      // Ensure storage is initialized to prevent IndexedDB errors when creating new users on PWA
+      await this.storageService.initialize();
+
       const result = await signInWithPopup(this.auth, provider);
 
       // Extract Google Access Token
