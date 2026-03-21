@@ -249,4 +249,40 @@ export class OpenaiService {
       })
     );
   }
+
+  categorizeCategories(
+    items: { id: string; name: string }[],
+    existingGroups: string[]
+  ): Observable<{ id: string; group: string }[]> {
+    const systemMessage = SYSTEM_PROMPTS['autoCategorize'];
+    const userMessage: OpenAIMessage = {
+      role: 'user',
+      content: `Please categorize the following items into appropriate groups.
+      
+Existing groups: [${existingGroups.join(', ')}]
+
+Items to categorize:
+${JSON.stringify(items)}
+
+Remember, return ONLY a JSON array.`
+    };
+
+    return this.sendMessage([systemMessage, userMessage]).pipe(
+      map(response => {
+        try {
+          // Find the first [ and last ]
+          const start = response.indexOf('[');
+          const end = response.lastIndexOf(']');
+          if (start !== -1 && end !== -1) {
+            const jsonStr = response.substring(start, end + 1);
+            return JSON.parse(jsonStr);
+          }
+          return JSON.parse(response);
+        } catch (e) {
+          console.error('Failed to parse AI categorization JSON:', response);
+          throw new Error('Invalid categorization format');
+        }
+      })
+    );
+  }
 }

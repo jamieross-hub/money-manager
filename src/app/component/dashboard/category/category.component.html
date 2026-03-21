@@ -46,13 +46,32 @@
         <mat-icon matPrefix>search</mat-icon>
         <input matInput type="text" [formControl]="searchControl">
       </mat-form-field>
-      <div class="filter-pills w-full lg:w-[40%] flex flex-row-reverse">
+      <div class="filter-pills w-full lg:w-[40%] flex flex-row-reverse gap-2 items-center">
+        @if (vm.hasUngroupedCategories) {
+          <mat-chip-set>
+            <mat-chip color="primary"
+                      (click)="autoCategorize()" 
+                      matTooltip="Auto Categorize Ungrouped"
+                      [disabled]="isAutoCategorizing"
+                      class="auto-categorize-btn cursor-pointer !bg-primary/10 hover:!bg-primary/20 transition-colors">
+              <div class="flex items-center justify-center gap-1.5 h-full">
+                @if (isAutoCategorizing) {
+                  <mat-icon class="animate-spin">sync</mat-icon>
+                  <span class="text-sm font-medium">Auto Categorize</span>
+                } @else {
+                  <mat-icon class="text-primary">auto_awesome</mat-icon>
+                  <span class="text-sm font-medium text-primary">Auto Categorize</span>
+                }
+              </div>
+            </mat-chip>
+          </mat-chip-set>
+        }
         <mat-chip-listbox (change)="setFilterType($event.value)" [value]="filterType$ | async">
           <mat-chip-option value="all">All</mat-chip-option>
           <mat-chip-option value="expense">Expense</mat-chip-option>
           <mat-chip-option value="income">Income</mat-chip-option>
-          @for (group of vm.availableGroups; track group) {
-            <mat-chip-option [value]="group">{{ group }}</mat-chip-option>
+          @for (group of vm.availableGroups; track group.name + '_' + group.count) {
+            <mat-chip-option [value]="group.name">{{ group.name }} ({{ group.count }})</mat-chip-option>
           }
         </mat-chip-listbox>
       </div>

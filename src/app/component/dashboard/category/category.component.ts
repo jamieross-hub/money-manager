@@ -12,6 +12,7 @@ import { Category, Budget } from 'src/app/util/models';
 import { CategoryBudgetService } from 'src/app/util/service/category-budget.service';
 import { AppViewService, AppView } from 'src/app/util/service/app-view.service';
 import { CategoryBudgetDialogComponent } from './category-budget-dialog/category-budget-dialog.component';
+import { OpenaiService } from 'src/app/util/service/ai-chat/openai.service';
 import { ParentCategorySelectorDialogComponent } from './parent-category-selector-dialog/parent-category-selector-dialog.component';
 import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
 import { Store } from '@ngrx/store';
@@ -104,7 +105,8 @@ export class CategoryComponent implements OnInit, OnDestroy {
       expenseChange: number;
       incomeChange: number;
     };
-    availableGroups: string[];
+    availableGroups: { name: string, count: number }[];
+    hasUngroupedCategories: boolean;
     isFamilyMode: boolean;
   }>;
 
@@ -120,6 +122,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
   // Local snapshot for dialogs and helpers
   private _categoriesSnapshot: any[] = [];
+  public isAutoCategorizing: boolean = false;
 
   constructor(
     private auth: Auth,
@@ -132,7 +135,8 @@ export class CategoryComponent implements OnInit, OnDestroy {
     public breakpointService: BreakpointService,
     private categoryService: CategoryService,
     private userService: UserService,
-    public appViewService: AppViewService
+    public appViewService: AppViewService,
+    private openaiService: OpenaiService
   ) {
 
     this.isLoading$ = this.store.select(CategoriesSelectors.selectCategoriesLoading);
@@ -226,7 +230,14 @@ export class CategoryComponent implements OnInit, OnDestroy {
         const incomeChange = calculateChange(totalIncome, prevIncome);
         const expenseCount = categories.filter(c => c.type === 'expense').length;
         const incomeCount = categories.filter(c => c.type === 'income').length;
-        const availableGroups = [...new Set(categories.map(c => c.group).filter(g => !!g))] as string[];
+        
+        const availableGroups = [...new Set(categories.map(c => c.group).filter(g => !!g))].map(groupName => ({
+          name: groupName as string,
+          count: categories.filter(c => c.group === groupName).length
+        }));
+        
+        const hasUngroupedCategories = processedCategories.some(c => !c.group && !c.isSystem && !c.isSubCategory);
+        
         this._categoriesSnapshot = processedCategories;
 
         return {
@@ -240,6 +251,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
             incomeChange
           },
           availableGroups,
+          hasUngroupedCategories,
           isFamilyMode
         };
       })
@@ -400,8 +412,10 @@ export class CategoryComponent implements OnInit, OnDestroy {
         allCategories: this._categoriesSnapshot // Use snapshot
       }
     });
-
     dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
+      if (result) {
+        this.store.dispatch(CategoriesActions.loadCategories({ userId: this.userId }));
+      }
     });
   }
 
@@ -540,6 +554,56 @@ export class CategoryComponent implements OnInit, OnDestroy {
           isSubCategory: category.isSubCategory
         }));
         this.notificationService.success('Budget removed successfully');
+      }
+    });
+  }
+
+  public autoCategorize(): void {
+    const ungrouped = this._categoriesSnapshot.filter(c => !c.group && !c.isSystem && !c.isSubCategory);
+    
+    if (ungrouped.length === 0) {
+      this.notificationService.info('No ungrouped categories found.');
+      return;
+    }
+
+    this.isAutoCategorizing = true;
+    const items = ungrouped.map(c => ({ id: c.id!, name: c.name }));
+    const existingGroups = [...new Set(this._categoriesSnapshot.map(c => c.group).filter(g => !!g))] as string[];
+
+    this.openaiService.categorizeCategories(items, existingGroups).subscribe({
+      next: (results) => {
+        let updatedCount = 0;
+        results.forEach(res => {
+          if (res.group) {
+            const cat = ungrouped.find(c => c.id === res.id);
+            if (cat) {
+              this.store.dispatch(CategoriesActions.updateCategory({
+                userId: this.userId,
+                categoryId: cat.id!,
+                name: cat.name,
+                categoryType: cat.type,
+                icon: cat.icon,
+                color: cat.color,
+                budgetData: cat.budget,
+                parentCategoryId: cat.parentCategoryId,
+                isSubCategory: cat.isSubCategory,
+                group: res.group
+              }));
+              updatedCount++;
+            }
+          }
+        });
+
+        this.isAutoCategorizing = false;
+        if (updatedCount > 0) {
+          this.notificationService.success(`Successfully categorized ${updatedCount} categories.`);
+        } else {
+          this.notificationService.info('No categories could be mapped to existing groups.');
+        }
+      },
+      error: (err) => {
+        this.isAutoCategorizing = false;
+        this.notificationService.error(err.message || 'Failed to auto categorize');
       }
     });
   }
