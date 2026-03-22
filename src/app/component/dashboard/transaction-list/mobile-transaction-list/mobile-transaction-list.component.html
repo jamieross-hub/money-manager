@@ -577,9 +577,7 @@
             [class.no-interaction]="selectedSpecialRange() === 'category'" (mousedown)="onLongPressStart(item)"
             (touchstart)="onLongPressStart(item)" (touchmove)="onLongPressEnd()" (mouseup)="onLongPressEnd()"
             (touchend)="onLongPressEnd()" (click)="onTransactionClick(item, cardElement)">
-            @if (selectedSpecialRange() === 'category') {
-            <canvas [appSandCanvas]="item._categoryColor" [percentage]="(item.amount / ((item._isIncome ? totalIncome() : totalExpenses()) || 1)) * 100"></canvas>
-            }
+
             <!-- Main Transaction Content -->
             <div class="transaction-main">
               <!-- Icon -->

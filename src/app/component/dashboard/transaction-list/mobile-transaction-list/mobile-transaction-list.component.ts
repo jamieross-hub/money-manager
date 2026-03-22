@@ -80,7 +80,6 @@ import { AppView } from 'src/app/util/service/app-view.service';
 import { RecurringTemplate } from 'src/app/util/models/recurring.model';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { SandCanvasDirective } from '../../../../util/directives/sand-canvas.directive';
 import { CategoryChartSheetComponent } from './components/category-chart-sheet/category-chart-sheet.component';
 
 dayjs.extend(weekOfYear);
@@ -113,8 +112,7 @@ interface SortOption {
     FormsModule,
     MatDividerModule,
     ImageFallbackDirective,
-    MatBottomSheetModule,
-    SandCanvasDirective
+    MatBottomSheetModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   animations: []
@@ -154,7 +152,6 @@ export class MobileTransactionListComponent
   selectedTxIds = signal<Set<string>>(new Set());
   selectedSpecialRange = signal<string | null>(null);
   
-  // Gyroscope handling moved to SandCanvasDirective
 
 
 
