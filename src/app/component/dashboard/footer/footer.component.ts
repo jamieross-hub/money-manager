@@ -91,8 +91,7 @@ export class FooterComponent {
 
   readonly isHomeActive = computed(() => this.currentUrl() === '/dashboard' || this.currentUrl() === '/dashboard/home');
   readonly isExpenseActive = computed(() => this.currentUrl().includes('/dashboard/transactions'));
-  readonly isReportsActive = computed(() => this.currentUrl() === '/dashboard/reports');
-  readonly isSummaryActive = computed(() => this.currentUrl() === '/dashboard/summary');
+  readonly isReportsActive = computed(() => this.currentUrl() === '/dashboard/reports' || this.currentUrl() === '/dashboard/family/reports');
   readonly isSettleActive = computed(() => this.currentUrl() === '/dashboard/family/settle');
   readonly isCategoryActive = computed(() => this.currentUrl() === '/dashboard/category');
   readonly isAccountsActive = computed(() => this.currentUrl() === '/dashboard/accounts');

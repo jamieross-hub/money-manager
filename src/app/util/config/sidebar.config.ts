@@ -59,7 +59,7 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         label: 'NAVIGATION.REPORTS',
         route: '/dashboard/family/reports',
         icon: 'analytics',
-        order: 4,
+        order: 5,
         familyOnly: true
       },
       // {
@@ -74,14 +74,14 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         route: '/dashboard/transactions',
         queryParams: { tab: 'recurring' },
         icon: 'repeat',
-        order: 5
+        order: 6
       },
      
       {
         label: 'NAVIGATION.BUDGETS',
         route: '/dashboard/budgets',
         icon: 'pie_chart',
-        order: 6
+        order: 7
       },
     
     ]

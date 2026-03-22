@@ -54,7 +54,7 @@
 
             <!-- Section Items -->
             <div class="space-y-1.5 overflow-hidden transition-all duration-300" [class.max-h-0]="section.isCollapsible && !section.isExpanded" [class.max-h-[1000px]]="!section.isCollapsible || section.isExpanded">
-              @for (child of section.children; track child.label) {
+              @for (child of section.children; track child.label + child.route) {
                 @if ((!child.familyOnly || isFamilyMode()) && (!child.hideInFamily || !isFamilyMode())) {
                   <!-- External Link -->
                   @if (child.externalUrl) {

@@ -141,9 +141,12 @@ export class FamilyReportsComponent implements OnInit {
       }
     }
 
-    return Array.from(groupMap.values()).map(g => ({
+    const groupItems = Array.from(groupMap.values());
+    const maxAmount = groupItems.length > 0 ? Math.max(...groupItems.map(g => g.amount)) : 0;
+
+    return groupItems.map(g => ({
       ...g,
-      percentage: totalSpent > 0 ? (g.amount / totalSpent) * 100 : 0
+      percentage: maxAmount > 0 ? (g.amount / maxAmount) * 100 : 0
     })).sort((a, b) => b.amount - a.amount);
   });
 
