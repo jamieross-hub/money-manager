@@ -41,7 +41,12 @@ export class FamilyReportsComponent implements OnInit {
   stats = this.familyProcessor.stats;
 
   categoryBreakdown = computed(() => {
-    return this.stats()?.categoryBreakdown || [];
+    const cats = this.stats()?.categoryBreakdown || [];
+    const allCats = this.allCategories() || [];
+    return cats.filter(c => {
+      const catObj = allCats.find(cat => cat.name.toLowerCase() === c.category.toLowerCase());
+      return !catObj?.isSystem;
+    });
   });
 
   allCategories = toSignal(this.store.select(CategoriesSelectors.selectAllCategories), { initialValue: [] });
@@ -49,6 +54,9 @@ export class FamilyReportsComponent implements OnInit {
 
   groupedCategoryBreakdown = computed(() => {
     const allCats = this.allCategories() || [];
+    let baseBreakdown: { category: string; amount: number }[] = [];
+    let totalSpent = 0;
+
     if (this.categoryViewMode() === 'single') {
       const txs = this.transactions() || [];
       const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
@@ -73,68 +81,69 @@ export class FamilyReportsComponent implements OnInit {
 
         let shareAmt = 0;
 
-        // 1. Explicit Split
         if (t.splitData?.splitBetween && t.splitData.splitBetween.length > 0) {
           const share = t.splitData.splitBetween.find(s => s.userId === uid);
-          if (share) {
-            shareAmt = Number(share.amount) || 0;
-          }
+          if (share) shareAmt = Number(share.amount) || 0;
         } else {
-          // 2. Fallback based on mode
           if (mode === 'common') {
             const activeCount = activeMembers.length || 1;
             shareAmt = Math.round((amount / activeCount) * 100) / 100;
-          } else { // 'split' fallback
-            if (t.userId === uid) {
-              shareAmt = amount;
-            }
+          } else {
+            if (t.userId === uid) shareAmt = amount;
           }
         }
 
         if (shareAmt > 0) {
-          totalExpenseShare += shareAmt;
           const cat = t.category || 'Uncategorized';
+          const catObj = allCats.find(c => c.name.toLowerCase() === cat.toLowerCase());
+          if (catObj?.isSystem) continue;
+
+          totalExpenseShare += shareAmt;
           categoryMap.set(cat, (categoryMap.get(cat) || 0) + shareAmt);
         }
       }
 
-      const items = Array.from(categoryMap.entries()).map(([category, amount]) => {
-        const catObj = allCats.find(c => c.name.toLowerCase() === category.toLowerCase());
-        return {
-          category,
-          amount,
-          percentage: totalExpenseShare > 0 ? (amount / totalExpenseShare) * 100 : 0,
-          isGroup: false,
-          groupIcon: undefined as string | undefined,
-          group: catObj?.group
-        };
-      }).sort((a, b) => b.amount - a.amount);
-
-      return items;
+      baseBreakdown = Array.from(categoryMap.entries()).map(([category, amount]) => ({ category, amount }));
+      totalSpent = totalExpenseShare;
+    } else {
+      baseBreakdown = this.categoryBreakdown() || [];
+      totalSpent = baseBreakdown.reduce((sum, b) => sum + b.amount, 0);
     }
 
-    const cats = this.categoryBreakdown() || [];
     const groupMap = new Map<string, { category: string; amount: number; percentage: number; isGroup: boolean; groupIcon?: string; group?: string }>();
 
-    for (const c of cats) {
+    for (const c of baseBreakdown) {
       const catObj = allCats.find(cat => cat.name.toLowerCase() === c.category.toLowerCase());
       const group = catObj?.group;
-      
+
       if (group) {
         if (!groupMap.has(group)) {
-          groupMap.set(group, { category: group, amount: 0, percentage: 0, isGroup: true, groupIcon: catObj?.groupIcon, group });
+          groupMap.set(group, { 
+            category: group, 
+            amount: 0, 
+            percentage: 0, 
+            isGroup: true, 
+            groupIcon: catObj?.groupIcon, 
+            group 
+          });
         }
         const g = groupMap.get(group)!;
         g.amount += c.amount;
       } else {
-        groupMap.set(c.category, { category: c.category, amount: c.amount, percentage: c.percentage, isGroup: false, group: undefined });
+        groupMap.set(c.category, { 
+          category: c.category, 
+          amount: c.amount, 
+          percentage: 0, 
+          isGroup: false, 
+          groupIcon: catObj?.icon, 
+          group: undefined 
+        });
       }
     }
 
-    const total = this.stats()?.totalExpense || 1;
     return Array.from(groupMap.values()).map(g => ({
       ...g,
-      percentage: (g.amount / total) * 100
+      percentage: totalSpent > 0 ? (g.amount / totalSpent) * 100 : 0
     })).sort((a, b) => b.amount - a.amount);
   });
 

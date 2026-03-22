@@ -116,7 +116,7 @@
       <!-- Category Breakdown -->
       <div class="  mt-5">
         <div class="flex justify-between items-center mb-3">
-          <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Expense by {{ categoryViewMode() === 'single' ? 'Category' : 'Group' }}</h2>
+          <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Expense by Category</h2>
           <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 border border-gray-200 dark:border-gray-700 origin-right">
             <button (click)="categoryViewMode.set('single')" 
               [class]="categoryViewMode() === 'single' ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white shadow-sm' : 'text-gray-500'"

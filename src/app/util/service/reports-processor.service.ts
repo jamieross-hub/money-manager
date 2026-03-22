@@ -1,5 +1,6 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { Transaction } from '../models/transaction.model';
+import { LocalIndexDBStorageService } from './indexdb-storage.service';
 
 export interface CategoryBreakdownItem {
     categoryId: string;
@@ -64,6 +65,7 @@ export interface ReportsProcessorOutput {
 })
 export class ReportsProcessorService {
     private worker: Worker | null = null;
+    private storageService = inject(LocalIndexDBStorageService);
 
     private _output = signal<ReportsProcessorOutput>({
         monthlySummaries: [],
@@ -108,6 +110,23 @@ export class ReportsProcessorService {
                 if (data.durationMs) {
                     console.log(`[ReportsProcessorWorker] Processed in ${data.durationMs.toFixed(2)}ms`);
                 }
+
+                // Cache base calculations in IndexedDB
+                if (data.baseRecalculated && data.baseFingerprint) {
+                    this.storageService.setItem('reports_base_cache', {
+                        fingerprint: data.baseFingerprint,
+                        data: {
+                            monthlySummaries: data.monthlySummaries,
+                            availableYears: data.availableYears,
+                            avgMonthlySpending: data.avgMonthlySpending,
+                            highestSpendingCategory: data.highestSpendingCategory,
+                            overallSavingsRate: data.overallSavingsRate,
+                            nextMonthPrediction: data.nextMonthPrediction,
+                            next3MonthsPrediction: data.next3MonthsPrediction,
+                            yearEndPrediction: data.yearEndPrediction
+                        }
+                    });
+                }
             };
 
             this.worker.onerror = (err) => {
@@ -140,7 +159,37 @@ export class ReportsProcessorService {
         this.lastFingerprint = fingerprint;
 
         this.isProcessing.set(true);
-        this.worker.postMessage(data);
+
+        // ── IndexedDB Caching ──
+        const baseFingerprint = this.generateBaseFingerprint(data.transactions, data.currentUserId);
+        const cached = this.storageService.getItem<{ fingerprint: string, data: any }>('reports_base_cache');
+        
+        const useCache = cached && cached.fingerprint === baseFingerprint;
+        const cachedBase = useCache ? cached.data : null;
+
+        // Optimization: Omit transactions if using cache and not looking at weekly view
+        const workerData = {
+            ...data,
+            transactions: (useCache && data.selectedPeriod !== 'weekly') ? [] : data.transactions,
+            cachedBase,
+            baseFingerprint
+        };
+
+        this.worker.postMessage(workerData);
+    }
+
+    private generateBaseFingerprint(transactions: Transaction[], uid: string | null): string {
+        let sumTs = 0;
+        for (const tx of transactions) {
+            const u = tx.updatedAt;
+            const ts = u ? (u instanceof Date ? u.getTime() : ((u as any).seconds || 0)) : 0;
+            sumTs += ts;
+        }
+        return JSON.stringify({
+            txCount: transactions.length,
+            sumTs,
+            uid
+        });
     }
 
     private generateFingerprint(data: any): string {

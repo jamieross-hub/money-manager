@@ -63,76 +63,105 @@ addEventListener('message', ({ data }) => {
         selectedMonth, 
         selectedWeekOffset,
         categoryIconMap,
-        categoryColorMap
+        categoryColorMap,
+        cachedBase
     } = data;
 
     const startTime = performance.now();
+    let baseRecalculated = false;
 
-    if (!transactions || transactions.length === 0) {
-        postMessage({
-            monthlySummaries: [],
-            availableYears: [],
-            avgMonthlySpending: 0,
-            highestSpendingCategory: null,
-            overallSavingsRate: 0,
-            currentPeriodSummary: null,
-            previousPeriodSummary: null,
-            filteredMonthlySummaries: [],
-            nextMonthPrediction: null,
-            next3MonthsPrediction: null,
-            yearEndPrediction: null
-        });
-        return;
-    }
+    let monthlySummaries: MonthlySummary[] = [];
+    let availableYears: number[] = [];
+    let avgMonthlySpending = 0;
+    let highestSpendingCategory: CategoryBreakdownItem | null = null;
+    let overallSavingsRate = 0;
+    let nextMonthPrediction: Prediction | null = null;
+    let next3MonthsPrediction: Prediction | null = null;
+    let yearEndPrediction: Prediction | null = null;
 
-    // 1. Build Monthly Summaries
-    const monthlySummaries = buildMonthlySummaries(transactions, categoryIconMap, categoryColorMap);
+    if (cachedBase) {
+        monthlySummaries = cachedBase.monthlySummaries || [];
+        availableYears = cachedBase.availableYears || [];
+        avgMonthlySpending = cachedBase.avgMonthlySpending || 0;
+        highestSpendingCategory = cachedBase.highestSpendingCategory || null;
+        overallSavingsRate = cachedBase.overallSavingsRate || 0;
+        nextMonthPrediction = cachedBase.nextMonthPrediction || null;
+        next3MonthsPrediction = cachedBase.next3MonthsPrediction || null;
+        yearEndPrediction = cachedBase.yearEndPrediction || null;
+    } else {
+        baseRecalculated = true;
 
-    // 2. Extract Available Years
-    const yearSet = new Set<number>();
-    for (const m of monthlySummaries) {
-        yearSet.add(m.year);
-    }
-    const availableYears = Array.from(yearSet).sort((a, b) => b - a);
-
-    // 3. Compute Key Metrics
-    const totalExpense = monthlySummaries.reduce((s, m) => s + m.expense, 0);
-    const totalIncome = monthlySummaries.reduce((s, m) => s + m.income, 0);
-    const avgMonthlySpending = monthlySummaries.length > 0 ? totalExpense / monthlySummaries.length : 0;
-    const overallSavingsRate = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0;
-
-    const catMap = new Map<string, CategoryBreakdownItem>();
-    for (const m of monthlySummaries) {
-        for (const c of m.categoryBreakdown) {
-            if (!catMap.has(c.categoryId)) {
-                catMap.set(c.categoryId, { ...c, amount: 0, transactionCount: 0, percentage: 0 });
-            }
-            const existing = catMap.get(c.categoryId)!;
-            existing.amount += c.amount;
-            existing.transactionCount += c.transactionCount;
+        if (!transactions || transactions.length === 0) {
+            postMessage({
+                monthlySummaries: [],
+                availableYears: [],
+                avgMonthlySpending: 0,
+                highestSpendingCategory: null,
+                overallSavingsRate: 0,
+                currentPeriodSummary: null,
+                previousPeriodSummary: null,
+                filteredMonthlySummaries: [],
+                nextMonthPrediction: null,
+                next3MonthsPrediction: null,
+                yearEndPrediction: null,
+                baseRecalculated: true,
+                baseFingerprint: data.baseFingerprint
+            });
+            return;
         }
-    }
-    const allCats = Array.from(catMap.values()).sort((a, b) => b.amount - a.amount);
-    if (totalExpense > 0) {
-        allCats.forEach(c => c.percentage = (c.amount / totalExpense) * 100);
-    }
-    const highestSpendingCategory = allCats.length > 0 ? allCats[0] : null;
 
-    // 4. Compute Period Summary
+        // 1. Build Monthly Summaries
+        monthlySummaries = buildMonthlySummaries(transactions, categoryIconMap, categoryColorMap);
+
+        // 2. Extract Available Years
+        const yearSet = new Set<number>();
+        for (const m of monthlySummaries) {
+            yearSet.add(m.year);
+        }
+        availableYears = Array.from(yearSet).sort((a, b) => b - a);
+
+        // 3. Compute Key Metrics
+        const totalExpense = monthlySummaries.reduce((s, m) => s + m.expense, 0);
+        const totalIncome = monthlySummaries.reduce((s, m) => s + m.income, 0);
+        avgMonthlySpending = monthlySummaries.length > 0 ? totalExpense / monthlySummaries.length : 0;
+        overallSavingsRate = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0;
+
+        const catMap = new Map<string, CategoryBreakdownItem>();
+        for (const m of monthlySummaries) {
+            for (const c of m.categoryBreakdown) {
+                if (!catMap.has(c.categoryId)) {
+                    catMap.set(c.categoryId, { ...c, amount: 0, transactionCount: 0, percentage: 0 });
+                }
+                const existing = catMap.get(c.categoryId)!;
+                existing.amount += c.amount;
+                existing.transactionCount += c.transactionCount;
+            }
+        }
+        const allCats = Array.from(catMap.values()).sort((a, b) => b.amount - a.amount);
+        if (totalExpense > 0) {
+            allCats.forEach(c => c.percentage = (c.amount / totalExpense) * 100);
+        }
+        highestSpendingCategory = allCats.length > 0 ? allCats[0] : null;
+
+        // 5. Compute Predictions
+        const predictions = computePredictions(
+            monthlySummaries,
+            categoryIconMap,
+            categoryColorMap
+        );
+        nextMonthPrediction = predictions.nextMonthPrediction;
+        next3MonthsPrediction = predictions.next3MonthsPrediction;
+        yearEndPrediction = predictions.yearEndPrediction;
+    }
+
+    // 4. Compute Period Summary (Always compute, depends on filters)
     const { currentPeriodSummary, previousPeriodSummary, filteredMonthlySummaries } = computePeriodSummaries(
-        transactions, 
+        transactions || [], 
         monthlySummaries, 
         selectedPeriod, 
         selectedYear, 
         selectedMonth, 
         selectedWeekOffset,
-        categoryIconMap,
-        categoryColorMap
-    );
-
-    // 5. Compute Predictions
-    const { nextMonthPrediction, next3MonthsPrediction, yearEndPrediction } = computePredictions(
-        monthlySummaries,
         categoryIconMap,
         categoryColorMap
     );
@@ -149,6 +178,8 @@ addEventListener('message', ({ data }) => {
         nextMonthPrediction,
         next3MonthsPrediction,
         yearEndPrediction,
+        baseRecalculated,
+        baseFingerprint: data.baseFingerprint,
         durationMs: performance.now() - startTime
     });
 });
