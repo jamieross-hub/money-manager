@@ -341,3 +341,12 @@ mat-list-item {
 .animate-soft-pulse {
   animation: softPulse 4s ease-in-out infinite;
 }
+
+.animation-slide-down {
+  animation: slideDown 0.2s ease-out forwards;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

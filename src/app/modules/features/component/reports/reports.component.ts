@@ -118,6 +118,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     selectedYear = signal<number>(new Date().getFullYear());
     selectedMonth = signal<number | null>(null);
     selectedWeekOffset = signal<number>(0);
+    expandedCategoryId = signal<string | null>(null);
 
     // Store Signals
     readonly transactions = this.store.selectSignal(TransactionsSelectors.selectAllTransactions);
@@ -163,7 +164,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
                         transactionCount: 0,
                         categoryIcon: item.categoryIcon,
                         groupIcon: cat?.groupIcon, // [NEW]
-                        categoryColor: item.categoryColor,
+                        categoryColor: (!item.categoryColor || item.categoryColor === '#9ca3af') ? this.stringToColor(groupName) : item.categoryColor,
                         categoryId: 'group_' + groupName
                     });
                 }
@@ -172,7 +173,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
                 g.transactionCount += item.transactionCount;
                 if (item.amount > (g.amount - item.amount)) {
                     g.categoryIcon = item.categoryIcon;
-                    g.categoryColor = item.categoryColor;
+                    g.categoryColor = (!item.categoryColor || item.categoryColor === '#9ca3af') ? this.stringToColor(groupName) : item.categoryColor;
                 }
             } else {
                 groups.set(item.categoryId, {
@@ -200,6 +201,70 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
         return result.sort((a, b) => b.amount - a.amount);
     });
+
+    readonly currentPeriodTransactions = computed(() => {
+        const txns = this.transactions();
+        if (!txns || txns.length === 0) return [];
+
+        const period = this.selectedPeriod();
+        const year = this.selectedYear();
+        const month = this.selectedMonth();
+        const offset = this.selectedWeekOffset();
+
+        const now = new Date();
+        const startOfCurrentWeek = dayjs().add(offset, 'week').startOf('week');
+        const endOfCurrentWeek = dayjs().add(offset, 'week').endOf('week');
+
+        return txns.filter(t => {
+            const date = this.toDateHelper(t.date);
+            if (!date) return false;
+            
+            const d = dayjs(date);
+            if (period === 'monthly') {
+                const currentMonth = month !== null ? month : (year === now.getFullYear() ? now.getMonth() : 0);
+                return d.year() === year && d.month() === currentMonth;
+            } else if (period === 'weekly') {
+                return d.isAfter(startOfCurrentWeek.subtract(1, 'millisecond')) && d.isBefore(endOfCurrentWeek.add(1, 'millisecond'));
+            } else { // yearly
+                return d.year() === year;
+            }
+        });
+    });
+
+    readonly expandedItemData = computed(() => {
+        const catId = this.expandedCategoryId();
+        if (!catId) return null;
+
+        const txns = this.currentPeriodTransactions();
+        const categories = this.allCategories();
+        
+        if (catId.startsWith('group_')) {
+            const groupName = catId.replace('group_', '');
+            const groupCatIds = new Set(categories.filter(c => c.group === groupName).map(c => c.id));
+            const items = txns.filter(t => groupCatIds.has(t.categoryId));
+            
+            const summary = this.currentPeriodSummarySignal();
+            const breakdown = summary?.categoryBreakdown.filter(item => groupCatIds.has(item.categoryId)) || [];
+            
+            return {
+                isGroup: true,
+                groupName,
+                transactions: items.map(t => ({ ...t, date: this.toDateHelper(t.date) })).sort((a, b) => ((b.date as Date)?.getTime() || 0) - ((a.date as Date)?.getTime() || 0)),
+                breakdown: breakdown.sort((a, b) => b.amount - a.amount)
+            };
+        } else {
+            const items = txns.filter(t => t.categoryId === catId);
+            return {
+                isGroup: false,
+                transactions: items.map(t => ({ ...t, date: this.toDateHelper(t.date) })).sort((a, b) => ((b.date as Date)?.getTime() || 0) - ((a.date as Date)?.getTime() || 0))
+            };
+        }
+    });
+
+    toggleExpand(categoryId: string): void {
+        this.expandedCategoryId.update(current => current === categoryId ? null : categoryId);
+    }
+
     filteredMonthlySummariesSignal = this.reportsProcessor.filteredMonthlySummaries;
     
     readonly totalHistory = computed(() => {
@@ -292,6 +357,20 @@ export class ReportsComponent implements OnInit, OnDestroy {
         if (date && date.seconds) return new Date(date.seconds * 1000);
         if (typeof date === 'number') return new Date(date);
         return null;
+    }
+
+    private stringToColor(str: string): string {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        let color = '#';
+        for (let i = 0; i < 3; i++) {
+            const value = (hash >> (i * 8)) & 0xFF;
+            const adjusted = Math.floor((value + 140) / 1.4); // Pastel-ish range
+            color += ('00' + adjusted.toString(16)).substr(-2);
+        }
+        return color;
     }
 
     // Backward compatibility getters
