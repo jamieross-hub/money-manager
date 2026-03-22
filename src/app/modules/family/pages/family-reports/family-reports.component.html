@@ -145,7 +145,7 @@
                 </div>
               </div>
               <span class="text-sm font-semibold text-gray-800 dark:text-gray-100 flex-shrink-0">
-                {{ cat.amount | currency }}
+                {{ cat.amount | currency:{round:true} }}
               </span>
             </div>
           }
