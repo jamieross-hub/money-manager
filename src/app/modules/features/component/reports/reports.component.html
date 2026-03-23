@@ -214,7 +214,7 @@
               </div>
               <!-- ═══════════ PERIOD SUMMARY ═══════════ -->
               <mat-card class="!rounded-xl !border-none">
-                <mat-card-content class="!px-6">
+                <mat-card-content class="!px-4">
                   <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
                     <!-- Title -->
                     <div class="flex items-center gap-2">
@@ -268,7 +268,7 @@
                     <div class="space-y-5">
                       <div class="space-y-3 pb-2 rounded-lg">
                         <!-- Combined Expense/Savings Bar -->
-                        <div class="py-2">
+                        <div class="p-2">
                           <!-- Combined Bar -->
                           <div class="flex h-2 w-full rounded-full overflow-hidden bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/80 dark:border-neutral-700/80 shadow-sm">
                             <!-- Expense Segment -->
@@ -284,17 +284,19 @@
                           </div>
                           
                           <!-- Legend -->
-                          <div class="flex items-center gap-4 text-xs mt-2 px-1 overflow-x-auto no-scrollbar whitespace-nowrap">
+                          <div class="flex items-center justify-center gap-4 text-xs mt-2 overflow-x-auto no-scrollbar whitespace-nowrap">
                             <!-- Expense Legend -->
                             <div class="flex items-center gap-1.5">
                               <span class="w-2.5 h-2.5 rounded-full bg-error-500 flex-shrink-0"></span>
-                              <span class="text-neutral-500">Expense</span>
+                              <span class="text-neutral-500">Expense </span>
+                              <span class="text-neutral-400 text-xxs">({{ (currentPeriodSummary.expense | math:'percentWidth':currentPeriodSummary.income) | number:'1.0-0' }}%)</span>
                             </div>
                            
                             <!-- Savings Legend -->
                             <div class="flex items-center gap-1.5">
                               <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" [ngClass]="currentPeriodSummary.savings >= 0 ? 'bg-success-500' : 'bg-error-500'"></span>
                               <span class="text-neutral-500">{{ currentPeriodSummary.savings >= 0 ? 'Savings' : 'Deficit' }}</span>
+                              <span class="text-neutral-400 text-xxs">({{ (currentPeriodSummary.savingsRate | abs) | number:'1.0-0' }}%)</span>
                             </div>
 
                            
@@ -305,7 +307,7 @@
                       
 
 
-                        <div>
+                        <div class="px-4">
                             <!-- show income and expence -->
                 
                           <div class="flex justify-between text-sm mb-1">
@@ -327,9 +329,7 @@
                             <span class="text-neutral-500 font-semibold text-sm"
                               [class.text-success-800]="currentPeriodSummary.savings >= 0"
                               [class.text-error-600]="currentPeriodSummary.savings < 0">
-                               <span class="text-xs font-normal ml-1">
-                                ({{ currentPeriodSummary.savingsRate | number:'1.1-1' }}%)
-                              </span>
+                             
                               {{ currentPeriodSummary.savings >= 0 ? '+' : '-' }}{{ (currentPeriodSummary.savings | abs) | currency:{compact:false,round:true} }}
                             </span>
                           </div>
@@ -348,7 +348,7 @@
               </mat-card-content>
               @defer (on viewport) {
               <!-- ═══════════ CATEGORY BREAKDOWN ═══════════ -->
-              <mat-card-content class="!px-6 !pt-1">
+              <mat-card-content class="!px-4 !pt-1">
                 <div class="flex items-center flex-wrap mb-2 mt-3 gap-2 justify-between">
                   <p class="text-lg font-semibold text-neutral-500 flex items-center gap-2 !mb-0">
                     <mat-icon class="text-primary-500">pie_chart</mat-icon>
