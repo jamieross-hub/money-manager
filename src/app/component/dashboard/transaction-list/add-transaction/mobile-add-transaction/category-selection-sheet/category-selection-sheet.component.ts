@@ -94,15 +94,21 @@ export class CategorySelectionSheetComponent implements OnInit {
                     }
                 });
 
-                // Show categories matching current type, hide system categories
-                let filtered = categories.filter(c => !c.isSystem && c.type === this.transactionType);
+                // Show all non-system categories, let user see both Expense and Income
+                let filtered = categories.filter(c => !c.isSystem && (c.type === 'income' || c.type === 'expense'));
 
                 if (search) {
                     filtered = filtered.filter(c => c.name.toLowerCase().startsWith(search));
                 }
 
-                // Sort by frequency (most used first) then by name
+                // Sort by prioritising current transaction type first, then frequency
                 const sorted = filtered.sort((a, b) => {
+                    const typePriorityA = a.type === this.transactionType ? 1 : 0;
+                    const typePriorityB = b.type === this.transactionType ? 1 : 0;
+
+                    if (typePriorityB !== typePriorityA) {
+                        return typePriorityB - typePriorityA;
+                    }
 
                     const freqA = a.id ? (frequencyMap.get(a.id) || 0) : 0;
                     const freqB = b.id ? (frequencyMap.get(b.id) || 0) : 0;
@@ -113,16 +119,7 @@ export class CategorySelectionSheetComponent implements OnInit {
                     return a.name.localeCompare(b.name);
                 });
 
-                // De-duplicate by name (case-insensitive) to avoid visual duplicates
-                const seen = new Set<string>();
-                return sorted.filter(c => {
-                    const nameLower = (c.name || '').toLowerCase();
-                    if (seen.has(nameLower)) {
-                        return false;
-                    }
-                    seen.add(nameLower);
-                    return true;
-                });
+                return sorted;
             })
         );
     }
