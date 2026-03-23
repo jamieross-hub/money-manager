@@ -104,7 +104,7 @@
 .section-label {
   @apply text-xs;
   color: var(--neutral-700);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   margin-bottom: 12px;
   padding-left: 4px;
 }
@@ -382,6 +382,17 @@
     border-color: var(--primary-200) !important;
     background-color: color-mix(in srgb, var(--primary-100), transparent 90%) !important;
   }
+}
+
+/* ── All Settled Banner ────────────── */
+.all-settled-banner {
+  background-color: var(--surface-200);
+  border: 1px solid var(--surface-300);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border-left: 4px solid var(--success-500);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
 }
 
 @media (max-width: 480px) {

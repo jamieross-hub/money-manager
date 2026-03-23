@@ -897,7 +897,35 @@ export class TransactionsService extends BaseService {
         }
     }
 
+    /**
+     * Cleanup transactions with status 'deleted' older than 30 days
+     */
+    public cleanupOldDeletedTransactions(userId: string, cleanupIds: string[], familyId?: string): void {
+        if (!cleanupIds || cleanupIds.length === 0) return;
 
+        console.log(`[TransactionsService] Cleaning up ${cleanupIds.length} old deleted transactions`);
+
+        if (this.isGuest()) {
+            const transactions = this.localStorageUtility.getEntities<Transaction>('transactions');
+            const remaining = transactions.filter(t => !cleanupIds.includes(t.id || ''));
+            this.localStorageUtility.saveEntities('transactions', remaining);
+            
+            const current = this.transactionsSubject.getValue();
+            this.transactionsSubject.next(current.filter(t => !cleanupIds.includes(t.id || '')));
+            return;
+        }
+
+        cleanupIds.forEach(id => {
+            this.addToSyncQueue('delete', { id, familyId }, userId).catch(err => {
+                console.error('Failed to add cleanup delete to sync queue:', err);
+            });
+            const itemKey = LocalStorageKeyHelper.getTransactionItemKey(id, familyId);
+            this.localStorageUtility.removeTransaction(itemKey);
+        });
+
+        const updatedList = this.getCachedTransactions(userId, familyId);
+        this.transactionsSubject.next(updatedList);
+    }
 
     /**
      * Check if Firebase validation error

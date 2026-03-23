@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { Transaction } from '../models/transaction.model';
+import { TransactionsService } from './db/transactions.service';
 import { RecurringTemplate } from '../models/recurring.model';
 import { Category, Account } from '../models';
 import { UserService } from './db/user.service';
@@ -30,7 +31,57 @@ export interface ProcessorOutput {
 export class TransactionProcessorService {
   private readonly userService = inject(UserService);
   private readonly currencyService = inject(CurrencyService);
+  private readonly transactionsService = inject(TransactionsService);
   
+  private worker: Worker | null = null;
+
+  constructor() {
+    if (typeof Worker !== 'undefined') {
+      this.worker = new Worker(new URL('../../worker/transaction-processor.worker', import.meta.url));
+      this.worker.onmessage = ({ data }) => {
+        if (data.groupedTransactions) {
+          data.groupedTransactions.forEach((group: any) => {
+            if (group.totalIncome > 0) {
+              group.incomeFormatted = this.currencyService.formatAmount(group.totalIncome, { round: true });
+            }
+            if (group.totalExpenses > 0) {
+              group.expenseFormatted = this.currencyService.formatAmount(group.totalExpenses, { round: true });
+            }
+            if (group.totalShare > 0 && group.date.startsWith('direct_')) {
+              group.dateHeader += ` (Share: ${this.currencyService.formatAmount(group.totalShare, { round: true })})`;
+            }
+            if (group.totalShare > 0 && group.date.startsWith('involved_')) {
+              group.dateHeader += ` (Share: ${this.currencyService.formatAmount(group.totalShare, { round: true })})`;
+            }
+          });
+        }
+
+        if (data.flattenedTransactions) {
+          data.flattenedTransactions.forEach((item: any) => {
+            if (item._isHeader) {
+              const group = data.groupedTransactions.find((g: any) => g.date === item.id.replace('header-', ''));
+              if (group) {
+                item.incomeFormatted = group.incomeFormatted;
+                item.expenseFormatted = group.expenseFormatted;
+                item.dateHeader = group.dateHeader;
+              }
+            }
+          });
+        }
+
+        this._output.set(data);
+        this._isProcessing.set(false);
+        
+        if (data.cleanupIds && data.cleanupIds.length > 0) {
+          const userId = this.userService.getCurrentUserId();
+          if (userId) {
+            this.transactionsService.cleanupOldDeletedTransactions(userId, data.cleanupIds, data.familyId);
+          }
+        }
+      };
+    }
+  }
+
   // Output Signals
   private _output = signal<ProcessorOutput>({
     filteredTransactions: [],
@@ -97,13 +148,17 @@ export class TransactionProcessorService {
 
     this._isProcessing.set(true);
 
-    // Use requestIdleCallback so heavy processing runs during browser idle time
-    // rather than blocking the render pipeline. Falls back to setTimeout on
-    // browsers that don't support rIC (e.g. Firefox < 55, Safari < 16).
     const run = () => {
-      const result = this.executeLogic(data);
-      this._output.set(result);
-      this._isProcessing.set(false);
+      if (this.worker) {
+        this.worker.postMessage({
+          ...data,
+          currentUserId: this.userService.getCurrentUserId()
+        });
+      } else {
+        const result = this.executeLogic(data);
+        this._output.set(result);
+        this._isProcessing.set(false);
+      }
       this.debounceTimer = null;
     };
 

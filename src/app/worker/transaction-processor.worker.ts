@@ -8,6 +8,26 @@ import { DateUtil } from '../util/helpers/date.util';
 dayjs.extend(isBetween);
 dayjs.extend(weekOfYear);
 
+const getMemberAmount = (tx: any, mId: string, type: 'paid' | 'share'): number => {
+  const amount = Number(tx.amount) || 0;
+  const sd = tx.splitData;
+  if (!sd) {
+    return (tx.userId === mId || tx.createdBy === mId) ? amount : 0;
+  }
+  if (type === 'paid') {
+    if (sd.paidByUserId === 'multiple' && sd.paidBy?.length) {
+      return Number(sd.paidBy.find((p: any) => p.userId === mId)?.amount) || 0;
+    }
+    const payerId = sd.paidByUserId || tx.userId;
+    return (payerId === mId) ? amount : 0;
+  } else {
+    if (sd.splitBetween && sd.splitBetween.length > 0) {
+      return Number(sd.splitBetween.find((s: any) => s.userId === mId)?.amount) || 0;
+    }
+    return (tx.userId === mId) ? amount : 0;
+  }
+};
+
 addEventListener('message', ({ data }) => {
   const { 
     transactions, 
@@ -30,6 +50,34 @@ addEventListener('message', ({ data }) => {
   if (!transactions) {
     postMessage({ flattenedTransactions: [], totalIncome: 0, totalExpenses: 0, filteredCount: 0 });
     return;
+  }
+
+  // Cleanup Detection: soft-deleted older than 30 days
+  const thirtyDaysAgo = dayjs().subtract(30, 'day').startOf('day');
+  const cleanupIds: string[] = [];
+
+  transactions.forEach((tx: any) => {
+    if (tx.status === 'deleted') {
+      const updatedAt = tx.updatedAt;
+      if (updatedAt) {
+        let updateTime = dayjs(updatedAt);
+        if (updatedAt && typeof updatedAt === 'object' && 'seconds' in updatedAt) {
+            updateTime = dayjs(updatedAt.seconds * 1000);
+        } else if (updatedAt instanceof Date) {
+            updateTime = dayjs(updatedAt);
+        } else {
+            updateTime = dayjs(updatedAt as any);
+        }
+        
+        if (updateTime.isValid() && updateTime.isBefore(thirtyDaysAgo)) {
+            cleanupIds.push(tx.id);
+        }
+      }
+    }
+  });
+
+  if (cleanupIds.length > 0) {
+    console.log(`[Worker] Found ${cleanupIds.length} soft-deleted transactions older than 30 days for cleanup.`);
   }
 
   // 1. Helper: Map creation
@@ -178,7 +226,7 @@ addEventListener('message', ({ data }) => {
   }
 
   // Date Range (Skip if source is upcoming, as it's already range-limited)
-  if (range !== 'upcoming') {
+  if (range !== 'upcoming' && !isRecurringMode) {
     if (filters.selectedDateRange) {
       const start = dayjs(filters.selectedDateRange.startDate).startOf('day');
       const end = dayjs(filters.selectedDateRange.endDate).endOf('day');
@@ -200,14 +248,44 @@ addEventListener('message', ({ data }) => {
     filtered = filtered.filter((t: any) => !!t.isRecurring === filters.isRecurring);
   }
 
+  // Account filter
+  if (filters.accountFilter && filters.accountFilter.length > 0) {
+    filtered = filtered.filter((t: any) => filters.accountFilter.includes(t.accountId));
+  }
+
+  // Account Type filter
+  if (filters.accountTypeFilter && filters.accountTypeFilter.length > 0) {
+    filtered = filtered.filter((t: any) => {
+      const account = accountMap.get(t.accountId);
+      return account && filters.accountTypeFilter.includes(account.type);
+    });
+  }
+
+  // Settlement range filter
+  if (range === 'settlement') {
+    filtered = filtered.filter((t: any) => !!t.settlementId);
+  } else if (range === 'no-settlement' || range === 'category') {
+    filtered = filtered.filter((t: any) => !t.settlementId);
+  }
+
   // Member filter (family split mode)
   if (filters.selectedMember) {
-    filtered = filtered.filter((t: any) => t.userId === filters.selectedMember || t.createdBy === filters.selectedMember);
+    const mId = filters.selectedMember;
+    filtered = filtered.filter((t: any) => {
+      if (t.settlementFromUserId === mId || t.settlementToUserId === mId) return true;
+      if (t.splitData) {
+        const sd = t.splitData;
+        const isPayer = sd.paidByUserId === mId || (sd.paidBy && sd.paidBy.some((p: any) => p.userId === mId)) || (!sd.paidByUserId && t.userId === mId);
+        const isInSplit = sd.splitBetween && sd.splitBetween.some((s: any) => s.userId === mId);
+        return isPayer || isInSplit;
+      }
+      return t.userId === mId || t.createdBy === mId;
+    });
   }
 
   // Merging Logic (Ported from component)
   let mergedData = filtered;
-  if (range !== 'upcoming' && range !== null && !isRecurringMode && !isDeletedMode) {
+  if (range !== 'upcoming' && range !== 'settlement' && range !== null && !isRecurringMode && !isDeletedMode && !isFamilyMode) {
     const endOfCheck = dayjs().add(3, 'day').endOf('day').toDate();
     const templates = (recurringTemplates || []).map((t: any) => ({ ...t, isRecurring: true }));
     const dueSoon = generateUpcomingTransactions(templates, dayjs().subtract(1, 'year').toDate(), endOfCheck, transactions);
@@ -256,12 +334,37 @@ addEventListener('message', ({ data }) => {
   const finalSortedTransactions = sortTransactions(mergedData, sort);
 
   // 6. Totals (settlement transactions are excluded from both income and expense totals)
+  const memberId = filters.selectedMember;
+  
   const totalIncome = mergedData
     .filter((t: any) => t.type === 'income' && !t.id?.startsWith('upcoming-') && !t.settlementId)
-    .reduce((sum: number, t: any) => sum + t.amount, 0);
+    .reduce((sum: number, t: any) => sum + (memberId ? getMemberAmount(t, memberId, 'share') : t.amount), 0);
+    
   const totalExpenses = mergedData
     .filter((t: any) => t.type === 'expense' && !t.id?.startsWith('upcoming-') && !t.settlementId)
+    .reduce((sum: number, t: any) => sum + (memberId ? getMemberAmount(t, memberId, 'share') : t.amount), 0);
+    
+  const totalSettlement = mergedData
+    .filter((t: any) => !!t.settlementId && !t.id?.startsWith('upcoming-'))
     .reduce((sum: number, t: any) => sum + t.amount, 0);
+
+  const userIncome = currentUserId ? mergedData
+    .filter((t: any) => t.type === 'income' && !t.id?.startsWith('upcoming-') && !t.settlementId)
+    .reduce((sum: number, t: any) => sum + getMemberAmount(t, currentUserId, 'share'), 0) : 0;
+    
+  const userExpenses = currentUserId ? mergedData
+    .filter((t: any) => t.type === 'expense' && !t.id?.startsWith('upcoming-') && !t.settlementId)
+    .reduce((sum: number, t: any) => sum + getMemberAmount(t, currentUserId, 'share'), 0) : 0;
+
+  const userPaidIncome = currentUserId ? mergedData
+    .filter((t: any) => t.type === 'income' && !t.id?.startsWith('upcoming-') && !t.settlementId)
+    .reduce((sum: number, t: any) => sum + getMemberAmount(t, currentUserId, 'paid'), 0) : 0;
+
+  const userPaidExpense = currentUserId ? mergedData
+    .filter((t: any) => t.type === 'expense' && !t.id?.startsWith('upcoming-') && !t.settlementId)
+    .reduce((sum: number, t: any) => sum + getMemberAmount(t, currentUserId, 'paid'), 0) : 0;
+
+  const userPaid = userPaidExpense - userPaidIncome;
 
   // 6. Grouping and View Models
   interface Group {
@@ -269,6 +372,10 @@ addEventListener('message', ({ data }) => {
     dateHeader: string;
     transactions: any[];
     isUpcomingGroup?: boolean;
+    totalIncome: number;
+    totalExpenses: number;
+    totalShare: number;
+    totalCost: number;
   }
 
   const groupsMap = new Map<string, Group>();
@@ -284,7 +391,7 @@ addEventListener('message', ({ data }) => {
     const category = categoryMap.get(tx.categoryId || '');
     const account = accountMap.get(tx.accountId || '');
 
-    const createdAt = tx.createdAt; // DON'T fallback to tx.date for "is new" check
+    const createdAt = tx.createdAt; 
     const createdAtDate = createdAt ? toDate(createdAt) : null;
 
     const txView = {
@@ -302,9 +409,10 @@ addEventListener('message', ({ data }) => {
       _syncStatusInfo: tx.syncStatus === 'failed' ? 'Sync failed' : (tx.syncStatus === 'pending' ? 'Pending sync' : 'Synced'),
       _recurringInfo: tx.isRecurring ? `Repeats ${tx.recurringInterval?.toLowerCase()}` : '',
       _isIncome: (() => {
+        const targetId = memberId || currentUserId;
         if (tx.settlementId) {
-          if (currentUserId === tx.settlementToUserId) return true;
-          if (currentUserId === tx.settlementFromUserId) return false;
+          if (targetId === tx.settlementToUserId) return true;
+          if (targetId === tx.settlementFromUserId) return false;
         }
         return tx.type === 'income';
       })(),
@@ -323,19 +431,35 @@ addEventListener('message', ({ data }) => {
       })(),
       _isOverdue: txDate ? dateObj.isBefore(today, 'day') : false,
       _isDeleted: tx.status === 'deleted',
-      _popState: (createdAtDate && createdAtDate.getTime() > sessionStartTime) ? 'new' : 'old'
+      _popState: (createdAtDate && createdAtDate.getTime() > sessionStartTime) ? 'new' : 'old',
+      _isHeader: false
     };
 
     let dateKey: string;
-    if (txView._isUpcoming && txView._isOverdue) {
-      dateKey = 'overdue';
-    } else if (txView._isUpcoming && range !== 'upcoming') {
-      dateKey = 'upcoming';
-    } else if ((range === 'this-year' || range === null) && !dateObj.isSame(today, 'day') && !dateObj.isSame(yesterday, 'day')) {
-      dateKey = dateObj.format('YYYY-MM');
-    } else {
-      dateKey = dateObj.format('YYYY-MM-DD');
+    let involvementPrefix = '';
+    
+    if (memberId) {
+      const isDirect = tx.splitData 
+        ? (tx.splitData.paidByUserId === memberId || (tx.splitData.paidBy && tx.splitData.paidBy.some((p: any) => p.userId === memberId)) || (!tx.splitData.paidByUserId && tx.userId === memberId))
+        : (tx.settlementFromUserId === memberId || tx.settlementToUserId === memberId || tx.userId === memberId || tx.createdBy === memberId);
+      involvementPrefix = isDirect ? 'direct_' : 'involved_';
     }
+
+    if (txView._isUpcoming && txView._isOverdue) {
+      dateKey = involvementPrefix + 'overdue';
+    } else if (txView._isUpcoming && range !== 'upcoming') {
+      dateKey = involvementPrefix + 'upcoming';
+    } else if (range === 'category') {
+      dateKey = involvementPrefix + (tx.categoryId || 'unknown');
+    } else if (memberId) {
+      dateKey = involvementPrefix + 'flat';
+    } else if ((range === 'this-year' || range === null) && !dateObj.isAfter(today, 'day') && !dateObj.isSame(today, 'day') && !dateObj.isSame(yesterday, 'day')) {
+      dateKey = involvementPrefix + dateObj.format('YYYY-MM');
+    } else {
+      dateKey = involvementPrefix + dateObj.format('YYYY-MM-DD');
+    }
+
+    const pureDateKey = involvementPrefix ? dateKey.replace(involvementPrefix, '') : dateKey;
 
     if (isRecurringMode && txView._isUpcoming) {
       return; 
@@ -345,36 +469,105 @@ addEventListener('message', ({ data }) => {
     if (!group) {
       let header = dateHeaderCache.get(dateKey);
       if (!header) {
-        if (dateKey === 'overdue') header = 'Overdue Recurring';
-        else if (dateKey === 'upcoming') header = 'Upcoming';
-        else if (dateObj.isSame(today, 'day')) header = 'Today';
-        else if (dateObj.isSame(yesterday, 'day')) header = 'Yesterday';
-        else if (range === 'this-year' || range === null) header = dateObj.format('MMMM YYYY');
-        else if (isDateSort) header = dateObj.format('dddd, DD MMM YYYY');
-        else header = dateObj.format('DD MMM YYYY');
+        let baseHeader = '';
+        if (pureDateKey === 'overdue') baseHeader = 'Overdue Recurring';
+        else if (pureDateKey === 'upcoming') baseHeader = 'Upcoming';
+        else if (range === 'category') {
+          const cat = categoryMap.get(pureDateKey);
+          baseHeader = cat ? cat.name : 'Unknown Category';
+        }
+        else if (memberId && pureDateKey === 'flat') {
+          baseHeader = involvementPrefix === 'direct_' ? 'Direct Involvement' : 'Part of Transactions';
+        }
+        else if (dateObj.isSame(today, 'day')) baseHeader = 'Today';
+        else if (dateObj.isSame(yesterday, 'day')) baseHeader = 'Yesterday';
+        else if (dateObj.isAfter(today, 'day')) {
+          if (dateObj.isSame(today.add(1, 'day'), 'day')) baseHeader = 'Tomorrow';
+          else baseHeader = dateObj.format('dddd, DD MMM YYYY');
+        }
+        else if (range === 'this-year' || range === null) baseHeader = dateObj.format('MMMM YYYY');
+        else if (isDateSort) baseHeader = dateObj.format('dddd, DD MMM YYYY');
+        else baseHeader = dateObj.format('DD MMM YYYY');
+
+        header = baseHeader;
         dateHeaderCache.set(dateKey, header);
       }
-      group = { date: dateKey, dateHeader: header, transactions: [], isUpcomingGroup: txView._isUpcoming };
+      group = { 
+        date: dateKey, 
+        dateHeader: header, 
+        transactions: [], 
+        isUpcomingGroup: txView._isUpcoming,
+        totalIncome: 0,
+        totalExpenses: 0,
+        totalShare: 0,
+        totalCost: 0
+      };
       groupsMap.set(dateKey, group);
     }
-    group.transactions.push(txView);
+
+    if (range === 'category') {
+      let summaryTx = group.transactions[0];
+      if (!summaryTx) {
+        summaryTx = {
+          ...txView,
+          id: `summary-${pureDateKey}`,
+          notes: 'Multiple transactions',
+          _isSummary: true,
+          _txCount: 0,
+          amount: 0
+        };
+        group.transactions.push(summaryTx);
+      }
+      summaryTx.amount += tx.amount;
+      summaryTx._txCount++;
+      summaryTx.notes = `${summaryTx._txCount} transactions`;
+    } else {
+      group.transactions.push(txView);
+    }
+
+    if (!txView._isUpcoming && !tx.settlementId) {
+      let amt = tx.amount;
+      let shareAmt = 0;
+      if (memberId) {
+        amt = getMemberAmount(tx, memberId, involvementPrefix === 'direct_' ? 'paid' : 'share');
+        shareAmt = getMemberAmount(tx, memberId, 'share');
+      }
+      if (txView._isIncome) group.totalIncome += amt;
+      else {
+        group.totalExpenses += amt;
+        group.totalShare += shareAmt;
+        group.totalCost += tx.amount;
+      }
+    }
   });
 
   const groups = Array.from(groupsMap.values());
 
-  // Re-order groups if needed
+  // Set totals and classes (except upcoming)
+  groups.forEach(group => {
+    if (!group.isUpcomingGroup && group.transactions.length > 0) {
+      if (group.date.startsWith('involved_') && group.totalCost > 0) {
+        group.totalExpenses = group.totalCost;
+      }
+    }
+  });
+
   let finalGroups = groups;
-  if (isDateSort) {
+  if (isDateSort || range === 'category') {
     finalGroups = groups.sort((a, b) => {
-      // Priority headers at the top
       if (a.dateHeader === 'Overdue Recurring' && b.dateHeader !== 'Overdue Recurring') return -1;
       if (b.dateHeader === 'Overdue Recurring' && a.dateHeader !== 'Overdue Recurring') return 1;
-      if (a.dateHeader === 'Upcoming' && b.dateHeader !== 'Upcoming') {
-         // Upcoming is after Overdue but before others
-         return -1; 
-      }
-      if (b.dateHeader === 'Upcoming' && a.dateHeader !== 'Upcoming') {
-         return 1;
+      if (a.dateHeader === 'Upcoming' && b.dateHeader !== 'Upcoming') return -1; 
+      if (b.dateHeader === 'Upcoming' && a.dateHeader !== 'Upcoming') return 1;
+
+      // Involvement sorting
+      if (a.date.startsWith('direct_') && b.date.startsWith('involved_')) return -1;
+      if (a.date.startsWith('involved_') && b.date.startsWith('direct_')) return 1;
+
+      if (range === 'category') {
+        const volA = a.totalIncome + a.totalExpenses;
+        const volB = b.totalIncome + b.totalExpenses;
+        return volB - volA; // Highest volume first
       }
 
       return sort === 'date-asc'
@@ -392,22 +585,25 @@ addEventListener('message', ({ data }) => {
       id: `header-${group.date}` 
     });
     group.transactions.forEach((tx: any) => {
-      flattened.push({ 
-        ...tx,
-        _isHeader: false
-      });
+      flattened.push(tx); // refs
     });
   });
 
   postMessage({
     filteredTransactions: mergedData,
     flattenedTransactions: flattened,
+    groupedTransactions: finalGroups,
     totalIncome,
     totalExpenses,
+    totalSettlement,
     filteredCount,
+    userIncome,
+    userExpenses,
+    userPaid,
     fingerprint,
     currentUserId,
     isFamilyMode,
-    familyId
+    familyId,
+    cleanupIds
   });
 });

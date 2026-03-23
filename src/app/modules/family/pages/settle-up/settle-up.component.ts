@@ -77,6 +77,9 @@ export class SettleUpComponent implements OnInit {
   settlements = toSignal(this.store.select(FamilySelectors.selectSettlements).pipe(debounceTime(50), distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as Settlement[] });
   loading = toSignal(this.store.select(TransactionsSelectors.selectTransactionsLoading).pipe(distinctUntilChanged()), { initialValue: true });
   settlementsLoading = toSignal(this.store.select(FamilySelectors.selectSettlementsLoading).pipe(distinctUntilChanged()), { initialValue: false });
+  isProcessorProcessing = this.familyProcessor.isProcessing;
+
+  isLoadingCombined = computed(() => this.loading() || this.isProcessorProcessing() || this.settlementsLoading());
 
   /** Current user's UID from AppState.profile */
   private readonly profile = this.store.selectSignal(ProfileSelectors.selectProfile);
