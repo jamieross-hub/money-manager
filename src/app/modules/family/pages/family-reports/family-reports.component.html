@@ -117,17 +117,17 @@
       <div class="  mt-5">
         <div class="flex justify-between items-center mb-3">
           <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Expense by Category</h2>
-          <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 border border-gray-200 dark:border-gray-700 origin-right">
+          <div class="flex items-center bg-surface-100 rounded-lg p-0.5 border border-gray-200 dark:border-gray-700 origin-right ">
             <button (click)="categoryViewMode.set('single')" 
-              [class]="categoryViewMode() === 'single' ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white shadow-sm' : 'text-gray-500'"
-              class="px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all flex items-center gap-1">
-              <mat-icon class="!text-[13px] !w-3.5 !h-3.5">person</mat-icon>
+              [class]="categoryViewMode() === 'single' ? 'bg-white  text-primary-500 dark:text-white shadow-sm' : 'text-gray-500'"
+              class="px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all flex items-center justify-center">
+              <mat-icon class="!text-[18px] !w-4.5 !h-4.5 !flex !items-center !justify-center">person</mat-icon>
               
             </button>
             <button (click)="categoryViewMode.set('group')" 
-              [class]="categoryViewMode() === 'group' ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white shadow-sm' : 'text-gray-500'"
-              class="px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all flex items-center gap-1">
-              <mat-icon class="!text-[13px] !w-3.5 !h-3.5">group</mat-icon>
+              [class]="categoryViewMode() === 'group' ? 'bg-white  text-primary-500 dark:text-white shadow-sm' : 'text-gray-500'"
+              class="px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all flex items-center justify-center">
+              <mat-icon class="!text-[18px] !w-4.5 !h-4.5 !flex !items-center !justify-center">group</mat-icon>
               
             </button>
           </div>
@@ -136,7 +136,7 @@
           @for (cat of groupedCategoryBreakdown(); track cat.category) {
             <div class="flex items-center gap-3 px-4 py-3">
               <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-primary-50 dark:bg-primary-900/30 flex-shrink-0">
-                <mat-icon class="!text-sm text-primary-600 dark:text-primary-300">{{ cat.groupIcon || getCategoryIcon(cat.category) }}</mat-icon>
+                <mat-icon class="text-primary-600 dark:text-primary-300">{{ cat.groupIcon || getCategoryIcon(cat.category) }}</mat-icon>
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm text-gray-800 dark:text-gray-100 font-medium">{{ cat.group || cat.category }}</p>
