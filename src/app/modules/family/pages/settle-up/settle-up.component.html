@@ -146,13 +146,13 @@
     <!-- ── EMPTY STATE ── -->
     @if (balances().length === 0 && !isLoadingCombined()) {
       @if (settlements().length === 0) {
-        <section class="empty-view">
+        <!-- <section class="empty-view">
           <div class="empty-icon-wrap">
             <mat-icon>check_circle</mat-icon>
           </div>
           <h3 class="empty-title">All Square!</h3>
           <p class="empty-desc">There are no outstanding balances in this group. Everyone is settled up.</p>
-        </section>
+        </section> -->
       } @else {
         <!-- Inline All Settled Banner Card -->
         <div class="all-settled-banner shadow-sm">
