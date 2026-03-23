@@ -745,6 +745,21 @@
             @if (selectedTx?.id === item.id) {
             <div class="transaction-details-expanded">
               <div class="details-container">
+
+  
+
+                <!-- Amount Information -->
+                <div class="detail-row">
+                  <div class="detail-label">
+                    <mat-icon class="detail-icon">payments</mat-icon>
+                    <span>Amount</span>
+                  </div>
+                  <div class="detail-value !text-xs">
+                    <span>
+                      {{ item._isIncome ? '+' : '-' }}{{ item.amount | currency:{round:false,compact:false} }}
+                    </span>
+                  </div>
+                </div>
                 <!-- Account Information -->
                 <div class="detail-row">
                   <div class="detail-label">
