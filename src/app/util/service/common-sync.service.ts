@@ -280,8 +280,8 @@ export class CommonSyncService implements OnDestroy {
    */
   private async initializeBackgroundSync(): Promise<void> {
     try {
-      if (!('serviceWorker' in navigator) || !('sync' in window)) {
-        this.warn('Background Sync API not supported');
+      if (!('serviceWorker' in navigator) || !('SyncManager' in window)) {
+        this.log('Background Sync API not supported');
         return;
       }
 
