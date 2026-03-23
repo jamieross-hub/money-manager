@@ -1,11 +1,30 @@
 <div class="bg-surface-100 p-1  lg:px-16 xl:px-32 2xl:px-48">
   <div class="max-w-7xl mx-auto">
 
+    <!-- ═══════════ PAGE HEADING ═══════════ -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8 mt-6 px-4 sm:px-2">
+      <div>
+        <p class="text-2xl md:text-3xl font-black tracking-tight text-neutral-800 flex items-center gap-2.5 mb-1.5">
+          <mat-icon class="text-primary-500 !text-2xl md:!text-3xl !w-auto !h-auto flex-shrink-0">donut_large</mat-icon>
+          <span>Financial Reports</span>
+        </p>
+        <p class="text-neutral-400 text-xs sm:text-sm font-medium">
+          Track your spending patterns and predict future expenses
+        </p>
+      </div>
+      
+      <div class="flex items-center self-start sm:self-center">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary-100/50 text-primary-600 border border-primary-200/50 shadow-sm transition-all hover:bg-primary-100">
+          <mat-icon class="!text-xs !w-auto !h-auto">insights</mat-icon>
+          Smart Insights
+        </span>
+      </div>
+    </div>
+
     <!-- ═══════════ HEADER ═══════════ -->
-    <div class="mb-10 mt-6 group relative">
+    <!-- <div class="mb-10 mt-6 group relative">
       <div class="grid items-start" style="grid-template-areas: 'stack';"
         (touchstart)="onSummaryTouchStart($event)" (touchend)="onSummaryTouchEnd($event)">
-        <!-- Category Card -->
         <div class="w-full transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] cursor-pointer origin-top"
           style="grid-area: stack;"
                     [ngClass]="activeSummaryCard === 'category' 
@@ -15,7 +34,6 @@
 
         </div>
 
-        <!-- Account Card -->
         <div class="w-full transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] cursor-pointer origin-top"
           style="grid-area: stack;"
                     [ngClass]="activeSummaryCard === 'account' 
@@ -25,25 +43,7 @@
 
         </div>
       </div>
-    </div>
-    <!-- <mat-card class="mb-6 !rounded-xl">
-    <mat-card-content>
-      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 pt-2">
-        <div class="flex-1">
-          <h2 class="text-2xxl sm:text-3xl font-bold text-neutral-900 mb-1">Financial Reports</h2>
-          <p class="text-neutral-400 text-sm sm:text-base">
-            Track your spending patterns and predict future expenses
-          </p>
-        </div>
-        <mat-chip-set>
-          <mat-chip color="primary" highlighted>
-            <mat-icon matChipAvatar>analytics</mat-icon>
-            Analytics
-          </mat-chip>
-        </mat-chip-set>
-      </div>
-    </mat-card-content>
-  </mat-card> -->
+    </div> -->
 
   <!-- ═══════════ TABS ═══════════ -->
   <mat-tab-group animationDuration="300ms" [selectedIndex]="activeTab === 'summary' ? 0 : 1"
@@ -217,12 +217,12 @@
                 <mat-card-content class="!px-4">
                   <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
                     <!-- Title -->
-                    <div class="flex items-center gap-2">
+                    <!-- <div class="flex items-center gap-2">
                       <div class="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-900/10 flex items-center justify-center flex-shrink-0">
                         <mat-icon class="text-primary-500">date_range</mat-icon>
                       </div>
-                      <h3 class="text-lg font-bold text-neutral-800 dark:text-neutral-100 mb-0">Period Summary</h3>
-                    </div>
+                      <h3 class="text-lg font-bold text-neutral-800 dark:text-neutral-100 mb-0">Summary</h3>
+                    </div> -->
 
                     <!-- Controls Group -->
                     <div class="flex items-center gap-3 w-full md:w-auto">
@@ -354,15 +354,15 @@
                     <mat-icon class="text-primary-500">pie_chart</mat-icon>
                     Expense
                   </p>
-                  <span class="text-xs font-medium text-primary-600 bg-primary-50/80 px-2.5 py-1 rounded-full border border-primary-100/50 flex items-center gap-1.5">
+                  <!-- <span class="text-xs font-medium text-primary-600 bg-primary-50/80 px-2.5 py-1 rounded-full border border-primary-100/50 flex items-center gap-1.5">
                     <mat-icon class="!text-sm !w-auto !h-auto">event</mat-icon>
                     {{ getPeriodLabel('current') }}
-                  </span>
+                  </span> -->
                 </div>
                 <div>
                   @for (cat of groupedCategoryBreakdown(); track cat.categoryId; let i = $index; let first = $first) {
                     <!-- <mat-divider *ngIf="!first"></mat-divider> -->
-                    <div class="group flex items-center gap-4 py-3 hover:bg-surface-100/60 rounded-xl transition-all duration-200 cursor-pointer mb-1 border-b border-neutral-100/50 last:border-b-0"
+                    <div class="group flex items-center gap-4 py-3 hover:bg-surface-100/60 rounded-xl transition-all duration-200 cursor-pointer mb-1 "
                       (click)="toggleExpand(cat.categoryId)">
                       <!-- Left: Icon Box -->
                       <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105"
@@ -453,6 +453,13 @@
                       </div>
                     }
                   }
+
+                  <div class="flex justify-center mt-4">
+                    <button mat-button color="primary" routerLink="/dashboard/category" class="!text-xs !font-bold flex items-center gap-1 group !h-7 !px-3 transition-opacity duration-200">
+                      <span>View All Categories</span>
+                      <mat-icon class="!text-sm !w-auto !h-auto transition-transform group-hover:translate-x-1">chevron_right</mat-icon>
+                    </button>
+                  </div>
                 </div>
                 <!-- category inslight  later -->
               </mat-card-content>
