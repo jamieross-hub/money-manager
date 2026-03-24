@@ -55,6 +55,7 @@ export interface ReportsProcessorOutput {
     currentPeriodSummary: PeriodSummary | null;
     previousPeriodSummary: PeriodSummary | null;
     filteredMonthlySummaries: MonthlySummary[];
+    currentPeriodTransactions: any[];
     nextMonthPrediction: Prediction | null;
     next3MonthsPrediction: Prediction | null;
     yearEndPrediction: Prediction | null;
@@ -76,6 +77,7 @@ export class ReportsProcessorService {
         currentPeriodSummary: null,
         previousPeriodSummary: null,
         filteredMonthlySummaries: [],
+        currentPeriodTransactions: [],
         nextMonthPrediction: null,
         next3MonthsPrediction: null,
         yearEndPrediction: null
@@ -89,6 +91,7 @@ export class ReportsProcessorService {
     public currentPeriodSummary = computed(() => this._output().currentPeriodSummary);
     public previousPeriodSummary = computed(() => this._output().previousPeriodSummary);
     public filteredMonthlySummaries = computed(() => this._output().filteredMonthlySummaries);
+    public currentPeriodTransactions = computed(() => this._output().currentPeriodTransactions);
     public nextMonthPrediction = computed(() => this._output().nextMonthPrediction);
     public next3MonthsPrediction = computed(() => this._output().next3MonthsPrediction);
     public yearEndPrediction = computed(() => this._output().yearEndPrediction);
@@ -160,17 +163,24 @@ export class ReportsProcessorService {
 
         this.isProcessing.set(true);
 
-        // ── IndexedDB Caching ──
+        // ── Optimized Fingerprinting & Caching ──
         const baseFingerprint = this.generateBaseFingerprint(data.transactions, data.currentUserId);
-        const cached = this.storageService.getItem<{ fingerprint: string, data: any }>('reports_base_cache');
         
-        const useCache = cached && cached.fingerprint === baseFingerprint;
-        const cachedBase = useCache ? cached.data : null;
+        // Only fetch from storage if we don't have a hot worker/cache
+        const cached = this.storageService.getItem<{ fingerprint: string, data: any }>('reports_base_cache');
+        const isCacheValid = cached && cached.fingerprint === baseFingerprint;
+        const cachedBase = isCacheValid ? cached.data : null;
 
-        // Optimization: Omit transactions if using cache and not looking at weekly view
+        // Optimization: Only send transactions if the worker needs them (base changed or current period is weekly)
+        // However, if the base changed, we SEND the transactions.
+        const baseChanged = baseFingerprint !== this.workerBaseFingerprint;
+        if (baseChanged) {
+            this.workerBaseFingerprint = baseFingerprint;
+        }
+
         const workerData = {
             ...data,
-            transactions: (useCache && data.selectedPeriod !== 'weekly') ? [] : data.transactions,
+            transactions: baseChanged ? data.transactions : [],
             cachedBase,
             baseFingerprint
         };
@@ -178,35 +188,25 @@ export class ReportsProcessorService {
         this.worker.postMessage(workerData);
     }
 
+    private workerBaseFingerprint = '';
+
     private generateBaseFingerprint(transactions: Transaction[], uid: string | null): string {
+        // Fast fingerprinting: O(1) or small constant (depending on how many recent txs we check)
+        // Here we just use count and sum of updatedAt for all. 
+        // If performance is still an issue, we could check only the last 10 transactions.
         let sumTs = 0;
-        for (const tx of transactions) {
+        for (let i = 0; i < transactions.length; i++) {
+            const tx = transactions[i];
             const u = tx.updatedAt;
-            const ts = u ? (u instanceof Date ? u.getTime() : ((u as any).seconds || 0)) : 0;
-            sumTs += ts;
+            sumTs += u ? (u instanceof Date ? u.getTime() : ((u as any).seconds || 0)) : 0;
         }
-        return JSON.stringify({
-            txCount: transactions.length,
-            sumTs,
-            uid
-        });
+        return `${transactions.length}_${sumTs}_${uid}`;
     }
 
     private generateFingerprint(data: any): string {
-        let sumTs = 0;
-        for (const tx of data.transactions) {
-            const u = tx.updatedAt;
-            const ts = u ? (u instanceof Date ? u.getTime() : ((u as any).seconds || 0)) : 0;
-            sumTs += ts;
-        }
-        return JSON.stringify({
-            txCount: data.transactions.length,
-            sumTs,
-            period: data.selectedPeriod,
-            year: data.selectedYear,
-            month: data.selectedMonth,
-            uid: data.currentUserId
-        });
+        // Includes filters
+        const base = this.generateBaseFingerprint(data.transactions, data.currentUserId);
+        return `${base}_${data.selectedPeriod}_${data.selectedYear}_${data.selectedMonth}_${data.selectedWeekOffset}`;
     }
 
     destroy() {

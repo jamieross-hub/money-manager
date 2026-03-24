@@ -132,6 +132,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     overallSavingsRateSignal = this.reportsProcessor.overallSavingsRate;
     currentPeriodSummarySignal = this.reportsProcessor.currentPeriodSummary;
     previousPeriodSummarySignal = this.reportsProcessor.previousPeriodSummary;
+    currentPeriodTransactionsSignal = this.reportsProcessor.currentPeriodTransactions;
 
     readonly groupedCategoryBreakdown = computed(() => {
         const summary = this.currentPeriodSummarySignal();
@@ -235,40 +236,11 @@ export class ReportsComponent implements OnInit, OnDestroy {
         return main;
     });
 
-    readonly currentPeriodTransactions = computed(() => {
-        const txns = this.transactions();
-        if (!txns || txns.length === 0) return [];
-
-        const period = this.selectedPeriod();
-        const year = this.selectedYear();
-        const month = this.selectedMonth();
-        const offset = this.selectedWeekOffset();
-
-        const now = new Date();
-        const startOfCurrentWeek = dayjs().add(offset, 'week').startOf('week');
-        const endOfCurrentWeek = dayjs().add(offset, 'week').endOf('week');
-
-        return txns.filter(t => {
-            const date = this.toDateHelper(t.date);
-            if (!date) return false;
-            
-            const d = dayjs(date);
-            if (period === 'monthly') {
-                const currentMonth = month !== null ? month : (year === now.getFullYear() ? now.getMonth() : 0);
-                return d.year() === year && d.month() === currentMonth;
-            } else if (period === 'weekly') {
-                return d.isAfter(startOfCurrentWeek.subtract(1, 'millisecond')) && d.isBefore(endOfCurrentWeek.add(1, 'millisecond'));
-            } else { // yearly
-                return d.year() === year;
-            }
-        });
-    });
-
     readonly expandedItemData = computed(() => {
         const catId = this.expandedCategoryId();
         if (!catId) return null;
 
-        const txns = this.currentPeriodTransactions();
+        const txns = this.currentPeriodTransactionsSignal();
         const categories = this.allCategories();
 
         // "Others" — collect all categories that were merged (< 1%)
@@ -354,6 +326,10 @@ export class ReportsComponent implements OnInit, OnDestroy {
         if (period === 'weekly') {
             const txns = this.transactions();
             if (!txns || txns.length === 0) return false;
+            
+            // Optimization: instead of iterating over ALL transactions, 
+            // the reportsProcessor already knows the bounds from monthlySummaries.
+            // But let's keep it simple for now as transactions() is relatively small in memory.
             let minTime = Infinity;
             txns.forEach(t => {
                 const d = this.toDateHelper(t.date)?.getTime();

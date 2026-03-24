@@ -54,6 +54,20 @@ const MONTHS = [
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
 ];
 
+// ── Global Worker Cache ──
+let cachedTransactions: any[] = [];
+let cachedBaseFingerprint = '';
+let cachedMonthlySummaries: MonthlySummary[] = [];
+let cachedIconMap: any = {};
+let cachedColorMap: any = {};
+let cachedAvgMonthlySpending = 0;
+let cachedHighestSpendingCategory: CategoryBreakdownItem | null = null;
+let cachedOverallSavingsRate = 0;
+let cachedAvailableYears: number[] = [];
+let cachedNextMonthPrediction: Prediction | null = null;
+let cachedNext3MonthsPrediction: Prediction | null = null;
+let cachedYearEndPrediction: Prediction | null = null;
+
 addEventListener('message', ({ data }) => {
     const { 
         transactions, 
@@ -64,11 +78,24 @@ addEventListener('message', ({ data }) => {
         selectedWeekOffset,
         categoryIconMap,
         categoryColorMap,
-        cachedBase
+        cachedBase,
+        baseFingerprint
     } = data;
 
     const startTime = performance.now();
     let baseRecalculated = false;
+
+    // 1. Update Worker Cache if fingerprint changes or new data arrives
+    if (baseFingerprint && baseFingerprint !== cachedBaseFingerprint) {
+        if (transactions && transactions.length > 0) {
+            cachedTransactions = transactions;
+            cachedBaseFingerprint = baseFingerprint;
+            baseRecalculated = true;
+        }
+    }
+
+    if (categoryIconMap) cachedIconMap = categoryIconMap;
+    if (categoryColorMap) cachedColorMap = categoryColorMap;
 
     let monthlySummaries: MonthlySummary[] = [];
     let availableYears: number[] = [];
@@ -79,7 +106,8 @@ addEventListener('message', ({ data }) => {
     let next3MonthsPrediction: Prediction | null = null;
     let yearEndPrediction: Prediction | null = null;
 
-    if (cachedBase) {
+    if (cachedBase && !baseRecalculated) {
+        // Use provided external cache (from IndexedDB via main thread)
         monthlySummaries = cachedBase.monthlySummaries || [];
         availableYears = cachedBase.availableYears || [];
         avgMonthlySpending = cachedBase.avgMonthlySpending || 0;
@@ -88,39 +116,26 @@ addEventListener('message', ({ data }) => {
         nextMonthPrediction = cachedBase.nextMonthPrediction || null;
         next3MonthsPrediction = cachedBase.next3MonthsPrediction || null;
         yearEndPrediction = cachedBase.yearEndPrediction || null;
-    } else {
-        baseRecalculated = true;
+        
+        // Sync worker's internal cache
+        cachedMonthlySummaries = monthlySummaries;
+        cachedAvailableYears = availableYears;
+        cachedAvgMonthlySpending = avgMonthlySpending;
+        cachedHighestSpendingCategory = highestSpendingCategory;
+        cachedOverallSavingsRate = overallSavingsRate;
+        cachedNextMonthPrediction = nextMonthPrediction;
+        cachedNext3MonthsPrediction = next3MonthsPrediction;
+        cachedYearEndPrediction = yearEndPrediction;
+    } else if (baseRecalculated) {
+        // Full recalculation
+        monthlySummaries = buildMonthlySummaries(cachedTransactions, cachedIconMap, cachedColorMap);
 
-        if (!transactions || transactions.length === 0) {
-            postMessage({
-                monthlySummaries: [],
-                availableYears: [],
-                avgMonthlySpending: 0,
-                highestSpendingCategory: null,
-                overallSavingsRate: 0,
-                currentPeriodSummary: null,
-                previousPeriodSummary: null,
-                filteredMonthlySummaries: [],
-                nextMonthPrediction: null,
-                next3MonthsPrediction: null,
-                yearEndPrediction: null,
-                baseRecalculated: true,
-                baseFingerprint: data.baseFingerprint
-            });
-            return;
-        }
-
-        // 1. Build Monthly Summaries
-        monthlySummaries = buildMonthlySummaries(transactions, categoryIconMap, categoryColorMap);
-
-        // 2. Extract Available Years
         const yearSet = new Set<number>();
         for (const m of monthlySummaries) {
             yearSet.add(m.year);
         }
         availableYears = Array.from(yearSet).sort((a, b) => b - a);
 
-        // 3. Compute Key Metrics
         const totalExpense = monthlySummaries.reduce((s, m) => s + m.expense, 0);
         const totalIncome = monthlySummaries.reduce((s, m) => s + m.income, 0);
         avgMonthlySpending = monthlySummaries.length > 0 ? totalExpense / monthlySummaries.length : 0;
@@ -143,27 +158,46 @@ addEventListener('message', ({ data }) => {
         }
         highestSpendingCategory = allCats.length > 0 ? allCats[0] : null;
 
-        // 5. Compute Predictions
         const predictions = computePredictions(
             monthlySummaries,
-            categoryIconMap,
-            categoryColorMap
+            cachedIconMap,
+            cachedColorMap
         );
         nextMonthPrediction = predictions.nextMonthPrediction;
         next3MonthsPrediction = predictions.next3MonthsPrediction;
         yearEndPrediction = predictions.yearEndPrediction;
+
+        // Update internal cache
+        cachedMonthlySummaries = monthlySummaries;
+        cachedAvailableYears = availableYears;
+        cachedAvgMonthlySpending = avgMonthlySpending;
+        cachedHighestSpendingCategory = highestSpendingCategory;
+        cachedOverallSavingsRate = overallSavingsRate;
+        cachedNextMonthPrediction = nextMonthPrediction;
+        cachedNext3MonthsPrediction = next3MonthsPrediction;
+        cachedYearEndPrediction = yearEndPrediction;
+    } else {
+        // Fallback to internal cache if no external cache and no fingerprint change
+        monthlySummaries = cachedMonthlySummaries;
+        availableYears = cachedAvailableYears;
+        avgMonthlySpending = cachedAvgMonthlySpending;
+        highestSpendingCategory = cachedHighestSpendingCategory;
+        overallSavingsRate = cachedOverallSavingsRate;
+        nextMonthPrediction = cachedNextMonthPrediction;
+        next3MonthsPrediction = cachedNext3MonthsPrediction;
+        yearEndPrediction = cachedYearEndPrediction;
     }
 
     // 4. Compute Period Summary (Always compute, depends on filters)
-    const { currentPeriodSummary, previousPeriodSummary, filteredMonthlySummaries } = computePeriodSummaries(
-        transactions || [], 
+    const { currentPeriodSummary, previousPeriodSummary, filteredMonthlySummaries, currentPeriodTransactions } = computePeriodSummaries(
+        cachedTransactions || [], 
         monthlySummaries, 
         selectedPeriod, 
         selectedYear, 
         selectedMonth, 
         selectedWeekOffset,
-        categoryIconMap,
-        categoryColorMap
+        cachedIconMap,
+        cachedColorMap
     );
 
     postMessage({
@@ -175,11 +209,12 @@ addEventListener('message', ({ data }) => {
         currentPeriodSummary,
         previousPeriodSummary,
         filteredMonthlySummaries,
+        currentPeriodTransactions, // Send this back so component doesn't have to re-filter
         nextMonthPrediction,
         next3MonthsPrediction,
         yearEndPrediction,
         baseRecalculated,
-        baseFingerprint: data.baseFingerprint,
+        baseFingerprint,
         durationMs: performance.now() - startTime
     });
 });
@@ -278,6 +313,7 @@ function computePeriodSummaries(
     const year = selectedYear;
     let currentMonths: MonthlySummary[] = [];
     let previousMonths: MonthlySummary[] = [];
+    let currentPeriodTransactions: any[] = [];
 
     if (selectedPeriod === 'monthly') {
         const currentMonth = selectedMonth !== null ? selectedMonth : (year === now.getFullYear() ? now.getMonth() : 0);
@@ -285,24 +321,36 @@ function computePeriodSummaries(
         const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
         const prevYear = currentMonth === 0 ? year - 1 : year;
         previousMonths = monthlySummaries.filter(m => m.month === prevMonth && m.year === prevYear);
+
+        currentPeriodTransactions = transactions.filter(t => {
+            const date = toDate(t.date);
+            return date && date.getFullYear() === year && date.getMonth() === currentMonth;
+        });
     } else if (selectedPeriod === 'weekly') {
         const startOfCurrentWeek = dayjs().add(selectedWeekOffset, 'week').startOf('week');
         const endOfCurrentWeek = dayjs().add(selectedWeekOffset, 'week').endOf('week');
         const startOfPrevWeek = dayjs().add(selectedWeekOffset - 1, 'week').startOf('week');
         const endOfPrevWeek = dayjs().add(selectedWeekOffset - 1, 'week').endOf('week');
 
-        currentMonths = buildAdhocSummary(transactions.filter(t => {
+        currentPeriodTransactions = transactions.filter(t => {
             const d = dayjs(toDate(t.date));
             return d.isAfter(startOfCurrentWeek.subtract(1, 'millisecond')) && d.isBefore(endOfCurrentWeek.add(1, 'millisecond'));
-        }), iconMap, colorMap);
+        });
 
-        previousMonths = buildAdhocSummary(transactions.filter(t => {
+        const prevTransactions = transactions.filter(t => {
             const d = dayjs(toDate(t.date));
             return d.isAfter(startOfPrevWeek.subtract(1, 'millisecond')) && d.isBefore(endOfPrevWeek.add(1, 'millisecond'));
-        }), iconMap, colorMap);
+        });
+
+        currentMonths = buildAdhocSummary(currentPeriodTransactions, iconMap, colorMap);
+        previousMonths = buildAdhocSummary(prevTransactions, iconMap, colorMap);
     } else {
         currentMonths = monthlySummaries.filter(m => m.year === year);
         previousMonths = monthlySummaries.filter(m => m.year === year - 1);
+        currentPeriodTransactions = transactions.filter(t => {
+            const date = toDate(t.date);
+            return date && date.getFullYear() === year;
+        });
     }
 
     const currentPeriodSummary = aggregatePeriod(currentMonths, getPeriodLabel('current', selectedPeriod, selectedYear, selectedMonth, selectedWeekOffset), iconMap, colorMap);
@@ -370,7 +418,7 @@ function computePeriodSummaries(
 
     const filteredMonthlySummaries = filteredHistory;
 
-    return { currentPeriodSummary, previousPeriodSummary, filteredMonthlySummaries };
+    return { currentPeriodSummary, previousPeriodSummary, filteredMonthlySummaries, currentPeriodTransactions };
 }
 
 function buildAdhocSummary(txns: any[], iconMap: any, colorMap: any): MonthlySummary[] {
