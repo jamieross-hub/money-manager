@@ -921,6 +921,7 @@ export class MobileTransactionListComponent
 
   clearSelection(shouldPopHistory = true) {
     this.selectedTxIds.set(new Set());
+    this.isLongPressing = false;
     if (shouldPopHistory && this.historyPushedForSelection) {
       this.historyPushedForSelection = false;
       window.history.back();
@@ -941,6 +942,7 @@ export class MobileTransactionListComponent
 
   onLongPressStart(transaction: Transaction) {
     if (transaction.id?.startsWith('upcoming-') || (transaction as any)._isDeleted || this.selectedRange() === 'category') return;
+    this.isLongPressing = false;
     
     this.longPressTimeout = setTimeout(() => {
       this.isLongPressing = true;

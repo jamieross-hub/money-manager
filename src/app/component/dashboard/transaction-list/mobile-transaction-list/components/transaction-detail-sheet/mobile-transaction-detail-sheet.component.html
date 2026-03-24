@@ -2,16 +2,6 @@
   <div class="sheet-header">
     <div class="drag-handle"></div>
     <div class="header-content">
-      <h2 class="sheet-title">Transaction Details</h2>
-      <button mat-icon-button (click)="close()" class="close-btn">
-        <mat-icon>close</mat-icon>
-      </button>
-    </div>
-  </div>
-
-  <div class="sheet-body">
-    <div class="details-container">
-      <!-- Category & Icon -->
       <div class="category-header">
         <div class="category-icon-wrapper" [style.background-color]="data.transaction._categoryColor + '20'">
           <mat-icon [style.color]="data.transaction._categoryColor">{{ data.transaction._categoryIcon }}</mat-icon>
@@ -20,10 +10,21 @@
           <div class="category-name text-truncate">{{ data.transaction.category | titlecase }}</div>
           <div class="transaction-date">{{ data.transaction._fullTransactionDateDisplay }}</div>
         </div>
+      </div>
+    </div>
+    <button mat-icon-button (click)="close()" class="close-btn">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="sheet-body">
+    <div class="details-container">
+      <div class="amount-section">
         <div class="amount-display" [class.income]="data.transaction._isIncome" [class.expense]="!data.transaction._isIncome">
           {{ data.transaction._isIncome ? '+' : '-' }}{{ data.transaction.amount | currency:{round:false,compact:false} }}
         </div>
       </div>
+
 
       <mat-divider></mat-divider>
 
