@@ -89,32 +89,49 @@ export class CategoryChartSheetComponent implements AfterViewInit {
 
   fullCategoryBreakdown = computed(() => {
     const txs = this.filteredTransactions();
-    const map = new Map<string, number>();
     let totalExpense = 0;
 
+    // First pass: accumulate raw amounts per categoryId
+    const rawMap = new Map<string, number>();
     txs.forEach((t: any) => {
       if (t.type === 'expense' && !t._isUpcoming && !t.settlementId) {
         const amt = Number(t.amount) || 0;
         const catId = t.categoryId || 'unknown';
-        map.set(catId, (map.get(catId) || 0) + amt);
+        rawMap.set(catId, (rawMap.get(catId) || 0) + amt);
         totalExpense += amt;
       }
     });
 
-    const list: any[] = [];
-    map.forEach((amount, catId) => {
-      if (amount <= 0) return; // Skip 0% / empty categories
-      const percentage = totalExpense > 0 ? (amount / totalExpense) * 100 : 0;
-      if (Math.round(percentage) === 0) return; // Skip if rounds to 0%
-      
+    // Second pass: group by category group (if available), else by categoryId
+    // Key = group name (if group exists) OR categoryId
+    const groupedMap = new Map<string, { amount: number; cat: any; isGroup: boolean }>();
+
+    rawMap.forEach((amount, catId) => {
       const cat = this.categoryMap().get(catId);
+      const groupKey = cat?.group ? `group::${cat.group}` : `cat::${catId}`;
+
+      if (groupedMap.has(groupKey)) {
+        groupedMap.get(groupKey)!.amount += amount;
+      } else {
+        groupedMap.set(groupKey, { amount, cat, isGroup: !!cat?.group });
+      }
+    });
+
+    const list: any[] = [];
+    groupedMap.forEach((entry, groupKey) => {
+      const { amount, cat, isGroup } = entry;
+      if (amount <= 0) return;
+      const percentage = totalExpense > 0 ? (amount / totalExpense) * 100 : 0;
+      if (Math.round(percentage) === 0) return;
+
       list.push({
-        categoryId: catId,
-        categoryName: cat?.name || 'Unknown',
+        categoryId: groupKey,
+        categoryName: isGroup ? (cat?.group || 'Unknown') : (cat?.name || 'Unknown'),
         categoryColor: cat?.color || '#3b82f6',
-        categoryIcon: cat?.icon || 'category',
+        categoryIcon: isGroup ? (cat?.groupIcon || 'folder') : (cat?.icon || 'category'),
         amount,
-        percentage
+        percentage,
+        isGroup
       });
     });
 
@@ -130,13 +147,33 @@ export class CategoryChartSheetComponent implements AfterViewInit {
     ];
 
     const sortedList = list.sort((a, b) => b.amount - a.amount);
-    
+
+    // Merge slices below 5% into "Others"
+    const mainItems = sortedList.filter(item => item.percentage >= 5);
+    const smallItems = sortedList.filter(item => item.percentage < 5);
+
+    if (smallItems.length > 0) {
+      const othersAmount = smallItems.reduce((sum, item) => sum + item.amount, 0);
+      const othersPercentage = smallItems.reduce((sum, item) => sum + item.percentage, 0);
+      mainItems.push({
+        categoryId: 'others',
+        categoryName: 'Others',
+        categoryColor: '#9ca3af',
+        categoryIcon: 'more_horiz',
+        amount: othersAmount,
+        percentage: othersPercentage,
+        isGrouped: true
+      });
+    }
+
     // Assign premium colors sequentially to sorted list max contrast
-    sortedList.forEach((item, index) => {
-      item.categoryColor = PREMIUM_COLORS[index % PREMIUM_COLORS.length];
+    mainItems.forEach((item, index) => {
+      if (item.categoryId !== 'others') {
+        item.categoryColor = PREMIUM_COLORS[index % PREMIUM_COLORS.length];
+      }
     });
 
-    return sortedList;
+    return mainItems;
   });
 
   categoryBreakdown = computed(() => {

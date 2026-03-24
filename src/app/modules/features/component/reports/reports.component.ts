@@ -188,18 +188,51 @@ export class ReportsComponent implements OnInit, OnDestroy {
             totalAmount += item.amount;
         });
 
-        const result = Array.from(groups.values()).map(g => ({
-            categoryId: g.categoryId,
-            categoryName: g.name,
-            categoryIcon: g.categoryIcon,
-            groupIcon: g.groupIcon, // [NEW]
-            categoryColor: g.categoryColor,
-            amount: g.amount,
-            transactionCount: g.transactionCount,
-            percentage: totalAmount > 0 ? (g.amount / totalAmount) * 100 : 0
-        }));
+        const sorted = Array.from(groups.values())
+            .map(g => ({
+                categoryId: g.categoryId,
+                categoryName: g.name,
+                categoryIcon: g.categoryIcon,
+                groupIcon: g.groupIcon,
+                categoryColor: g.categoryColor,
+                amount: g.amount,
+                transactionCount: g.transactionCount,
+                percentage: totalAmount > 0 ? (g.amount / totalAmount) * 100 : 0,
+                isGrouped: g.categoryId.startsWith('group_')
+            }))
+            .sort((a, b) => b.amount - a.amount);
 
-        return result.sort((a, b) => b.amount - a.amount);
+        // Merge items < 1% into "Others"
+        const main: any[] = sorted.filter(item => item.percentage >= 1);
+        const small = sorted.filter(item => item.percentage < 1);
+
+        if (small.length > 0) {
+            const othersAmount = small.reduce((s, i) => s + i.amount, 0);
+            const othersCount = small.reduce((s, i) => s + i.transactionCount, 0);
+            const othersPercentage = totalAmount > 0 ? (othersAmount / totalAmount) * 100 : 0;
+            main.push({
+                categoryId: 'others',
+                categoryName: 'Others',
+                categoryIcon: 'more_horiz',
+                groupIcon: undefined,
+                categoryColor: '#9ca3af',
+                amount: othersAmount,
+                transactionCount: othersCount,
+                percentage: othersPercentage,
+                isGrouped: true,
+                // Store the merged items so expandedItemData can build the drill-down
+                breakdown: small.map(i => ({
+                    categoryId: i.categoryId,
+                    categoryName: i.categoryName,
+                    categoryIcon: i.categoryIcon,
+                    amount: i.amount,
+                    transactionCount: i.transactionCount,
+                    percentage: i.percentage
+                }))
+            });
+        }
+
+        return main;
     });
 
     readonly currentPeriodTransactions = computed(() => {
@@ -237,7 +270,23 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
         const txns = this.currentPeriodTransactions();
         const categories = this.allCategories();
-        
+
+        // "Others" — collect all categories that were merged (< 1%)
+        if (catId === 'others') {
+            const othersEntry = this.groupedCategoryBreakdown().find(i => i.categoryId === 'others') as any;
+            const breakdown: any[] = othersEntry?.breakdown || [];
+            const othersCatIds = new Set(breakdown.map((b: any) => b.categoryId));
+            const items = txns.filter(t => othersCatIds.has(t.categoryId));
+            return {
+                isGroup: true,
+                groupName: 'Others',
+                breakdown,
+                transactions: items
+                    .map(t => ({ ...t, date: this.toDateHelper(t.date) }))
+                    .sort((a, b) => ((b.date as Date)?.getTime() || 0) - ((a.date as Date)?.getTime() || 0))
+            };
+        }
+
         if (catId.startsWith('group_')) {
             const groupName = catId.replace('group_', '');
             const groupCatIds = new Set(categories.filter(c => c.group === groupName).map(c => c.id));
