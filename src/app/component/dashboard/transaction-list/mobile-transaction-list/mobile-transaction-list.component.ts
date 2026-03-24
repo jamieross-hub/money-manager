@@ -17,7 +17,8 @@ import {
   ElementRef,
   AfterViewInit,
   DestroyRef,
-  HostListener  
+  HostListener,
+  viewChildren
 } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
@@ -41,7 +42,7 @@ import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.d
 import { MatDialog } from '@angular/material/dialog';
 import { MatBottomSheetModule, MatBottomSheet } from '@angular/material/bottom-sheet';
 import { Transaction } from '../../../../util/models/transaction.model';
-import { Subject, Subscription, Observable } from 'rxjs';
+import { Subject, Subscription, Observable, timer } from 'rxjs';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import { Auth } from '@angular/fire/auth';
@@ -61,22 +62,18 @@ import { selectAllCategories } from 'src/app/store/categories/categories.selecto
 import { RecurringInterval, SyncStatus } from 'src/app/util/config/enums';
 import { FilterService } from 'src/app/util/service/filter.service';
 import { CommonSyncService } from 'src/app/util/service/common-sync.service';
-import { CategoryService } from 'src/app/util/service/db/category.service';
-import { CurrencyService } from 'src/app/util/service/currency.service';
-import { ThemeSwitchingService } from 'src/app/util/service/theme-switching.service';
-import { AppViewService } from 'src/app/util/service/app-view.service';
-import { UserService } from 'src/app/util/service/db/user.service';
-import { ACCOUNT_TYPE_OPTIONS } from 'src/app/util/config/config';
-
-import { TransactionsService } from 'src/app/util/service/db/transactions.service';
 import { RecurringService } from 'src/app/util/service/db/recurring.service';
 import { TransactionProcessorService } from 'src/app/util/service/transaction-processor.service';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map, distinctUntilChanged } from 'rxjs/operators';
+import { map, distinctUntilChanged, take } from 'rxjs/operators';
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import * as FamilySelectors from 'src/app/modules/family/store/family.selectors';
 import { FamilyMember, Family } from 'src/app/util/models/family.model';
-import { AppView } from 'src/app/util/service/app-view.service';
+import { AppViewService, AppView } from 'src/app/util/service/app-view.service';
+import { UserService } from 'src/app/util/service/db/user.service';
+import { CurrencyService } from 'src/app/util/service/currency.service';
+import { ThemeSwitchingService } from 'src/app/util/service/theme-switching.service';
+import { ACCOUNT_TYPE_OPTIONS } from 'src/app/util/config/config';
 import { RecurringTemplate } from 'src/app/util/models/recurring.model';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -132,16 +129,13 @@ export class MobileTransactionListComponent
   private readonly appViewService = inject<AppViewService>(AppViewService);
   private readonly syncService = inject<CommonSyncService>(CommonSyncService);
   private readonly dateService = inject<DateService>(DateService);
-  private readonly categoryService = inject<CategoryService>(CategoryService);
   private readonly currencyService = inject<CurrencyService>(CurrencyService);
   private readonly themeService = inject<ThemeSwitchingService>(ThemeSwitchingService);
-  private readonly transactionsService = inject<TransactionsService>(TransactionsService);
   private readonly recurringService = inject(RecurringService);
   private readonly processorService = inject(TransactionProcessorService);
   private readonly route = inject(Router);
   private readonly dialog = inject(MatDialog);
   private readonly cdr = inject(ChangeDetectorRef);
-  private readonly auth = inject(Auth);
   private readonly destroyRef = inject(DestroyRef);
   public  readonly bottomSheet = inject(MatBottomSheet);
 
@@ -157,6 +151,7 @@ export class MobileTransactionListComponent
 
   isSelectionMode = computed(() => this.selectedTxIds().size > 0);
   newlyAddedTxId = signal<string | null>(null);
+  private previousTxIds = new Set<string>();
   showFilters: boolean = false;
 
   // Signals defined below...
@@ -216,7 +211,7 @@ export class MobileTransactionListComponent
   public currentScrollHeader = signal<string>('');
   public showScrollIndicator = signal<boolean>(false);
   private scrollTimeout: any;
-  private previousTxIds = new Set<string>();
+  readonly headerPills = viewChildren<ElementRef>('headerPill');
 
   // Long press handling
   private longPressTimeout: any;
@@ -318,18 +313,20 @@ export class MobileTransactionListComponent
 
   availableCategories = computed(() => {
     const cats = this.categories();
-    const txs = this.allTransactions();
+    // Use filteredTransactions (already computed by processor) to avoid a full scan of allTransactions.
+    // Falls back to allTransactions when processor hasn't run yet.
+    const txs = this.filteredTransactions().length > 0 ? this.filteredTransactions() : this.allTransactions();
     if (!cats || !txs) return [];
 
     const usedCategoryIds = new Set<string>();
-    txs.forEach(tx => {
+    for (const tx of txs) {
       if (tx.categoryId) usedCategoryIds.add(tx.categoryId);
       if (tx.isCategorySplit && tx.categorySplits) {
-        tx.categorySplits.forEach(split => {
+        for (const split of tx.categorySplits) {
           if (split.categoryId) usedCategoryIds.add(split.categoryId);
-        });
+        }
       }
-    });
+    }
 
     return cats
       .filter(category => usedCategoryIds.has(category.id || ''))
@@ -357,15 +354,18 @@ export class MobileTransactionListComponent
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
+    if (!this.selectedTx && !this.isSelectionMode() && !this.showActiveFilterDetails() && !this.showSearchInput()) {
+      return;
+    }
+
+    const target = event.target as HTMLElement;
     if (this.selectedTx || this.isSelectionMode()) {
-      const target = event.target as HTMLElement;
       if (!target.closest('.transaction-card') && !target.closest('.selection-toolbar')) {
         this.clearSelection();
       }
     }
 
     if (this.showActiveFilterDetails() || this.showSearchInput()) {
-      const target = event.target as HTMLElement;
       const isInsideIndicator = !!target.closest('.active-filters-indicator');
       const isOverlay = !!target.closest('.cdk-overlay-container');
       
@@ -417,7 +417,7 @@ export class MobileTransactionListComponent
 
   /** Current user's UID */
   private readonly currentUserProfile = this.store.selectSignal<User | null>(ProfileSelectors.selectProfile);
-  get currentUserId(): string { return this.currentUserProfile()?.uid ?? ''; }
+  currentUserId = computed(() => this.currentUserProfile()?.uid ?? '');
 
   /** Family members list (for role lookups) */
   familyMembers = this.store.selectSignal(FamilySelectors.selectFamilyMembers);
@@ -425,7 +425,7 @@ export class MobileTransactionListComponent
   /** Family members sorted so the current user is always on top */
   sortedFamilyMembers = computed(() => {
     const members = this.familyMembers() || [];
-    const uid = this.currentUserId;
+    const uid = this.currentUserId();
     if (!uid) return members;
     return [...members].sort((a, b) => {
       if (a.userId === uid) return -1;
@@ -434,58 +434,6 @@ export class MobileTransactionListComponent
     });
   });
 
-  /**
-   * Returns true if the current user can edit the given transaction.
-   * - Transactions linked to a settlement CANNOT be edited (to prevent data inconsistency).
-   */
-  canEdit(tx: Transaction): boolean {
-      if ((tx as any)._isSummary) return false;
-      if (!this.isFamilyMode()) return tx.syncStatus !== SyncStatus.PENDING;
-    if (tx.settlementId || tx.categoryId === 'adjustment' || tx.status === 'pending' || tx.syncStatus === SyncStatus.PENDING) return false;
-    return this.canPerformAction(tx);
-  }
-
-  /**
-   * Returns true if the current user can delete the given transaction.
-   * - Settlement transactions can be deleted by: creator, sender, or receiver.
-   */
-  canDelete(tx: Transaction): boolean {
-    if ((tx as any)._isSummary) return false;
-    if (tx.settlementId) {
-      const uid = this.currentUserId;
-      if (!uid) return false;
-      // Creator, Sender, or Receiver can delete
-      if (tx.createdBy === uid || tx.userId === uid || tx.settlementFromUserId === uid || tx.settlementToUserId === uid) {
-        return true;
-      }
-      // Family Admin can also delete
-      const me = this.familyMembers().find(m => m.userId === uid);
-      return me?.role === 'admin';
-    }
-    return this.canPerformAction(tx);
-  }
-
-  private canPerformAction(tx: Transaction): boolean {
-    if (tx.syncStatus === SyncStatus.PENDING) return false;
-    if (!this.isFamilyMode()) return true;
-    const uid = this.currentUserId;
-    if (!uid) return false;
-    // Creator can always edit/delete
-    if (tx.createdBy === uid || tx.userId === uid) return true;
-    // Admin can edit/delete
-    const me = this.familyMembers().find(m => m.userId === uid);
-    return me?.role === 'admin';
-  }
-
-  canAdjust(tx: Transaction): boolean {
-    if ((tx as any)._isSummary) return false;
-    return !this.canEdit(tx) && 
-           !tx.settlementId && 
-           tx.categoryId !== 'adjustment' && 
-           this.isFamilyMode() && 
-           this.isSplitMode() && 
-           tx.syncStatus !== SyncStatus.PENDING;
-  }
 
   // Labels (Computed)
   currentSortLabel = computed(() => {
@@ -520,7 +468,7 @@ export class MobileTransactionListComponent
     const member = this.familyMembers().find(m => m.userId === memberId);
     if (!member) return 'All Members';
     // Show "You" for the current user
-    return member.userId === this.currentUserId ? 'You' : member.displayName;
+    return member.userId === this.currentUserId() ? 'You' : member.displayName;
   });
 
   currentMemberIcon = computed(() => {
@@ -686,23 +634,23 @@ export class MobileTransactionListComponent
         isRecurringMode,
         isFamilyMode,
         isDeletedMode: (selectedSpecialRange || selectedRange) === 'deleted',
-        currentUserId: this.currentUserId,
-        familyId: activeFamilyId
+        currentUserId: this.currentUserId(),
+        familyId: activeFamilyId,
+        familyMembers: this.familyMembers()
       });
     });
 
 
     // Detect newly added transactions to scroll and highlight
     effect(() => {
-      const transactions = this.allActiveTransactions();
+      const transactions = this.filteredTransactions();
       const currentIds = new Set(transactions.map(t => t.id).filter(Boolean) as string[]);
       
       // Find IDs that are in currentIds but were NOT in previousTxIds
       const newIds = [...currentIds].filter(id => !this.previousTxIds.has(id));
       
       // Only act if there's exactly one new ID (to avoid bulk load highlighting)
-      // and if the list was already populated (to avoid first load highlighting)
-      if (newIds.length === 1 && this.previousTxIds.size > 0) {
+      if (newIds.length === 1) {
         const newId = newIds[0];
         const newTx = transactions.find(t => t.id === newId);
         
@@ -711,7 +659,8 @@ export class MobileTransactionListComponent
         const createdDate = createdAt ? (createdAt instanceof Date ? createdAt : (createdAt as any).toDate?.() || new Date(createdAt as any)) : null;
         const isRecent = createdDate && (Date.now() - createdDate.getTime()) < 30000;
 
-        if (isRecent) {
+        // Either it's a new addition to an existing list, or it's the very first very recent transaction
+        if (this.previousTxIds.size > 0 || isRecent) {
           this.newlyAddedTxId.set(newId);
           
           // Scroll to the new transaction after a short delay for rendering
@@ -721,14 +670,16 @@ export class MobileTransactionListComponent
               element.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
             
-            // Clear the highlight after 5 seconds
-            setTimeout(() => {
+            // Clear the highlight after 5 seconds using RxJS timer
+            timer(5000).pipe(
+              take(1),
+              takeUntilDestroyed(this.destroyRef)
+            ).subscribe(() => {
               if (this.newlyAddedTxId() === newId) {
                 this.newlyAddedTxId.set(null);
-                this.cdr.markForCheck();
               }
-            }, 5000);
-          }, 100);
+            });
+          }, 200);
         }
       }
       
@@ -736,13 +687,9 @@ export class MobileTransactionListComponent
       this.previousTxIds = currentIds;
     });
 
-
     // React to theme changes (e.g., for charts)
     effect(() => {
       this.themeService.currentTheme();
-      // if (this.showChart) {
-      //   this.renderChart();
-      // }
     });
   }
 
@@ -885,40 +832,40 @@ export class MobileTransactionListComponent
     this.filterService.setSelectedDateRange(startDate, endDate);
   }
 
-  isCurrentMonth(): boolean {
+  isCurrentMonth = computed(() => {
     const currentMonth = dayjs().month();
     const currentYear = dayjs().year();
     return this.filteredTransactions().some((tx: Transaction) => {
       const txDate = dayjs(this.dateService.toDate(tx.date));
       return txDate.month() === currentMonth && txDate.year() === currentYear;
     });
-  }
+  });
 
-  isCurrentWeek(): boolean {
+  isCurrentWeek = computed(() => {
     const currentWeek = dayjs().week();
     const currentYear = dayjs().year();
     return this.filteredTransactions().some((tx: Transaction) => {
       const txDate = dayjs(this.dateService.toDate(tx.date));
       return txDate.week() === currentWeek && txDate.year() === currentYear;
     });
-  }
+  });
 
-  isLastMonth(): boolean {
+  isLastMonth = computed(() => {
     const lastMonth = dayjs().subtract(1, 'month').month();
     const lastMonthYear = dayjs().subtract(1, 'month').year();
     return this.filteredTransactions().some((tx: Transaction) => {
       const txDate = dayjs(this.dateService.toDate(tx.date));
       return txDate.month() === lastMonth && txDate.year() === lastMonthYear;
     });
-  }
+  });
 
-  isCurrentYear(): boolean {
+  isCurrentYear = computed(() => {
     const currentYear = dayjs().year();
     return this.filteredTransactions().some((tx: Transaction) => {
       const txDate = dayjs(this.dateService.toDate(tx.date));
       return txDate.year() === currentYear;
     });
-  }
+  });
 
   hasActiveFilters(): boolean {
     return this.filterService.hasActiveFilters() || !!this.selectedSpecialRange();
@@ -1241,7 +1188,6 @@ export class MobileTransactionListComponent
     // Hide indicator after 1.5s of no scrolling
     this.scrollTimeout = setTimeout(() => {
       this.showScrollIndicator.set(false);
-      this.cdr.markForCheck();
     }, 1500);
 
     // Find the currently visible header
@@ -1249,22 +1195,23 @@ export class MobileTransactionListComponent
   }
 
   private updateCurrentHeader(container: HTMLElement) {
-    const headers = container.querySelectorAll('.date-header-pill');
+    const headers = this.headerPills();
+    if (!headers || headers.length === 0) return;
+
     let activeHeader = '';
+    const containerTop = container.getBoundingClientRect().top;
     
-    // Simple logic: find the header closest to the top but not past it
-    for (let i = 0; i < headers.length; i++) {
-      const rect = headers[i].getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
+    for (const pill of headers) {
+      const native = pill.nativeElement;
+      const rect = native.getBoundingClientRect();
       
-      // If the header is near the top of the container
-      if (rect.top <= containerRect.top + 100) {
-        activeHeader = headers[i].getAttribute('data-header') || '';
+      if (rect.top <= containerTop + 20) {
+        activeHeader = native.getAttribute('data-header') || '';
       } else {
-        break; 
+        break;
       }
     }
-
+ 
     if (activeHeader && activeHeader !== this.currentScrollHeader()) {
       this.currentScrollHeader.set(activeHeader);
     }

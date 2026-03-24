@@ -44,8 +44,22 @@ addEventListener('message', ({ data }) => {
     isDeletedMode,
     currentUserId,
     fingerprint,
-    familyId
+    familyId,
+    familyMembers
   } = data;
+
+  // Pre-compute admin status once (O(m)) instead of per-transaction O(n×m)
+  const isCurrentUserAdmin = isFamilyMode && currentUserId
+    ? (familyMembers || []).some((m: any) => m.userId === currentUserId && m.role === 'admin')
+    : false;
+
+  const canPerformAction = (tx: any): boolean => {
+    if (tx.syncStatus === 'PENDING' || tx.syncStatus === 'pending') return false;
+    if (!isFamilyMode) return true;
+    if (!currentUserId) return false;
+    if (tx.createdBy === currentUserId || tx.userId === currentUserId) return true;
+    return isCurrentUserAdmin;
+  };
 
   if (!transactions) {
     postMessage({ flattenedTransactions: [], totalIncome: 0, totalExpenses: 0, filteredCount: 0 });
@@ -394,6 +408,37 @@ addEventListener('message', ({ data }) => {
     const createdAt = tx.createdAt; 
     const createdAtDate = createdAt ? toDate(createdAt) : null;
 
+    const _isUpcoming = !!tx.isPending && (tx.id?.startsWith('upcoming-') || false);
+    const _isSummary = !!(tx as any)._isSummary;
+
+    // Permission flags — computed once here, read O(1) in template per CD cycle
+    const _canEdit = (() => {
+      if (_isSummary) return false;
+      if (!isFamilyMode) return tx.syncStatus !== 'PENDING' && tx.syncStatus !== 'pending';
+      if (tx.settlementId || tx.categoryId === 'adjustment' || tx.status === 'pending' || tx.syncStatus === 'PENDING' || tx.syncStatus === 'pending') return false;
+      return canPerformAction(tx);
+    })();
+
+    const _canDelete = (() => {
+      if (_isSummary) return false;
+      if (tx.settlementId) {
+        if (!currentUserId) return false;
+        if (tx.createdBy === currentUserId || tx.userId === currentUserId ||
+            tx.settlementFromUserId === currentUserId || tx.settlementToUserId === currentUserId) return true;
+        return isCurrentUserAdmin;
+      }
+      return canPerformAction(tx);
+    })();
+
+    const _canAdjust = (() => {
+      if (_isSummary) return false;
+      return !_canEdit &&
+             !tx.settlementId &&
+             tx.categoryId !== 'adjustment' &&
+             isFamilyMode &&
+             tx.syncStatus !== 'PENDING' && tx.syncStatus !== 'pending';
+    })();
+
     const txView = {
       ...tx,
       _categoryColor: category?.color || '#46777f',
@@ -420,7 +465,7 @@ addEventListener('message', ({ data }) => {
       _createdAtDisplay: tx.createdAt ? dayjs(toDate(tx.createdAt)).format('DD MMM YYYY, hh:mm a') : 'N/A',
       _updatedAtDisplay: tx.updatedAt ? dayjs(toDate(tx.updatedAt)).format('DD MMM YYYY, hh:mm a') : 
                         (tx.createdAt ? dayjs(toDate(tx.createdAt)).format('DD MMM YYYY, hh:mm a') : 'N/A'),
-      _isUpcoming: !!tx.isPending && (tx.id?.startsWith('upcoming-') || false),
+      _isUpcoming,
       _dueStatus: (() => {
         const diffDays = dateObj.diff(today, 'day');
         if (diffDays < 0) return 'Overdue';
@@ -432,7 +477,10 @@ addEventListener('message', ({ data }) => {
       _isOverdue: txDate ? dateObj.isBefore(today, 'day') : false,
       _isDeleted: tx.status === 'deleted',
       _popState: (createdAtDate && createdAtDate.getTime() > sessionStartTime) ? 'new' : 'old',
-      _isHeader: false
+      _isHeader: false,
+      _canEdit,
+      _canDelete,
+      _canAdjust
     };
 
     let dateKey: string;

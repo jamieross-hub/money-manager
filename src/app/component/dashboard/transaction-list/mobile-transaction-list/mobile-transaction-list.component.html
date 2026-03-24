@@ -266,7 +266,7 @@
               {{ member.displayName.charAt(0).toUpperCase() }}
             </div>
             }
-            <span>{{ member.userId === currentUserId ? member.displayName + ' (You)' : member.displayName }}</span>
+            <span>{{ member.userId === currentUserId() ? member.displayName + ' (You)' : member.displayName }}</span>
           </div>
           @if (selectedMember() === member.userId) {
           <mat-icon class="check-icon">check</mat-icon>
@@ -549,7 +549,7 @@
       <div class="transaction-group relative w-full">
         @if (selectedSpecialRange() !== 'category') {
         <div class="date-header-row sticky top-0 z-20 w-full px-2 py-2 pointer-events-none">
-          <div class="date-header-pill" [attr.data-header]="group.dateHeader">
+          <div class="date-header-pill" #headerPill [attr.data-header]="group.dateHeader">
             <span class="header-title !text-[10px]">{{ group.dateHeader }}</span>
             @if (group.incomeFormatted || group.expenseFormatted) {
             <span class="header-totals flex items-center gap-1 text-[10px]">
@@ -694,25 +694,25 @@
             @if (selectedTx?.id === item.id && !item._isUpcoming && !item._isDeleted) {
             <div class="transaction-actions">
               <div class="actions-container flex items-center space-x-2">
-                @if (canEdit(item)) {
+                @if (item._canEdit) {
                 <button mat-icon-button class="action-button edit-btn"
                   (click)="onEditTransaction(item); $event.stopPropagation()" matTooltip="Edit transaction">
                   <mat-icon>edit</mat-icon>
                 </button>
                 }
-                @if (!canEdit(item) && !canDelete(item)) {
+                @if (!item._canEdit && !item._canDelete) {
                 <span class="text-[11px] text-gray-400 dark:text-gray-500 italic px-2">View only</span>
                 }
-                @if (canAdjust(item)) {
+                @if (item._canAdjust) {
                 <button mat-icon-button class="action-button adjust-btn"
                   (click)="onAdjustTransaction(item); $event.stopPropagation()" matTooltip="Adjust transaction details">
                   <mat-icon>tune</mat-icon>
                 </button>
                 }
-                @if (!canEdit(item) && canDelete(item) && item.settlementId) {
+                @if (!item._canEdit && item._canDelete && item.settlementId) {
                 <span class="text-[10px] text-gray-400 dark:text-gray-500 italic px-1">Uneditable settlement</span>
                 }
-                @if (canDelete(item)) {
+                @if (item._canDelete) {
                 <button mat-icon-button class="action-button delete-btn"
                   (click)="onDeleteTransaction(item); $event.stopPropagation()" matTooltip="Delete transaction">
                   <mat-icon>delete</mat-icon>
