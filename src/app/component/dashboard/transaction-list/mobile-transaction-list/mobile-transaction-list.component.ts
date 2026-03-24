@@ -78,6 +78,7 @@ import { RecurringTemplate } from 'src/app/util/models/recurring.model';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { CategoryChartSheetComponent } from './components/category-chart-sheet/category-chart-sheet.component';
+import { MobileTransactionDetailSheetComponent } from './components/transaction-detail-sheet/mobile-transaction-detail-sheet.component';
 
 dayjs.extend(weekOfYear);
 
@@ -141,7 +142,6 @@ export class MobileTransactionListComponent
 
   isRecurring = input<boolean>(false);
 
-  selectedTx: Transaction | null = null;
 
   selectedTxIds = signal<Set<string>>(new Set());
   selectedSpecialRange = signal<string | null>(null);
@@ -354,12 +354,12 @@ export class MobileTransactionListComponent
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
-    if (!this.selectedTx && !this.isSelectionMode() && !this.showActiveFilterDetails() && !this.showSearchInput()) {
+    if (!this.isSelectionMode() && !this.showActiveFilterDetails() && !this.showSearchInput()) {
       return;
     }
 
     const target = event.target as HTMLElement;
-    if (this.selectedTx || this.isSelectionMode()) {
+    if (this.isSelectionMode()) {
       if (!target.closest('.transaction-card') && !target.closest('.selection-toolbar')) {
         this.clearSelection();
       }
@@ -871,7 +871,7 @@ export class MobileTransactionListComponent
     return this.filterService.hasActiveFilters() || !!this.selectedSpecialRange();
   }
 
-  onTransactionClick(transaction: Transaction, element: HTMLElement) {
+  onTransactionClick(transaction: Transaction) {
     if (this.isLongPressing || this.selectedRange() === 'category') return;
     
     if (this.isSelectionMode()) {
@@ -879,18 +879,17 @@ export class MobileTransactionListComponent
       return;
     }
 
-
     if (transaction.id?.startsWith('upcoming-')) return;
 
-    if (this.selectedTx?.id === transaction.id) {
-      this.selectedTx = null;
-    } else {
-      this.selectedTx = transaction;
-      // Scroll into view with a slight delay to allow expansion rendering
-      setTimeout(() => {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 250);
-    }
+    this.bottomSheet.open(MobileTransactionDetailSheetComponent, {
+      data: { 
+        transaction,
+        onEdit: (tx: Transaction) => this.onEditTransaction(tx),
+        onAdjust: (tx: Transaction) => this.onAdjustTransaction(tx),
+        onDelete: (tx: Transaction) => this.onDeleteTransaction(tx)
+      },
+      panelClass: 'custom-bottom-sheet'
+    });
   }
 
   toggleSelection(transaction: Transaction) {
@@ -943,14 +942,9 @@ export class MobileTransactionListComponent
   onLongPressStart(transaction: Transaction) {
     if (transaction.id?.startsWith('upcoming-') || (transaction as any)._isDeleted || this.selectedRange() === 'category') return;
     
-    // Ignore long press if the card is already expanded
-    if (this.selectedTx?.id === transaction.id) return;
-
-    this.isLongPressing = false;
     this.longPressTimeout = setTimeout(() => {
       this.isLongPressing = true;
       this.toggleSelection(transaction);
-      this.selectedTx = null; // Close expansion if open
     }, this.LONG_PRESS_DURATION);
   }
 

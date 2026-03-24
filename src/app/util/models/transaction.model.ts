@@ -152,6 +152,11 @@ export interface Transaction extends Auditable, RecurrenceInfo {
   _dueStatus?: string;
   _isOverdue?: boolean;
   _popState?: string;
+
+  // Permission flags (baked by TransactionProcessorService)
+  _canEdit?: boolean;
+  _canAdjust?: boolean;
+  _canDelete?: boolean;
 }
 
 /**

@@ -1,0 +1,169 @@
+<div class="transaction-detail-sheet">
+  <div class="sheet-header">
+    <div class="drag-handle"></div>
+    <div class="header-content">
+      <h2 class="sheet-title">Transaction Details</h2>
+      <button mat-icon-button (click)="close()" class="close-btn">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="sheet-body">
+    <div class="details-container">
+      <!-- Category & Icon -->
+      <div class="category-header">
+        <div class="category-icon-wrapper" [style.background-color]="data.transaction._categoryColor + '20'">
+          <mat-icon [style.color]="data.transaction._categoryColor">{{ data.transaction._categoryIcon }}</mat-icon>
+        </div>
+        <div class="category-info">
+          <div class="category-name text-truncate">{{ data.transaction.category | titlecase }}</div>
+          <div class="transaction-date">{{ data.transaction._fullTransactionDateDisplay }}</div>
+        </div>
+        <div class="amount-display" [class.income]="data.transaction._isIncome" [class.expense]="!data.transaction._isIncome">
+          {{ data.transaction._isIncome ? '+' : '-' }}{{ data.transaction.amount | currency:{round:false,compact:false} }}
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Account Information -->
+      <div class="detail-row">
+        <div class="detail-label">
+          <mat-icon class="detail-icon">account_balance</mat-icon>
+          <span>Account</span>
+        </div>
+        <div class="detail-value">
+          <span class="account-name">{{ data.transaction._accountName }}</span>
+          @if (data.transaction._accountType) {
+          <span class="account-type">({{ data.transaction._accountType }})</span>
+          }
+        </div>
+      </div>
+
+      <!-- Recurring Status -->
+      @if (data.transaction.isRecurring) {
+      <div class="detail-row">
+        <div class="detail-label">
+          <mat-icon class="detail-icon">repeat</mat-icon>
+          <span>Recurring</span>
+        </div>
+        <div class="detail-value">
+          <span class="recurring-info">{{ data.transaction._recurringInfo }}</span>
+        </div>
+      </div>
+      }
+
+      <!-- Updated Date -->
+      <div class="detail-row">
+        <div class="detail-label">
+          <mat-icon class="detail-icon">update</mat-icon>
+          <span>Last Updated</span>
+        </div>
+        <div class="detail-value">
+          <span class="updated-date">{{ data.transaction._updatedAtDisplay }}</span>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      @if (data.transaction.notes && data.transaction.notes.trim()) {
+      <div class="detail-row notes-row">
+        <div class="detail-label">
+          <mat-icon class="detail-icon">description</mat-icon>
+          <span>Notes</span>
+        </div>
+        <div class="detail-value">
+          <p class="transaction-notes">{{ data.transaction.notes }}</p>
+        </div>
+      </div>
+      }
+
+      <!-- Family Split Details -->
+      @if(data.transaction.splitData) {
+      <div class="split-details-section">
+        <h3 class="section-title">Split Details</h3>
+        
+        <div class="split-card">
+          <!-- Paid By -->
+          @if(data.transaction.splitData.paidBy?.length || data.transaction.splitData.paidByUserId) {
+          <div class="split-group">
+            <p class="group-label">Paid By</p>
+            <div class="member-list">
+              @if (data.transaction.splitData.paidBy?.length) {
+                @for (payer of data.transaction.splitData.paidBy; track payer.userId) {
+                <div class="member-item">
+                  <div class="member-avatar">
+                    <img [src]="payer.photoURL" appImageFallback alt="Payer">
+                  </div>
+                  <span class="member-name">{{ payer.displayName }}</span>
+                  <span class="member-amount">{{ payer.amount | currency }}</span>
+                </div>
+                }
+              } @else if (data.transaction.splitData.paidByUserId) {
+                <div class="member-item">
+                  <div class="member-avatar">
+                    <img [src]="data.transaction.splitData.paidByPhotoURL" appImageFallback alt="Payer">
+                  </div>
+                  <span class="member-name">{{ data.transaction.splitData.paidByDisplayName }}</span>
+                  <span class="member-amount">{{ data.transaction.amount | currency }}</span>
+                </div>
+              }
+            </div>
+          </div>
+          }
+
+          <!-- Split Between -->
+          @if (data.transaction.splitData.splitBetween.length) {
+          <div class="split-group mt-4">
+            <p class="group-label">Split Between</p>
+            <div class="member-list">
+              @for (member of data.transaction.splitData.splitBetween; track member.userId) {
+              <div class="member-item">
+                <div class="member-avatar">
+                  <img [src]="member.photoURL" appImageFallback alt="Member">
+                </div>
+                <span class="member-name">{{ member.displayName }}</span>
+                <span class="member-amount">{{ member.amount | currency }}</span>
+              </div>
+              }
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+
+  <div class="sheet-footer">
+    <div class="action-bar">
+      @if (data.transaction._canEdit) {
+      <button mat-flat-button color="primary" class="action-btn edit-btn" (click)="onEdit()">
+        <mat-icon>edit</mat-icon>
+        <span>Edit</span>
+      </button>
+      }
+      
+      @if (data.transaction._canAdjust) {
+      <button mat-stroked-button class="action-btn adjust-btn" (click)="onAdjust()">
+        <mat-icon>tune</mat-icon>
+        <span>Adjust</span>
+      </button>
+      }
+
+      @if (data.transaction._canDelete) {
+      <button mat-stroked-button color="warn" class="action-btn delete-btn" (click)="onDelete()">
+        <mat-icon>delete</mat-icon>
+        <span>Delete</span>
+      </button>
+      }
+
+      @if (!data.transaction._canEdit && !data.transaction._canDelete) {
+      <div class="view-only-badge">
+        <mat-icon>info</mat-icon>
+        <span>View Only Mode</span>
+      </div>
+      }
+    </div>
+  </div>
+</div>
