@@ -68,12 +68,13 @@
 
       <!-- Notes -->
       @if (data.transaction.notes && data.transaction.notes.trim()) {
-      <div class="detail-row notes-row">
-        <div class="detail-label">
-          <mat-icon class="detail-icon">description</mat-icon>
-          <span>Notes</span>
+      <div class="notes-section">
+        <div class="notes-header">
+          <mat-icon class="notes-icon">notes</mat-icon>
+          <span class="notes-label">Notes</span>
         </div>
-        <div class="detail-value">
+        <div class="notes-container">
+          <div class="notes-accent"></div>
           <p class="transaction-notes">{{ data.transaction.notes }}</p>
         </div>
       </div>
