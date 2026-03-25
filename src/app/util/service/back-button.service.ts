@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -16,7 +16,8 @@ export class BackButtonService {
     private bottomSheet: MatBottomSheet,
     private router: Router,
     private snackBar: MatSnackBar,
-    private navStack: NavigationStackService
+    private navStack: NavigationStackService,
+    private zone: NgZone
   ) {}
 
   init() {
@@ -24,51 +25,59 @@ export class BackButtonService {
     history.pushState(null, '', location.href);
 
     window.onpopstate = () => {
+      this.zone.run(() => {
 
-      // 1️⃣ Close Overlays (Topmost First)
-      // We check the DOM to see which overlay (Dialog or Bottom Sheet) is actually on top
-      const overlays = Array.from(document.querySelectorAll('mat-dialog-container, mat-bottom-sheet-container'));
-      if (overlays.length > 0) {
-        const lastOverlay = overlays[overlays.length - 1];
-        
-        if (lastOverlay.tagName.toLowerCase() === 'mat-bottom-sheet-container') {
-          this.bottomSheet.dismiss();
-        } else {
-          // It's a dialog, close the last one
-          if (this.dialog.openDialogs.length > 0) {
-            this.dialog.openDialogs[this.dialog.openDialogs.length - 1].close();
+        // 1️⃣ Close Overlays (Topmost First)
+        // We check the DOM to see which overlay (Dialog or Bottom Sheet) is actually on top
+        const overlays = Array.from(document.querySelectorAll('mat-dialog-container, mat-bottom-sheet-container'));
+        if (overlays.length > 0) {
+          const lastOverlay = overlays[overlays.length - 1];
+
+          if (lastOverlay.tagName.toLowerCase() === 'mat-bottom-sheet-container') {
+            this.bottomSheet.dismiss();
+          } else {
+            // It's a dialog, close the last one
+            if (this.dialog.openDialogs.length > 0) {
+              this.dialog.openDialogs[this.dialog.openDialogs.length - 1].close();
+            }
           }
-        }
-        
-        history.pushState(null, '', location.href);
-        return;
-      }
 
-      // 2️⃣ Navigate stack if available
-      if (this.navStack.canGoBack()) {
-        const previous = this.navStack.pop();
-        if (previous) {
-          this.router.navigateByUrl(previous);
+          // Small delay for history to settle
+          setTimeout(() => {
+            history.pushState(null, '', location.href);
+          }, 50);
           return;
         }
-      }
 
-      // 3️⃣ Exit app protection
-      const now = Date.now();
+        // 2️⃣ Navigate stack if available
+        if (this.navStack.canGoBack()) {
+          const previous = this.navStack.pop();
+          if (previous) {
+            this.router.navigateByUrl(previous);
+            return;
+          }
+        }
 
-      if (now - this.lastBackPressed < this.exitTime) {
-        window.close(); // PWA exit
-      } else {
-        this.lastBackPressed = now;
+        // 3️⃣ Exit app protection
+        const now = Date.now();
 
-        this.snackBar.open(
-          'Press back again to exit',
-          '',
-          { duration: 2000 }
-        );
+        if (now - this.lastBackPressed < this.exitTime) {
+          window.close(); // PWA exit
+        } else {
+          this.lastBackPressed = now;
 
-        history.pushState(null, '', location.href);
-      }
+          this.snackBar.open(
+            'Press back again to exit',
+            '',
+            { duration: 2000 }
+          );
+
+          // Small delay for history to settle
+          setTimeout(() => {
+            history.pushState(null, '', location.href);
+          }, 50);
+        }
+      });
 
     };
 
