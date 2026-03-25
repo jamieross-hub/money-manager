@@ -34,7 +34,6 @@ import * as TransactionsActions from '../../../../../store/transactions/transact
 import { loadAccounts } from 'src/app/store/accounts/accounts.actions';
 import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
-import { PwaNavigationService } from 'src/app/util/service/pwa-navigation.service';
 import { RecurringInterval, SyncStatus, TransactionStatus, TransactionType, AccountType } from 'src/app/util/config/enums';
 import { Category } from 'src/app/util/models';
 import { BreakpointObserver } from '@angular/cdk/layout';
@@ -191,7 +190,6 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     private userService: UserService,
     private currencyService: CurrencyService,
     private bottomSheet: MatBottomSheet,
-    private pwaNavigation: PwaNavigationService,
     private cdr: ChangeDetectorRef,
     private recurringService: RecurringService,
     private categoryService: CategoryService
@@ -1191,16 +1189,16 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     // Using current form value or defaulting to Expense
     const currentType = this.transactionForm.get('categoryType')?.value || TransactionType.EXPENSE;
 
-    const ref = this.bottomSheet.open(CategorySelectionSheetComponent, {
+    const sheetRef = this.bottomSheet.open(CategorySelectionSheetComponent, {
       data: {
-        categories: this.categories(),
-        selectedCategory: this.transactionForm.get('categoryId')?.value
+        selectedCategoryId: this.transactionForm.get('categoryId')?.value,
+        transactionType: currentType // We might want to pass this to filter list
       },
-      closeOnNavigation: false
+      closeOnNavigation: false,
+      panelClass: 'bg-transparent' // For rounded corners if needed
     });
-    this.pwaNavigation.registerBottomSheet(ref);
-    
-    ref.afterDismissed().subscribe(category => {
+
+    sheetRef.afterDismissed().subscribe((category: Category | undefined) => {
       if (category) {
         this.onCategoryChange(category);
       }
@@ -1218,17 +1216,19 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       return;
     }
 
-    const ref = this.bottomSheet.open(MultiplePaidBySheetComponent, {
+    const sheetRef = this.bottomSheet.open(MultiplePaidBySheetComponent, {
       data: {
         members: this.familyMembers(),
-        paidBy: this.transactionForm.get('paidBy')?.value || [],
-        totalAmount: parseFloat(this.transactionForm.get('amount')?.value || '0')
+        totalAmount: totalAmount,
+        initialPaidBy: this.transactionForm.get('paidBy')?.value || [],
+        currencySymbol: '₹'
       },
-      closeOnNavigation: false
+      panelClass: 'bg-transparent',
+      closeOnNavigation: false,
+      disableClose: true
     });
-    this.pwaNavigation.registerBottomSheet(ref);
-    
-    ref.afterDismissed().subscribe((result: PaidByMember[] | undefined) => {
+
+    sheetRef.afterDismissed().subscribe((result: PaidByMember[] | undefined) => {
       if (result) {
         if (result.length === 0) {
           // Fallback to current user if they saved an empty list somehow
@@ -1307,15 +1307,14 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       initialSplits: currentSplits
     };
 
-    const ref = this.bottomSheet.open(SplitConfigSheetComponent, {
+    const bottomSheetRef = this.bottomSheet.open(SplitConfigSheetComponent, {
        data: data,
        panelClass: 'bg-transparent',
        closeOnNavigation: false,
        disableClose: true
     });
-    this.pwaNavigation.registerBottomSheet(ref);
 
-    ref.afterDismissed().pipe(
+    bottomSheetRef.afterDismissed().pipe(
        takeUntil(this._onDestroy)
     ).subscribe((result?: { mode: SplitMode, splits: SplitBetweenMember[] }) => {
        if (result) {

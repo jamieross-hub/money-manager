@@ -40,9 +40,7 @@ import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.d
 
 
 import { MatDialog } from '@angular/material/dialog';
-import { MatBottomSheetModule, MatBottomSheet, MatBottomSheetRef } from '@angular/material/bottom-sheet';
-import { PwaNavigationService } from 'src/app/util/service/pwa-navigation.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatBottomSheetModule, MatBottomSheet } from '@angular/material/bottom-sheet';
 import { Transaction } from '../../../../util/models/transaction.model';
 import { Subject, Subscription, Observable, timer } from 'rxjs';
 import dayjs from 'dayjs';
@@ -138,7 +136,6 @@ export class MobileTransactionListComponent
   private readonly processorService = inject(TransactionProcessorService);
   private readonly route = inject(Router);
   private readonly dialog = inject(MatDialog);
-  private readonly pwaNavigation = inject(PwaNavigationService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
   public  readonly bottomSheet = inject(MatBottomSheet);
@@ -886,7 +883,7 @@ export class MobileTransactionListComponent
     // Don't open for upcoming or deleted/pending transactions
     if (transaction.id?.startsWith('upcoming-') || (transaction as any)._isDeleted || transaction.syncStatus === SyncStatus.PENDING) return;
 
-    const ref = this.bottomSheet.open(MobileTransactionDetailSheetComponent, {
+    this.bottomSheet.open(MobileTransactionDetailSheetComponent, {
       data: { 
         transaction,
         onEdit: (tx: Transaction) => this.onEditTransaction(tx),
@@ -896,7 +893,6 @@ export class MobileTransactionListComponent
       closeOnNavigation: false,
       panelClass: 'custom-bottom-sheet'
     });
-    this.pwaNavigation.registerBottomSheet(ref);
   }
 
   toggleSelection(transaction: Transaction) {

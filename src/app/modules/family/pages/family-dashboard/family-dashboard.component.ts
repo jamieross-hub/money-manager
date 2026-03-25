@@ -60,7 +60,6 @@ import { LoaderService } from 'src/app/util/service/loader.service';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 import { ReportService } from 'src/app/util/service/db/report.service';
 import { UserService } from 'src/app/util/service/db/user.service';
-import { PwaNavigationService } from 'src/app/util/service/pwa-navigation.service';
 
 // Dialogs & Components
 import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
@@ -132,7 +131,6 @@ export class FamilyDashboardComponent implements OnInit {
   private readonly reportService            = inject(ReportService);
   private readonly storageService           = inject(LocalIndexDBStorageService);
   private readonly userService              = inject(UserService);
-  private readonly pwaNavigationService     = inject(PwaNavigationService);
 
   // ─── Private State ───────────────────────────────────────────────────────────
   private isInstanceLoading = false;
@@ -251,11 +249,10 @@ export class FamilyDashboardComponent implements OnInit {
   }
 
   openMembersSheet(): void {
-    const ref = this.bottomSheet.open(FamilyMembersComponent, {
+    this.bottomSheet.open(FamilyMembersComponent, {
       panelClass: ['bg-transparent', 'auto-height-sheet'],
       closeOnNavigation: false
     });
-    this.pwaNavigationService.registerBottomSheet(ref);
   }
 
   loadMoreActivities(): void {
