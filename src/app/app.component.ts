@@ -3,7 +3,6 @@ import { ThemeSwitchingService } from './util/service/theme-switching.service';
 import { Location, CommonModule } from '@angular/common';
 import { LoaderService } from './util/service/loader.service';
 import { PwaNavigationService, NavigationState } from './util/service/pwa-navigation.service';
-import { BackButtonService } from './util/service/back-button.service';
 import { CommonSyncService } from './util/service/common-sync.service';
 import { filter, Subject, takeUntil, take } from 'rxjs';
 import { APP_CONFIG } from './util/config/config';
@@ -58,7 +57,6 @@ export class AppComponent implements OnInit, OnDestroy {
     private location: Location,
     private loaderService: LoaderService,
     private pwaNavigationService: PwaNavigationService,
-    private backButtonService: BackButtonService,
     private commonSyncService: CommonSyncService,
     private ssrService: SsrService,
     private firebaseMessagingService: FirebaseMessagingService,
@@ -111,7 +109,6 @@ export class AppComponent implements OnInit, OnDestroy {
       this.isOnline = navigator.onLine;
     }
     this.initializePwaFeatures();
-    this.backButtonService.init();
     this.setupEventListeners();
     this.firebaseMessagingService.listenForMessages();
     this.commonSyncService.startSync();

@@ -4,6 +4,9 @@ import { Router, NavigationEnd, NavigationStart, Event as RouterEvent } from '@a
 import { BehaviorSubject, Observable, filter, takeUntil, Subject, map } from 'rxjs';
 import { Platform } from '@angular/cdk/platform';
 import { isPlatformServer } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 export interface NavigationState {
   canGoBack: boolean;
@@ -31,9 +34,12 @@ export class PwaNavigationService implements OnDestroy {
   private navigationStack: string[] = [];
   private maxStackSize = 50;
 
+  // Back button protection
+  private lastBackPressed = 0;
+  private exitTime = 2000;
+
   public navigationState$: Observable<NavigationState> = this.navigationStateSubject.asObservable();
   public canGoBack$: Observable<boolean> = this.navigationState$.pipe(
-    filter(state => state.canGoBack),
     map(state => state.canGoBack)
   );
 
@@ -42,6 +48,9 @@ export class PwaNavigationService implements OnDestroy {
     private router: Router,
     private platform: Platform,
     private ngZone: NgZone,
+    private dialog: MatDialog,
+    private bottomSheet: MatBottomSheet,
+    private snackBar: MatSnackBar,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     if (!isPlatformServer(this.platformId)) {
@@ -50,14 +59,10 @@ export class PwaNavigationService implements OnDestroy {
   }
 
   private initializePwaNavigation(): void {
-    // Detect PWA environment
     const isStandalone = this.isStandalonePwa();
     const isMobile = this.isMobileDevice();
 
-    // Initialize navigation stack
-    this.navigationStack = [];
-    
-    // Listen to router events
+    // 1️⃣ Listen to router events
     this.router.events
       .pipe(
         filter((event: RouterEvent): event is NavigationEnd => event instanceof NavigationEnd),
@@ -69,7 +74,6 @@ export class PwaNavigationService implements OnDestroy {
         });
       });
 
-    // Listen to router events for navigation start
     this.router.events
       .pipe(
         filter((event: RouterEvent): event is NavigationStart => event instanceof NavigationStart),
@@ -81,28 +85,37 @@ export class PwaNavigationService implements OnDestroy {
         });
       });
 
-    // Handle browser back/forward buttons
-    const popstateHandler = () => {
-      this.ngZone.run(() => {
-        this.handlePopState();
-      });
-    };
+    // 2️⃣ Handle browser back/forward buttons (Web popstate)
+    if (typeof window !== 'undefined') {
+      // Ensure there's a state to pop even at root
+      history.pushState(null, '', location.href);
 
-    // if (typeof window !== 'undefined') {
-    //   window.addEventListener('popstate', popstateHandler);
-
-    //   // Store for cleanup
-    //   this.destroy$.subscribe(() => {
-    //     window.removeEventListener('popstate', popstateHandler);
-    //   });
-    // }
-
-    // Handle hardware back button on mobile
-    if (isMobile) {
-      this.setupHardwareBackButton();
+      window.onpopstate = () => {
+        this.ngZone.run(() => {
+          this.handleBackInteraction();
+        });
+      };
     }
 
-    // Handle keyboard events
+    // 3️⃣ Handle hardware back button for Android (if applicable, e.g. Capacitor)
+    if (isMobile && this.platform.ANDROID) {
+      const backButtonHandler = (event: Event) => {
+        event.preventDefault();
+        this.ngZone.run(() => {
+          this.handleBackInteraction();
+        });
+      };
+      
+      document.addEventListener('backbutton', backButtonHandler, false);
+      this.destroy$.subscribe(() => document.removeEventListener('backbutton', backButtonHandler));
+    }
+
+    // 4️⃣ iOS back gesture
+    if (isMobile && this.platform.IOS) {
+      this.setupIosBackGesture();
+    }
+
+    // 5️⃣ Keyboard interactions
     this.setupKeyboardNavigation();
 
     // Update initial state
@@ -114,22 +127,17 @@ export class PwaNavigationService implements OnDestroy {
   }
 
   private isStandalonePwa(): boolean {
-    if (isPlatformServer(this.platformId)) {
-      return false; // Default to false on server-side
-    }
+    if (isPlatformServer(this.platformId)) return false;
     return window.matchMedia('(display-mode: standalone)').matches ||
            (window.navigator as any).standalone === true;
   }
 
   private isMobileDevice(): boolean {
-    if (isPlatformServer(this.platformId)) {
-      return false; // Default to false on server-side
-    }
+    if (isPlatformServer(this.platformId)) return false;
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   }
 
   private handleNavigationStart(event: NavigationStart): void {
-    // Don't add to stack if it's a navigation within the same route
     if (event.url !== this.navigationStateSubject.value.currentRoute) {
       this.addToNavigationStack(this.navigationStateSubject.value.currentRoute);
     }
@@ -142,52 +150,59 @@ export class PwaNavigationService implements OnDestroy {
     this.updateNavigationState({
       currentRoute: event.url,
       previousRoute,
-      canGoBack: this.navigationStack.length > 0 || this.canNavigateBack()
+      canGoBack: this.navigationStack.length > 0
     });
   }
 
-  private handlePopState(): void {
-    // Handle browser back/forward navigation
-    const currentRoute = this.router.url;
-    const currentState = this.navigationStateSubject.value;
-    
-    // Update navigation stack when user uses browser back/forward
-    if (currentRoute !== currentState.currentRoute) {
-      this.updateNavigationState({
-        currentRoute,
-        previousRoute: currentState.currentRoute,
-        canGoBack: this.navigationStack.length > 0 || this.canNavigateBack()
-      });
+  /**
+   * Universal handler for all back interactions (popstate, hardware back, swipe)
+   */
+  private handleBackInteraction(): void {
+    // A. Close Overlays (Topmost First)
+    const overlays = Array.from(document.querySelectorAll('mat-dialog-container, mat-bottom-sheet-container'));
+    if (overlays.length > 0) {
+      const lastOverlay = overlays[overlays.length - 1];
+      
+      if (lastOverlay.tagName.toLowerCase() === 'mat-bottom-sheet-container') {
+        this.bottomSheet.dismiss();
+      } else {
+        if (this.dialog.openDialogs.length > 0) {
+          this.dialog.openDialogs[this.dialog.openDialogs.length - 1].close();
+        }
+      }
+      
+      this.restoreHistoryState();
+      return;
+    }
+
+    // B. Navigate Stack
+    if (this.navigationStack.length > 0) {
+      const previous = this.navigationStack.pop();
+      if (previous) {
+        this.router.navigateByUrl(previous);
+        return;
+      }
+    }
+
+    // C. Exit App Protection
+    const now = Date.now();
+    if (now - this.lastBackPressed < this.exitTime) {
+      window.close(); // PWA exit
+    } else {
+      this.lastBackPressed = now;
+      this.snackBar.open('Press back again to exit', '', { duration: 2000 });
+      this.restoreHistoryState();
     }
   }
 
-  private setupHardwareBackButton(): void {
-    // Handle hardware back button on Android
-    if (this.platform.ANDROID) {
-      const backButtonHandler = (event: Event) => {
-        event.preventDefault();
-        this.ngZone.run(() => {
-          this.handleHardwareBackButton();
-        });
-      };
-      
-      document.addEventListener('backbutton', backButtonHandler, false);
-      
-      // Store for cleanup
-      this.destroy$.subscribe(() => {
-        document.removeEventListener('backbutton', backButtonHandler);
-      });
-    }
-
-    // Handle iOS back gesture and hardware back button
-    if (this.platform.IOS) {
-      // iOS doesn't have a hardware back button, but we can handle swipe gestures
-      this.setupIosBackGesture();
-    }
+  private restoreHistoryState(): void {
+    // Add back the popped state so the next back button also triggers an event
+    setTimeout(() => {
+      history.pushState(null, '', location.href);
+    }, 50);
   }
 
   private setupIosBackGesture(): void {
-    // Handle iOS swipe back gesture
     let startX = 0;
     let startY = 0;
     const threshold = 50;
@@ -203,10 +218,9 @@ export class PwaNavigationService implements OnDestroy {
       const deltaX = startX - endX;
       const deltaY = Math.abs(startY - endY);
 
-      // Check if it's a horizontal swipe from left edge
       if (deltaX > threshold && deltaY < threshold && startX < 50) {
         this.ngZone.run(() => {
-          this.handleHardwareBackButton();
+          this.handleBackInteraction();
         });
       }
     };
@@ -214,7 +228,6 @@ export class PwaNavigationService implements OnDestroy {
     document.addEventListener('touchstart', touchStartHandler, { passive: true });
     document.addEventListener('touchend', touchEndHandler, { passive: true });
 
-    // Store for cleanup
     this.destroy$.subscribe(() => {
       document.removeEventListener('touchstart', touchStartHandler);
       document.removeEventListener('touchend', touchEndHandler);
@@ -223,124 +236,31 @@ export class PwaNavigationService implements OnDestroy {
 
   private setupKeyboardNavigation(): void {
     const keydownHandler = (event: KeyboardEvent) => {
-      // Handle Alt+Left arrow (browser back)
       if (event.altKey && event.key === 'ArrowLeft') {
         event.preventDefault();
-        this.ngZone.run(() => {
-          this.goBack();
-        });
+        this.ngZone.run(() => this.goBack());
       }
       
-      // Handle Escape key for closing modals/dialogs
       if (event.key === 'Escape') {
-        this.ngZone.run(() => {
-          this.handleEscapeKey();
-        });
+        this.ngZone.run(() => this.handleBackInteraction());
       }
     };
 
     document.addEventListener('keydown', keydownHandler);
-
-    // Store for cleanup
-    this.destroy$.subscribe(() => {
-      document.removeEventListener('keydown', keydownHandler);
-    });
-  }
-
-  private handleHardwareBackButton(): void {
-    const currentState = this.navigationStateSubject.value;
-    
-    // Check if we're in a modal or dialog
-    if (this.isInModal()) {
-      this.closeModal();
-      return;
-    }
-
-    // Check if we can go back in navigation stack
-    if (currentState.canGoBack) {
-      this.goBack();
-    } else {
-      // Show exit confirmation for PWA
-      this.showExitConfirmation();
-    }
-  }
-
-  private handleEscapeKey(): void {
-    // Close modals or dialogs when Escape is pressed
-    if (this.isInModal()) {
-      this.closeModal();
-    }
-  }
-
-  private isInModal(): boolean {
-    // Check if there are any modal elements open
-    const modals = document.querySelectorAll('.modal, .dialog, [role="dialog"]');
-    return modals.length > 0;
-  }
-
-  private closeModal(): void {
-    // Find and close the topmost modal
-    const modals = document.querySelectorAll('.modal, .dialog, [role="dialog"]');
-    if (modals.length > 0) {
-      const topModal = modals[modals.length - 1];
-      const closeButton = topModal.querySelector('[data-dismiss="modal"], .close, .modal-close');
-      if (closeButton) {
-        (closeButton as HTMLElement).click();
-      }
-    }
-  }
-
-  private showExitConfirmation(): void {
-    if (this.navigationStateSubject.value.isStandalone) {
-      // For standalone PWA, show a custom exit confirmation
-      if (confirm('Do you want to exit the app?')) {
-        this.exitApp();
-      }
-    }
-  }
-
-  private exitApp(): void {
-    // For standalone PWA, we can't programmatically exit, but we can minimize
-    if (this.navigationStateSubject.value.isStandalone) {
-      // Try to minimize the app (this works on some platforms)
-      window.close();
-    }
+    this.destroy$.subscribe(() => document.removeEventListener('keydown', keydownHandler));
   }
 
   private addToNavigationStack(route: string): void {
-    if (route && route !== '/') {
+    if (route && route !== '/' && route !== '') {
       this.navigationStack.push(route);
-      
-      // Keep stack size manageable
       if (this.navigationStack.length > this.maxStackSize) {
         this.navigationStack.shift();
       }
     }
   }
 
-  private canNavigateBack(): boolean {
-    return this.navigationStack.length > 0 || window.history.length > 1;
-  }
-
   public goBack(): void {
-    const currentState = this.navigationStateSubject.value;
-    
-    // Check if we have routes in our navigation stack
-    if (this.navigationStack.length > 0) {
-      const previousRoute = this.navigationStack.pop();
-      if (previousRoute) {
-        this.router.navigateByUrl(previousRoute);
-        return;
-      }
-    }
-
-    // Fallback to browser back
-    if (window.history.length > 1) {
-      this.location.back();
-    } else {
-      // If no history, navigate to home
-      this.router.navigate(['/dashboard']);
-    }
+    this.handleBackInteraction();
   }
 
   public goForward(): void {
@@ -354,8 +274,7 @@ export class PwaNavigationService implements OnDestroy {
   public clearNavigationStack(): void {
     this.navigationStack = [];
     this.updateNavigationState({
-      canGoBack: false,
-      navigationStack: []
+      canGoBack: false
     });
   }
 
@@ -363,41 +282,17 @@ export class PwaNavigationService implements OnDestroy {
     return [...this.navigationStack];
   }
 
-  public isStandaloneMode(): boolean {
-    return this.navigationStateSubject.value.isStandalone;
-  }
-
-  public isMobileMode(): boolean {
-    return this.navigationStateSubject.value.isMobile;
-  }
-
   private updateNavigationState(updates: Partial<NavigationState>): void {
     const currentState = this.navigationStateSubject.value;
     const newState = { ...currentState, ...updates };
-    
-    if (updates.navigationStack) {
-      this.navigationStack = updates.navigationStack;
-    }
-    
     this.navigationStateSubject.next(newState);
   }
 
   ngOnDestroy(): void {
-    // Clean up all event listeners and subscriptions
     this.destroy$.next();
     this.destroy$.complete();
-    
-    // Clear navigation stack
     this.navigationStack = [];
-    
-    // Reset navigation state
-    this.navigationStateSubject.next({
-      canGoBack: false,
-      currentRoute: '',
-      previousRoute: '',
-      navigationStack: [],
-      isStandalone: false,
-      isMobile: false
-    });
+    window.onpopstate = null;
   }
-} 
+}
+ 
