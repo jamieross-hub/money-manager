@@ -1,7 +1,7 @@
 import { Injectable, NgZone, Inject, PLATFORM_ID, OnDestroy } from '@angular/core';
 import { Location } from '@angular/common';
 import { Router, NavigationEnd, NavigationStart, Event as RouterEvent } from '@angular/router';
-import { BehaviorSubject, Observable, filter, takeUntil, Subject, map } from 'rxjs';
+import { BehaviorSubject, Observable, filter, takeUntil, Subject, map, take } from 'rxjs';
 import { Platform } from '@angular/cdk/platform';
 import { isPlatformServer } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
@@ -34,6 +34,9 @@ export class PwaNavigationService implements OnDestroy {
   private navigationStack: string[] = [];
   private maxStackSize = 50;
 
+  // Overlay tracking
+  private overlayStack: any[] = [];
+
   // Back button protection
   private lastBackPressed = 0;
   private exitTime = 2000;
@@ -55,7 +58,29 @@ export class PwaNavigationService implements OnDestroy {
   ) {
     if (!isPlatformServer(this.platformId)) {
       this.initializePwaNavigation();
+      this.setupOverlayTracking();
     }
+  }
+
+  private setupOverlayTracking(): void {
+    // Automatically track all dialogs
+    this.dialog.afterOpened.pipe(takeUntil(this.destroy$)).subscribe(ref => {
+      this.overlayStack.push(ref);
+      ref.afterClosed().pipe(take(1)).subscribe(() => {
+        this.overlayStack = this.overlayStack.filter(r => r !== ref);
+      });
+    });
+  }
+
+  /**
+   * Register a bottom sheet reference for tracking.
+   * Bottom sheets don't have a global afterOpened, so they must be registered manually.
+   */
+  public registerBottomSheet(ref: any): void {
+    this.overlayStack.push(ref);
+    ref.afterDismissed().pipe(take(1)).subscribe(() => {
+      this.overlayStack = this.overlayStack.filter(r => r !== ref);
+    });
   }
 
   private initializePwaNavigation(): void {
@@ -190,16 +215,15 @@ export class PwaNavigationService implements OnDestroy {
     }
 
     // 2️⃣ Close Overlays (Topmost First)
-    const overlays = Array.from(document.querySelectorAll('mat-dialog-container, mat-bottom-sheet-container'));
-    if (overlays.length > 0) {
-      const lastOverlay = overlays[overlays.length - 1];
+    if (this.overlayStack.length > 0) {
+      const lastOverlay = this.overlayStack[this.overlayStack.length - 1];
       
-      if (lastOverlay.tagName.toLowerCase() === 'mat-bottom-sheet-container') {
-        this.bottomSheet.dismiss();
-      } else {
-        if (this.dialog.openDialogs.length > 0) {
-          this.dialog.openDialogs[this.dialog.openDialogs.length - 1].close();
-        }
+      if (lastOverlay.dismiss) {
+        // MatBottomSheetRef
+        lastOverlay.dismiss();
+      } else if (lastOverlay.close) {
+        // MatDialogRef
+        lastOverlay.close();
       }
       
       this.restoreHistoryState();
