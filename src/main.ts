@@ -26,9 +26,9 @@ function initializePwaFeatures() {
   });
 
   // Handle navigation events for PWA
-  window.addEventListener('popstate', (event) => {
-    console.log('Navigation event:', event);
-  });
+  // window.addEventListener('popstate', (event) => {
+  //   console.log('Navigation event:', event);
+  // });
 
   // Handle visibility change for PWA
   document.addEventListener('visibilitychange', () => {

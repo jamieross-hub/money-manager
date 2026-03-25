@@ -114,6 +114,7 @@ export class HomeComponent {
   //     switch (action.id) {
   //       case 'add-transaction':
   //         this._dialog.open(MobileAddTransactionComponent, {
+  //           closeOnNavigation: false,
   //           panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
   //         });
   //         break;
@@ -175,6 +176,7 @@ export class HomeComponent {
     //check route param action=add-transaction
     if (this.router.url.includes('action=add-transaction')) {
       this._dialog.open(MobileAddTransactionComponent, {
+        closeOnNavigation: false,
         panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
       });
     }

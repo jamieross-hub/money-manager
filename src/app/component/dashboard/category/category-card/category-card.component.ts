@@ -600,6 +600,7 @@ Remaining: ${remainingDays} days`;
       height: '85vh',
       maxHeight: '85vh',
       disableClose: false,
+      closeOnNavigation: false,
       autoFocus: false,
       hasBackdrop: true,
       backdropClass: 'dialog-backdrop',
@@ -613,6 +614,7 @@ Remaining: ${remainingDays} days`;
       height: '100vh',
       maxWidth: '100vw',
       maxHeight: '100vh',
+      closeOnNavigation: false,
       data: {
         category: { ...this.category },
         isEdit: true
@@ -636,6 +638,7 @@ Remaining: ${remainingDays} days`;
     const dialogRef = this.dialog.open(MobileCategoryAddEditPopupComponent, {
       width: '500px',
       maxWidth: '90vw',
+      closeOnNavigation: false,
       data: {
         category: { ...this.category },
         isEdit: true
@@ -656,6 +659,7 @@ Remaining: ${remainingDays} days`;
     const dialogRef = this.dialog.open(CategoryBudgetDialogComponent, {
       width: '500px',
       maxWidth: '90vw',
+      closeOnNavigation: false,
       data: {
         category: this.category,
         isEdit: this.category.budget?.hasBudget || false

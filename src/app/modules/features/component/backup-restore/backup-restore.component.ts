@@ -62,6 +62,7 @@ export class BackupRestoreComponent implements OnInit {
 
         const dialogRef = this.dialog.open(ConfirmDialogComponent, {
             width: '400px',
+            closeOnNavigation: false,
             data: {
                 title: this.translate.instant(confirmTitle),
                 message: this.translate.instant(confirmMsg),

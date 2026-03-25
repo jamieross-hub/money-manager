@@ -316,6 +316,7 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
   openIconSelectorDialog(): void {
     this.bottomSheet
       .open(IconSelectorDialogComponent, {
+        closeOnNavigation: false,
         data: {
           currentIcon: this.categoryForm.get('icon')?.value,
         },

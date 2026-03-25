@@ -433,6 +433,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
     const dialogRef = this.dialog.open(EditCategoryGroupDialogComponent, {
       panelClass: 'responsive-dialog',
+      closeOnNavigation: false,
       data: { groupName, groupIcon: currentIcon }
     });
 
@@ -485,6 +486,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
   public openMobileDialog(category?: Category): void {
     const dialogRef = this.dialog.open(MobileCategoryAddEditPopupComponent, {
       panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
+      closeOnNavigation: false,
       data: {
         category: category ? { ...category } : null,
         isEdit: category ? true : false,
@@ -552,6 +554,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
   public openBudgetDialog(category: Category): void {
     const dialogRef = this.dialog.open(CategoryBudgetDialogComponent, {
       panelClass: 'responsive-dialog',
+      closeOnNavigation: false,
       data: {
         category: category,
         isEdit: category.budget?.hasBudget || false
@@ -579,6 +582,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
   public openParentCategorySelector(category: Category): void {
     const dialogRef = this.dialog.open(ParentCategorySelectorDialogComponent, {
       panelClass: 'responsive-dialog',
+      closeOnNavigation: false,
       data: {
         category: category,
         allCategories: this._categoriesSnapshot
@@ -609,6 +613,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
     if (!category.budget) return;
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
+      closeOnNavigation: false,
       data: {
         title: 'Remove Budget',
         message: `Are you sure you want to remove the budget for "${category.name}"?`,

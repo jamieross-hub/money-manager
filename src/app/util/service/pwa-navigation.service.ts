@@ -88,14 +88,14 @@ export class PwaNavigationService implements OnDestroy {
       });
     };
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('popstate', popstateHandler);
+    // if (typeof window !== 'undefined') {
+    //   window.addEventListener('popstate', popstateHandler);
 
-      // Store for cleanup
-      this.destroy$.subscribe(() => {
-        window.removeEventListener('popstate', popstateHandler);
-      });
-    }
+    //   // Store for cleanup
+    //   this.destroy$.subscribe(() => {
+    //     window.removeEventListener('popstate', popstateHandler);
+    //   });
+    // }
 
     // Handle hardware back button on mobile
     if (isMobile) {

@@ -463,7 +463,10 @@ export class ProfileComponent {
   }
 
   createFamilyGroup(): void {
-    const ref = this.dialog.open(FamilyCreateDialogComponent, { disableClose: true });
+    const ref = this.dialog.open(FamilyCreateDialogComponent, { 
+      disableClose: true,
+      closeOnNavigation: false 
+    });
     ref.afterClosed().subscribe(async result => {
       if (result) {
         try {
@@ -482,7 +485,10 @@ export class ProfileComponent {
   }
 
   joinFamilyGroup(): void {
-    const ref = this.dialog.open(FamilyJoinDialogComponent, { disableClose: true });
+    const ref = this.dialog.open(FamilyJoinDialogComponent, { 
+      disableClose: true,
+      closeOnNavigation: false 
+    });
     ref.afterClosed().subscribe(async code => {
       if (code) {
         if (code) {
@@ -515,6 +521,7 @@ export class ProfileComponent {
 
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
+      closeOnNavigation: false,
       data: {
         title: 'Delete Family Wallet',
         message: 'Are you sure you want to delete this family wallet? All shared transactions and data will be hidden and other members will be disconnected. This action cannot be undone.',
@@ -773,7 +780,8 @@ export class ProfileComponent {
         message: 'Are you sure you want to log out from your account?',
         confirmText: 'Sign Out',
         cancelText: 'Cancel',
-        type: 'info'
+        type: 'info',
+        closeOnNavigation: false
       },
     });
 

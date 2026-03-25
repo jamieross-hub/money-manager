@@ -148,6 +148,7 @@ export class FooterComponent {
     this._dialog.open(AddAccountDialogComponent, {
       data: null,
       disableClose: true,
+      closeOnNavigation: false,
       panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
     });
   }
@@ -156,6 +157,7 @@ export class FooterComponent {
     this._dialog.open(MobileCategoryAddEditPopupComponent, {
       data: null,
       disableClose: true,
+      closeOnNavigation: false,
       panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
     });
   }
@@ -163,6 +165,7 @@ export class FooterComponent {
   addTransaction() {
     this.notificationService.buttonClick();
     this._dialog.open(MobileAddTransactionComponent, {
+      closeOnNavigation: false,
       panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
     });
   }

@@ -304,6 +304,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
   public openAccountDialog(account?: Account): void {
     const dialogRef = this.dialog.open(AddAccountDialogComponent, {
       panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'desktop-dialog',
+      closeOnNavigation: false,
       data: account || null
     });
 
@@ -329,7 +330,8 @@ export class AccountsComponent implements OnInit, OnDestroy {
         message: `Are you sure you want to delete "${account.name}"? This action cannot be undone.`,
         confirmText: 'Delete',
         cancelText: 'Cancel',
-        confirmColor: 'warn'
+        confirmColor: 'warn',
+        closeOnNavigation: false
       }
     });
 
@@ -370,6 +372,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
       width: '90vw',
       maxWidth: '800px',
       maxHeight: '90vh',
+      closeOnNavigation: false,
       panelClass: 'account-statement-dialog'
     });
   }

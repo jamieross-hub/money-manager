@@ -1194,6 +1194,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         selectedCategoryId: this.transactionForm.get('categoryId')?.value,
         transactionType: currentType // We might want to pass this to filter list
       },
+      closeOnNavigation: false,
       panelClass: 'bg-transparent' // For rounded corners if needed
     });
 
@@ -1223,6 +1224,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         currencySymbol: '₹'
       },
       panelClass: 'bg-transparent',
+      closeOnNavigation: false,
       disableClose: true
     });
 
@@ -1308,6 +1310,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     const bottomSheetRef = this.bottomSheet.open(SplitConfigSheetComponent, {
        data: data,
        panelClass: 'bg-transparent',
+       closeOnNavigation: false,
        disableClose: true
     });
 

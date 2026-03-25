@@ -194,6 +194,7 @@ export class SettleUpComponent implements OnInit {
     };
 
     const ref = this.dialog.open(SettleDialogComponent, {
+      closeOnNavigation: false,
       data,
     });
 

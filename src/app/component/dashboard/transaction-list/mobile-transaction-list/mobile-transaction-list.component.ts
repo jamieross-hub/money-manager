@@ -219,13 +219,13 @@ export class MobileTransactionListComponent
   private isLongPressing = false;
   private historyPushedForSelection = false;
 
-  @HostListener('window:popstate', ['$event'])
-  onPopState(event: PopStateEvent) {
-    if (this.historyPushedForSelection) {
-      this.historyPushedForSelection = false;
-      this.clearSelection(false);
-    }
-  }
+  // @HostListener('window:popstate', ['$event'])
+  // onPopState(event: PopStateEvent) {
+  //   if (this.historyPushedForSelection) {
+  //     this.historyPushedForSelection = false;
+  //     this.clearSelection(false);
+  //   }
+  // }
 
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
   appView = toSignal(this.appViewService.appView$, { initialValue: 'MONTHLY' as AppView });
@@ -286,6 +286,7 @@ export class MobileTransactionListComponent
         familyName: this.activeFamily()?.name,
         members: this.familyMembers()
       },
+      closeOnNavigation: false,
       panelClass: 'category-chart-sheet-panel'
     });
   }
@@ -888,6 +889,7 @@ export class MobileTransactionListComponent
         onAdjust: (tx: Transaction) => this.onAdjustTransaction(tx),
         onDelete: (tx: Transaction) => this.onDeleteTransaction(tx)
       },
+      closeOnNavigation: false,
       panelClass: 'custom-bottom-sheet'
     });
   }
@@ -973,6 +975,7 @@ export class MobileTransactionListComponent
     this.dialog
       .open(ConfirmDialogComponent, {
         width: '300px',
+        closeOnNavigation: false,
         data: {
           title: isSettlement ? 'Revert Settlement' : 'Delete Transaction',
           message: isSettlement 
@@ -998,6 +1001,7 @@ export class MobileTransactionListComponent
     
     this.dialog.open(ConfirmDialogComponent, {
       width: '300px',
+      closeOnNavigation: false,
       data: {
         title: 'Delete Transactions',
         message: `Are you sure you want to delete ${selectedIds.size} selected transactions?`,
@@ -1073,6 +1077,7 @@ export class MobileTransactionListComponent
     this.dialog.open(CustomDateRangeDialogComponent, {
       width: '90%',
       maxWidth: '400px',
+      closeOnNavigation: false,
       data: {
         startDate: this.selectedDateRange()?.startDate,
         endDate: this.selectedDateRange()?.endDate

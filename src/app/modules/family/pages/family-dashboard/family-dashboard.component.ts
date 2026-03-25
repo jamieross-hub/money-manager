@@ -250,7 +250,8 @@ export class FamilyDashboardComponent implements OnInit {
 
   openMembersSheet(): void {
     this.bottomSheet.open(FamilyMembersComponent, {
-      panelClass: ['bg-transparent', 'auto-height-sheet']
+      panelClass: ['bg-transparent', 'auto-height-sheet'],
+      closeOnNavigation: false
     });
   }
 
@@ -330,6 +331,7 @@ export class FamilyDashboardComponent implements OnInit {
     const existingNames = this.store.selectSignal(FamilySelectors.selectUserFamilies)()?.map(f => f.name) ?? [];
     this.dialog.open(FamilyCreateDialogComponent, {
       disableClose: true,
+      closeOnNavigation: false,
       data: { existingNames },
     }).afterClosed().subscribe(result => {
       if (result) this.store.dispatch(FamilyActions.createFamily({ request: result }));
@@ -337,7 +339,7 @@ export class FamilyDashboardComponent implements OnInit {
   }
 
   joinFamily(): void {
-    this.dialog.open(FamilyJoinDialogComponent, { disableClose: true })
+    this.dialog.open(FamilyJoinDialogComponent, { disableClose: true, closeOnNavigation: false })
       .afterClosed().subscribe(code => {
         if (code) this.store.dispatch(FamilyActions.joinFamily({ inviteCode: code }));
       });
@@ -350,6 +352,7 @@ export class FamilyDashboardComponent implements OnInit {
     const existingNames = this.store.selectSignal(FamilySelectors.selectUserFamilies)()?.map(f => f.name) ?? [];
     this.dialog.open(FamilyCreateDialogComponent, {
       disableClose: true,
+      closeOnNavigation: false,
       data: { existingNames, family: fam },
     }).afterClosed().subscribe(result => {
       if (result && fam.id) {
@@ -372,6 +375,7 @@ export class FamilyDashboardComponent implements OnInit {
       : 'Are you sure you want to leave this family?';
 
     this.dialog.open(ConfirmDialogComponent, {
+      closeOnNavigation: false,
       data: { title, message, confirmText: isOwner ? 'Delete' : 'Leave', confirmColor: 'warn' },
     }).afterClosed().subscribe(async ok => {
       if (!ok) return;

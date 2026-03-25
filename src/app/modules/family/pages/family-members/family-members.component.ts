@@ -99,6 +99,7 @@ export class FamilyMembersComponent implements OnInit {
 
   removeMember(member: FamilyMember) {
     const ref = this.dialog.open(ConfirmDialogComponent, {
+      closeOnNavigation: false,
       data: { title: 'Remove Member', message: `Remove ${member.displayName} from the family?`, confirmText: 'Remove', confirmColor: 'warn' }
     });
     ref.afterClosed().subscribe(ok => {

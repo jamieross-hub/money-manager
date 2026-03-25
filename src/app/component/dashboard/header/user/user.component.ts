@@ -293,6 +293,7 @@ export class UserComponent {
 
     if (this.isGuest()) {
       const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        closeOnNavigation: false,
         data: {
           title: 'Sign Out?',
           message: 'Are you sure you want to sign out? All your guest data will be permanently deleted.',
