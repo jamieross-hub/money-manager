@@ -33,6 +33,7 @@ import { FamilyModeToggleComponent } from 'src/app/util/components/family-mode-t
 import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 import { FamilyService } from 'src/app/modules/family/services/family.service';
 import { FamilyMember } from 'src/app/util/models/family.model';
+import { PwaNavigationService } from 'src/app/util/service/pwa-navigation.service';
 import { map, switchMap, of, combineLatest } from 'rxjs';
 
 @Component({
@@ -74,6 +75,7 @@ export class UserComponent {
   private readonly familyService       = inject(FamilyService);
   private readonly store               = inject(Store<AppState>);
   private readonly swUpdate            = inject(SwUpdate);
+  private readonly pwaNavigationService = inject(PwaNavigationService);
   private readonly destroyRef          = inject(DestroyRef);
 
   // ── Observables → signals ──────────────────────────────────────────────────
@@ -153,6 +155,21 @@ export class UserComponent {
     this.destroyRef.onDestroy(() => {
       if (this.updateInterval) {
         clearInterval(this.updateInterval);
+      }
+    });
+
+    // ── Handle back button for menu close ──────────────────────────────────
+    effect((onCleanup) => {
+      const open = this.isOpen();
+      if (open) {
+        const unregister = this.pwaNavigationService.registerBackHandler(() => {
+          if (this.isOpen()) {
+            this.isOpen.set(false);
+            return true; // handled
+          }
+          return false;
+        });
+        onCleanup(() => unregister());
       }
     });
   }

@@ -155,10 +155,32 @@ export class PwaNavigationService implements OnDestroy {
   }
 
   /**
+   * Register a custom back button handler.
+   * @param handler A function that returns true if it handled the back action.
+   * @returns A function to unregister the handler.
+   */
+  public registerBackHandler(handler: () => boolean): () => void {
+    this.backHandlers.push(handler);
+    return () => {
+      this.backHandlers = this.backHandlers.filter(h => h !== handler);
+    };
+  }
+
+  private backHandlers: (() => boolean)[] = [];
+
+  /**
    * Universal handler for all back interactions (popstate, hardware back, swipe)
    */
   private handleBackInteraction(): void {
-    // A. Close Overlays (Topmost First)
+    // 1️⃣ Run registered custom handlers (topmost/last-registered first)
+    for (let i = this.backHandlers.length - 1; i >= 0; i--) {
+      if (this.backHandlers[i]()) {
+        this.restoreHistoryState();
+        return;
+      }
+    }
+
+    // 2️⃣ Close Overlays (Topmost First)
     const overlays = Array.from(document.querySelectorAll('mat-dialog-container, mat-bottom-sheet-container'));
     if (overlays.length > 0) {
       const lastOverlay = overlays[overlays.length - 1];
