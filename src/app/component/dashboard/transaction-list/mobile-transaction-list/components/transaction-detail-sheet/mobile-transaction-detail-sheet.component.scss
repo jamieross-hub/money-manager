@@ -86,7 +86,7 @@
       top: 16px;
       right: 8px;
       color: var(--neutral-500);
-      transition: all 0.2s ease;
+      // transition: all 0.2s ease;
 
       &:hover {
            background: var(--neutral-50)!important;
@@ -222,7 +222,7 @@
         border-radius: 16px;
         border: 1px solid var(--surface-100);
         overflow: hidden;
-        transition: all 0.2s ease;
+        // transition: all 0.2s ease;
 
         .notes-accent {
           position: absolute;
