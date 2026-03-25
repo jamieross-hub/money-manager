@@ -880,7 +880,8 @@ export class MobileTransactionListComponent
       return;
     }
 
-    if (transaction.id?.startsWith('upcoming-')) return;
+    // Don't open for upcoming or deleted/pending transactions
+    if (transaction.id?.startsWith('upcoming-') || (transaction as any)._isDeleted || transaction.syncStatus === SyncStatus.PENDING) return;
 
     this.bottomSheet.open(MobileTransactionDetailSheetComponent, {
       data: { 

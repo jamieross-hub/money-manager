@@ -168,10 +168,19 @@ export class PwaNavigationService implements OnDestroy {
 
   private backHandlers: (() => boolean)[] = [];
 
+  private lastInteractionTime = 0;
+  private readonly INTERACTION_GUARD_MS = 100;
+
   /**
    * Universal handler for all back interactions (popstate, hardware back, swipe)
    */
   private handleBackInteraction(): void {
+    const now = Date.now();
+    if (now - this.lastInteractionTime < this.INTERACTION_GUARD_MS) {
+      return;
+    }
+    this.lastInteractionTime = now;
+
     // 1️⃣ Run registered custom handlers (topmost/last-registered first)
     for (let i = this.backHandlers.length - 1; i >= 0; i--) {
       if (this.backHandlers[i]()) {
@@ -207,7 +216,6 @@ export class PwaNavigationService implements OnDestroy {
     }
 
     // C. Exit App Protection
-    const now = Date.now();
     if (now - this.lastBackPressed < this.exitTime) {
       window.close(); // PWA exit
     } else {

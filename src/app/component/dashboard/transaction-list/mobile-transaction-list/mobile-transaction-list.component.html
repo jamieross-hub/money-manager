@@ -573,7 +573,7 @@
             [class.multi-selected]="selectedTxIds().has(item.id!)" [class.upcoming]="item._isUpcoming"
             [class.deleted]="item._isDeleted" [class.opacity-50]="item.syncStatus === 'pending'"
             [class.grayscale]="item.syncStatus === 'pending'" [class.newly-added]="item.id === newlyAddedTxId()"
-            [class.no-interaction]="selectedSpecialRange() === 'category'" (mousedown)="onLongPressStart(item)"
+            [class.no-interaction]="selectedSpecialRange() === 'category' || item._isDeleted || item.syncStatus === 'pending'" (mousedown)="onLongPressStart(item)"
             (touchstart)="onLongPressStart(item)" (touchmove)="onLongPressEnd()" (mouseup)="onLongPressEnd()"
             (touchend)="onLongPressEnd()" (click)="onTransactionClick(item)">
 
