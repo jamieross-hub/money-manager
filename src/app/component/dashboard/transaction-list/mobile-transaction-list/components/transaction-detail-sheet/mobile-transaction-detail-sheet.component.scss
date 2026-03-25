@@ -114,16 +114,19 @@
         padding: 8px 0 16px;
         
         .amount-display {
-          font-size: 2rem;
-          font-weight: 800;
-          letter-spacing: -0.03em;
+          font-family: 'JetBrains Mono', monospace !important;
+          font-size: 1.9rem;
+          font-weight: 850;
+          letter-spacing: -0.05em;
+          line-height: 1.1;
+          font-variant-numeric: tabular-nums;
           
           &.income {
-            color: #16a34a;
+            color: #059669; // More premium emerald green
           }
           
           &.expense {
-            color: var(--surface-900);
+            color: var(--neutral-900);
           }
         }
       }
@@ -406,10 +409,12 @@
       .amount-section {
         .amount-display {
           &.expense {
-            color: #fff;
+            color: #ffffff;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.05);
           }
           &.income {
-            color: #4ade80;
+            color: #34d399; // Lighter emerald for dark mode
+            text-shadow: 0 0 30px rgba(52, 211, 153, 0.1);
           }
         }
       }
