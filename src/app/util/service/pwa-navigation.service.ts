@@ -157,7 +157,7 @@ export class PwaNavigationService implements OnDestroy {
   private backHandlers: (() => boolean)[] = [];
 
   private lastInteractionTime = 0;
-  private readonly INTERACTION_GUARD_MS = 100;
+  private readonly INTERACTION_GUARD_MS = 350; // must be > overlay close animation (~250ms)
 
   /**
    * Universal handler for all back interactions (popstate, hardware back, swipe)
@@ -181,7 +181,7 @@ export class PwaNavigationService implements OnDestroy {
     const overlays = Array.from(document.querySelectorAll('mat-dialog-container, mat-bottom-sheet-container'));
     if (overlays.length > 0) {
       const lastOverlay = overlays[overlays.length - 1];
-      
+
       if (lastOverlay.tagName.toLowerCase() === 'mat-bottom-sheet-container') {
         this.bottomSheet.dismiss();
       } else {
@@ -189,7 +189,9 @@ export class PwaNavigationService implements OnDestroy {
           this.dialog.openDialogs[this.dialog.openDialogs.length - 1].close();
         }
       }
-      
+
+      // Reset exit-protection so a prior back-press timestamp can't trigger window.close()
+      this.lastBackPressed = 0;
       this.restoreHistoryState();
       return;
     }
