@@ -239,9 +239,9 @@ export class PwaNavigationService implements OnDestroy {
 
   private restoreHistoryState(): void {
     // Push synchronously so Android registers the new history entry immediately.
-    // A setTimeout here lets the system think history is empty and kills the PWA
-    // before the next back press can fire a popstate event.
-    history.pushState(null, '', location.href);
+    // Use the current Angular router URL to prevent the browser from actually going back.
+    const currentUrl = this.location.prepareExternalUrl(this.router.url);
+    history.pushState(null, '', currentUrl || '/');
   }
 
   private setupIosBackGesture(): void {
