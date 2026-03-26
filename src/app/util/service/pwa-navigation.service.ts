@@ -85,30 +85,16 @@ export class PwaNavigationService implements OnDestroy {
         });
       });
 
-    // 2️⃣ Handle browser back/forward buttons (Web popstate)
-    if (typeof window !== 'undefined') {
-      // Ensure there's a state to pop even at root
-      history.pushState(null, '', location.href);
+    // 2️⃣ Handle hardware back button (Android PWA)
+    const backButtonHandler = (event: Event) => {
+      event.preventDefault();
+      this.ngZone.run(() => {
+        this.handleBackInteraction();
+      });
+    };
 
-      window.onpopstate = () => {
-        this.ngZone.run(() => {
-          this.handleBackInteraction();
-        });
-      };
-    }
-
-    // 3️⃣ Handle hardware back button for Android (if applicable, e.g. Capacitor)
-    if (isMobile && this.platform.ANDROID) {
-      const backButtonHandler = (event: Event) => {
-        event.preventDefault();
-        this.ngZone.run(() => {
-          this.handleBackInteraction();
-        });
-      };
-      
-      document.addEventListener('backbutton', backButtonHandler, false);
-      this.destroy$.subscribe(() => document.removeEventListener('backbutton', backButtonHandler));
-    }
+    document.addEventListener('backbutton', backButtonHandler, false);
+    this.destroy$.subscribe(() => document.removeEventListener('backbutton', backButtonHandler));
 
     // 4️⃣ iOS back gesture
     if (isMobile && this.platform.IOS) {
@@ -322,7 +308,6 @@ export class PwaNavigationService implements OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     this.navigationStack = [];
-    window.onpopstate = null;
   }
 }
  
