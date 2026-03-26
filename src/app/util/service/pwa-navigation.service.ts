@@ -166,8 +166,31 @@ export class PwaNavigationService implements OnDestroy {
     const now = Date.now();
     this.notificationService.info(`[PWA-NAV] handleBackInteraction fired`);
 
+    const hasBottomSheet = !!(this.bottomSheet as any)._openedBottomSheetRef;
+    const dialogCount = this.dialog.openDialogs.length;
+    const isAtRoot = !hasBottomSheet && dialogCount === 0 && this.navigationStack.length === 0 && this.backHandlers.length === 0;
+
+    if (isAtRoot) {
+      // C. Exit App Protection (Root only)
+      const timeSinceLastBack = now - this.lastBackPressed;
+      this.notificationService.info(`[PWA-NAV] Exit guard: ${timeSinceLastBack}ms`);
+      if (timeSinceLastBack < this.exitTime) {
+        this.notificationService.info(`[PWA-NAV] 🚪 Exiting app`);
+        // window.close() only works for windows opened via window.open().
+        // For Android PWA, navigate back past all history entries to close the app.
+        history.go(-history.length);
+      } else {
+        this.notificationService.info(`[PWA-NAV] ⚠️ 1st root back — show snackbar`);
+        this.lastBackPressed = now;
+        this.snackBar.open('Press back again to exit', '', { duration: 2000 });
+        this.restoreHistoryState();
+      }
+      return;
+    }
+
     if (now - this.lastInteractionTime < this.INTERACTION_GUARD_MS) {
       this.notificationService.info(`[PWA-NAV] ⛔ Guard active (${now - this.lastInteractionTime}ms)`);
+      this.restoreHistoryState(); // MUST push state back that was popped by browser to prevent native exit
       return;
     }
     this.lastInteractionTime = now;
@@ -185,8 +208,6 @@ export class PwaNavigationService implements OnDestroy {
     }
 
     // 2️⃣ Close Overlays (Topmost First) — use Angular Material APIs, not DOM queries
-    const hasBottomSheet = !!(this.bottomSheet as any)._openedBottomSheetRef;
-    const dialogCount = this.dialog.openDialogs.length;
     this.notificationService.info(`[PWA-NAV] BS: ${hasBottomSheet} | Dlg: ${dialogCount} | Nav: ${this.navigationStack.length}`);
 
     // ✅ Bottom sheet check (renders above dialogs, dismiss first)
@@ -216,31 +237,13 @@ export class PwaNavigationService implements OnDestroy {
         return;
       }
     }
-
-    // C. Exit App Protection
-    const timeSinceLastBack = now - this.lastBackPressed;
-    this.notificationService.info(`[PWA-NAV] Exit guard: ${timeSinceLastBack}ms`);
-    if (timeSinceLastBack < this.exitTime) {
-      this.notificationService.info(`[PWA-NAV] 🚪 Exiting app`);
-      // window.close() only works for windows opened via window.open().
-      // For Android PWA, navigate back past all history entries to close the app.
-      history.go(-history.length);
-    } else {
-      this.notificationService.info(`[PWA-NAV] ⚠️ 1st root back — show snackbar`);
-      this.lastBackPressed = now;
-      this.snackBar.open('Press back again to exit', '', { duration: 2000 });
-      // Push synchronously so Android registers the new history entry immediately.
-      // A setTimeout here lets the system think history is empty and kills the PWA
-      // before the next back press can fire a popstate event.
-      history.pushState(null, '', location.href);
-    }
   }
 
   private restoreHistoryState(): void {
-    // Add back the popped state so the next back button also triggers an event
-    setTimeout(() => {
-      history.pushState(null, '', location.href);
-    }, 50);
+    // Push synchronously so Android registers the new history entry immediately.
+    // A setTimeout here lets the system think history is empty and kills the PWA
+    // before the next back press can fire a popstate event.
+    history.pushState(null, '', location.href);
   }
 
   private setupIosBackGesture(): void {
