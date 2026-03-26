@@ -1,7 +1,7 @@
 import { Injectable, NgZone, Inject, PLATFORM_ID, OnDestroy } from '@angular/core';
 import { Location } from '@angular/common';
 import { Router, NavigationEnd, NavigationStart, Event as RouterEvent } from '@angular/router';
-import { BehaviorSubject, Observable, filter, takeUntil, Subject, map, fromEvent } from 'rxjs';
+import { BehaviorSubject, Observable, filter, takeUntil, Subject, map } from 'rxjs';
 import { Platform } from '@angular/cdk/platform';
 import { isPlatformServer } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
@@ -12,6 +12,7 @@ export interface NavigationState {
   canGoBack: boolean;
   currentRoute: string;
   previousRoute: string;
+  navigationStack: string[];
   isStandalone: boolean;
   isMobile: boolean;
 }
@@ -24,18 +25,18 @@ export class PwaNavigationService implements OnDestroy {
     canGoBack: false,
     currentRoute: '',
     previousRoute: '',
+    navigationStack: [],
     isStandalone: false,
     isMobile: false
   });
 
   private destroy$ = new Subject<void>();
-  private backHandlers: (() => boolean)[] = [];
+  private navigationStack: string[] = [];
+  private maxStackSize = 50;
 
   // Back button protection
   private lastBackPressed = 0;
   private exitTime = 2000;
-  private lastInteractionTime = 0;
-  private readonly INTERACTION_GUARD_MS = 100;
 
   public navigationState$: Observable<NavigationState> = this.navigationStateSubject.asObservable();
   public canGoBack$: Observable<boolean> = this.navigationState$.pipe(
@@ -73,23 +74,33 @@ export class PwaNavigationService implements OnDestroy {
         });
       });
 
+    this.router.events
+      .pipe(
+        filter((event: RouterEvent): event is NavigationStart => event instanceof NavigationStart),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((event: NavigationStart) => {
+        this.ngZone.run(() => {
+          this.handleNavigationStart(event);
+        });
+      });
+
     // 2️⃣ Handle browser back/forward buttons (Web popstate)
     if (typeof window !== 'undefined') {
-      fromEvent(window, 'popstate')
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(() => {
-          this.ngZone.run(() => {
-            this.handleBackInteraction();
-          });
+      // Ensure there's a state to pop even at root
+      history.pushState(null, '', location.href);
+
+      window.onpopstate = () => {
+        this.ngZone.run(() => {
+          this.handleBackInteraction();
         });
+      };
     }
 
     // 3️⃣ Handle hardware back button for Android (if applicable, e.g. Capacitor)
     if (isMobile && this.platform.ANDROID) {
       const backButtonHandler = (event: Event) => {
-        // Only prevent default if we're handling it ourselves (e.g. closing an overlay)
-        // However, standard hardware back button on Android usually triggers popstate.
-        // If we're in a wrapper like Capacitor, we might need this.
+        event.preventDefault();
         this.ngZone.run(() => {
           this.handleBackInteraction();
         });
@@ -126,6 +137,12 @@ export class PwaNavigationService implements OnDestroy {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   }
 
+  private handleNavigationStart(event: NavigationStart): void {
+    if (event.url !== this.navigationStateSubject.value.currentRoute) {
+      this.addToNavigationStack(this.navigationStateSubject.value.currentRoute);
+    }
+  }
+
   private handleNavigationEnd(event: NavigationEnd): void {
     const currentState = this.navigationStateSubject.value;
     const previousRoute = currentState.currentRoute;
@@ -133,7 +150,7 @@ export class PwaNavigationService implements OnDestroy {
     this.updateNavigationState({
       currentRoute: event.url,
       previousRoute,
-      canGoBack: window.history.length > 1
+      canGoBack: this.navigationStack.length > 0
     });
   }
 
@@ -149,6 +166,11 @@ export class PwaNavigationService implements OnDestroy {
     };
   }
 
+  private backHandlers: (() => boolean)[] = [];
+
+  private lastInteractionTime = 0;
+  private readonly INTERACTION_GUARD_MS = 100;
+
   /**
    * Universal handler for all back interactions (popstate, hardware back, swipe)
    */
@@ -162,6 +184,7 @@ export class PwaNavigationService implements OnDestroy {
     // 1️⃣ Run registered custom handlers (topmost/last-registered first)
     for (let i = this.backHandlers.length - 1; i >= 0; i--) {
       if (this.backHandlers[i]()) {
+        this.restoreHistoryState();
         return;
       }
     }
@@ -178,34 +201,35 @@ export class PwaNavigationService implements OnDestroy {
           this.dialog.openDialogs[this.dialog.openDialogs.length - 1].close();
         }
       }
+      
+      this.restoreHistoryState();
       return;
     }
 
-    // 3️⃣ If at root or no history to go back to, handle exit
-    if (this.router.url === '/' || window.history.length <= 1) {
-      this.handleExit();
-    } else {
-      // Browser already navigated if this was a popstate event
-      // If triggered manually via UI button, we'll call location.back() in goBack()
-    }
-  }
-
-  private handleExit(): void {
-    const now = Date.now();
-
-    if (now - this.lastBackPressed < this.exitTime) {
-      // Android PWA safe exit
-      const nav = navigator as any;
-      if (nav.app?.exitApp) {
-        nav.app.exitApp();
-      } else {
-        // Fallback for pure PWA: cannot force exit easily
-        // window.close() usually fails, so we just let the user know or stay
+    // B. Navigate Stack
+    if (this.navigationStack.length > 0) {
+      const previous = this.navigationStack.pop();
+      if (previous) {
+        this.router.navigateByUrl(previous);
+        return;
       }
+    }
+
+    // C. Exit App Protection
+    if (now - this.lastBackPressed < this.exitTime) {
+      window.close(); // PWA exit
     } else {
       this.lastBackPressed = now;
       this.snackBar.open('Press back again to exit', '', { duration: 2000 });
+      this.restoreHistoryState();
     }
+  }
+
+  private restoreHistoryState(): void {
+    // Add back the popped state so the next back button also triggers an event
+    setTimeout(() => {
+      history.pushState(null, '', location.href);
+    }, 50);
   }
 
   private setupIosBackGesture(): void {
@@ -256,12 +280,17 @@ export class PwaNavigationService implements OnDestroy {
     this.destroy$.subscribe(() => document.removeEventListener('keydown', keydownHandler));
   }
 
-  public goBack(): void {
-    if (this.router.url !== '/') {
-      this.location.back();
-    } else {
-      this.handleExit();
+  private addToNavigationStack(route: string): void {
+    if (route && route !== '/' && route !== '') {
+      this.navigationStack.push(route);
+      if (this.navigationStack.length > this.maxStackSize) {
+        this.navigationStack.shift();
+      }
     }
+  }
+
+  public goBack(): void {
+    this.handleBackInteraction();
   }
 
   public goForward(): void {
@@ -270,6 +299,17 @@ export class PwaNavigationService implements OnDestroy {
 
   public navigateTo(route: string): void {
     this.router.navigateByUrl(route);
+  }
+
+  public clearNavigationStack(): void {
+    this.navigationStack = [];
+    this.updateNavigationState({
+      canGoBack: false
+    });
+  }
+
+  public getNavigationStack(): string[] {
+    return [...this.navigationStack];
   }
 
   private updateNavigationState(updates: Partial<NavigationState>): void {
@@ -281,6 +321,8 @@ export class PwaNavigationService implements OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.navigationStack = [];
+    window.onpopstate = null;
   }
 }
  

@@ -99,6 +99,7 @@ export class PwaBackButtonComponent implements OnInit, OnDestroy {
       canGoBack: false,
       currentRoute: '',
       previousRoute: '',
+      navigationStack: [],
       isStandalone: false,
       isMobile: false
     };

@@ -79,6 +79,7 @@ export class AppComponent implements OnInit, OnDestroy {
       canGoBack: false,
       currentRoute: '',
       previousRoute: '',
+      navigationStack: [],
       isStandalone: false,
       isMobile: false
     };
@@ -207,6 +208,7 @@ export class AppComponent implements OnInit, OnDestroy {
     // Save current navigation state and other app data
     const appState = {
       currentRoute: this.navigationState.currentRoute,
+      navigationStack: this.navigationState.navigationStack,
       timestamp: Date.now()
     };
 
