@@ -207,11 +207,16 @@ export class PwaNavigationService implements OnDestroy {
 
     // C. Exit App Protection
     if (now - this.lastBackPressed < this.exitTime) {
-      window.close(); // PWA exit
+      // window.close() only works for windows opened via window.open().
+      // For Android PWA, navigate back past all history entries to close the app.
+      history.go(-history.length);
     } else {
       this.lastBackPressed = now;
       this.snackBar.open('Press back again to exit', '', { duration: 2000 });
-      this.restoreHistoryState();
+      // Push synchronously so Android registers the new history entry immediately.
+      // A setTimeout here lets the system think history is empty and kills the PWA
+      // before the next back press can fire a popstate event.
+      history.pushState(null, '', location.href);
     }
   }
 
