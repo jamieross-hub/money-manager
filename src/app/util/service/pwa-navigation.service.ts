@@ -37,6 +37,7 @@ export class PwaNavigationService implements OnDestroy {
 
   // Back button protection
   private lastBackPressed = 0;
+  private backPressCount = 0;
   private exitTime = 2000;
 
   public navigationState$: Observable<NavigationState> = this.navigationStateSubject.asObservable();
@@ -174,15 +175,25 @@ export class PwaNavigationService implements OnDestroy {
       // C. Exit App Protection (Root only)
       const timeSinceLastBack = now - this.lastBackPressed;
       this.notificationService.info(`[PWA-NAV] Exit guard: ${timeSinceLastBack}ms`);
+      
       if (timeSinceLastBack < this.exitTime) {
+        this.backPressCount++;
+      } else {
+        this.backPressCount = 1;
+      }
+      
+      this.lastBackPressed = now;
+
+      if (this.backPressCount >= 3) {
         this.notificationService.info(`[PWA-NAV] 🚪 Exiting app`);
         // window.close() only works for windows opened via window.open().
         // For Android PWA, navigate back past all history entries to close the app.
         history.go(-history.length);
+        this.backPressCount = 0;
       } else {
-        this.notificationService.info(`[PWA-NAV] ⚠️ 1st root back — show snackbar`);
-        this.lastBackPressed = now;
-        this.snackBar.open('Press back again to exit', '', { duration: 2000 });
+        this.notificationService.info(`[PWA-NAV] ⚠️ root back: ${this.backPressCount} — show snackbar`);
+        const remaining = 3 - this.backPressCount;
+        this.snackBar.open(`Press back ${remaining} more time${remaining > 1 ? 's' : ''} to exit`, '', { duration: 2000 });
         this.restoreHistoryState();
       }
       return;
@@ -215,6 +226,7 @@ export class PwaNavigationService implements OnDestroy {
      // this.notificationService.info(`[PWA-NAV] ✅ Dismissing bottom sheet`);
       this.bottomSheet.dismiss();
       this.lastBackPressed = 0;
+      this.backPressCount = 0;
       this.restoreHistoryState();
       return;
     }
@@ -224,6 +236,7 @@ export class PwaNavigationService implements OnDestroy {
       //this.notificationService.info(`[PWA-NAV] ✅ Closing dialog (${dialogCount - 1})`);
       this.dialog.openDialogs[dialogCount - 1].close();
       this.lastBackPressed = 0;
+      this.backPressCount = 0;
       this.restoreHistoryState();
       return;
     }
