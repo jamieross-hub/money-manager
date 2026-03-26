@@ -43,7 +43,6 @@ export class PwaNavigationService implements OnDestroy {
   // Overlay history states
   private skipNextPopState = false;
   private currentOverlayIndex = 0;
-  private hasBottomSheetOpen = false;
 
   public navigationState$: Observable<NavigationState> = this.navigationStateSubject.asObservable();
   public canGoBack$: Observable<boolean> = this.navigationState$.pipe(
@@ -114,15 +113,11 @@ export class PwaNavigationService implements OnDestroy {
       ref.afterClosed().subscribe(() => this.popOverlayStateIfNeeded(id));
     });
 
-    const originalBsOpen = this.bottomSheet.open.bind(this.bottomSheet) as any;
+    const originalBsOpen = this.bottomSheet.open.bind(this.bottomSheet);
     this.bottomSheet.open = (...args: any[]) => {
       const ref = originalBsOpen(...args);
-      this.hasBottomSheetOpen = true;
       const id = this.pushOverlayState();
-      ref.afterDismissed().subscribe(() => {
-        this.hasBottomSheetOpen = false;
-        this.popOverlayStateIfNeeded(id);
-      });
+      ref.afterDismissed().subscribe(() => this.popOverlayStateIfNeeded(id));
       return ref as any;
     };
 
@@ -191,82 +186,76 @@ export class PwaNavigationService implements OnDestroy {
    * Universal handler for all back interactions (popstate, hardware back, swipe)
    */
   private handleBackInteraction(): void {
-  const now = Date.now();
+    const now = Date.now();
 
-  // 1️⃣ Interaction guard (TOP)
-  if (now - this.lastInteractionTime < this.INTERACTION_GUARD_MS) {
-    this.restoreHistoryState();
-    return;
-  }
-  this.lastInteractionTime = now;
+    const hasBottomSheet = !!(this.bottomSheet as any)._openedBottomSheetRef;
+    const dialogCount = this.dialog.openDialogs.length;
+    const isAtRoot = !hasBottomSheet && dialogCount === 0 && this.navigationStack.length === 0 && this.backHandlers.length === 0;
 
-  const hasBottomSheet = this.hasBottomSheetOpen;
-  const dialogCount = this.dialog.openDialogs.length;
+    if (isAtRoot) {
+      // C. Exit App Protection (Root only)
+      const timeSinceLastBack = now - this.lastBackPressed;
+      
+      if (timeSinceLastBack < this.exitTime) {
+        this.backPressCount++;
+      } else {
+        this.backPressCount = 1;
+      }
+      
+      this.lastBackPressed = now;
 
-  // 2️⃣ UI layers (highest priority)
-  if (hasBottomSheet) {
-    this.bottomSheet.dismiss();
-    this.restoreHistoryState();
-    this.lastBackPressed = 0;
-    this.backPressCount = 0;
-    return;
-  }
-
-  if (dialogCount > 0) {
-    this.dialog.openDialogs[dialogCount - 1].close();
-    this.restoreHistoryState();
-    this.lastBackPressed = 0;
-    this.backPressCount = 0;
-    return;
-  }
-
-  // 3️⃣ Custom handlers
-  for (let i = this.backHandlers.length - 1; i >= 0; i--) {
-    if (this.backHandlers[i]()) {
-      this.restoreHistoryState();
+      if (this.backPressCount >= 3) {        this.backPressCount = 0;
+        this.restoreHistoryState();
+      } else {
+        const remaining = 3 - this.backPressCount;
+        this.notificationService.info(`Press back ${remaining} more time${remaining > 1 ? 's' : ''} to exit`);
+        this.restoreHistoryState();
+      }
       return;
     }
-  }
 
-  // 4️⃣ Navigation stack
-  if (this.navigationStack.length > 0) {
-    const previous = this.navigationStack.pop();
-    if (previous) {
-      this.router.navigateByUrl(previous);
-      this.restoreHistoryState();
+    if (now - this.lastInteractionTime < this.INTERACTION_GUARD_MS) {
+      this.restoreHistoryState(); // MUST push state back that was popped by browser to prevent native exit
       return;
     }
-  }
+    this.lastInteractionTime = now;
 
-  // 5️⃣ Root exit protection
-  const isAtRoot =
-    this.navigationStack.length === 0 &&
-    this.backHandlers.length === 0;
-
-  if (isAtRoot) {
-    const timeSinceLastBack = now - this.lastBackPressed;
-
-    if (timeSinceLastBack < this.exitTime) {
-      this.backPressCount++;
-    } else {
-      this.backPressCount = 1;
+    // 1️⃣ Run registered custom handlers (topmost/last-registered first)
+    for (let i = this.backHandlers.length - 1; i >= 0; i--) {
+      const handled = this.backHandlers[i]();
+      if (handled) {
+        this.restoreHistoryState();
+        return;
+      }
     }
 
-    this.lastBackPressed = now;
-
-    if (this.backPressCount >= 3) {
+    // 2️⃣ Close Overlays (Topmost First) — use Angular Material APIs, not DOM queries
+    // ✅ Bottom sheet check (renders above dialogs, dismiss first)
+    if (hasBottomSheet) {
+      this.bottomSheet.dismiss();
+      this.lastBackPressed = 0;
       this.backPressCount = 0;
-      return; // ✅ allow exit
-    } else {
-      const remaining = 3 - this.backPressCount;
-      this.notificationService.info(
-        `Press back ${remaining} more time${remaining > 1 ? 's' : ''} to exit`
-      );
-      this.restoreHistoryState();
       return;
     }
+
+    // ✅ Dialog check (handles multiple stacked dialogs)
+    if (dialogCount > 0) {
+      //this.notificationService.info(`[PWA-NAV] ✅ Closing dialog (${dialogCount - 1})`);
+      this.dialog.openDialogs[dialogCount - 1].close();
+      this.lastBackPressed = 0;
+      this.backPressCount = 0;
+      return;
+    }
+
+    // B. Navigate Stack
+    if (this.navigationStack.length > 0) {
+      const previous = this.navigationStack.pop();
+      if (previous) {
+        this.router.navigateByUrl(previous);
+        return;
+      }
+    }
   }
-}
 
   private restoreHistoryState(): void {
     // Push synchronously so Android registers the new history entry immediately.
