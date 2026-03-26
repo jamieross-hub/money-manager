@@ -113,7 +113,7 @@ export class PwaNavigationService implements OnDestroy {
       ref.afterClosed().subscribe(() => this.popOverlayStateIfNeeded(id));
     });
 
-    const originalBsOpen = this.bottomSheet.open.bind(this.bottomSheet);
+    const originalBsOpen = this.bottomSheet.open.bind(this.bottomSheet) as any;
     this.bottomSheet.open = (...args: any[]) => {
       const ref = originalBsOpen(...args);
       const id = this.pushOverlayState();
@@ -204,7 +204,8 @@ export class PwaNavigationService implements OnDestroy {
       
       this.lastBackPressed = now;
 
-      if (this.backPressCount >= 3) {        this.backPressCount = 0;
+      if (this.backPressCount >= 3) {
+        this.backPressCount = 0;
         this.restoreHistoryState();
       } else {
         const remaining = 3 - this.backPressCount;
