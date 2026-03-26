@@ -7,6 +7,7 @@ import { isPlatformServer } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from './notification.service';
 
 export interface NavigationState {
   canGoBack: boolean;
@@ -51,6 +52,7 @@ export class PwaNavigationService implements OnDestroy {
     private dialog: MatDialog,
     private bottomSheet: MatBottomSheet,
     private snackBar: MatSnackBar,
+    private notificationService: NotificationService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     if (!isPlatformServer(this.platformId)) {
@@ -162,23 +164,34 @@ export class PwaNavigationService implements OnDestroy {
    */
   private handleBackInteraction(): void {
     const now = Date.now();
+    this.notificationService.info(`[PWA-NAV] handleBackInteraction fired`);
+
     if (now - this.lastInteractionTime < this.INTERACTION_GUARD_MS) {
+      this.notificationService.info(`[PWA-NAV] ⛔ Guard active (${now - this.lastInteractionTime}ms)`);
       return;
     }
     this.lastInteractionTime = now;
 
     // 1️⃣ Run registered custom handlers (topmost/last-registered first)
+    this.notificationService.info(`[PWA-NAV] backHandlers: ${this.backHandlers.length}`);
     for (let i = this.backHandlers.length - 1; i >= 0; i--) {
-      if (this.backHandlers[i]()) {
+      const handled = this.backHandlers[i]();
+      this.notificationService.info(`[PWA-NAV] handler[${i}]: ${handled}`);
+      if (handled) {
+        this.notificationService.info(`[PWA-NAV] ✅ Custom handled — restoring`);
         this.restoreHistoryState();
         return;
       }
     }
 
     // 2️⃣ Close Overlays (Topmost First) — use Angular Material APIs, not DOM queries
+    const hasBottomSheet = !!(this.bottomSheet as any)._openedBottomSheetRef;
+    const dialogCount = this.dialog.openDialogs.length;
+    this.notificationService.info(`[PWA-NAV] BS: ${hasBottomSheet} | Dlg: ${dialogCount} | Nav: ${this.navigationStack.length}`);
 
     // ✅ Bottom sheet check (renders above dialogs, dismiss first)
-    if ((this.bottomSheet as any)._openedBottomSheetRef) {
+    if (hasBottomSheet) {
+      this.notificationService.info(`[PWA-NAV] ✅ Dismissing bottom sheet`);
       this.bottomSheet.dismiss();
       this.lastBackPressed = 0;
       this.restoreHistoryState();
@@ -186,8 +199,9 @@ export class PwaNavigationService implements OnDestroy {
     }
 
     // ✅ Dialog check (handles multiple stacked dialogs)
-    if (this.dialog.openDialogs.length > 0) {
-      this.dialog.openDialogs[this.dialog.openDialogs.length - 1].close();
+    if (dialogCount > 0) {
+      this.notificationService.info(`[PWA-NAV] ✅ Closing dialog (${dialogCount - 1})`);
+      this.dialog.openDialogs[dialogCount - 1].close();
       this.lastBackPressed = 0;
       this.restoreHistoryState();
       return;
@@ -196,6 +210,7 @@ export class PwaNavigationService implements OnDestroy {
     // B. Navigate Stack
     if (this.navigationStack.length > 0) {
       const previous = this.navigationStack.pop();
+      this.notificationService.info(`[PWA-NAV] ✅ Nav back to: ${previous}`);
       if (previous) {
         this.router.navigateByUrl(previous);
         return;
@@ -203,11 +218,15 @@ export class PwaNavigationService implements OnDestroy {
     }
 
     // C. Exit App Protection
-    if (now - this.lastBackPressed < this.exitTime) {
+    const timeSinceLastBack = now - this.lastBackPressed;
+    this.notificationService.info(`[PWA-NAV] Exit guard: ${timeSinceLastBack}ms`);
+    if (timeSinceLastBack < this.exitTime) {
+      this.notificationService.info(`[PWA-NAV] 🚪 Exiting app`);
       // window.close() only works for windows opened via window.open().
       // For Android PWA, navigate back past all history entries to close the app.
       history.go(-history.length);
     } else {
+      this.notificationService.info(`[PWA-NAV] ⚠️ 1st root back — show snackbar`);
       this.lastBackPressed = now;
       this.snackBar.open('Press back again to exit', '', { duration: 2000 });
       // Push synchronously so Android registers the new history entry immediately.
