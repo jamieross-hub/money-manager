@@ -85,15 +85,24 @@ export class PwaNavigationService implements OnDestroy {
         });
       });
 
-    // 2️⃣ Standard navigation is handled by Angular Router
-    // Manual onpopstate and pushState are removed to use browser defaults
+    // 2️⃣ Handle browser back/forward buttons (Web popstate)
+    if (typeof window !== 'undefined') {
+      // Ensure there's a state to pop even at root
+      history.pushState(null, '', location.href);
+
+      window.onpopstate = () => {
+        this.ngZone.run(() => {
+          this.handleBackInteraction();
+        });
+      };
+    }
 
     // 3️⃣ Handle hardware back button for Android (if applicable, e.g. Capacitor)
     if (isMobile && this.platform.ANDROID) {
       const backButtonHandler = (event: Event) => {
         event.preventDefault();
         this.ngZone.run(() => {
-          this.goBack();
+          this.handleBackInteraction();
         });
       };
       
@@ -163,12 +172,19 @@ export class PwaNavigationService implements OnDestroy {
   private readonly INTERACTION_GUARD_MS = 100;
 
   /**
-   * Universal handler for all back interactions
+   * Universal handler for all back interactions (popstate, hardware back, swipe)
    */
-  public goBack(): void {
+  private handleBackInteraction(): void {
+    const now = Date.now();
+    if (now - this.lastInteractionTime < this.INTERACTION_GUARD_MS) {
+      return;
+    }
+    this.lastInteractionTime = now;
+
     // 1️⃣ Run registered custom handlers (topmost/last-registered first)
     for (let i = this.backHandlers.length - 1; i >= 0; i--) {
       if (this.backHandlers[i]()) {
+        this.restoreHistoryState();
         return;
       }
     }
@@ -185,44 +201,35 @@ export class PwaNavigationService implements OnDestroy {
           this.dialog.openDialogs[this.dialog.openDialogs.length - 1].close();
         }
       }
+      
+      this.restoreHistoryState();
       return;
     }
 
-    // 3️⃣ Standard Navigation/Exit
-    if (this.router.url !== '/' && this.router.url !== '/login') {
-      this.location.back();
-    } else {
-      this.handleExit();
+    // B. Navigate Stack
+    if (this.navigationStack.length > 0) {
+      const previous = this.navigationStack.pop();
+      if (previous) {
+        this.router.navigateByUrl(previous);
+        return;
+      }
     }
-  }
 
-  private handleExit(): void {
-    const now = Date.now();
+    // C. Exit App Protection
     if (now - this.lastBackPressed < this.exitTime) {
       window.close(); // PWA exit
     } else {
       this.lastBackPressed = now;
       this.snackBar.open('Press back again to exit', '', { duration: 2000 });
+      this.restoreHistoryState();
     }
   }
 
-  public goForward(): void {
-    this.location.forward();
-  }
-
-  public navigateTo(route: string): void {
-    this.router.navigateByUrl(route);
-  }
-
-  public clearNavigationStack(): void {
-    this.navigationStack = [];
-    this.updateNavigationState({
-      canGoBack: false
-    });
-  }
-
-  public getNavigationStack(): string[] {
-    return [...this.navigationStack];
+  private restoreHistoryState(): void {
+    // Add back the popped state so the next back button also triggers an event
+    setTimeout(() => {
+      history.pushState(null, '', location.href);
+    }, 50);
   }
 
   private setupIosBackGesture(): void {
@@ -243,7 +250,7 @@ export class PwaNavigationService implements OnDestroy {
 
       if (deltaX > threshold && deltaY < threshold && startX < 50) {
         this.ngZone.run(() => {
-          this.goBack();
+          this.handleBackInteraction();
         });
       }
     };
@@ -265,7 +272,7 @@ export class PwaNavigationService implements OnDestroy {
       }
       
       if (event.key === 'Escape') {
-        this.ngZone.run(() => this.goBack());
+        this.ngZone.run(() => this.handleBackInteraction());
       }
     };
 
@@ -282,6 +289,29 @@ export class PwaNavigationService implements OnDestroy {
     }
   }
 
+  public goBack(): void {
+    this.handleBackInteraction();
+  }
+
+  public goForward(): void {
+    this.location.forward();
+  }
+
+  public navigateTo(route: string): void {
+    this.router.navigateByUrl(route);
+  }
+
+  public clearNavigationStack(): void {
+    this.navigationStack = [];
+    this.updateNavigationState({
+      canGoBack: false
+    });
+  }
+
+  public getNavigationStack(): string[] {
+    return [...this.navigationStack];
+  }
+
   private updateNavigationState(updates: Partial<NavigationState>): void {
     const currentState = this.navigationStateSubject.value;
     const newState = { ...currentState, ...updates };
@@ -292,6 +322,7 @@ export class PwaNavigationService implements OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     this.navigationStack = [];
+    window.onpopstate = null;
   }
 }
  
