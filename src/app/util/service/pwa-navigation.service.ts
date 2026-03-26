@@ -85,16 +85,18 @@ export class PwaNavigationService implements OnDestroy {
         });
       });
 
-    // 2️⃣ Handle hardware back button (Android PWA)
-    const backButtonHandler = (event: Event) => {
-      event.preventDefault();
+    // 2️⃣ Handle Android back button in PWA via popstate
+    // Push an initial state so there's always something to pop (prevents leaving the app)
+    history.pushState(null, '', location.href);
+
+    const popstateHandler = () => {
       this.ngZone.run(() => {
         this.handleBackInteraction();
       });
     };
 
-    document.addEventListener('backbutton', backButtonHandler, false);
-    this.destroy$.subscribe(() => document.removeEventListener('backbutton', backButtonHandler));
+    window.addEventListener('popstate', popstateHandler);
+    this.destroy$.subscribe(() => window.removeEventListener('popstate', popstateHandler));
 
     // 4️⃣ iOS back gesture
     if (isMobile && this.platform.IOS) {
