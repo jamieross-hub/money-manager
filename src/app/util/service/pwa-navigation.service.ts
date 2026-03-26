@@ -40,6 +40,10 @@ export class PwaNavigationService implements OnDestroy {
   private backPressCount = 0;
   private exitTime = 2000;
 
+  // Overlay history states
+  private skipNextPopState = false;
+  private currentOverlayIndex = 0;
+
   public navigationState$: Observable<NavigationState> = this.navigationStateSubject.asObservable();
   public canGoBack$: Observable<boolean> = this.navigationState$.pipe(
     map(state => state.canGoBack)
@@ -92,12 +96,30 @@ export class PwaNavigationService implements OnDestroy {
     // Note: initial history.pushState is done in AppComponent.ngOnInit() after full bootstrap
     const popstateHandler = () => {
       this.ngZone.run(() => {
+        if (this.skipNextPopState) {
+          this.skipNextPopState = false;
+          return;
+        }
         this.handleBackInteraction();
       });
     };
 
     window.addEventListener('popstate', popstateHandler);
     this.destroy$.subscribe(() => window.removeEventListener('popstate', popstateHandler));
+
+    // 3️⃣ Push dummy state when overlays open
+    this.dialog.afterOpened.pipe(takeUntil(this.destroy$)).subscribe((ref) => {
+      const id = this.pushOverlayState();
+      ref.afterClosed().subscribe(() => this.popOverlayStateIfNeeded(id));
+    });
+
+    const originalBsOpen = this.bottomSheet.open.bind(this.bottomSheet) as any;
+    this.bottomSheet.open = (...args: any[]) => {
+      const ref = originalBsOpen(...args);
+      const id = this.pushOverlayState();
+      ref.afterDismissed().subscribe(() => this.popOverlayStateIfNeeded(id));
+      return ref as any;
+    };
 
     // 4️⃣ iOS back gesture
     if (isMobile && this.platform.IOS) {
@@ -213,7 +235,6 @@ export class PwaNavigationService implements OnDestroy {
       this.bottomSheet.dismiss();
       this.lastBackPressed = 0;
       this.backPressCount = 0;
-      this.restoreHistoryState();
       return;
     }
 
@@ -223,7 +244,6 @@ export class PwaNavigationService implements OnDestroy {
       this.dialog.openDialogs[dialogCount - 1].close();
       this.lastBackPressed = 0;
       this.backPressCount = 0;
-      this.restoreHistoryState();
       return;
     }
 
@@ -242,6 +262,22 @@ export class PwaNavigationService implements OnDestroy {
     // Use the current Angular router URL to prevent the browser from actually going back.
     const currentUrl = this.location.prepareExternalUrl(this.router.url);
     history.pushState(null, '', currentUrl || '/');
+  }
+
+  private pushOverlayState(): number {
+    this.currentOverlayIndex++;
+    const stateId = this.currentOverlayIndex;
+    const currentUrl = this.location.prepareExternalUrl(this.router.url);
+    history.pushState({ overlayId: stateId }, '', currentUrl || '/');
+    return stateId;
+  }
+
+  private popOverlayStateIfNeeded(closedOverlayId: number): void {
+    const currentStateId = history.state?.overlayId || 0;
+    if (currentStateId >= closedOverlayId) {
+      this.skipNextPopState = true;
+      history.back();
+    }
   }
 
   private setupIosBackGesture(): void {
