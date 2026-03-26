@@ -86,9 +86,7 @@ export class PwaNavigationService implements OnDestroy {
       });
 
     // 2️⃣ Handle Android back button in PWA via popstate
-    // Push an initial state so there's always something to pop (prevents leaving the app)
-    history.pushState(null, '', location.href);
-
+    // Note: initial history.pushState is done in AppComponent.ngOnInit() after full bootstrap
     const popstateHandler = () => {
       this.ngZone.run(() => {
         this.handleBackInteraction();
@@ -177,20 +175,19 @@ export class PwaNavigationService implements OnDestroy {
       }
     }
 
-    // 2️⃣ Close Overlays (Topmost First)
-    const overlays = Array.from(document.querySelectorAll('mat-dialog-container, mat-bottom-sheet-container'));
-    if (overlays.length > 0) {
-      const lastOverlay = overlays[overlays.length - 1];
+    // 2️⃣ Close Overlays (Topmost First) — use Angular Material APIs, not DOM queries
 
-      if (lastOverlay.tagName.toLowerCase() === 'mat-bottom-sheet-container') {
-        this.bottomSheet.dismiss();
-      } else {
-        if (this.dialog.openDialogs.length > 0) {
-          this.dialog.openDialogs[this.dialog.openDialogs.length - 1].close();
-        }
-      }
+    // ✅ Bottom sheet check (renders above dialogs, dismiss first)
+    if ((this.bottomSheet as any)._openedBottomSheetRef) {
+      this.bottomSheet.dismiss();
+      this.lastBackPressed = 0;
+      this.restoreHistoryState();
+      return;
+    }
 
-      // Reset exit-protection so a prior back-press timestamp can't trigger window.close()
+    // ✅ Dialog check (handles multiple stacked dialogs)
+    if (this.dialog.openDialogs.length > 0) {
+      this.dialog.openDialogs[this.dialog.openDialogs.length - 1].close();
       this.lastBackPressed = 0;
       this.restoreHistoryState();
       return;

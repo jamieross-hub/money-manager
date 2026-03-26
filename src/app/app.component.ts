@@ -107,6 +107,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.themeSwitchingService; // Initialize theme service
     if (this.ssrService.isClientSide()) {
       this.isOnline = navigator.onLine;
+      // Ensure PWA always has a history entry to pop on first back press.
+      // Without this, Android closes the app immediately before popstate fires.
+      history.pushState(null, '', location.href);
     }
     this.initializePwaFeatures();
     this.setupEventListeners();
