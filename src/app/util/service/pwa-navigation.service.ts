@@ -191,7 +191,7 @@ export class PwaNavigationService implements OnDestroy {
 
     // ✅ Bottom sheet check (renders above dialogs, dismiss first)
     if (hasBottomSheet) {
-      this.notificationService.info(`[PWA-NAV] ✅ Dismissing bottom sheet`);
+     // this.notificationService.info(`[PWA-NAV] ✅ Dismissing bottom sheet`);
       this.bottomSheet.dismiss();
       this.lastBackPressed = 0;
       this.restoreHistoryState();
@@ -200,7 +200,7 @@ export class PwaNavigationService implements OnDestroy {
 
     // ✅ Dialog check (handles multiple stacked dialogs)
     if (dialogCount > 0) {
-      this.notificationService.info(`[PWA-NAV] ✅ Closing dialog (${dialogCount - 1})`);
+      //this.notificationService.info(`[PWA-NAV] ✅ Closing dialog (${dialogCount - 1})`);
       this.dialog.openDialogs[dialogCount - 1].close();
       this.lastBackPressed = 0;
       this.restoreHistoryState();
