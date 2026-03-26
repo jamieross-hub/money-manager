@@ -85,24 +85,15 @@ export class PwaNavigationService implements OnDestroy {
         });
       });
 
-    // 2️⃣ Handle browser back/forward buttons (Web popstate)
-    if (typeof window !== 'undefined') {
-      // Ensure there's a state to pop even at root
-      history.pushState(null, '', location.href);
-
-      window.onpopstate = () => {
-        this.ngZone.run(() => {
-          this.handleBackInteraction();
-        });
-      };
-    }
+    // 2️⃣ Standard navigation is handled by Angular Router
+    // Manual onpopstate and pushState are removed to use browser defaults
 
     // 3️⃣ Handle hardware back button for Android (if applicable, e.g. Capacitor)
     if (isMobile && this.platform.ANDROID) {
       const backButtonHandler = (event: Event) => {
         event.preventDefault();
         this.ngZone.run(() => {
-          this.handleBackInteraction();
+          this.goBack();
         });
       };
       
@@ -172,19 +163,12 @@ export class PwaNavigationService implements OnDestroy {
   private readonly INTERACTION_GUARD_MS = 100;
 
   /**
-   * Universal handler for all back interactions (popstate, hardware back, swipe)
+   * Universal handler for all back interactions
    */
-  private handleBackInteraction(): void {
-    const now = Date.now();
-    if (now - this.lastInteractionTime < this.INTERACTION_GUARD_MS) {
-      return;
-    }
-    this.lastInteractionTime = now;
-
+  public goBack(): void {
     // 1️⃣ Run registered custom handlers (topmost/last-registered first)
     for (let i = this.backHandlers.length - 1; i >= 0; i--) {
       if (this.backHandlers[i]()) {
-        this.restoreHistoryState();
         return;
       }
     }
@@ -201,96 +185,25 @@ export class PwaNavigationService implements OnDestroy {
           this.dialog.openDialogs[this.dialog.openDialogs.length - 1].close();
         }
       }
-      
-      this.restoreHistoryState();
       return;
     }
 
-    // B. Navigate Stack
-    if (this.navigationStack.length > 0) {
-      const previous = this.navigationStack.pop();
-      if (previous) {
-        this.router.navigateByUrl(previous);
-        return;
-      }
+    // 3️⃣ Standard Navigation/Exit
+    if (this.router.url !== '/' && this.router.url !== '/login') {
+      this.location.back();
+    } else {
+      this.handleExit();
     }
+  }
 
-    // C. Exit App Protection
+  private handleExit(): void {
+    const now = Date.now();
     if (now - this.lastBackPressed < this.exitTime) {
       window.close(); // PWA exit
     } else {
       this.lastBackPressed = now;
       this.snackBar.open('Press back again to exit', '', { duration: 2000 });
-      this.restoreHistoryState();
     }
-  }
-
-  private restoreHistoryState(): void {
-    // Add back the popped state so the next back button also triggers an event
-    setTimeout(() => {
-      history.pushState(null, '', location.href);
-    }, 50);
-  }
-
-  private setupIosBackGesture(): void {
-    let startX = 0;
-    let startY = 0;
-    const threshold = 50;
-
-    const touchStartHandler = (event: TouchEvent) => {
-      startX = event.touches[0].clientX;
-      startY = event.touches[0].clientY;
-    };
-
-    const touchEndHandler = (event: TouchEvent) => {
-      const endX = event.changedTouches[0].clientX;
-      const endY = event.changedTouches[0].clientY;
-      const deltaX = startX - endX;
-      const deltaY = Math.abs(startY - endY);
-
-      if (deltaX > threshold && deltaY < threshold && startX < 50) {
-        this.ngZone.run(() => {
-          this.handleBackInteraction();
-        });
-      }
-    };
-
-    document.addEventListener('touchstart', touchStartHandler, { passive: true });
-    document.addEventListener('touchend', touchEndHandler, { passive: true });
-
-    this.destroy$.subscribe(() => {
-      document.removeEventListener('touchstart', touchStartHandler);
-      document.removeEventListener('touchend', touchEndHandler);
-    });
-  }
-
-  private setupKeyboardNavigation(): void {
-    const keydownHandler = (event: KeyboardEvent) => {
-      if (event.altKey && event.key === 'ArrowLeft') {
-        event.preventDefault();
-        this.ngZone.run(() => this.goBack());
-      }
-      
-      if (event.key === 'Escape') {
-        this.ngZone.run(() => this.handleBackInteraction());
-      }
-    };
-
-    document.addEventListener('keydown', keydownHandler);
-    this.destroy$.subscribe(() => document.removeEventListener('keydown', keydownHandler));
-  }
-
-  private addToNavigationStack(route: string): void {
-    if (route && route !== '/' && route !== '') {
-      this.navigationStack.push(route);
-      if (this.navigationStack.length > this.maxStackSize) {
-        this.navigationStack.shift();
-      }
-    }
-  }
-
-  public goBack(): void {
-    this.handleBackInteraction();
   }
 
   public goForward(): void {
@@ -312,6 +225,63 @@ export class PwaNavigationService implements OnDestroy {
     return [...this.navigationStack];
   }
 
+  private setupIosBackGesture(): void {
+    let startX = 0;
+    let startY = 0;
+    const threshold = 50;
+
+    const touchStartHandler = (event: TouchEvent) => {
+      startX = event.touches[0].clientX;
+      startY = event.touches[0].clientY;
+    };
+
+    const touchEndHandler = (event: TouchEvent) => {
+      const endX = event.changedTouches[0].clientX;
+      const endY = event.changedTouches[0].clientY;
+      const deltaX = startX - endX;
+      const deltaY = Math.abs(startY - endY);
+
+      if (deltaX > threshold && deltaY < threshold && startX < 50) {
+        this.ngZone.run(() => {
+          this.goBack();
+        });
+      }
+    };
+
+    document.addEventListener('touchstart', touchStartHandler, { passive: true });
+    document.addEventListener('touchend', touchEndHandler, { passive: true });
+
+    this.destroy$.subscribe(() => {
+      document.removeEventListener('touchstart', touchStartHandler);
+      document.removeEventListener('touchend', touchEndHandler);
+    });
+  }
+
+  private setupKeyboardNavigation(): void {
+    const keydownHandler = (event: KeyboardEvent) => {
+      if (event.altKey && event.key === 'ArrowLeft') {
+        event.preventDefault();
+        this.ngZone.run(() => this.goBack());
+      }
+      
+      if (event.key === 'Escape') {
+        this.ngZone.run(() => this.goBack());
+      }
+    };
+
+    document.addEventListener('keydown', keydownHandler);
+    this.destroy$.subscribe(() => document.removeEventListener('keydown', keydownHandler));
+  }
+
+  private addToNavigationStack(route: string): void {
+    if (route && route !== '/' && route !== '') {
+      this.navigationStack.push(route);
+      if (this.navigationStack.length > this.maxStackSize) {
+        this.navigationStack.shift();
+      }
+    }
+  }
+
   private updateNavigationState(updates: Partial<NavigationState>): void {
     const currentState = this.navigationStateSubject.value;
     const newState = { ...currentState, ...updates };
@@ -322,7 +292,6 @@ export class PwaNavigationService implements OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     this.navigationStack = [];
-    window.onpopstate = null;
   }
 }
  
