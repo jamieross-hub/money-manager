@@ -165,7 +165,6 @@ export class PwaNavigationService implements OnDestroy {
    */
   private handleBackInteraction(): void {
     const now = Date.now();
-    this.notificationService.info(`[PWA-NAV] handleBackInteraction fired`);
 
     const hasBottomSheet = !!(this.bottomSheet as any)._openedBottomSheetRef;
     const dialogCount = this.dialog.openDialogs.length;
@@ -174,7 +173,6 @@ export class PwaNavigationService implements OnDestroy {
     if (isAtRoot) {
       // C. Exit App Protection (Root only)
       const timeSinceLastBack = now - this.lastBackPressed;
-      this.notificationService.info(`[PWA-NAV] Exit guard: ${timeSinceLastBack}ms`);
       
       if (timeSinceLastBack < this.exitTime) {
         this.backPressCount++;
@@ -184,46 +182,34 @@ export class PwaNavigationService implements OnDestroy {
       
       this.lastBackPressed = now;
 
-      if (this.backPressCount >= 3) {
-        this.notificationService.info(`[PWA-NAV] 🚪 Exiting app`);
-        // window.close() only works for windows opened via window.open().
-        // For Android PWA, navigate back past all history entries to close the app.
-        history.go(-history.length);
-        this.backPressCount = 0;
+      if (this.backPressCount >= 3) {        this.backPressCount = 0;
+        this.restoreHistoryState();
       } else {
-        this.notificationService.info(`[PWA-NAV] ⚠️ root back: ${this.backPressCount} — show snackbar`);
         const remaining = 3 - this.backPressCount;
-        this.snackBar.open(`Press back ${remaining} more time${remaining > 1 ? 's' : ''} to exit`, '', { duration: 2000 });
+        this.notificationService.info(`Press back ${remaining} more time${remaining > 1 ? 's' : ''} to exit`);
         this.restoreHistoryState();
       }
       return;
     }
 
     if (now - this.lastInteractionTime < this.INTERACTION_GUARD_MS) {
-      this.notificationService.info(`[PWA-NAV] ⛔ Guard active (${now - this.lastInteractionTime}ms)`);
       this.restoreHistoryState(); // MUST push state back that was popped by browser to prevent native exit
       return;
     }
     this.lastInteractionTime = now;
 
     // 1️⃣ Run registered custom handlers (topmost/last-registered first)
-    this.notificationService.info(`[PWA-NAV] backHandlers: ${this.backHandlers.length}`);
     for (let i = this.backHandlers.length - 1; i >= 0; i--) {
       const handled = this.backHandlers[i]();
-      this.notificationService.info(`[PWA-NAV] handler[${i}]: ${handled}`);
       if (handled) {
-        this.notificationService.info(`[PWA-NAV] ✅ Custom handled — restoring`);
         this.restoreHistoryState();
         return;
       }
     }
 
     // 2️⃣ Close Overlays (Topmost First) — use Angular Material APIs, not DOM queries
-    this.notificationService.info(`[PWA-NAV] BS: ${hasBottomSheet} | Dlg: ${dialogCount} | Nav: ${this.navigationStack.length}`);
-
     // ✅ Bottom sheet check (renders above dialogs, dismiss first)
     if (hasBottomSheet) {
-     // this.notificationService.info(`[PWA-NAV] ✅ Dismissing bottom sheet`);
       this.bottomSheet.dismiss();
       this.lastBackPressed = 0;
       this.backPressCount = 0;
@@ -244,7 +230,6 @@ export class PwaNavigationService implements OnDestroy {
     // B. Navigate Stack
     if (this.navigationStack.length > 0) {
       const previous = this.navigationStack.pop();
-      this.notificationService.info(`[PWA-NAV] ✅ Nav back to: ${previous}`);
       if (previous) {
         this.router.navigateByUrl(previous);
         return;
