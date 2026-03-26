@@ -73,6 +73,7 @@ import { AppViewService, AppView } from 'src/app/util/service/app-view.service';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { CurrencyService } from 'src/app/util/service/currency.service';
 import { ThemeSwitchingService } from 'src/app/util/service/theme-switching.service';
+import { PwaNavigationService } from 'src/app/util/service/pwa-navigation.service';
 import { ACCOUNT_TYPE_OPTIONS } from 'src/app/util/config/config';
 import { RecurringTemplate } from 'src/app/util/models/recurring.model';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -139,6 +140,7 @@ export class MobileTransactionListComponent
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
   public  readonly bottomSheet = inject(MatBottomSheet);
+  private readonly pwaNavigationService = inject(PwaNavigationService);
 
   isRecurring = input<boolean>(false);
 
@@ -276,7 +278,7 @@ export class MobileTransactionListComponent
   isGuest = computed(() => this.userService.isGuestUser());
 
   openCategoryChart() {
-    this.bottomSheet.open(CategoryChartSheetComponent, {
+    this.pwaNavigationService.openBottomSheet(CategoryChartSheetComponent, {
       data: {
         filteredTransactions: this.filteredTransactions(),
         categoryMap: this.categoryMap(),
@@ -883,7 +885,7 @@ export class MobileTransactionListComponent
     // Don't open for upcoming or deleted/pending transactions
     if (transaction.id?.startsWith('upcoming-') || (transaction as any)._isDeleted || transaction.syncStatus === SyncStatus.PENDING) return;
 
-    this.bottomSheet.open(MobileTransactionDetailSheetComponent, {
+    this.pwaNavigationService.openBottomSheet(MobileTransactionDetailSheetComponent, {
       data: { 
         transaction,
         onEdit: (tx: Transaction) => this.onEditTransaction(tx),

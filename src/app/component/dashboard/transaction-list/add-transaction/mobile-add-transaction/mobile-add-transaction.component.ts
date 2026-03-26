@@ -24,6 +24,7 @@ import { NotificationService } from 'src/app/util/service/notification.service';
 import { ValidationService } from 'src/app/util/service/validation.service';
 import { AddAccountDialogComponent } from 'src/app/component/dashboard/accounts/add-account-dialog/add-account-dialog.component';
 import { MobileCategoryAddEditPopupComponent } from 'src/app/component/dashboard/category/mobile-category-add-edit-popup/mobile-category-add-edit-popup.component';
+import { PwaNavigationService } from 'src/app/util/service/pwa-navigation.service';
 
 import { LoaderService } from 'src/app/util/service/loader.service';
 import { DateService } from 'src/app/util/service/date.service';
@@ -126,6 +127,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   private categorySplitDialogRef: MatDialogRef<CategorySplitDialogComponent> | null = null;
   private readonly _store = inject(Store<AppState>);
   private readonly familyService = inject(FamilyService);
+  private readonly pwaNavigationService = inject(PwaNavigationService);
   public isFamilyMode = toSignal(
     this._store.select(fromProfile.selectUserPreferences).pipe(
       map(prefs => prefs?.isFamilyMode ?? false)
@@ -1189,7 +1191,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     // Using current form value or defaulting to Expense
     const currentType = this.transactionForm.get('categoryType')?.value || TransactionType.EXPENSE;
 
-    const sheetRef = this.bottomSheet.open(CategorySelectionSheetComponent, {
+    const sheetRef = this.pwaNavigationService.openBottomSheet(CategorySelectionSheetComponent, {
       data: {
         selectedCategoryId: this.transactionForm.get('categoryId')?.value,
         transactionType: currentType // We might want to pass this to filter list
@@ -1216,7 +1218,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       return;
     }
 
-    const sheetRef = this.bottomSheet.open(MultiplePaidBySheetComponent, {
+    const sheetRef = this.pwaNavigationService.openBottomSheet(MultiplePaidBySheetComponent, {
       data: {
         members: this.familyMembers(),
         totalAmount: totalAmount,
@@ -1307,7 +1309,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       initialSplits: currentSplits
     };
 
-    const bottomSheetRef = this.bottomSheet.open(SplitConfigSheetComponent, {
+    const bottomSheetRef = this.pwaNavigationService.openBottomSheet(SplitConfigSheetComponent, {
        data: data,
        panelClass: 'bg-transparent',
        closeOnNavigation: false,

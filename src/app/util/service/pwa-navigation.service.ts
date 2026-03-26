@@ -5,7 +5,8 @@ import { BehaviorSubject, Observable, filter, takeUntil, Subject, map } from 'rx
 import { Platform } from '@angular/cdk/platform';
 import { isPlatformServer } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
-import { MatBottomSheet } from '@angular/material/bottom-sheet';
+import { MatBottomSheet, MatBottomSheetConfig, MatBottomSheetRef } from '@angular/material/bottom-sheet';
+import { ComponentType } from '@angular/cdk/portal';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { NotificationService } from './notification.service';
 
@@ -112,14 +113,6 @@ export class PwaNavigationService implements OnDestroy {
       const id = this.pushOverlayState();
       ref.afterClosed().subscribe(() => this.popOverlayStateIfNeeded(id));
     });
-
-    const originalBsOpen = this.bottomSheet.open.bind(this.bottomSheet) as any;
-    this.bottomSheet.open = (...args: any[]) => {
-      const ref = originalBsOpen(...args);
-      const id = this.pushOverlayState();
-      ref.afterDismissed().subscribe(() => this.popOverlayStateIfNeeded(id));
-      return ref as any;
-    };
 
     // 4️⃣ iOS back gesture
     if (isMobile && this.platform.IOS) {
@@ -340,6 +333,23 @@ export class PwaNavigationService implements OnDestroy {
 
   public goBack(): void {
     this.handleBackInteraction();
+  }
+
+  /**
+   * Wrapper for MatBottomSheet.open that automatically pushes history state for PWA back-button handling.
+   */
+  public openBottomSheet<T, D = any, R = any>(
+    component: ComponentType<T>,
+    config?: MatBottomSheetConfig<D>
+  ): MatBottomSheetRef<T, R> {
+    const ref = this.bottomSheet.open(component, config);
+    const id = this.pushOverlayState();
+
+    ref.afterDismissed().subscribe(() => {
+      this.popOverlayStateIfNeeded(id);
+    });
+
+    return ref;
   }
 
   public goForward(): void {
