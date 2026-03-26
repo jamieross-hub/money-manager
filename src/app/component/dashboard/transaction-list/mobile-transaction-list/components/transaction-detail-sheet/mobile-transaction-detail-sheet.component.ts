@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -29,24 +29,25 @@ export interface TransactionDetailData {
     ImageFallbackDirective
   ],
   templateUrl: './mobile-transaction-detail-sheet.component.html',
-  styleUrls: ['./mobile-transaction-detail-sheet.component.scss']
+  styleUrls: ['./mobile-transaction-detail-sheet.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MobileTransactionDetailSheetComponent {
-  public data = inject<TransactionDetailData>(MAT_BOTTOM_SHEET_DATA);
+  public data = signal(inject<TransactionDetailData>(MAT_BOTTOM_SHEET_DATA));
   private bottomSheetRef = inject(MatBottomSheetRef<MobileTransactionDetailSheetComponent>);
 
   onEdit() {
-    this.data.onEdit(this.data.transaction);
+    this.data().onEdit(this.data().transaction);
     this.close();
   }
 
   onAdjust() {
-    this.data.onAdjust(this.data.transaction);
+    this.data().onAdjust(this.data().transaction);
     this.close();
   }
 
   onDelete() {
-    this.data.onDelete(this.data.transaction);
+    this.data().onDelete(this.data().transaction);
     this.close();
   }
 
