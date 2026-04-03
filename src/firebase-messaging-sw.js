@@ -101,35 +101,66 @@ self.addEventListener('notificationclick', (event) => {
 
   event.notification.close();
 
-  // Handle notification click
-  if (event.action === 'view' || !event.action) {
-    // Focus existing window or open new one
-    event.waitUntil(
-      clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-        // Check if there's already a window/tab open with the target URL
-        for (const client of clientList) {
-          if (client.url.includes(self.location.origin) && 'focus' in client) {
-            return client.focus();
-          }
-        }
-        
-        // If no window/tab is open, open a new one
-        if (clients.openWindow) {
-          const urlToOpen = event.notification.data?.url || self.location.origin;
-          return clients.openWindow(urlToOpen);
-        }
-      })
-    );
-  } else if (event.action === 'dismiss') {
-    // Just close the notification (already done above)
-    console.log('Notification dismissed');
-  } else {
-    // Handle custom actions
+  // 1. Determine target URL
+  const targetUrl = event.notification.data?.url || '/';
+  // Ensure we have an absolute URL for comparisons
+  const absoluteTargetUrl = new URL(targetUrl, self.location.origin).href;
+
+  // 2. Handle specific actions
+  if (event.action === 'dismiss') {
+    return;
+  }
+
+  // Handle other actions if present
+  if (event.action && event.action !== 'view') {
     const actionUrl = event.notification.data?.actionUrl;
     if (actionUrl) {
-      event.waitUntil(clients.openWindow(actionUrl));
+      const absoluteActionUrl = new URL(actionUrl, self.location.origin).href;
+      event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+          for (const client of clientList) {
+            if (client.url === absoluteActionUrl && 'focus' in client) {
+              return client.focus();
+            }
+          }
+          if (clients.openWindow) {
+            return clients.openWindow(absoluteActionUrl);
+          }
+        })
+      );
+      return;
     }
   }
+
+  // 3. Main focus or open logic (for 'view' action or direct click)
+  event.waitUntil(
+    clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true
+    }).then((clientList) => {
+      // ✅ If app already open at target → focus it
+      for (const client of clientList) {
+        if (client.url === absoluteTargetUrl && 'focus' in client) {
+          return client.focus();
+        }
+      }
+
+      // ✅ If app open at different url → focus it and navigate
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          if ('navigate' in client) {
+            client.navigate(absoluteTargetUrl);
+          }
+          return client.focus();
+        }
+      }
+
+      // ✅ If not open → open PWA window
+      if (clients.openWindow) {
+        return clients.openWindow(absoluteTargetUrl);
+      }
+    })
+  );
 });
 
 // Handle notification close
