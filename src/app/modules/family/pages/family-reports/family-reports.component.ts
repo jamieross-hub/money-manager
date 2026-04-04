@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, DestroyRef } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { trigger, transition, style, animate, stagger, query } from '@angular/animations';
 import { distinctUntilChanged, debounceTime } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import { CommonModule } from '@angular/common';
@@ -23,9 +24,21 @@ import { CurrencyPipe } from 'src/app/util/pipes';
   selector: 'app-family-reports',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule,CurrencyPipe],
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, CurrencyPipe],
   templateUrl: './family-reports.component.html',
-  styleUrls: ['./family-reports.component.scss']
+  styleUrls: ['./family-reports.component.scss'],
+  animations: [
+    trigger('insightsAnimation', [
+      transition('* => *', [
+        query(':enter', [
+          style({ opacity: 0, transform: 'translateY(10px) scale(0.98)' }),
+          stagger(80, [
+            animate('400ms cubic-bezier(0.35, 0, 0.25, 1)', style({ opacity: 1, transform: 'translateY(0) scale(1)' }))
+          ])
+        ], { optional: true })
+      ])
+    ])
+  ]
 })
 export class FamilyReportsComponent implements OnInit {
   private store = inject(Store<AppState>);
