@@ -216,7 +216,7 @@ addEventListener('message', ({ data }) => {
   }
 
   // 4. Filtering Logic
-  let filtered = [...sourceData];
+  let filtered = sourceData ? [...sourceData] : [];
   
   // Search
   if (filters.searchTerm && filters.searchTerm.trim()) {
@@ -227,11 +227,6 @@ addEventListener('message', ({ data }) => {
       t.notes?.toLowerCase().includes(searchLower) ||
       t.amount?.toString().includes(searchLower)
     );
-  }
-
-  // Category
-  if (filters.selectedCategory && !filters.selectedCategory.includes('all')) {
-    filtered = filtered.filter((t: any) => filters.selectedCategory.includes(t.categoryId));
   }
 
   // Type
@@ -245,13 +240,13 @@ addEventListener('message', ({ data }) => {
       const start = dayjs(filters.selectedDateRange.startDate).startOf('day');
       const end = dayjs(filters.selectedDateRange.endDate).endOf('day');
       filtered = filtered.filter((t: any) => {
-        const d = toDate(t.date);
+        const d = DateUtil.toDate(t.date);
         return d && dayjs(d).isBetween(start, end, 'day', '[]');
       });
     } else if (filters.selectedDate) {
       const target = dayjs(filters.selectedDate).startOf('day');
       filtered = filtered.filter((t: any) => {
-        const d = toDate(t.date);
+        const d = DateUtil.toDate(t.date);
         return d && dayjs(d).isSame(target, 'day');
       });
     }
@@ -295,6 +290,14 @@ addEventListener('message', ({ data }) => {
       }
       return t.userId === mId || t.createdBy === mId;
     });
+  }
+
+  // --- Capture Used Categories BEFORE Category selection filter ---
+  const usedCategoryIds = Array.from(new Set(filtered.map((t: any) => t.categoryId).filter(Boolean)));
+
+  // Finally Apply Category selection filter
+  if (filters.selectedCategory && !filters.selectedCategory.includes('all')) {
+    filtered = filtered.filter((t: any) => filters.selectedCategory.includes(t.categoryId));
   }
 
   // Merging Logic (Ported from component)
@@ -652,6 +655,7 @@ addEventListener('message', ({ data }) => {
     currentUserId,
     isFamilyMode,
     familyId,
-    cleanupIds
+    cleanupIds,
+    usedCategoryIds
   });
 });

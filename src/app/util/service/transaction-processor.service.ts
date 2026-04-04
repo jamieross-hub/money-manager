@@ -23,6 +23,7 @@ export interface ProcessorOutput {
   userIncome?: number;
   userExpenses?: number;
   userPaid?: number;
+  usedCategoryIds?: string[];
 }
 
 @Injectable({
@@ -93,7 +94,8 @@ export class TransactionProcessorService {
     filteredCount: 0,
     userIncome: 0,
     userExpenses: 0,
-    userPaid: 0
+    userPaid: 0,
+    usedCategoryIds: []
   });
 
   private readonly _isProcessing = signal<boolean>(false);
@@ -108,6 +110,7 @@ export class TransactionProcessorService {
   public userIncome = computed(() => this._output().userIncome || 0);
   public userExpenses = computed(() => this._output().userExpenses || 0);
   public userPaid = computed(() => this._output().userPaid || 0);
+  public usedCategoryIds = computed(() => this._output().usedCategoryIds || []);
   public isProcessing = computed(() => this._isProcessing());
 
   private debounceTimer: any;
@@ -404,44 +407,6 @@ export class TransactionProcessorService {
       );
     }
 
-    // Category
-    if (filters.selectedCategory && !filters.selectedCategory.includes('all')) {
-      filtered = filtered.filter((t: any) => filters.selectedCategory.includes(t.categoryId));
-    }
-
-    // Type
-    if (filters.selectedType && filters.selectedType !== 'all') {
-      filtered = filtered.filter((t: any) => t.type === filters.selectedType);
-    }
-
-    // Date Range
-    if (range !== 'upcoming' && !isRecurringMode) {
-      if (filters.selectedDateRange) {
-        const start = dayjs(filters.selectedDateRange.startDate).startOf('day');
-        const end = dayjs(filters.selectedDateRange.endDate).endOf('day');
-        filtered = filtered.filter((t: any) => {
-          const d = toDate(t.date);
-          return d && dayjs(d).isBetween(start, end, 'day', '[]');
-        });
-      } else if (filters.selectedDate) {
-        const target = dayjs(filters.selectedDate).startOf('day');
-        filtered = filtered.filter((t: any) => {
-          const d = toDate(t.date);
-          return d && dayjs(d).isSame(target, 'day');
-        });
-      }
-    }
-
-    // Recurring filter
-    if (filters.isRecurring !== null && filters.isRecurring !== undefined) {
-      filtered = filtered.filter((t: any) => !!t.isRecurring === filters.isRecurring);
-    }
-
-    // Account filter
-    if (filters.accountFilter && filters.accountFilter.length > 0) {
-      filtered = filtered.filter((t: any) => filters.accountFilter.includes(t.accountId));
-    }
-
     // Account Type filter
     if (filters.accountTypeFilter && filters.accountTypeFilter.length > 0) {
       filtered = filtered.filter((t: any) => {
@@ -475,6 +440,14 @@ export class TransactionProcessorService {
         // 3. Normal Transaction: check owner/creator
         return t.userId === memberId || t.createdBy === memberId;
       });
+    }
+
+    // --- Capture Used Categories BEFORE Category selection filter ---
+    const usedCategoryIds = Array.from(new Set(filtered.map((t: any) => t.categoryId).filter(Boolean)));
+
+    // Finally Apply Category selection filter
+    if (filters.selectedCategory && !filters.selectedCategory.includes('all')) {
+      filtered = filtered.filter((t: any) => filters.selectedCategory.includes(t.categoryId));
     }
 
     // Merging Logic
@@ -967,7 +940,8 @@ export class TransactionProcessorService {
       filteredCount,
       userIncome,
       userExpenses,
-      userPaid
+      userPaid,
+      usedCategoryIds
     };
   }
 

@@ -316,23 +316,11 @@ export class MobileTransactionListComponent
 
   availableCategories = computed(() => {
     const cats = this.categories();
-    // Use filteredTransactions (already computed by processor) to avoid a full scan of allTransactions.
-    // Falls back to allTransactions when processor hasn't run yet.
-    const txs = this.filteredTransactions().length > 0 ? this.filteredTransactions() : this.allTransactions();
-    if (!cats || !txs) return [];
-
-    const usedCategoryIds = new Set<string>();
-    for (const tx of txs) {
-      if (tx.categoryId) usedCategoryIds.add(tx.categoryId);
-      if (tx.isCategorySplit && tx.categorySplits) {
-        for (const split of tx.categorySplits) {
-          if (split.categoryId) usedCategoryIds.add(split.categoryId);
-        }
-      }
-    }
+    const usedIds = this.processorService.usedCategoryIds();
+    if (!cats || !usedIds) return [];
 
     return cats
-      .filter(category => usedCategoryIds.has(category.id || ''))
+      .filter(category => usedIds.includes(category.id || ''))
       .map(category => ({ ...category, id: category.id || '' }));
   });
 
