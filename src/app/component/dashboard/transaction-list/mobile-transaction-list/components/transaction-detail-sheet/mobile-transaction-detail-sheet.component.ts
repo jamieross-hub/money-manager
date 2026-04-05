@@ -11,9 +11,11 @@ import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.d
 
 export interface TransactionDetailData {
   transaction: Transaction;
+  isFamilyMode: boolean;
   onEdit: (tx: Transaction) => void;
   onAdjust: (tx: Transaction) => void;
   onDelete: (tx: Transaction) => void;
+  onFlag: (tx: Transaction) => void;
 }
 
 @Component({
@@ -49,6 +51,10 @@ export class MobileTransactionDetailSheetComponent {
   onDelete() {
     this.data().onDelete(this.data().transaction);
     this.close();
+  }
+
+  onFlag() {
+    this.data().onFlag(this.data().transaction);
   }
 
   close() {

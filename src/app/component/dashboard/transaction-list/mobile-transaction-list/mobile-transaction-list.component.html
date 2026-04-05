@@ -573,6 +573,7 @@
             [class.multi-selected]="selectedTxIds().has(item.id!)" [class.upcoming]="item._isUpcoming"
             [class.deleted]="item._isDeleted" [class.opacity-50]="item.syncStatus === 'pending'"
             [class.grayscale]="item.syncStatus === 'pending'" [class.newly-added]="item.id === newlyAddedTxId()"
+            [class.flagged]="item.flagged"
             [class.no-interaction]="selectedSpecialRange() === 'category' || item._isDeleted || item.syncStatus === 'pending'" (mousedown)="onLongPressStart(item)"
             (touchstart)="onLongPressStart(item)" (touchmove)="onLongPressEnd()" (mouseup)="onLongPressEnd()"
             (touchend)="onLongPressEnd()" (click)="onTransactionClick(item)">
@@ -622,7 +623,12 @@
 
               <!-- Details (left) -->
               <div class="transaction-details">
-                <div class="transaction-title">{{ (item.notes) ? item.notes : (item.category | titlecase) }}</div>
+                <div class="transaction-title">
+                  @if (item.flagged) {
+                    <mat-icon class="flag-icon-small">warning</mat-icon>
+                  }
+                  {{ (item.notes) ? item.notes : (item.category | titlecase) }}
+                </div>
 
                 @if (item.splitData?.splitBetween?.length && !item._isSummary) {
                 <div class="split-members-avatars">

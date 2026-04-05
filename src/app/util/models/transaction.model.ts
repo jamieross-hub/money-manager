@@ -157,6 +157,12 @@ export interface Transaction extends Auditable, RecurrenceInfo {
   _canEdit?: boolean;
   _canAdjust?: boolean;
   _canDelete?: boolean;
+  
+  // Flagging (Dispute/Comment)
+  flagged?: boolean;
+  flagMessage?: string;
+  flaggedBy?: string | null;
+  flaggedAt?: Date | Timestamp | null;
 }
 
 /**
@@ -206,6 +212,10 @@ export interface CreateTransactionRequest extends TransactionBaseRequest {}
  */
 export interface UpdateTransactionRequest extends Partial<TransactionBaseRequest> {
   status?: TransactionStatus;
+  flagged?: boolean;
+  flagMessage?: string;
+  flaggedBy?: string | null;
+  flaggedAt?: Date | Timestamp | null;
 }
 
 /**

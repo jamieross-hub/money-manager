@@ -82,6 +82,19 @@
         }
       }
 
+      <!-- Flagged/Dispute Section -->
+      @if (data().isFamilyMode && data().transaction.flagged) {
+        <div class="flagged-section">
+          <div class="flagged-banner">
+            <mat-icon class="flag-icon">warning</mat-icon>
+            <div class="flag-content">
+              <span class="flag-title">Marked as Incorrect</span>
+              <p class="flag-message">{{ data().transaction.flagMessage || 'No specific reason provided.' }}</p>
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- Family Split Details -->
       @if(data().transaction.splitData; as splitData) {
       <div class="split-details-section">
@@ -160,6 +173,13 @@
         <mat-icon>delete</mat-icon>
         <span>Delete</span>
       </button>
+      }
+
+      @if (data().isFamilyMode) {
+        <button mat-stroked-button class="action-btn flag-btn" [class.active-flag]="data().transaction.flagged" (click)="onFlag()">
+          <mat-icon>{{ data().transaction.flagged ? 'flag' : 'outlined_flag' }}</mat-icon>
+          <span>{{ data().transaction.flagged ? 'Update Flag' : 'Flag' }}</span>
+        </button>
       }
 
       @if (!data().transaction._canEdit && !data().transaction._canDelete) {

@@ -222,7 +222,6 @@
         border-radius: 16px;
         border: 1px solid var(--surface-100);
         overflow: hidden;
-        // transition: all 0.2s ease;
 
         .notes-accent {
           position: absolute;
@@ -249,6 +248,52 @@
           background: var(--surface-100);
         }
       }
+    }
+
+    .flagged-section {
+      margin: 12px 0;
+      animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+
+      .flagged-banner {
+        background: #fff1f2; // Light rose/red
+        border: 1px solid #fecaca;
+        border-radius: 16px;
+        padding: 16px;
+        display: flex;
+        gap: 12px;
+        box-shadow: 0 4px 12px rgba(225, 29, 72, 0.05);
+
+        .flag-icon {
+          color: #e11d48;
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
+        }
+
+        .flag-content {
+          .flag-title {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #9f1239;
+            margin-bottom: 2px;
+          }
+          .flag-message {
+            margin: 0;
+            font-size: 0.88rem;
+            line-height: 1.4;
+            color: #be123c;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-1px, 0, 0); }
+      20%, 80% { transform: translate3d(2px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+      40%, 60% { transform: translate3d(4px, 0, 0); }
     }
 
     .split-details-section {
@@ -346,8 +391,17 @@
         mat-icon {
           margin-right: 4px;
         }
+      }
 
-      
+      .flag-btn {
+        color: var(--neutral-500);
+        border-color: var(--surface-300);
+
+        &.active-flag {
+          background: #fff1f2 !important;
+          border-color: #fca5a5 !important;
+          color: #e11d48 !important;
+        }
       }
 
       .view-only-badge {
@@ -484,6 +538,20 @@
       }
     }
 
+    .flagged-section {
+      .flagged-banner {
+        background: #2d1a1a;
+        border-color: #442222;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+
+        .flag-icon { color: #f87171; }
+        .flag-content {
+          .flag-title { color: #fca5a5; }
+          .flag-message { color: #f87171; }
+        }
+      }
+    }
+
     .sheet-footer {
       background: #121212;
       border-top-color: #222;
@@ -499,6 +567,17 @@
             background: #2d1a1a;
             border-color: #442222;
             color: #f87171;
+          }
+
+          &.flag-btn {
+            border-color: #333;
+            color: #888;
+
+            &.active-flag {
+              background: #2d1a1a !important;
+              border-color: #442222 !important;
+              color: #f87171 !important;
+            }
           }
         }
       }

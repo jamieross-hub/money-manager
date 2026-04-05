@@ -80,6 +80,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { CategoryChartSheetComponent } from './components/category-chart-sheet/category-chart-sheet.component';
 import { MobileTransactionDetailSheetComponent } from './components/transaction-detail-sheet/mobile-transaction-detail-sheet.component';
+import { FlagTransactionDialogComponent } from './components/flag-transaction-dialog/flag-transaction-dialog.component';
+import { TransactionsService } from 'src/app/util/service/db/transactions.service';
 
 dayjs.extend(weekOfYear);
 
@@ -141,6 +143,7 @@ export class MobileTransactionListComponent
   private readonly destroyRef = inject(DestroyRef);
   public  readonly bottomSheet = inject(MatBottomSheet);
   private readonly pwaNavigationService = inject(PwaNavigationService);
+  private readonly transactionsService = inject(TransactionsService);
 
   isRecurring = input<boolean>(false);
 
@@ -876,9 +879,11 @@ export class MobileTransactionListComponent
     this.pwaNavigationService.openBottomSheet(MobileTransactionDetailSheetComponent, {
       data: { 
         transaction,
+        isFamilyMode: this.isFamilyMode(),
         onEdit: (tx: Transaction) => this.onEditTransaction(tx),
         onAdjust: (tx: Transaction) => this.onAdjustTransaction(tx),
-        onDelete: (tx: Transaction) => this.onDeleteTransaction(tx)
+        onDelete: (tx: Transaction) => this.onDeleteTransaction(tx),
+        onFlag: (tx: Transaction) => this.onFlagTransaction(tx)
       },
       closeOnNavigation: false,
       panelClass: 'custom-bottom-sheet'
@@ -954,6 +959,34 @@ export class MobileTransactionListComponent
 
   onEditTransaction(transaction: Transaction) {
     this.editTransaction.emit(transaction);
+  }
+
+  onFlagTransaction(transaction: Transaction) {
+    this.dialog.open(FlagTransactionDialogComponent, {
+      width: '100%',
+      maxWidth: '450px',
+      panelClass: 'custom-dialog',
+      data: {
+        title: transaction.flagged ? 'Update Flag' : 'Flag Transaction',
+        message: 'Explain why this transaction is incorrect so other members can rectify it.',
+        comment: transaction.flagMessage || '',
+        isUpdate: !!transaction.flagged
+      }
+    }).afterClosed().subscribe(comment => {
+      if (comment !== undefined) {
+        const userId = this.userService.getCurrentUserId();
+        if (!userId) return;
+        
+        const isRemoving = comment === null;
+        
+        this.transactionsService.updateTransaction(userId, transaction.id!, {
+          flagged: !isRemoving,
+          flagMessage: isRemoving ? '' : (comment || ''),
+          flaggedBy: isRemoving ? null : userId,
+          flaggedAt: isRemoving ? null : new Date()
+        }).subscribe();
+      }
+    });
   }
 
   onAdjustTransaction(transaction: Transaction) {

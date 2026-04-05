@@ -1052,6 +1052,44 @@
     border-color: var(--primary-500);
     z-index: 10;
   }
+
+  &.flagged {
+    border-left: 3px solid #e11d48 !important;
+    background: #fffafa !important; // Very subtle rose
+
+    [data-theme='dark'] & {
+      background: #1a0f0f !important;
+      border-left-color: #f87171 !important;
+      
+      .transaction-title {
+        color: #fca5a5 !important;
+        .flag-icon-small {
+          color: #f87171;
+        }
+      }
+    }
+    
+    .transaction-title {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #9f1239 !important;
+      
+      .flag-icon-small {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+        color: #e11d48;
+        animation: pulse-warn 2s infinite;
+      }
+    }
+  }
+
+  @keyframes pulse-warn {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+  }
 }
 
 @keyframes pulseHighlight {
