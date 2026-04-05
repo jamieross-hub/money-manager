@@ -1,0 +1,22 @@
+:host {
+  font-family: 'Inter', system-ui, sans-serif;
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif !important;
+  }
+
+  // Financial Data / Amounts
+  .font-black,
+  .text-\[14px\].font-black,
+  .text-\[13px\].font-black,
+  .text-\[12px\].font-black,
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-feature-settings: "tnum" on, "zero" on;
+    letter-spacing: -0.01em;
+  }
+
+  .tracking-widest {
+    letter-spacing: 0.1em;
+  }
+}

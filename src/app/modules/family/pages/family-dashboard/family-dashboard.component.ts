@@ -45,7 +45,7 @@ import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import * as ProfileActions from 'src/app/store/profile/profile.actions';
 
 // Models
-import { Family, FamilyMember, Settlement } from 'src/app/util/models/family.model';
+import { Family, FamilyMember, Settlement, FamilyMemberStats } from 'src/app/util/models/family.model';
 import { Transaction } from 'src/app/util/models/transaction.model';
 
 // Enums & Config
@@ -67,6 +67,7 @@ import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/c
 import { FamilyCreateDialogComponent } from '../../dialogs/family-create-dialog/family-create-dialog.component';
 import { FamilyJoinDialogComponent } from '../../dialogs/family-join-dialog/family-join-dialog.component';
 import { FamilyMembersComponent } from '../family-members/family-members.component';
+import { MemberBreakdownSheetComponent } from '../../dialogs/member-breakdown-sheet/member-breakdown-sheet.component';
 
 // Pipes & Directives
 import { CurrencyPipe, AppDatePipe, TruncatePipe } from 'src/app/util/pipes';
@@ -95,7 +96,7 @@ import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.d
     CurrencyPipe,
     AppDatePipe,
     TruncatePipe,
-    ImageFallbackDirective,
+    ImageFallbackDirective
   ],
   templateUrl: './family-dashboard.component.html',
   styleUrls: ['./family-dashboard.component.scss']
@@ -259,6 +260,19 @@ export class FamilyDashboardComponent implements OnInit {
 
   loadMoreActivities(): void {
     this.activityLimit.update(l => l + 5);
+  }
+
+  openMemberDetails(member: FamilyMemberStats): void {
+    this.pwaNavigationService.openBottomSheet(MemberBreakdownSheetComponent, {
+      data: {
+        member,
+        transactions: this.transactions(),
+        balances: this.settleBalances(),
+        memberColor: this.memberColor(member.userId)
+      },
+      panelClass: ['bg-transparent', 'auto-height-sheet'],
+      closeOnNavigation: true
+    });
   }
 
   copyCode(code: string): void {

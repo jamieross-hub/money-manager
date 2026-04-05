@@ -1,0 +1,150 @@
+<div class="flex flex-col h-full bg-slate-50/95 dark:bg-gray-950/95 backdrop-blur-xl rounded-t-[32px] overflow-hidden border-t border-white/20 dark:border-gray-800/50 shadow-2xl">
+  
+  <!-- Header Bar -->
+  <div class="px-6 pt-6 pb-2">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 rounded-2xl overflow-hidden shadow-lg ring-2 ring-white dark:ring-gray-800 shrink-0"
+             [style.backgroundColor]="data.memberColor">
+          @if (data.member.photoURL) {
+            <img [src]="data.member.photoURL" appImageFallback alt="avatar" class="w-full h-full object-cover" />
+          } @else {
+            <mat-icon class="!text-[32px] !w-8 !h-8 text-white translate-y-3 translate-x-3">person</mat-icon>
+          }
+        </div>
+        <div>
+          <h2 class="text-xl font-black text-gray-900 dark:text-white leading-tight uppercase tracking-tight m-0">
+            {{ data.member.displayName }}
+          </h2>
+          <div class="flex items-center gap-2 mt-0.5">
+            <span class="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none">
+              {{ data.member.isActive ? 'Active Member' : 'Inactive' }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <button mat-icon-button (click)="close()" class="bg-gray-200/50 dark:bg-gray-800/50 backdrop-blur-md">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="px-6 pb-8 space-y-6">
+    
+    <!-- Summary Cards Grid -->
+    <div class="grid grid-cols-3 gap-1">
+      <div class="bg-white dark:bg-gray-900/50 rounded-2xl p-3 border border-gray-100 dark:border-gray-800 shadow-sm">
+        <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 opacity-70">Paid</p>
+        <p class="text-[14px] font-black text-gray-900 dark:text-white leading-none">
+          {{ data.member.totalPaid | currency }}
+        </p>
+      </div>
+      <div class="bg-white dark:bg-gray-900/50 rounded-2xl p-3 border border-gray-100 dark:border-gray-800 shadow-sm">
+        <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 opacity-70">Spent</p>
+        <p class="text-[14px] font-black text-primary-600 dark:text-primary-400 leading-none">
+          {{ data.member.totalExpense | currency }}
+        </p>
+      </div>
+      <div class="bg-white dark:bg-gray-900/50 rounded-2xl p-3 border border-gray-100 dark:border-gray-800 shadow-sm"
+           [class.bg-green-50/50]="data.member.netBalance > 0"
+           [class.bg-orange-50/50]="data.member.netBalance < 0">
+        <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 opacity-70">Balance</p>
+        <p class="text-[14px] font-black leading-none"
+           [class.text-green-600]="data.member.netBalance > 0"
+           [class.text-orange-600]="data.member.netBalance < 0"
+           [class.text-gray-900]="data.member.netBalance === 0">
+          {{ data.member.netBalance | currency }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Category Distribution -->
+    @if (memberCategories().length > 0) {
+      <div class="bg-white dark:bg-gray-900/40 rounded-2xl p-4 border border-gray-100 dark:border-gray-800/50">
+        <h3 class="text-[11px] font-black text-gray-500 uppercase tracking-widest mb-4">Spending breakdown</h3>
+        <div class="space-y-4">
+          @for (cat of memberCategories(); track cat.category) {
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <span class="text-[12px] font-bold text-gray-700 dark:text-gray-300">{{ cat.category }}</span>
+                <span class="text-[12px] font-black text-gray-900 dark:text-white">{{ cat.amount | currency }}</span>
+              </div>
+              <div class="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                <div class="h-full bg-primary-500 rounded-full transition-all duration-500"
+                     [style.width.%]="cat.percentage"
+                     [style.backgroundColor]="data.memberColor"></div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Net Settlement Details -->
+    @if (filteredBalances().length > 0) {
+      <div>
+        <h3 class="text-[11px] font-black text-gray-500 uppercase tracking-widest mb-3 px-1">Settlement status</h3>
+        <div class="flex flex-col gap-2">
+          @for (b of filteredBalances(); track b.fromUserId + b.toUserId) {
+            <div class="flex items-center justify-between bg-white dark:bg-gray-900/40 p-3 rounded-2xl border border-gray-100 dark:border-gray-800/50">
+              <div class="flex items-center gap-3">
+                <div class="flex -space-x-2">
+                    <img [src]="b.fromPhotoURL" appImageFallback class="w-8 h-8 rounded-full border-2 border-white dark:border-gray-900 bg-gray-200" *ngIf="b.fromPhotoURL"/>
+                    <img [src]="b.toPhotoURL" appImageFallback class="w-8 h-8 rounded-full border-2 border-white dark:border-gray-900 bg-gray-200" *ngIf="b.toPhotoURL"/>
+                </div>
+                <div>
+                  <p class="text-[12px] font-bold text-gray-800 dark:text-gray-200 leading-tight">
+                    @if (b.fromUserId === data.member.userId) {
+                      Owes {{ b.toDisplayName }}
+                    } @else {
+                      Owed by {{ b.fromDisplayName }}
+                    }
+                  </p>
+                </div>
+              </div>
+              <p class="text-[14px] font-black" [class.text-orange-500]="b.fromUserId === data.member.userId" [class.text-green-500]="b.toUserId === data.member.userId">
+                {{ b.amount | currency }}
+              </p>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Recent Activity -->
+    <div>
+      <h3 class="text-[11px] font-black text-gray-500 uppercase tracking-widest mb-3 px-1">Recent involved activity</h3>
+      <div class="flex flex-col gap-2">
+        @for (tx of memberTransactions(); track tx.id) {
+          <div class="flex items-center gap-3 bg-white dark:bg-gray-900/40 p-3 rounded-2xl border border-gray-100 dark:border-gray-800/50">
+            <div class="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800/50 flex items-center justify-center shrink-0">
+               <mat-icon class="text-gray-400 dark:text-gray-500">receipt_long</mat-icon>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[13px] font-bold text-gray-900 dark:text-white truncate leading-tight mb-0.5">{{ tx.payee || tx.category }}</p>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] text-gray-500 font-medium uppercase tracking-tighter">{{ tx.date | appDate:'shortDate' }}</span>
+                <span class="w-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-full"></span>
+                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">{{ getTxAmountLabel(tx) }}</span>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-[13px] font-black text-gray-900 dark:text-white leading-tight mb-0.5">
+                {{ tx.amount | currency }}
+              </p>
+              @if (getMemberShareInTx(tx) > 0 && getMemberShareInTx(tx) !== tx.amount) {
+                <p class="text-[9px] font-bold text-primary-500 leading-none">Share: {{ getMemberShareInTx(tx) | currency }}</p>
+              }
+            </div>
+          </div>
+        } @empty {
+          <div class="p-8 text-center bg-gray-100/50 dark:bg-gray-900/20 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800">
+            <mat-icon class="!w-12 !h-12 !text-[48px] text-gray-300 mb-2">history</mat-icon>
+            <p class="text-gray-400 text-xs font-medium">No recent transactions found</p>
+          </div>
+        }
+      </div>
+    </div>
+
+  </div>
+</div>

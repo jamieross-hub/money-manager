@@ -247,7 +247,8 @@
       <div class="flex flex-col gap-3 pb-4">
         @for (m of stats()?.memberBreakdown; track m.userId) {
           <div
-            class="group relative bg-white dark:bg-gray-800/40 rounded-2xl p-3.5 border border-gray-100 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300 flex items-center gap-3 overflow-hidden">
+            (click)="openMemberDetails(m)" matRipple
+            class="group relative bg-white dark:bg-gray-800/40 rounded-2xl p-3.5 border border-gray-100 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300 flex items-center gap-3 overflow-hidden cursor-pointer">
             
             <!-- Proportional Progress Bar (Thin, at the bottom) -->
             <div class="absolute bottom-0 left-0 h-1 transition-all duration-500 opacity-60" 
@@ -273,10 +274,10 @@
                   <div class="px-1 py-0.5 rounded bg-gray-100 dark:bg-gray-700/50 text-[8px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none">
                     {{ ((m.totalExpense / (stats()?.totalExpense || 1)) * 100) | truncate:0 }}% Share
                   </div>
-                  <span class="text-[9px] font-bold text-gray-400 dark:text-gray-500 flex items-center gap-0.5">
+                  <!-- <span class="text-[9px] font-bold text-gray-400 dark:text-gray-500 flex items-center gap-0.5">
                     <mat-icon class="!text-[10px] !w-2 !h-2">receipt_long</mat-icon>
                     {{ m.paidCount }}
-                  </span>
+                  </span> -->
                 </div>
               </div>
             </div>
