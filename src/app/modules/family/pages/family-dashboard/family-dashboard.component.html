@@ -251,11 +251,10 @@
             
             <!-- Proportional Progress Bar (Thin, at the bottom) -->
             <div class="absolute bottom-0 left-0 h-1 transition-all duration-500 opacity-60" 
-                 [style.width.%]="(m.totalExpense / (stats()?.totalExpense || 1)) * 100"
-                 [style.backgroundColor]="memberColor(m.userId)"></div>
+                 [style.width.%]="(m.totalExpense / (stats()?.totalExpense || 1)) * 100"></div>
 
             <!-- Member Accent Detail -->
-            <div class="absolute inset-y-0 left-0 w-1 opacity-80" [style.backgroundColor]="memberColor(m.userId)"></div>
+            <div class="absolute inset-y-0 left-0 w-1 opacity-80" ></div>
 
             <div class="flex items-center gap-3 flex-1 min-w-0 z-10">
               <div class="relative">

@@ -56,68 +56,47 @@
 
             </div>
 
-            <!-- Smart Insights with Premium Glass & Animations -->
-            <div class="insights-glass rounded-2xl p-4 border shadow-sm mt-2 overflow-hidden">
-              <div class="flex items-center justify-between mb-4">
+            <div class="insights-glass rounded-2xl p-1 border shadow-sm mt-3 overflow-hidden">
+              <div class="flex items-center justify-between mb-1 cursor-pointer select-none" (click)="isInsightsExpanded.set(!isInsightsExpanded())">
                 <p class="text-[10px] font-black tracking-[0.2em] uppercase text-gray-500/80 dark:text-gray-400/70 flex items-center gap-2">
                   <mat-icon class="!text-[14px] !w-3.5 !h-3.5 text-primary-500 animate-pulse">auto_awesome</mat-icon>
                   Smart Insights
                 </p>
-                <div class="h-[1px] flex-1 bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700/50 to-transparent ml-4"></div>
+                <div class="flex items-center gap-3 flex-1 ml-4 ">
+                  <div class="h-[1px] flex-1 bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700/50 to-transparent"></div>
+                  <mat-icon class="text-gray-400 !text-[18px] !w-[18px] !h-[18px] transition-transform duration-300"
+                    [class.rotate-180]="!isInsightsExpanded()">
+                    expand_more
+                  </mat-icon>
+                </div>
               </div>
               
-              <div class="space-y-3" [@insightsAnimation]>
-                @if (topSpender()) {
-                  <div class="insight-item flex items-center gap-3 p-2 rounded-xl group transition-all">
-                    <div class="icon-container bg-primary-100 dark:bg-primary-900/30">
-                      <mat-icon class="!text-[16px] !w-4 !h-4 text-primary-600 dark:text-primary-300">payments</mat-icon>
+              @if (isInsightsExpanded()) {
+                <div @expandCollapse class="space-y-3">
+                  @for (insight of smartInsights(); track insight.label) {
+                    <div class="insight-item flex items-center gap-3 p-2 rounded-xl group transition-all">
+                      <div class="icon-container {{ insight.colorClass }}">
+                        <mat-icon class="!text-[16px] !w-4 !h-4">{{ insight.icon }}</mat-icon>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold tracking-wider leading-none mb-1">{{ insight.label }}</p>
+                        <p class="text-xs text-gray-700 dark:text-gray-300 truncate font-bold text-gray-900 dark:text-white">
+                          {{ insight.value }}
+                        </p>
+                      </div>
+                      <div class="px-2 py-0.5 rounded-full border {{ insight.badgeClass }}">
+                        <span class="text-[11px] font-bold">
+                          @if (insight.isCurrency) {
+                            {{ insight.amount | currency:{round:true} }}
+                          } @else if (insight.isPercentage) {
+                            {{ insight.amount | number:'1.0-0' }}%
+                          }
+                        </span>
+                      </div>
                     </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold tracking-wider leading-none mb-1">Top Spender</p>
-                      <p class="text-xs text-gray-700 dark:text-gray-300 truncate">
-                        <span class="font-bold text-gray-900 dark:text-white">{{ topSpender()!.name }}</span>
-                      </p>
-                    </div>
-                    <div class="px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20">
-                      <span class="text-[11px] font-bold text-red-600 dark:text-red-400">{{ topSpender()!.amount | currency:{round:true} }}</span>
-                    </div>
-                  </div>
-                }
-
-                @if (topCategory()) {
-                  <div class="insight-item flex items-center gap-3 p-2 rounded-xl group transition-all">
-                    <div class="icon-container bg-amber-100 dark:bg-amber-900/30">
-                      <mat-icon class="!text-[16px] !w-4 !h-4 text-amber-600 dark:text-amber-300">category</mat-icon>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold tracking-wider leading-none mb-1">Top Category</p>
-                      <p class="text-xs text-gray-700 dark:text-gray-300 truncate">
-                        <span class="font-bold text-gray-900 dark:text-white">{{ topCategory()!.name }}</span>
-                      </p>
-                    </div>
-                    <div class="px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20">
-                      <span class="text-[11px] font-bold text-amber-600 dark:text-amber-400">{{ topCategory()!.percentage | number:'1.0-0' }}%</span>
-                    </div>
-                  </div>
-                }
-
-                @if (largestExpense()) {
-                  <div class="insight-item flex items-center gap-3 p-2 rounded-xl group transition-all">
-                    <div class="icon-container bg-emerald-100 dark:bg-emerald-900/30">
-                      <mat-icon class="!text-[16px] !w-4 !h-4 text-emerald-600 dark:text-emerald-300">receipt_long</mat-icon>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold tracking-wider leading-none mb-1">Largest Expense</p>
-                      <p class="text-xs text-gray-700 dark:text-gray-300 truncate">
-                        <span class="font-bold text-gray-900 dark:text-white">{{ largestExpense()!.note }}</span>
-                      </p>
-                    </div>
-                    <div class="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20">
-                      <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">{{ largestExpense()!.amount | currency:{round:true} }}</span>
-                    </div>
-                  </div>
-                }
-              </div>
+                  }
+                </div>
+              }
             </div>
 
           </div>

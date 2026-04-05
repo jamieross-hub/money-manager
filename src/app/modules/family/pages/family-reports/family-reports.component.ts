@@ -28,14 +28,14 @@ import { CurrencyPipe } from 'src/app/util/pipes';
   templateUrl: './family-reports.component.html',
   styleUrls: ['./family-reports.component.scss'],
   animations: [
-    trigger('insightsAnimation', [
-      transition('* => *', [
-        query(':enter', [
-          style({ opacity: 0, transform: 'translateY(10px) scale(0.98)' }),
-          stagger(80, [
-            animate('400ms cubic-bezier(0.35, 0, 0.25, 1)', style({ opacity: 1, transform: 'translateY(0) scale(1)' }))
-          ])
-        ], { optional: true })
+    trigger('expandCollapse', [
+      transition(':enter', [
+        style({ height: '0', opacity: 0, overflow: 'hidden' }),
+        animate('300ms cubic-bezier(0.4, 0.0, 0.2, 1)', style({ height: '*', opacity: 1 }))
+      ]),
+      transition(':leave', [
+        style({ height: '*', opacity: 1, overflow: 'hidden' }),
+        animate('300ms cubic-bezier(0.4, 0.0, 0.2, 1)', style({ height: '0', opacity: 0 }))
       ])
     ])
   ]
@@ -52,6 +52,7 @@ export class FamilyReportsComponent implements OnInit {
   family       = toSignal(this.store.select(FamilySelectors.selectFamily));
 
   stats = this.familyProcessor.stats;
+  isInsightsExpanded = signal(false);
 
   categoryBreakdown = computed(() => {
     const cats = this.stats()?.categoryBreakdown || [];
@@ -221,6 +222,54 @@ export class FamilyReportsComponent implements OnInit {
       }
     }
     return Number(large.amount) > 0 ? { note: large.note || large.category, amount: Number(large.amount) } : null;
+  });
+
+  smartInsights = computed(() => {
+    const insights = [];
+    const ts = this.topSpender();
+    const tc = this.topCategory();
+    const le = this.largestExpense();
+
+    if (ts) {
+      insights.push({
+        type: 'spender',
+        label: 'Top Spender',
+        value: ts.name,
+        amount: ts.amount,
+        isCurrency: true,
+        icon: 'payments',
+        colorClass: 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-300',
+        badgeClass: 'bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/20 text-red-600 dark:text-red-400'
+      });
+    }
+
+    if (tc) {
+      insights.push({
+        type: 'category',
+        label: 'Top Category',
+        value: tc.name,
+        amount: tc.percentage,
+        isPercentage: true,
+        icon: 'category',
+        colorClass: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300',
+        badgeClass: 'bg-amber-50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/20 text-amber-600 dark:text-amber-400'
+      });
+    }
+
+    if (le) {
+      insights.push({
+        type: 'expense',
+        label: 'Largest Expense',
+        value: le.note,
+        amount: le.amount,
+        isCurrency: true,
+        icon: 'receipt_long',
+        colorClass: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300',
+        badgeClass: 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-900/20 text-emerald-600 dark:text-emerald-400'
+      });
+    }
+
+    return insights;
   });
 
   private memberColors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
