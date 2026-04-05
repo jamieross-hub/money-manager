@@ -102,7 +102,18 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   // 1. Determine target URL
-  const targetUrl = event.notification.data?.url || '/';
+  let targetUrl = event.notification.data?.url;
+  
+  // If no URL, try to use route (common for local notifications)
+  if (!targetUrl && event.notification.data?.route) {
+    targetUrl = `/money-manager${event.notification.data.route}`;
+  }
+  
+  // Default to app home if nothing else works
+  if (!targetUrl) {
+    targetUrl = '/money-manager/';
+  }
+
   // Ensure we have an absolute URL for comparisons
   const absoluteTargetUrl = new URL(targetUrl, self.location.origin).href;
 

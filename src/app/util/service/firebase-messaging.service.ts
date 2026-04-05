@@ -693,8 +693,10 @@ export class FirebaseMessagingService {
     if (notification.data?.['url']) {
       window.open(notification.data['url'], '_blank');
     } else if (notification.data?.['route']) {
-      // Navigate to specific route in the app
-      window.location.href = notification.data['route'];
+      // Navigate to specific route in the app using base URL
+      const route = notification.data['route'];
+      const targetUrl = route.startsWith('/') ? `${environment.baseUrl}${route}` : `${environment.baseUrl}/${route}`;
+      window.location.href = targetUrl;
     }
 
     // Emit click event for components to handle
