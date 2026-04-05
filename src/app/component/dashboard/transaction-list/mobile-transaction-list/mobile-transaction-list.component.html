@@ -622,7 +622,7 @@
 
               <!-- Details (left) -->
               <div class="transaction-details">
-                <div class="transaction-title">{{ item.category | titlecase }}</div>
+                <div class="transaction-title">{{ (item.notes) ? item.notes : (item.category | titlecase) }}</div>
 
                 @if (item.splitData?.splitBetween?.length && !item._isSummary) {
                 <div class="split-members-avatars">
@@ -663,9 +663,7 @@
                 </div>
                 }
 
-                @if (item.notes) {
-                <div class="transaction-notes">{{ item.notes }}</div>
-                }
+
               </div>
 
               <!-- Amount (right) -->
