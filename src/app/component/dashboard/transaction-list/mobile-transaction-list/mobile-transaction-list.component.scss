@@ -780,6 +780,7 @@
 
 .transaction-scroll {
   height: auto;
+  padding-bottom: 80px;
 }
 
 
@@ -927,26 +928,6 @@
   position: relative;
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);
-    border-color: var(--primary-300);
-    z-index: 1;
-
-    [data-theme='dark'] & {
-      background: var(--surface-300) !important;
-      border-color: var(--primary-700);
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
-    }
-  }
-
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    transition-duration: 0.1s;
-  }
 
   :host-context(.dark-theme) & {
     border-color: rgba(255, 255, 255, 0.08);
@@ -977,6 +958,14 @@
 
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform, opacity, box-shadow;
+
+  /* Modern Scroll-Driven Reveal Animation */
+  @supports (view-timeline: --any) {
+    view-timeline: --card-view block;
+    animation: reveal-card linear both;
+    animation-timeline: --card-view;
+    animation-range: entry 0% exit 100%;
+  }
 
   .category-progress-bg {
     position: absolute;
@@ -1109,6 +1098,25 @@
     0% { transform: scale(1); opacity: 1; }
     50% { transform: scale(1.15); opacity: 0.7; }
     100% { transform: scale(1); opacity: 1; }
+  }
+
+  @keyframes reveal-card {
+    0% {
+      opacity: 0;
+      transform: translateY(60px) scale(0.85);
+    }
+    15% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    85% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    100% {
+      opacity: 0.5;
+      transform: translateY(-20px) scale(0.95);
+    }
   }
 }
 
