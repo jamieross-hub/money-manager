@@ -53,11 +53,17 @@
             }
           </div>
           <div>
-            <p class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight mb-1">{{ family()?.name
-            }}</p>
-            <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1.5 opacity-90">
-              <mat-icon class="!text-[16px] !w-4 !h-4 opacity-70">group</mat-icon>
-              {{ members().length }} member{{ members().length !== 1 ? 's' : '' }}
+            <p class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight mb-1">{{ family()?.name }}</p>
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2 opacity-90">
+              <span class="flex items-center gap-1">
+                <mat-icon class="!text-[16px] !w-4 !h-4 opacity-70">group</mat-icon>
+                {{ members().length }} member{{ members().length !== 1 ? 's' : '' }}
+              </span>
+              <span class="text-gray-300 dark:text-gray-600">|</span>
+              <span class="flex items-center gap-1 capitalize">
+                <mat-icon class="!text-[16px] !w-4 !h-4 opacity-70">{{ family()?.mode === 'split' ? 'call_split' : 'account_balance_wallet' }}</mat-icon>
+                {{ family()?.mode || 'Common' }}
+              </span>
             </p>
           </div>
         </div>
