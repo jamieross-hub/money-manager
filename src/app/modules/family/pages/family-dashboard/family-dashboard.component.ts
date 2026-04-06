@@ -30,7 +30,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRippleModule } from '@angular/material/core';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatBottomSheet, MatBottomSheetModule } from '@angular/material/bottom-sheet';
 
@@ -61,6 +60,7 @@ import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage
 import { ReportService } from 'src/app/util/service/db/report.service';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { PwaNavigationService } from 'src/app/util/service/pwa-navigation.service';
+import { NotificationService } from 'src/app/util/service/notification.service';
 
 // Dialogs & Components
 import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
@@ -89,7 +89,6 @@ import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.d
     MatMenuModule,
     MatProgressSpinnerModule,
     MatRippleModule,
-    MatSnackBarModule,
     MatTooltipModule,
     MatBottomSheetModule,
     // App
@@ -121,7 +120,6 @@ export class FamilyDashboardComponent implements OnInit {
 
   // Material
   private readonly dialog                   = inject(MatDialog);
-  private readonly snackBar                 = inject(MatSnackBar);
   private readonly bottomSheet              = inject(MatBottomSheet);
 
   // App Services
@@ -134,6 +132,7 @@ export class FamilyDashboardComponent implements OnInit {
   private readonly storageService           = inject(LocalIndexDBStorageService);
   private readonly userService              = inject(UserService);
   private readonly pwaNavigationService     = inject(PwaNavigationService);
+  private readonly notificationService      = inject(NotificationService);
 
   // ─── Private State ───────────────────────────────────────────────────────────
   private isInstanceLoading = false;
@@ -290,8 +289,8 @@ export class FamilyDashboardComponent implements OnInit {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 1.5 * 1024 * 1024) {
-      this.snackBar.open('Image size should be less than 1.5MB', 'Close', { duration: 3000 });
+    if (file.size > 1 * 1024 * 1024) {
+      this.notificationService.error('Image size should be less than 1MB');
       return;
     }
 
@@ -311,14 +310,14 @@ export class FamilyDashboardComponent implements OnInit {
     const userEmail = this.auth.currentUser?.email;
 
     if (!fam?.id || !userEmail) {
-      this.snackBar.open('Unable to generate report: Missing data', 'Close', { duration: 3000 });
+      this.notificationService.error('Unable to generate report: Missing data');
       return;
     }
 
     this.reportService.getPendingReport(fam.id).subscribe({
       next: pendingReport => {
         if (pendingReport) {
-          this.snackBar.open('A report is already being prepared. Please check your email shortly.', 'Close', { duration: 5000 });
+          this.notificationService.info('A report is already being prepared. Please check your email shortly.');
           return;
         }
 
@@ -327,13 +326,10 @@ export class FamilyDashboardComponent implements OnInit {
           familyId: fam.id,
           type:     'family_overview',
         }).subscribe({
-          next: () => this.snackBar.open('Report requested! You will receive it via email soon.', 'Close', {
-            duration:   5000,
-            panelClass: ['success-snackbar'],
-          }),
+          next: () => this.notificationService.success('Report requested! You will receive it via email soon.'),
           error: err => {
             console.error('Report request failed:', err);
-            this.snackBar.open('Failed to request report. Please try again later.', 'Close', { duration: 3000 });
+            this.notificationService.error('Failed to request report. Please try again later.');
           },
         });
       },
