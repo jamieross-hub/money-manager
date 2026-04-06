@@ -1,4 +1,4 @@
-import { Component, HostListener, ElementRef, AfterViewInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, HostListener, ElementRef, AfterViewInit, OnDestroy, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { Router } from '@angular/router';
 import { ViewChild } from '@angular/core';
@@ -12,7 +12,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { SidebarNavParent, getAllNavigationItems } from '../../../util/config/sidebar.config';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { User } from 'src/app/util/models';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, map } from 'rxjs';
 
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
@@ -34,14 +34,21 @@ import { selectIsFamilyMode } from 'src/app/store/profile/profile.selectors';
 ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SideBarComponent implements AfterViewInit, OnDestroy {
+export class SideBarComponent implements AfterViewInit, OnDestroy, OnInit {
   @ViewChild('drawer') drawer!: MatDrawer;
   isAdmin: boolean = false;
   navigationSections: SidebarNavParent[] = [];
-  user$: Observable<User | null>;
+  
+  public userService = inject(UserService);
+  private store = inject(Store<AppState>);
+  
+  user$: Observable<User | null> = this.userService.userAuth$;
 
   /** True when the user has family mode enabled — drives familyOnly nav items */
   readonly isFamilyMode = toSignal(this.store.select(selectIsFamilyMode), { initialValue: false });
+
+  /** True when the user is a guest — drives hideForGuest nav items */
+  readonly isGuestUser = toSignal(this.user$.pipe(map(u => u?.uid === 'offline-guest')), { initialValue: false });
 
 
   private boundDocumentClick: (event: Event) => void;
@@ -49,13 +56,9 @@ export class SideBarComponent implements AfterViewInit, OnDestroy {
   constructor(
     private auth: Auth,
     public router: Router,
-    private elementRef: ElementRef,
-    public userService: UserService,
-
-    private store: Store<AppState>
+    private elementRef: ElementRef
   ) {
     this.navigationSections = getAllNavigationItems();
-    this.user$ = this.userService.userAuth$;
     this.boundDocumentClick = this.handleDocumentClick.bind(this);
   }
 

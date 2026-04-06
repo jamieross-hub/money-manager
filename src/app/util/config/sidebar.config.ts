@@ -10,6 +10,8 @@ export interface SidebarNavChild {
   familyOnly?: boolean;
   /** If true, hide this item when the user has family mode active */
   hideInFamily?: boolean;
+  /** If true, hide this item for guest users */
+  hideForGuest?: boolean;
 }
 
 export interface SidebarNavParent {
@@ -118,6 +120,7 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         route: '/dashboard/family',
         icon: 'family_restroom',
         hideInFamily: true,
+        hideForGuest: true,
         order: 3
       },
       {
