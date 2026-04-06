@@ -1126,3 +1126,243 @@ export const GROUP_ICON_OPTIONS: { icon: string; label: string }[] = [
   { icon: 'pets', label: 'Pets' },
   { icon: 'health_and_safety', label: 'Health' },
 ];
+
+/** Curated categories seeded per group type based on the selected icon. */
+export const GROUP_CATEGORIES_MAP: Record<string, Pick<Category, 'name' | 'type' | 'icon' | 'color' | 'isSystem' | 'familyId' | 'userId' | 'createdAt'>[]> = {
+
+  // 👨‍👩‍👧 Family
+  family_restroom: [
+    { name: 'Food & Dining', type: TransactionType.EXPENSE, icon: 'restaurant', color: '#F59E0B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Groceries', type: TransactionType.EXPENSE, icon: 'local_grocery_store', color: '#10B981', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Bills & Utilities', type: TransactionType.EXPENSE, icon: 'receipt_long', color: '#EF4444', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Education', type: TransactionType.EXPENSE, icon: 'school', color: '#6366F1', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Healthcare', type: TransactionType.EXPENSE, icon: 'local_hospital', color: '#0EA5E9', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Transport', type: TransactionType.EXPENSE, icon: 'directions_car', color: '#F97316', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Shopping', type: TransactionType.EXPENSE, icon: 'shopping_cart', color: '#A855F7', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Entertainment', type: TransactionType.EXPENSE, icon: 'movie', color: '#8B5CF6', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Family & Kids', type: TransactionType.EXPENSE, icon: 'child_care', color: '#14B8A6', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Household Income', type: TransactionType.INCOME, icon: 'account_balance_wallet', color: '#22C55E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Other', type: TransactionType.EXPENSE, icon: 'category', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+  ],
+
+  // 🏠 Home & Household
+  home: [
+    { name: 'Rent / EMI', type: TransactionType.EXPENSE, icon: 'home', color: '#EF4444', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Groceries', type: TransactionType.EXPENSE, icon: 'local_grocery_store', color: '#10B981', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Electricity', type: TransactionType.EXPENSE, icon: 'lightbulb', color: '#F59E0B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Water', type: TransactionType.EXPENSE, icon: 'water_drop', color: '#0EA5E9', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Internet', type: TransactionType.EXPENSE, icon: 'wifi', color: '#6366F1', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Gas / Cooking', type: TransactionType.EXPENSE, icon: 'local_fire_department', color: '#F97316', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Maintenance & Repairs', type: TransactionType.EXPENSE, icon: 'handyman', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Household Items', type: TransactionType.EXPENSE, icon: 'cleaning_services', color: '#14B8A6', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Home Income', type: TransactionType.INCOME, icon: 'account_balance_wallet', color: '#22C55E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Other', type: TransactionType.EXPENSE, icon: 'category', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+  ],
+
+  // 💼 Work
+  work: [
+    { name: 'Office Supplies', type: TransactionType.EXPENSE, icon: 'business_center', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Work Meals', type: TransactionType.EXPENSE, icon: 'lunch_dining', color: '#F59E0B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Commute', type: TransactionType.EXPENSE, icon: 'commute', color: '#F97316', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Software & Tools', type: TransactionType.EXPENSE, icon: 'computer', color: '#6366F1', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Training & Courses', type: TransactionType.EXPENSE, icon: 'menu_book', color: '#8B5CF6', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Printing & Stationery', type: TransactionType.EXPENSE, icon: 'print', color: '#0EA5E9', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Business Travel', type: TransactionType.EXPENSE, icon: 'flight', color: '#14B8A6', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Salary / Income', type: TransactionType.INCOME, icon: 'work', color: '#22C55E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Freelance Income', type: TransactionType.INCOME, icon: 'computer', color: '#10B981', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Other', type: TransactionType.EXPENSE, icon: 'category', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+  ],
+
+  // 👥 Friends
+  groups: [
+    { name: 'Food & Drinks', type: TransactionType.EXPENSE, icon: 'restaurant', color: '#F59E0B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Entertainment', type: TransactionType.EXPENSE, icon: 'movie', color: '#8B5CF6', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Travel', type: TransactionType.EXPENSE, icon: 'flight', color: '#0EA5E9', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Shopping', type: TransactionType.EXPENSE, icon: 'shopping_bag', color: '#A855F7', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Activities', type: TransactionType.EXPENSE, icon: 'sports_soccer', color: '#10B981', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Gifts', type: TransactionType.EXPENSE, icon: 'card_giftcard', color: '#F97316', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Events', type: TransactionType.EXPENSE, icon: 'celebration', color: '#EF4444', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Contributions', type: TransactionType.INCOME, icon: 'account_balance_wallet', color: '#22C55E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Other', type: TransactionType.EXPENSE, icon: 'category', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+  ],
+
+  // ❤️ Loved Ones
+  favorite: [
+    { name: 'Gifts', type: TransactionType.EXPENSE, icon: 'card_giftcard', color: '#F43F5E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Dining Out', type: TransactionType.EXPENSE, icon: 'restaurant', color: '#F59E0B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Activities & Fun', type: TransactionType.EXPENSE, icon: 'attractions', color: '#8B5CF6', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Travel', type: TransactionType.EXPENSE, icon: 'flight', color: '#0EA5E9', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Movies & Shows', type: TransactionType.EXPENSE, icon: 'movie', color: '#6366F1', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Special Occasions', type: TransactionType.EXPENSE, icon: 'cake', color: '#F97316', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Shopping', type: TransactionType.EXPENSE, icon: 'shopping_bag', color: '#A855F7', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Contributions', type: TransactionType.INCOME, icon: 'account_balance_wallet', color: '#22C55E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Other', type: TransactionType.EXPENSE, icon: 'category', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+  ],
+
+  // 🎓 Education
+  school: [
+    { name: 'Tuition / Fees', type: TransactionType.EXPENSE, icon: 'school', color: '#6366F1', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Books & Stationery', type: TransactionType.EXPENSE, icon: 'menu_book', color: '#F59E0B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Online Courses', type: TransactionType.EXPENSE, icon: 'computer', color: '#8B5CF6', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Uniform & Clothing', type: TransactionType.EXPENSE, icon: 'checkroom', color: '#0EA5E9', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Transport', type: TransactionType.EXPENSE, icon: 'directions_bus', color: '#F97316', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Meals', type: TransactionType.EXPENSE, icon: 'lunch_dining', color: '#10B981', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Exam Fees', type: TransactionType.EXPENSE, icon: 'edit', color: '#EF4444', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Scholarships / Income', type: TransactionType.INCOME, icon: 'account_balance_wallet', color: '#22C55E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Other', type: TransactionType.EXPENSE, icon: 'category', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+  ],
+
+  // 💰 Savings & Goals
+  savings: [
+    { name: 'Emergency Fund', type: TransactionType.INCOME, icon: 'health_and_safety', color: '#EF4444', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Vacation Fund', type: TransactionType.INCOME, icon: 'flight', color: '#0EA5E9', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Home / Down Payment', type: TransactionType.INCOME, icon: 'home', color: '#10B981', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Vehicle Fund', type: TransactionType.INCOME, icon: 'directions_car', color: '#F97316', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Investment', type: TransactionType.INCOME, icon: 'trending_up', color: '#22C55E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Retirement', type: TransactionType.INCOME, icon: 'savings', color: '#6366F1', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Withdrawal', type: TransactionType.EXPENSE, icon: 'account_balance_wallet', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Other Goal', type: TransactionType.INCOME, icon: 'category', color: '#A855F7', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+  ],
+
+  // 🧾 Bills & Payments
+  account_balance: [
+    { name: 'Electricity', type: TransactionType.EXPENSE, icon: 'lightbulb', color: '#F59E0B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Water', type: TransactionType.EXPENSE, icon: 'water_drop', color: '#0EA5E9', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Internet', type: TransactionType.EXPENSE, icon: 'wifi', color: '#6366F1', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Mobile / Phone', type: TransactionType.EXPENSE, icon: 'phone', color: '#10B981', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Gas', type: TransactionType.EXPENSE, icon: 'local_fire_department', color: '#EF4444', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Insurance', type: TransactionType.EXPENSE, icon: 'policy', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Rent / EMI', type: TransactionType.EXPENSE, icon: 'home', color: '#F97316', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Subscriptions', type: TransactionType.EXPENSE, icon: 'live_tv', color: '#8B5CF6', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Credit Card', type: TransactionType.EXPENSE, icon: 'credit_card', color: '#A855F7', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Contributions', type: TransactionType.INCOME, icon: 'account_balance_wallet', color: '#22C55E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Other', type: TransactionType.EXPENSE, icon: 'category', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+  ],
+
+  // 🍽️ Food & Dining
+  restaurant: [
+    { name: 'Groceries', type: TransactionType.EXPENSE, icon: 'local_grocery_store', color: '#10B981', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Restaurants', type: TransactionType.EXPENSE, icon: 'restaurant', color: '#F59E0B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Food Delivery', type: TransactionType.EXPENSE, icon: 'delivery_dining', color: '#F97316', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Cafe & Coffee', type: TransactionType.EXPENSE, icon: 'local_cafe', color: '#92400E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Street Food & Snacks', type: TransactionType.EXPENSE, icon: 'fastfood', color: '#EF4444', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Alcohol & Drinks', type: TransactionType.EXPENSE, icon: 'liquor', color: '#8B5CF6', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Contributions', type: TransactionType.INCOME, icon: 'account_balance_wallet', color: '#22C55E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Other', type: TransactionType.EXPENSE, icon: 'category', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+  ],
+
+  // 🚗 Transport
+  directions_car: [
+    { name: 'Fuel / Petrol', type: TransactionType.EXPENSE, icon: 'local_gas_station', color: '#F97316', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Vehicle Maintenance', type: TransactionType.EXPENSE, icon: 'build', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Vehicle Insurance', type: TransactionType.EXPENSE, icon: 'policy', color: '#6366F1', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Parking', type: TransactionType.EXPENSE, icon: 'local_parking', color: '#0EA5E9', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Toll Charges', type: TransactionType.EXPENSE, icon: 'toll', color: '#EF4444', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Cab / Taxi', type: TransactionType.EXPENSE, icon: 'local_taxi', color: '#F59E0B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Bus / Train', type: TransactionType.EXPENSE, icon: 'train', color: '#10B981', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Auto / Rickshaw', type: TransactionType.EXPENSE, icon: 'two_wheeler', color: '#A855F7', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Contributions', type: TransactionType.INCOME, icon: 'account_balance_wallet', color: '#22C55E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Other', type: TransactionType.EXPENSE, icon: 'category', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+  ],
+
+  // ✈️ Travel
+  flight: [
+    // 🚗 Transport
+    { name: 'Fuel / Petrol', type: TransactionType.EXPENSE, icon: 'local_gas_station', color: '#F97316', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Cab / Taxi', type: TransactionType.EXPENSE, icon: 'local_taxi', color: '#F59E0B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Bus / Train', type: TransactionType.EXPENSE, icon: 'train', color: '#10B981', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Flights', type: TransactionType.EXPENSE, icon: 'flight', color: '#0EA5E9', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Auto / Rickshaw', type: TransactionType.EXPENSE, icon: 'two_wheeler', color: '#A855F7', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Parking & Toll', type: TransactionType.EXPENSE, icon: 'local_parking', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    // 🏨 Accommodation
+    { name: 'Hotel / Resort', type: TransactionType.EXPENSE, icon: 'hotel', color: '#6366F1', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Hostel / Airbnb', type: TransactionType.EXPENSE, icon: 'holiday_village', color: '#8B5CF6', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    // 🍽️ Food & Drinks
+    { name: 'Restaurants', type: TransactionType.EXPENSE, icon: 'restaurant', color: '#F59E0B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Street Food & Snacks', type: TransactionType.EXPENSE, icon: 'fastfood', color: '#EF4444', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Tea / Coffee', type: TransactionType.EXPENSE, icon: 'local_cafe', color: '#92400E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    // 🎟️ Activities
+    { name: 'Entry Tickets', type: TransactionType.EXPENSE, icon: 'confirmation_number', color: '#F43F5E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Adventure Activities', type: TransactionType.EXPENSE, icon: 'hiking', color: '#14B8A6', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Guide Charges', type: TransactionType.EXPENSE, icon: 'person', color: '#06B6D4', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    // 🛍️ Shopping
+    { name: 'Souvenirs & Shopping', type: TransactionType.EXPENSE, icon: 'shopping_bag', color: '#A855F7', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    // 📶 Connectivity
+    { name: 'Mobile & SIM', type: TransactionType.EXPENSE, icon: 'sim_card', color: '#22C55E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    // 🧾 Travel Essentials
+    { name: 'Travel Insurance', type: TransactionType.EXPENSE, icon: 'policy', color: '#1E3A8A', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Medicines & Toiletries', type: TransactionType.EXPENSE, icon: 'medication', color: '#0EA5E9', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    // 💰 Fees & Misc
+    { name: 'Tips & Service Charges', type: TransactionType.EXPENSE, icon: 'payments', color: '#D4AF37', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Luggage & Misc Fees', type: TransactionType.EXPENSE, icon: 'luggage', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    // 💵 Income
+    { name: 'Travel Budget', type: TransactionType.INCOME, icon: 'account_balance_wallet', color: '#22C55E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+  ],
+
+  // ⚽ Sports & Fitness
+  sports_soccer: [
+    { name: 'Gym Membership', type: TransactionType.EXPENSE, icon: 'fitness_center', color: '#EF4444', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Sports Equipment', type: TransactionType.EXPENSE, icon: 'sports_soccer', color: '#F97316', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Sport Fees / Court', type: TransactionType.EXPENSE, icon: 'sports', color: '#F59E0B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Supplements / Nutrition', type: TransactionType.EXPENSE, icon: 'medication', color: '#10B981', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Sportswear', type: TransactionType.EXPENSE, icon: 'checkroom', color: '#6366F1', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Events & Matches', type: TransactionType.EXPENSE, icon: 'emoji_events', color: '#8B5CF6', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Coaching / Training', type: TransactionType.EXPENSE, icon: 'school', color: '#0EA5E9', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Transport', type: TransactionType.EXPENSE, icon: 'directions_car', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Contributions', type: TransactionType.INCOME, icon: 'account_balance_wallet', color: '#22C55E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Other', type: TransactionType.EXPENSE, icon: 'category', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+  ],
+
+  // 🎉 Events & Parties
+  celebration: [
+    { name: 'Venue', type: TransactionType.EXPENSE, icon: 'location_on', color: '#F43F5E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Food & Catering', type: TransactionType.EXPENSE, icon: 'restaurant', color: '#F59E0B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Decoration', type: TransactionType.EXPENSE, icon: 'palette', color: '#A855F7', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Entertainment', type: TransactionType.EXPENSE, icon: 'music_note', color: '#8B5CF6', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Gifts', type: TransactionType.EXPENSE, icon: 'card_giftcard', color: '#F97316', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Photography', type: TransactionType.EXPENSE, icon: 'camera_alt', color: '#0EA5E9', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Travel & Transport', type: TransactionType.EXPENSE, icon: 'directions_car', color: '#14B8A6', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Invitations & Printing', type: TransactionType.EXPENSE, icon: 'print', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Contributions', type: TransactionType.INCOME, icon: 'account_balance_wallet', color: '#22C55E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Other', type: TransactionType.EXPENSE, icon: 'category', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+  ],
+
+  // 🤲 Donations
+  volunteer_activism: [
+    { name: 'Charity', type: TransactionType.EXPENSE, icon: 'volunteer_activism', color: '#F43F5E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Religious / Temple', type: TransactionType.EXPENSE, icon: 'temple_hindu', color: '#F59E0B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Medical Aid', type: TransactionType.EXPENSE, icon: 'local_hospital', color: '#EF4444', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Education Support', type: TransactionType.EXPENSE, icon: 'school', color: '#6366F1', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Animal Welfare', type: TransactionType.EXPENSE, icon: 'pets', color: '#10B981', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Community Service', type: TransactionType.EXPENSE, icon: 'groups', color: '#0EA5E9', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Fundraising Income', type: TransactionType.INCOME, icon: 'account_balance_wallet', color: '#22C55E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Other', type: TransactionType.EXPENSE, icon: 'category', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+  ],
+
+  // 🐾 Pets
+  pets: [
+    { name: 'Pet Food', type: TransactionType.EXPENSE, icon: 'pets', color: '#F59E0B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Vet / Medical', type: TransactionType.EXPENSE, icon: 'local_hospital', color: '#EF4444', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Grooming', type: TransactionType.EXPENSE, icon: 'content_cut', color: '#8B5CF6', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Accessories', type: TransactionType.EXPENSE, icon: 'shopping_bag', color: '#F97316', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Toys', type: TransactionType.EXPENSE, icon: 'toys', color: '#10B981', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Training', type: TransactionType.EXPENSE, icon: 'school', color: '#6366F1', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Boarding / Sitting', type: TransactionType.EXPENSE, icon: 'home', color: '#0EA5E9', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Contributions', type: TransactionType.INCOME, icon: 'account_balance_wallet', color: '#22C55E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Other', type: TransactionType.EXPENSE, icon: 'category', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+  ],
+
+  // 🏥 Health
+  health_and_safety: [
+    { name: 'Doctor / Consultation', type: TransactionType.EXPENSE, icon: 'medical_services', color: '#0EA5E9', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Medicine', type: TransactionType.EXPENSE, icon: 'medication', color: '#EF4444', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Lab Tests / Diagnostics', type: TransactionType.EXPENSE, icon: 'biotech', color: '#F97316', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Hospital / Surgery', type: TransactionType.EXPENSE, icon: 'local_hospital', color: '#F43F5E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Health Insurance', type: TransactionType.EXPENSE, icon: 'policy', color: '#6366F1', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Gym & Fitness', type: TransactionType.EXPENSE, icon: 'fitness_center', color: '#10B981', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Mental Health / Therapy', type: TransactionType.EXPENSE, icon: 'self_improvement', color: '#8B5CF6', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Dental & Eye Care', type: TransactionType.EXPENSE, icon: 'health_and_safety', color: '#14B8A6', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Contributions', type: TransactionType.INCOME, icon: 'account_balance_wallet', color: '#22C55E', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+    { name: 'Other', type: TransactionType.EXPENSE, icon: 'category', color: '#64748B', isSystem: false, familyId: '', userId: '', createdAt: 0 },
+  ],
+};

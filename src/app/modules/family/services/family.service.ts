@@ -42,7 +42,7 @@ import { NotificationService } from 'src/app/util/service/notification.service';
 import { LocalStorageKey, LocalStorageKeyHelper } from 'src/app/util/models/local-storage.model';
 import * as FamilyActions from '../store/family.actions';
 import { TransactionType, AccountType, TransactionStatus } from 'src/app/util/config/enums';
-import { defaultCategoriesForNewUser } from 'src/app/util/config/config';
+import { defaultCategoriesForNewUser, GROUP_CATEGORIES_MAP } from 'src/app/util/config/config';
 import { Category, Account, User } from 'src/app/util/models';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
@@ -290,7 +290,7 @@ export class FamilyService implements OnDestroy {
     } as Omit<FamilyMember, 'id'>);
 
     // 3. Initialize defaults (categories/accounts)
-    await this.initializeFamilyDefaults(familyId, user.uid, request.mode ?? 'common');
+    await this.initializeFamilyDefaults(familyId, user.uid, request.mode ?? 'common', request.icon);
 
     // 4. Finally, update user's preferences with familyId
     // This completes the "Group Created" state transition for the user
@@ -336,7 +336,7 @@ export class FamilyService implements OnDestroy {
     } catch (e) {}
   }
 
-  private async initializeFamilyDefaults(familyId: string, userId: string, mode: 'common' | 'split' = 'common'): Promise<void> {
+  private async initializeFamilyDefaults(familyId: string, userId: string, mode: 'common' | 'split' = 'common', groupIcon?: string): Promise<void> {
     const batch = writeBatch(this.firestore);
 
     // 1. Create Default Account
@@ -359,10 +359,13 @@ export class FamilyService implements OnDestroy {
     const accountRef = doc(this.firestore, `family-groups/${familyId}/accounts/${accountId}`);
     batch.set(accountRef, accountData);
 
-    // 2. Create Default Categories
+    // 2. Create Group-Specific Categories
+    // Use curated categories for the selected group type, falling back to defaults.
     const categoriesColRef = collection(this.firestore, `family-groups/${familyId}/categories`);
-    let categoriesToCreate = defaultCategoriesForNewUser; // Just a subset for family
-    
+    const groupSpecific = groupIcon ? GROUP_CATEGORIES_MAP[groupIcon] : null;
+    let categoriesToCreate: Pick<Category, 'name' | 'type' | 'icon' | 'color' | 'isSystem' | 'familyId' | 'userId' | 'createdAt'>[] =
+      groupSpecific ?? defaultCategoriesForNewUser;
+
     if (mode === 'split') {
       categoriesToCreate = categoriesToCreate.filter(cat => cat.type === TransactionType.EXPENSE);
     }
