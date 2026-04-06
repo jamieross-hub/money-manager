@@ -73,13 +73,13 @@
                     (contextmenu)="$event.preventDefault()"
               class="group flex flex-col items-center gap-2 lg:gap-1">
               <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
-                [ngClass]="(showSummaryInFamily() ? isReportsActive() : isSettleActive()) ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
+                [ngClass]="(showSummaryInFamily() || activeFamily()?.mode !== 'split' ? isReportsActive() : isSettleActive()) ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
                 <mat-icon class="text-xl lg:text-base relative bottom-1"
-                [ngClass]="(showSummaryInFamily() ? isReportsActive() : isSettleActive()) ? 'active-icon' : 'inactive-icon dark:text-slate-400'">{{ showSummaryInFamily() ? 'assessment' : 'handshake' }}</mat-icon>
+                [ngClass]="(showSummaryInFamily() || activeFamily()?.mode !== 'split' ? isReportsActive() : isSettleActive()) ? 'active-icon' : 'inactive-icon dark:text-slate-400'">{{ (showSummaryInFamily() || activeFamily()?.mode !== 'split') ? 'assessment' : 'handshake' }}</mat-icon>
               </div>
               <span class="nav-label"
-              [ngClass]="(showSummaryInFamily() ? isReportsActive() : isSettleActive()) ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">
-                @if (showSummaryInFamily()) {
+              [ngClass]="(showSummaryInFamily() || activeFamily()?.mode !== 'split' ? isReportsActive() : isSettleActive()) ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">
+                @if (showSummaryInFamily() || activeFamily()?.mode !== 'split') {
                   {{ 'NAVIGATION.SUMMARY' | translate }}
                 } @else {
                   Settle

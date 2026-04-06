@@ -57,7 +57,7 @@ export class FooterComponent {
     { initialValue: [] }
   );
 
-  private readonly activeFamily = computed(() => {
+  readonly activeFamily = computed(() => {
     const activeId = this.isFamilyMode() ? this.familyService.activeFamilyId() : null;
     return activeId ? this.userFamilies().find(f => f.id === activeId) : null;
   });
@@ -207,7 +207,8 @@ export class FooterComponent {
 
   handleSettleClick() {
     if (this.isLongPress) return;
-    const route = this.showSummaryInFamily() ? '/dashboard/family/reports' : '/dashboard/family/settle';
+    const isCommonMode = this.activeFamily()?.mode !== 'split';
+    const route = (this.showSummaryInFamily() || isCommonMode) ? '/dashboard/family/reports' : '/dashboard/family/settle';
     this.navigateTo(route);
   }
 
