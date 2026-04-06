@@ -141,40 +141,57 @@
 
       <!-- DEFAULT MODE (COMMON) -->
       @if (family()?.mode !== 'split') {
-        <div class="grid grid-cols-3 gap-3">
-          <!-- Income Card -->
-          <div
-            class="bg-white dark:bg-gray-800 rounded-2xl p-2 shadow-sm border border-gray-100 dark:border-gray-700/60 flex flex-col justify-between relative overflow-hidden">
-            <div class="absolute top-0 right-0 p-2 opacity-[0.15] dark:opacity-20 pointer-events-none">
-              <mat-icon class="!text-[36px] !w-9 !h-9 text-green-500">trending_up</mat-icon>
+        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800/80 mb-6 transition-all hover:shadow-md relative overflow-hidden">
+          <!-- Top Row: Group Balance & Personal Contribution -->
+          <div class="px-4 py-2 relative z-10">
+            <div class="flex items-center justify-between mb-1">
+              <div class="flex flex-col">
+                <span class="text-[9px] font-bold tracking-widest uppercase mb-0.5 text-gray-400 dark:text-gray-500">
+                  Group Balance
+                </span>
+                <div class="flex items-baseline gap-1.5">
+                  <span class="text-2xl font-black ml-1"
+                    [class.text-green-600]="(stats()?.netBalance || 0) >= 0"
+                    [class.text-gray-900]="(stats()?.netBalance || 0) === 0"
+                    [class.dark:text-white]="(stats()?.netBalance || 0) === 0"
+                    [class.text-red-500]="(stats()?.netBalance || 0) < 0">
+                    {{ stats()?.netBalance | currency }}
+                  </span>
+                  <span class="text-[8px] font-black text-gray-400 uppercase opacity-50">Net</span>
+                </div>
+              </div>
+              <div class="flex flex-col items-end">
+                <span class="text-[9px] font-bold uppercase tracking-widest mb-0.5 text-gray-400 dark:text-gray-500">
+                  Your Contribution
+                </span>
+                <span class="text-xl font-black leading-none text-primary-600 dark:text-primary-400">
+                  {{ currentUserPaid() | currency }}
+                </span>
+              </div>
             </div>
-            <p class="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2 z-10">Income</p>
-            <p class="text-[17px] font-bold text-gray-900 dark:text-white truncate z-10">
-              {{ stats()?.totalIncome | currency }}
-            </p>
           </div>
-          <!-- Expenses Card -->
-          <div
-            class="bg-white dark:bg-gray-800 rounded-2xl p-2 shadow-sm border border-gray-100 dark:border-gray-700/60 flex flex-col justify-between relative overflow-hidden">
-            <div class="absolute top-0 right-0 p-2 opacity-[0.15] dark:opacity-20 pointer-events-none">
-              <mat-icon class="!text-[36px] !w-9 !h-9 text-red-500">trending_down</mat-icon>
+          <!-- Bottom Row: Income & Expenses -->
+          <div class="px-4 py-3 bg-gray-50/50 dark:bg-gray-900/40 border-t border-gray-100 dark:border-gray-700/50 relative z-10 shadow-inner">
+            <div class="flex items-center justify-between">
+              <div class="flex flex-col">
+                <span class="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Income</span>
+                <div class="flex items-center gap-1.5">
+                  <div class="w-4 h-4 rounded-full bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-500">
+                    <mat-icon class="!text-[12px] !w-3 !h-3">arrow_upward</mat-icon>
+                  </div>
+                  <span class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ stats()?.totalIncome | currency }}</span>
+                </div>
+              </div>
+              <div class="flex flex-col items-end">
+                <span class="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Expenses</span>
+                 <div class="flex items-center gap-1.5">
+                  <span class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ stats()?.totalExpense | currency }}</span>
+                  <div class="w-4 h-4 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center text-red-500">
+                    <mat-icon class="!text-[12px] !w-3 !h-3">arrow_downward</mat-icon>
+                  </div>
+                </div>
+              </div>
             </div>
-            <p class="text-[12px] font-semibold text-gray-500 dark:text-gray-400 mb-2 z-10">Expenses</p>
-            <p class="text-[17px] font-bold text-gray-900 dark:text-white truncate z-10">
-              {{ stats()?.totalExpense | currency }}
-            </p>
-          </div>
-          <!-- Balance Card -->
-          <div
-            class=" rounded-2xl p-2 shadow-md flex flex-col justify-between border border-gray-700 relative overflow-hidden">
-            <div class="absolute top-0 right-0 p-2 opacity-10 pointer-events-none">
-              <mat-icon class="!text-[36px] !w-9 !h-9 text-white">account_balance_wallet</mat-icon>
-            </div>
-            <p class="text-[12px] font-semibold text-gray-300 dark:text-gray-400 mb-2 z-10">Balance</p>
-            <p class="text-[17px] font-bold truncate z-10" [class.text-green-400]="(stats()?.netBalance || 0) >= 0"
-              [class.text-red-400]="(stats()?.netBalance || 0) < 0">
-              {{ stats()?.netBalance | currency }}
-            </p>
           </div>
         </div>
       }
@@ -296,145 +313,133 @@
     </div>
     }
 
-    <!-- Member Breakdown / Recent Activity -->
+    <!-- DEFAULT MODE (COMMON): Member Contributions -->
+    @if (family()?.mode !== 'split') {
+    <div class="px-1 pb-2">
+      <div class="flex items-center justify-between mb-3 px-1">
+        <p class="text-[13px] font-semibold tracking-wider uppercase text-gray-500 dark:text-gray-400">
+          Member Contributions
+        </p>
+      </div>
+      <div class="flex flex-col gap-3 pb-4">
+        @for (m of stats()?.memberBreakdown; track m.userId) {
+          <div (click)="openMemberDetails(m)" matRipple class="bg-white dark:bg-gray-800/40 rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between cursor-pointer transition-all hover:shadow-md" [class.opacity-60]="!m.isActive">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 overflow-hidden" [style.background]="memberColor(m.userId)">
+                @if (m.photoURL) {
+                  <img [src]="m.photoURL" appImageFallback alt="avatar" class="w-full h-full object-cover" />
+                } @else {
+                  <mat-icon class="!text-[22px] !w-6 !h-6 text-white">person</mat-icon>
+                }
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="text-[15px] font-bold text-gray-800 dark:text-gray-200 truncate">{{ m.displayName }}</span>
+                @if (!m.isActive) {
+                  <span class="text-[10px] uppercase tracking-wider font-extrabold text-red-400 mt-0.5">Left Group</span>
+                }
+              </div>
+            </div>
+            <div class="flex items-center gap-4 shrink-0 pl-3">
+              <div class="flex flex-col items-end">
+                <span class="text-[9px] font-bold text-green-600 dark:text-green-500 uppercase tracking-widest leading-none mb-1 opacity-80">Paid</span>
+                <span class="text-sm font-black text-gray-900 dark:text-gray-100 leading-none">{{ m.totalPaid | currency }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- Recent Activity (Both Modes) -->
     <div class="px-1 pb-2">
       <div class="flex items-center justify-between mb-3 px-1">
         <p class="text-[13px] font-bold tracking-wider uppercase text-gray-500 dark:text-gray-400">
-          {{ family()?.mode === 'split' ? 'Recent Activity' : 'Member Activity' }}
+          Recent Activity
         </p>
       </div>
 
-      <!-- DEFAULT MODE (COMMON): Member Breakdown -->
-      @if (family()?.mode !== 'split') {
-        <div class="flex flex-col gap-3 pb-4">
-          @for (m of stats()?.memberBreakdown; track m.userId) {
-            <div
-              class="bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
-              <div class="flex items-center gap-3" [class.opacity-60]="!m.isActive">
+      <div class="flex flex-col gap-3 pb-4">
+        @for (tx of displayedActivities(); track tx._trackId) {
+          <div 
+            class="rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between gap-1">
+            <div class="flex-1 min-w-0 flex items-center gap-3">
+              <!-- User Avatars -->
+              @if (tx.category === 'Settlement') {
+                <div class="flex items-center -space-x-1 shrink-0">
+                  <div
+                    class="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 overflow-hidden relative z-10"
+                    [style.background]="memberColor(tx.payerId)" [matTooltip]="tx.payerName">
+                    <img [src]="tx.payerPhoto" appImageFallback alt="from" class="w-full h-full object-cover" />
+                  </div>
+                  <div
+                    class="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 z-20 overflow-hidden">
+                    <mat-icon class="!text-[14px] !w-3.5 !h-3.5 text-gray-500">arrow_forward</mat-icon>
+                  </div>
+                  <div
+                    class="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 overflow-hidden relative z-10"
+                    [style.background]="memberColor(tx.recipientId)" [matTooltip]="tx.recipientName">
+                    <img [src]="tx.recipientPhoto" appImageFallback alt="to"
+                      class="w-full h-full object-cover" />
+                  </div>
+                </div>
+              } @else {
                 <div
                   class="w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 overflow-hidden"
-                  [style.background]="memberColor(m.userId)">
-                  <img [src]="m.photoURL" appImageFallback alt="avatar" class="w-full h-full object-cover" />
+                  [style.background]="memberColor(tx.payerId)">
+                  <img [src]="tx.payerPhoto" appImageFallback alt="avatar" class="w-full h-full object-cover" />
                 </div>
-                <div class="flex flex-col">
-                  <span class="text-[15px] font-bold text-gray-800 dark:text-gray-200 truncate max-w-[120px]">{{
-                  m.displayName }}</span>
-                  @if (!m.isActive) {
-                    <span class="text-[10px] uppercase tracking-wider font-extrabold text-red-400 -mt-0.5">Left Group</span>
-                  }
-                </div>
-              </div>
-              <div class="flex items-center gap-3">
-                @if (family()?.mode !== 'split') {
-                  <div class="flex items-center gap-1.5">
-                    <div
-                      class="w-5 h-5 rounded-full bg-green-50 dark:bg-green-400/10 flex items-center justify-center text-green-600 dark:text-green-400">
-                      <mat-icon class="!text-[10px] !w-2.5 !h-2.5">arrow_upward</mat-icon>
-                    </div>
-                    <span class="text-[13px] font-bold text-gray-900 dark:text-white">{{ m.totalIncome | currency
-                    }}</span>
-                  </div>
+              }
+              <!-- Activity Info -->
+              <div class="flex flex-col min-w-0">
+                <span class="text-[14px] font-bold text-secondary-500 break-words" *ngIf="tx.note">{{ tx.note}}</span>
+                <span class="text-[12px] text-gray-500 dark:text-gray-400 break-words">
+                  @if (tx.category === 'Settlement') {
+                    <span class="font-medium text-primary-600 dark:text-primary-400 break-words">
+                      {{ tx.payerLabel }} <mat-icon
+                    class="!text-[10px] !w-2.5 !h-2.5 mx-0.5 align-middle">arrow_forward</mat-icon> {{
+                    tx.recipientId === currentUserId() ? 'You' : tx.recipientName }}
+                  </span>
                 }
-                <div class="flex items-center gap-1.5">
-                  <div
-                    class="w-5 h-5 rounded-full bg-red-50 dark:bg-red-400/10 flex items-center justify-center text-red-500 dark:text-red-400">
-                    <mat-icon class="!text-[10px] !w-2.5 !h-2.5">arrow_downward</mat-icon>
-                  </div>
-                  <span class="text-[13px] font-bold text-gray-900 dark:text-white">{{ m.totalExpense | currency }}</span>
-                </div>
-              </div>
+                @if (tx.category !== 'Settlement' && tx.category !== 'MemberActivity') {
+                  <span class="font-medium">{{ tx.payerLabel }}</span> paid
+                }
+              </span>
+                @if (tx.category !== 'MemberActivity') {
+                  <span class="text-[14px] font-bold" [class.text-green-600]="tx.type === 'income'"
+                    [class.dark:text-green-400]="tx.type === 'income'" [class.text-gray-900]="tx.type !== 'income'"
+                    [class.dark:text-white]="tx.type !== 'income'">
+                    {{ tx.amount | currency }}
+                  </span>
+                }
             </div>
-          }
+          </div>
+          <!-- Compact Date & Time -->
+          <div class="flex flex-col items-end shrink-0">
+            <span class="text-[0.9rem] font-medium text-gray-500 dark:text-gray-400">{{ tx.date | appDate:'dd MMM' }}</span>
+            <span class="text-[9px] font-medium text-gray-400">{{ tx.date | appDate:'time-only' }}</span>
+          </div>
         </div>
       }
 
-      <!-- SPLIT MODE: Recent Activity -->
-      @if (family()?.mode === 'split') {
-        <div class="flex flex-col gap-3 pb-4">
-          @for (tx of displayedActivities(); track tx._trackId) {
-            <div 
-              class="rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center justify-between gap-1">
-              <div class="flex-1 min-w-0 flex items-center gap-3">
-                <!-- User Avatars -->
-                @if (tx.category === 'Settlement') {
-                  <div class="flex items-center -space-x-1 shrink-0">
-                    <div
-                      class="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 overflow-hidden relative z-10"
-                      [style.background]="memberColor(tx.payerId)" [matTooltip]="tx.payerName">
-                      <img [src]="tx.payerPhoto" appImageFallback alt="from" class="w-full h-full object-cover" />
-                    </div>
-                    <div
-                      class="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 z-20 overflow-hidden">
-                      <mat-icon class="!text-[14px] !w-3.5 !h-3.5 text-gray-500">arrow_forward</mat-icon>
-                    </div>
-                    <div
-                      class="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 overflow-hidden relative z-10"
-                      [style.background]="memberColor(tx.recipientId)" [matTooltip]="tx.recipientName">
-                      <img [src]="tx.recipientPhoto" appImageFallback alt="to"
-                        class="w-full h-full object-cover" />
-                    </div>
-                  </div>
-                } @else {
-                  <div
-                    class="w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-800 shrink-0 overflow-hidden"
-                    [style.background]="memberColor(tx.payerId)">
-                    <img [src]="tx.payerPhoto" appImageFallback alt="avatar" class="w-full h-full object-cover" />
-                  </div>
-                }
-                <!-- Activity Info -->
-                <div class="flex flex-col min-w-0">
-                  <span class="text-[14px] font-bold text-secondary-500 break-words" *ngIf="tx.note">{{ tx.note}}</span>
-                  <span class="text-[12px] text-gray-500 dark:text-gray-400 break-words">
-                    @if (tx.category === 'Settlement') {
-                      <span class="font-medium text-primary-600 dark:text-primary-400 break-words">
-                        {{ tx.payerLabel }} <mat-icon
-                      class="!text-[10px] !w-2.5 !h-2.5 mx-0.5 align-middle">arrow_forward</mat-icon> {{
-                      tx.recipientId === currentUserId() ? 'You' : tx.recipientName }}
-                    </span>
-                  }
-                  @if (tx.category !== 'Settlement' && tx.category !== 'MemberActivity') {
-                    <span class="font-medium">{{ tx.payerLabel }}</span> paid
-                  }
+      @if (recentActivities().length > displayedActivities().length) {
+        <div class="flex justify-center mt-2">
+          <button mat-stroked-button class="!text-primary-600 dark:!text-primary-400 font-medium" (click)="loadMoreActivities()">
+           <mat-icon class="!text-lg !w-4 !h-4">arrow_downward</mat-icon>
+            Show More
+          </button>
+        </div>
+      }
 
-                 
-                 
-                </span>
-                  @if (tx.category !== 'MemberActivity') {
-                    <span class="text-[14px] font-bold" [class.text-green-600]="tx.type === 'income'"
-                      [class.dark:text-green-400]="tx.type === 'income'" [class.text-gray-900]="tx.type !== 'income'"
-                      [class.dark:text-white]="tx.type !== 'income'">
-                      {{ tx.amount | currency }}
-                    </span>
-                  }
-              </div>
-            </div>
-            <!-- Compact Date & Time -->
-            <div class="flex flex-col items-end shrink-0">
-              <span class="text-[0.9rem] font-medium text-gray-500 dark:text-gray-400">{{ tx.date | appDate:'dd MMM' }}</span>
-              <span class="text-[9px] font-medium text-gray-400">{{ tx.date | appDate:'time-only' }}</span>
-            </div>
-          </div>
-        }
-
-        @if (recentActivities().length > displayedActivities().length) {
-          <div class="flex justify-center mt-2">
-            <button mat-stroked-button class="!text-primary-600 dark:!text-primary-400 font-medium" (click)="loadMoreActivities()">
-             <mat-icon class="!text-lg !w-4 !h-4">arrow_downward</mat-icon>
-              Show More
-            </button>
-          </div>
-        }
-
-        <!-- Empty State for Recent Activity -->
-        @if (!recentActivities().length) {
-          <div
-            class="text-center py-8 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700/60">
-            <mat-icon class="!text-3xl text-gray-300 dark:text-gray-600 mb-2">receipt_long</mat-icon>
-            <p class="text-[13px] font-medium text-gray-500 dark:text-gray-400">No recent activity yet</p>
-          </div>
-        }
-      </div>
-    }
+      <!-- Empty State for Recent Activity -->
+      @if (!recentActivities().length) {
+        <div
+          class="text-center py-8 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700/60">
+          <mat-icon class="!text-3xl text-gray-300 dark:text-gray-600 mb-2">receipt_long</mat-icon>
+          <p class="text-[13px] font-medium text-gray-500 dark:text-gray-400">No recent activity yet</p>
+        </div>
+      }
+    </div>
   </div>
 }
 </div>

@@ -1,8 +1,8 @@
-<div class="flex flex-col h-full bg-slate-50/95 dark:bg-gray-950/95 backdrop-blur-xl rounded-t-[32px] border-t border-white/20 dark:border-gray-800/50 shadow-2xl">
+<div class="flex flex-col max-h-[85vh] overflow-hidden bg-slate-50/95 dark:bg-gray-950/95 backdrop-blur-xl rounded-t-[32px] border-t border-white/20 dark:border-gray-800/50 shadow-2xl">
   
   <!-- Header Bar -->
-  <div class="px-6 pt-6 pb-2">
-    <div class="flex items-center justify-between mb-4">
+  <div class="shrink-0 z-50 px-6 pt-6 pb-4 bg-slate-50/95 dark:bg-gray-950/95 shadow-sm border-b border-gray-100 dark:border-gray-800/60 relative">
+    <div class="flex items-center justify-between">
       <div class="flex items-center gap-4">
         <div class="w-14 h-14 rounded-2xl overflow-hidden shadow-lg ring-2 ring-white dark:ring-gray-800 shrink-0"
              [style.backgroundColor]="data.memberColor">
@@ -29,7 +29,8 @@
     </div>
   </div>
 
-  <div class="px-6 pb-8 space-y-6">
+  <!-- Scrollable Content -->
+  <div class="flex-1 overflow-y-auto px-6 py-6 pb-8 space-y-6">
     
     <!-- Summary Cards Grid -->
     <div class="grid grid-cols-3 gap-1">
