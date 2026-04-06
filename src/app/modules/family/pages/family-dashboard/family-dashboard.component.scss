@@ -84,9 +84,11 @@
   .text-2xl.font-black, // Group Spend
   .text-xl.font-black,  // Net Settle Balance
   .text-sm.font-bold,   // Paid/Share details
+  .text-sm.font-black,  // New Paid/Share details
   .text-\[17px\].font-bold, // Summary cards
   .text-\[13px\].font-bold, // Member amounts
   .text-\[14px\].font-bold, // Activity amounts
+  .font-black,
   .font-mono,
   .financial-amount {
     font-family: 'JetBrains Mono', monospace !important;
