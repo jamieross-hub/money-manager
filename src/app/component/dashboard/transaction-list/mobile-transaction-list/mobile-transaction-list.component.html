@@ -632,13 +632,13 @@
 
                 @if (isFamilyMode() && !isSplitMode() && !item._isSummary) {
                 <div class="split-members-avatars">
-                  @if (item.userPhotoURL) {
-                  <div class="member-avatar-small">
-                    <img [src]="item.userPhotoURL" appImageFallback alt="Payer">
+                  @if (item.splitData?.paidByPhotoURL || item.userPhotoURL) {
+                  <div class="member-avatar-small" matTooltip="Paid by {{ item.splitData?.paidByDisplayName || item.userDisplayName }}">
+                    <img [src]="item.splitData!.paidByPhotoURL || item.userPhotoURL" appImageFallback alt="Payer">
                   </div>
-                  } @else if (item.userDisplayName) {
-                  <div class="member-avatar-small member-avatar-small--fallback">
-                    {{ item.userDisplayName.charAt(0).toUpperCase() }}
+                  } @else if (item.splitData?.paidByDisplayName || item.userDisplayName) {
+                  <div class="member-avatar-small member-avatar-small--fallback" matTooltip="Paid by {{ item.splitData?.paidByDisplayName || item.userDisplayName }}">
+                    {{ (item.splitData!.paidByDisplayName || item.userDisplayName!).charAt(0).toUpperCase() }}
                   </div>
                   }
                 </div>
