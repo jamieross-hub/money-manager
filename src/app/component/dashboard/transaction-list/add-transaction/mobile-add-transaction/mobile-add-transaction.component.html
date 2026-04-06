@@ -176,8 +176,8 @@
     </div>
   </div>
 
-  @if(isSplitGroupMode()) {
-    <!-- Family Split Details Card -->
+  @if(isFamilyMode()) {
+    <!-- Family Details Card -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
 
       <div class="p-4 space-y-5">
@@ -285,6 +285,7 @@
           </div>
         </div>
 
+        @if(isSplitGroupMode()) {
         <!-- Divider -->
         <div class="border-t border-gray-100 dark:border-gray-700"></div>
 
@@ -366,10 +367,11 @@
                 </div>
               }
             </div>
+        }
 
           </div>
         </div>
-        } <!-- end @if(isSplitGroupMode()) -->
+        } <!-- end @if(isFamilyMode()) -->
 
 
         <!-- Account and Payment Method Grid -->

@@ -411,7 +411,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   private buildSplitData() {
     const paidByUserId: string = this.transactionForm.get('paidByUserId')?.value || '';
     const paidBy: PaidByMember[] = this.transactionForm.get('paidBy')?.value || [];
-    let splitBetween: SplitBetweenMember[] = this.transactionForm.get('splitBetween')?.value || [];
+    let splitBetween: SplitBetweenMember[] = this.isSplitGroupMode() ? (this.transactionForm.get('splitBetween')?.value || []) : [];
     const members = this.familyMembers();
     const paidByMember = members.find(m => m.userId === paidByUserId);
 
@@ -869,8 +869,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           isCategorySplit: this.isCategorySplit(),
           categorySplits: this.categorySplits,
           totalSplitAmount: this.categorySplits.reduce((sum, split) => sum + split.amount, 0),
-          // Family split data (applies when group mode = 'split')
-          splitData: this.isSplitGroupMode() ? this.buildSplitData() : null,
+          // Family split data
+          splitData: this.isFamilyMode() ? this.buildSplitData() : null,
           userDisplayName: this.userProfile()?.displayName || '',
           userPhotoURL: this.userProfile()?.photoURL || '',
           createdAt: this.dialogData?.createdAt,
