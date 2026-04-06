@@ -348,7 +348,7 @@ export class SignInComponent implements OnInit, OnDestroy {
         }
       );
 
-      this.notificationService.success('Account created successfully! Please check your email for verification.');
+      this.notificationService.info('Account created successfully! Please check your email for verification.');
       this._setIsSignInPage(true);
 
     } catch (error: any) {
@@ -401,7 +401,7 @@ export class SignInComponent implements OnInit, OnDestroy {
         }
       );
 
-      this.notificationService.success('Successfully signed in with Google!');
+      this.notificationService.info('Successfully signed in with Google!');
 
       // Load user data
       await this.loadUserData();
@@ -427,7 +427,7 @@ export class SignInComponent implements OnInit, OnDestroy {
       const guestUid = 'offline-guest';
       await this.loadUserData(guestUid);
 
-      this.notificationService.success('Logged in as Guest (Offline Mode)');
+      this.notificationService.info('Logged in as Guest (Offline Mode)');
       await this.navigateAfterSignIn();
     } catch (error) {
       console.error('Guest mode error:', error);
