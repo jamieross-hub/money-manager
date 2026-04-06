@@ -122,7 +122,7 @@
       <button mat-stroked-button type="button" class="flex-1" (click)="close()" [disabled]="loading()">Cancel</button>
       <button mat-flat-button color="primary" type="button" class="flex-1" [disabled]="form.invalid || loading()" (click)="submit()">
         @if (!loading()) {
-          <mat-icon class="!text-base mr-1 mb-2">{{ isEditMode() ? 'save' : 'add' }}</mat-icon>
+          <mat-icon class="!text-base">{{ isEditMode() ? 'save' : 'add' }}</mat-icon>
         }
         @if (loading()) {
           <mat-progress-spinner mode="indeterminate" diameter="16" class="mr-2 inline-block"></mat-progress-spinner>

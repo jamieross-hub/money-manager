@@ -206,6 +206,18 @@ export class ProfileComponent {
     return family ? family.name : null;
   });
 
+  readonly sortedFamilyGroups = computed(() => {
+    const families = this.familyGroups();
+    const activeId = this.activeFamilyId();
+    if (!activeId) return families;
+    
+    return [...families].sort((a, b) => {
+      if (a.id === activeId) return -1;
+      if (b.id === activeId) return 1;
+      return 0;
+    });
+  });
+
   // ─── Theme Selection ──────────────────────────────────────────────
   readonly themePreference = this.themeSwitchingService.themePreference;
   readonly isSpecialTheme = computed(() => {
