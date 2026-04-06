@@ -32,6 +32,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatRippleModule } from '@angular/material/core';
 import { TranslateModule } from '@ngx-translate/core';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import { IncludesPipe } from 'src/app/util/pipes/includes.pipe';
@@ -113,7 +114,8 @@ interface SortOption {
     FormsModule,
     MatDividerModule,
     ImageFallbackDirective,
-    MatBottomSheetModule
+    MatBottomSheetModule,
+    MatRippleModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   animations: []
