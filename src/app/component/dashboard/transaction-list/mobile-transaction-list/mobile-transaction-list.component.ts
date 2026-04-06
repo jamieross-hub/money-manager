@@ -963,9 +963,8 @@ export class MobileTransactionListComponent
 
   onFlagTransaction(transaction: Transaction) {
     this.dialog.open(FlagTransactionDialogComponent, {
-      width: '100%',
-      maxWidth: '450px',
-      panelClass: 'custom-dialog',
+      disableClose: true,
+      closeOnNavigation: false,
       data: {
         title: transaction.flagged ? 'Update Flag' : 'Flag Transaction',
         message: 'Explain why this transaction is incorrect so other members can rectify it.',

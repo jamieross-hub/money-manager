@@ -1,0 +1,64 @@
+<div class="p-6 min-w-[320px]">
+  <!-- Header -->
+  <div class="flex items-start justify-between mb-6">
+    <div class="flex gap-3">
+      <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
+        <mat-icon class="text-red-600 dark:text-red-400">flag</mat-icon>
+      </div>
+      <div>
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white !mb-0">{{ data.title }}</h2>
+        <p class="text-xs text-gray-500 dark:text-gray-400 m-0 leading-tight">{{ data.message }}</p>
+      </div>
+    </div>
+    <button mat-icon-button (click)="onCancel()" class="close-btn !-top-2 !-right-2" aria-label="Close dialog">
+      <mat-icon class="text-gray-400">close</mat-icon>
+    </button>
+  </div>
+
+  <div class="flex flex-col gap-4">
+    <mat-form-field appearance="fill" class="w-full">
+      <mat-label>Reason / Comment</mat-label>
+      <textarea 
+        matInput 
+        [(ngModel)]="comment" 
+        placeholder="e.g., Wrong amount, wrong category..." 
+        rows="4"
+        maxlength="200"
+      ></textarea>
+      <mat-hint align="end" class="text-[10px]">{{ comment.length }}/200</mat-hint>
+    </mat-form-field>
+
+    <!-- Actions -->
+    <div class="flex gap-3 mt-2">
+      <button 
+        mat-stroked-button 
+        class="flex-1"
+        (click)="onCancel()"
+      >
+        Cancel
+      </button>
+      
+      <div class="flex-[1.5] flex gap-2">
+        <button 
+          *ngIf="data.isUpdate"
+          mat-stroked-button 
+          color="accent"
+          class="flex-1"
+          (click)="onRemove()"
+        >
+          Solve
+        </button>
+        <button 
+          mat-flat-button 
+          color="warn" 
+          class="flex-[2]"
+          [disabled]="!comment.trim()" 
+          (click)="onConfirm()"
+        >
+          {{ data.isUpdate ? 'Update' : 'Flag' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
