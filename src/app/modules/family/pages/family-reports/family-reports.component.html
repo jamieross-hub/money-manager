@@ -8,141 +8,131 @@
 
   @if (stats()) {
     <div class="px-2 ">
-          <h2 class="text-sm font-semibold text-gray-700  mb-3">Group Summary</h2>
-      <!-- Overall Summary -->
-      @if (family()?.mode === 'split') {
-        <div class="mt-4">
-          <div class="bg-surface-200 rounded-2xl p-2 shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden group transition-all">
-            
-            <!-- Decorative Watermark Icon -->
-            <div class="absolute -right-6 -bottom-6 opacity-[0.04] dark:opacity-[0.06] pointer-events-none group-hover:scale-110 transition-transform duration-500">
-              <mat-icon class="!text-[120px] !w-[120px] !h-[120px] text-gray-400 dark:text-gray-500">insights</mat-icon>
-            </div>
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Group Summary</h2>
+      
+      <!-- Overall Summary (Universal Master Card) -->
+      <div class="mt-4">
+        <div class="bg-surface-200 rounded-2xl p-2 shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden group transition-all">
+          
+          <!-- Decorative Watermark Icon -->
+          <div class="absolute -right-6 -bottom-6 opacity-[0.04] dark:opacity-[0.06] pointer-events-none group-hover:scale-110 transition-transform duration-500">
+            <mat-icon class="!text-[120px] !w-[120px] !h-[120px] text-gray-400 dark:text-gray-500">insights</mat-icon>
+          </div>
 
-            <!-- Top Row: Group Identity -->
-            <div class="border-b border-gray-100 dark:border-gray-800 pb-4 mb-4 flex items-center justify-between px-2 pt-4">
-              <div class="flex items-start gap-3">
-                <div class="w-10 h-10 rounded-xl bg-surface-100 dark:bg-gray-800/40 flex items-center justify-center border border-gray-100 dark:border-gray-700 shadow-inner">
-                  <mat-icon class="!text-[20px] !w-5 !h-5 text-primary-500">{{ family()?.icon || 'roofing' }}</mat-icon>
-                </div>
-                <div>
-                  <h3 class="text-sm leading-tight">{{ family()?.name }}</h3>
-                  <div class="flex items-center gap-2 mt-1">
-                    <span class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                      <mat-icon class="!text-[12px] !w-3.5 !h-3.5 opacity-70">group</mat-icon>
-                      {{ members().length }} members
-                    </span>
-                    <span class="text-gray-300 dark:text-gray-600">|</span>
-                    <span class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                      <mat-icon class="!text-[12px] !w-3.5 !h-3.5 opacity-70">calendar_today</mat-icon>
-                      {{ dateRange() }}
-                    </span>
-                  </div>
+          <!-- Top Row: Group Identity -->
+          <div class="border-b border-gray-100 dark:border-gray-800 pb-4 mb-4 flex items-center justify-between px-2 pt-4 relative z-10">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 rounded-xl bg-surface-100 dark:bg-gray-800/40 flex items-center justify-center border border-gray-100 dark:border-gray-700 shadow-inner">
+                <mat-icon class="!text-[20px] !w-5 !h-5 text-primary-500">{{ family()?.icon || 'roofing' }}</mat-icon>
+              </div>
+              <div>
+                <h3 class="text-sm leading-tight text-gray-900 dark:text-white font-bold">{{ family()?.name }}</h3>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1 font-medium">
+                    <mat-icon class="!text-[12px] !w-3.5 !h-3.5 opacity-70">group</mat-icon>
+                    {{ members().length }} members
+                  </span>
+                  <span class="text-gray-300 dark:text-gray-600">|</span>
+                  <span class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1 font-medium">
+                    <mat-icon class="!text-[12px] !w-3.5 !h-3.5 opacity-70">calendar_today</mat-icon>
+                    {{ dateRange() }}
+                  </span>
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- Ledger Style Details -->
-            <div class="space-y-3 mb-4 px-2">
+          <!-- Ledger Style Details -->
+          <div class="space-y-3 mb-4 px-2 relative z-10">
+            @if (family()?.mode !== 'split') {
               <div class="flex justify-between items-center text-xs">
-                <span class="text-gray-500 dark:text-gray-400 font-medium">Total Transactions</span>
-                <span class="font-bold text-gray-800 dark:text-gray-200">{{ transactions().length }} </span>
+                <span class="text-gray-500 dark:text-gray-400 font-medium">Net Balance</span>
+                <span class="font-black text-lg leading-none"
+                  [class.text-green-600]="stats()!.netBalance >= 0"
+                  [class.dark:text-green-400]="stats()!.netBalance >= 0"
+                  [class.text-red-500]="stats()!.netBalance < 0"
+                  [class.dark:text-red-400]="stats()!.netBalance < 0">
+                  {{ stats()!.netBalance | currency }}
+                </span>
               </div>
-
-               <div class="flex justify-between items-center text-xs">
-                <span class="text-gray-500 dark:text-gray-400 font-medium">Total Expenses</span>
-                <span class="font-bold text-gray-800 dark:text-gray-200">{{ stats()!.totalExpense | currency }}</span>
+              <div class="flex justify-between items-center text-xs">
+                <span class="text-gray-500 dark:text-gray-400 font-medium">Group Income</span>
+                <span class="font-bold text-green-600 dark:text-green-500">{{ stats()!.totalIncome | currency }}</span>
               </div>
+            }
 
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-gray-500 dark:text-gray-400 font-medium">Group Expenses</span>
+              <span class="font-bold text-red-500 dark:text-red-400">{{ stats()!.totalExpense | currency }}</span>
             </div>
 
-            <div class="insights-glass rounded-2xl p-1 border shadow-sm mt-3 overflow-hidden">
-              <div class="flex items-center justify-between mb-1 cursor-pointer select-none" (click)="isInsightsExpanded.set(!isInsightsExpanded())">
-                <p class="text-[10px] font-black tracking-[0.2em] uppercase text-gray-500/80 dark:text-gray-400/70 flex items-center gap-2">
-                  <mat-icon class="!text-[14px] !w-3.5 !h-3.5 text-primary-500 animate-pulse">auto_awesome</mat-icon>
-                  Smart Insights
-                </p>
-                <div class="flex items-center gap-3 flex-1 ml-4 ">
-                  <div class="h-[1px] flex-1 bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700/50 to-transparent"></div>
-                  <mat-icon class="text-gray-400 !text-[18px] !w-[18px] !h-[18px] transition-transform duration-300"
-                    [class.rotate-180]="!isInsightsExpanded()">
-                    expand_more
-                  </mat-icon>
-                </div>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-gray-500 dark:text-gray-400 font-medium">Total Transactions</span>
+              <span class="font-bold text-gray-800 dark:text-gray-200">{{ transactions().length }}</span>
+            </div>
+          </div>
+
+          <!-- Smart Insights -->
+          <div class="insights-glass rounded-2xl p-1 border shadow-sm mt-3 overflow-hidden relative z-10">
+            <div class="flex items-center justify-between mb-1 cursor-pointer select-none" (click)="isInsightsExpanded.set(!isInsightsExpanded())">
+              <p class="text-[10px] font-black tracking-[0.2em] uppercase text-gray-500/80 dark:text-gray-400/70 flex items-center gap-2">
+                <mat-icon class="!text-[14px] !w-3.5 !h-3.5 text-primary-500 animate-pulse">auto_awesome</mat-icon>
+                Smart Insights
+              </p>
+              <div class="flex items-center gap-3 flex-1 ml-4 ">
+                <div class="h-[1px] flex-1 bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700/50 to-transparent"></div>
+                <mat-icon class="text-gray-400 !text-[18px] !w-[18px] !h-[18px] transition-transform duration-300"
+                  [class.rotate-180]="!isInsightsExpanded()">
+                  expand_more
+                </mat-icon>
               </div>
-              
-              @if (isInsightsExpanded()) {
-                <div @expandCollapse class="space-y-3">
-                  @for (insight of smartInsights(); track insight.label) {
-                    <div class="insight-item flex items-center gap-3 p-2 rounded-xl group transition-all">
-                      <div class="icon-container {{ insight.colorClass }}">
-                        <mat-icon class="!text-[16px] !w-4 !h-4">{{ insight.icon }}</mat-icon>
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold tracking-wider leading-none mb-1">{{ insight.label }}</p>
-                        <p class="text-xs text-gray-700 dark:text-gray-300 truncate font-bold text-gray-900 dark:text-white">
-                          {{ insight.value }}
-                        </p>
-                      </div>
-                      <div class="px-2 py-0.5 rounded-full border {{ insight.badgeClass }}">
-                        <span class="text-[11px] font-bold">
-                          @if (insight.isCurrency) {
-                            {{ insight.amount | currency:{round:true} }}
-                          } @else if (insight.isPercentage) {
-                            {{ insight.amount | number:'1.0-0' }}%
-                          }
-                        </span>
-                      </div>
+            </div>
+            
+            @if (isInsightsExpanded()) {
+              <div @expandCollapse class="space-y-3">
+                @for (insight of smartInsights(); track insight.label) {
+                  <div class="insight-item flex items-center gap-3 p-2 rounded-xl group transition-all">
+                    <div class="icon-container {{ insight.colorClass }}">
+                      <mat-icon class="!text-[16px] !w-4 !h-4">{{ insight.icon }}</mat-icon>
                     </div>
-                  }
-                </div>
-              }
-            </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold tracking-wider leading-none mb-1">{{ insight.label }}</p>
+                      <p class="text-xs text-gray-700 dark:text-gray-300 truncate font-bold text-gray-900 dark:text-white">
+                        {{ insight.value }}
+                      </p>
+                    </div>
+                    <div class="px-2 py-0.5 rounded-full border {{ insight.badgeClass }}">
+                      <span class="text-[11px] font-bold">
+                        @if (insight.isCurrency) {
+                          {{ insight.amount | currency:{round:true} }}
+                        } @else if (insight.isPercentage) {
+                          {{ insight.amount | number:'1.0-0' }}%
+                        }
+                      </span>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
 
-          </div>
         </div>
-      } @else {
-        <div class=" mt-4 grid grid-cols-2 gap-3">
-          <div class="bg-surface-200 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
-            <p class="text-xs text-gray-500 dark:text-gray-400">Total Income</p>
-            <p class="text-xl font-bold text-green-600 dark:text-green-400 mt-1">
-              {{ stats()!.totalIncome | number:'1.0-0' }}
-            </p>
-          </div>
-          <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
-            <p class="text-xs text-gray-500 dark:text-gray-400">Total Expense</p>
-            <p class="text-xl font-bold text-red-600 dark:text-red-400 mt-1">
-              {{ stats()!.totalExpense | number:'1.0-0' }}
-            </p>
-          </div>
-          <div class="col-span-2 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
-            <p class="text-xs text-gray-500 dark:text-gray-400">Net Balance</p>
-            <p class="text-2xl font-black mt-1"
-              [class.text-green-600]="stats()!.netBalance >= 0"
-              [class.dark:text-green-400]="stats()!.netBalance >= 0"
-              [class.text-red-600]="stats()!.netBalance < 0"
-              [class.dark:text-red-400]="stats()!.netBalance < 0">
-              {{ stats()!.netBalance | number:'1.0-0' }}
-            </p>
-          </div>
-        </div>
-      }
+      </div>
+
       <!-- Category Breakdown -->
-      <div class="  mt-5">
+      <div class="mt-6">
         <div class="flex justify-between items-center mb-3">
           <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Expense by Category</h2>
-          <div class="flex items-center bg-surface-100 rounded-lg p-0.5 border border-gray-200 dark:border-gray-700 origin-right ">
+          <div class="flex items-center bg-surface-100 rounded-lg p-0.5 border border-gray-200 dark:border-gray-700 origin-right">
             <button (click)="categoryViewMode.set('single')" 
-              [class]="categoryViewMode() === 'single' ? 'bg-white  text-primary-500 dark:text-white shadow-sm' : 'text-gray-500'"
+              [class]="categoryViewMode() === 'single' ? 'bg-white text-primary-500 dark:text-white shadow-sm' : 'text-gray-500'"
               class="px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all flex items-center justify-center">
               <mat-icon class="!text-[18px] !w-4.5 !h-4.5 !flex !items-center !justify-center">person</mat-icon>
-              
             </button>
             <button (click)="categoryViewMode.set('group')" 
-              [class]="categoryViewMode() === 'group' ? 'bg-white  text-primary-500 dark:text-white shadow-sm' : 'text-gray-500'"
+              [class]="categoryViewMode() === 'group' ? 'bg-white text-primary-500 dark:text-white shadow-sm' : 'text-gray-500'"
               class="px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all flex items-center justify-center">
               <mat-icon class="!text-[18px] !w-4.5 !h-4.5 !flex !items-center !justify-center">group</mat-icon>
-              
             </button>
           </div>
         </div>
@@ -164,49 +154,44 @@
             </div>
           }
           @if (!groupedCategoryBreakdown().length) {
-            <div class="px-4 py-8 text-center">
+            <div class="px-4 py-8 text-center bg-gray-50/50 dark:bg-gray-800/50">
               <p class="text-sm text-gray-400">No expense data yet</p>
             </div>
           }
         </div>
       </div>
+
       <!-- Member Breakdown -->
-      <div class="mt-5">
+      <div class="mt-6">
         <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Member Contribution</h2>
-        <div class=" px-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
           @for (m of stats()!.memberBreakdown; track m.userId) {
             <div class="px-4 py-3">
               <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-3">
                   @if (m.photoURL) {
-                    <img [src]="m.photoURL" alt="Member" class="w-7 h-7 rounded-full object-cover">
+                    <img [src]="m.photoURL" alt="Member" class="w-8 h-8 rounded-full object-cover shadow-sm ring-1 ring-gray-100 dark:ring-gray-700">
                   } @else {
-                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm"
                       [style.background]="memberColor(m.userId)">
                       {{ m.displayName.charAt(0).toUpperCase() }}
                     </div>
                   }
-                  <span class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ m.displayName }}</span>
+                  <span class="text-sm font-bold text-gray-800 dark:text-gray-100">{{ m.displayName }}</span>
                 </div>
-                <span class="text-xs text-gray-500">{{ m.transactionCount }} entries</span>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 bg-gray-100 dark:bg-gray-700/50 px-2 py-0.5 rounded-full">{{ m.transactionCount }} entries</span>
               </div>
-              <div class="flex gap-4 text-xs">
+              <div class="flex gap-4 text-xs mt-1 pl-[44px]">
                 @if (family()?.mode !== 'split') {
-                  <span class="text-green-600">↑ {{ m.totalIncome | currency }}</span>
-                  <span class="text-red-600">↓ {{ m.totalExpense | currency }}</span>
-                  <span class="font-semibold"
-                    [class.text-green-600]="m.netBalance >= 0"
-                    [class.text-red-600]="m.netBalance < 0">
-                    Net: {{ m.netBalance | currency }}
-                  </span>
+                  <span class="text-gray-500 dark:text-gray-400 font-medium tracking-wide">Paid: <span class="font-black text-green-600 dark:text-green-500 text-[13px] ml-1">{{ m.totalPaid | currency }}</span></span>
                 } @else {
-                  <span class="text-gray-600 dark:text-gray-300">Expense: <span class="font-bold text-red-600 dark:text-red-400">{{ m.totalExpense | currency }}</span></span>
+                  <span class="text-gray-500 dark:text-gray-400 font-medium tracking-wide">Share: <span class="font-black text-red-600 dark:text-red-400 text-[13px] ml-1">{{ m.totalExpense | currency }}</span></span>
                 }
               </div>
             </div>
           }
           @if (!stats()!.memberBreakdown.length) {
-            <div class="px-4 py-8 text-center">
+            <div class="px-4 py-8 text-center bg-gray-50/50 dark:bg-gray-800/50">
               <p class="text-sm text-gray-400">No member data yet</p>
             </div>
           }
