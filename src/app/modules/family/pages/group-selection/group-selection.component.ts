@@ -25,6 +25,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatBottomSheetModule } from '@angular/material/bottom-sheet';
 import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 
 import { FamilyService } from '../../services/family.service';
@@ -33,6 +34,7 @@ import { UserService } from 'src/app/util/service/db/user.service';
 import { Transaction } from 'src/app/util/models/transaction.model';
 import { FamilyCreateDialogComponent } from '../../dialogs/family-create-dialog/family-create-dialog.component';
 import { FamilyJoinDialogComponent } from '../../dialogs/family-join-dialog/family-join-dialog.component';
+import { FamilyModeInfoSheet } from '../../dialogs/family-mode-info-sheet/family-mode-info-sheet';
 import { ConfirmDialogComponent, ConfirmDialogData } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
 import { Family, FamilyMemberRole } from 'src/app/util/models/family.model';
 import { Store } from '@ngrx/store';
@@ -46,6 +48,7 @@ import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage
 import { LoaderService } from 'src/app/util/service/loader.service';
 import { TransactionStatus } from 'src/app/util/config/enums';
 import { CurrencyPipe, AppDatePipe } from 'src/app/util/pipes';
+import { PwaNavigationService } from 'src/app/util/service/pwa-navigation.service';
 // ─── View Model ──────────────────────────────────────────────────────────────
 
 export type GroupType = 'family' | 'trip' | 'work' | 'other';
@@ -127,7 +130,9 @@ type LoadState = 'loading' | 'loaded' | 'empty' | 'error';
     QuickActionsFabComponent,
     ImageFallbackDirective,
     CurrencyPipe,
-    AppDatePipe
+    CurrencyPipe,
+    AppDatePipe,
+    MatBottomSheetModule
 ],
   templateUrl: './group-selection.component.html',
   styleUrls: ['./group-selection.component.scss'],
@@ -139,6 +144,7 @@ export class GroupSelectionComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private store = inject(Store<AppState>);
   private loaderService = inject(LoaderService);
+  private pwaNavigationService = inject(PwaNavigationService);
   public selectedGroup = signal<UserGroup | null>(null);
   public showDeleted = signal<boolean>(false);
   private autoOpened = false;
@@ -441,6 +447,16 @@ export class GroupSelectionComponent implements OnInit {
     this.familyService.setActiveFamily(group.id);
     this.familyService.sharedSelectedGroup.set(group);
     this.router.navigate(['/dashboard/family/dashboard', group.id]);
+  }
+
+  openModeInfo(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.pwaNavigationService.openBottomSheet(FamilyModeInfoSheet, {
+      panelClass: ['bg-transparent', 'auto-height-sheet'],
+      closeOnNavigation: false,
+    });
   }
 
   requestLeave(group: UserGroup): void {

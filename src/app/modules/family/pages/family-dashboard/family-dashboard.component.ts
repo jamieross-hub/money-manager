@@ -68,6 +68,7 @@ import { FamilyCreateDialogComponent } from '../../dialogs/family-create-dialog/
 import { FamilyJoinDialogComponent } from '../../dialogs/family-join-dialog/family-join-dialog.component';
 import { FamilyMembersComponent } from '../family-members/family-members.component';
 import { MemberBreakdownSheetComponent } from '../../dialogs/member-breakdown-sheet/member-breakdown-sheet.component';
+import { FamilyModeInfoSheet } from '../../dialogs/family-mode-info-sheet/family-mode-info-sheet';
 
 // Pipes & Directives
 import { CurrencyPipe, AppDatePipe, TruncatePipe } from 'src/app/util/pipes';
@@ -261,6 +262,13 @@ export class FamilyDashboardComponent implements OnInit {
     this.activityLimit.update(l => l + 5);
   }
 
+  openModeInfo(): void {
+    this.pwaNavigationService.openBottomSheet(FamilyModeInfoSheet, {
+      panelClass: ['bg-transparent', 'auto-height-sheet'],
+      closeOnNavigation: false
+    });
+  }
+
   openMemberDetails(member: FamilyMemberStats): void {
     this.pwaNavigationService.openBottomSheet(MemberBreakdownSheetComponent, {
       data: {
@@ -270,7 +278,7 @@ export class FamilyDashboardComponent implements OnInit {
         memberColor: this.memberColor(member.userId)
       },
       panelClass: ['bg-transparent', 'auto-height-sheet'],
-      closeOnNavigation: true
+      closeOnNavigation: false
     });
   }
 

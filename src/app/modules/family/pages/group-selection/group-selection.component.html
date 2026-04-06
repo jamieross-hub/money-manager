@@ -76,7 +76,7 @@
                 <span class="gs-info__name">{{ active.name }}</span>
               </div>
               <div class="gs-info__meta">
-                <span class="gs-meta-text gs-meta-text--with-icon">
+                <span class="gs-meta-text gs-meta-text--with-icon cursor-pointer transition-opacity hover:opacity-80" (click)="openModeInfo($event)">
                   <mat-icon class="gs-meta-icon">{{ groupModeIcon[active.mode] }}</mat-icon>
                   {{ groupModeLabel[active.mode] }}
                 </span>
@@ -134,7 +134,7 @@
                   <span class="gs-info__name">{{ group.name }}</span>
                 </div>
                 <div class="gs-info__meta">
-                  <span class="gs-meta-text gs-meta-text--with-icon">
+                  <span class="gs-meta-text gs-meta-text--with-icon cursor-pointer transition-opacity hover:opacity-80" (click)="openModeInfo($event)">
                     <mat-icon class="gs-meta-icon">{{ groupModeIcon[group.mode] }}</mat-icon>
                     {{ groupModeLabel[group.mode] }}
                   </span>

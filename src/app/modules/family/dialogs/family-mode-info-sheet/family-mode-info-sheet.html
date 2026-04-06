@@ -1,0 +1,46 @@
+<div class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-200 rounded-t-3xl shadow-xl overflow-hidden relative flex flex-col h-[60dvh]">
+  <!-- Header (Sticky) -->
+  <div class="sticky top-0 z-20 bg-white dark:bg-gray-900 px-5 pt-6 pb-4 border-b border-gray-100 dark:border-gray-800/80 flex justify-between items-center shrink-0">
+    <h2 class="text-xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
+      <mat-icon class="text-primary-500 dark:text-primary-400">info</mat-icon>
+      Family Group Modes
+    </h2>
+    <button mat-icon-button (click)="close()" class="!text-gray-400 hover:!text-gray-600 dark:hover:!text-white transition-colors duration-200">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Scrollable Content -->
+  <div class="px-5 pt-5 pb-8 overflow-y-auto overscroll-contain ">
+    <!-- Common Mode -->
+    <div class="mb-5 bg-gray-50 dark:bg-gray-800/60 p-4 rounded-2xl border border-gray-100 dark:border-gray-700/50 hover:border-primary-500/30 transition-colors duration-300">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="p-2 bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center">
+          <mat-icon class="!text-[20px] !w-5 !h-5">account_balance_wallet</mat-icon>
+        </div>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Common Mode</h3>
+      </div>
+      <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed ml-12">
+        All family expenses and balances are managed collectively. This mode is ideal for families who share most of their expenses equally without needing to track exact who-owes-who breakdowns for every transaction.
+      </p>
+    </div>
+
+    <!-- Split Mode -->
+    <div class="bg-gray-50 dark:bg-gray-800/60 p-4 rounded-2xl border border-gray-100 dark:border-gray-700/50 hover:border-pink-500/30 transition-colors duration-300">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="p-2 bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 rounded-full flex items-center justify-center">
+          <mat-icon class="!text-[20px] !w-5 !h-5">call_split</mat-icon>
+        </div>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Split Mode</h3>
+      </div>
+      <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed ml-12">
+        Expenses can be split precisely either by percentage, shares, or exact amounts among members. Perfect for groups or roommates who need to maintain accurate individual tabs and settle up specific balances.
+      </p>
+    </div>
+
+    <!-- Note -->
+    <p class="text-xs text-gray-500 text-center mt-6 italic font-medium">
+      The group mode can be changed at any time by the family admin in the settings.
+    </p>
+  </div>
+</div>
