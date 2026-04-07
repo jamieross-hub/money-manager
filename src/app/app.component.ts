@@ -204,6 +204,11 @@ export class AppComponent implements OnInit, OnDestroy {
           this.handleAppForeground();
         }
       });
+
+      // Global context menu disable
+      document.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+      });
     }
   }
 
