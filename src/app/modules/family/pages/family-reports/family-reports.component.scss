@@ -35,3 +35,78 @@
   flex-shrink: 0;
   box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.1);
 }
+
+// ── Mat Table (History) ──
+.history-table {
+  ::ng-deep {
+    .mat-mdc-header-row {
+      background-color: var(--surface-200);
+    }
+
+    .mat-mdc-header-cell {
+      font-weight: 600;
+      font-size: 0.8125rem;
+      color: var(--neutral-600);
+    }
+
+    .mat-mdc-cell {
+      font-size: 0.875rem;
+    }
+
+    .mat-mdc-row {
+      transition: background-color 0.15s ease;
+
+      &:hover {
+        background-color: var(--surface-100);
+      }
+    }
+
+    .mat-mdc-footer-cell {
+      border-top: 1px solid var(--surface-400) !important;
+    }
+  }
+}
+
+.compact-table {
+  ::ng-deep {
+    .mat-mdc-header-cell,
+    .mat-mdc-cell,
+    .mat-mdc-footer-cell {
+      padding: 8px 10px;
+      white-space: nowrap;
+    }
+
+    .mat-mdc-header-cell {
+      font-size: 0.7rem;
+    }
+
+    .mat-mdc-row,
+    .mat-mdc-footer-row {
+      height: 40px;
+    }
+
+    .mat-mdc-header-row {
+      height: 36px;
+    }
+  }
+}
+
+.animation-slide-down {
+  animation: slideDown 0.2s ease-out forwards;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.thin-scrollbar {
+  scrollbar-width: thin;
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+  }
+}

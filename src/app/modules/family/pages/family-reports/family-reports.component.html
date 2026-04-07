@@ -8,7 +8,46 @@
 
   @if (stats()) {
     <div class="px-2 ">
-      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Group Summary</h2>
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Group Summary</h2>
+        
+        <!-- Period Toggler (Inline style for common mode) -->
+        @if (family()?.mode === 'common') {
+          <div class="flex items-center bg-surface-100 dark:bg-gray-800 rounded-lg p-0.5 border border-gray-200 dark:border-gray-700">
+            <button (click)="selectPeriod('weekly')" 
+              [class]="selectedPeriod() === 'weekly' ? 'bg-white dark:bg-gray-700 text-primary-500 shadow-sm' : 'text-gray-500'"
+              class="px-2 py-1 rounded-md text-[10px] font-bold transition-all uppercase tracking-wider">
+              W
+            </button>
+            <button (click)="selectPeriod('monthly')" 
+              [class]="selectedPeriod() === 'monthly' ? 'bg-white dark:bg-gray-700 text-primary-500 shadow-sm' : 'text-gray-500'"
+              class="px-2 py-1 rounded-md text-[10px] font-bold transition-all uppercase tracking-wider">
+              M
+            </button>
+            <button (click)="selectPeriod('yearly')" 
+              [class]="selectedPeriod() === 'yearly' ? 'bg-white dark:bg-gray-700 text-primary-500 shadow-sm' : 'text-gray-500'"
+              class="px-2 py-1 rounded-md text-[10px] font-bold transition-all uppercase tracking-wider">
+              Y
+            </button>
+          </div>
+        }
+      </div>
+
+      <!-- Date Navigator (Common Mode) -->
+      @if (family()?.mode === 'common') {
+        <div class="mb-4 flex items-center justify-between bg-white dark:bg-gray-800 rounded-xl p-1.5 border border-gray-100 dark:border-gray-700 shadow-sm">
+          <button (click)="previousPeriod()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-400">
+            <mat-icon class="!text-sm">chevron_left</mat-icon>
+          </button>
+          <div class="text-xs font-black  text-primary-600 dark:text-primary-400">
+            {{ getPeriodLabel() }}
+          </div>
+          <button (click)="nextPeriod()" [disabled]="!canGoNext()" 
+            class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-400 disabled:opacity-30">
+            <mat-icon class="!text-sm">chevron_right</mat-icon>
+          </button>
+        </div>
+      }
       
       <!-- Overall Summary (Universal Master Card) -->
       <div class="mt-4">
@@ -35,7 +74,7 @@
                   <span class="text-gray-300 dark:text-gray-600">|</span>
                   <span class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1 font-medium">
                     <mat-icon class="!text-[12px] !w-3.5 !h-3.5 opacity-70">calendar_today</mat-icon>
-                    {{ dateRange() }}
+                    {{ family()?.mode === 'common' ? getPeriodLabel() : dateRange() }}
                   </span>
                 </div>
               </div>
@@ -47,7 +86,7 @@
             @if (family()?.mode !== 'split') {
               <div class="flex justify-between items-center text-xs">
                 <span class="text-gray-500 dark:text-gray-400 font-medium">Net Balance</span>
-                <span class="font-black text-lg leading-none"
+                <span class="text-lg font-bold leading-none"
                   [class.text-green-600]="stats()!.netBalance >= 0"
                   [class.dark:text-green-400]="stats()!.netBalance >= 0"
                   [class.text-red-500]="stats()!.netBalance < 0"
@@ -61,6 +100,14 @@
               </div>
             }
 
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-gray-500 dark:text-gray-400 font-medium">Group Mode</span>
+              <div class="flex items-center gap-1.5 py-1 rounded-lg border transition-all duration-300" (click)="openModeInfo($event)">
+                <span class="text-[10px] font-bold uppercase tracking-[0.1em] bg-primary-500 text-white px-2 py-1 rounded-lg">
+                  {{ (family()?.mode || 'common') }}
+                </span>
+              </div>
+            </div>
             <div class="flex justify-between items-center text-xs">
               <span class="text-gray-500 dark:text-gray-400 font-medium">Group Expenses</span>
               <span class="font-bold text-red-500 dark:text-red-400">{{ stats()!.totalExpense | currency }}</span>
@@ -123,39 +170,115 @@
       <div class="mt-6">
         <div class="flex justify-between items-center mb-3">
           <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Expense by Category</h2>
-          <div class="flex items-center bg-surface-100 rounded-lg p-0.5 border border-gray-200 dark:border-gray-700 origin-right">
-            <button (click)="categoryViewMode.set('single')" 
-              [class]="categoryViewMode() === 'single' ? 'bg-white text-primary-500 dark:text-white shadow-sm' : 'text-gray-500'"
-              class="px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all flex items-center justify-center">
-              <mat-icon class="!text-[18px] !w-4.5 !h-4.5 !flex !items-center !justify-center">person</mat-icon>
-            </button>
-            <button (click)="categoryViewMode.set('group')" 
-              [class]="categoryViewMode() === 'group' ? 'bg-white text-primary-500 dark:text-white shadow-sm' : 'text-gray-500'"
-              class="px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all flex items-center justify-center">
-              <mat-icon class="!text-[18px] !w-4.5 !h-4.5 !flex !items-center !justify-center">group</mat-icon>
-            </button>
-          </div>
+          @if (family()?.mode === 'split') {
+            <div class="flex items-center bg-surface-100 rounded-lg p-0.5 border border-gray-200 dark:border-gray-700 origin-right">
+              <button (click)="categoryViewMode.set('single')" 
+                [class]="categoryViewMode() === 'single' ? 'bg-white text-primary-500 dark:text-white shadow-sm' : 'text-gray-500'"
+                class="px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all flex items-center justify-center">
+                <mat-icon class="!text-[18px] !w-4.5 !h-4.5 !flex !items-center !justify-center">person</mat-icon>
+              </button>
+              <button (click)="categoryViewMode.set('group')" 
+                [class]="categoryViewMode() === 'group' ? 'bg-white text-primary-500 dark:text-white shadow-sm' : 'text-gray-500'"
+                class="px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all flex items-center justify-center">
+                <mat-icon class="!text-[18px] !w-4.5 !h-4.5 !flex !items-center !justify-center">group</mat-icon>
+              </button>
+            </div>
+          }
         </div>
-        <div class="px-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
-          @for (cat of groupedCategoryBreakdown(); track cat.category) {
-            <div class="flex items-center gap-3 px-4 py-3">
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-primary-50 dark:bg-primary-900/30 flex-shrink-0">
-                <mat-icon class="text-primary-600 dark:text-primary-300">{{ cat.groupIcon || getCategoryIcon(cat.category) }}</mat-icon>
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm text-gray-800 dark:text-gray-100 font-medium">{{ cat.group || cat.category }}</p>
-                <div class="mt-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <div class="h-full bg-primary-500 rounded-full" [style.width.%]="cat.percentage"></div>
+        <div class="space-y-1">
+          @for (cat of groupedCategoryBreakdown(); track cat.categoryId) {
+            <div class="group flex flex-col bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-all duration-200 mb-1 overflow-hidden">
+              <div class="flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-900/10"
+                (click)="toggleExpand(cat.categoryId)">
+                <!-- Left: Icon Box -->
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105"
+                  [style.background-color]="cat.categoryColor + '20'"
+                  [style.color]="cat.categoryColor">
+                  <mat-icon>{{ cat.groupIcon || cat.categoryIcon || getCategoryIcon(cat.categoryName) }}</mat-icon>
+                </div>
+                
+                <!-- Right: Content Column -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex justify-between items-baseline mb-1">
+                    <div class="min-w-0">
+                      <span class="text-sm font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-1 min-w-0">
+                        <span class="truncate">{{ cat.categoryName }}</span>
+                        <mat-icon class="!text-xs !w-auto !h-auto text-gray-400 transition-transform duration-200 flex-shrink-0" [class.rotate-180]="expandedCategoryId() === cat.categoryId">keyboard_arrow_down</mat-icon>
+                      </span>
+                      <p class="text-[10px] text-gray-400 font-medium">
+                        {{ cat.transactionCount }} transaction{{ cat.transactionCount !== 1 ? 's' : '' }}
+                      </p>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-sm font-bold text-gray-800 dark:text-gray-100">
+                        {{ cat.amount | currency:{compact:true} }}
+                      </span>
+                      <p class="text-[10px] font-bold text-gray-400 bg-gray-50 dark:bg-gray-700/50 px-1.5 rounded-full inline-block">
+                        {{ cat.percentage | number:'1.0-0' }}%
+                      </p>
+                    </div>
+                  </div>
+                  <!-- Progress Bar -->
+                  <div class="mt-2 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-500" [style.background-color]="cat.categoryColor" [style.width.%]="cat.percentage"></div>
+                  </div>
                 </div>
               </div>
-              <span class="text-sm font-semibold text-gray-800 dark:text-gray-100 flex-shrink-0">
-                {{ cat.amount | currency:{round:true} }}
-              </span>
+
+              <!-- EXPANDED CONTENT -->
+              @if (expandedCategoryId() === cat.categoryId) {
+                <div class="px-4 py-3 bg-gray-50/50 dark:bg-gray-900/10 border-t border-gray-100 dark:border-gray-700 space-y-3 animation-slide-down">
+                  
+                  @if (expandedItemData()?.isGroup) {
+                    <!-- Group Breakdown -->
+                    <div>
+                      <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Breakdown</p>
+                      <div class="space-y-1">
+                        @for (sub of expandedItemData()?.breakdown; track sub.categoryId) {
+                          <div class="flex items-center justify-between text-xs py-1.5 border-b border-gray-100/50 dark:border-gray-700/50 last:border-b-0">
+                            <div class="flex items-center gap-2">
+                              <mat-icon class="!text-xs !w-4 !h-4 text-gray-400">{{ sub.categoryIcon || getCategoryIcon(sub.categoryName) }}</mat-icon>
+                              <span class="text-gray-600 dark:text-gray-400 font-medium">{{ sub.categoryName }}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                              <span class="font-bold text-gray-800 dark:text-gray-200">{{ sub.amount | currency:{compact:true} }}</span>
+                              <span class="text-[9px] font-black text-gray-400 bg-gray-100 dark:bg-gray-800 px-1 rounded">{{ sub.percentage | number:'1.0-0' }}%</span>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                    <mat-divider class="dark:border-gray-700/50"></mat-divider>
+                  }
+
+                  <!-- Transactions List -->
+                  <div>
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Recent Items</p>
+                    @if (expandedItemData()?.transactions?.length === 0) {
+                      <p class="text-[10px] text-gray-400 italic text-center py-2">No items found</p>
+                    } @else {
+                      <div class="divide-y divide-gray-100/80 dark:divide-gray-700/50 max-h-40 overflow-y-auto pr-1 thin-scrollbar">
+                        @for (t of expandedItemData()?.transactions; track t.id) {
+                          <div class="flex justify-between items-center py-1.5 text-xs px-1">
+                            <div class="min-w-0 flex-1">
+                              <span class="font-medium text-gray-700 dark:text-gray-300 truncate block">{{ t.note || t.category || 'Untitled' }}</span>
+                              <p class="text-[10px] text-gray-400">{{ t.date | date:'mediumDate' }}</p>
+                            </div>
+                            <span class="font-bold text-red-500 dark:text-red-400 ml-2">
+                              -{{ t.amount | currency }}
+                            </span>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
             </div>
           }
           @if (!groupedCategoryBreakdown().length) {
-            <div class="px-4 py-8 text-center bg-gray-50/50 dark:bg-gray-800/50">
-              <p class="text-sm text-gray-400">No expense data yet</p>
+            <div class="px-4 py-8 text-center bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+              <p class="text-sm text-gray-400">No expense data for this period</p>
             </div>
           }
         </div>
@@ -197,6 +320,76 @@
           }
         </div>
       </div>
+
+      <!-- Monthly History (Common Mode) -->
+      @if (family()?.mode === 'common' && filteredMonthlySummaries().length > 0) {
+        <div class="mt-6 mb-8">
+          <mat-card class="!rounded-xl !border-none bg-white dark:bg-gray-800">
+            <mat-card-content class="pt-4 px-0 pb-0">
+              <p class="text-lg font-semibold text-neutral-500 mb-5 flex items-center gap-2 px-4">
+                <mat-icon class="text-primary-500">{{ selectedPeriod() === 'weekly' ? 'view_week' : 'calendar_month' }}</mat-icon>
+                {{ selectedPeriod() === 'weekly' ? 'Weekly' : selectedPeriod() === 'yearly' ? 'Yearly' : 'Monthly' }} History 
+                <span *ngIf="selectedPeriod() !== 'yearly'">({{ selectedYear() }})</span>
+              </p>
+              
+              <div class="overflow-x-auto rounded-lg mat-elevation-z1 mx-2 mb-2">
+                <table mat-table [dataSource]="filteredMonthlySummaries()" class="w-full history-table compact-table">
+                  
+                  <!-- Month Column -->
+                  <ng-container matColumnDef="month">
+                    <th mat-header-cell *matHeaderCellDef>{{ selectedPeriod() === 'weekly' ? 'Week' : selectedPeriod() === 'yearly' ? 'Year' : 'Month' }}</th>
+                    <td mat-cell *matCellDef="let m" class="font-medium text-neutral-700 dark:text-gray-200">
+                      {{ m.label }}
+                    </td>
+                    <td mat-footer-cell *matFooterCellDef class="font-bold">Total</td>
+                  </ng-container>
+
+                  <!-- Income Column -->
+                  <ng-container matColumnDef="income">
+                    <th mat-header-cell *matHeaderCellDef class="!text-right">Income</th>
+                    <td mat-cell *matCellDef="let m" class="!text-right text-green-600 dark:text-green-400 font-medium">
+                      {{ m.income | currency:{compact:true} }}
+                    </td>
+                    <td mat-footer-cell *matFooterCellDef class="!text-right font-bold text-green-600 dark:text-green-400">
+                      {{ totalHistory().income | currency:{compact:true} }}
+                    </td>
+                  </ng-container>
+
+                  <!-- Expense Column -->
+                  <ng-container matColumnDef="expense">
+                    <th mat-header-cell *matHeaderCellDef class="!text-right">Expense</th>
+                    <td mat-cell *matCellDef="let m" class="!text-right text-red-500 dark:text-red-400 font-medium">
+                      {{ m.expense | currency:{compact:true} }}
+                    </td>
+                    <td mat-footer-cell *matFooterCellDef class="!text-right font-bold text-red-500 dark:text-red-400">
+                      {{ totalHistory().expense | currency:{compact:true} }}
+                    </td>
+                  </ng-container>
+
+                  <!-- Net Column -->
+                  <ng-container matColumnDef="savings">
+                    <th mat-header-cell *matHeaderCellDef class="!text-right">Net</th>
+                    <td mat-cell *matCellDef="let m" class="!text-right font-semibold"
+                      [class.text-green-600]="m.savings >= 0" [class.dark:text-green-400]="m.savings >= 0"
+                      [class.text-red-500]="m.savings < 0" [class.dark:text-red-400]="m.savings < 0">
+                      {{ m.savings >= 0 ? '+' : '-' }}{{ (m.savings | abs) | currency:{compact:true} }}
+                    </td>
+                    <td mat-footer-cell *matFooterCellDef class="!text-right font-bold"
+                      [class.text-green-600]="totalHistory().savings >= 0" [class.dark:text-green-400]="totalHistory().savings >= 0"
+                      [class.text-red-500]="totalHistory().savings < 0" [class.dark:text-red-400]="totalHistory().savings < 0">
+                      {{ totalHistory().savings >= 0 ? '+' : '-' }}{{ (totalHistory().savings | abs) | currency:{compact:true} }}
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="['month', 'income', 'expense', 'savings']"></tr>
+                  <tr mat-row *matRowDef="let row; columns: ['month', 'income', 'expense', 'savings'];"></tr>
+                  <tr mat-footer-row *matFooterRowDef="['month', 'income', 'expense', 'savings']"></tr>
+                </table>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      }
     </div>
   }
 </div>

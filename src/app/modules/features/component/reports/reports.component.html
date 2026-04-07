@@ -386,7 +386,7 @@
                           </div>
                           <div class="text-right">
                             <span class="text-sm font-semibold text-neutral-900">
-                              {{ cat.amount | currency }}
+                              {{ cat.amount | currency:{compact:true} }}
                             </span>
                             <p class="text-xs font-semibold text-neutral-400 mt-0.5">
                               {{ cat.percentage | number:'1.0-0' }}%

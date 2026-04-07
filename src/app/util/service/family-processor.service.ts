@@ -26,6 +26,11 @@ export interface FamilyProcessorInput {
   mode: 'common' | 'split';
   currentUserId?: string;
   sessionStartTime: number;
+  selectedPeriod?: 'weekly' | 'monthly' | 'yearly';
+  selectedYear?: number;
+  selectedMonth?: number | null;
+  selectedWeekOffset?: number;
+  allTransactions?: Transaction[]; // Full set of transactions for history
 }
 
 export interface FamilyProcessorOutput {
@@ -34,6 +39,8 @@ export interface FamilyProcessorOutput {
   activities: any[];
   currentUserStats?: CurrentUserStats;
   fingerprint?: string;
+  monthlySummaries?: any[];
+  filteredMonthlySummaries?: any[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -51,6 +58,8 @@ export class FamilyProcessorService {
     currentUserPaid: 0
   });
   readonly isProcessing = signal<boolean>(false);
+  readonly monthlySummaries = signal<any[]>([]);
+  readonly filteredMonthlySummaries = signal<any[]>([]);
 
   private readonly store = inject(Store<AppState>);
   private readonly localStorageUtility = inject(LocalIndexDBStorageService);
@@ -106,6 +115,9 @@ export class FamilyProcessorService {
     };
   });
 
+  // [NEW] Allow manual override of transactions for scoped processing (e.g. reports)
+  readonly transactionsOverride = signal<Transaction[] | null>(null);
+
   constructor() {
     this.initWorker();
 
@@ -115,6 +127,7 @@ export class FamilyProcessorService {
     effect(() => {
       const input = this.connector();
       const familyId = input.familyId;
+      const override = this.transactionsOverride();
       
       if (familyId) {
         // When group changes, we might want to clear or reset things before new processing finishes
@@ -123,7 +136,7 @@ export class FamilyProcessorService {
         untracked(() => {
           if (isReady) {
             this.process({
-              transactions: input.transactions,
+              transactions: override ?? input.transactions,
               members: input.members,
               settlements: input.settlements,
               familyId: familyId,
@@ -148,6 +161,12 @@ export class FamilyProcessorService {
           this.activities.set(payload.activities);
           if (payload.currentUserStats) {
             this.currentUserStats.set(payload.currentUserStats);
+          }
+          if (payload.monthlySummaries) {
+            this.monthlySummaries.set(payload.monthlySummaries);
+          }
+          if (payload.filteredMonthlySummaries) {
+            this.filteredMonthlySummaries.set(payload.filteredMonthlySummaries);
           }
           this.isProcessing.set(false);
           console.log(`[FamilyProcessorWorker] Processed ${payload.fid} in ${payload.durationMs?.toFixed(2)}ms`);

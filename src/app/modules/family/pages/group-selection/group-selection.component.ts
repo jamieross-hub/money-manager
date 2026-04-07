@@ -48,7 +48,7 @@ import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage
 import { LoaderService } from 'src/app/util/service/loader.service';
 import { TransactionStatus } from 'src/app/util/config/enums';
 import { CurrencyPipe, AppDatePipe } from 'src/app/util/pipes';
-import { PwaNavigationService } from 'src/app/util/service/pwa-navigation.service';
+
 // ─── View Model ──────────────────────────────────────────────────────────────
 
 export type GroupType = 'family' | 'trip' | 'work' | 'other';
@@ -144,7 +144,6 @@ export class GroupSelectionComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private store = inject(Store<AppState>);
   private loaderService = inject(LoaderService);
-  private pwaNavigationService = inject(PwaNavigationService);
   public selectedGroup = signal<UserGroup | null>(null);
   public showDeleted = signal<boolean>(false);
   private autoOpened = false;
@@ -447,16 +446,6 @@ export class GroupSelectionComponent implements OnInit {
     this.familyService.setActiveFamily(group.id);
     this.familyService.sharedSelectedGroup.set(group);
     this.router.navigate(['/dashboard/family/dashboard', group.id]);
-  }
-
-  openModeInfo(event?: Event): void {
-    if (event) {
-      event.stopPropagation();
-    }
-    this.pwaNavigationService.openBottomSheet(FamilyModeInfoSheet, {
-      panelClass: ['bg-transparent', 'auto-height-sheet'],
-      closeOnNavigation: false,
-    });
   }
 
   requestLeave(group: UserGroup): void {
