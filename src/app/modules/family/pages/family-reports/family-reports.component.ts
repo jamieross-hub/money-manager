@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, DestroyRef, effect, untracked, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, effect, untracked, OnDestroy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { distinctUntilChanged, debounceTime } from 'rxjs/operators';
@@ -19,12 +19,12 @@ import * as CategoriesSelectors from 'src/app/store/categories/categories.select
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import { FamilyMember } from 'src/app/util/models/family.model';
 import { Transaction } from 'src/app/util/models/transaction.model';
-import { FamilyService } from '../../services/family.service';
-import { FamilyProcessorService } from 'src/app/util/service/family-processor.service';
+import { FamilyReportsProcessorService } from 'src/app/util/service/family-reports-processor.service';
 import { CurrencyPipe, AbsPipe } from 'src/app/util/pipes';
 import { PwaNavigationService } from 'src/app/util/service/pwa-navigation.service';
 import { FamilyModeInfoSheet } from '../../dialogs/family-mode-info-sheet/family-mode-info-sheet';
 import { DateUtil } from 'src/app/util/helpers/date.util';
+import { AppViewService } from 'src/app/util/service/app-view.service';
 
 // Material Modules 
 import { MatTableModule } from '@angular/material/table';
@@ -67,17 +67,16 @@ import { MatCardModule } from '@angular/material/card';
 })
 export class FamilyReportsComponent implements OnInit, OnDestroy {
   private store = inject(Store<AppState>);
-  private familyService = inject(FamilyService);
-  private destroyRef = inject(DestroyRef);
-  private familyProcessor = inject(FamilyProcessorService);
+  private reportsProcessor = inject(FamilyReportsProcessorService);
   private pwaNavigationService = inject(PwaNavigationService);
+  private appViewService = inject(AppViewService);
 
   members      = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(debounceTime(50), distinctUntilChanged((a: FamilyMember[], b: FamilyMember[]) => a.length === b.length)), { initialValue: [] as FamilyMember[] });
   transactions = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions).pipe(debounceTime(100), distinctUntilChanged((a: Transaction[], b: Transaction[]) => a.length === b.length && a[0]?.id === b[0]?.id && (a[0] as any)?.updatedAt === (b[0] as any)?.updatedAt)), { initialValue: [] as Transaction[] });
   loading      = toSignal(this.store.select(TransactionsSelectors.selectTransactionsLoading).pipe(distinctUntilChanged()), { initialValue: true });
   family       = toSignal(this.store.select(FamilySelectors.selectFamily));
 
-  stats = this.familyProcessor.stats;
+  stats = this.reportsProcessor.stats;
   isInsightsExpanded = signal(false);
 
   // Period selector (Signals)
@@ -109,8 +108,8 @@ export class FamilyReportsComponent implements OnInit, OnDestroy {
 
   allCategories = toSignal(this.store.select(CategoriesSelectors.selectAllCategories), { initialValue: [] });
   categoryViewMode = signal<'single' | 'group'>('group');
-  monthlySummaries = this.familyProcessor.monthlySummaries;
-  filteredMonthlySummaries = this.familyProcessor.filteredMonthlySummaries;
+  monthlySummaries = this.reportsProcessor.monthlySummaries;
+  filteredMonthlySummaries = this.reportsProcessor.filteredMonthlySummaries;
   expandedCategoryId = signal<string | null>(null);
 
   toggleExpand(categoryId: string): void {
@@ -211,8 +210,8 @@ export class FamilyReportsComponent implements OnInit, OnDestroy {
 
   totalHistory = computed(() => {
     const hist = this.filteredMonthlySummaries() || [];
-    return hist.reduce((acc, curr) => ({
-      income: acc.income + (curr.income || 0),
+    return hist.reduce((acc: { income: number; expense: number; savings: number }, curr: { income: number; expense: number; savings: number }) => ({
+      income:  acc.income  + (curr.income  || 0),
       expense: acc.expense + (curr.expense || 0),
       savings: acc.savings + (curr.savings || 0),
     }), { income: 0, expense: 0, savings: 0 });
@@ -453,46 +452,67 @@ export class FamilyReportsComponent implements OnInit, OnDestroy {
   private memberColors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
 
   constructor() {
-    // Effect to sync filtered transactions with processor
+    // Effect: drive the reports worker for both common and split modes
     effect(() => {
-      const mode = this.family()?.mode;
+      const mode = (this.family()?.mode || 'common') as 'common' | 'split';
       const allTxns = this.transactions() || [];
       const period = this.selectedPeriod();
       const year = this.selectedYear();
       const month = this.selectedMonth();
       const offset = this.selectedWeekOffset();
+      const mems = this.members() || [];
+      const famId = this.family()?.id || '';
 
-      if (mode === 'common') {
-        const filtered = this.filterTransactions(allTxns, period, year, month, offset);
-        untracked(() => {
-          this.familyProcessor.transactionsOverride.set(filtered);
-          this.familyProcessor.process({
+      if (!famId || !mems.length) return;
+
+      untracked(() => {
+        if (mode === 'common') {
+          // Period-filtered slice for common mode
+          const filtered = this.filterTransactions(allTxns, period, year, month, offset);
+          this.reportsProcessor.process({
             transactions: filtered,
             allTransactions: allTxns,
-            members: this.members() || [],
-            settlements: [],
-            familyId: this.family()?.id || '',
+            members: mems,
             mode: 'common',
-            currentUserId: undefined,
-            sessionStartTime: Date.now(),
+            familyId: famId,
             selectedPeriod: period,
             selectedYear: year,
             selectedMonth: month,
             selectedWeekOffset: offset
           });
-        });
-      } else {
-        untracked(() => {
-          this.familyProcessor.transactionsOverride.set(null);
-        });
-      }
+        } else {
+          // Split mode: pass all transactions, no period filter
+          this.reportsProcessor.process({
+            transactions: allTxns,
+            allTransactions: allTxns,
+            members: mems,
+            mode: 'split',
+            familyId: famId,
+            selectedPeriod: period,
+            selectedYear: year,
+            selectedMonth: month,
+            selectedWeekOffset: offset
+          });
+        }
+      });
     });
   }
 
-  ngOnInit() {}
+  private appViewSub: any;
+
+  ngOnInit() {
+    // Sync the period toggler with the global app view (Weekly/Monthly/Yearly)
+    // so that common-mode family reports match the app-level period selection.
+    this.appViewSub = this.appViewService.appView$.subscribe(view => {
+      if (view === 'WEEKLY') this.selectedPeriod.set('weekly');
+      else if (view === 'YEARLY') this.selectedPeriod.set('yearly');
+      else this.selectedPeriod.set('monthly');
+    });
+  }
 
   ngOnDestroy() {
-    this.familyProcessor.transactionsOverride.set(null);
+    this.appViewSub?.unsubscribe();
+    this.reportsProcessor.reset();
   }
 
   private filterTransactions(txns: Transaction[], period: string, year: number, month: number | null, offset: number): Transaction[] {

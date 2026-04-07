@@ -58,8 +58,6 @@ export class FamilyProcessorService {
     currentUserPaid: 0
   });
   readonly isProcessing = signal<boolean>(false);
-  readonly monthlySummaries = signal<any[]>([]);
-  readonly filteredMonthlySummaries = signal<any[]>([]);
 
   private readonly store = inject(Store<AppState>);
   private readonly localStorageUtility = inject(LocalIndexDBStorageService);
@@ -152,28 +150,22 @@ export class FamilyProcessorService {
 
   private initWorker() {
     if (typeof Worker !== 'undefined') {
-      this.worker = new Worker(new URL('../../worker/family-processor.worker', import.meta.url));
+      this.worker = new Worker(new URL('../../worker/family-dashboard.worker', import.meta.url));
       this.worker.onmessage = ({ data }) => {
         const { type, payload } = data;
-        if (type === 'FAMILY_DATA_PROCESSED') {
+        if (type === 'FAMILY_DASHBOARD_PROCESSED') {
           this.stats.set(payload.stats);
           this.balances.set(payload.balances);
           this.activities.set(payload.activities);
           if (payload.currentUserStats) {
             this.currentUserStats.set(payload.currentUserStats);
           }
-          if (payload.monthlySummaries) {
-            this.monthlySummaries.set(payload.monthlySummaries);
-          }
-          if (payload.filteredMonthlySummaries) {
-            this.filteredMonthlySummaries.set(payload.filteredMonthlySummaries);
-          }
           this.isProcessing.set(false);
-          console.log(`[FamilyProcessorWorker] Processed ${payload.fid} in ${payload.durationMs?.toFixed(2)}ms`);
+          console.log(`[FamilyDashboardWorker] Processed ${payload.fid} in ${payload.durationMs?.toFixed(2)}ms`);
         }
       };
       this.worker.onerror = (err) => {
-        console.error('FamilyProcessorWorker error:', err);
+        console.error('[FamilyDashboardWorker] error:', err);
         this.isProcessing.set(false);
       };
     } else {
@@ -250,7 +242,7 @@ export class FamilyProcessorService {
     this.debounceTimer = setTimeout(() => {
       this.isProcessing.set(true);
       this.worker?.postMessage({
-        type: 'PROCESS_FAMILY_DATA',
+        type: 'PROCESS_FAMILY_DASHBOARD',
         payload: { ...input, fingerprint: currentFingerprint, fid: input.familyId }
       });
       this.debounceTimer = null;
