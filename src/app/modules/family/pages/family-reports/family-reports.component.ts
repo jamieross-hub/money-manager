@@ -17,7 +17,7 @@ import * as FamilySelectors from '../../store/family.selectors';
 import * as TransactionsSelectors from 'src/app/store/transactions/transactions.selectors';
 import * as CategoriesSelectors from 'src/app/store/categories/categories.selectors';
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
-import { FamilyMember } from 'src/app/util/models/family.model';
+import { FamilyMember, Settlement } from 'src/app/util/models/family.model';
 import { Transaction } from 'src/app/util/models/transaction.model';
 import { FamilyReportsProcessorService } from 'src/app/util/service/family-reports-processor.service';
 import { CurrencyPipe, AbsPipe } from 'src/app/util/pipes';
@@ -79,6 +79,7 @@ export class FamilyReportsComponent implements OnInit, OnDestroy {
   transactions = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions).pipe(debounceTime(100), distinctUntilChanged((a: Transaction[], b: Transaction[]) => a.length === b.length && a[0]?.id === b[0]?.id && (a[0] as any)?.updatedAt === (b[0] as any)?.updatedAt)), { initialValue: [] as Transaction[] });
   loading      = toSignal(this.store.select(TransactionsSelectors.selectTransactionsLoading).pipe(distinctUntilChanged()), { initialValue: true });
   family       = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null as Family | null });
+  settlements  = toSignal(this.store.select(FamilySelectors.selectSettlements), { initialValue: [] as Settlement[] });
 
   stats = this.reportsProcessor.stats;
   isInsightsExpanded = signal(false);
@@ -266,6 +267,7 @@ export class FamilyReportsComponent implements OnInit, OnDestroy {
       const viewMode = this.categoryViewMode();
       const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
       const uid = profile?.uid;
+      const settles = this.settlements() || [];
 
       if (!famId || !mems.length) return;
 
@@ -281,7 +283,8 @@ export class FamilyReportsComponent implements OnInit, OnDestroy {
           selectedMonth: month,
           selectedWeekOffset: offset,
           categoryViewMode: viewMode,
-          currentUserId: uid
+          currentUserId: uid,
+          settlements: settles
         });
       });
     });

@@ -2,6 +2,7 @@ import { Injectable, signal, inject } from '@angular/core';
 import { Transaction } from '../models/transaction.model';
 import { FamilyMember, FamilyStats } from '../models/family.model';
 import { MonthlySummary } from '../../worker/family-reports.worker';
+import { Settlement } from '../models/family.model';
 
 export interface FamilyReportsProcessorInput {
   allTransactions: Transaction[];
@@ -15,6 +16,7 @@ export interface FamilyReportsProcessorInput {
   selectedWeekOffset: number;
   categoryViewMode: 'single' | 'group';
   currentUserId?: string;
+  settlements: Settlement[];
 }
 
 /**
@@ -141,7 +143,9 @@ export class FamilyReportsProcessorService {
       offset: input.selectedWeekOffset,
       view:   input.categoryViewMode,
       uid:    input.currentUserId,
-      catLen: input.categories.length
+      catLen: input.categories.length,
+      settleLen: input.settlements.length,
+      settleSum: input.settlements.reduce((acc, s) => acc + (s.amount || 0), 0)
     });
   }
 }

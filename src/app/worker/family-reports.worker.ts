@@ -42,7 +42,7 @@ addEventListener('message', ({ data }) => {
 
   if (type === 'PROCESS_FAMILY_REPORTS') {
     const {
-      allTransactions, members, categories, mode, fingerprint, fid,
+      allTransactions, members, categories, mode, settlements, fingerprint, fid,
       selectedPeriod, selectedYear, selectedMonth, selectedWeekOffset,
       categoryViewMode, currentUserId
     } = payload;
@@ -56,23 +56,26 @@ addEventListener('message', ({ data }) => {
     }).filter(Boolean) as number[])).sort((a, b) => b - a);
 
     // 2. Filter transactions for the current period
-    const periodTransactions = filterTransactions(
-      allTransactions, 
-      selectedPeriod || 'monthly', 
-      selectedYear || new Date().getFullYear(), 
-      selectedMonth ?? null, 
-      selectedWeekOffset || 0
-    );
+    const periodTransactions = mode === 'split' 
+      ? allTransactions 
+      : filterTransactions(
+          allTransactions, 
+          selectedPeriod || 'monthly', 
+          selectedYear || new Date().getFullYear(), 
+          selectedMonth ?? null, 
+          selectedWeekOffset || 0
+        );
 
     // 3. Compute stats from period-filtered transactions
-    const stats = computeStats(periodTransactions, members || [], mode || 'common');
+    const stats = computeStats(periodTransactions, members || [], mode || 'common', settlements || []);
     
     // 4. Date Range Label
     stats.dateRangeLabel = generateDateRangeLabel(
       selectedPeriod || 'monthly', 
       selectedYear || new Date().getFullYear(), 
       selectedMonth ?? null, 
-      selectedWeekOffset || 0
+      selectedWeekOffset || 0,
+      mode
     );
     stats.availableYears = availableYears;
 
@@ -145,7 +148,8 @@ function filterTransactions(txns: Transaction[], period: string, year: number, m
     return txns;
 }
 
-function generateDateRangeLabel(period: string, year: number, month: number | null, offset: number): string {
+function generateDateRangeLabel(period: string, year: number, month: number | null, offset: number, mode?: string): string {
+    if (mode === 'split') return 'All Time';
     if (period === 'monthly') {
       return dayjs().month(month || 0).year(year).format('MMMM YYYY');
     } else if (period === 'yearly') {
@@ -277,7 +281,8 @@ function stringToColorWorker(str: string): string {
 function computeStats(
   transactions: Transaction[],
   members: FamilyMember[],
-  mode: 'common' | 'split'
+  mode: 'common' | 'split',
+  settlements: any[] = []
 ): FamilyStats {
   let totalIncome  = 0;
   let totalExpense = 0;
@@ -369,6 +374,28 @@ function computeStats(
 
     const recorderStats = memberMap.get(tx.userId);
     if (recorderStats) recorderStats.transactionCount++;
+  });
+
+  // ─── Process Settlements ───
+  settlements.forEach(s => {
+    const amount = Number(s.amount) || 0;
+    if (amount <= 0) return;
+
+    transactionCount++;
+
+    const fromStats = memberMap.get(s.fromUserId);
+    if (fromStats) {
+      fromStats.totalPaid += amount;
+      fromStats.paidCount++;
+      fromStats.transactionCount++;
+    }
+
+    const toStats = memberMap.get(s.toUserId);
+    if (toStats) {
+      toStats.totalPaid -= amount;
+      // We don't increment toStats.transactionCount here as they didn't "record" it usually,
+      // but they are a participant. For reports, counting it for the payer is enough.
+    }
   });
 
   const memberBreakdown = Array.from(memberMap.values()).map(m => ({
