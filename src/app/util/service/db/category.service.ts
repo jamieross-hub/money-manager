@@ -227,6 +227,9 @@ export class CategoryService implements OnDestroy {
         this.activeListenerPath = currentPath;
 
         return new Observable<void>(observer => {
+            const lockedFamilyId = this.getFamilyId(); // 🔒 Lock context for entire stream height
+            const activeCtx = this.getActiveContext();  // 🔒 Lock NgRx bucket context
+
             // 0. Emit cached categories immediately from the individual-item store
             // This ensures the UI feels instant when switching contexts (Personal <-> Family)
             const cachedCategories = this.readCategoriesFromStore(userId);
@@ -235,7 +238,7 @@ export class CategoryService implements OnDestroy {
             this.categoriesSubject.next(cachedCategories);
             this.store.dispatch(CategoriesActions.loadCategoriesSuccess({
                 categories: cachedCategories,
-                context: this.getActiveContext()
+                context: activeCtx
             }));
 
 
@@ -258,10 +261,9 @@ export class CategoryService implements OnDestroy {
                         const firestoreCategories: Category[] = [];
                          querySnapshot.forEach((docSnap) => {
                              const data: any = docSnap.data();
-                             const currentFamilyId = this.getFamilyId();
 
-                             if (currentFamilyId && !data?.familyId) {
-                                 data.familyId = currentFamilyId;
+                             if (lockedFamilyId && !data?.familyId) {
+                                 data.familyId = lockedFamilyId;
                              }
 
                              if (data && docSnap.id && data.name) {
@@ -277,20 +279,23 @@ export class CategoryService implements OnDestroy {
                         const localCategories = this.readCategoriesFromStore(userId);
                         const merged = this.mergeFirestoreAndLocal(firestoreCategories, localCategories);
 
-                        const currentFamilyId = this.getFamilyId();
-                        const filteredMerged = merged.filter(c => currentFamilyId ? !!c.familyId : !c.familyId);
+                        const filteredMerged = merged.filter(c => lockedFamilyId ? c.familyId === lockedFamilyId : !c.familyId);
 
                         this.replaceCategoriesInStore(filteredMerged);
 
-                        this.categories = {};
-                        filteredMerged.forEach(cat => {
-                            if (cat.id) this.categories[cat.id] = cat;
-                        });
+                        const isActiveContext = (lockedFamilyId && this.getFamilyId() === lockedFamilyId) || (!lockedFamilyId && !this.getFamilyId());
+                        if (isActiveContext) {
+                            this.categories = {};
+                            filteredMerged.forEach(cat => {
+                                if (cat.id) this.categories[cat.id] = cat;
+                            });
 
-                        this.categoriesSubject.next(filteredMerged);
+                            this.categoriesSubject.next(filteredMerged);
+                        }
+
                         this.store.dispatch(CategoriesActions.loadCategoriesSuccess({
                             categories: filteredMerged,
-                            context: this.getActiveContext()
+                            context: activeCtx
                         }));
 
                         observer.next();
@@ -310,15 +315,13 @@ export class CategoryService implements OnDestroy {
                         const docSnap = change.doc;
                         if (change.type === 'removed') {
                             catMap.delete(docSnap.id);
-                            const familyId = this.getFamilyId();
-                            const itemKey = LocalStorageKeyHelper.getCategoryItemKey(docSnap.id, familyId);
+                            const itemKey = LocalStorageKeyHelper.getCategoryItemKey(docSnap.id, lockedFamilyId);
                             this.localStorageUtility.removeCategory(itemKey);
                         } else {
                             const data = docSnap.data();
-                            const currentFamilyId = this.getFamilyId();
 
-                            if (currentFamilyId && !data?.['familyId']) {
-                                data['familyId'] = currentFamilyId;
+                            if (lockedFamilyId && !data?.['familyId']) {
+                                data['familyId'] = lockedFamilyId;
                             }
 
                             if (data && docSnap.id && data['name']) {
@@ -333,16 +336,20 @@ export class CategoryService implements OnDestroy {
                         }
                     });
 
-                    const currentFamilyId = this.getFamilyId();
-                    const filtered = Array.from(catMap.values()).filter(c => currentFamilyId ? !!c.familyId : !c.familyId);
+                    const filtered = Array.from(catMap.values()).filter(c => lockedFamilyId ? c.familyId === lockedFamilyId : !c.familyId);
                     const updatedList = filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-                    this.categories = {};
-                    updatedList.forEach(c => { if (c.id) this.categories[c.id] = c; });
+                    
+                    const isActiveContext = (lockedFamilyId && this.getFamilyId() === lockedFamilyId) || (!lockedFamilyId && !this.getFamilyId());
+                    if (isActiveContext) {
+                        this.categories = {};
+                        updatedList.forEach(c => { if (c.id) this.categories[c.id] = c; });
 
-                    this.categoriesSubject.next(updatedList);
+                        this.categoriesSubject.next(updatedList);
+                    }
+
                     this.store.dispatch(CategoriesActions.loadCategoriesSuccess({
                         categories: updatedList,
-                        context: this.getActiveContext()
+                        context: activeCtx
                     }));
 
                     observer.next();
@@ -417,25 +424,28 @@ export class CategoryService implements OnDestroy {
                 // Merge with local pending categories to protect offline writes
                 const localCategories = this.readCategoriesFromStore(userId);
                 const merged = this.mergeFirestoreAndLocal(categories, localCategories);
-                const currentFamilyId = this.getFamilyId();
-                const filteredMerged = merged.filter(c => currentFamilyId ? !!c.familyId : !c.familyId);
+                const currentFamilyId = familyId || this.getFamilyId();
+                const filteredMerged = merged.filter(c => currentFamilyId ? c.familyId === currentFamilyId : !c.familyId);
 
                 // Replace individual-item store with fresh data
                 this.replaceCategoriesInStore(filteredMerged);
                 
                 // Update internal categories map - Clear first to remove cross-context stale data
-                this.categories = {};
-                filteredMerged.forEach(cat => {
-                    if (cat.id) this.categories[cat.id] = cat;
-                });
+                const isActiveContext = (currentFamilyId && this.getFamilyId() === currentFamilyId) || (!currentFamilyId && !this.getFamilyId());
+                if (isActiveContext) {
+                    this.categories = {};
+                    filteredMerged.forEach(cat => {
+                        if (cat.id) this.categories[cat.id] = cat;
+                    });
 
-                // Update Subject so UI reflects the fresh data immediately
-                this.categoriesSubject.next(filteredMerged);
+                    // Update Subject so UI reflects the fresh data immediately
+                    this.categoriesSubject.next(filteredMerged);
+                }
 
                 // Update NgRx state — include context so data goes into the correct bucket
                 this.store.dispatch(CategoriesActions.loadCategoriesSuccess({
                     categories: filteredMerged,
-                    context: this.getActiveContext()
+                    context: currentFamilyId ? 'family' : 'personal'
                 }));
             }),
             map(() => undefined),
@@ -787,7 +797,7 @@ export class CategoryService implements OnDestroy {
     public getCachedCategories(type?: TransactionType): Category[] {
         const familyId = this.getFamilyId();
         const all = (Object.values(this.categories) as Category[])
-            .filter(c => familyId ? !!c.familyId : !c.familyId);
+            .filter(c => familyId ? c.familyId === familyId : !c.familyId);
             
         if (!type) return all;
         return all.filter(c => c.type === type);
