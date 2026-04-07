@@ -72,6 +72,13 @@ export interface FamilyStats {
   transactionCount: number;
   memberBreakdown: FamilyMemberStats[];
   categoryBreakdown: CategoryBreakdownItem[];
+  topSpender?: { name: string; amount: number };
+  topCategory?: { name: string; amount: number; percentage: number };
+  largestExpense?: { note: string; amount: number };
+  availableYears?: number[];
+  dateRangeLabel?: string;
+  totalHistory?: { income: number; expense: number; savings: number };
+  groupedCategoryBreakdown?: any[];
 }
 
 // ─── Requests ──────────────────────────────────────────────────────────────

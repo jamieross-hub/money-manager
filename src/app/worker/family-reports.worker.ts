@@ -42,26 +42,68 @@ addEventListener('message', ({ data }) => {
 
   if (type === 'PROCESS_FAMILY_REPORTS') {
     const {
-      transactions, allTransactions, members, mode, fingerprint, fid,
-      selectedPeriod, selectedYear, selectedMonth, selectedWeekOffset
+      allTransactions, members, categories, mode, fingerprint, fid,
+      selectedPeriod, selectedYear, selectedMonth, selectedWeekOffset,
+      categoryViewMode, currentUserId
     } = payload;
 
     const startTime = performance.now();
 
-    // Compute stats from period-filtered transactions
-    const stats = computeStats(transactions || [], members || [], mode || 'common');
+    // 1. Available Years (always from full set)
+    const availableYears = Array.from(new Set(allTransactions.map((t: Transaction) => {
+      const d = DateUtil.toDate(t.date);
+      return d ? d.getFullYear() : null;
+    }).filter(Boolean) as number[])).sort((a, b) => b - a);
 
-    // Always build full history from all transactions
-    const fullTransactions    = allTransactions || transactions;
-    const monthlySummaries    = buildMonthlySummaries(fullTransactions);
+    // 2. Filter transactions for the current period
+    const periodTransactions = filterTransactions(
+      allTransactions, 
+      selectedPeriod || 'monthly', 
+      selectedYear || new Date().getFullYear(), 
+      selectedMonth ?? null, 
+      selectedWeekOffset || 0
+    );
 
+    // 3. Compute stats from period-filtered transactions
+    const stats = computeStats(periodTransactions, members || [], mode || 'common');
+    
+    // 4. Date Range Label
+    stats.dateRangeLabel = generateDateRangeLabel(
+      selectedPeriod || 'monthly', 
+      selectedYear || new Date().getFullYear(), 
+      selectedMonth ?? null, 
+      selectedWeekOffset || 0
+    );
+    stats.availableYears = availableYears;
+
+    // 5. Monthly Summaries (Full History)
+    const monthlySummaries = buildMonthlySummaries(allTransactions);
+
+    // 6. Filtered History (for the table)
     const { filteredMonthlySummaries } = computePeriodSummaries(
-      fullTransactions,
+      allTransactions,
       monthlySummaries,
       selectedPeriod    || 'monthly',
       selectedYear      || new Date().getFullYear(),
       selectedMonth     ?? null,
       selectedWeekOffset || 0
+    );
+
+    // 7. Total History Header Sums
+    stats.totalHistory = filteredMonthlySummaries.reduce((acc, curr) => ({
+      income:  acc.income  + (curr.income  || 0),
+      expense: acc.expense + (curr.expense || 0),
+      savings: acc.savings + (curr.savings || 0),
+    }), { income: 0, expense: 0, savings: 0 });
+
+    // 8. Grouped Category Breakdown
+    stats.groupedCategoryBreakdown = computeGroupedCategoryBreakdown(
+      periodTransactions, 
+      categories || [], 
+      categoryViewMode || 'group',
+      currentUserId,
+      mode || 'common',
+      members || []
     );
 
     const durationMs = performance.now() - startTime;
@@ -79,6 +121,156 @@ addEventListener('message', ({ data }) => {
     });
   }
 });
+
+function filterTransactions(txns: Transaction[], period: string, year: number, month: number | null, offset: number): Transaction[] {
+    if (period === 'monthly') {
+      const targetMonth = month ?? new Date().getMonth();
+      return txns.filter(t => {
+        const d = dayjs(DateUtil.toDate(t.date));
+        return d.year() === year && d.month() === targetMonth;
+      });
+    } else if (period === 'yearly') {
+      return txns.filter(t => {
+        const d = dayjs(DateUtil.toDate(t.date));
+        return d.year() === year;
+      });
+    } else if (period === 'weekly') {
+      const startOfWeek = dayjs().add(offset, 'week').startOf('week');
+      const endOfWeek = dayjs().add(offset, 'week').endOf('week');
+      return txns.filter(t => {
+        const d = dayjs(DateUtil.toDate(t.date));
+        return d.isAfter(startOfWeek.subtract(1, 'ms')) && d.isBefore(endOfWeek.add(1, 'ms'));
+      });
+    }
+    return txns;
+}
+
+function generateDateRangeLabel(period: string, year: number, month: number | null, offset: number): string {
+    if (period === 'monthly') {
+      return dayjs().month(month || 0).year(year).format('MMMM YYYY');
+    } else if (period === 'yearly') {
+      return year.toString();
+    } else if (period === 'weekly') {
+      const start = dayjs().add(offset, 'week').startOf('week');
+      const end = dayjs().add(offset, 'week').endOf('week');
+      return `${start.format('DD MMM')} - ${end.format('DD MMM YYYY')}`;
+    }
+    return '';
+}
+
+function computeGroupedCategoryBreakdown(
+  txns: Transaction[], 
+  allCats: any[], 
+  viewMode: 'single' | 'group',
+  uid: string | undefined,
+  mode: 'common' | 'split',
+  members: FamilyMember[]
+) {
+  let baseBreakdown: { category: string; amount: number; transactionCount: number }[] = [];
+  const activeMembers = members.filter(m => m.isActive);
+
+  if (viewMode === 'single' && uid) {
+    const categoryMap = new Map<string, { amount: number; count: number }>();
+    for (const t of txns) {
+      if (t.status === TransactionStatus.DELETED || t.category === 'Settlement' || t.type === TransactionType.TRANSFER) continue;
+      if (t.type === TransactionType.INCOME) continue;
+
+      const amount = Number(t.amount) || 0;
+      let shareAmt = 0;
+
+      if (t.splitData?.splitBetween?.length) {
+        const share = t.splitData.splitBetween.find(s => s.userId === uid);
+        if (share) shareAmt = Number(share.amount) || 0;
+      } else {
+        if (mode === 'common') {
+          shareAmt = Math.round((amount / (activeMembers.length || 1)) * 100) / 100;
+        } else if (t.userId === uid) {
+          shareAmt = amount;
+        }
+      }
+
+      if (shareAmt > 0) {
+        const cat = t.category || 'Uncategorized';
+        const entry = categoryMap.get(cat) || { amount: 0, count: 0 };
+        entry.amount += shareAmt;
+        entry.count += 1;
+        categoryMap.set(cat, entry);
+      }
+    }
+    baseBreakdown = Array.from(categoryMap.entries()).map(([category, data]) => ({ 
+      category, 
+      amount: data.amount, 
+      transactionCount: data.count 
+    }));
+  } else {
+    const categoryMap = new Map<string, { amount: number; count: number }>();
+    for (const t of txns) {
+      if (t.status === TransactionStatus.DELETED || t.category === 'Settlement' || t.type === TransactionType.TRANSFER) continue;
+      if (t.type === TransactionType.INCOME) continue;
+      const cat = t.category || 'Uncategorized';
+      const entry = categoryMap.get(cat) || { amount: 0, count: 0 };
+      entry.amount += (Number(t.amount) || 0);
+      entry.count += 1;
+      categoryMap.set(cat, entry);
+    }
+    baseBreakdown = Array.from(categoryMap.entries()).map(([category, data]) => ({ 
+      category, 
+      amount: data.amount, 
+      transactionCount: data.count 
+    }));
+  }
+
+  const groupMap = new Map<string, any>();
+  for (const b of baseBreakdown) {
+    const catObj = allCats.find((c: any) => c.name.toLowerCase() === b.category.toLowerCase());
+    if (catObj?.isSystem) continue;
+
+    const group = catObj?.group;
+    if (group) {
+        if (!groupMap.has(group)) {
+            groupMap.set(group, {
+                categoryId: 'group_' + group,
+                categoryName: group,
+                amount: 0,
+                percentage: 0,
+                isGroup: true,
+                groupIcon: catObj?.groupIcon,
+                categoryColor: catObj?.color || stringToColorWorker(group),
+                transactionCount: 0
+            });
+        }
+        const g = groupMap.get(group);
+        g.amount += b.amount;
+        g.transactionCount += b.transactionCount;
+    } else {
+        groupMap.set(b.category, {
+            categoryId: b.category,
+            categoryName: b.category,
+            amount: b.amount,
+            percentage: 0,
+            isGroup: false,
+            categoryIcon: catObj?.icon,
+            categoryColor: catObj?.color || stringToColorWorker(b.category),
+            transactionCount: b.transactionCount
+        });
+    }
+  }
+
+  const result = Array.from(groupMap.values());
+  const maxAmount = result.length > 0 ? Math.max(...result.map(r => r.amount)) : 0;
+  result.forEach(r => {
+    r.percentage = maxAmount > 0 ? (r.amount / maxAmount) * 100 : 0;
+  });
+
+  return result.sort((a, b) => b.amount - a.amount);
+}
+
+function stringToColorWorker(str: string): string {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+    return '#' + '00000'.substring(0, 6 - c.length) + c;
+}
 
 // ─── Stats ───────────────────────────────────────────────────────────────────
 
@@ -192,6 +384,24 @@ function computeStats(
     }))
     .sort((a, b) => b.amount - a.amount);
 
+  // Identify Top Spender
+  let topSpenderMember = memberBreakdown[0];
+  for (const m of memberBreakdown) {
+    if (m.totalPaid > (topSpenderMember?.totalPaid || 0)) {
+      topSpenderMember = m;
+    }
+  }
+
+  // Identify Largest Individual Expense
+  let maxExpenseTx: Transaction | null = null;
+  for (const tx of transactions) {
+    if (tx.status === TransactionStatus.DELETED || tx.category === 'Settlement' || tx.type === TransactionType.TRANSFER) continue;
+    if (tx.type === TransactionType.INCOME) continue;
+    if (!maxExpenseTx || (Number(tx.amount) || 0) > (Number(maxExpenseTx.amount) || 0)) {
+      maxExpenseTx = tx;
+    }
+  }
+
   return {
     totalIncome,
     totalExpense,
@@ -199,6 +409,9 @@ function computeStats(
     transactionCount,
     memberBreakdown,
     categoryBreakdown,
+    topSpender: topSpenderMember && topSpenderMember.totalPaid > 0 ? { name: topSpenderMember.displayName, amount: topSpenderMember.totalPaid } : undefined,
+    topCategory: categoryBreakdown.length > 0 && categoryBreakdown[0].amount > 0 ? { name: categoryBreakdown[0].category, amount: categoryBreakdown[0].amount, percentage: categoryBreakdown[0].percentage } : undefined,
+    largestExpense: maxExpenseTx ? { note: maxExpenseTx.note || maxExpenseTx.category, amount: Number(maxExpenseTx.amount) || 0 } : undefined
   };
 }
 

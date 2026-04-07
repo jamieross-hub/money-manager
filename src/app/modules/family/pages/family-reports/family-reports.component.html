@@ -6,7 +6,7 @@
     <div class="flex justify-center py-16"><mat-spinner diameter="36"></mat-spinner></div>
   }
 
-  <!-- @if (stats()) { -->
+  @if (family()) {
     <div class="px-2 ">
       <div class="flex justify-between items-center mb-3">
         <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Group Summary</h2>
@@ -50,121 +50,123 @@
       }
       
       <!-- Overall Summary (Universal Master Card) -->
-      <div class="mt-4">
-        <div class="bg-surface-200 rounded-2xl p-2 shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden group transition-all">
-          
-          <!-- Decorative Watermark Icon -->
-          <div class="absolute -right-6 -bottom-6 opacity-[0.04] dark:opacity-[0.06] pointer-events-none group-hover:scale-110 transition-transform duration-500">
-            <mat-icon class="!text-[120px] !w-[120px] !h-[120px] text-gray-400 dark:text-gray-500">insights</mat-icon>
-          </div>
+   
+        <div class="mt-4">
+          <div class="bg-surface-200 rounded-2xl p-2 shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden group transition-all">
+            
+            <!-- Decorative Watermark Icon -->
+            <div class="absolute -right-6 -bottom-6 opacity-[0.04] dark:opacity-[0.06] pointer-events-none group-hover:scale-110 transition-transform duration-500">
+              <mat-icon class="!text-[120px] !w-[120px] !h-[120px] text-gray-400 dark:text-gray-500">insights</mat-icon>
+            </div>
 
-          <!-- Top Row: Group Identity -->
-          <div class="border-b border-gray-100 dark:border-gray-800 pb-4 mb-4 flex items-center justify-between px-2 pt-4 relative z-10">
-            <div class="flex items-start gap-3">
-              <div class="w-10 h-10 rounded-xl bg-surface-100 dark:bg-gray-800/40 flex items-center justify-center border border-gray-100 dark:border-gray-700 shadow-inner">
-                <mat-icon class="!text-[20px] !w-5 !h-5 text-primary-500">{{ family()?.icon || 'roofing' }}</mat-icon>
-              </div>
-              <div>
-                <h3 class="text-sm leading-tight text-gray-900 dark:text-white font-bold">{{ family()?.name }}</h3>
-                <div class="flex items-center gap-2 mt-1">
-                  <span class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1 font-medium">
-                    <mat-icon class="!text-[12px] !w-3.5 !h-3.5 opacity-70">group</mat-icon>
-                    {{ members().length }} members
-                  </span>
-                  <span class="text-gray-300 dark:text-gray-600">|</span>
-                  <span class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1 font-medium">
-                    <mat-icon class="!text-[12px] !w-3.5 !h-3.5 opacity-70">calendar_today</mat-icon>
-                    {{ family()?.mode === 'common' ? getPeriodLabel() : dateRange() }}
-                  </span>
+            <!-- Top Row: Group Identity -->
+            <div class="border-b border-gray-100 dark:border-gray-800 pb-4 mb-4 flex items-center justify-between px-2 pt-4 relative z-10">
+              <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-surface-100 dark:bg-gray-800/40 flex items-center justify-center border border-gray-100 dark:border-gray-700 shadow-inner">
+                  <mat-icon class="!text-[20px] !w-5 !h-5 text-primary-500">{{ family()?.icon || 'roofing' }}</mat-icon>
+                </div>
+                <div>
+                  <h3 class="text-sm leading-tight text-gray-900 dark:text-white font-bold">{{ family()?.name }}</h3>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1 font-medium">
+                      <mat-icon class="!text-[12px] !w-3.5 !h-3.5 opacity-70">group</mat-icon>
+                      {{ members().length }} members
+                    </span>
+                    <span class="text-gray-300 dark:text-gray-600">|</span>
+                    <span class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1 font-medium">
+                      <mat-icon class="!text-[12px] !w-3.5 !h-3.5 opacity-70">calendar_today</mat-icon>
+                      {{ family()?.mode === 'common' ? getPeriodLabel() : dateRangeLabel() }}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Ledger Style Details -->
-          <div class="space-y-3 mb-4 px-2 relative z-10">
-            @if (family()?.mode !== 'split') {
+            <!-- Ledger Style Details -->
+            <div class="space-y-3 mb-4 px-2 relative z-10">
+              @if (family()?.mode !== 'split') {
+                <div class="flex justify-between items-center text-xs">
+                  <span class="text-gray-500 dark:text-gray-400 font-medium">Net Balance</span>
+                  <span class="text-lg font-bold leading-none"
+                    [class.text-green-600]="stats()?.netBalance ?? 0 >= 0"
+                    [class.dark:text-green-400]="stats()?.netBalance ?? 0 >= 0"
+                    [class.text-red-500]="stats()?.netBalance ?? 0 < 0"
+                    [class.dark:text-red-400]="stats()?.netBalance ?? 0 < 0">
+                    {{ stats()?.netBalance | currency }}
+                  </span>
+                </div>
+                <div class="flex justify-between items-center text-xs">
+                  <span class="text-gray-500 dark:text-gray-400 font-medium">Group Income</span>
+                  <span class="font-bold text-green-600 dark:text-green-500">{{ stats()?.totalIncome | currency }}</span>
+                </div>
+              }
+
               <div class="flex justify-between items-center text-xs">
-                <span class="text-gray-500 dark:text-gray-400 font-medium">Net Balance</span>
-                <span class="text-lg font-bold leading-none"
-                  [class.text-green-600]="stats()?.netBalance ?? 0 >= 0"
-                  [class.dark:text-green-400]="stats()?.netBalance ?? 0 >= 0"
-                  [class.text-red-500]="stats()?.netBalance ?? 0 < 0"
-                  [class.dark:text-red-400]="stats()?.netBalance ?? 0 < 0">
-                  {{ stats()?.netBalance | currency }}
-                </span>
+                <span class="text-gray-500 dark:text-gray-400 font-medium">Group Mode</span>
+                <div class="flex items-center gap-1.5 py-1 rounded-lg border transition-all duration-300" (click)="openModeInfo($event)">
+                  <span class="text-[10px] font-bold uppercase tracking-[0.1em] bg-primary-500 text-white px-2 py-1 rounded-lg">
+                    {{ (family()?.mode || 'common') }}
+                  </span>
+                </div>
               </div>
               <div class="flex justify-between items-center text-xs">
-                <span class="text-gray-500 dark:text-gray-400 font-medium">Group Income</span>
-                <span class="font-bold text-green-600 dark:text-green-500">{{ stats()?.totalIncome | currency }}</span>
+                <span class="text-gray-500 dark:text-gray-400 font-medium">Group Expenses</span>
+                <span class="font-bold text-red-500 dark:text-red-400">{{ stats()?.totalExpense | currency }}</span>
               </div>
-            }
 
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-gray-500 dark:text-gray-400 font-medium">Group Mode</span>
-              <div class="flex items-center gap-1.5 py-1 rounded-lg border transition-all duration-300" (click)="openModeInfo($event)">
-                <span class="text-[10px] font-bold uppercase tracking-[0.1em] bg-primary-500 text-white px-2 py-1 rounded-lg">
-                  {{ (family()?.mode || 'common') }}
-                </span>
+              <div class="flex justify-between items-center text-xs">
+                <span class="text-gray-500 dark:text-gray-400 font-medium">Total Transactions</span>
+                <span class="font-bold text-gray-800 dark:text-gray-200">{{ stats()?.transactionCount }}</span>
               </div>
             </div>
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-gray-500 dark:text-gray-400 font-medium">Group Expenses</span>
-              <span class="font-bold text-red-500 dark:text-red-400">{{ stats()?.totalExpense | currency }}</span>
+
+            <!-- Smart Insights -->
+            <div class="insights-glass rounded-2xl p-1 border shadow-sm mt-3 overflow-hidden relative z-10">
+              <div class="flex items-center justify-between mb-1 cursor-pointer select-none" (click)="isInsightsExpanded.set(!isInsightsExpanded())">
+                <p class="text-[10px] font-black tracking-[0.2em] uppercase text-gray-500/80 dark:text-gray-400/70 flex items-center gap-2">
+                  <mat-icon class="!text-[14px] !w-3.5 !h-3.5 text-primary-500 animate-pulse">auto_awesome</mat-icon>
+                  Smart Insights
+                </p>
+                <div class="flex items-center gap-3 flex-1 ml-4 ">
+                  <div class="h-[1px] flex-1 bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700/50 to-transparent"></div>
+                  <mat-icon class="text-gray-400 !text-[18px] !w-[18px] !h-[18px] transition-transform duration-300"
+                    [class.rotate-180]="!isInsightsExpanded()">
+                    expand_more
+                  </mat-icon>
+                </div>
+              </div>
+              
+              @if (isInsightsExpanded()) {
+                <div @expandCollapse class="space-y-3">
+                  @for (insight of smartInsights(); track insight.label) {
+                    <div class="insight-item flex items-center gap-3 p-2 rounded-xl group transition-all">
+                      <div class="icon-container {{ insight.colorClass }}">
+                        <mat-icon class="!text-[16px] !w-4 !h-4">{{ insight.icon }}</mat-icon>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold tracking-wider leading-none mb-1">{{ insight.label }}</p>
+                        <p class="text-xs text-gray-700 dark:text-gray-300 truncate font-bold text-gray-900 dark:text-white">
+                          {{ insight.value }}
+                        </p>
+                      </div>
+                      <div class="px-2 py-0.5 rounded-full border {{ insight.badgeClass }}">
+                        <span class="text-[11px] font-bold">
+                          @if (insight.isCurrency) {
+                            {{ insight.amount | currency:{round:true} }}
+                          } @else if (insight.isPercentage) {
+                            {{ insight.amount | number:'1.0-0' }}%
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
             </div>
 
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-gray-500 dark:text-gray-400 font-medium">Total Transactions</span>
-              <span class="font-bold text-gray-800 dark:text-gray-200">{{ transactions().length }}</span>
-            </div>
           </div>
-
-          <!-- Smart Insights -->
-          <div class="insights-glass rounded-2xl p-1 border shadow-sm mt-3 overflow-hidden relative z-10">
-            <div class="flex items-center justify-between mb-1 cursor-pointer select-none" (click)="isInsightsExpanded.set(!isInsightsExpanded())">
-              <p class="text-[10px] font-black tracking-[0.2em] uppercase text-gray-500/80 dark:text-gray-400/70 flex items-center gap-2">
-                <mat-icon class="!text-[14px] !w-3.5 !h-3.5 text-primary-500 animate-pulse">auto_awesome</mat-icon>
-                Smart Insights
-              </p>
-              <div class="flex items-center gap-3 flex-1 ml-4 ">
-                <div class="h-[1px] flex-1 bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700/50 to-transparent"></div>
-                <mat-icon class="text-gray-400 !text-[18px] !w-[18px] !h-[18px] transition-transform duration-300"
-                  [class.rotate-180]="!isInsightsExpanded()">
-                  expand_more
-                </mat-icon>
-              </div>
-            </div>
-            
-            @if (isInsightsExpanded()) {
-              <div @expandCollapse class="space-y-3">
-                @for (insight of smartInsights(); track insight.label) {
-                  <div class="insight-item flex items-center gap-3 p-2 rounded-xl group transition-all">
-                    <div class="icon-container {{ insight.colorClass }}">
-                      <mat-icon class="!text-[16px] !w-4 !h-4">{{ insight.icon }}</mat-icon>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold tracking-wider leading-none mb-1">{{ insight.label }}</p>
-                      <p class="text-xs text-gray-700 dark:text-gray-300 truncate font-bold text-gray-900 dark:text-white">
-                        {{ insight.value }}
-                      </p>
-                    </div>
-                    <div class="px-2 py-0.5 rounded-full border {{ insight.badgeClass }}">
-                      <span class="text-[11px] font-bold">
-                        @if (insight.isCurrency) {
-                          {{ insight.amount | currency:{round:true} }}
-                        } @else if (insight.isPercentage) {
-                          {{ insight.amount | number:'1.0-0' }}%
-                        }
-                      </span>
-                    </div>
-                  </div>
-                }
-              </div>
-            }
-          </div>
-
         </div>
-      </div>
+      
 
       <!-- Category Breakdown -->
       <div class="mt-6">
@@ -391,5 +393,5 @@
         </div>
       }
     </div>
-    <!-- } -->
+  }
 </div>

@@ -86,25 +86,11 @@ export class FamilyReportsComponent implements OnInit, OnDestroy {
   selectedWeekOffset = signal<number>(0);
 
   readonly periodOptions: ('weekly' | 'monthly' | 'yearly')[] = ['weekly', 'monthly', 'yearly'];
-  readonly availableYears = computed(() => {
-    const txns = this.transactions();
-    if (!txns || txns.length === 0) return [new Date().getFullYear()];
-    const years = new Set<number>();
-    txns.forEach((t: Transaction) => {
-      const d = DateUtil.toDate(t.date);
-      if (d) years.add(d.getFullYear());
-    });
-    return Array.from(years).sort((a, b) => b - a);
-  });
-
-  categoryBreakdown = computed(() => {
-    const cats = this.stats()?.categoryBreakdown || [];
-    const allCats = this.allCategories() || [];
-    return cats.filter(c => {
-      const catObj = allCats.find(cat => cat.name.toLowerCase() === c.category.toLowerCase());
-      return !catObj?.isSystem;
-    });
-  });
+  // These are now provide by stats() which comes from the worker
+  availableYears = computed(() => this.stats()?.availableYears || [new Date().getFullYear()]);
+  groupedCategoryBreakdown = computed(() => this.stats()?.groupedCategoryBreakdown || []);
+  totalHistory = computed(() => this.stats()?.totalHistory || { income: 0, expense: 0, savings: 0 });
+  dateRangeLabel = computed(() => this.stats()?.dateRangeLabel || 'Loading...');
 
   allCategories = toSignal(this.store.select(CategoriesSelectors.selectAllCategories), { initialValue: [] });
   categoryViewMode = signal<'single' | 'group'>('group');
@@ -138,7 +124,7 @@ export class FamilyReportsComponent implements OnInit, OnDestroy {
       const mList = this.members() || [];
       const activeMembers = mList.filter(m => m.isActive);
 
-      txns = allTxns.filter(t => {
+      txns = allTxns.filter((t: Transaction) => {
         const type = (t as any).type;
         const isExpense = type !== 'income' && type !== 1 && type !== '1';
         if (!isExpense) return false;
@@ -147,7 +133,7 @@ export class FamilyReportsComponent implements OnInit, OnDestroy {
         if (amount <= 0) return false;
 
         if (t.splitData?.splitBetween && t.splitData.splitBetween.length > 0) {
-          return t.splitData.splitBetween.some(s => s.userId === uid && Number(s.amount) > 0);
+          return t.splitData.splitBetween.some((s: any) => s.userId === uid && Number(s.amount) > 0);
         } else {
           if (mode === 'common') return true; // In common mode, everyone shares all transactions
           return t.userId === uid;
@@ -155,7 +141,7 @@ export class FamilyReportsComponent implements OnInit, OnDestroy {
       });
     } else {
       // In group mode, just filter for expenses
-      txns = allTxns.filter(t => {
+      txns = allTxns.filter((t: Transaction) => {
         const type = (t as any).type;
         return type !== 'income' && type !== 1 && type !== '1';
       });
@@ -208,211 +194,22 @@ export class FamilyReportsComponent implements OnInit, OnDestroy {
     }
   });
 
-  totalHistory = computed(() => {
-    const hist = this.filteredMonthlySummaries() || [];
-    return hist.reduce((acc: { income: number; expense: number; savings: number }, curr: { income: number; expense: number; savings: number }) => ({
-      income:  acc.income  + (curr.income  || 0),
-      expense: acc.expense + (curr.expense || 0),
-      savings: acc.savings + (curr.savings || 0),
-    }), { income: 0, expense: 0, savings: 0 });
-  });
+  // dateRangeLabel computed above replaces this manual calculation
 
-  groupedCategoryBreakdown = computed(() => {
-    const allCats = this.allCategories() || [];
-    let baseBreakdown: { category: string; amount: number }[] = [];
-    let totalSpent = 0;
 
-    if (this.categoryViewMode() === 'single') {
-      const txs = this.transactions() || [];
-      const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
-      const uid = profile?.uid;
-      if (!uid) return [];
-
-      const fam = this.family();
-      const mode = fam?.mode || 'common';
-      const mList = this.members() || [];
-      const activeMembers = mList.filter(m => m.isActive);
-
-      const categoryMap = new Map<string, number>();
-      let totalExpenseShare = 0;
-
-      for (const t of txs) {
-        const type = (t as any).type;
-        const isExpense = type !== 'income' && type !== 1 && type !== '1';
-        if (!isExpense) continue;
-
-        const amount = Number(t.amount) || 0;
-        if (amount <= 0) continue;
-
-        let shareAmt = 0;
-
-        if (t.splitData?.splitBetween && t.splitData.splitBetween.length > 0) {
-          const share = t.splitData.splitBetween.find(s => s.userId === uid);
-          if (share) shareAmt = Number(share.amount) || 0;
-        } else {
-          if (mode === 'common') {
-            const activeCount = activeMembers.length || 1;
-            shareAmt = Math.round((amount / activeCount) * 100) / 100;
-          } else {
-            if (t.userId === uid) shareAmt = amount;
-          }
-        }
-
-        if (shareAmt > 0) {
-          const cat = t.category || 'Uncategorized';
-          const catObj = allCats.find(c => c.name.toLowerCase() === cat.toLowerCase());
-          if (catObj?.isSystem) continue;
-
-          totalExpenseShare += shareAmt;
-          categoryMap.set(cat, (categoryMap.get(cat) || 0) + shareAmt);
-        }
-      }
-
-      baseBreakdown = Array.from(categoryMap.entries()).map(([category, amount]) => ({ category, amount }));
-      totalSpent = totalExpenseShare;
-    } else {
-      baseBreakdown = this.categoryBreakdown() || [];
-      totalSpent = baseBreakdown.reduce((sum: number, b: { amount: number }) => sum + b.amount, 0);
-    }
-
-    const groupMap = new Map<string, { 
-      category: string; 
-      amount: number; 
-      percentage: number; 
-      isGroup: boolean; 
-      groupIcon?: string; 
-      group?: string;
-      categoryColor?: string;
-    }>();
-
-    for (const c of baseBreakdown as any[]) {
-      const catObj = allCats.find((cat: any) => cat.name.toLowerCase() === c.category.toLowerCase());
-      const group = catObj?.group;
-      let color = catObj?.color;
-
-      if (group) {
-        if (!groupMap.has(group)) {
-          groupMap.set(group, { 
-            category: group, 
-            amount: 0, 
-            percentage: 0, 
-            isGroup: true, 
-            groupIcon: catObj?.groupIcon, 
-            group,
-            categoryColor: color || this.stringToColor(group)
-          });
-        }
-        const g = groupMap.get(group)!;
-        g.amount += c.amount;
-      } else {
-        groupMap.set(c.category, { 
-          category: c.category, 
-          amount: c.amount, 
-          percentage: 0, 
-          isGroup: false, 
-          groupIcon: catObj?.icon, 
-          group: undefined,
-          categoryColor: color || this.stringToColor(c.category)
-        });
-      }
-    }
-
-    const groupItems = Array.from(groupMap.values());
-    const maxAmount = groupItems.length > 0 ? Math.max(...groupItems.map((g: any) => g.amount)) : 0;
-
-    return groupItems.map((g: any) => {
-      const isGroup = g.isGroup;
-      const categoryId = isGroup ? 'group_' + g.group : g.category;
-      const categoryName = isGroup ? g.group : g.category;
-      
-      return {
-        ...g,
-        categoryId,
-        categoryName,
-        percentage: maxAmount > 0 ? (g.amount / maxAmount) * 100 : 0
-      };
-    }).sort((a: any, b: any) => b.amount - a.amount);
-  });
-
-  private stringToColor(str: string): string {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
-    return '#' + '00000'.substring(0, 6 - c.length) + c;
-  }
-
-  dateRange = computed(() => {
-    const tx = this.transactions() || [];
-    if (tx.length === 0) return 'No data';
-    const dates = tx.map((t: Transaction) => {
-      const d = t.date;
-      if (!d) return 0;
-      if (d instanceof Date) return d.getTime();
-      return DateUtil.toDate(d)?.getTime() || 0;
-    }).filter((v: number) => !!v).sort((a: number, b: number) => a - b);
-    if (dates.length === 0) return 'No data';
-    const min = new Date(dates[0]);
-    const max = new Date(dates[dates.length - 1]);
-    const format = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-    return `${format(min)} – ${format(max)}`;
-  });
-
-  topSpender = computed(() => {
-    const members = this.stats()?.memberBreakdown || [];
-    if (members.length === 0) return null;
-    let top = members[0];
-    for (const m of members) {
-      if (m.totalPaid > top.totalPaid) {
-        top = m;
-      }
-    }
-    return top.totalPaid > 0 ? { name: top.displayName, amount: top.totalPaid } : null;
-  });
-
-  topCategory = computed(() => {
-    const cats = this.categoryBreakdown() || [];
-    if (cats.length === 0) return null;
-    let top = cats[0];
-    for (const c of cats) {
-      if (c.amount > top.amount) {
-        top = c;
-      }
-    }
-    const total = this.stats()?.totalExpense || 1;
-    const pct = (top.amount / total) * 100;
-    return top.amount > 0 ? { name: top.category, amount: top.amount, percentage: pct } : null;
-  });
-
-  largestExpense = computed(() => {
-    const txs = this.transactions() || [];
-    const expenses = txs.filter((t: Transaction) => {
-      const type = (t as any).type;
-      return type !== 'income' && type !== 1 && type !== '1';
-    });
-    if (expenses.length === 0) return null;
-    let large = expenses[0];
-    for (const t of expenses) {
-      if (Number(t.amount) > Number(large.amount)) {
-        large = t;
-      }
-    }
-    return Number(large.amount) > 0 ? { note: large.note || large.category, amount: Number(large.amount) } : null;
-  });
+  // Top Spender, Top Category and Largest Expense are now provided directly by the stats() signal from the worker.
 
   smartInsights = computed(() => {
     const insights = [];
-    const ts = this.topSpender();
-    const tc = this.topCategory();
-    const le = this.largestExpense();
+    const s = this.stats();
+    if (!s) return [];
 
-    if (ts) {
+    if (s.topSpender) {
       insights.push({
         type: 'spender',
         label: 'Top Spender',
-        value: ts.name,
-        amount: ts.amount,
+        value: s.topSpender.name,
+        amount: s.topSpender.amount,
         isCurrency: true,
         icon: 'payments',
         colorClass: 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-300',
@@ -420,12 +217,12 @@ export class FamilyReportsComponent implements OnInit, OnDestroy {
       });
     }
 
-    if (tc) {
+    if (s.topCategory) {
       insights.push({
         type: 'category',
         label: 'Top Category',
-        value: tc.name,
-        amount: tc.percentage,
+        value: s.topCategory.name,
+        amount: s.topCategory.percentage,
         isPercentage: true,
         icon: 'category',
         colorClass: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300',
@@ -433,12 +230,12 @@ export class FamilyReportsComponent implements OnInit, OnDestroy {
       });
     }
 
-    if (le) {
+    if (s.largestExpense) {
       insights.push({
         type: 'expense',
         label: 'Largest Expense',
-        value: le.note,
-        amount: le.amount,
+        value: s.largestExpense.note,
+        amount: s.largestExpense.amount,
         isCurrency: true,
         icon: 'receipt_long',
         colorClass: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300',
@@ -452,48 +249,36 @@ export class FamilyReportsComponent implements OnInit, OnDestroy {
   private memberColors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
 
   constructor() {
-    // Effect: drive the reports worker for both common and split modes
     effect(() => {
-      const mode = (this.family()?.mode || 'common') as 'common' | 'split';
       const allTxns = this.transactions() || [];
       const period = this.selectedPeriod();
       const year = this.selectedYear();
       const month = this.selectedMonth();
       const offset = this.selectedWeekOffset();
       const mems = this.members() || [];
+      const cats = this.allCategories() || [];
       const famId = this.family()?.id || '';
+      const mode = (this.family()?.mode || 'common') as 'common' | 'split';
+      const viewMode = this.categoryViewMode();
+      const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
+      const uid = profile?.uid;
 
       if (!famId || !mems.length) return;
 
       untracked(() => {
-        if (mode === 'common') {
-          // Period-filtered slice for common mode
-          const filtered = this.filterTransactions(allTxns, period, year, month, offset);
-          this.reportsProcessor.process({
-            transactions: filtered,
-            allTransactions: allTxns,
-            members: mems,
-            mode: 'common',
-            familyId: famId,
-            selectedPeriod: period,
-            selectedYear: year,
-            selectedMonth: month,
-            selectedWeekOffset: offset
-          });
-        } else {
-          // Split mode: pass all transactions, no period filter
-          this.reportsProcessor.process({
-            transactions: allTxns,
-            allTransactions: allTxns,
-            members: mems,
-            mode: 'split',
-            familyId: famId,
-            selectedPeriod: period,
-            selectedYear: year,
-            selectedMonth: month,
-            selectedWeekOffset: offset
-          });
-        }
+        this.reportsProcessor.process({
+          allTransactions: allTxns,
+          members: mems,
+          categories: cats,
+          mode,
+          familyId: famId,
+          selectedPeriod: period,
+          selectedYear: year,
+          selectedMonth: month,
+          selectedWeekOffset: offset,
+          categoryViewMode: viewMode,
+          currentUserId: uid
+        });
       });
     });
   }
@@ -512,31 +297,13 @@ export class FamilyReportsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.appViewSub?.unsubscribe();
-    this.reportsProcessor.reset();
+    // We no longer call reportsProcessor.reset() here.
+    // This allows the stats to persist in memory so they are "instant" 
+    // when the user navigates back to the reports page.
   }
 
-  private filterTransactions(txns: Transaction[], period: string, year: number, month: number | null, offset: number): Transaction[] {
-    if (period === 'monthly') {
-      const targetMonth = month ?? new Date().getMonth();
-      return txns.filter(t => {
-        const d = dayjs(DateUtil.toDate(t.date));
-        return d.year() === year && d.month() === targetMonth;
-      });
-    } else if (period === 'yearly') {
-      return txns.filter(t => {
-        const d = dayjs(DateUtil.toDate(t.date));
-        return d.year() === year;
-      });
-    } else if (period === 'weekly') {
-      const startOfWeek = dayjs().add(offset, 'week').startOf('week');
-      const endOfWeek = dayjs().add(offset, 'week').endOf('week');
-      return txns.filter(t => {
-        const d = dayjs(DateUtil.toDate(t.date));
-        return d.isAfter(startOfWeek.subtract(1, 'ms')) && d.isBefore(endOfWeek.add(1, 'ms'));
-      });
-    }
-    return txns;
-  }
+  // The worker now handles all filtering internally
+
 
   getPeriodLabel(): string {
     const period = this.selectedPeriod();

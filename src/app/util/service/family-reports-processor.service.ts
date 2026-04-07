@@ -4,15 +4,17 @@ import { FamilyMember, FamilyStats } from '../models/family.model';
 import { MonthlySummary } from '../../worker/family-reports.worker';
 
 export interface FamilyReportsProcessorInput {
-  transactions: Transaction[];
-  allTransactions?: Transaction[]; // Full history (all time)
+  allTransactions: Transaction[];
   members: FamilyMember[];
+  categories: any[];
   mode: 'common' | 'split';
   familyId: string;
   selectedPeriod: 'weekly' | 'monthly' | 'yearly';
   selectedYear: number;
   selectedMonth: number | null;
   selectedWeekOffset: number;
+  categoryViewMode: 'single' | 'group';
+  currentUserId?: string;
 }
 
 /**
@@ -32,6 +34,7 @@ export class FamilyReportsProcessorService {
 
   private debounceTimer: any;
   private lastFingerprint = '';
+  private lastFamilyId    = '';
 
   constructor() {
     this.initWorker();
@@ -79,6 +82,15 @@ export class FamilyReportsProcessorService {
 
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
 
+    // If family ID has changed, clear the results immediately to avoid showing stale data from a different group.
+    if (this.lastFamilyId !== input.familyId) {
+      this.lastFamilyId = input.familyId;
+      this.lastFingerprint = ''; // Force re-process
+      this.stats.set(null);
+      this.monthlySummaries.set([]);
+      this.filteredMonthlySummaries.set([]);
+    }
+
     this.debounceTimer = setTimeout(() => {
       this.isProcessing.set(true);
       this.worker!.postMessage({
@@ -95,10 +107,10 @@ export class FamilyReportsProcessorService {
 
   /** Reset output state when leaving the reports page. */
   reset(): void {
+    // Only clear the fingerprint so that a fresh check is forced when the component returns.
+    // We DO NOT clear stats/summaries signals here, allowing them to provide "stale" data
+    // while the worker finishes its new run.
     this.lastFingerprint = '';
-    this.stats.set(null);
-    this.monthlySummaries.set([]);
-    this.filteredMonthlySummaries.set([]);
     this.isProcessing.set(false);
   }
 
@@ -111,15 +123,25 @@ export class FamilyReportsProcessorService {
   }
 
   private generateFingerprint(input: FamilyReportsProcessorInput): string {
+    // Detect modified transactions even if length is the same
+    const txUpdateTimeSum = input.allTransactions.reduce((sum, t) => {
+        const updated = (t as any).updatedAt;
+        const time = updated?.seconds || (updated instanceof Date ? updated.getTime() : 0);
+        return sum + (time % 1000000); 
+    }, 0);
+
     return JSON.stringify({
       fid:    input.familyId,
       mode:   input.mode,
-      len:    input.transactions.length,
-      allLen: input.allTransactions?.length ?? 0,
+      len:    input.allTransactions.length,
+      updated: txUpdateTimeSum,
       period: input.selectedPeriod,
       year:   input.selectedYear,
       month:  input.selectedMonth,
-      offset: input.selectedWeekOffset
+      offset: input.selectedWeekOffset,
+      view:   input.categoryViewMode,
+      uid:    input.currentUserId,
+      catLen: input.categories.length
     });
   }
 }
