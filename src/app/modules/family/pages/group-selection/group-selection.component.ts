@@ -43,7 +43,7 @@ import * as FamilyActions from '../../store/family.actions';
 import * as FamilySelectors from '../../store/family.selectors';
 import { selectUserFamilies, selectUserFamiliesLoading, selectUserFamiliesLoaded, selectFamilyError } from '../../store/family.selectors';
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
-import { QuickActionsFabComponent, QuickAction, QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
+import { QuickAction, QuickActionsFabConfig } from 'src/app/util/components/floating-action-buttons/quick-actions-fab/quick-actions-fab.component';
 import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 import { LoaderService } from 'src/app/util/service/loader.service';
 import { TransactionStatus } from 'src/app/util/config/enums';
@@ -128,7 +128,6 @@ type LoadState = 'loading' | 'loaded' | 'empty' | 'error';
     MatDialogModule,
     MatListModule,
     MatTooltipModule,
-    QuickActionsFabComponent,
     ImageFallbackDirective,
     CurrencyPipe,
     CurrencyPipe,
