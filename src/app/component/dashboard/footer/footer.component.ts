@@ -380,6 +380,14 @@ export class FooterComponent {
 
   handleSettleClick() {
     if (this.isLongPress) return;
+    
+    // 1. Individual mode: Always go to standard reports
+    if (!this.isFamilyMode()) {
+      this.navigateTo('/dashboard/reports');
+      return;
+    }
+
+    // 2. Family mode: Decide between summary vs. settle based on family settings
     const isCommonMode = this.activeFamily()?.mode !== 'split';
     const route = (this.showSummaryInFamily() || isCommonMode) ? '/dashboard/family/reports' : '/dashboard/family/settle';
     this.navigateTo(route);
