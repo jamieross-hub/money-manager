@@ -33,6 +33,7 @@ import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { CategoryService } from 'src/app/util/service/db/category.service';
 import { Router } from '@angular/router';
 import { FormControl } from '@angular/forms';
+import { FooterService } from 'src/app/component/dashboard/footer/footer.service';
 
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -138,7 +139,8 @@ export class CategoryComponent implements OnInit, OnDestroy {
     private categoryService: CategoryService,
     private userService: UserService,
     public appViewService: AppViewService,
-    private openaiService: OpenaiService
+    private openaiService: OpenaiService,
+    private footerService: FooterService
   ) {
 
     this.isLoading$ = this.store.select(CategoriesSelectors.selectCategoriesLoading);
@@ -267,11 +269,13 @@ export class CategoryComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.initializeComponent();
     this.setupSearch();
+    this.setupFooter();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.footerService.resetConfig();
   }
 
   private async initializeComponent(): Promise<void> {
@@ -305,6 +309,18 @@ export class CategoryComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe(value => {
       this.searchText$.next((value as string) || '');
+    });
+  }
+
+  private setupFooter(): void {
+    this.footerService.patchConfig({
+      fab: {
+        id: 'fab',
+        icon: 'category',
+        label: 'Category',
+        isFab: true,
+        action: () => this.openAddMobileDialog()
+      }
     });
   }
 

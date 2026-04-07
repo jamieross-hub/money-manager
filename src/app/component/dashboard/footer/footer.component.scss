@@ -133,3 +133,61 @@ button:has(.glow-animation) {
 	}
 }
 
+.glass-morphism {
+	background: rgba(255, 255, 255, 0.8) !important;
+	backdrop-filter: blur(12px) saturate(180%);
+	-webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+
+[data-theme="dark"],
+.dark {
+	.glass-morphism {
+		background: rgba(15, 23, 42, 0.8) !important;
+		backdrop-filter: blur(12px) saturate(180%);
+		-webkit-backdrop-filter: blur(12px) saturate(180%);
+	}
+}
+
+@keyframes menuSlideUp {
+	from {
+		opacity: 0;
+		transform: translateY(10px) scale(0.95);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+.mode-menu-animation {
+	animation: menuSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+	transform-origin: bottom center;
+}
+
+@keyframes footerItemFadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(8px) scale(0.92);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+.footer-item-animation {
+	animation: footerItemFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.mode-item-animation {
+	animation: footerItemFadeIn 0.4s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+}
+
+[data-theme="dark"],
+.dark {
+	.inactive-icon-box {
+		background-color: #1e293b !important; // slate-800
+		color: #94a3b8 !important; // slate-400
+	}
+}
+

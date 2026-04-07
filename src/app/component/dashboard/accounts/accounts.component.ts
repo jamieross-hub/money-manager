@@ -24,6 +24,7 @@ import { Transaction } from 'src/app/util/models/transaction.model';
 import * as ProfileSelectors from '../../../store/profile/profile.selectors';
 import { BehaviorSubject, combineLatest, map, distinctUntilChanged } from 'rxjs';
 import { CurrencyService } from 'src/app/util/service/currency.service';
+import { FooterService } from 'src/app/component/dashboard/footer/footer.service';
 
 interface AccountViewModel {
   account: Account;
@@ -126,7 +127,8 @@ export class AccountsComponent implements OnInit, OnDestroy {
     private readonly userService: UserService,
     private readonly cdr: ChangeDetectorRef,
     private readonly notificationService: NotificationService,
-    private readonly currencyService: CurrencyService
+    private readonly currencyService: CurrencyService,
+    private readonly footerService: FooterService
   ) {
 
     if (this.breakpointService.device.isMobile) {
@@ -150,11 +152,26 @@ export class AccountsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.initializeComponent();
     this.setupViewModel();
+    this.setupFooter();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.footerService.resetConfig();
+  }
+
+  private setupFooter(): void {
+    this.footerService.patchConfig({
+      fab: {
+        id: 'fab',
+        icon: 'account_balance',
+        label: 'Account',
+        bgClass: 'add-btn-green',
+        isFab: true,
+        action: () => this.addAccount()
+      }
+    });
   }
 
   /**

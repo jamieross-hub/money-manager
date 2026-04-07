@@ -4,217 +4,154 @@
     <!-- Professional Action Bar -->
     <div class="px-2 py-3 lg:px-5 lg:py-2 " [ngClass]="{'lg:pb-2 mt-2': isDesktop()}">
       <!-- Quick Actions Grid -->
-      <div class="grid grid-cols-5 gap-2 lg:max-w-md lg:mx-auto lg:gap-1" style="    align-items: flex-end;">
-        <!-- Home / Family (contextual) -->
-        @if(isFamilyMode()) {
-          <button (click)="home()" class="group flex flex-col items-center gap-2 lg:gap-1">
-            <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
-              [ngClass]="isFamilyActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
-              @if (isImageIcon(activeFamilyIcon())) {
-                <img [src]="activeFamilyIcon()" class="w-6 h-6 object-cover rounded-md mt-0.5"
-                     [ngClass]="isFamilyActive() ? '' : 'filter grayscale opacity-70'" alt="Family icon" />
-              } @else {
-                <mat-icon class="text-xl lg:text-base relative bottom-1"
-                [ngClass]="isFamilyActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">{{ activeFamilyIcon() }}</mat-icon>
-              }
-            </div>
-            <span class="nav-label truncate max-w-[68px] inline-block text-center w-full"
-            [ngClass]="isFamilyActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">Home</span>
-          </button>
+      <div [ngClass]="footerLayoutClass()" style="align-items: flex-end; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);">
+        @if (!showHomeMenu()) {
+          
+          <!-- Dynamic Items Rendering -->
+          @for (item of dynamicConfig().items; track item.id; let i = $index) {
+            
+            <!-- Insert FAB at middle position (index 2) -->
+            @if (i === 2 && !dynamicConfig().hideFab) {
+              <button (click)="onAddFabClick()" 
+                      class="footer-item-animation group flex flex-col items-center gap-2 lg:gap-1"
+                      [style.animation-delay]="i * 0.05 + 's'">
+                <div class="add-button-box w-12 h-12 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center shadow-md hover:scale-105 hover:shadow-lg transition-transform transition-colors duration-200"
+                  [ngClass]="fabConfig().bgClass" [class.glow-animation]="fabConfig().label !== 'Add'">
+                  <mat-icon class="text-white text-lg lg:text-base relative bottom-1">{{ fabConfig().icon }}</mat-icon>
+                </div>
+                <span class="nav-label add-label dark:text-slate-300">{{ fabConfig().label }}</span>
+              </button>
+            }
+
+            <!-- Home Item -->
+            @if (item.id === 'home') {
+              <button (click)="onActionClick(item)" 
+                      (mousedown)="startHomePress()" 
+                      (mouseup)="endHomePress()" 
+                      (mouseleave)="cancelHomePress()" 
+                      (touchstart)="startHomePress()" 
+                      (touchend)="endHomePress()" 
+                      (contextmenu)="$event.preventDefault()" 
+                      class="footer-item-animation group flex flex-col items-center gap-2 lg:gap-1"
+                      [style.animation-delay]="i * 0.05 + 's'">
+                <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
+                  [ngClass]="(isFamilyMode() ? isFamilyActive() : isHomeActive()) ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
+                  @if (isFamilyMode() && isImageIcon(activeFamilyIcon())) {
+                    <img [src]="activeFamilyIcon()" class="w-6 h-6 object-cover rounded-md mt-0.5"
+                         [ngClass]="isFamilyActive() ? '' : 'filter grayscale opacity-70'" alt="Family icon" />
+                  } @else {
+                    <mat-icon class="text-xl lg:text-base relative bottom-1"
+                    [ngClass]="(isFamilyMode() ? isFamilyActive() : isHomeActive()) ? 'active-icon' : 'inactive-icon dark:text-slate-400'">{{ item.icon }}</mat-icon>
+                  }
+                </div>
+                <span class="nav-label truncate max-w-[68px] inline-block text-center w-full"
+                [ngClass]="(isFamilyMode() ? isFamilyActive() : isHomeActive()) ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">
+                  {{ (isFamilyMode() ? 'Home' : (item.label.includes('NAVIGATION') ? (item.label | translate) : item.label)) }}
+                </span>
+              </button>
+            }
+
+            <!-- Expense Item -->
+            @else if (item.id === 'expense') {
+              <button (click)="quickExpense()" 
+                      class="footer-item-animation group flex flex-col items-center gap-2 lg:gap-1"
+                      [style.animation-delay]="i * 0.05 + 's'">
+                <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
+                  [ngClass]="isExpenseActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
+                  <mat-icon class="text-xl lg:text-base relative bottom-1"
+                  [ngClass]="isExpenseActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">{{ item.icon }}</mat-icon>
+                </div>
+                <span class="nav-label"
+                  [ngClass]="isExpenseActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">
+                  {{ item.label.includes('NAVIGATION') ? (item.label | translate) : item.label }}
+                </span>
+              </button>
+            }
+
+            <!-- Reports / Settle Item -->
+            @else if (item.id === 'reports') {
+              <button (click)="handleSettleClick()"
+                      (mousedown)="startPress()"
+                      (mouseup)="endPress()"
+                      (mouseleave)="endPress()"
+                      (touchstart)="startPress()"
+                      (touchend)="endPress()"
+                      (contextmenu)="$event.preventDefault()"
+                class="footer-item-animation group flex flex-col items-center gap-2 lg:gap-1"
+                [style.animation-delay]="i * 0.05 + 's'">
+                <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
+                  [ngClass]="(isFamilyMode() ? (showSummaryInFamily() || activeFamily()?.mode !== 'split' ? isReportsActive() : isSettleActive()) : isReportsActive()) ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
+                  <mat-icon class="text-xl lg:text-base relative bottom-1"
+                  [ngClass]="(isFamilyMode() ? (showSummaryInFamily() || activeFamily()?.mode !== 'split' ? isReportsActive() : isSettleActive()) : isReportsActive()) ? 'active-icon' : 'inactive-icon dark:text-slate-400'">
+                    {{ item.icon }}
+                  </mat-icon>
+                </div>
+                <span class="nav-label"
+                [ngClass]="(isFamilyMode() ? (showSummaryInFamily() || activeFamily()?.mode !== 'split' ? isReportsActive() : isSettleActive()) : isReportsActive()) ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">
+                  {{ item.label.includes('NAVIGATION') ? (item.label | translate) : item.label }}
+                </span>
+              </button>
+            }
+
+            <!-- Generic Item (Category, Accounts, Profile) -->
+            @else {
+              <button (click)="onActionClick(item)" 
+                      class="footer-item-animation group flex flex-col items-center gap-2 lg:gap-1"
+                      [style.animation-delay]="i * 0.05 + 's'">
+                <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
+                  [ngClass]="(item.id === 'category' ? isCategoryActive() : (item.id === 'accounts' ? isAccountsActive() : isProfileActive())) ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
+                  <mat-icon class="text-xl lg:text-base relative bottom-1"
+                  [ngClass]="(item.id === 'category' ? isCategoryActive() : (item.id === 'accounts' ? isAccountsActive() : isProfileActive())) ? 'active-icon' : 'inactive-icon dark:text-slate-400'">
+                    {{ item.icon }}
+                  </mat-icon>
+                </div>
+                <span class="nav-label"
+                  [ngClass]="(item.id === 'category' ? isCategoryActive() : (item.id === 'accounts' ? isAccountsActive() : isProfileActive())) ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">
+                  {{ item.label.includes('NAVIGATION') ? (item.label | translate) : item.label }}
+                </span>
+              </button>
+            }
+          }
+
+          <!-- Fallback for FAB if less than 3 items -->
+          @if ((dynamicConfig().items?.length ?? 0) < 3 && !dynamicConfig().hideFab) {
+             <button (click)="onAddFabClick()" class="group flex flex-col items-center gap-2 lg:gap-1">
+                <div class="add-button-box w-12 h-12 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center shadow-md hover:scale-105 hover:shadow-lg transition-transform transition-colors duration-200"
+                  [ngClass]="fabConfig().bgClass" [class.glow-animation]="fabConfig().label !== 'Add'">
+                  <mat-icon class="text-white text-lg lg:text-base relative bottom-1">{{ fabConfig().icon }}</mat-icon>
+                </div>
+                <span class="nav-label add-label dark:text-slate-300">{{ fabConfig().label }}</span>
+              </button>
+          }
+
         } @else {
-          <button (click)="home()" class="group flex flex-col items-center gap-2 lg:gap-1">
-            <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
-              [ngClass]="isHomeActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
-              <mat-icon class="text-xl lg:text-base relative bottom-1"
-              [ngClass]="isHomeActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">home</mat-icon>
-            </div>
-            <span class="nav-label"
-              [ngClass]="isHomeActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
-            'NAVIGATION.HOME' | translate }}</span>
-          </button>
-        }
-
-
-        <!-- Expense -->
-        <button (click)="quickExpense()" class="group flex flex-col items-center gap-2 lg:gap-1">
-          <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
-            [ngClass]="isExpenseActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
-            <mat-icon class="text-xl lg:text-base relative bottom-1"
-            [ngClass]="isExpenseActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">trending_up</mat-icon>
-          </div>
-          <span class="nav-label"
-            [ngClass]="isExpenseActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
-          'NAVIGATION.EXPENSE' | translate }}</span>
-        </button>
-
-        <!-- Add (Dynamic) -->
-
-        <button (click)="onAddFabClick()" class="group flex flex-col items-center gap-2 lg:gap-1">
-          <div class="add-button-box w-12 h-12 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center shadow-md hover:scale-105 hover:shadow-lg transition-transform transition-colors duration-200"
-            [ngClass]="addConfig().bgClass" [class.glow-animation]="addConfig().label !== 'Add'">
-            <mat-icon class="text-white text-lg lg:text-base relative bottom-1">{{ addConfig().icon
-            }}</mat-icon>
-          </div>
-          <span class="nav-label add-label dark:text-slate-300">{{ addConfig().label
-          }}</span>
-        </button>
-
-
-        <!-- Summary / Settlement (contextual: swap when family mode is on) -->
-        @if(isFamilyMode()) {
-          <!-- Settlement nav item – visible on mobile only -->
-          @if (isMobile()) {
-            <button (click)="handleSettleClick()"
-                    (mousedown)="startPress()"
-                    (mouseup)="endPress()"
-                    (mouseleave)="endPress()"
-                    (touchstart)="startPress()"
-                    (touchend)="endPress()"
-                    (contextmenu)="$event.preventDefault()"
-              class="group flex flex-col items-center gap-2 lg:gap-1">
-              <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
-                [ngClass]="(showSummaryInFamily() || activeFamily()?.mode !== 'split' ? isReportsActive() : isSettleActive()) ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
-                <mat-icon class="text-xl lg:text-base relative bottom-1"
-                [ngClass]="(showSummaryInFamily() || activeFamily()?.mode !== 'split' ? isReportsActive() : isSettleActive()) ? 'active-icon' : 'inactive-icon dark:text-slate-400'">{{ (showSummaryInFamily() || activeFamily()?.mode !== 'split') ? 'assessment' : 'handshake' }}</mat-icon>
-              </div>
-              <span class="nav-label"
-              [ngClass]="(showSummaryInFamily() || activeFamily()?.mode !== 'split' ? isReportsActive() : isSettleActive()) ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">
-                @if (showSummaryInFamily() || activeFamily()?.mode !== 'split') {
-                  {{ 'NAVIGATION.SUMMARY' | translate }}
+          <!-- MODE SELECTION VIEW -->
+          @for (item of footerSelectionItems(); track item.id) {
+            <button (click)="selectFamily(item.id)" class="group flex flex-col items-center gap-2 lg:gap-1 mode-item-animation">
+              <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-all duration-300 transform"
+                [ngClass]="(item.id === null ? !isFamilyMode() : (activeFamily()?.id === item.id)) ? 'active-icon-box scale-110' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
+                @if (isImageIcon(item.icon)) {
+                   <img [src]="item.icon" class="w-6 h-6 object-cover rounded-md mt-0.5" alt="icon" />
                 } @else {
-                  Settle
+                   <mat-icon class="text-xl lg:text-base relative bottom-1">{{ item.icon || 'groups' }}</mat-icon>
                 }
-              </span>
-            </button>
-          }
-        } @else {
-          <!-- Original Summary nav item -->
-          @if (isMobile()) {
-            <button (click)="navigateTo('/dashboard/reports')" class="group flex flex-col items-center gap-2 lg:gap-1"
-              >
-              <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
-                [ngClass]="isReportsActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
-                <mat-icon class="text-xl lg:text-base relative bottom-1"
-                [ngClass]="isReportsActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">assessment</mat-icon>
               </div>
-              <span class="nav-label"
-                [ngClass]="isReportsActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
-              'NAVIGATION.SUMMARY' | translate }}</span>
+              <span class="nav-label truncate max-w-[68px] inline-block text-center w-full"
+                [ngClass]="(item.id === null ? !isFamilyMode() : (activeFamily()?.id === item.id)) ? 'active-label font-bold' : 'inactive-label'">{{ item.name }}</span>
+            </button>
+          }
+          
+          <!-- Close Button if items < 5 -->
+          @if (footerSelectionItems().length < 5) {
+            <button (click)="showHomeMenu.set(false)" class="group flex flex-col items-center gap-2 lg:gap-1 mode-item-animation">
+              <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500 shadow-md">
+                <mat-icon class="text-xl lg:text-base relative bottom-1">close</mat-icon>
+              </div>
+              <span class="nav-label">Close</span>
             </button>
           }
         }
-
-
-        <!-- Category -->
-        @if (!isMobile()) {
-          <button (click)="navigateTo('/dashboard/category')" class="group flex flex-col items-center gap-2 lg:gap-1"
-            >
-            <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
-              [ngClass]="isCategoryActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
-              <mat-icon class="text-xl lg:text-base relative bottom-1"
-              [ngClass]="isCategoryActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">layers</mat-icon>
-            </div>
-            <span class="nav-label"
-              [ngClass]="isCategoryActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
-            'NAVIGATION.CATEGORIES' | translate }}</span>
-          </button>
-        }
-
-        <!-- Reports -->
-        <!-- <button
-        (click)="reports()"
-        class="group flex flex-col items-center gap-2"
-        >
-        <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-md transition-all duration-200"
-          [class]="isReportsActive() ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'"
-          (click)="reports()">
-          <mat-icon class="text-lg relative bottom-1" [class]="isReportsActive() ? 'text-white' : 'text-gray-600 dark:text-gray-400'">bar_chart</mat-icon>
-        </div>
-        <span class="text-xs font-medium transition-colors duration-200"
-        [class]="isReportsActive() ? 'text-primary dark:text-primary' : 'text-gray-700 dark:text-gray-300'">Report</span>
-      </button> -->
-
-      @if (!isMobile()) {
-        <button (click)="navigateTo('/dashboard/accounts')" class="group flex flex-col items-center gap-2 lg:gap-1"
-          >
-          <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
-            [ngClass]="isAccountsActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
-            <mat-icon class="text-xl lg:text-base relative bottom-1"
-            [ngClass]="isAccountsActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">account_balance</mat-icon>
-          </div>
-          <span class="nav-label"
-            [ngClass]="isAccountsActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
-          'NAVIGATION.ACCOUNTS' | translate }}</span>
-        </button>
-      }
-
-      @if (isMobile()) {
-        <button (click)="navigateTo('/dashboard/profile')" class="group flex flex-col items-center gap-2 lg:gap-1"
-          >
-          <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
-            [ngClass]="isProfileActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
-            <mat-icon class="text-xl lg:text-base relative bottom-1"
-            [ngClass]="isProfileActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">{{ isFamilyMode() ? 'group' : 'person' }}</mat-icon>
-          </div>
-          <span class="nav-label"
-            [ngClass]="isProfileActive() ? 'active-label dark:text-blue-400' : 'inactive-label dark:text-slate-400'">{{
-          'NAVIGATION.PROFILE' | translate }}</span>
-        </button>
-      }
-
-      <!-- More -->
-      <!-- <button
-      [matMenuTriggerFor]="moreMenu"
-      class="group flex flex-col items-center gap-2"
-      (click)="onMoreMenuClick()"
-      >
-      <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-md transition-all duration-200"
-        [class]="isMoreActive() ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'">
-        <mat-icon class="text-lg relative bottom-1" [class]="isMoreActive() ? 'text-white' : 'text-gray-600 dark:text-gray-400'">more_horiz</mat-icon>
       </div>
-      <span class="text-xs font-medium transition-colors duration-200"
-      [class]="isMoreActive() ? 'text-primary dark:text-primary' : 'text-gray-700 dark:text-gray-300'">More</span>
-    </button> -->
-
-    <!-- More Menu -->
-    <!-- <mat-menu #moreMenu="matMenu" class="more-menu-panel">
-    <button mat-menu-item (click)="navigateTo('/dashboard/accounts')" class="menu-item">
-      <mat-icon>account_balance</mat-icon>
-      <span>Accounts</span>
-    </button>
-
-    <button mat-menu-item (click)="navigateTo('/dashboard/reports')" class="menu-item">
-      <mat-icon>bar_chart</mat-icon>
-      <span>Reports</span>
-    </button>
-
-    <button mat-menu-item (click)="sharePWA()" class="menu-item">
-      <mat-icon>share</mat-icon>
-      <span>Share</span>
-    </button> -->
-
-    <!-- <button mat-menu-item (click)="navigateTo('/dashboard/budgets')">
-    <mat-icon>pie_chart</mat-icon>
-    <span>Budgets</span>
-  </button> -->
-  <!-- <button mat-menu-item (click)="navigateTo('/dashboard/goals')">
-  <mat-icon>flag</mat-icon>
-  <span>Goals</span>
-</button> -->
-<!-- <button mat-menu-item (click)="navigateTo('/dashboard/notes')">
-<mat-icon>note</mat-icon>
-<span>Notes</span>
-</button> -->
-<!-- <button mat-menu-item (click)="navigateTo('/dashboard/tax')">
-<mat-icon>receipt</mat-icon>
-<span>Tax</span>
-</button> -->
-<!-- <button mat-menu-item (click)="navigateTo('/dashboard/subscription')">
-<mat-icon>subscriptions</mat-icon>
-<span>Subscriptions</span>
-</button> -->
-<!-- </mat-menu> -->
-</div>
-</div>
-</footer>
+    </div>
+  </footer>
 }

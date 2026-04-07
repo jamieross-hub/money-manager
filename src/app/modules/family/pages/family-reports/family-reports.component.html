@@ -6,7 +6,7 @@
     <div class="flex justify-center py-16"><mat-spinner diameter="36"></mat-spinner></div>
   }
 
-  @if (stats()) {
+  <!-- @if (stats()) { -->
     <div class="px-2 ">
       <div class="flex justify-between items-center mb-3">
         <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Group Summary</h2>
@@ -87,16 +87,16 @@
               <div class="flex justify-between items-center text-xs">
                 <span class="text-gray-500 dark:text-gray-400 font-medium">Net Balance</span>
                 <span class="text-lg font-bold leading-none"
-                  [class.text-green-600]="stats()!.netBalance >= 0"
-                  [class.dark:text-green-400]="stats()!.netBalance >= 0"
-                  [class.text-red-500]="stats()!.netBalance < 0"
-                  [class.dark:text-red-400]="stats()!.netBalance < 0">
-                  {{ stats()!.netBalance | currency }}
+                  [class.text-green-600]="stats()?.netBalance ?? 0 >= 0"
+                  [class.dark:text-green-400]="stats()?.netBalance ?? 0 >= 0"
+                  [class.text-red-500]="stats()?.netBalance ?? 0 < 0"
+                  [class.dark:text-red-400]="stats()?.netBalance ?? 0 < 0">
+                  {{ stats()?.netBalance | currency }}
                 </span>
               </div>
               <div class="flex justify-between items-center text-xs">
                 <span class="text-gray-500 dark:text-gray-400 font-medium">Group Income</span>
-                <span class="font-bold text-green-600 dark:text-green-500">{{ stats()!.totalIncome | currency }}</span>
+                <span class="font-bold text-green-600 dark:text-green-500">{{ stats()?.totalIncome | currency }}</span>
               </div>
             }
 
@@ -110,7 +110,7 @@
             </div>
             <div class="flex justify-between items-center text-xs">
               <span class="text-gray-500 dark:text-gray-400 font-medium">Group Expenses</span>
-              <span class="font-bold text-red-500 dark:text-red-400">{{ stats()!.totalExpense | currency }}</span>
+              <span class="font-bold text-red-500 dark:text-red-400">{{ stats()?.totalExpense | currency }}</span>
             </div>
 
             <div class="flex justify-between items-center text-xs">
@@ -288,7 +288,7 @@
       <div class="mt-6">
         <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Member Contribution</h2>
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
-          @for (m of stats()!.memberBreakdown; track m.userId) {
+          @for (m of stats()?.memberBreakdown || []; track m.userId) {
             <div class="px-4 py-3">
               <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-3">
@@ -313,7 +313,7 @@
               </div>
             </div>
           }
-          @if (!stats()!.memberBreakdown.length) {
+          @if (!stats()?.memberBreakdown?.length) {
             <div class="px-4 py-8 text-center bg-gray-50/50 dark:bg-gray-800/50">
               <p class="text-sm text-gray-400">No member data yet</p>
             </div>
@@ -391,5 +391,5 @@
         </div>
       }
     </div>
-  }
+    <!-- } -->
 </div>

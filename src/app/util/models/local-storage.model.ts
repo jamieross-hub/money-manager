@@ -66,6 +66,7 @@ export enum LocalStorageKey {
     FAMILIES_CACHE = 'families-cache',
     RECURRING_CACHE = 'recurring-cache',
     CURRENT_FILTER_STATE = 'current-filter-state',
+    RECENT_FOOTER_MODES = 'recent-footer-modes',
 }
 
 /**

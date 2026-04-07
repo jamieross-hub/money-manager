@@ -48,6 +48,7 @@ import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage
 import { LoaderService } from 'src/app/util/service/loader.service';
 import { TransactionStatus } from 'src/app/util/config/enums';
 import { CurrencyPipe, AppDatePipe } from 'src/app/util/pipes';
+import { FooterService } from 'src/app/component/dashboard/footer/footer.service';
 
 // ─── View Model ──────────────────────────────────────────────────────────────
 
@@ -139,6 +140,7 @@ type LoadState = 'loading' | 'loaded' | 'empty' | 'error';
 })
 export class GroupSelectionComponent implements OnInit {
   private familyService = inject(FamilyService);
+  private readonly footerService = inject(FooterService);
   private router = inject(Router);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
@@ -171,6 +173,9 @@ export class GroupSelectionComponent implements OnInit {
   constructor() {}
 
   async ngOnInit(): Promise<void> {
+    this.destroyRef.onDestroy(() => {
+      this.footerService.resetConfig();
+    });
     this.initializeEffects();
 
     // 🚀 OPTIMIZATION: Seed the store from cache immediately
@@ -182,6 +187,36 @@ export class GroupSelectionComponent implements OnInit {
 
     this.loadGroups();
     this.loadDeletedGroups();
+    this.setupFooter();
+  }
+
+  private setupFooter(): void {
+    this.footerService.patchConfig({
+      items: [
+        {
+          id: 'home',
+          icon: 'home',
+          label: 'Home',
+          priority: 1,
+          action: () => this.router.navigate(['/dashboard/home'])
+        },
+        {
+          id: 'create-group',
+          icon: 'add_circle',
+          label: 'Create Group',
+          priority: 2,
+          action: () => this.openCreateDialog()
+        },
+        {
+          id: 'join-group',
+          icon: 'link',
+          label: 'Join Group',
+          priority: 3,
+          action: () => this.openJoinDialog()
+        }
+      ],
+      hideFab: true
+    });
   }
 
   private subscriptionsMap = new Map<string, Subscription>();
