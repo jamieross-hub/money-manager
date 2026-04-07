@@ -548,10 +548,8 @@ function computePeriodSummaries(
 
   } else {
     // monthly
+    // We show all months of the selected year in the history table, even if a specific month is selected for summary cards.
     filteredHistory = monthlySummaries.filter(m => m.year === selectedYear);
-    if (selectedMonth !== null) {
-      filteredHistory = filteredHistory.filter(m => m.month === selectedMonth);
-    }
   }
 
   return { filteredMonthlySummaries: filteredHistory };

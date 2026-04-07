@@ -327,7 +327,7 @@
       @if (family()?.mode === 'common' && filteredMonthlySummaries().length > 0) {
         <div class="mt-6 mb-8">
           <mat-card class="!rounded-xl !border-none bg-white dark:bg-gray-800">
-            <mat-card-content class="pt-4 px-0 pb-0">
+            <mat-card-content class="pt-4 !px-0 pb-0">
               <p class="text-lg font-semibold text-neutral-500 mb-5 flex items-center gap-2 px-4">
                 <mat-icon class="text-primary-500">{{ selectedPeriod() === 'weekly' ? 'view_week' : 'calendar_month' }}</mat-icon>
                 {{ selectedPeriod() === 'weekly' ? 'Weekly' : selectedPeriod() === 'yearly' ? 'Yearly' : 'Monthly' }} History 

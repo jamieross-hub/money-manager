@@ -25,6 +25,9 @@ import { PwaNavigationService } from 'src/app/util/service/pwa-navigation.servic
 import { FamilyModeInfoSheet } from '../../dialogs/family-mode-info-sheet/family-mode-info-sheet';
 import { DateUtil } from 'src/app/util/helpers/date.util';
 import { AppViewService } from 'src/app/util/service/app-view.service';
+import { FamilyService } from '../../services/family.service';
+import * as FamilyActions from '../../store/family.actions';
+import { Family } from 'src/app/util/models/family.model';
 
 // Material Modules 
 import { MatTableModule } from '@angular/material/table';
@@ -70,11 +73,12 @@ export class FamilyReportsComponent implements OnInit, OnDestroy {
   private reportsProcessor = inject(FamilyReportsProcessorService);
   private pwaNavigationService = inject(PwaNavigationService);
   private appViewService = inject(AppViewService);
+  private familyService = inject(FamilyService);
 
   members      = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(debounceTime(50), distinctUntilChanged((a: FamilyMember[], b: FamilyMember[]) => a.length === b.length)), { initialValue: [] as FamilyMember[] });
   transactions = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions).pipe(debounceTime(100), distinctUntilChanged((a: Transaction[], b: Transaction[]) => a.length === b.length && a[0]?.id === b[0]?.id && (a[0] as any)?.updatedAt === (b[0] as any)?.updatedAt)), { initialValue: [] as Transaction[] });
   loading      = toSignal(this.store.select(TransactionsSelectors.selectTransactionsLoading).pipe(distinctUntilChanged()), { initialValue: true });
-  family       = toSignal(this.store.select(FamilySelectors.selectFamily));
+  family       = toSignal(this.store.select(FamilySelectors.selectFamily), { initialValue: null as Family | null });
 
   stats = this.reportsProcessor.stats;
   isInsightsExpanded = signal(false);
@@ -293,6 +297,18 @@ export class FamilyReportsComponent implements OnInit, OnDestroy {
       else if (view === 'YEARLY') this.selectedPeriod.set('yearly');
       else this.selectedPeriod.set('monthly');
     });
+
+    // Ensure family is loaded in the store. 
+    // If not, use the activeFamilyId from the service to trigger a load.
+    const currentFamily = this.family();
+    if (!currentFamily) {
+      const activeId = this.familyService.activeFamilyId();
+      if (activeId) {
+        this.store.dispatch(FamilyActions.loadFamily({ familyId: activeId }));
+      } else {
+        this.store.dispatch(FamilyActions.loadMyFamily());
+      }
+    }
   }
 
   ngOnDestroy() {
