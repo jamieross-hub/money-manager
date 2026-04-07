@@ -205,7 +205,7 @@ export class AppComponent implements OnInit, OnDestroy {
         }
       });
 
-      // Global context menu disable
+      // This disables all right-click / long-press menus globally
       document.addEventListener('contextmenu', (event) => {
         event.preventDefault();
       });
