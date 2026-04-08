@@ -401,8 +401,13 @@ export class TransactionsService extends BaseService {
                 }
             });
 
-            // Single bulk write to IndexedDB
-            this.localStorageUtility.setTransactions(batchItems);
+            // Use the service's own bulk logic to keep IndexedDB and store in sync
+            this.bulkUpdateTransactionCache(userId, transactions.map(tx => ({
+                ...tx,
+                status: TransactionStatus.DELETED,
+                updatedAt: new Date(),
+                syncStatus: SyncStatus.SYNCED
+            }) as Transaction));
             return of(undefined);
         }
 
@@ -721,7 +726,7 @@ export class TransactionsService extends BaseService {
                         const localTransactions = this.getCachedTransactions(userId, familyId);
                         const merged = this.mergeFirestoreAndLocal(firestoreTransactions, localTransactions);
 
-                        // Persist merged list to IndexedDB efficiently
+                        // Persist merged list to IndexedDB efficiently (now flat for all modes)
                         this.bulkUpdateTransactionCache(userId, merged);
 
                         // Re-read sorted list from IndexedDB (Source of Truth).
@@ -770,8 +775,12 @@ export class TransactionsService extends BaseService {
                                 }
 
                                 // Only overwrite if the local copy is not a still-pending write.
-                                const existing = txMap.get(tx.id!);
-                                const isLocalPending = existing?.syncStatus === 'pending';
+                                // We check the actual IndexedDB cache instead of our in-memory map to ensure 
+                                // we pick up sync-completions from CommonSyncService.
+                                const itemKey = LocalStorageKeyHelper.getTransactionItemKey(tx.id!, effectiveFamilyId);
+                                const cached = this.localStorageUtility.getItem<Transaction>(itemKey, 'transactions');
+                                const isLocalPending = cached?.syncStatus === 'pending';
+                                
                                 if (!isLocalPending) {
                                     txMap.set(tx.id!, tx);
                                     this.updateTransactionCache(userId, 'update', tx);
@@ -1010,12 +1019,15 @@ export class TransactionsService extends BaseService {
         console.log(`[TransactionsService] Cleaning up ${cleanupIds.length} old deleted transactions`);
 
         if (this.isGuest()) {
-            const transactions = this.localStorageUtility.getEntities<Transaction>('transactions');
-            const remaining = transactions.filter(t => !cleanupIds.includes(t.id || ''));
-            this.localStorageUtility.saveEntities('transactions', remaining);
+            const transactions = this.getCachedTransactions(userId, familyId);
+            const toDelete = transactions.filter(t => cleanupIds.includes(t.id || ''));
+            toDelete.forEach(tx => {
+                const itemKey = LocalStorageKeyHelper.getTransactionItemKey(tx.id!, familyId);
+                this.localStorageUtility.removeTransaction(itemKey);
+            });
             
-            const current = this.transactionsSubject.getValue();
-            this.transactionsSubject.next(current.filter(t => !cleanupIds.includes(t.id || '')));
+            const updated = this.getCachedTransactions(userId, familyId);
+            this.transactionsSubject.next(updated);
             return;
         }
 

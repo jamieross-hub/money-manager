@@ -225,13 +225,6 @@ export class MobileTransactionListComponent
   private isLongPressing = false;
   private historyPushedForSelection = false;
 
-  // @HostListener('window:popstate', ['$event'])
-  // onPopState(event: PopStateEvent) {
-  //   if (this.historyPushedForSelection) {
-  //     this.historyPushedForSelection = false;
-  //     this.clearSelection(false);
-  //   }
-  // }
 
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
   appView = toSignal(this.appViewService.appView$, { initialValue: 'MONTHLY' as AppView });
@@ -686,6 +679,36 @@ export class MobileTransactionListComponent
     effect(() => {
       this.themeService.currentTheme();
     });
+
+    // Back button handling for Selection Mode
+    effect((onCleanup) => {
+      const isSelection = this.isSelectionMode();
+      
+      if (isSelection && !this.historyPushedForSelection) {
+        // Push a state so the back button can be intercepted
+        window.history.pushState({ selectionMode: true }, '');
+        this.historyPushedForSelection = true;
+
+        // Register the back handler with PwaNavigationService
+        const unregister = this.pwaNavigationService.registerBackHandler(() => {
+          if (this.isSelectionMode()) {
+            this.historyPushedForSelection = false; // Prevent onCleanup from popping history again
+            this.clearSelection(false); 
+            return true;
+          }
+          return false;
+        });
+
+        onCleanup(() => {
+          unregister();
+          // If selection mode was cleared programmatically (not via back button), pop the history state
+          if (!this.isSelectionMode() && this.historyPushedForSelection) {
+            this.historyPushedForSelection = false;
+            window.history.back();
+          }
+        });
+      }
+    });
   }
 
   ngOnInit() {
@@ -905,14 +928,6 @@ export class MobileTransactionListComponent
     }
     this.selectedTxIds.set(current);
     
-    if (current.size > 0 && !this.historyPushedForSelection) {
-      window.history.pushState({ multiSelect: true }, '');
-      this.historyPushedForSelection = true;
-    } else if (current.size === 0 && this.historyPushedForSelection) {
-      this.historyPushedForSelection = false;
-      window.history.back();
-    }
-
     if (current.size === 0) {
       this.isLongPressing = false;
     }
@@ -921,9 +936,11 @@ export class MobileTransactionListComponent
   clearSelection(shouldPopHistory = true) {
     this.selectedTxIds.set(new Set());
     this.isLongPressing = false;
+    
+    // History popping is now handled by the effect's onCleanup
+    // but we still manage the flag for the effect to know what to do
     if (shouldPopHistory && this.historyPushedForSelection) {
-      this.historyPushedForSelection = false;
-      window.history.back();
+      // The effect's onCleanup will see this change and call window.history.back()
     }
   }
 
@@ -932,11 +949,6 @@ export class MobileTransactionListComponent
       .filter(tx => tx.id && !tx.id.startsWith('upcoming-') && !(tx as any)._isDeleted)
       .map(tx => tx.id!);
     this.selectedTxIds.set(new Set(allIds));
-    
-    if (allIds.length > 0 && !this.historyPushedForSelection) {
-      window.history.pushState({ multiSelect: true }, '');
-      this.historyPushedForSelection = true;
-    }
   }
 
   onLongPressStart(transaction: Transaction) {
