@@ -95,6 +95,7 @@ function computeStats(transactions: Transaction[], members: FamilyMember[], mode
       totalIncome: 0,
       totalExpense: 0,
       totalPaid: 0,
+      actualPaid: 0,
       netBalance: 0,
       transactionCount: 0,
       paidCount: 0,
@@ -128,7 +129,9 @@ function computeStats(transactions: Transaction[], members: FamilyMember[], mode
         const mStats = memberMap.get(p.userId);
         if (mStats) {
           const pAmt = Number(p.amount) || 0;
-          mStats.totalPaid += isIncome ? -pAmt : pAmt;
+          const finalAmt = isIncome ? -pAmt : pAmt;
+          mStats.totalPaid += finalAmt;
+          mStats.actualPaid += finalAmt;
           mStats.paidCount++;
         }
       });
@@ -136,7 +139,9 @@ function computeStats(transactions: Transaction[], members: FamilyMember[], mode
       const payerId = tx.splitData?.paidByUserId || tx.userId;
       const mStats = memberMap.get(payerId);
       if (mStats) {
-        mStats.totalPaid += isIncome ? -amount : amount;
+        const finalAmt = isIncome ? -amount : amount;
+        mStats.totalPaid += finalAmt;
+        mStats.actualPaid += finalAmt;
         mStats.paidCount++;
       }
     }

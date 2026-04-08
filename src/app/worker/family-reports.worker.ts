@@ -297,6 +297,7 @@ function computeStats(
       totalIncome: 0,
       totalExpense: 0,
       totalPaid: 0,
+      actualPaid: 0,
       netBalance: 0,
       transactionCount: 0,
       paidCount: 0,
@@ -330,7 +331,9 @@ function computeStats(
         const mStats = memberMap.get(p.userId);
         if (mStats) {
           const pAmt = Number(p.amount) || 0;
-          mStats.totalPaid += isIncome ? -pAmt : pAmt;
+          const finalAmt = isIncome ? -pAmt : pAmt;
+          mStats.totalPaid += finalAmt;
+          mStats.actualPaid += finalAmt;
           mStats.paidCount++;
         }
       });
@@ -338,7 +341,9 @@ function computeStats(
       const payerId = tx.splitData?.paidByUserId || tx.userId;
       const mStats  = memberMap.get(payerId);
       if (mStats) {
-        mStats.totalPaid += isIncome ? -amount : amount;
+        const finalAmt = isIncome ? -amount : amount;
+        mStats.totalPaid += finalAmt;
+        mStats.actualPaid += finalAmt;
         mStats.paidCount++;
       }
     }
@@ -414,7 +419,7 @@ function computeStats(
   // Identify Top Spender
   let topSpenderMember = memberBreakdown[0];
   for (const m of memberBreakdown) {
-    if (m.totalPaid > (topSpenderMember?.totalPaid || 0)) {
+    if (m.actualPaid > (topSpenderMember?.actualPaid || 0)) {
       topSpenderMember = m;
     }
   }
@@ -436,7 +441,7 @@ function computeStats(
     transactionCount,
     memberBreakdown,
     categoryBreakdown,
-    topSpender: topSpenderMember && topSpenderMember.totalPaid > 0 ? { name: topSpenderMember.displayName, amount: topSpenderMember.totalPaid } : undefined,
+    topSpender: topSpenderMember && topSpenderMember.actualPaid > 0 ? { name: topSpenderMember.displayName, amount: topSpenderMember.actualPaid } : undefined,
     topCategory: categoryBreakdown.length > 0 && categoryBreakdown[0].amount > 0 ? { name: categoryBreakdown[0].category, amount: categoryBreakdown[0].amount, percentage: categoryBreakdown[0].percentage } : undefined,
     largestExpense: maxExpenseTx ? { note: maxExpenseTx.note || maxExpenseTx.category, amount: Number(maxExpenseTx.amount) || 0 } : undefined
   };

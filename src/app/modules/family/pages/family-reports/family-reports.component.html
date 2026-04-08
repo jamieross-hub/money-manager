@@ -190,20 +190,20 @@
         <div class="space-y-1">
           @for (cat of groupedCategoryBreakdown(); track cat.categoryId) {
             <div class="group flex flex-col bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-all duration-200 mb-1 overflow-hidden">
-              <div class="flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-900/10"
+              <div class="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-900/10"
                 (click)="toggleExpand(cat.categoryId)">
                 <!-- Left: Icon Box -->
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105"
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105"
                   [style.background-color]="cat.categoryColor + '20'"
                   [style.color]="cat.categoryColor">
-                  <mat-icon>{{ cat.groupIcon || cat.categoryIcon || getCategoryIcon(cat.categoryName) }}</mat-icon>
+                  <mat-icon class="!text-[20px] !w-5 !h-5">{{ cat.groupIcon || cat.categoryIcon || getCategoryIcon(cat.categoryName) }}</mat-icon>
                 </div>
                 
                 <!-- Right: Content Column -->
                 <div class="flex-1 min-w-0">
-                  <div class="flex justify-between items-baseline mb-1">
+                  <div class="flex justify-between items-baseline mb-0.5">
                     <div class="min-w-0">
-                      <span class="text-sm font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-1 min-w-0">
+                      <span class="text-xs font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-1 min-w-0">
                         <span class="truncate">{{ cat.categoryName }}</span>
                         <mat-icon class="!text-xs !w-auto !h-auto text-gray-400 transition-transform duration-200 flex-shrink-0" [class.rotate-180]="expandedCategoryId() === cat.categoryId">keyboard_arrow_down</mat-icon>
                       </span>
@@ -212,7 +212,7 @@
                       </p>
                     </div>
                     <div class="text-right">
-                      <span class="text-sm font-semibold text-neutral-500 dark:text-gray-100">
+                      <span class="text-xs font-semibold text-neutral-500 dark:text-gray-100">
                         {{ cat.amount | currency:{compact:true} }}
                       </span>
                       <!-- <p class="text-[10px] font-bold text-gray-400 bg-gray-50 dark:bg-gray-700/50 px-1.5 rounded-full inline-block">
@@ -221,7 +221,7 @@
                     </div>
                   </div>
                   <!-- Progress Bar -->
-                  <div class="mt-2 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div class="mt-1.5 h-1 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div class="h-full rounded-full transition-all duration-500" [style.background-color]="cat.categoryColor" [style.width.%]="cat.percentage"></div>
                   </div>
                 </div>
@@ -229,17 +229,17 @@
 
               <!-- EXPANDED CONTENT -->
               @if (expandedCategoryId() === cat.categoryId) {
-                <div class="px-4 py-3 bg-gray-50/50 dark:bg-gray-900/10 border-t border-gray-100 dark:border-gray-700 space-y-3 animation-slide-down">
+                <div class="px-3 py-2 bg-gray-50/50 dark:bg-gray-900/10 border-t border-gray-100 dark:border-gray-700 space-y-2.5 animation-slide-down">
                   
                   @if (expandedItemData()?.isGroup) {
                     <!-- Group Breakdown -->
                     <div>
-                      <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2">Breakdown</p>
+                      <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Breakdown</p>
                       <div class="space-y-1">
                         @for (sub of expandedItemData()?.breakdown; track sub.categoryId) {
-                          <div class="flex items-center justify-between text-xs py-1.5 border-b border-gray-100/50 dark:border-gray-700/50 last:border-b-0">
+                          <div class="flex items-center justify-between text-[11px] py-1 border-b border-gray-100/50 dark:border-gray-700/50 last:border-b-0">
                             <div class="flex items-center gap-2">
-                              <mat-icon class="!text-xs !w-4 !h-4 text-gray-400">{{ sub.categoryIcon || getCategoryIcon(sub.categoryName) }}</mat-icon>
+                              <mat-icon class="!text-[14px] !w-3.5 !h-3.5 text-gray-400">{{ sub.categoryIcon || getCategoryIcon(sub.categoryName) }}</mat-icon>
                               <span class="text-gray-600 dark:text-gray-400 font-medium">{{ sub.categoryName }}</span>
                             </div>
                             <div class="flex items-center gap-2">
@@ -255,13 +255,13 @@
 
                   <!-- Transactions List -->
                   <div>
-                    <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2">Recent Items</p>
+                    <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Recent Items</p>
                     @if (expandedItemData()?.transactions?.length === 0) {
                       <p class="text-[10px] text-gray-400 italic text-center py-2">No items found</p>
                     } @else {
                       <div class="divide-y divide-gray-100/80 dark:divide-gray-700/50 max-h-40 overflow-y-auto pr-1 thin-scrollbar">
                         @for (t of expandedItemData()?.transactions; track t.id) {
-                          <div class="flex justify-between items-center py-1.5 text-xs px-1">
+                          <div class="flex justify-between items-center py-1.5 text-[11px] px-1">
                             <div class="min-w-0 flex-1">
                               <span class="font-medium text-gray-700 dark:text-gray-300 truncate block">{{ t.note || t.category || 'Untitled' }}</span>
                               <p class="text-[10px] text-gray-400">{{ t.date | date:'mediumDate' }}</p>
@@ -304,26 +304,29 @@
                   }
                   <span class="text-sm font-semibold text-gray-800 dark:text-gray-100">{{ m.displayName }}</span>
                 </div>
-                <span class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 bg-gray-100 dark:bg-gray-700/50 px-2 py-0.5 rounded-full">{{ m.transactionCount }} entries</span>
+                <span class="text-[10px] font-semibold text-gray-400 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <mat-icon class="!text-[12px] !w-3 !h-3 opacity-70">history</mat-icon>
+                  {{ m.transactionCount }} Entries
+                </span>
               </div>
               <div class="mt-4">
                 @if (family()?.mode !== 'split') {
                   <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-800/40 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700/50">
                     <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Total Contribution</span>
-                    <span class="text-sm font-bold text-green-600 dark:text-green-500">{{ m.totalPaid | currency }}</span>
+                    <span class="text-sm font-bold text-green-600 dark:text-green-500">{{ m.actualPaid | currency }}</span>
                   </div>
                 } @else {
                   <div class="grid grid-cols-[1fr_1fr_1.5fr] gap-1 items-start bg-gray-50 dark:bg-gray-800/20 p-3 rounded-2xl border border-gray-100 dark:border-gray-700/50">
                     <div class="flex flex-col">
                       <span class="text-[10px] uppercase font-bold text-gray-400 tracking-wide leading-none mb-1.5">Paid</span>
-                      <span class="text-sm font-bold text-gray-800 dark:text-gray-200 leading-none">
-                        {{ m.totalPaid | currency:{ compact:true } }}
+                      <span class="text-xs font-bold text-gray-800 dark:text-gray-200 leading-none">
+                        {{ m.actualPaid | currency:{ compact:true } }}
                       </span>
                     </div>
                     
                     <div class="flex flex-col border-l border-gray-200 dark:border-gray-700/50 pl-3">
                       <span class="text-[10px] uppercase font-bold text-gray-400 tracking-wide leading-none mb-1.5">Share</span>
-                      <span class="text-sm font-bold text-gray-800 dark:text-gray-200 leading-none">
+                      <span class="text-xs font-bold text-gray-800 dark:text-gray-200 leading-none">
                         {{ m.totalExpense | currency:{ compact:true } }}
                       </span>
                     </div>
@@ -331,7 +334,7 @@
                     <div class="flex flex-col items-end border-l border-gray-200 dark:border-gray-700/50 pl-3">
                       <span class="text-[10px] uppercase font-bold text-gray-400 tracking-wide leading-none mb-1.5">Balance</span>
                       <div class="flex flex-col items-end">
-                        <span class="text-sm font-bold tracking-tight leading-none"
+                        <span class="text-xs font-bold tracking-tight leading-none"
                           [class.text-green-600]="m.netBalance > 0"
                           [class.dark:text-green-400]="m.netBalance > 0"
                           [class.text-red-500]="m.netBalance < 0"

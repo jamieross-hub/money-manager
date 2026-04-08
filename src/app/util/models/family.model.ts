@@ -53,6 +53,7 @@ export interface FamilyMemberStats {
   totalIncome: number;
   totalExpense: number;
   totalPaid: number;
+  actualPaid: number;
   netBalance: number;
   transactionCount: number;
   paidCount: number;
