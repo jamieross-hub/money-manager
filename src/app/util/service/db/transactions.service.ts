@@ -355,6 +355,110 @@ export class TransactionsService extends BaseService {
     }
 
     /**
+     * Bulk delete transactions (soft-delete, local-first).
+     * Performs one optimistic store dispatch, one bulk cache write,
+     * and queues each item for background sync — no per-item loops in callers.
+     */
+    deleteTransactions(userId: string, transactions: Transaction[]): Observable<void> {
+        if (!transactions || transactions.length === 0) return of(undefined);
+
+        const now = Timestamp.now();
+
+        if (this.isGuest()) {
+            const batchItems: { key: string; value: Transaction }[] = [];
+            
+            transactions.forEach(tx => {
+                const updatedTx = {
+                    ...tx,
+                    status: TransactionStatus.DELETED,
+                    updatedAt: new Date(),
+                    syncStatus: SyncStatus.SYNCED
+                } as Transaction;
+
+                // 1. Prepare for bulk IndexedDB write
+                batchItems.push({
+                    key: tx.id!,
+                    value: updatedTx
+                });
+
+                // 2. Dispatch store success per item (optimistic)
+                this.store.dispatch(TransactionsActions.deleteTransactionSuccess({
+                    transactionId: tx.id!,
+                    transaction: updatedTx
+                }));
+
+                // 3. Dispatch balance updates
+                if (tx.accountId || tx.toAccountId) {
+                    const affectedAccounts = new Set([tx.accountId, tx.toAccountId].filter(Boolean));
+                    affectedAccounts.forEach(accId => {
+                        this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
+                            userId,
+                            accountId: accId as string,
+                            transactionType: 'delete',
+                            oldTransaction: tx
+                        }));
+                    });
+                }
+            });
+
+            // Single bulk write to IndexedDB
+            this.localStorageUtility.setTransactions(batchItems);
+            return of(undefined);
+        }
+
+        return new Observable<void>(observer => {
+            const cachedTransactions = this.getCachedTransactions(userId);
+            const cacheMap = new Map(cachedTransactions.map(tx => [tx.id, tx]));
+
+            // 1. Build soft-deleted versions and dispatch store updates in a single pass
+            const deletedVersions: Transaction[] = transactions.map(tx => {
+                const cached = cacheMap.get(tx.id!) || tx;
+                const updatedTx = this.scrubUndefined({
+                    ...cached,
+                    status: TransactionStatus.DELETED,
+                    updatedAt: now,
+                    syncStatus: SyncStatus.PENDING
+                }) as Transaction;
+
+                // Optimistic: update account balances
+                if (updatedTx.accountId || updatedTx.toAccountId) {
+                    const affectedAccounts = new Set([updatedTx.accountId, updatedTx.toAccountId].filter(Boolean));
+                    affectedAccounts.forEach(accId => {
+                        this.store.dispatch(AccountsActions.updateAccountBalanceForTransaction({
+                            userId,
+                            accountId: accId as string,
+                            transactionType: 'delete',
+                            oldTransaction: updatedTx
+                        }));
+                    });
+                }
+
+                // Dispatch success per item to clear from UI
+                this.store.dispatch(TransactionsActions.deleteTransactionSuccess({
+                    transactionId: updatedTx.id!,
+                    transaction: updatedTx
+                }));
+
+                return updatedTx;
+            });
+
+            // 2. Bulk-update cache in a single IndexedDB write batch
+            this.bulkUpdateTransactionCache(userId, deletedVersions);
+
+            // 3. Complete the observable immediately (non-blocking)
+            observer.next();
+            observer.complete();
+
+            // 4. Queue each for background sync
+            deletedVersions.forEach(tx => {
+                this.addToSyncQueue('update', tx, userId).catch(err => {
+                    console.error(`[TransactionsService] Bulk delete sync queue error for ${tx.id}:`, err);
+                });
+            });
+        });
+    }
+
+    /**
      * Get all transactions for a user
      */
     getTransactions(userId: string, familyId?: string): Observable<Transaction[]> {

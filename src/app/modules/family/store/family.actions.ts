@@ -58,6 +58,8 @@ export const updateTransaction = createAction('[Family] Update Transaction', pro
 export const updateTransactionSuccess = createAction('[Family] Update Transaction Success', props<{ txId: string; request: UpdateFamilyTransactionRequest }>());
 export const deleteTransaction = createAction('[Family] Delete Transaction', props<{ familyId: string; txId: string }>());
 export const deleteTransactionSuccess = createAction('[Family] Delete Transaction Success', props<{ txId: string; transaction: Transaction }>());
+export const deleteBatchTransactions = createAction('[Family] Delete Batch Transactions', props<{ familyId: string; txIds: string[] }>());
+export const deleteBatchTransactionsSuccess = createAction('[Family] Delete Batch Transactions Success', props<{ txIds: string[]; transactions: Transaction[] }>());
 
 // ─── Error ─────────────────────────────────────────────────────────────────
 export const clearError = createAction('[Family] Clear Error');

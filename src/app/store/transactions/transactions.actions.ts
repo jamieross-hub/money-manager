@@ -148,4 +148,19 @@ export const deleteRecurringTemplateFailure = createAction(
   '[Transactions] Delete Recurring Template Failure',
   props<{ error: any }>()
 );
+
+export const deleteBatchRecurringTemplates = createAction(
+  '[Transactions] Delete Batch Recurring Templates',
+  props<{ userId: string; templateIds: string[] }>()
+);
+
+export const deleteBatchRecurringTemplatesSuccess = createAction(
+  '[Transactions] Delete Batch Recurring Templates Success',
+  props<{ templateIds: string[] }>()
+);
+
+export const deleteBatchRecurringTemplatesFailure = createAction(
+  '[Transactions] Delete Batch Recurring Templates Failure',
+  props<{ error: any }>()
+);
  

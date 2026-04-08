@@ -39,6 +39,10 @@ export class TransactionsFacadeService {
         return this.getServiceForContext(familyId).deleteTransaction(userId, transactionId);
     }
 
+    deleteTransactions(userId: string, transactions: Transaction[], familyId?: string): Observable<void> {
+        return this.getServiceForContext(familyId).deleteTransactions(userId, transactions);
+    }
+
     getTransactions(userId: string, familyId?: string): Observable<Transaction[]> {
         const profile = this.store.selectSignal(ProfileSelectors.selectProfile)();
         const effectiveFamilyId = familyId || (profile?.preferences?.isFamilyMode ? profile?.preferences?.activeFamilyId : undefined);

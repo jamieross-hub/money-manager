@@ -36,12 +36,4 @@ export class ConfirmDialogComponent {
       confirmColor: data.confirmColor || (data.type === 'delete' ? 'warn' : 'primary')
     };
   }
-
-  onCancel(): void {
-    this.dialogRef.close(false);
-  }
-
-  onConfirm(): void {
-    this.dialogRef.close(true);
-  }
-} 
+}

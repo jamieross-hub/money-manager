@@ -135,6 +135,30 @@ export class RecurringService extends BaseService {
   }
 
   /**
+   * Delete multiple recurring transaction templates
+   */
+  deleteBatchRecurringTemplates(userId: string, templateIds: string[]): Observable<void> {
+    if (!templateIds || templateIds.length === 0) return of(undefined);
+
+    if (this.isGuest()) {
+      const cacheKey = LocalStorageKeyHelper.getRecurringCacheKey(userId);
+      const templates = this.localStorageUtility.getItem<RecurringTemplate[]>(cacheKey) || [];
+      const filtered = templates.filter(t => !templateIds.includes(t.id || ''));
+      this.localStorageUtility.setItem(cacheKey, filtered);
+      this.recurringTemplatesSubject.next(filtered);
+      return of(undefined);
+    }
+
+    // Since we don't have many recurring templates, we can fire them in parallel
+    // or use a writeBatch (not currently used in base service/utility)
+    const promises = templateIds.map(id => deleteDoc(doc(this.firestore, this.getRecurringTemplatePath(userId, id))));
+    return from(Promise.all(promises)).pipe(
+      map(() => undefined),
+      catchError(err => this.handleError(err, 'deleteBatchRecurringTemplates'))
+    );
+  }
+
+  /**
    * Fetch all recurring templates for a user
    */
   getRecurringTemplates(userId: string): Observable<RecurringTemplate[]> {

@@ -137,6 +137,16 @@ export class TransactionsEffects {
         ))
   ));
 
+  deleteBatchRecurringTemplates$ = createEffect(() => this.actions$.pipe(
+    ofType(TransactionsActions.deleteBatchRecurringTemplates),
+    mergeMap(({ userId, templateIds }) => 
+      this.recurringService.deleteBatchRecurringTemplates(userId, templateIds)
+        .pipe(
+          map(() => TransactionsActions.deleteBatchRecurringTemplatesSuccess({ templateIds })),
+          catchError(error => of(TransactionsActions.deleteBatchRecurringTemplatesFailure({ error })))
+        ))
+  ));
+
   constructor(
     private actions$: Actions,
     private transactionsService: TransactionsService,

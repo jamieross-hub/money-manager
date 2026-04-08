@@ -314,6 +314,29 @@ export class FamilyEffects {
     )
   );
 
+  deleteBatchTransactions$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(FamilyActions.deleteBatchTransactions),
+      mergeMap(({ familyId, txIds }) => {
+        const userId = this.userService.getCurrentUserId() || '';
+        // Resolve all deletes in parallel via forkJoin
+        return this.transactionsFacade.deleteTransactions(userId,
+          txIds.map(id => ({ id, familyId }) as any),
+          familyId
+        ).pipe(
+          map(() => {
+            this.notificationService.info(`${txIds.length} transaction${txIds.length > 1 ? 's' : ''} deleted`);
+            return FamilyActions.deleteBatchTransactionsSuccess({ txIds, transactions: [] });
+          }),
+          catchError(() => {
+            this.notificationService.error('Failed to delete some transactions');
+            return of(FamilyActions.clearError());
+          })
+        );
+      })
+    )
+  );
+
   loadSettlements$ = createEffect(() =>
     this.actions$.pipe(
       ofType(FamilyActions.loadSettlements),

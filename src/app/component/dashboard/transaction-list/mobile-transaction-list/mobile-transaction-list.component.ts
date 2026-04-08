@@ -123,6 +123,7 @@ export class MobileTransactionListComponent
   @ViewChild('searchInput') searchInput!: ElementRef;
   @Output() editTransaction = new EventEmitter<Transaction>();
   @Output() deleteTransaction = new EventEmitter<Transaction>();
+  @Output() bulkDeleteTransactions = new EventEmitter<Transaction[]>();
   @Output() addTransaction = new EventEmitter<void>();
   @Output() importTransactions = new EventEmitter<void>();
   @Output() adjustTransaction = new EventEmitter<Transaction>();
@@ -1021,19 +1022,23 @@ export class MobileTransactionListComponent
     if (selectedIds.size === 0) return;
 
     const transactionsToDelete = this.flattenedTransactions().filter(tx => tx.id && selectedIds.has(tx.id));
-    
+    if (transactionsToDelete.length === 0) return;
+
     this.dialog.open(ConfirmDialogComponent, {
       width: '300px',
       closeOnNavigation: false,
       data: {
         title: 'Delete Transactions',
-        message: `Are you sure you want to delete ${selectedIds.size} selected transactions?`,
+        message: `Are you sure you want to delete ${transactionsToDelete.length} selected transaction${transactionsToDelete.length > 1 ? 's' : ''}?`,
         confirmText: 'Delete',
         cancelText: 'Cancel',
       }
     }).afterClosed().subscribe(result => {
       if (result) {
-        transactionsToDelete.forEach(tx => this.deleteTransaction.emit(tx));
+        // Emit the entire batch in one shot so the parent can handle
+        // all deletions atomically (Promise.all) rather than firing
+        // N individual store dispatches that can race on slow networks.
+        this.bulkDeleteTransactions.emit(transactionsToDelete);
         this.clearSelection();
       }
     });

@@ -22,7 +22,7 @@ import { LoaderService } from 'src/app/util/service/loader.service';
 import { ImportTransactionsComponent } from './add-transaction/import-transactions.component';
 import { FilterService } from 'src/app/util/service/filter.service';
 import { Subject, Subscription, Observable, map } from 'rxjs'; // Subject needed for destroy$
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, take } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import { AppState } from '../../../store/app.state';
 import * as TransactionsActions from '../../../store/transactions/transactions.actions';
@@ -381,36 +381,58 @@ export class TransactionListComponent implements OnInit, OnDestroy {
     this.showFullTable.update(v => !v);
   }
 
-  // Bulk operations - Optimized
-  async bulkDeleteTransactions(transactions: Transaction[]) {
+  // Bulk operations - Handles recurring, family, and regular transactions correctly
+  bulkDeleteTransactions(transactions: Transaction[]) {
     if (!transactions || transactions.length === 0) return;
 
-    //this.loaderService.show();
     const userId = this.userService.getCurrentUserId();
-
     if (!userId) {
       this.notificationService.error('User not authenticated');
-      //this.loaderService.hide();
       return;
     }
 
-    try {
-      // Use helper to create array of promises
-      const deletePromises = transactions.map(transaction =>
-        this.transactionsService.deleteTransaction(userId, transaction.id!).toPromise()
-      );
+    // Partition into flat ID arrays for batch processing
+    const recurringIds: string[] = [];
+    const regularTxs: Transaction[] = [];
+    let familyId: string | undefined;
+    const familyTxIds: string[] = [];
 
-      await Promise.all(deletePromises);
+    transactions.forEach(tx => {
+      if (!tx.id) return;
 
-      this.notificationService.success(`Successfully deleted ${transactions.length} transaction(s)`);
-      this.store.dispatch(TransactionsActions.loadTransactions({ userId }));
-    } catch (error) {
-      console.error('Error deleting transactions:', error);
-      this.notificationService.error('Failed to delete some transactions');
-    } finally {
-      //this.loaderService.hide();
+      if (tx.isRecurring) {
+        recurringIds.push(tx.id);
+      } else if (tx.familyId && !tx.accountId) {
+        familyId = tx.familyId; // Assumed single family context per user clarification
+        familyTxIds.push(tx.id);
+      } else {
+        regularTxs.push(tx);
+      }
+    });
+
+    // 1. Recurring - ONE batch dispatch
+    if (recurringIds.length > 0) {
+      this.store.dispatch(TransactionsActions.deleteBatchRecurringTemplates({ userId, templateIds: recurringIds }));
     }
+
+    // 2. Family - ONE batch dispatch
+    if (familyId && familyTxIds.length > 0) {
+      this.store.dispatch(FamilyActions.deleteBatchTransactions({ familyId, txIds: familyTxIds }));
+    }
+
+    // 3. Regular - ONE bulk service call (handles optimistic store + IndexedDB + Sync)
+    if (regularTxs.length > 0) {
+      this.transactionsService.deleteTransactions(userId, regularTxs)
+        .pipe(take(1))
+        .subscribe();
+    }
+
+    const total = transactions.length;
+    this.notificationService.success(
+      `Successfully deleted ${total} transaction${total > 1 ? 's' : ''}`
+    );
   }
+
 
   async bulkUpdateCategory(data: { transactions: Transaction[], categoryId: string }) {
     const { transactions, categoryId } = data;

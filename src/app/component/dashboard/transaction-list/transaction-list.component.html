@@ -1,5 +1,6 @@
 @if (breakpointService.device.isMobile || (breakpointService.device.isTablePortrait && isTransactionsPage())) {
 <mobile-transaction-list (editTransaction)="editTransaction($event)" (deleteTransaction)="deleteTransaction($event)"
+  (bulkDeleteTransactions)="bulkDeleteTransactions($event)"
   (adjustTransaction)="adjustTransaction($event)"
 	(addTransaction)="addTransactionDialog()" (importTransactions)="openImportDialog()"
 	[isRecurring]="isRecurringTab()">

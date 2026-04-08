@@ -119,14 +119,45 @@ export class PwaNavigationService implements OnDestroy {
       this.setupIosBackGesture();
     }
 
-    // 5️⃣ Keyboard interactions
-    this.setupKeyboardNavigation();
+    // 5️⃣ Keyboard and Click interactions
+    this.setupGlobalInteractionListeners();
 
     // Update initial state
     this.updateNavigationState({
       isStandalone,
       isMobile,
       currentRoute: this.router.url
+    });
+  }
+
+  private setupGlobalInteractionListeners(): void {
+    // 1. Keyboard
+    const keydownHandler = (event: KeyboardEvent) => {
+      if (event.altKey && event.key === 'ArrowLeft') {
+        event.preventDefault();
+        this.ngZone.run(() => this.goBack());
+      }
+      
+      if (event.key === 'Escape') {
+        this.ngZone.run(() => this.handleBackInteraction());
+      }
+    };
+
+    // 2. Click tracking (critical for Android back-gesture protection)
+    // Updates lastInteractionTime so that handleBackInteraction can detect 
+    // when a back-gesture was likely triggered by an accidental swipe during a click.
+    const clickHandler = () => {
+      this.lastInteractionTime = Date.now();
+    };
+
+    document.addEventListener('keydown', keydownHandler, { passive: false });
+    document.addEventListener('click', clickHandler, { capture: true, passive: true });
+    document.addEventListener('touchstart', clickHandler, { capture: true, passive: true });
+
+    this.destroy$.subscribe(() => {
+      document.removeEventListener('keydown', keydownHandler);
+      document.removeEventListener('click', clickHandler);
+      document.removeEventListener('touchstart', clickHandler);
     });
   }
 
@@ -304,22 +335,6 @@ export class PwaNavigationService implements OnDestroy {
       document.removeEventListener('touchstart', touchStartHandler);
       document.removeEventListener('touchend', touchEndHandler);
     });
-  }
-
-  private setupKeyboardNavigation(): void {
-    const keydownHandler = (event: KeyboardEvent) => {
-      if (event.altKey && event.key === 'ArrowLeft') {
-        event.preventDefault();
-        this.ngZone.run(() => this.goBack());
-      }
-      
-      if (event.key === 'Escape') {
-        this.ngZone.run(() => this.handleBackInteraction());
-      }
-    };
-
-    document.addEventListener('keydown', keydownHandler);
-    this.destroy$.subscribe(() => document.removeEventListener('keydown', keydownHandler));
   }
 
   private addToNavigationStack(route: string): void {
