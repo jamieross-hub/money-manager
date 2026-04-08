@@ -17,6 +17,8 @@ export interface User {
 	monthlyIncome?: number;
 	preferences?: UserPreferences;
 	updatedAt?: Date | Timestamp;
+	lastLoginAt?: Date | Timestamp;
+	loginCount?: number;
 	photoURL?: string;
 	emailVerified?: boolean;
 	phoneNumber?: string;

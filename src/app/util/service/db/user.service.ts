@@ -26,6 +26,7 @@ import {
   getDoc,
   updateDoc,
   serverTimestamp,
+  increment,
   writeBatch,
   collection,
   query,
@@ -129,6 +130,7 @@ export class UserService implements OnDestroy {
   private readonly rateLimitMap = new Map<string, RateLimitEntry>();
   private readonly auditLog: Array<{ timestamp: Date; event: string; userId?: string; details: any }> = [];
   private pendingProfileUpdatesCount = 0;
+  private metadataUpdatedThisSession = false;
 
   constructor(
     private readonly notificationService: NotificationService,
@@ -229,6 +231,9 @@ export class UserService implements OnDestroy {
 
         // Set last active UID for optimistic loading on next refresh
         this.storageService.setItem(LocalStorageKey.LAST_ACTIVE_UID, user.uid);
+
+        // Update login metadata on app open (session start)
+        this.updateLoginMetadata(user.uid);
 
         let userData = await this.getCurrentUser();
 
@@ -870,6 +875,7 @@ export class UserService implements OnDestroy {
         // 🛡️ Always force a fresh fetch from Firestore on sign-in to ensure IndexedDB is up-to-date
         // This fulfills the "store profile in indexdb once user sign in" requirement
         await this.ensureUserDataCached(userCredential.user.uid, true);
+        await this.updateLoginMetadata(userCredential.user.uid);
 
 
 
@@ -1301,6 +1307,7 @@ export class UserService implements OnDestroy {
 
     // 🛡️ Always force a fresh fetch or merge from Firestore on sign-in
     await this.ensureUserDataCached(firebaseUser.uid, true);
+    await this.updateLoginMetadata(firebaseUser.uid);
 
     this.storageService.setItem(LocalStorageKey.LAST_ACTIVE_UID, firebaseUser.uid);
 
@@ -1337,6 +1344,25 @@ export class UserService implements OnDestroy {
   }
 
   /**
+   * Update user login metadata (lastLoginAt, loginCount)
+   */
+  private async updateLoginMetadata(uid: string): Promise<void> {
+    try {
+      if (this.isGuestUser() || uid === 'offline-guest' || this.metadataUpdatedThisSession) return;
+
+      const userRef = doc(this.firestore, `users/${uid}`);
+      await updateDoc(userRef, {
+        lastLoginAt: serverTimestamp(),
+        loginCount: increment(1)
+      });
+      this.metadataUpdatedThisSession = true;
+      console.log(`[UserService] Login metadata updated for: ${uid}`);
+    } catch (error) {
+      console.error('[UserService] Error updating login metadata:', error);
+    }
+  }
+
+  /**
    * Create user document in Firestore with enhanced security
    */
   private async createUserInFirestore(
@@ -1350,7 +1376,7 @@ export class UserService implements OnDestroy {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         lastLoginAt: serverTimestamp(),
-        loginCount: 0,
+        loginCount: 1,
         isActive: true,
         securitySettings: {
           twoFactorEnabled: false,
