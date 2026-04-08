@@ -1191,6 +1191,91 @@ export class LocalIndexDBStorageService {
         });
     }
 
+    /**
+     * Selectively clear storage for app updates.
+     * Preserves Auth state, Guest data, and fundamental Preferences.
+     */
+    async clearCacheForUpdate(): Promise<void> {
+        console.log('🧹 Selective cache clearance for app update...');
+        
+        const isGuest = this.getItem(LocalStorageKey.GUEST_MODE) === 'true';
+        
+        // 1. Keys to preserve in the main keyValueStore
+        const keysToKeep = new Set<string>([
+            LocalStorageKey.GUEST_MODE,
+            LocalStorageKey.GUEST_DATA_INITIALIZED,
+            LocalStorageKey.USER_DATA_GUEST,
+            LocalStorageKey.LAST_ACTIVE_UID,
+            LocalStorageKey.THEME_PREFERENCE,
+            LocalStorageKey.LOCALE_PREFERENCE,
+            LocalStorageKey.APP_LANGUAGE,
+            LocalStorageKey.FCM_TOKEN,
+            LocalStorageKey.SYNC_QUEUE,
+            LocalStorageKey.PWA_INSTALL_DISMISSED,
+            LocalStorageKey.PWA_INSTALL_DISMISSED_TIME,
+            'app-updated' // Keep the update flag itself if needed
+        ]);
+
+        const dynamicPrefixes = [
+            LocalStorageKey.USER_DATA_PREFIX,
+            LocalStorageKey.LAST_LOGIN_PREFIX,
+            'guest_' // Legacy and Guest-specific collections
+        ];
+
+        // 2. Identify keys to remove from keyValueStore
+        const allKeys = Array.from(this.keyValueCache.keys());
+        const keysToRemove = allKeys.filter(key => {
+            if (keysToKeep.has(key)) return false;
+            if (dynamicPrefixes.some(p => key.startsWith(p))) return false;
+            return true;
+        });
+
+        // 3. Clear In-Memory Caches selectively
+        keysToRemove.forEach(key => this.keyValueCache.delete(key));
+        
+        // 4. Clear Dedicated Stores ONLY if NOT in Guest Mode
+        // Logged-in users will re-sync their transactions/accounts/categories from Firestore.
+        // Guest users MUST keep their local data as it's not backed up in the cloud.
+        if (!isGuest) {
+            console.log('ℹ️ User is authenticated. Clearing business data caches (will re-sync from cloud).');
+            this.transactionsCache.clear();
+            this.accountsCache.clear();
+            this.categoriesCache.clear();
+            
+            this.familyIdIndex.clear();
+            this.userIdIndex.clear();
+            this.accountIdIndex.clear();
+            this.accountsFamilyIdIndex.clear();
+            this.categoriesFamilyIdIndex.clear();
+            
+            await this.clearTransactionsStore();
+            await this.clearAccountsStore();
+            await this.clearCategoriesStore();
+        } else {
+            console.log('ℹ️ User is in GUEST mode. Preserving all local transaction/account/category data.');
+        }
+
+        // 5. Persist removal to keyValueStore in DB
+        if (this.db && keysToRemove.length > 0) {
+            return new Promise((resolve, reject) => {
+                try {
+                    const transaction = this.db!.transaction([this.STORE_NAME], 'readwrite');
+                    const store = transaction.objectStore(this.STORE_NAME);
+                    
+                    keysToRemove.forEach(key => store.delete(key));
+                    
+                    transaction.oncomplete = () => {
+                        console.log(`✅ Main key-value store cleared of ${keysToRemove.length} non-essential items.`);
+                        resolve();
+                    };
+                    transaction.onerror = () => reject(transaction.error);
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+    }
+
     // ==========================================
     // Type-Safe Methods & Collections (No Changes)
     // ==========================================

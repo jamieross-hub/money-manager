@@ -251,9 +251,9 @@ export class UserComponent {
             } catch (cErr) { console.warn('Cache clear error:', cErr); }
           }
           
-          // Clear ALL Local IndexedDB Caches safely
+          // Clear non-essential Local IndexedDB Caches safely, preserving Auth/Guest data
           try {
-            await this.localStorageService.clear();
+            await this.localStorageService.clearCacheForUpdate();
           } catch (idbErr) { console.warn('IndexedDB clearance error:', idbErr); }
 
           // Activate update if ready

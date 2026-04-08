@@ -254,8 +254,8 @@ export class FooterComponent {
       return 0;
     });
     
-    // Limit to 5 items
-    return sorted.slice(0, 5);
+    // Limit to 4 items
+    return sorted.slice(0, 4);
   });
 
   onAddFabClick() {
