@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "ng serve --host 0.0.0.0 --port 4200",
     "config": "node scripts/set-env.js",
     "build": "npm run config && ng build --configuration production",
     "build:cache-bust": "npm run config && node deploy-cache-bust.js && ng build --configuration production",
