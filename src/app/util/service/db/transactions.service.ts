@@ -775,12 +775,8 @@ export class TransactionsService extends BaseService {
                                 }
 
                                 // Only overwrite if the local copy is not a still-pending write.
-                                // We check the actual IndexedDB cache instead of our in-memory map to ensure 
-                                // we pick up sync-completions from CommonSyncService.
-                                const itemKey = LocalStorageKeyHelper.getTransactionItemKey(tx.id!, effectiveFamilyId);
-                                const cached = this.localStorageUtility.getItem<Transaction>(itemKey, 'transactions');
-                                const isLocalPending = cached?.syncStatus === 'pending';
-                                
+                                const existing = txMap.get(tx.id!);
+                                const isLocalPending = existing?.syncStatus === 'pending';
                                 if (!isLocalPending) {
                                     txMap.set(tx.id!, tx);
                                     this.updateTransactionCache(userId, 'update', tx);
