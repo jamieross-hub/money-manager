@@ -12,8 +12,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { trigger, state, style, transition, animate } from '@angular/animations';
@@ -35,6 +33,7 @@ import { FamilyService } from 'src/app/modules/family/services/family.service';
 import { FamilyMember } from 'src/app/util/models/family.model';
 import { PwaNavigationService } from 'src/app/util/service/pwa-navigation.service';
 import { map, switchMap, of, combineLatest } from 'rxjs';
+import { APP_CONFIG } from 'src/app/util/config/config';
 
 @Component({
   selector: 'app-user',
@@ -48,7 +47,6 @@ import { map, switchMap, of, combineLatest } from 'rxjs';
     RouterModule,
     TranslateModule,
     ClickOutsideDirective,
-    MatDialogModule,
     // ThemeToggleComponent,
     FamilyModeToggleComponent,
     ImageFallbackDirective,
@@ -71,7 +69,6 @@ export class UserComponent {
   private readonly breakpointObserver  = inject(BreakpointObserver);
   private readonly themeSwitchingService = inject(ThemeSwitchingService);
   private readonly localStorageService = inject(LocalIndexDBStorageService);
-  private readonly dialog              = inject(MatDialog);
   private readonly familyService       = inject(FamilyService);
   private readonly store               = inject(Store<AppState>);
   private readonly swUpdate            = inject(SwUpdate);
@@ -143,6 +140,10 @@ export class UserComponent {
       this.swUpdate.versionUpdates.subscribe(evt => {
         if (evt.type === 'VERSION_READY') {
           this.updateAvailable.set(true);
+          this.notificationService.info(
+            '🚀 A new version is available! Tap "Cache Management" to update.',
+            'Update'
+          );
         }
       });
   
@@ -220,8 +221,29 @@ export class UserComponent {
   }
 
   updateApp(): void {
-    this.close();
-    
+    if (this.updateAvailable()) {
+      // Show confirmation modal via shared NotificationService
+      this.close();
+      this.notificationService.confirm({
+        title: 'Update Available',
+        message: 'A new version of ' + APP_CONFIG.APP_NAME + ' is ready. The app will reload to apply the update. Any unsaved changes will be lost.',
+        confirmText: 'Update Now',
+        cancelText: 'Later',
+        type: 'info',
+        icon: 'system_update'
+      }).subscribe(confirmed => {
+        if (confirmed) {
+          this.performUpdate();
+        }
+      });
+      return;
+    }
+
+    // No update available — open cache management directly
+    this.performUpdate();
+  }
+
+  private performUpdate(): void {
     // Create and show update overlay to inform the user
     const overlay = document.createElement('div');
     overlay.className = 'fixed inset-0 z-[9999] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4';
@@ -309,23 +331,18 @@ export class UserComponent {
     this.close();
   }
 
-  async signOut(e?: Event): Promise<void> {
+  signOut(e?: Event): void {
     e?.stopPropagation();
 
     if (this.isGuest()) {
-      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-        closeOnNavigation: false,
-        data: {
-          title: 'Sign Out?',
-          message: 'Are you sure you want to sign out? All your guest data will be permanently deleted.',
-          confirmText: 'Sign Out',
-          cancelText: 'Cancel',
-          type: 'warning',
-        },
-      });
-
-      dialogRef.afterClosed().subscribe(async (result) => {
-        if (result) {
+      this.notificationService.confirm({
+        title: 'Sign Out?',
+        message: 'Are you sure you want to sign out? All your guest data will be permanently deleted.',
+        confirmText: 'Sign Out',
+        cancelText: 'Cancel',
+        type: 'warning',
+      }).subscribe(async confirmed => {
+        if (confirmed) {
           try {
             await this.userService.signOut();
             this.notificationService.success('Signed out and guest data cleared');
@@ -338,9 +355,10 @@ export class UserComponent {
       });
     } else {
       try {
-        await this.userService.signOut();
-        this.notificationService.success('Signed out successfully');
-        this.close();
+        this.userService.signOut().then(() => {
+          this.notificationService.success('Signed out successfully');
+          this.close();
+        });
       } catch (error) {
         console.error('Error signing out:', error);
         this.notificationService.error('Failed to sign out');

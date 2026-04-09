@@ -18,6 +18,38 @@
       color: #dc2626;
     }
   }
+
+  .hero-icon-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    flex-shrink: 0;
+    
+    mat-icon {
+      font-size: 1.5rem;
+      width: 1.5rem;
+      height: 1.5rem;
+      line-height: 1.5rem;
+    }
+
+    &.badge-delete {
+      background-color: #fee2e2;
+      color: #dc2626;
+    }
+
+    &.badge-warning {
+      background-color: #fef9c3;
+      color: #ca8a04;
+    }
+
+    &.badge-info {
+      background-color: #e0e7ff;
+      color: #4f46e5;
+    }
+  }
   
   .dialog-title {
     font-size: clamp(1rem, 2.5vw, 1.5rem);

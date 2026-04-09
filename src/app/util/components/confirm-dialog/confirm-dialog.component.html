@@ -1,8 +1,17 @@
 <div class="confirm-dialog">
   <div class="dialog-header">
-    <mat-icon class="dialog-icon" [class.delete]="data.type === 'delete'">
-      {{ data.type === 'delete' ? 'delete_forever' : 'warning' }}
-    </mat-icon>
+    @if (data.icon) {
+      <div class="hero-icon-badge"
+           [class.badge-delete]="data.type === 'delete'"
+           [class.badge-warning]="data.type === 'warning'"
+           [class.badge-info]="data.type === 'info'">
+        <mat-icon>{{ data.icon }}</mat-icon>
+      </div>
+    } @else {
+      <mat-icon class="dialog-icon" [class.delete]="data.type === 'delete'">
+        {{ data.type === 'delete' ? 'delete_forever' : 'warning' }}
+      </mat-icon>
+    }
     <h2 class="dialog-title">{{ data.title }}</h2>
   </div>
   

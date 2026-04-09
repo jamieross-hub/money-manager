@@ -1,7 +1,10 @@
 import { Injectable, Inject, PLATFORM_ID } from "@angular/core";
 import { MatSnackBar, MatSnackBarConfig } from "@angular/material/snack-bar";
+import { MatDialog } from "@angular/material/dialog";
 import { APP_CONFIG } from "../config/config";
 import { isPlatformServer } from "@angular/common";
+import { Observable, map } from "rxjs";
+import { ConfirmDialogComponent, ConfirmDialogData } from "../components/confirm-dialog/confirm-dialog.component";
 
 export interface HapticFeedbackOptions {
   duration?: number;
@@ -27,6 +30,7 @@ export class NotificationService {
 
   constructor(
     private snackBar: MatSnackBar,
+    private dialog: MatDialog,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isVibrationSupported = !isPlatformServer(this.platformId) && 'vibrate' in navigator;
@@ -194,5 +198,26 @@ export class NotificationService {
   showCustom(message: string, action: string = "Notification", customConfig: MatSnackBarConfig = {}): void {
     const config = { ...this.defaultConfig, ...customConfig }; // Merge default config with custom config
     this.snackBar.open(message, action, config);
+  }
+
+  /**
+   * Opens a reusable confirmation dialog and returns an Observable<boolean>.
+   * Resolves to `true` if the user confirms, `false` otherwise.
+   *
+   * @example
+   * this.notificationService.confirm({
+   *   title: 'Delete Item',
+   *   message: 'Are you sure you want to delete this item?',
+   *   confirmText: 'Delete',
+   *   cancelText: 'Cancel',
+   *   type: 'delete',
+   * }).subscribe(confirmed => { if (confirmed) { ... } });
+   */
+  confirm(data: ConfirmDialogData): Observable<boolean> {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      closeOnNavigation: false,
+      data,
+    });
+    return dialogRef.afterClosed().pipe(map(result => !!result));
   }
 }
