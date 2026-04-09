@@ -834,11 +834,16 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
               : transactionDate;
 
             const interval = formData.recurringInterval as RecurringInterval;
-            
-            // If the start date is on or before the reference (source) transaction date, 
-            // and they are in the same period, the NEXT one is truly the next one.
-            const nextDate = new Date(startDate);
-            
+
+            const advanceByInterval = (d: Date): void => {
+              switch (interval) {
+                case RecurringInterval.DAILY: d.setDate(d.getDate() + 1); break;
+                case RecurringInterval.WEEKLY: d.setDate(d.getDate() + 7); break;
+                case RecurringInterval.MONTHLY: d.setMonth(d.getMonth() + 1); break;
+                case RecurringInterval.YEARLY: d.setFullYear(d.getFullYear() + 1); break;
+              }
+            };
+
             const isSamePeriod = (d1: Date, d2: Date, inv: RecurringInterval): boolean => {
               const m1 = dayjs(d1);
               const m2 = dayjs(d2);
@@ -849,18 +854,26 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
               return false;
             };
 
+            const nextDate = new Date(startDate);
+
+            // If the start date coincides with or precedes the reference transaction,
+            // advance once so the NEXT occurrence is correctly computed.
             if (!referenceDate || startDate.getTime() <= referenceDate.getTime() || isSamePeriod(startDate, referenceDate, interval)) {
-              switch (interval) {
-                case RecurringInterval.DAILY: nextDate.setDate(nextDate.getDate() + 1); break;
-                case RecurringInterval.WEEKLY: nextDate.setDate(nextDate.getDate() + 7); break;
-                case RecurringInterval.MONTHLY: nextDate.setMonth(nextDate.getMonth() + 1); break;
-                case RecurringInterval.YEARLY: nextDate.setFullYear(nextDate.getFullYear() + 1); break;
-                default: break;
-              }
-              return nextDate;
+              advanceByInterval(nextDate);
             }
 
-            return startDate;
+            // Backdate scenario: keep advancing until we land on today or a future date
+            // so the template always stores the next upcoming occurrence.
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            let safetyCounter = 0;
+            const MAX_ITERATIONS = 1000;
+            while (nextDate < today && safetyCounter < MAX_ITERATIONS) {
+              advanceByInterval(nextDate);
+              safetyCounter++;
+            }
+
+            return nextDate;
           })() : null,
           status: TransactionStatus.COMPLETED,
           isSplitTransaction: formData.isSplitTransaction || false,
