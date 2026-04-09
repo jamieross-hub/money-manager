@@ -230,7 +230,8 @@ export class UserComponent {
         confirmText: 'Update Now',
         cancelText: 'Later',
         type: 'info',
-        icon: 'system_update'
+        icon: 'system_update',
+        design: 'premium'
       }).subscribe(confirmed => {
         if (confirmed) {
           this.performUpdate();

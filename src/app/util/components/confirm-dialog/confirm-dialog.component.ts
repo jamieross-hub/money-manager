@@ -13,6 +13,7 @@ export interface ConfirmDialogData {
   confirmColor?: 'primary' | 'warn' | 'accent';
   /** Optional Material Icon name (e.g. 'system_update') rendered as the dialog icon */
   icon?: string;
+  design?: 'standard' | 'premium';
 }
 
 @Component({
@@ -36,7 +37,8 @@ export class ConfirmDialogComponent {
       cancelText: data.cancelText || 'Cancel',
       type: data.type || 'warning',
       confirmColor: data.confirmColor || (data.type === 'delete' ? 'warn' : 'primary'),
-      icon: data.icon
+      icon: data.icon,
+      design: data.design || 'standard'
     };
   }
 }

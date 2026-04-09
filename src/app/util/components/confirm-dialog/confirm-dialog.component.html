@@ -1,37 +1,72 @@
-<div class="confirm-dialog">
-  <div class="dialog-header">
-    @if (data.icon) {
-      <div class="hero-icon-badge"
-           [class.badge-delete]="data.type === 'delete'"
-           [class.badge-warning]="data.type === 'warning'"
-           [class.badge-info]="data.type === 'info'">
-        <mat-icon>{{ data.icon }}</mat-icon>
-      </div>
-    } @else {
-      <mat-icon class="dialog-icon" [class.delete]="data.type === 'delete'">
-        {{ data.type === 'delete' ? 'delete_forever' : 'warning' }}
+@if (data.design === 'premium') {
+  <div class="premium-confirm-dialog">
+    <div class="dialog-icon-wrapper" 
+         [class.badge-delete]="data.type === 'delete'"
+         [class.badge-warning]="data.type === 'warning'"
+         [class.badge-info]="data.type === 'info'">
+      <div class="icon-glow"></div>
+      <mat-icon class="premium-icon">
+        {{ data.icon ? data.icon : (data.type === 'delete' ? 'delete_forever' : data.type === 'info' ? 'info' : 'warning_amber') }}
       </mat-icon>
-    }
-    <h2 class="dialog-title">{{ data.title }}</h2>
+    </div>
+    
+    <div class="dialog-text-content">
+      <h2 class="dialog-title">{{ data.title }}</h2>
+      <p class="dialog-message">{{ data.message }}</p>
+    </div>
+    
+    <div class="dialog-actions">
+      <button mat-button 
+              type="button"
+              [mat-dialog-close]="false"
+              class="premium-btn cancel-btn">
+        {{ data.cancelText }}
+      </button>
+      <button mat-flat-button 
+              type="button"
+              [color]="data.confirmColor"
+              [mat-dialog-close]="true"
+              class="premium-btn confirm-btn">
+        {{ data.confirmText }}
+      </button>
+    </div>
   </div>
-  
-  <div class="dialog-content">
-    <p class="dialog-message">{{ data.message }}</p>
+} @else {
+  <div class="confirm-dialog">
+    <div class="dialog-header">
+      @if (data.icon) {
+        <div class="hero-icon-badge"
+             [class.badge-delete]="data.type === 'delete'"
+             [class.badge-warning]="data.type === 'warning'"
+             [class.badge-info]="data.type === 'info'">
+          <mat-icon>{{ data.icon }}</mat-icon>
+        </div>
+      } @else {
+        <mat-icon class="dialog-icon" [class.delete]="data.type === 'delete'">
+          {{ data.type === 'delete' ? 'delete_forever' : 'warning' }}
+        </mat-icon>
+      }
+      <h2 class="dialog-title">{{ data.title }}</h2>
+    </div>
+    
+    <div class="dialog-content">
+      <p class="dialog-message">{{ data.message }}</p>
+    </div>
+    
+    <div class="dialog-actions">
+      <button mat-button 
+              type="button"
+              [mat-dialog-close]="false"
+              class="cancel-button">
+        {{ data.cancelText }}
+      </button>
+      <button mat-raised-button 
+              type="button"
+              [color]="data.confirmColor"
+              [mat-dialog-close]="true"
+              class="confirm-button">
+        {{ data.confirmText }}
+      </button>
+    </div>
   </div>
-  
-  <div class="dialog-actions">
-    <button mat-button 
-            type="button"
-            [mat-dialog-close]="false"
-            class="cancel-button">
-      {{ data.cancelText }}
-    </button>
-    <button mat-raised-button 
-            type="button"
-            [color]="data.confirmColor"
-            [mat-dialog-close]="true"
-            class="confirm-button">
-      {{ data.confirmText }}
-    </button>
-  </div>
-</div> 
+} 
