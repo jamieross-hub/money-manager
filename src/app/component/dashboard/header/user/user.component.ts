@@ -140,10 +140,22 @@ export class UserComponent {
       this.swUpdate.versionUpdates.subscribe(evt => {
         if (evt.type === 'VERSION_READY') {
           this.updateAvailable.set(true);
-          this.notificationService.info(
-            '🚀 A new version is available! Tap "Cache Management" to update.',
-            'Update'
-          );
+          
+          this.notificationService.confirm({
+            title: 'Update Available',
+            message: 'A new version of ' + APP_CONFIG.APP_NAME + ' is ready. The app will reload to apply the update. Any unsaved changes will be lost.',
+            confirmText: 'Update Now',
+            cancelText: 'Later',
+            type: 'info',
+            icon: 'system_update',
+            design: 'premium'
+          }).subscribe(confirmed => {
+            if (confirmed) {
+              this.performUpdate();
+            } else {
+               this.notificationService.info('🚀 You can update later from the user menu.');
+            }
+          });
         }
       });
   
