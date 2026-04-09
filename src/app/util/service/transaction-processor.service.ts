@@ -384,10 +384,12 @@ export class TransactionProcessorService {
       );
     } else {
       if (isRecurringMode) {
-        sourceData = (recurringTemplates || []).map((t: any) => ({
-          ...t,
-          date: t.nextOccurrence || t.createdAt || new Date()
-        }));
+        sourceData = (recurringTemplates || [])
+          .filter((t: any) => t.isActive === true)
+          .map((t: any) => ({
+            ...t,
+            date: t.nextOccurrence || t.createdAt || new Date()
+          }));
       } else {
         sourceData = transactions;
       }

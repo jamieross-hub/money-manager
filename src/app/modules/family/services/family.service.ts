@@ -565,7 +565,12 @@ export class FamilyService implements OnDestroy {
 
   setActiveFamily(id: string | null): void {
     const previousId = this.activeFamilyId();
-    if (previousId === id) return;
+    const currentIsFamilyMode = !!(this.store.selectSignal(fromProfile.selectUserPreferences)()?.isFamilyMode);
+    const desiredIsFamilyMode = !!id;
+    // Skip only when BOTH the active family ID and the family-mode flag are already in sync.
+    // Without this check, selecting the same family after toggling family mode OFF via
+    // profile settings would hit the early-return and never dispatch isFamilyMode: true.
+    if (previousId === id && currentIsFamilyMode === desiredIsFamilyMode) return;
 
     this.isTransitioning = true;
     this.activeFamilyId.set(id);

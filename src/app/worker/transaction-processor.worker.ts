@@ -209,7 +209,12 @@ addEventListener('message', ({ data }) => {
     sourceData = generateUpcomingTransactions(templates.map((t: any) => ({ ...t, isRecurring: true })), startDate, endDate, transactions);
   } else {
     if (isRecurringMode) {
-      sourceData = recurringTemplates || [];
+      sourceData = (recurringTemplates || [])
+        .filter((t: any) => t.isActive === true)
+        .map((t: any) => ({
+          ...t,
+          date: t.nextOccurrence || t.createdAt || new Date()
+        }));
     } else {
       sourceData = transactions; // SelectAllTransactions already filtered for !isDeleted
     }
