@@ -1,4 +1,5 @@
-import { Component, Inject , ChangeDetectionStrategy} from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { Component, Inject, ChangeDetectionStrategy } from '@angular/core';
 
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,12 +9,13 @@ export interface ConfirmDialogData {
   title: string;
   message: string;
   confirmText: string;
-  cancelText: string;
+  cancelText?: string;
   type: 'delete' | 'warning' | 'info';
   confirmColor?: 'primary' | 'warn' | 'accent';
   /** Optional Material Icon name (e.g. 'system_update') rendered as the dialog icon */
   icon?: string;
-  design?: 'standard' | 'premium';
+  imageUrl?: string;
+  design?: 'standard' | 'premium' | 'welcome';
 }
 
 @Component({
@@ -25,20 +27,27 @@ export interface ConfirmDialogData {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ConfirmDialogComponent {
+  safeMessage: SafeHtml;
+
   constructor(
     public dialogRef: MatDialogRef<ConfirmDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    private sanitizer: DomSanitizer
   ) {
     // Set defaults if not provided
     this.data = {
       title: data.title || 'Confirm',
       message: data.message || 'Are you sure?',
       confirmText: data.confirmText || 'Confirm',
-      cancelText: data.cancelText || 'Cancel',
+      cancelText: data.cancelText,
       type: data.type || 'warning',
       confirmColor: data.confirmColor || (data.type === 'delete' ? 'warn' : 'primary'),
       icon: data.icon,
+      imageUrl: data.imageUrl,
       design: data.design || 'standard'
     };
+
+    // Sanitize message for safe HTML rendering
+    this.safeMessage = this.sanitizer.bypassSecurityTrustHtml(this.data.message);
   }
 }

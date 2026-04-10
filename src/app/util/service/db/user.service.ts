@@ -387,7 +387,8 @@ export class UserService implements OnDestroy {
         notifications: false,
         emailUpdates: false,
         hapticFeedback: true,
-        theme: 'light-theme'
+        theme: 'light-theme',
+        hasSeenWelcome: false
       }
     };
   }
@@ -766,7 +767,8 @@ export class UserService implements OnDestroy {
             notifications: false,
             emailUpdates: false,
             hapticFeedback: true,
-            theme: 'light-theme'
+            theme: 'light-theme',
+            hasSeenWelcome: false
           }
         };
 

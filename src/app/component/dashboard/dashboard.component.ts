@@ -23,6 +23,9 @@ import { InvitationPopupService } from 'src/app/util/service/invitation-popup.se
 import { RecurringTransactionService } from 'src/app/util/service/recurring-transaction.service';
 import { PwaSwService } from 'src/app/util/service/pwa-sw.service';
 import { TransactionsFacadeService } from 'src/app/util/service/db/transactions-facade.service';
+import { NotificationService } from 'src/app/util/service/notification.service';
+import { appConfig } from 'src/app/app.config';
+import { APP_CONFIG } from 'src/app/util/config/config';
 
 @Component({
   selector: 'app-dashboard',
@@ -48,7 +51,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private pwaSwService: PwaSwService,
     private transactionsService: TransactionsService,
-    private transactionsFacade: TransactionsFacadeService
+    private transactionsFacade: TransactionsFacadeService,
+    private notificationService: NotificationService
   ) { }
 
   ngOnInit() {
@@ -56,6 +60,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadAppData();
 
     this.invitationPopupService.showInvitationsAfterLogin();
+
+    this.checkAndShowWelcomeNotification();
 
     // Check for due recurring transactions after a short delay
     //  setTimeout(() => {
@@ -131,5 +137,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.updateAvailable = false;
     this.pwaSwService.dismissUpdate();
     this.cdr.markForCheck();
+  }
+
+  private checkAndShowWelcomeNotification() {
+    this.userService.userAuth$.pipe(
+      filter(user => !!user),
+      take(1)
+    ).subscribe(user => {
+      if (user && user.preferences && user.preferences.hasSeenWelcome === false) {
+        this.notificationService.confirm({
+          title: APP_CONFIG.APP_NAME,
+          message: APP_CONFIG.WELCOME_MESSAGE,
+          confirmText: 'Get Started',
+          type: 'info',
+          imageUrl: 'assets/images/logo.svg',
+          design: 'welcome'
+        }).subscribe(confirmed => {
+          const updatedUser: any = {
+            ...user,
+            preferences: {
+              ...user.preferences,
+              hasSeenWelcome: true
+            }
+          };
+          this.userService.createOrUpdateUser(updatedUser);
+        });
+      }
+    });
   }
 }

@@ -54,6 +54,7 @@ export interface UserPreferences {
 	isFamilyMode?: boolean;
 	activeFamilyId?: string | null;
 	hapticFeedback?: boolean;
+	hasSeenWelcome?: boolean;
 }
 
 

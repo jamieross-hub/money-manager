@@ -56,6 +56,16 @@
         background-color: #e0e7ff;
         color: #4f46e5;
       }
+
+      &.logo-badge {
+        background-color: transparent !important;
+        
+        .standard-image-icon {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+      }
     }
     
     .dialog-title {
@@ -103,6 +113,29 @@
   align-items: center;
   text-align: center;
   padding: 1.5rem 0.5rem 0.5rem;
+  position: relative;
+
+  .close-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    color: var(--text-color-secondary, #6b7280);
+    z-index: 2;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background-color: var(--surface-hover, #f3f4f6);
+      color: var(--text-color, #1f2937);
+      transform: rotate(90deg);
+    }
+
+    // mat-icon {
+    //   font-size: 1.25rem;
+    //   width: 1.25rem;
+    //   height: 1.25rem;
+    //   line-height: 1.25rem;
+    // }
+  }
 
   .dialog-icon-wrapper {
     position: relative;
@@ -132,6 +165,12 @@
       width: 2.25rem;
       height: 2.25rem;
       line-height: 2.25rem;
+    }
+
+    .premium-image-icon {
+      width: 3.5rem;
+      height: 3.5rem;
+      object-fit: contain;
     }
 
     &.badge-delete {
@@ -171,6 +210,10 @@
     font-size: clamp(0.95rem, 2.5vw, 1.05rem);
     line-height: 1.6;
     margin: 0;
+
+    .welcome-modes-list {
+      display: none; // Removed from premium, moved to welcome design
+    }
   }
 
   .dialog-actions {
@@ -206,5 +249,113 @@
   100% {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+/* ================================================= */
+/*             WELCOME ONBOARDING DIALOG             */
+/* ================================================= */
+
+.welcome-confirm-dialog {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0.5rem 0.5rem;
+  text-align: center;
+
+  .dialog-header {
+    margin-bottom: 1.25rem;
+    
+    .brand-badge {
+      width: 3.5rem;
+      height: 3.5rem;
+      background: white;
+      border-radius: 16px;
+      margin: 0 auto 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      
+      .brand-logo {
+        width: 2.5rem;
+        height: 2.5rem;
+        object-fit: contain;
+      }
+    }
+
+    .welcome-title {
+      font-size: clamp(1.25rem, 4vw, 1.5rem);
+      font-weight: 800;
+      color: var(--text-color, #111827);
+      margin: 0;
+      letter-spacing: -0.025em;
+    }
+  }
+
+  .welcome-content {
+    margin-bottom: 1.5rem;
+    
+    .welcome-message {
+      color: var(--text-color-secondary, #4b5563);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      padding: 0 0.5rem;
+    }
+  }
+
+  .welcome-actions {
+    .welcome-btn {
+      width: 100%;
+      height: 3rem;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+  }
+}
+
+// Support classes specifically for welcome modes list
+.welcome-modes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  text-align: left;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+
+  .mode-item {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.25rem 0;
+
+    .mode-icon {
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mode-details {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.4rem;
+      font-size: 0.875rem;
+
+      b {
+        color: var(--text-color, #1f2937);
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      span {
+        color: var(--text-color-secondary, #6b7280);
+        line-height: 1.4;
+      }
+    }
   }
 }

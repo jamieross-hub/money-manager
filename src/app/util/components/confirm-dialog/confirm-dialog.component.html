@@ -1,27 +1,76 @@
-@if (data.design === 'premium') {
+@if (data.design === 'welcome') {
+  <div class="welcome-confirm-dialog">
+    <div class="dialog-header">
+      @if (data.imageUrl) {
+        <div class="brand-badge">
+          <img [src]="data.imageUrl" class="brand-logo" alt="App Logo">
+        </div>
+      }
+      <h2 class="welcome-title">{{ data.title }}</h2>
+    </div>
+
+    <div class="welcome-content">
+      <div class="welcome-message" [innerHTML]="safeMessage"></div>
+
+      <div class="welcome-modes-list">
+        <div class="mode-item">
+          <span class="mode-icon">👤</span>
+          <div class="mode-details"><b>Individual:</b><span>For your private spending.</span></div>
+        </div>
+        <div class="mode-item">
+          <span class="mode-icon">🏠</span>
+          <div class="mode-details"><b>Common Expenses:</b><span>For shared household bills where no one owes each other.</span></div>
+        </div>
+        <div class="mode-item">
+          <span class="mode-icon">⚖️</span>
+          <div class="mode-details"><b>Split Expenses:</b><span>To track shared expenses and settle debts among family or friends.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="welcome-actions">
+      <button mat-flat-button 
+              type="button"
+              [color]="data.confirmColor"
+              [mat-dialog-close]="true"
+              class="welcome-btn confirm-btn">
+        {{ data.confirmText }}
+      </button>
+    </div>
+  </div>
+} @else if (data.design === 'premium') {
   <div class="premium-confirm-dialog">
+    <button mat-icon-button class="close-btn" [mat-dialog-close]="false" type="button">
+      <mat-icon>close</mat-icon>
+    </button>
     <div class="dialog-icon-wrapper" 
          [class.badge-delete]="data.type === 'delete'"
          [class.badge-warning]="data.type === 'warning'"
          [class.badge-info]="data.type === 'info'">
       <div class="icon-glow"></div>
-      <mat-icon class="premium-icon">
-        {{ data.icon ? data.icon : (data.type === 'delete' ? 'delete_forever' : data.type === 'info' ? 'info' : 'warning_amber') }}
-      </mat-icon>
+      @if (data.imageUrl) {
+        <img [src]="data.imageUrl" class="premium-image-icon" alt="Dialog Icon">
+      } @else {
+        <mat-icon class="premium-icon">
+          {{ data.icon ? data.icon : (data.type === 'delete' ? 'delete_forever' : data.type === 'info' ? 'info' : 'warning_amber') }}
+        </mat-icon>
+      }
     </div>
     
     <div class="dialog-text-content">
       <h2 class="dialog-title">{{ data.title }}</h2>
-      <p class="dialog-message">{{ data.message }}</p>
+      <p class="dialog-message" [innerHTML]="safeMessage"></p>
     </div>
     
     <div class="dialog-actions">
-      <button mat-button 
-              type="button"
-              [mat-dialog-close]="false"
-              class="premium-btn cancel-btn">
-        {{ data.cancelText }}
-      </button>
+      @if (data.cancelText) {
+        <button mat-button 
+                type="button"
+                [mat-dialog-close]="false"
+                class="premium-btn cancel-btn">
+          {{ data.cancelText }}
+        </button>
+      }
       <button mat-flat-button 
               type="button"
               [color]="data.confirmColor"
@@ -34,7 +83,11 @@
 } @else {
   <div class="confirm-dialog">
     <div class="dialog-header">
-      @if (data.icon) {
+      @if (data.imageUrl) {
+        <div class="hero-icon-badge logo-badge">
+          <img [src]="data.imageUrl" class="standard-image-icon" alt="Logo">
+        </div>
+      } @else if (data.icon) {
         <div class="hero-icon-badge"
              [class.badge-delete]="data.type === 'delete'"
              [class.badge-warning]="data.type === 'warning'"
@@ -50,16 +103,18 @@
     </div>
     
     <div class="dialog-content">
-      <p class="dialog-message">{{ data.message }}</p>
+      <p class="dialog-message" [innerHTML]="safeMessage"></p>
     </div>
     
     <div class="dialog-actions">
-      <button mat-button 
-              type="button"
-              [mat-dialog-close]="false"
-              class="cancel-button">
-        {{ data.cancelText }}
-      </button>
+      @if (data.cancelText) {
+        <button mat-button 
+                type="button"
+                [mat-dialog-close]="false"
+                class="cancel-button">
+          {{ data.cancelText }}
+        </button>
+      }
       <button mat-raised-button 
               type="button"
               [color]="data.confirmColor"
