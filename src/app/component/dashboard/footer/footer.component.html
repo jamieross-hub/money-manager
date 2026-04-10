@@ -32,7 +32,7 @@
                       (touchstart)="startHomePress()" 
                       (touchend)="endHomePress()" 
                       (contextmenu)="$event.preventDefault()" 
-                      class="footer-item-animation group flex flex-col items-center gap-2 lg:gap-1"
+                      class="footer-item-animation group w-full flex flex-col items-center gap-2 lg:gap-1"
                       [style.animation-delay]="i * 0.05 + 's'">
                 <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
                   [ngClass]="(isFamilyMode() ? isFamilyActive() : isHomeActive()) ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
@@ -54,7 +54,7 @@
             <!-- Expense Item -->
             @else if (item.id === 'expense') {
               <button (click)="quickExpense()" 
-                      class="footer-item-animation group flex flex-col items-center gap-2 lg:gap-1"
+                      class="footer-item-animation group w-full flex flex-col items-center gap-2 lg:gap-1"
                       [style.animation-delay]="i * 0.05 + 's'">
                 <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
                   [ngClass]="isExpenseActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
@@ -77,7 +77,7 @@
                       (touchstart)="startPress()"
                       (touchend)="endPress()"
                       (contextmenu)="$event.preventDefault()"
-                class="footer-item-animation group flex flex-col items-center gap-2 lg:gap-1"
+                class="footer-item-animation group w-full flex flex-col items-center gap-2 lg:gap-1"
                 [style.animation-delay]="i * 0.05 + 's'">
                 <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
                   [ngClass]="(isFamilyMode() ? (showSummaryInFamily() || activeFamily()?.mode !== 'split' ? isReportsActive() : isSettleActive()) : isReportsActive()) ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
@@ -96,12 +96,12 @@
             <!-- Generic Item (Category, Accounts, Profile) -->
             @else {
               <button (click)="onActionClick(item)" 
-                      class="footer-item-animation group flex flex-col items-center gap-2 lg:gap-1"
+                      class="footer-item-animation group w-full flex flex-col items-center gap-2 lg:gap-1"
                       [style.animation-delay]="i * 0.05 + 's'">
                 <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
-                  [ngClass]="(item.id === 'category' ? isCategoryActive() : (item.id === 'accounts' ? isAccountsActive() : isProfileActive())) ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
+                  [ngClass]="item.bgClass || ((item.id === 'category' ? isCategoryActive() : (item.id === 'accounts' ? isAccountsActive() : isProfileActive())) ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400')">
                   <mat-icon class="text-xl lg:text-base relative bottom-1"
-                  [ngClass]="(item.id === 'category' ? isCategoryActive() : (item.id === 'accounts' ? isAccountsActive() : isProfileActive())) ? 'active-icon' : 'inactive-icon dark:text-slate-400'">
+                  [ngClass]="item.bgClass ? 'text-white' : ((item.id === 'category' ? isCategoryActive() : (item.id === 'accounts' ? isAccountsActive() : isProfileActive())) ? 'active-icon' : 'inactive-icon dark:text-slate-400')">
                     {{ item.icon }}
                   </mat-icon>
                 </div>
@@ -115,7 +115,7 @@
 
           <!-- Fallback for FAB if less than 3 items -->
           @if ((dynamicConfig().items?.length ?? 0) < 3 && !dynamicConfig().hideFab) {
-             <button (click)="onAddFabClick()" class="group flex flex-col items-center gap-2 lg:gap-1">
+             <button (click)="onAddFabClick()" class="group w-full flex flex-col items-center gap-2 lg:gap-1">
                 <div class="add-button-box w-12 h-12 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center shadow-md hover:scale-105 hover:shadow-lg transition-transform transition-colors duration-200"
                   [ngClass]="fabConfig().bgClass" [class.glow-animation]="fabConfig().label !== 'Add'">
                   <mat-icon class="text-white text-lg lg:text-base relative bottom-1">{{ fabConfig().icon }}</mat-icon>
@@ -127,7 +127,7 @@
         } @else {
           <!-- MODE SELECTION VIEW -->
           @for (item of footerSelectionItems(); track item.id) {
-            <button (click)="selectFamily(item.id)" class="group flex flex-col items-center gap-2 lg:gap-1 mode-item-animation">
+            <button (click)="selectFamily(item.id)" class="group w-full flex flex-col items-center gap-2 lg:gap-1 mode-item-animation">
               <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-all duration-300 transform"
                 [ngClass]="(item.id === null ? !isFamilyMode() : (activeFamily()?.id === item.id)) ? 'active-icon-box scale-110' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
                 @if (isImageIcon(item.icon)) {
@@ -143,7 +143,7 @@
           
           <!-- Close Button if items < 5 -->
           @if (footerSelectionItems().length < 5) {
-            <button (click)="showHomeMenu.set(false)" class="group flex flex-col items-center gap-2 lg:gap-1 mode-item-animation">
+            <button (click)="showHomeMenu.set(false)" class="group w-full flex flex-col items-center gap-2 lg:gap-1 mode-item-animation">
               <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500 shadow-md">
                 <mat-icon class="text-xl lg:text-base relative bottom-1">close</mat-icon>
               </div>

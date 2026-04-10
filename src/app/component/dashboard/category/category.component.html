@@ -51,16 +51,16 @@
           <mat-chip-set>
             <mat-chip color="primary"
                       (click)="autoCategorize()" 
-                      matTooltip="Auto Categorize Ungrouped"
+                      matTooltip="Auto Group Categories"
                       [disabled]="isAutoCategorizing"
                       class="auto-categorize-btn cursor-pointer !bg-primary/10 hover:!bg-primary/20 transition-colors">
               <div class="flex items-center justify-center gap-1.5 h-full">
                 @if (isAutoCategorizing) {
                   <mat-icon class="animate-spin">sync</mat-icon>
-                  <span class="text-sm font-medium">Auto Categorize</span>
+                  <span class="text-sm font-medium">Auto Group Categories</span>
                 } @else {
                   <mat-icon class="text-primary">auto_awesome</mat-icon>
-                  <span class="text-sm font-medium text-primary">Auto Categorize</span>
+                  <span class="text-sm font-medium text-primary">Auto Group Categories</span>
                 }
               </div>
             </mat-chip>

@@ -215,9 +215,10 @@ export class FooterComponent {
     const showFab = !this.dynamicConfig().hideFab;
     const total = items.length + (showFab ? 1 : 0);
     
-    if (total <= 3) {
-      return 'flex justify-center gap-10 lg:max-w-md lg:mx-auto';
-    }
+    if (total === 1) return 'grid grid-cols-1 gap-2 lg:max-w-md lg:mx-auto lg:gap-1';
+    if (total === 2) return 'grid grid-cols-2 gap-2 lg:max-w-md lg:mx-auto lg:gap-1';
+    if (total === 3) return 'grid grid-cols-3 gap-2 lg:max-w-md lg:mx-auto lg:gap-1';
+    if (total === 4) return 'grid grid-cols-4 gap-2 lg:max-w-md lg:mx-auto lg:gap-1';
     
     return 'grid grid-cols-5 gap-2 lg:max-w-md lg:mx-auto lg:gap-1';
   });

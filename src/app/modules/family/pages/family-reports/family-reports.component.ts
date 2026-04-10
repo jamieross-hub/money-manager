@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, ChangeDetectionStrategy, signal, computed, effect, untracked, OnDestroy } from '@angular/core';
+import { RouterModule } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { distinctUntilChanged, debounceTime } from 'rxjs/operators';
@@ -54,7 +55,8 @@ import { MatCardModule } from '@angular/material/card';
     MatTableModule,
     MatDividerModule,
     MatCardModule,
-    CategoryReportItemComponent
+    CategoryReportItemComponent,
+    RouterModule
   ],
   templateUrl: './family-reports.component.html',
   styleUrls: ['./family-reports.component.scss'],

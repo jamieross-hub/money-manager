@@ -313,14 +313,37 @@ export class CategoryComponent implements OnInit, OnDestroy {
   }
 
   private setupFooter(): void {
-    this.footerService.patchConfig({
-      fab: {
-        id: 'fab',
-        icon: 'category',
-        label: 'Category',
-        isFab: true,
-        action: () => this.openAddMobileDialog()
-      }
+    this.vm$.pipe(takeUntil(this.destroy$)).subscribe(vm => {
+      this.footerService.patchConfig({
+        hideFab: true,
+        items: [
+          {
+            id: 'home',
+            icon: 'home',
+            label: 'Home'
+          },
+          
+          {
+          id: 'fab',
+          icon: 'add',
+          label: 'Add Category',
+          bgClass: 'bg-primary-500',
+          isFab: true,
+          action: () => this.openAddMobileDialog()
+        },{
+            id: 'category-count',
+            icon: 'category',
+            label: `${vm.categories.length} Categories`,
+            action: () => {} // informational button
+          },
+          // {
+          //   id: 'group-count',
+          //   icon: 'folder',
+          //   label: `${vm.availableGroups.length} Groups`,
+          //   action: () => {} // informational button
+          // }
+        ]
+      });
     });
   }
 
