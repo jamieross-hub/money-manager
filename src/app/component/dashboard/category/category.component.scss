@@ -332,8 +332,13 @@
             }
 
             .category-type {
-                font-size: 0.75rem;
+                font-size: 0.65rem;
                 color: var(--neutral-500);
+                // background: var(--surface-500);
+                // padding: 0px 8px;
+                border-radius: 12px;
+                width: max-content;
+                margin-top: 5px;
             }
         }
 

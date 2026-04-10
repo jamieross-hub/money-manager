@@ -333,7 +333,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
         },{
             id: 'category-count',
             icon: 'category',
-            label: `${vm.categories.length} Categories`,
+            label: `${vm.categories.length} Category`,
             action: () => {} // informational button
           },
           // {

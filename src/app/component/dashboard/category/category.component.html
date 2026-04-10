@@ -106,7 +106,12 @@
                     <mat-icon>{{ category.icon || 'category' }}</mat-icon>
                   </div>
                   <span matListItemTitle class="category-name">{{ category.name }}</span>
-                  <span matListItemLine class="category-type">{{ category.type | titlecase }}</span>
+                  <span class="category-type inline-flex items-center gap-1" [style.color]="category.group ? category.color : null">
+                    @if (category.group && category.groupIcon) {
+                      <mat-icon class="!text-[14px] !w-3.5 !h-3.5">{{ category.groupIcon }}</mat-icon>
+                    }
+                    {{ (category.group || category.type) | titlecase }}
+                  </span>
                   <div matListItemMeta class="item-right">
                     <div class="amount-container">
                       <span class="category-amount">
@@ -230,7 +235,12 @@
                           <mat-icon>{{ subCategory.icon || 'category' }}</mat-icon>
                         </div>
                         <span matListItemTitle class="category-name">{{ subCategory.name }}</span>
-                        <span matListItemLine class="category-type">{{ subCategory.type | titlecase }}</span>
+                        <span matListItemLine class="category-type inline-flex items-center gap-1" [style.color]="subCategory.group ? subCategory.color : null">
+                          @if (subCategory.group && subCategory.groupIcon) {
+                            <mat-icon class="!text-[14px] !w-3.5 !h-3.5">{{ subCategory.groupIcon }}</mat-icon>
+                          }
+                          {{ (subCategory.group || subCategory.type) | titlecase }}
+                        </span>
                         <div matListItemMeta class="item-right">
                           <div class="amount-container">
                             <span class="category-amount">
