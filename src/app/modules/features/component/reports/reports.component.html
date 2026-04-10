@@ -712,46 +712,43 @@
           @defer (on viewport) {
           <!-- Overspend Categories Warning -->
           @if (nextMonthPrediction.overspendCategories.length > 0) {
-            <mat-expansion-panel
-              class="!rounded-xl" [expanded]="true">
-              <mat-expansion-panel-header>
-                <mat-panel-title class="flex items-center gap-2">
+            <div class="bg-surface-50 rounded-xl border border-surface-300 p-4 shadow-sm">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
                   <mat-icon class="text-warning-500">warning</mat-icon>
-                  <span class="font-semibold">Categories Likely to Overspend</span>
-                </mat-panel-title>
-                <mat-panel-description>
-                  {{ nextMonthPrediction.overspendCategories.length }} categories flagged
-                </mat-panel-description>
-              </mat-expansion-panel-header>
+                  <span class="font-bold text-neutral-800 dark:text-neutral-100">Categories Likely to Overspend</span>
+                </div>
+                <span class="text-xs font-semibold px-2 py-0.5 bg-warning-100/50 text-warning-600 rounded-full border border-warning-200">
+                  {{ nextMonthPrediction.overspendCategories.length }} flagged
+                </span>
+              </div>
               <p class="text-sm text-neutral-400 mb-4">
                 These categories are trending above their average. Keep an eye on them!
               </p>
-              <mat-list>
+              
+              <div class="space-y-2">
                 @for (cat of nextMonthPrediction.overspendCategories; track cat.categoryId) {
-                  <mat-list-item
-                    class="!h-auto !py-2">
-                    <div
-                      class="flex items-center justify-between w-full p-3 bg-warning-100 rounded-lg border border-warning-200">
-                      <div class="flex items-center gap-3">
-                        <mat-icon class="text-warning-500 !text-lg">trending_up
-                        </mat-icon>
-                        <div>
-                          <div class="text-sm font-semibold text-neutral-800">
-                            {{ cat.categoryName }}
-                          </div>
-                          <div class="text-xs text-warning-500">
-                            {{ cat.percentage | number:'1.0-0' }}% above average
-                          </div>
+                  <div class="flex items-center justify-between w-full p-2.5 bg-surface-100 rounded-lg border border-surface-300 transition-all hover:bg-surface-200 cursor-default">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-lg bg-surface-50 flex items-center justify-center shadow-sm">
+                        <mat-icon class="text-warning-500 !text-lg">trending_up</mat-icon>
+                      </div>
+                      <div>
+                        <div class="text-sm font-bold text-neutral-800 dark:text-neutral-100">
+                          {{ cat.categoryName }}
+                        </div>
+                        <div class="text-[10px] uppercase tracking-wider font-bold text-warning-500">
+                          {{ cat.percentage | number:'1.0-0' }}% above average
                         </div>
                       </div>
-                      <span class="text-sm font-bold text-warning-600">
-                        {{ cat.amount | currency }}
-                      </span>
                     </div>
-                  </mat-list-item>
+                    <div class="text-sm font-bold text-warning-600">
+                      {{ cat.amount | currency }}
+                    </div>
+                  </div>
                 }
-              </mat-list>
-            </mat-expansion-panel>
+              </div>
+            </div>
           }
           } @placeholder {
           <div class="h-24 bg-neutral-200 rounded-xl animate-pulse"></div>
