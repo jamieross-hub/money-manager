@@ -814,7 +814,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           categoryId: finalCategoryId,
           categoryType: finalCategoryType,
           type: finalCategoryType,
-          date: this.dateService.getLocalDateTimeFromForm(formData.date, true, this.dialogData?.date),
+          date: Timestamp.fromDate(this.dateService.getLocalDateTimeFromForm(formData.date, true, this.dialogData?.date)),
           notes: formData.description,
           taxAmount: formData.taxAmount || 0,
           taxPercentage: formData.taxPercentage || 0,
@@ -822,7 +822,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           isRecurring: formData.isRecurring || false,
           payee: formData.description || this.dialogData?.payee || '', // Carry over payee if available
           recurringInterval: formData.recurringInterval || RecurringInterval.MONTHLY,
-          recurringEndDate: formData.recurringEndDate ? this.dateService.getLocalDateTimeFromForm(formData.recurringEndDate, false, this.dialogData?.recurringEndDate) : null,
+          recurringEndDate: formData.recurringEndDate ? Timestamp.fromDate(this.dateService.getLocalDateTimeFromForm(formData.recurringEndDate, false, this.dialogData?.recurringEndDate)) : null,
           nextOccurrence: formData.isRecurring ? (() => {
             const startStr = formData.recurringStartDate || formData.date;
             const startDate = this.dateService.getLocalDateTimeFromForm(startStr, false, this.dialogData?.recurringStartDate || this.dialogData?.date);
@@ -873,7 +873,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
               safetyCounter++;
             }
 
-            return nextDate;
+            return Timestamp.fromDate(nextDate);
           })() : null,
           status: TransactionStatus.COMPLETED,
           isSplitTransaction: formData.isSplitTransaction || false,
@@ -936,8 +936,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
             splitData: finalAdjustmentSplitData,
             userId: this.userId,
             syncStatus: SyncStatus.PENDING,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
             createdBy: this.userId,
             updatedBy: this.userId,
           };
@@ -965,7 +965,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
               ...transactionData,
               isActive: true,
               isRecurring: true,
-              nextOccurrence: transactionData.nextOccurrence || new Date()
+              nextOccurrence: transactionData.nextOccurrence || Timestamp.now()
             };
             this.store.dispatch(
               TransactionsActions.updateRecurringTemplate({
@@ -1001,8 +1001,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
             recurringInterval: null,
             recurringEndDate: null,
             syncStatus: SyncStatus.PENDING,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
             createdBy: this.userId,
             updatedBy: this.userId,
           };
@@ -1021,10 +1021,10 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
               userId: this.userId,
               isActive: true,
               isRecurring: true,
-              nextOccurrence: transactionData.nextOccurrence || new Date(),
+              nextOccurrence: transactionData.nextOccurrence || Timestamp.now(),
               syncStatus: SyncStatus.SYNCED,
-              createdAt: new Date(),
-              updatedAt: new Date(),
+              createdAt: Timestamp.now(),
+              updatedAt: Timestamp.now(),
               createdBy: this.userId,
               updatedBy: this.userId,
             };
