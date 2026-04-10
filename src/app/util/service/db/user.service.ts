@@ -936,15 +936,15 @@ export class UserService implements OnDestroy {
         this.rateLimitMap.delete(`signin:${currentUser.email}`);
       }
 
-      // Clear guest mode flag
-      this.storageService.removeItem(LocalStorageKey.GUEST_MODE);
-      
-      // Clear the entire database on sign out (Wait for it to finish)
-      await this.storageService.clear();
+      // Note: We no longer clear the entire storageService here to preserve guest/offline data.
+      // The user can manually clear guest data via "Delete Account" if they are in guest mode.
+
 
       await signOut(this.auth);
       console.log('User signed out');
       this.router.navigate(['/sign-in']);
+      //reload page
+      window.location.reload();
     } catch (error) {
       console.error('Error signing out:', error);
       this.logAuditEvent('LOGOUT_ERROR', undefined, {
