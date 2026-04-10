@@ -28,15 +28,34 @@ interface ImportTransaction {
 }
 
 
-import { SharedModule } from '../../../../modules/shared/shared.module';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-google-sheets',
   templateUrl: './google-sheets.component.html',
   styleUrls: ['./google-sheets.component.scss'],
   standalone: true,
-  imports: [SharedModule, CommonModule],
+  imports: [
+    CommonModule, 
+    ReactiveFormsModule, 
+    MatIconModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatSlideToggleModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule
+  ],
   providers: [GoogleSheetsService],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

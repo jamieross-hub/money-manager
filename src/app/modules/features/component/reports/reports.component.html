@@ -361,97 +361,12 @@
                 </div>
                 <div>
                   @for (cat of groupedCategoryBreakdown(); track cat.categoryId; let i = $index; let first = $first) {
-                    <!-- <mat-divider *ngIf="!first"></mat-divider> -->
-                    <div class="group flex items-center gap-4 py-3 hover:bg-surface-100/60 rounded-xl transition-all duration-200 cursor-pointer mb-1 "
-                      (click)="toggleExpand(cat.categoryId)">
-                      <!-- Left: Icon Box -->
-                      <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105"
-                        [style.background-color]="cat.categoryColor + '20'"
-                        [style.color]="cat.categoryColor">
-                        <mat-icon class="category-icon !text-xl">{{ cat.groupIcon || cat.categoryIcon }}</mat-icon>
-                      </div>
-                      
-                      <!-- Right: Content Column -->
-                      <div class="flex-1 min-w-0">
-                        <!-- Top row: name + amount -->
-                        <div class="flex justify-between items-baseline mb-1">
-                          <div class="min-w-0">
-                            <span class="text-sm font-semibold text-neutral-800 flex items-center gap-1 min-w-0">
-                              <span class="truncate">{{ cat.categoryName }}</span>
-                              <mat-icon class="!text-xs !w-auto !h-auto text-neutral-400 transition-transform duration-200 flex-shrink-0" [class.rotate-180]="expandedCategoryId() === cat.categoryId">keyboard_arrow_down</mat-icon>
-                            </span>
-                            <p class="text-xs text-neutral-400 mt-0.5">
-                              {{ cat.transactionCount }} transaction{{ cat.transactionCount !== 1 ? 's' : '' }}
-                            </p>
-                          </div>
-                          <div class="text-right">
-                            <span class="text-sm font-semibold text-neutral-900">
-                              {{ cat.amount | currency:{compact:true} }}
-                            </span>
-                            <p class="text-xs font-semibold text-neutral-400 mt-0.5">
-                              {{ cat.percentage | number:'1.0-0' }}%
-                            </p>
-                          </div>
-                        </div>
-                        <!-- Progress Bar -->
-                        <mat-progress-bar mode="determinate"
-                          [value]="cat.amount | math:'percentWidth':(groupedCategoryBreakdown()[0]?.amount || 1)"
-                          color="primary"
-                          class="category-bar !rounded-full !h-1.5 w-full mt-2">
-                        </mat-progress-bar>
-                      </div>
-                    </div>
-
-                    <!-- EXPANDED CONTENT -->
-                    @if (expandedCategoryId() === cat.categoryId) {
-                      <div class="px-2 py-3 bg-neutral-50/60 rounded-xl border border-neutral-100/60 space-y-3 mb-3 -mt-1 animation-slide-down !mt-2">
-                        
-                        @if (expandedItemData()?.isGroup) {
-                          <!-- Group Breakdown -->
-                          <div>
-                            <p class="text-xs font-semibold text-neutral-400 mb-2">Categories in Group</p>
-                            <div class="space-y-1">
-                              @for (sub of expandedItemData()?.breakdown; track sub.categoryId) {
-                                <div class="flex items-center justify-between text-xs p-1 pb-1.5 border-b border-neutral-100/50 last:border-b-0">
-                                  <div class="flex items-center gap-1.5">
-                                    <mat-icon class="!text-sm !w-auto !h-auto text-neutral-400">{{ sub.categoryIcon }}</mat-icon>
-                                    <span class="text-neutral-600">{{ sub.categoryName }}</span>
-                                  </div>
-                                  <div class="flex items-center gap-2">
-                                    <span class="font-medium text-neutral-700">{{ sub.amount | currency:{compact:true} }}</span>
-                                    <span class="text-xxs text-neutral-400 bg-neutral-100 px-1 rounded">{{ sub.percentage | number:'1.0-0' }}%</span>
-                                  </div>
-                                </div>
-                              }
-                            </div>
-                          </div>
-                          <mat-divider></mat-divider>
-                        }
-
-                        <!-- Transactions List -->
-                        <div>
-                          <p class="text-xs font-semibold text-neutral-400 mb-2">Recent Transactions</p>
-                          @if (expandedItemData()?.transactions?.length === 0) {
-                            <p class="text-xs text-neutral-400 text-center py-2">No transaction details found</p>
-                          } @else {
-                            <div class="divide-y divide-neutral-100/80 max-h-40 overflow-y-auto pr-1">
-                              @for (t of expandedItemData()?.transactions; track t.id) {
-                                <div class="flex justify-between items-center py-1.5 text-xs px-2">
-                                  <div class="min-w-0 flex-1">
-                                    <span class="font-medium text-neutral-700 truncate block">{{ t.note || t.category || 'Untitled' }}</span>
-                                    <p class="text-xxs text-neutral-400">{{ t.date | date:'shortDate' }}</p>
-                                  </div>
-                                  <span class="font-semibold flex-shrink-0 ml-2" [class.text-error-600]="t.type === 'expense'" [class.text-success-600]="t.type === 'income'">
-                                    {{ t.amount | currency }}
-                                  </span>
-                                </div>
-                              }
-                            </div>
-                          }
-                        </div>
-                        
-                      </div>
-                    }
+                    <app-category-report-item
+                      [item]="cat"
+                      [isExpanded]="expandedCategoryId() === cat.categoryId"
+                      [expandedData]="expandedItemData()"
+                      (toggleExpand)="toggleExpand(cat.categoryId)">
+                    </app-category-report-item>
                   }
 
                   <div class="flex justify-center mt-4">

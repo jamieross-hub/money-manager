@@ -28,6 +28,8 @@ import { AppViewService } from 'src/app/util/service/app-view.service';
 import { FamilyService } from '../../services/family.service';
 import * as FamilyActions from '../../store/family.actions';
 import { Family } from 'src/app/util/models/family.model';
+import { CategoryReportItem, ExpandedReportData } from 'src/app/util/models/report-card.model';
+import { CategoryReportItemComponent } from 'src/app/util/components/cards/category-report-item/category-report-item.component';
 
 // Material Modules 
 import { MatTableModule } from '@angular/material/table';
@@ -51,7 +53,8 @@ import { MatCardModule } from '@angular/material/card';
     AbsPipe,
     MatTableModule,
     MatDividerModule,
-    MatCardModule
+    MatCardModule,
+    CategoryReportItemComponent
   ],
   templateUrl: './family-reports.component.html',
   styleUrls: ['./family-reports.component.scss'],

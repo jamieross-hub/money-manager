@@ -47,15 +47,39 @@ interface MonthlyBreakdown {
   balance: number;
 }
 
-import { SharedModule } from '../../../../modules/shared/shared.module';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DecimalPipe } from '@angular/common';
+import { CurrencyPipe } from '../../../../util/pipes/currency.pipe';
+import { FormsModule } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatButtonModule } from '@angular/material/button';
+import { MatSliderModule } from '@angular/material/slider';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 @Component({
   selector: 'app-budgets',
   templateUrl: './budgets.component.html',
   styleUrls: ['./budgets.component.scss'],
   standalone: true,
-  imports: [SharedModule, CommonModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    CurrencyPipe,
+    DecimalPipe,
+    MatCardModule,
+    MatIconModule,
+    MatProgressBarModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatCheckboxModule,
+    MatButtonModule,
+    MatSliderModule,
+    MatButtonToggleModule
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BudgetsComponent implements OnInit, OnDestroy {

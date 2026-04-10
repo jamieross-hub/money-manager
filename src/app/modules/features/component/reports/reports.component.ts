@@ -39,6 +39,7 @@ import { AbsPipe } from '../../../../util/pipes/abs.pipe';
 import { MathPipe } from '../../../../util/pipes/math.pipe';
 import { TrendPipe } from '../../../../util/pipes/trend.pipe';
 import { LocalIndexDBStorageService } from '../../../../util/service/indexdb-storage.service';
+import { CategoryReportItemComponent } from 'src/app/util/components/cards/category-report-item/category-report-item.component';
 
 @Component({
     selector: 'app-reports',
@@ -70,7 +71,8 @@ import { LocalIndexDBStorageService } from '../../../../util/service/indexdb-sto
         RouterModule,
         AbsPipe,
         MathPipe,
-        TrendPipe
+        TrendPipe,
+        CategoryReportItemComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -247,8 +249,16 @@ export class ReportsComponent implements OnInit, OnDestroy {
         if (catId === 'others') {
             const othersEntry = this.groupedCategoryBreakdown().find(i => i.categoryId === 'others') as any;
             const breakdown: any[] = othersEntry?.breakdown || [];
-            const othersCatIds = new Set(breakdown.map((b: any) => b.categoryId));
-            const items = txns.filter(t => othersCatIds.has(t.categoryId));
+            const actualCatIds = new Set<string>();
+            breakdown.forEach(b => {
+                if (b.categoryId.startsWith('group_')) {
+                    const gName = b.categoryId.replace('group_', '');
+                    categories.filter(c => c.group === gName && c.id).forEach(c => actualCatIds.add(c.id!));
+                } else {
+                    actualCatIds.add(b.categoryId);
+                }
+            });
+            const items = txns.filter(t => actualCatIds.has(t.categoryId));
             return {
                 isGroup: true,
                 groupName: 'Others',

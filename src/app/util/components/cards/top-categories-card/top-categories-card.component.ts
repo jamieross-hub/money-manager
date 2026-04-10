@@ -11,7 +11,7 @@ import * as CategoriesSelectors from '../../../../store/categories/categories.se
 import { Transaction } from '../../../../util/models/transaction.model';
 import { Category } from '../../../../util/models/category.model';
 import { TransactionType } from '../../../../util/config/enums';
-import { SharedModule } from "src/app/modules/shared/shared.module";
+import { BudgetCardComponent } from '../budget-card/budget-card.component';
 import { CurrencyService } from '../../../service/currency.service';
 
 export interface TopCategory {
@@ -49,7 +49,7 @@ export interface TopCategoriesConfig {
 @Component({
   selector: 'app-top-categories-card',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, SharedModule],
+  imports: [CommonModule, MatCardModule, MatIconModule, BudgetCardComponent],
   templateUrl: './top-categories-card.component.html',
   styleUrl: './top-categories-card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

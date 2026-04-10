@@ -10,15 +10,25 @@ import * as TransactionsSelectors from '../../../../store/transactions/transacti
 import { UserService } from 'src/app/util/service/db/user.service';
 import { CurrencyService } from '../../../../util/service/currency.service';
 
-import { SharedModule } from '../../../../modules/shared/shared.module';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DecimalPipe } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-tax',
   templateUrl: './tax.component.html',
   styleUrls: ['./tax.component.scss'],
   standalone: true,
-  imports: [SharedModule, CommonModule],
+  imports: [
+    CommonModule, 
+    ReactiveFormsModule, 
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatButtonModule,
+    DecimalPipe
+  ],
   providers: [TaxService],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

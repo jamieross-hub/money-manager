@@ -5,15 +5,26 @@ import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../../../../util/components/confirm-dialog/confirm-dialog.component';
 import { TranslateService } from '@ngx-translate/core';
 
-import { SharedModule } from '../../../../modules/shared/shared.module';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
     selector: 'app-backup-restore',
     templateUrl: './backup-restore.component.html',
     styleUrls: ['./backup-restore.component.scss'],
     standalone: true,
-    imports: [SharedModule, CommonModule],
+    imports: [
+        CommonModule, 
+        TranslateModule,
+        MatCardModule,
+        MatIconModule,
+        MatButtonModule,
+        MatProgressSpinnerModule
+    ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BackupRestoreComponent implements OnInit {
