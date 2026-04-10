@@ -162,15 +162,31 @@ export class AccountsComponent implements OnInit, OnDestroy {
   }
 
   private setupFooter(): void {
-    this.footerService.patchConfig({
-      fab: {
-        id: 'fab',
-        icon: 'account_balance',
-        label: 'Account',
-        bgClass: 'add-btn-green',
-        isFab: true,
-        action: () => this.addAccount()
-      }
+    this.accounts$.pipe(takeUntil(this.destroy$)).subscribe(accounts => {
+      this.footerService.patchConfig({
+        hideFab: true,
+        items: [
+          {
+            id: 'home',
+            icon: 'home',
+            label: 'Home'
+          },
+          {
+            id: 'fab',
+            icon: 'account_balance',
+            label: 'Add Account',
+            bgClass: 'add-btn-green',
+            isFab: true,
+            action: () => this.addAccount()
+          },
+          {
+            id: 'account-count',
+            icon: 'account_balance_wallet',
+            label: `${accounts.length} Accounts`,
+            action: () => {} // informational
+          }
+        ]
+      });
     });
   }
 
