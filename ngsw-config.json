@@ -99,6 +99,18 @@
         "maxAge": "365d",
         "timeout": "1s"
       }
+    },
+    {
+      "name": "google-profile-images",
+      "urls": [
+        "https://lh*.googleusercontent.com/**"
+      ],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxSize": 100,
+        "maxAge": "30d",
+        "timeout": "1s"
+      }
     }
   ],
   "navigationUrls": [
