@@ -367,15 +367,25 @@ export class UserComponent {
         }
       });
     } else {
-      try {
-        this.userService.signOut().then(() => {
-          this.notificationService.success('Signed out successfully');
-          this.close();
-        });
-      } catch (error) {
-        console.error('Error signing out:', error);
-        this.notificationService.error('Failed to sign out');
-      }
+      this.notificationService.confirm({
+        title: 'Sign Out',
+        message: 'Are you sure you want to sign out?',
+        confirmText: 'Sign Out',
+        cancelText: 'Cancel',
+        type: 'warning',
+      }).subscribe(confirmed => {
+        if (confirmed) {
+          try {
+            this.userService.signOut().then(() => {
+              this.notificationService.success('Signed out successfully');
+              this.close();
+            });
+          } catch (error) {
+            console.error('Error signing out:', error);
+            this.notificationService.error('Failed to sign out');
+          }
+        }
+      });
     }
   }
 
