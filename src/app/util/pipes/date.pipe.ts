@@ -66,6 +66,12 @@ export class AppDatePipe implements PipeTransform {
           return this.dateService.formatDate(date, customFormatString);
         }
         return date.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
+      case 'MMM':
+        return date.toLocaleDateString(locale, { month: 'short' });
+      case 'dd':
+        return date.toLocaleDateString(locale, { day: '2-digit' });
+      case 'd':
+        return date.toLocaleDateString(locale, { day: 'numeric' });
       case 'user-preference':
       default:
         // Use user's locale to format in a standard medium representation if no specific format provided
