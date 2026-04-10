@@ -253,7 +253,20 @@ export class UserComponent {
     }
 
     // No update available — open cache management directly
-    this.performUpdate();
+    this.close();
+    this.notificationService.confirm({
+      title: 'Refresh Application?',
+      message: 'No new updates found, but you can reload to clear cache and refresh the application state. Any unsaved changes will be lost.',
+      confirmText: 'Refresh Now',
+      cancelText: 'Cancel',
+      type: 'info',
+      icon: 'refresh',
+      design: 'premium'
+    }).subscribe(confirmed => {
+      if (confirmed) {
+        this.performUpdate();
+      }
+    });
   }
 
   private performUpdate(): void {

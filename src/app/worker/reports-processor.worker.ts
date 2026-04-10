@@ -60,6 +60,7 @@ let cachedBaseFingerprint = '';
 let cachedMonthlySummaries: MonthlySummary[] = [];
 let cachedIconMap: any = {};
 let cachedColorMap: any = {};
+let cachedGroupMap: any = {};
 let cachedAvgMonthlySpending = 0;
 let cachedHighestSpendingCategory: CategoryBreakdownItem | null = null;
 let cachedOverallSavingsRate = 0;
@@ -78,6 +79,7 @@ addEventListener('message', ({ data }) => {
         selectedWeekOffset,
         categoryIconMap,
         categoryColorMap,
+        categoryGroupMap,
         cachedBase,
         baseFingerprint
     } = data;
@@ -96,6 +98,7 @@ addEventListener('message', ({ data }) => {
 
     if (categoryIconMap) cachedIconMap = categoryIconMap;
     if (categoryColorMap) cachedColorMap = categoryColorMap;
+    if (categoryGroupMap) cachedGroupMap = categoryGroupMap;
 
     let monthlySummaries: MonthlySummary[] = [];
     let availableYears: number[] = [];
@@ -161,7 +164,8 @@ addEventListener('message', ({ data }) => {
         const predictions = computePredictions(
             monthlySummaries,
             cachedIconMap,
-            cachedColorMap
+            cachedColorMap,
+            cachedGroupMap
         );
         nextMonthPrediction = predictions.nextMonthPrediction;
         next3MonthsPrediction = predictions.next3MonthsPrediction;
@@ -521,7 +525,7 @@ function getPeriodLabel(which: 'current' | 'previous', selectedPeriod: string, s
     }
 }
 
-function computePredictions(monthlySummaries: MonthlySummary[], iconMap: any, colorMap: any) {
+function computePredictions(monthlySummaries: MonthlySummary[], iconMap: any, colorMap: any, groupMap: any) {
     if (monthlySummaries.length < 2) {
         return { nextMonthPrediction: null, next3MonthsPrediction: null, yearEndPrediction: null };
     }
@@ -543,35 +547,71 @@ function computePredictions(monthlySummaries: MonthlySummary[], iconMap: any, co
     const confidence: 'low' | 'medium' | 'high' =
         recent.length >= 6 ? 'high' : recent.length >= 3 ? 'medium' : 'low';
 
-    const catAvgMap = new Map<string, { total: number; count: number; name: string; id: string }>();
+    // ── Group-Aware Overspend Detection ──
+    const latestMonth = recent[0];
+    
+    // 1. Build a map of group-level averages over the recent period
+    const groupMetricsMap = new Map<string, { totalAmount: number; count: number; name: string }>();
+
     for (const m of recent) {
+        const monthGroupSums = new Map<string, number>();
+        
         for (const c of m.categoryBreakdown) {
-            if (!catAvgMap.has(c.categoryId)) {
-                catAvgMap.set(c.categoryId, { total: 0, count: 0, name: c.categoryName, id: c.categoryId });
+            const gName = groupMap[c.categoryId] || c.categoryName;
+            monthGroupSums.set(gName, (monthGroupSums.get(gName) || 0) + c.amount);
+        }
+
+        for (const [gName, amt] of monthGroupSums) {
+            if (!groupMetricsMap.has(gName)) {
+                groupMetricsMap.set(gName, { totalAmount: 0, count: 0, name: gName });
             }
-            const e = catAvgMap.get(c.categoryId)!;
-            e.total += c.amount;
-            e.count += 1;
+            const g = groupMetricsMap.get(gName)!;
+            g.totalAmount += amt;
+            g.count += 1;
         }
     }
 
+    // 2. Identify groups trending above their average in the latest month
     const overspendCategories: CategoryBreakdownItem[] = [];
-    for (const [catId, data] of catAvgMap) {
-        const catAvg = data.total / data.count;
-        const latestMonth = recent[0];
-        const latestCatSpend = latestMonth.categoryBreakdown.find(c => c.categoryId === catId);
-        if (latestCatSpend && latestCatSpend.amount > catAvg * 1.2) {
+    const latestGroupSums = new Map<string, { amount: number; transactionCount: number; categoryId: string; icon: string; color: string }>();
+
+    for (const c of latestMonth.categoryBreakdown) {
+        const gName = groupMap[c.categoryId] || c.categoryName;
+        if (!latestGroupSums.has(gName)) {
+            // Use the icon/color of the first category in the group encountered
+            latestGroupSums.set(gName, { 
+                amount: 0, 
+                transactionCount: 0, 
+                categoryId: c.categoryId, 
+                icon: iconMap[c.categoryId] || 'category', 
+                color: colorMap[c.categoryId] || '#9ca3af' 
+            });
+        }
+        const g = latestGroupSums.get(gName)!;
+        g.amount += c.amount;
+        g.transactionCount += c.transactionCount;
+    }
+
+    for (const [gName, latest] of latestGroupSums) {
+        const metrics = groupMetricsMap.get(gName);
+        if (!metrics || metrics.count === 0) continue;
+
+        const avgAmt = metrics.totalAmount / metrics.count;
+        
+        // Flag group if current spend is 20%+ above average
+        if (latest.amount > avgAmt * 1.2) {
             overspendCategories.push({
-                categoryId: catId,
-                categoryName: data.name,
-                categoryIcon: iconMap[catId] || 'category',
-                categoryColor: colorMap[catId] || '#9ca3af',
-                amount: latestCatSpend.amount,
-                percentage: catAvg > 0 ? ((latestCatSpend.amount - catAvg) / catAvg) * 100 : 0,
-                transactionCount: latestCatSpend.transactionCount
+                categoryId: latest.categoryId, // Keep one category ID as reference
+                categoryName: gName,
+                categoryIcon: latest.icon,
+                categoryColor: latest.color,
+                amount: latest.amount,
+                percentage: avgAmt > 0 ? ((latest.amount - avgAmt) / avgAmt) * 100 : 0,
+                transactionCount: latest.transactionCount
             });
         }
     }
+
     overspendCategories.sort((a, b) => b.percentage - a.percentage);
 
     const predictedExpMonth = avgExpense * (trend === 'increasing' ? trendFactor : trend === 'decreasing' ? trendFactor : 1);

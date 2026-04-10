@@ -440,6 +440,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     // Category icon & color lookup
     private categoryIconMap = new Map<string, string>();
     private categoryColorMap = new Map<string, string>();
+    private categoryGroupMap = new Map<string, string>();
 
     // Month labels
     private readonly MONTHS = [
@@ -469,8 +470,10 @@ export class ReportsComponent implements OnInit, OnDestroy {
             if (txns && txns.length > 0) {
                 const iconMap: { [key: string]: string } = {};
                 const colorMap: { [key: string]: string } = {};
+                const groupMap: { [key: string]: string } = {};
                 this.categoryIconMap.forEach((v, k) => iconMap[k] = v);
                 this.categoryColorMap.forEach((v, k) => colorMap[k] = v);
+                this.categoryGroupMap.forEach((v, k) => groupMap[k] = v);
 
                 this.reportsProcessor.process({
                     transactions: txns,
@@ -480,7 +483,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
                     selectedMonth: month,
                     selectedWeekOffset: offset,
                     categoryIconMap: iconMap,
-                    categoryColorMap: colorMap
+                    categoryColorMap: colorMap,
+                    categoryGroupMap: groupMap
                 });
             }
         });
@@ -511,10 +515,14 @@ export class ReportsComponent implements OnInit, OnDestroy {
             const categories = this.allCategories();
             this.categoryIconMap.clear();
             this.categoryColorMap.clear();
+            this.categoryGroupMap.clear();
             for (const cat of categories) {
                 if (cat.id) {
                     this.categoryIconMap.set(cat.id, cat.icon || 'category');
                     this.categoryColorMap.set(cat.id, cat.color || '#9ca3af');
+                    if (cat.group) {
+                        this.categoryGroupMap.set(cat.id, cat.group);
+                    }
                 }
             }
         });

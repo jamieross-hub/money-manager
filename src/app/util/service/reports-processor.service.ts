@@ -150,6 +150,7 @@ export class ReportsProcessorService {
         selectedWeekOffset: number;
         categoryIconMap: Record<string, string>;
         categoryColorMap: Record<string, string>;
+        categoryGroupMap: Record<string, string>;
     }): void {
         if (!this.worker) {
             console.warn('Worker not initialized, processing skipped.');
