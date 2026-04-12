@@ -302,6 +302,7 @@ function computeStats(
       transactionCount: 0,
       paidCount: 0,
       isActive: m.isActive,
+      role: m.role,
     });
   });
 

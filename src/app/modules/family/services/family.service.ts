@@ -818,6 +818,7 @@ export class FamilyService implements OnDestroy {
         transactionCount: 0,
         paidCount: 0,
         isActive: m.isActive,
+        role: m.role,
       });
     });
 

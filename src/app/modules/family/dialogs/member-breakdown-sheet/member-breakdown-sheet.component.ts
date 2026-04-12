@@ -1,7 +1,8 @@
-import { Component, Inject, computed, signal } from '@angular/core';
+import { Component, Inject, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatRippleModule } from '@angular/material/core';
 import { MatDividerModule } from '@angular/material/divider';
 import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bottom-sheet';
 import { FamilyMemberStats, BalanceEntry } from 'src/app/util/models/family.model';
@@ -9,6 +10,9 @@ import { Transaction } from 'src/app/util/models/transaction.model';
 import { CurrencyPipe, TruncatePipe, AppDatePipe } from 'src/app/util/pipes';
 import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 import { TransactionType, TransactionStatus } from 'src/app/util/config/enums';
+import { FamilyService } from '../../services/family.service';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-member-breakdown-sheet',
@@ -17,6 +21,7 @@ import { TransactionType, TransactionStatus } from 'src/app/util/config/enums';
     CommonModule,
     MatIconModule,
     MatButtonModule,
+    MatRippleModule,
     MatDividerModule,
     CurrencyPipe,
     AppDatePipe,
@@ -99,9 +104,36 @@ export class MemberBreakdownSheetComponent {
       transactions: Transaction[]; 
       balances: BalanceEntry[];
       memberColor: string;
+      isCurrentUserAdmin?: boolean;
+      familyId?: string;
     },
     private bottomSheetRef: MatBottomSheetRef<MemberBreakdownSheetComponent>
   ) {}
+
+  private readonly familyService = inject(FamilyService);
+  private readonly dialog = inject(MatDialog);
+
+  async makeAdmin() {
+    if (!this.data.familyId || !this.data.member.userId) return;
+
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Promote to Admin',
+        message: `Are you sure you want to promote ${this.data.member.displayName} to Admin? This will give them full access to manage family settings and members.`,
+        confirmText: 'Promote',
+        confirmColor: 'primary'
+      }
+    }).afterClosed().subscribe(async confirmed => {
+      if (!confirmed) return;
+
+      try {
+        await this.familyService.updateMemberRole(this.data.familyId!, this.data.member.userId, 'admin');
+        this.data.member.role = 'admin';
+      } catch (error) {
+        console.error('Failed to update member role:', error);
+      }
+    });
+  }
 
   close() {
     this.bottomSheetRef.dismiss();

@@ -100,6 +100,7 @@ function computeStats(transactions: Transaction[], members: FamilyMember[], mode
       transactionCount: 0,
       paidCount: 0,
       isActive: m.isActive,
+      role: m.role,
     });
   });
 

@@ -58,6 +58,7 @@ export interface FamilyMemberStats {
   transactionCount: number;
   paidCount: number;
   isActive: boolean;
+  role: FamilyMemberRole;
 }
 
 export interface CategoryBreakdownItem {

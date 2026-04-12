@@ -270,12 +270,17 @@ export class FamilyDashboardComponent implements OnInit {
   }
 
   openMemberDetails(member: FamilyMemberStats): void {
+    const isCurrentUserAdmin = this.members().find(m => m.userId === this.currentUserId())?.role === 'admin';
+    const familyId = this.family()?.id;
+
     this.pwaNavigationService.openBottomSheet(MemberBreakdownSheetComponent, {
       data: {
         member,
         transactions: this.transactions(),
         balances: this.settleBalances(),
-        memberColor: this.memberColor(member.userId)
+        memberColor: this.memberColor(member.userId),
+        isCurrentUserAdmin,
+        familyId
       },
       panelClass: ['bg-transparent', 'auto-height-sheet'],
       closeOnNavigation: false

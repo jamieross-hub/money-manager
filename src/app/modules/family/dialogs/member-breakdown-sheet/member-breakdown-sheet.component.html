@@ -20,6 +20,17 @@
             <span class="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none">
               {{ data.member.isActive ? 'Active Member' : 'Inactive' }}
             </span>
+            @if (data.isCurrentUserAdmin && data.member.role === 'member') {
+              <button matRipple (click)="makeAdmin()" 
+                      class="px-1.5 py-0.5 rounded bg-indigo-600 text-[10px] font-black text-white hover:bg-indigo-700 uppercase tracking-widest leading-none border-none cursor-pointer transition-all shadow-sm active:scale-95 flex items-center gap-1">
+                {{ data.member.role }}
+                <mat-icon class="!text-[10px] !w-auto !h-auto">arrow_upward</mat-icon>
+              </button>
+            } @else {
+              <span class="px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/30 text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest leading-none">
+                {{ data.member.role }}
+              </span>
+            }
           </div>
         </div>
       </div>
