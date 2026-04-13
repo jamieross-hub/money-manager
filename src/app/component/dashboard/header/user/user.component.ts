@@ -19,7 +19,6 @@ import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { ThemeSwitchingService } from 'src/app/util/service/theme-switching.service';
 import { ThemeType } from 'src/app/util/models/theme.model';
-import { LocalIndexDBStorageService } from 'src/app/util/service/indexdb-storage.service';
 import { ClickOutsideDirective } from 'src/app/util/directives/click-outside.directive';
 import { LocalStorageKey } from 'src/app/util/models/local-storage.model';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
@@ -68,7 +67,6 @@ export class UserComponent {
   private readonly router              = inject(Router);
   private readonly breakpointObserver  = inject(BreakpointObserver);
   private readonly themeSwitchingService = inject(ThemeSwitchingService);
-  private readonly localStorageService = inject(LocalIndexDBStorageService);
   private readonly familyService       = inject(FamilyService);
   private readonly store               = inject(Store<AppState>);
   private readonly swUpdate            = inject(SwUpdate);
@@ -256,7 +254,7 @@ export class UserComponent {
     this.close();
     this.notificationService.confirm({
       title: 'Refresh Application?',
-      message: 'No new updates found, but you can reload to clear cache and refresh the application state. Any unsaved changes will be lost.',
+      message: 'No new updates found, but you can reload to refresh the application state. Any unsaved changes will be lost.',
       confirmText: 'Refresh Now',
       cancelText: 'Cancel',
       type: 'info',
@@ -299,11 +297,6 @@ export class UserComponent {
             } catch (cErr) { console.warn('Cache clear error:', cErr); }
           }
           
-          // Clear non-essential Local IndexedDB Caches safely, preserving Auth/Guest data
-          try {
-            await this.localStorageService.clearCacheForUpdate();
-          } catch (idbErr) { console.warn('IndexedDB clearance error:', idbErr); }
-
           // Activate update if ready
           if (this.swUpdate.isEnabled && this.updateAvailable()) {
             try {
