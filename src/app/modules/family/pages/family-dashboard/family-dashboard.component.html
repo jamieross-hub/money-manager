@@ -55,7 +55,7 @@
           <div>
             <p class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight mb-1">{{ family()?.name }}</p>
             <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2 opacity-90">
-              <span class="flex items-center gap-1">
+              <span class="flex items-center gap-1" (click)="openMembersSheet()">
                 <mat-icon class="!text-[16px] !w-4 !h-4 opacity-70">group</mat-icon>
                 {{ members().length }} member{{ members().length !== 1 ? 's' : '' }}
               </span>
@@ -92,6 +92,16 @@
               <div class="flex flex-col">
                 <span class="font-medium">Edit Group</span>
                 <span class="text-[10px] text-gray-500 -mt-0.5">Change name or icon</span>
+              </div>
+            </div>
+          </button>
+          <!-- managege member -->
+           <button mat-menu-item (click)="openMembersSheet()">
+            <div class="flex items-center">
+              <mat-icon class="!mr-3 text-primary-500">manage_accounts</mat-icon>
+              <div class="flex flex-col">
+                <span class="font-medium">Manage Members</span>
+                <span class="text-[10px] text-gray-500 -mt-0.5">Add or remove members</span>
               </div>
             </div>
           </button>
