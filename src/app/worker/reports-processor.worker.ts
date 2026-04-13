@@ -156,8 +156,8 @@ addEventListener('message', ({ data }) => {
             }
         }
         const allCats = Array.from(catMap.values()).sort((a, b) => b.amount - a.amount);
-        if (totalExpense > 0) {
-            allCats.forEach(c => c.percentage = (c.amount / totalExpense) * 100);
+        if (totalIncome > 0) {
+            allCats.forEach(c => c.percentage = (c.amount / totalIncome) * 100);
         }
         highestSpendingCategory = allCats.length > 0 ? allCats[0] : null;
 
@@ -279,8 +279,8 @@ function buildMonthlySummaries(transactions: any[], iconMap: any, colorMap: any)
         const savingsRate = val.income > 0 ? (savings / val.income) * 100 : 0;
 
         const categories = Array.from(val.categories.values());
-        if (val.expense > 0) {
-            categories.forEach(c => c.percentage = (c.amount / val.expense) * 100);
+        if (val.income > 0) {
+            categories.forEach(c => c.percentage = (c.amount / val.income) * 100);
         }
         categories.sort((a, b) => b.amount - a.amount);
 
@@ -455,7 +455,7 @@ function buildAdhocSummary(txns: any[], iconMap: any, colorMap: any): MonthlySum
     }
 
     const categories = Array.from(catMap.values());
-    if (expense > 0) categories.forEach(c => c.percentage = (c.amount / expense) * 100);
+    if (income > 0) categories.forEach(c => c.percentage = (c.amount / income) * 100);
     categories.sort((a, b) => b.amount - a.amount);
 
     return [{
@@ -494,7 +494,7 @@ function aggregatePeriod(months: MonthlySummary[], label: string, iconMap: any, 
         }
     }
     const categories = Array.from(catMap.values()).sort((a, b) => b.amount - a.amount);
-    if (expense > 0) categories.forEach(c => c.percentage = (c.amount / expense) * 100);
+    if (income > 0) categories.forEach(c => c.percentage = (c.amount / income) * 100);
 
     return {
         label, income, expense, savings, savingsRate, avgMonthlySpending, avgMonthlyIncome,

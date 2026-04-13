@@ -200,42 +200,12 @@ export class ReportsComponent implements OnInit, OnDestroy {
                 categoryColor: g.categoryColor,
                 amount: g.amount,
                 transactionCount: g.transactionCount,
-                percentage: totalAmount > 0 ? (g.amount / totalAmount) * 100 : 0,
+                percentage: (summary.income ?? 0) > 0 ? (g.amount / summary.income!) * 100 : 0,
                 isGrouped: g.categoryId.startsWith('group_')
             }))
             .sort((a, b) => b.amount - a.amount);
 
-        // Merge items < 1% into "Others"
-        const main: any[] = sorted.filter(item => item.percentage >= 1);
-        const small = sorted.filter(item => item.percentage < 1);
-
-        if (small.length > 0) {
-            const othersAmount = small.reduce((s, i) => s + i.amount, 0);
-            const othersCount = small.reduce((s, i) => s + i.transactionCount, 0);
-            const othersPercentage = totalAmount > 0 ? (othersAmount / totalAmount) * 100 : 0;
-            main.push({
-                categoryId: 'others',
-                categoryName: 'Others',
-                categoryIcon: 'more_horiz',
-                groupIcon: undefined,
-                categoryColor: '#9ca3af',
-                amount: othersAmount,
-                transactionCount: othersCount,
-                percentage: othersPercentage,
-                isGrouped: true,
-                // Store the merged items so expandedItemData can build the drill-down
-                breakdown: small.map(i => ({
-                    categoryId: i.categoryId,
-                    categoryName: i.categoryName,
-                    categoryIcon: i.categoryIcon,
-                    amount: i.amount,
-                    transactionCount: i.transactionCount,
-                    percentage: i.percentage
-                }))
-            });
-        }
-
-        return main;
+        return sorted;
     });
 
     readonly expandedItemData = computed(() => {
@@ -244,30 +214,6 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
         const txns = this.currentPeriodTransactionsSignal();
         const categories = this.allCategories();
-
-        // "Others" — collect all categories that were merged (< 1%)
-        if (catId === 'others') {
-            const othersEntry = this.groupedCategoryBreakdown().find(i => i.categoryId === 'others') as any;
-            const breakdown: any[] = othersEntry?.breakdown || [];
-            const actualCatIds = new Set<string>();
-            breakdown.forEach(b => {
-                if (b.categoryId.startsWith('group_')) {
-                    const gName = b.categoryId.replace('group_', '');
-                    categories.filter(c => c.group === gName && c.id).forEach(c => actualCatIds.add(c.id!));
-                } else {
-                    actualCatIds.add(b.categoryId);
-                }
-            });
-            const items = txns.filter(t => actualCatIds.has(t.categoryId));
-            return {
-                isGroup: true,
-                groupName: 'Others',
-                breakdown,
-                transactions: items
-                    .map(t => ({ ...t, date: this.toDateHelper(t.date) }))
-                    .sort((a, b) => ((b.date as Date)?.getTime() || 0) - ((a.date as Date)?.getTime() || 0))
-            };
-        }
 
         if (catId.startsWith('group_')) {
             const groupName = catId.replace('group_', '');

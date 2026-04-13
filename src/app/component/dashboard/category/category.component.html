@@ -40,313 +40,363 @@
         </section>
       <!-- } -->
     <!-- Controls: Search & Filter -->
-    <section class="controls-section">
-      <mat-form-field appearance="fill" class="search-bar" subscriptSizing="dynamic">
-        <mat-label>Search categories...</mat-label>
-        <mat-icon matPrefix>search</mat-icon>
-        <input matInput type="text" [formControl]="searchControl">
-      </mat-form-field>
-      <div class="filter-pills w-full lg:w-[40%] flex flex-row-reverse gap-2 items-center">
-        @if (vm.hasUngroupedCategories) {
-          <mat-chip-set>
-            <mat-chip color="primary"
-                      (click)="autoCategorize()" 
-                      matTooltip="Auto Group Categories"
-                      [disabled]="isAutoCategorizing"
-                      class="auto-categorize-btn cursor-pointer !bg-primary/10 hover:!bg-primary/20 transition-colors">
-              <div class="flex items-center justify-center gap-1.5 h-full">
-                @if (isAutoCategorizing) {
-                  <mat-icon class="animate-spin">sync</mat-icon>
-                  <span class="text-sm font-medium">Auto Group Categories</span>
-                } @else {
-                  <mat-icon class="text-primary">auto_awesome</mat-icon>
-                  <span class="text-sm font-medium text-primary">Auto Group Categories</span>
-                }
-              </div>
-            </mat-chip>
-          </mat-chip-set>
-        }
-        <mat-chip-listbox (change)="setFilterType($event.value)" [value]="filterType$ | async">
-          <mat-chip-option value="all">All</mat-chip-option>
-          <mat-chip-option value="expense">Expense</mat-chip-option>
-          <mat-chip-option value="income">Income</mat-chip-option>
-          @for (group of vm.availableGroups; track group.name + '_' + group.count) {
-            <mat-chip-option [value]="group.name"
-              (pointerdown)="onGroupPointerDown($event, group.name)" 
-              (pointerup)="onGroupPointerUp($event)"
-              (pointerleave)="onGroupPointerUp($event)">
-              <div class="flex items-center gap-1.5 h-full">
-                <mat-icon class="!text-[14px] !w-3.5 !h-3.5 opacity-70">{{ group.icon }}</mat-icon>
-                <span>{{ group.name }} ({{ group.count }})</span>
-              </div>
-            </mat-chip-option>
-          }
-        </mat-chip-listbox>
-      </div>
-    </section>
-    <!-- Categories List -->
-    <section class="categories-list-section">
-      @defer {
-      @if (vm.categories.length === 0) {
-        <div class="empty-state">
-          <mat-icon>search_off</mat-icon>
-          <p>No categories found.</p>
-        </div>
-      }
-      @if (vm.categories.length > 0) {
-        <mat-card class="categories-list-card">
-          <mat-list class="pt-0">
-            @for (category of vm.categories; track category.id) {
-              <!-- Main Categories -->
-              @if(!category.isSubCategory && !category.parentCategoryId) {
-                <mat-list-item class="category-item-wrapper" [class.selected]="selectedCategoryId === category.id"
-                  (click)="toggleExpandCategory(category, $event)">
-                  <div matListItemAvatar class="category-icon" [style.background-color]="category.color + '20'"
-                    [style.color]="category.color">
-                    <mat-icon>{{ category.icon || 'category' }}</mat-icon>
-                  </div>
-                  <span matListItemTitle class="category-name">{{ category.name }}</span>
-                  <span class="category-type inline-flex items-center gap-1" [style.color]="category.group ? category.color : null">
-                    @if (category.group && category.groupIcon) {
-                      <mat-icon class="!text-[14px] !w-3.5 !h-3.5">{{ category.groupIcon }}</mat-icon>
-                    }
-                    {{ (category.group || category.type) | titlecase }}
-                  </span>
-                  <div matListItemMeta class="item-right">
-                    <div class="amount-container">
-                      <span class="category-amount">
-                        {{ category.totalSpent | currency:{round: true} }}
-                        @if (!breakpointService.device.isMobile) {
-                          <span class="period">/ {{
-                          appViewService.getViewLabel() }}</span>
-                        }
-                      </span>
-                      <!-- Budget Progress -->
-                      @if (category.budget?.hasBudget) {
-                        <div class="budget-progress-wrapper">
-                          <mat-progress-bar mode="determinate" [value]="category.budgetProgress"
-                            [color]="category.budgetColor"
-                          [ngClass]="category.budgetStatusClass"></mat-progress-bar>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                </mat-list-item>
-                <!-- Action Buttons & Expanded Details -->
-                @if (selectedCategoryId === category.id) {
-                  <div class="category-actions-expansion">
-                    <div class="expansion-header">
-                      <div class="action-buttons-compact">
-                        <!-- Edit -->
-                        <button mat-icon-button class="expansion-action-btn edit-btn"
-                          (click)="openMobileDialog(category)" matTooltip="Edit category">
-                          <mat-icon>edit</mat-icon>
-                          <span class="btn-label">Edit</span>
-                        </button>
-                        <!-- Set/Edit Budget -->
-                        @if (category.type === 'expense') {
-                          <button mat-icon-button class="expansion-action-btn budget-btn"
-                            (click)="openBudgetDialog(category)"
-                            [matTooltip]="category.budget?.hasBudget ? 'Edit Budget' : 'Set Budget'">
-                            <mat-icon>account_balance_wallet</mat-icon>
-                            <span class="btn-label">{{ category.budget?.hasBudget ? 'Edit Budget' : 'Set
-                            Budget' }}</span>
-                          </button>
-                        }
-                        <!-- Remove Budget -->
-                        @if (category.budget?.hasBudget) {
-                          <button mat-icon-button class="expansion-action-btn remove-budget-btn"
-                            (click)="removeBudget(category)"
-                            matTooltip="Remove Budget">
-                            <mat-icon>money_off</mat-icon>
-                            <span class="btn-label">Remove Budget</span>
-                          </button>
-                        }
-                        <!-- Remove from Parent -->
-                        @if (category.isSubCategory || category.parentCategoryId) {
-                          <button mat-icon-button class="expansion-action-btn tree-off-btn"
-                            (click)="removeFromParentCategory(category)" matTooltip="Remove from Parent">
-                            <mat-icon>account_tree_off</mat-icon>
-                            <span class="btn-label">Unlink Parent</span>
-                          </button>
-                        }
-                        <!-- Delete -->
-                        <button mat-icon-button class="expansion-action-btn delete-btn"
-                          (click)="deleteCategory(category)" matTooltip="Delete category">
-                          <mat-icon>delete</mat-icon>
-                          <span class="btn-label">Delete</span>
-                        </button>
-                      </div>
-                    </div>
-                    <div class="category-details-expanded">
-                      @if (category.stats; as stats) {
-                        <div class="details-container">
-                          <div class="detail-row">
-                            <div class="detail-label">
-                              <mat-icon class="detail-icon">analytics</mat-icon>
-                              <span>Total Spent</span>
-                            </div>
-                            <div class="detail-value">
-                              {{ stats.totalSpent | currency }}
-                            </div>
+    <mat-tab-group class="category-tabs" animationDuration="0ms">
+      <!-- Manage Categories Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <div class="flex items-center gap-2">
+            <mat-icon class="!text-lg">category</mat-icon>
+            <span>Categories</span>
+          </div>
+        </ng-template>
+
+        <div class="tab-content pt-4">
+          <!-- Controls: Search & Filter -->
+          <section class="controls-section">
+            <mat-form-field appearance="fill" class="search-bar" subscriptSizing="dynamic">
+              <mat-label>Search categories...</mat-label>
+              <mat-icon matPrefix>search</mat-icon>
+              <input matInput type="text" [formControl]="searchControl">
+            </mat-form-field>
+            <div class="filter-pills w-full lg:w-[40%] flex flex-row-reverse gap-2 items-center">
+              <mat-chip-listbox (change)="setFilterType($event.value)" [value]="filterType$ | async">
+                <mat-chip-option value="all">All</mat-chip-option>
+                <mat-chip-option value="expense">Expense</mat-chip-option>
+                <mat-chip-option value="income">Income</mat-chip-option>
+              </mat-chip-listbox>
+            </div>
+          </section>
+
+          <!-- Categories List -->
+          <section class="categories-list-section">
+            @defer {
+              @if (vm.categories.length === 0) {
+                <div class="empty-state">
+                  <mat-icon>search_off</mat-icon>
+                  <p>No categories found.</p>
+                </div>
+              }
+              @if (vm.categories.length > 0) {
+                <mat-card class="categories-list-card">
+                  <mat-list class="pt-0">
+                    @for (category of vm.categories; track category.id) {
+                      <!-- Main Categories -->
+                      @if(!category.isSubCategory && !category.parentCategoryId) {
+                        <mat-list-item class="category-item-wrapper" [class.selected]="selectedCategoryId === category.id"
+                          (click)="toggleExpandCategory(category, $event)">
+                          <div matListItemAvatar class="category-icon" [style.background-color]="category.color + '20'"
+                            [style.color]="category.color">
+                            <mat-icon>{{ category.icon || 'category' }}</mat-icon>
                           </div>
-                          <div class="detail-row">
-                            <div class="detail-label">
-                              <mat-icon class="detail-icon">calendar_month</mat-icon>
-                              <span>This Month</span>
-                            </div>
-                            <div class="detail-value">
-                              {{ stats.thisMonth | currency }}
-                            </div>
-                          </div>
-                          <div class="detail-row">
-                            <div class="detail-label">
-                              <mat-icon class="detail-icon">receipt_long</mat-icon>
-                              <span>Transactions</span>
-                            </div>
-                            <div class="detail-value">{{ stats.totalTransactions }}</div>
-                          </div>
-                          @if (category.budget?.hasBudget) {
-                            <div class="detail-row">
-                              <div class="detail-label">
-                                <mat-icon class="detail-icon">account_balance_wallet</mat-icon>
-                                <span>Budget</span>
-                              </div>
-                              <div class="detail-value">
-                                {{ category.budget?.budgetAmount | currency }}
-                                ({{ category.budgetProgress.toFixed(0) }}%)
-                              </div>
-                            </div>
-                          }
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
-                <!-- Subcategories -->
-                @if(getSubCategoriesForCategory(category.id!).length > 0) {
-                  <div class="subcategories-container">
-                    @for (subCategory of getSubCategoriesForCategory(category.id!); track subCategory.id) {
-                      <mat-list-item class="subcategory-item-wrapper"
-                        [class.selected]="selectedCategoryId === subCategory.id"
-                        (click)="toggleExpandCategory(subCategory, $event)">
-                        <div matListItemAvatar class="category-icon small"
-                          [style.background-color]="subCategory.color + '20'" [style.color]="subCategory.color">
-                          <mat-icon>{{ subCategory.icon || 'category' }}</mat-icon>
-                        </div>
-                        <span matListItemTitle class="category-name">{{ subCategory.name }}</span>
-                        <span matListItemLine class="category-type inline-flex items-center gap-1" [style.color]="subCategory.group ? subCategory.color : null">
-                          @if (subCategory.group && subCategory.groupIcon) {
-                            <mat-icon class="!text-[14px] !w-3.5 !h-3.5">{{ subCategory.groupIcon }}</mat-icon>
-                          }
-                          {{ (subCategory.group || subCategory.type) | titlecase }}
-                        </span>
-                        <div matListItemMeta class="item-right">
-                          <div class="amount-container">
-                            <span class="category-amount">
-                              {{ subCategory.totalSpent | currency }}
-                              <span class="period">/ {{ appViewService.getViewLabel() }}</span>
-                            </span>
-                            <!-- Budget Progress for Subcategory -->
-                            @if (subCategory.budget?.hasBudget) {
-                              <div class="budget-progress-wrapper">
-                                <mat-progress-bar mode="determinate" [value]="subCategory.budgetProgress"
-                                  [color]="subCategory.budgetColor"
-                                [ngClass]="subCategory.budgetStatusClass"></mat-progress-bar>
-                              </div>
+                          <span matListItemTitle class="category-name">{{ category.name }}</span>
+                          <span class="category-type inline-flex items-center gap-1" [style.color]="category.group ? category.color : null">
+                            @if (category.group && category.groupIcon) {
+                              <mat-icon class="!text-[14px] !w-3.5 !h-3.5">{{ category.groupIcon }}</mat-icon>
                             }
-                          </div>
-                        </div>
-                      </mat-list-item>
-                      @if (selectedCategoryId === subCategory.id) {
-                        <div class="category-actions-expansion subcategory-actions">
-                          <div class="expansion-header">
-                            <div class="expansion-title">
-                              <mat-icon>info</mat-icon>
-                              Stats & Controls
-                            </div>
-                            <div class="action-buttons-compact">
-                              <!-- Set/Edit Budget -->
-                              @if (subCategory.type === 'expense') {
-                                <button mat-icon-button class="expansion-action-btn budget-btn"
-                                  (click)="openBudgetDialog(subCategory)"
-                                  [matTooltip]="subCategory.budget?.hasBudget ? 'Edit Budget' : 'Set Budget'">
-                                  <mat-icon>account_balance_wallet</mat-icon>
-                                  <span class="btn-label">{{ subCategory.budget?.hasBudget ? 'Edit Budget' :
-                                  'Set Budget' }}</span>
-                                </button>
+                            {{ (category.group || category.type) | titlecase }}
+                          </span>
+                          <div matListItemMeta class="item-right">
+                            <div class="amount-container">
+                              <span class="category-amount">
+                                {{ category.totalSpent | currency:{round: true} }}
+                                @if (!breakpointService.device.isMobile) {
+                                  <span class="period">/ {{
+                                  appViewService.getViewLabel() }}</span>
+                                }
+                              </span>
+                              <!-- Budget Progress -->
+                              @if (category.budget?.hasBudget) {
+                                <div class="budget-progress-wrapper">
+                                  <mat-progress-bar mode="determinate" [value]="category.budgetProgress"
+                                    [color]="category.budgetColor"
+                                  [ngClass]="category.budgetStatusClass"></mat-progress-bar>
+                                </div>
                               }
-                              <!-- Remove Budget -->
-                              @if (subCategory.budget?.hasBudget) {
-                                <button mat-icon-button class="expansion-action-btn remove-budget-btn"
-                                  (click)="removeBudget(subCategory)"
-                                  matTooltip="Remove Budget">
-                                  <mat-icon>money_off</mat-icon>
-                                  <span class="btn-label">Remove Budget</span>
-                                </button>
-                              }
-                              <!-- Edit -->
-                              <button mat-icon-button class="expansion-action-btn edit-btn"
-                                (click)="openMobileDialog(subCategory)" matTooltip="Edit subcategory">
-                                <mat-icon>edit</mat-icon>
-                                <span class="btn-label">Edit</span>
-                              </button>
-                              <!-- Delete -->
-                              <button mat-icon-button class="expansion-action-btn delete-btn"
-                                (click)="deleteCategory(subCategory)" matTooltip="Delete subcategory">
-                                <mat-icon>delete</mat-icon>
-                                <span class="btn-label">Delete</span>
-                              </button>
                             </div>
                           </div>
-                          <div class="category-details-expanded subcategory-details-expanded">
-                            @if (subCategory.stats; as stats) {
-                              <div class="details-container">
-                                <div class="detail-row">
-                                  <div class="detail-label">
-                                    <mat-icon class="detail-icon">analytics</mat-icon>
-                                    <span>Total Spent</span>
-                                  </div>
-                                  <div class="detail-value">
-                                    {{ stats.totalSpent | currency }}
-                                  </div>
-                                </div>
-                                <div class="detail-row">
-                                  <div class="detail-label">
-                                    <mat-icon class="detail-icon">calendar_month</mat-icon>
-                                    <span>This Month</span>
-                                  </div>
-                                  <div class="detail-value">
-                                    {{ stats.thisMonth | currency }}
-                                  </div>
-                                </div>
-                                @if (subCategory.budget?.hasBudget) {
+                        </mat-list-item>
+                        <!-- Action Buttons & Expanded Details -->
+                        @if (selectedCategoryId === category.id) {
+                          <div class="category-actions-expansion">
+                            <div class="expansion-header">
+                              <div class="action-buttons-compact">
+                                <!-- Edit -->
+                                <button mat-icon-button class="expansion-action-btn edit-btn"
+                                  (click)="openMobileDialog(category)" matTooltip="Edit category">
+                                  <mat-icon>edit</mat-icon>
+                                  <span class="btn-label">Edit</span>
+                                </button>
+                                <!-- Set/Edit Budget -->
+                                @if (category.type === 'expense') {
+                                  <button mat-icon-button class="expansion-action-btn budget-btn"
+                                    (click)="openBudgetDialog(category)"
+                                    [matTooltip]="category.budget?.hasBudget ? 'Edit Budget' : 'Set Budget'">
+                                    <mat-icon>account_balance_wallet</mat-icon>
+                                    <span class="btn-label">{{ category.budget?.hasBudget ? 'Edit Budget' : 'Set
+                                    Budget' }}</span>
+                                  </button>
+                                }
+                                <!-- Remove Budget -->
+                                @if (category.budget?.hasBudget) {
+                                  <button mat-icon-button class="expansion-action-btn remove-budget-btn"
+                                    (click)="removeBudget(category)"
+                                    matTooltip="Remove Budget">
+                                    <mat-icon>money_off</mat-icon>
+                                    <span class="btn-label">Remove Budget</span>
+                                  </button>
+                                }
+                                <!-- Remove from Parent -->
+                                @if (category.isSubCategory || category.parentCategoryId) {
+                                  <button mat-icon-button class="expansion-action-btn tree-off-btn"
+                                    (click)="removeFromParentCategory(category)" matTooltip="Remove from Parent">
+                                    <mat-icon>account_tree_off</mat-icon>
+                                    <span class="btn-label">Unlink Parent</span>
+                                  </button>
+                                }
+                                <!-- Delete -->
+                                <button mat-icon-button class="expansion-action-btn delete-btn"
+                                  (click)="deleteCategory(category)" matTooltip="Delete category">
+                                  <mat-icon>delete</mat-icon>
+                                  <span class="btn-label">Delete</span>
+                                </button>
+                              </div>
+                            </div>
+                            <div class="category-details-expanded">
+                              @if (category.stats; as stats) {
+                                <div class="details-container">
                                   <div class="detail-row">
                                     <div class="detail-label">
-                                      <mat-icon class="detail-icon">account_balance_wallet</mat-icon>
-                                      <span>Budget</span>
+                                      <mat-icon class="detail-icon">analytics</mat-icon>
+                                      <span>Total Spent</span>
                                     </div>
                                     <div class="detail-value">
-                                      {{ subCategory.budget?.budgetAmount | currency }}
-                                      ({{ subCategory.budgetProgress.toFixed(0) }}%)
+                                      {{ stats.totalSpent | currency }}
                                     </div>
                                   </div>
-                                }
-                              </div>
+                                  <div class="detail-row">
+                                    <div class="detail-label">
+                                      <mat-icon class="detail-icon">calendar_month</mat-icon>
+                                      <span>This Month</span>
+                                    </div>
+                                    <div class="detail-value">
+                                      {{ stats.thisMonth | currency }}
+                                    </div>
+                                  </div>
+                                  <div class="detail-row">
+                                    <div class="detail-label">
+                                      <mat-icon class="detail-icon">receipt_long</mat-icon>
+                                      <span>Transactions</span>
+                                    </div>
+                                    <div class="detail-value">{{ stats.totalTransactions }}</div>
+                                  </div>
+                                  @if (category.budget?.hasBudget) {
+                                    <div class="detail-row">
+                                      <div class="detail-label">
+                                        <mat-icon class="detail-icon">account_balance_wallet</mat-icon>
+                                        <span>Budget</span>
+                                      </div>
+                                      <div class="detail-value">
+                                        {{ category.budget?.budgetAmount | currency }}
+                                        ({{ category.budgetProgress.toFixed(0) }}%)
+                                      </div>
+                                    </div>
+                                  }
+                                </div>
+                              }
+                            </div>
+                          </div>
+                        }
+                        <!-- Subcategories -->
+                        @if(getSubCategoriesForCategory(category.id!).length > 0) {
+                          <div class="subcategories-container">
+                            @for (subCategory of getSubCategoriesForCategory(category.id!); track subCategory.id) {
+                              <mat-list-item class="subcategory-item-wrapper"
+                                [class.selected]="selectedCategoryId === subCategory.id"
+                                (click)="toggleExpandCategory(subCategory, $event)">
+                                <div matListItemAvatar class="category-icon small"
+                                  [style.background-color]="subCategory.color + '20'" [style.color]="subCategory.color">
+                                  <mat-icon>{{ subCategory.icon || 'category' }}</mat-icon>
+                                </div>
+                                <span matListItemTitle class="category-name">{{ subCategory.name }}</span>
+                                <span matListItemLine class="category-type inline-flex items-center gap-1" [style.color]="subCategory.group ? subCategory.color : null">
+                                  @if (subCategory.group && subCategory.groupIcon) {
+                                    <mat-icon class="!text-[14px] !w-3.5 !h-3.5">{{ subCategory.groupIcon }}</mat-icon>
+                                  }
+                                  {{ (subCategory.group || subCategory.type) | titlecase }}
+                                </span>
+                                <div matListItemMeta class="item-right">
+                                  <div class="amount-container">
+                                    <span class="category-amount">
+                                      {{ subCategory.totalSpent | currency }}
+                                      <span class="period">/ {{ appViewService.getViewLabel() }}</span>
+                                    </span>
+                                    <!-- Budget Progress for Subcategory -->
+                                    @if (subCategory.budget?.hasBudget) {
+                                      <div class="budget-progress-wrapper">
+                                        <mat-progress-bar mode="determinate" [value]="subCategory.budgetProgress"
+                                          [color]="subCategory.budgetColor"
+                                        [ngClass]="subCategory.budgetStatusClass"></mat-progress-bar>
+                                      </div>
+                                    }
+                                  </div>
+                                </div>
+                              </mat-list-item>
+                              @if (selectedCategoryId === subCategory.id) {
+                                <div class="category-actions-expansion subcategory-actions">
+                                  <div class="expansion-header">
+                                    <div class="expansion-title">
+                                      <mat-icon>info</mat-icon>
+                                      Stats & Controls
+                                    </div>
+                                    <div class="action-buttons-compact">
+                                      <!-- Set/Edit Budget -->
+                                      @if (subCategory.type === 'expense') {
+                                        <button mat-icon-button class="expansion-action-btn budget-btn"
+                                          (click)="openBudgetDialog(subCategory)"
+                                          [matTooltip]="subCategory.budget?.hasBudget ? 'Edit Budget' : 'Set Budget'">
+                                          <mat-icon>account_balance_wallet</mat-icon>
+                                          <span class="btn-label">{{ subCategory.budget?.hasBudget ? 'Edit Budget' :
+                                          'Set Budget' }}</span>
+                                        </button>
+                                      }
+                                      <!-- Remove Budget -->
+                                      @if (subCategory.budget?.hasBudget) {
+                                        <button mat-icon-button class="expansion-action-btn remove-budget-btn"
+                                          (click)="removeBudget(subCategory)"
+                                          matTooltip="Remove Budget">
+                                          <mat-icon>money_off</mat-icon>
+                                          <span class="btn-label">Remove Budget</span>
+                                        </button>
+                                      }
+                                      <!-- Edit -->
+                                      <button mat-icon-button class="expansion-action-btn edit-btn"
+                                        (click)="openMobileDialog(subCategory)" matTooltip="Edit subcategory">
+                                        <mat-icon>edit</mat-icon>
+                                        <span class="btn-label">Edit</span>
+                                      </button>
+                                      <!-- Delete -->
+                                      <button mat-icon-button class="expansion-action-btn delete-btn"
+                                        (click)="deleteCategory(subCategory)" matTooltip="Delete subcategory">
+                                        <mat-icon>delete</mat-icon>
+                                        <span class="btn-label">Delete</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <div class="category-details-expanded subcategory-details-expanded">
+                                    @if (subCategory.stats; as stats) {
+                                      <div class="details-container">
+                                        <div class="detail-row">
+                                          <div class="detail-label">
+                                            <mat-icon class="detail-icon">analytics</mat-icon>
+                                            <span>Total Spent</span>
+                                          </div>
+                                          <div class="detail-value">
+                                            {{ stats.totalSpent | currency }}
+                                          </div>
+                                        </div>
+                                        <div class="detail-row">
+                                          <div class="detail-label">
+                                            <mat-icon class="detail-icon">calendar_month</mat-icon>
+                                            <span>This Month</span>
+                                          </div>
+                                          <div class="detail-value">
+                                            {{ stats.thisMonth | currency }}
+                                          </div>
+                                        </div>
+                                        @if (subCategory.budget?.hasBudget) {
+                                          <div class="detail-row">
+                                            <div class="detail-label">
+                                              <mat-icon class="detail-icon">account_balance_wallet</mat-icon>
+                                              <span>Budget</span>
+                                            </div>
+                                            <div class="detail-value">
+                                              {{ subCategory.budget?.budgetAmount | currency }}
+                                              ({{ subCategory.budgetProgress.toFixed(0) }}%)
+                                            </div>
+                                          </div>
+                                        }
+                                      </div>
+                                    }
+                                  </div>
+                                </div>
+                              }
                             }
                           </div>
-                        </div>
+                        }
                       }
                     }
-                  </div>
-                }
+                  </mat-list>
+                </mat-card>
               }
             }
-          </mat-list>
-        </mat-card>
-      }
-    }
-  </section>
+          </section>
+        </div>
+      </mat-tab>
+
+      <!-- Manage Category Group Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <div class="flex items-center gap-2">
+            <mat-icon class="!text-lg">folder</mat-icon>
+            <span>Groups</span>
+          </div>
+        </ng-template>
+
+        <div class="tab-content pt-4">
+          <!-- Groups Header with Auto Categorize -->
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <div>
+              <h2 class="text-xl font-semibold dark:text-white mb-1">Category Groups</h2>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Organize your categories into high-level groups</p>
+            </div>
+            
+            @if (vm.hasUngroupedCategories) {
+              <button mat-flat-button color="primary" 
+                      (click)="autoCategorize()" 
+                      [disabled]="isAutoCategorizing"
+                      class="auto-categorize-btn">
+                <mat-icon [class.animate-spin]="isAutoCategorizing" class="mr-2">
+                  {{ isAutoCategorizing ? 'sync' : 'auto_awesome' }}
+                </mat-icon>
+                <span>{{ isAutoCategorizing ? 'Auto Grouping...' : 'Auto Group Categories' }}</span>
+              </button>
+            }
+          </div>
+
+          <!-- Groups Grid -->
+          <div class="groups-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-8">
+            @for (group of vm.availableGroups; track group.name) {
+              <mat-card class="group-card hover:shadow-md transition-all cursor-pointer border border-slate-100 dark:border-slate-800"
+                        (click)="openEditCategoryGroupDialog(group.name)">
+                <div class="p-3 flex items-center gap-3">
+                  <div class="group-icon-wrapper flex items-center justify-center bg-primary/10 text-primary rounded-xl shrink-0">
+                    <mat-icon>{{ group.icon }}</mat-icon>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white truncate m-0 leading-tight">
+                      {{ group.name }}
+                    </h3>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 m-0">
+                      {{ group.count }} categories
+                    </p>
+                  </div>
+                  <button mat-icon-button color="primary" class="shrink-0 scale-90 opacity-60 hover:opacity-100 transition-opacity">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                </div>
+              </mat-card>
+            } @empty {
+              <div class="col-span-full py-12 flex flex-col items-center justify-center text-slate-400">
+                <mat-icon class="!w-16 !h-16 !text-6xl mb-4 opacity-20">folder_off</mat-icon>
+                <p>No groups created yet.</p>
+                <p class="text-sm">Assign categories to groups to see them here.</p>
+              </div>
+            }
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+
 </div>
 </div>
 }

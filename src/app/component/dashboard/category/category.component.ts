@@ -47,6 +47,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatTabsModule } from '@angular/material/tabs';
 import { TranslateModule } from '@ngx-translate/core';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 import { CategorySummaryCardComponent } from 'src/app/util/components/cards/category-summary-card/category-summary-card.component';
@@ -72,6 +73,7 @@ dayjs.extend(isBetween);
     MatListModule,
     MatProgressBarModule,
     MatTooltipModule,
+    MatTabsModule,
     TranslateModule,
     CurrencyPipe,
     CategorySummaryCardComponent

@@ -600,3 +600,72 @@
     transform: translateY(0);
   }
 }
+
+// =============================================================================
+// CATEGORY TABS & GROUPS
+// =============================================================================
+
+.category-tabs {
+  ::ng-deep {
+    .mat-mdc-tab-group {
+      --mdc-tab-indicator-active-indicator-color: var(--primary-500);
+      --mat-tab-header-active-label-text-color: var(--primary-500);
+      --mat-tab-header-active-ripple-color: var(--primary-500);
+    }
+    
+    .mat-mdc-tab-labels {
+      border-bottom: 1px solid var(--surface-200);
+    }
+
+    .mat-mdc-tab {
+      height: 48px;
+    }
+  }
+}
+
+.tab-content {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.group-card {
+  border-radius: 12px !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  background: var(--surface-200) !important;
+  box-shadow: none !important;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px -8px rgba(0, 0, 0, 0.08) !important;
+    border-color: var(--primary-300) !important;
+  }
+
+  .group-icon-wrapper {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px;
+    border-radius: 10px !important;
+    
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
+.auto-categorize-btn {
+  border-radius: 12px !important;
+  padding: 0 1.5rem !important;
+  height: 44px !important;
+  
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
