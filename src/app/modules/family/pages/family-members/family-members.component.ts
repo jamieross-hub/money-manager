@@ -23,12 +23,12 @@ import { FamilyMember } from 'src/app/util/models/family.model';
 import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/confirm-dialog.component';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { CommonHeaderComponent } from 'src/app/util/components/dialog/common-header/common-header.component';
-import { CommonBodyContentComponent } from 'src/app/util/components/dialog/common-body-content/common-body-content.component';
 import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.directive';
 import { FamilyService } from '../../services/family.service';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { ValidationService } from 'src/app/util/service/validation.service';
 
 @Component({
   selector: 'app-family-members',
@@ -43,7 +43,6 @@ import { MatInputModule } from '@angular/material/input';
     MatDividerModule,
     MatTooltipModule,
     CommonHeaderComponent,
-    CommonBodyContentComponent,
     ImageFallbackDirective,
     FormsModule,
     MatFormFieldModule,
@@ -58,6 +57,7 @@ export class FamilyMembersComponent implements OnInit {
   private notificationService = inject(NotificationService);
   private location = inject(Location);
   private familyService = inject(FamilyService);
+  private validationService = inject(ValidationService);
   readonly breakpointService = inject(BreakpointService);
   private bottomSheetRef = inject(MatBottomSheetRef<FamilyMembersComponent>, { optional: true });
   readonly isBottomSheet = signal(!!this.bottomSheetRef);
@@ -81,6 +81,12 @@ export class FamilyMembersComponent implements OnInit {
 
   emailToAdd = signal('');
   isAdding = signal(false);
+
+  isEmailValid = computed(() => {
+    const email = this.emailToAdd().trim();
+    if (!email) return true;
+    return this.validationService.validateEmail(email);
+  });
 
   constructor() {
     effect(() => {
@@ -124,7 +130,7 @@ export class FamilyMembersComponent implements OnInit {
   async addMember() {
     const email = this.emailToAdd().trim();
     const famId = this.family()?.id;
-    if (!email || !famId) return;
+    if (!email || !famId || !this.isEmailValid()) return;
 
     this.isAdding.set(true);
     try {

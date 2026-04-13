@@ -8,11 +8,8 @@
   </app-common-header>
 
 
-  <!-- Content -->
-  <app-common-body-content class="flex-1 overflow-y-auto">
 
-
-    <div class="max-w-screen-md mx-auto pb-40 px-4">
+    <div class="max-w-screen-md mx-auto px-4 max-h-[60dvh] overflow-y-auto">
 
       <!-- Add Member Section (Admin Only) -->
       @if (isAdmin()) {
@@ -33,11 +30,14 @@
               <input matInput type="email" [(ngModel)]="emailToAdd" placeholder="e.g. name@example.com" 
                 (keyup.enter)="addMember()" [disabled]="isAdding()">
               <mat-icon matPrefix class="mr-2 text-gray-400">mail_outline</mat-icon>
+              @if (emailToAdd() && !isEmailValid()) {
+                <mat-error>Please enter a valid email address</mat-error>
+              }
             </mat-form-field>
             
             <button mat-flat-button color="primary" 
               class="!h-[48px] !rounded-xl !px-6 font-bold shadow-sm shadow-primary-200 dark:shadow-none transition-all active:scale-95 disabled:grayscale"
-              (click)="addMember()" [disabled]="!emailToAdd() || isAdding()">
+              (click)="addMember()" [disabled]="!emailToAdd() || isAdding() || !isEmailValid()">
               @if (isAdding()) {
                 <mat-spinner diameter="20" class="mr-2"></mat-spinner>
               } @else {
@@ -112,5 +112,4 @@
       </div>
 
     </div>
-  </app-common-body-content>
 </div>
