@@ -88,7 +88,7 @@ export class TransactionsService extends BaseService {
         });
 
         if (this.isGuest()) {
-            this.localStorageUtility.saveEntity('transactions', transactionData, 'id');
+            this.updateTransactionCache(userId, 'create', transactionData);
             // Update store immediately
             this.store.dispatch(TransactionsActions.createTransactionSuccess({
                 transaction: transactionData
@@ -152,29 +152,26 @@ export class TransactionsService extends BaseService {
      */
     updateTransaction(userId: string, transactionId: string, updatedTransaction: Partial<Transaction>): Observable<void> {
         if (this.isGuest()) {
-            const transactions = this.localStorageUtility.getEntities<Transaction>('transactions');
-            const index = transactions.findIndex(t => t.id === transactionId);
-            if (index !== -1) {
-                const oldTransaction = { ...transactions[index] };
-                const newTransaction = { ...oldTransaction, ...updatedTransaction, updatedAt: new Date(), syncStatus: SyncStatus.SYNCED };
-                transactions[index] = newTransaction;
-                this.localStorageUtility.saveEntities('transactions', transactions);
+            const oldValue = this.getCachedTransactions(userId).find(t => t.id === transactionId);
+            if (oldValue) {
+                const newTransaction = { ...oldValue, ...updatedTransaction, updatedAt: new Date(), syncStatus: SyncStatus.SYNCED } as Transaction;
+                this.updateTransactionCache(userId, 'update', newTransaction);
 
                 // Update store immediately
                 this.store.dispatch(TransactionsActions.updateTransactionSuccess({
-                    transaction: newTransaction as Transaction
+                    transaction: newTransaction
                 }));
 
-                // Update account balance if amount, account, toAccount or type changed
-                const accountChanged = updatedTransaction.accountId && updatedTransaction.accountId !== oldTransaction.accountId;
-                const toAccountChanged = updatedTransaction.toAccountId !== undefined && updatedTransaction.toAccountId !== oldTransaction.toAccountId;
-                const amountChanged = updatedTransaction.amount !== undefined && updatedTransaction.amount !== oldTransaction.amount;
-                const typeChanged = updatedTransaction.type && updatedTransaction.type !== oldTransaction.type;
+                // Update account balance
+                const accountChanged = updatedTransaction.accountId && updatedTransaction.accountId !== oldValue.accountId;
+                const toAccountChanged = updatedTransaction.toAccountId !== undefined && updatedTransaction.toAccountId !== oldValue.toAccountId;
+                const amountChanged = updatedTransaction.amount !== undefined && updatedTransaction.amount !== oldValue.amount;
+                const typeChanged = updatedTransaction.type && updatedTransaction.type !== oldValue.type;
                 
-                if ((amountChanged || accountChanged || toAccountChanged || typeChanged) && oldTransaction.accountId) {
+                if ((amountChanged || accountChanged || toAccountChanged || typeChanged) && oldValue.accountId) {
                     const affectedAccounts = new Set([
-                        oldTransaction.accountId, 
-                        oldTransaction.toAccountId, 
+                        oldValue.accountId, 
+                        oldValue.toAccountId, 
                         newTransaction.accountId, 
                         newTransaction.toAccountId
                     ].filter(Boolean));
@@ -184,8 +181,8 @@ export class TransactionsService extends BaseService {
                             userId: userId,
                             accountId: accId as string,
                             transactionType: 'update',
-                            oldTransaction: oldTransaction as Transaction,
-                            newTransaction: newTransaction as Transaction
+                            oldTransaction: oldValue,
+                            newTransaction: newTransaction
                         }));
                     });
                 }
@@ -266,12 +263,11 @@ export class TransactionsService extends BaseService {
      */
     deleteTransaction(userId: string, transactionId: string): Observable<Transaction | void> {
         if (this.isGuest()) {
-            const transactions = this.localStorageUtility.getEntities<Transaction>('transactions');
-            const transactionToDelete = transactions.find(t => t.id === transactionId);
+            const transactionToDelete = this.getCachedTransactions(userId).find(t => t.id === transactionId);
 
             if (transactionToDelete) {
-                const updatedTx = { ...transactionToDelete, status: TransactionStatus.DELETED, updatedAt: new Date() };
-                this.localStorageUtility.saveEntity('transactions', updatedTx, 'id');
+                const updatedTx = { ...transactionToDelete, status: TransactionStatus.DELETED, updatedAt: new Date(), syncStatus: SyncStatus.SYNCED };
+                this.updateTransactionCache(userId, 'update', updatedTx);
                 // Update store immediately
                 this.store.dispatch(TransactionsActions.deleteTransactionSuccess({ 
                     transactionId, 
@@ -474,12 +470,6 @@ export class TransactionsService extends BaseService {
             return this.getFamilyTransactions(userId, effectiveFamilyId);
         }
 
-        if (this.isGuest()) {
-            const transactions = this.localStorageUtility.getEntities<Transaction>('transactions').filter(t => t.status !== TransactionStatus.DELETED);
-            this.transactionsSubject.next(transactions);
-            return of(transactions);
-        }
-
         /**
          * ⚠️ ARCHITECTURE ALIGNMENT: Source of Truth = IndexedDB
          *
@@ -519,7 +509,6 @@ export class TransactionsService extends BaseService {
      * Get all family transactions (Optimized via IndexedDB Index)
      */
     getFamilyTransactions(userId: string, familyId: string): Observable<Transaction[]> {
-        if (this.isGuest()) return of([]);
 
         /**
          * ⚠️ ARCHITECTURE ALIGNMENT: IndexedDB as Source of Truth

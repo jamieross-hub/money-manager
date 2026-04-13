@@ -609,7 +609,12 @@ export class LocalIndexDBStorageService {
      *   the caller treats the value as read-only (e.g. dispatching into NgRx).
      */
     getItem<T>(key: string, storeName: string = this.STORE_NAME, clone = true): T | null {
-        const cache = storeName === this.TRANSACTIONS_STORE ? this.transactionsCache : this.keyValueCache;
+        let cache: Map<string, any>;
+        if (storeName === this.TRANSACTIONS_STORE) cache = this.transactionsCache;
+        else if (storeName === this.ACCOUNTS_STORE) cache = this.accountsCache;
+        else if (storeName === this.CATEGORIES_STORE) cache = this.categoriesCache;
+        else cache = this.keyValueCache;
+
         const value = cache.get(key);
 
         if (value === undefined || value === null) {
@@ -964,6 +969,39 @@ export class LocalIndexDBStorageService {
 
         if (keysToMigrate.length > 0 || collectionKeys.length > 0 || prefixedKeys.length > 0) {
             console.log('✅ Overall transaction storage migration complete.');
+        }
+
+        // 4. Unpack guest collections (accounts, transactions, categories) into individual records
+        const guestCollections = [
+            { key: 'guest_accounts', store: this.ACCOUNTS_STORE, idField: 'accountId', cache: this.accountsCache, indexFn: this.updateAccountsSecondaryIndices.bind(this) },
+            { key: 'guest_transactions', store: this.TRANSACTIONS_STORE, idField: 'id', cache: this.transactionsCache, indexFn: this.updateSecondaryIndices.bind(this) },
+            { key: 'guest_categories', store: this.CATEGORIES_STORE, idField: 'id', cache: this.categoriesCache, indexFn: this.updateCategoriesSecondaryIndices.bind(this) }
+        ];
+
+        let guestMigrated = false;
+        for (const coll of guestCollections) {
+            const data = this.keyValueCache.get(coll.key);
+            if (Array.isArray(data) && data.length > 0) {
+                console.log(`📦 Unpacking guest collection: ${coll.key} (${data.length} items)`);
+                guestMigrated = true;
+                for (const item of data) {
+                    const id = item[coll.idField];
+                    if (id) {
+                        // Ensure it has the correct userId for indexing
+                        item.userId = 'offline-guest';
+                        
+                        coll.cache.set(id, item);
+                        coll.indexFn(id, item);
+                        await this.persistItem(id, item, coll.store);
+                    }
+                }
+                // Delete the bulk key from memory and DB
+                this.keyValueCache.delete(coll.key);
+                await this.deleteItem(coll.key, this.STORE_NAME);
+            }
+        }
+        if (guestMigrated) {
+            console.log('✅ Guest collection migration complete.');
         }
     }
 

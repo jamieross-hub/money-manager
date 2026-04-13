@@ -165,7 +165,7 @@ export class AccountsService {
         };
 
         if (this.isGuest()) {
-            this.localStorageUtility.saveEntity('accounts', account, 'accountId');
+            this.updateAccountCache(userId, 'create', account);
             this.store.dispatch(AccountsActions.createAccountSuccess({ account }));
             return of(accountId);
         }
@@ -195,12 +195,6 @@ export class AccountsService {
      * Reacts automatically to changes in the user's family mode preference.
      */
     getAccounts(userId: string): Observable<Account[]> {
-        if (this.isGuest()) {
-            const accounts = this.localStorageUtility.getEntities<Account>('accounts');
-            this.accountsSubject.next(accounts);
-            return of(accounts);
-        }
-
         /**
          * ⚠️ ARCHITECTURE ALIGNMENT: Source of Truth = IndexedDB (individual-item store)
          *
@@ -214,9 +208,8 @@ export class AccountsService {
                 const cachedAccounts = this.readAccountsFromStore(userId)
                     .filter(a => !!(a && a.accountId));
                 
-                console.log(`[AccountsService] 💨 Emitting ${cachedAccounts.length} cached accounts in getAccounts`);
+                console.log(`[AccountsService] 💨 Emitting ${cachedAccounts.length} cached accounts in getAccounts (Guest: ${this.isGuest()})`);
                 this.accountsSubject.next(cachedAccounts);
-
 
                 // 2. Return reactive subject. Updates will be pushed here by
                 // listenToAccounts() when the background sync detects changes.
@@ -436,11 +429,6 @@ export class AccountsService {
 
     // 🔹 Get a single account by its ID
     getAccount(userId: string, accountId: string): Observable<Account | undefined> {
-        if (this.isGuest()) {
-            const accounts = this.localStorageUtility.getEntities<Account>('accounts');
-            return of(accounts.find(a => (a as any).accountId === accountId));
-        }
-
         return new Observable<Account | undefined>(observer => {
             // Reads from individual-item store first
             const key = this.getAccountStoreKey(accountId);
@@ -448,6 +436,12 @@ export class AccountsService {
 
             if (cached) {
                 observer.next(cached);
+                observer.complete();
+                return;
+            }
+
+            if (this.isGuest()) {
+                observer.next(undefined);
                 observer.complete();
                 return;
             }
@@ -499,15 +493,12 @@ export class AccountsService {
             sanitizedData.balance = Number(sanitizedData.balance) || 0;
         }
 
+        const updatedAt = Timestamp.now() as any;
+        const updatedAccount = { accountId, ...sanitizedData, updatedAt, syncStatus: this.isGuest() ? SyncStatus.SYNCED : SyncStatus.PENDING } as any;
+
         if (this.isGuest()) {
-            const accounts = this.localStorageUtility.getEntities<Account>('accounts');
-            const index = accounts.findIndex(a => (a as any).accountId === accountId);
-            if (index !== -1) {
-                const updatedAccount = { ...accounts[index], ...sanitizedData, updatedAt: new Date() as any };
-                accounts[index] = updatedAccount;
-                this.localStorageUtility.saveEntities('accounts', accounts);
-                this.store.dispatch(AccountsActions.updateAccountSuccess({ account: updatedAccount }));
-            }
+            this.updateAccountCache(userId, 'update', updatedAccount);
+            this.store.dispatch(AccountsActions.updateAccountSuccess({ account: updatedAccount }));
             return of(undefined);
         }
 
@@ -515,11 +506,10 @@ export class AccountsService {
             const accountRef = doc(this.firestore, this.getAccountPath(userId, accountId));
             const updateData = {
                 ...sanitizedData,
-                updatedAt: Timestamp.now() as any
+                updatedAt
             };
 
             // 1. Dispatch store updates immediately (Optimistic)
-            const updatedAccount = { accountId, ...sanitizedData, syncStatus: SyncStatus.PENDING } as any;
             this.store.dispatch(AccountsActions.updateAccountSuccess({ account: updatedAccount }));
             
             // 2. Update individual-item store immediately
@@ -539,7 +529,7 @@ export class AccountsService {
     // 🔹 Delete an account
     deleteAccount(userId: string, accountId: string): Observable<void> {
         if (this.isGuest()) {
-            this.localStorageUtility.deleteEntity('accounts', accountId, 'accountId');
+            this.updateAccountCache(userId, 'delete', { accountId } as any);
             this.store.dispatch(AccountsActions.deleteAccountSuccess({ accountId }));
             return of(undefined);
         }
@@ -576,14 +566,8 @@ export class AccountsService {
         let updateDataToSync: any = null;
         
         // 1. Optimistic Update
-        const isGuest = userId === 'offline-guest';
-        let accounts: Account[] = [];
-
-        if (isGuest) {
-            accounts = this.localStorageUtility.getEntities<Account>('accounts');
-        } else {
-            accounts = this.readAccountsFromStore(userId);
-        }
+        const isGuest = this.isGuest();
+        const accounts = this.readAccountsFromStore(userId);
 
         const index = accounts.findIndex(a => (a as any).accountId === accountId);
         
@@ -643,13 +627,10 @@ export class AccountsService {
                 updateDataToSync.loanDetails = account.loanDetails;
             }
             
-            if (isGuest) {
-                this.localStorageUtility.saveEntities('accounts', accounts);
-            } else {
-                // Write updated individual account to store
-                const key = this.getAccountStoreKey(accountId);
-                this.localStorageUtility.setAccount(key, account);
-            }
+            // Write updated individual account to store
+            const key = this.getAccountStoreKey(accountId);
+            this.localStorageUtility.setAccount(key, account);
+            
             this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...account } as any }));
         }
 
@@ -676,15 +657,8 @@ export class AccountsService {
         transactions: { accountId: string; type: 'income' | 'expense'; amount: number }[]
     ): Observable<void> {
         // 1. Optimistic Update
-        const isGuest = userId === 'offline-guest';
-        let accounts: Account[] = [];
+        const accounts = this.readAccountsFromStore(userId);
         const updatedAccountsMap = new Map<string, any>();
-
-        if (isGuest) {
-            accounts = this.localStorageUtility.getEntities<Account>('accounts');
-        } else {
-            accounts = this.readAccountsFromStore(userId);
-        }
         
         transactions.forEach((t: any) => {
             const index = accounts.findIndex(a => (a as any).accountId === t.accountId);
@@ -713,20 +687,16 @@ export class AccountsService {
             }
         });
 
-        if (isGuest) {
-            this.localStorageUtility.saveEntities('accounts', accounts);
-        } else {
-            // Write updated accounts in bulk
-            const itemsToUpdate = accounts
-                .filter(acc => acc?.accountId && updatedAccountsMap.has(acc.accountId))
-                .map(acc => ({
-                    key: this.getAccountStoreKey(acc.accountId!),
-                    value: acc
-                }));
-                
-            if (itemsToUpdate.length > 0) {
-                this.localStorageUtility.setAccounts(itemsToUpdate);
-            }
+        // Write updated accounts in bulk
+        const itemsToUpdate = accounts
+            .filter(acc => acc?.accountId && updatedAccountsMap.has(acc.accountId))
+            .map(acc => ({
+                key: this.getAccountStoreKey(acc.accountId!),
+                value: acc
+            }));
+            
+        if (itemsToUpdate.length > 0) {
+            this.localStorageUtility.setAccounts(itemsToUpdate);
         }
         
         if (this.isGuest()) {
@@ -754,15 +724,8 @@ export class AccountsService {
         transaction: Transaction
     ): Observable<void> {
         // 1. Optimistic Update
-        const isGuest = userId === 'offline-guest';
-        let accounts: Account[] = [];
+        const accounts = this.readAccountsFromStore(userId);
         const updatesToSync: any[] = [];
-
-        if (isGuest) {
-            accounts = this.localStorageUtility.getEntities<Account>('accounts');
-        } else {
-            accounts = this.readAccountsFromStore(userId);
-        }
 
         const oldIndex = accounts.findIndex(a => (a as any).accountId === oldAccountId);
         const newIndex = accounts.findIndex(a => (a as any).accountId === newAccountId);
@@ -791,20 +754,16 @@ export class AccountsService {
             oldAccount.updatedAt = Timestamp.now() as any;
             newAccount.updatedAt = Timestamp.now() as any;
             
-            if (isGuest) {
-                this.localStorageUtility.saveEntities('accounts', accounts);
-            } else {
-                // Write updated accounts in bulk
-                const itemsToUpdate = [oldAccount, newAccount]
-                    .filter(acc => acc?.accountId)
-                    .map(acc => ({
-                        key: this.getAccountStoreKey(acc.accountId!),
-                        value: acc
-                    }));
-                    
-                if (itemsToUpdate.length > 0) {
-                    this.localStorageUtility.setAccounts(itemsToUpdate);
-                }
+            // Write updated accounts in bulk
+            const itemsToUpdate = [oldAccount, newAccount]
+                .filter(acc => acc?.accountId)
+                .map(acc => ({
+                    key: this.getAccountStoreKey(acc.accountId!),
+                    value: acc
+                }));
+                
+            if (itemsToUpdate.length > 0) {
+                this.localStorageUtility.setAccounts(itemsToUpdate);
             }
             this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...oldAccount } as any }));
             this.store.dispatch(AccountsActions.updateAccountSuccess({ account: { ...newAccount } as any }));

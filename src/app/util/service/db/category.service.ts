@@ -185,12 +185,6 @@ export class CategoryService implements OnDestroy {
      * Reacts automatically to changes in the user's family mode preference.
      */
     getCategories(userId: string): Observable<Category[]> {
-        if (this.isGuest()) {
-            const categories = this.localStorageUtility.getEntities<Category>('categories');
-            this.categoriesSubject.next(categories);
-            return of(categories);
-        }
-
         /**
          * ⚠️ ARCHITECTURE ALIGNMENT: Source of Truth = IndexedDB (individual-item store)
          *
@@ -202,7 +196,7 @@ export class CategoryService implements OnDestroy {
                 // 1. Emit cached categories immediately from the individual-item store
                 const cachedCategories = this.readCategoriesFromStore(userId);
                 
-                console.log(`[CategoryService] 💨 Emitting ${cachedCategories.length} cached categories in getCategories`);
+                console.log(`[CategoryService] 💨 Emitting ${cachedCategories.length} cached categories in getCategories (Guest: ${this.isGuest()})`);
                 this.categoriesSubject.next(cachedCategories);
 
 
@@ -534,7 +528,7 @@ export class CategoryService implements OnDestroy {
         };
 
         if (this.isGuest()) {
-            this.localStorageUtility.saveEntity('categories', categoryData, 'id');
+            this.updateCategoryCache(userId, 'create', categoryData);
             // Update store immediately
             this.store.dispatch(CategoriesActions.createCategorySuccess({
                 category: categoryData
@@ -582,7 +576,7 @@ export class CategoryService implements OnDestroy {
         };
 
         if (this.isGuest()) {
-            const categories = this.localStorageUtility.getEntities<Category>('categories');
+            const categories = this.readCategoriesFromStore(userId);
             const index = categories.findIndex(c => c.id === categoryId);
             if (index !== -1) {
                 // Logic for parent/sub-category updates
@@ -593,6 +587,7 @@ export class CategoryService implements OnDestroy {
                             const pIndex = categories.findIndex(c => c.id === currentCategory.parentCategoryId);
                             if (pIndex !== -1) {
                                 categories[pIndex].subCategories = (categories[pIndex].subCategories || []).filter(id => id !== categoryId);
+                                this.updateCategoryCache(userId, 'update', categories[pIndex]);
                                 this.store.dispatch(CategoriesActions.updateCategorySuccess({ category: categories[pIndex] }));
                             }
                         }
@@ -602,6 +597,7 @@ export class CategoryService implements OnDestroy {
                             const oldPIndex = categories.findIndex(c => c.id === currentCategory.parentCategoryId);
                             if (oldPIndex !== -1) {
                                 categories[oldPIndex].subCategories = (categories[oldPIndex].subCategories || []).filter(id => id !== categoryId);
+                                this.updateCategoryCache(userId, 'update', categories[oldPIndex]);
                                 this.store.dispatch(CategoriesActions.updateCategorySuccess({ category: categories[oldPIndex] }));
                             }
                         }
@@ -610,15 +606,14 @@ export class CategoryService implements OnDestroy {
                             const subCats = categories[newPIndex].subCategories || [];
                             if (!subCats.includes(categoryId)) {
                                 categories[newPIndex].subCategories = [...subCats, categoryId];
+                                this.updateCategoryCache(userId, 'update', categories[newPIndex]);
                                 this.store.dispatch(CategoriesActions.updateCategorySuccess({ category: categories[newPIndex] }));
                             }
                         }
                     }
                 }
 
-                categories[index] = updatedCategory;
-                this.localStorageUtility.saveEntities('categories', categories);
-                
+                this.updateCategoryCache(userId, 'update', updatedCategory);
                 // Update store
                 this.store.dispatch(CategoriesActions.updateCategorySuccess({ category: updatedCategory }));
             }
@@ -706,7 +701,7 @@ export class CategoryService implements OnDestroy {
         const categoryData = this.categories[categoryId];
 
         if (this.isGuest()) {
-            const categories = this.localStorageUtility.getEntities<Category>('categories');
+            const categories = this.readCategoriesFromStore(userId);
             const index = categories.findIndex(c => c.id === categoryId);
             if (index === -1) return of(undefined);
 
@@ -716,20 +711,20 @@ export class CategoryService implements OnDestroy {
                 // Remove from parent
                 const pIndex = categories.findIndex(c => c.id === cat.parentCategoryId);
                 if (pIndex !== -1) {
-                    categories[pIndex].subCategories = (categories[pIndex].subCategories || []).filter(id => id !== categoryId);
-                    this.store.dispatch(CategoriesActions.updateCategorySuccess({ category: categories[pIndex] }));
+                    const updatedParent = { ...categories[pIndex], subCategories: (categories[pIndex].subCategories || []).filter(id => id !== categoryId) };
+                    this.updateCategoryCache(userId, 'update', updatedParent);
+                    this.store.dispatch(CategoriesActions.updateCategorySuccess({ category: updatedParent }));
                 }
             } else if (cat.subCategories && cat.subCategories.length > 0) {
                 // Delete sub-categories
                 const subIds = cat.subCategories || [];
-                subIds.forEach(id => this.store.dispatch(CategoriesActions.deleteCategorySuccess({ categoryId: id })));
-                const finalCategories = categories.filter(c => !subIds.includes(c.id!) && c.id !== categoryId);
-                this.localStorageUtility.saveEntities('categories', finalCategories);
-                this.store.dispatch(CategoriesActions.deleteCategorySuccess({ categoryId }));
-                return of(undefined);
+                subIds.forEach(id => {
+                    this.store.dispatch(CategoriesActions.deleteCategorySuccess({ categoryId: id }));
+                    this.updateCategoryCache(userId, 'delete', { id } as Category);
+                });
             }
 
-            this.localStorageUtility.deleteEntity('categories', categoryId, 'id');
+            this.updateCategoryCache(userId, 'delete', { id: categoryId } as Category);
             this.store.dispatch(CategoriesActions.deleteCategorySuccess({ categoryId }));
             return of(undefined);
         }
