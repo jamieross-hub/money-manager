@@ -761,6 +761,11 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       return;
     }
 
+    // Prevent double submission
+    if (this.isSubmitting()) {
+      return;
+    }
+
     this.transactionForm.markAllAsTouched();
 
     // Additional validation for split transactions
@@ -776,296 +781,286 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       return;
     }
 
-    if (this.transactionForm.valid && !this.isSubmitting()) {
-      this.isSubmitting.set(true);
+    if (!this.transactionForm.valid) {
+      this.notificationService.error('Please fill in all required fields');
+      return;
+    }
 
-      try {
-        this.loaderService.show();
+    this.isSubmitting.set(true);
 
-        const formData = this.transactionForm.value;
+    try {
+      this.loaderService.show();
 
-        let finalCategoryId = formData.categoryId;
-        let finalCategoryName = formData.categoryName;
-        let finalCategoryType = formData.categoryType as TransactionType;
-        
-        if (formData.isTransferMode) {
-          finalCategoryType = TransactionType.TRANSFER;
-          finalCategoryName = 'Transfer';
-          try {
-            finalCategoryId = await firstValueFrom(this.categoryService.findOrCreateSystemCategory(
-              this.userId,
-              'Transfer',
-              TransactionType.TRANSFER,
-              'swap_horiz',
-              '#8b5cf6'
-            ));
-          } catch (e) {
-            console.error('Error creating transfer category', e);
-            finalCategoryId = 'transfer_system';
+      const formData = this.transactionForm.value;
+
+      let finalCategoryId = formData.categoryId;
+      let finalCategoryName = formData.categoryName;
+      let finalCategoryType = formData.categoryType as TransactionType;
+      
+      if (formData.isTransferMode) {
+        finalCategoryType = TransactionType.TRANSFER;
+        finalCategoryName = 'Transfer';
+        try {
+          finalCategoryId = await firstValueFrom(this.categoryService.findOrCreateSystemCategory(
+            this.userId,
+            'Transfer',
+            TransactionType.TRANSFER,
+            'swap_horiz',
+            '#8b5cf6'
+          ));
+        } catch (e) {
+          console.error('Error creating transfer category', e);
+          finalCategoryId = 'transfer_system';
+        }
+      }
+
+      const transactionData = {
+
+        accountId: formData.accountId,
+        toAccountId: formData.isTransferMode ? formData.toAccountId : undefined,
+        amount: parseFloat(formData.amount),
+        category: finalCategoryName,
+        categoryId: finalCategoryId,
+        categoryType: finalCategoryType,
+        type: finalCategoryType,
+        date: Timestamp.fromDate(this.dateService.getLocalDateTimeFromForm(formData.date, true, this.dialogData?.date)),
+        notes: formData.description,
+        taxAmount: formData.taxAmount || 0,
+        taxPercentage: formData.taxPercentage || 0,
+        taxes: formData.taxes || [],
+        isRecurring: formData.isRecurring || false,
+        payee: formData.description || this.dialogData?.payee || '', // Carry over payee if available
+        recurringInterval: formData.recurringInterval || RecurringInterval.MONTHLY,
+        recurringEndDate: formData.recurringEndDate ? Timestamp.fromDate(this.dateService.getLocalDateTimeFromForm(formData.recurringEndDate, false, this.dialogData?.recurringEndDate)) : null,
+        nextOccurrence: formData.isRecurring ? (() => {
+          const startStr = formData.recurringStartDate || formData.date;
+          const startDate = this.dateService.getLocalDateTimeFromForm(startStr, false, this.dialogData?.recurringStartDate || this.dialogData?.date);
+          const transactionDate = this.dateService.getLocalDateTimeFromForm(formData.date, false, this.dialogData?.date);
+          
+          // For existing transactions being converted to recurring
+          const referenceDate = (this.dialogData?.id && this.dialogData.date) 
+            ? this.dateService.toDate(this.dialogData.date) 
+            : transactionDate;
+
+          const interval = formData.recurringInterval as RecurringInterval;
+
+          const advanceByInterval = (d: Date): void => {
+            switch (interval) {
+              case RecurringInterval.DAILY: d.setDate(d.getDate() + 1); break;
+              case RecurringInterval.WEEKLY: d.setDate(d.getDate() + 7); break;
+              case RecurringInterval.MONTHLY: d.setMonth(d.getMonth() + 1); break;
+              case RecurringInterval.YEARLY: d.setFullYear(d.getFullYear() + 1); break;
+            }
+          };
+
+          const isSamePeriod = (d1: Date, d2: Date, inv: RecurringInterval): boolean => {
+            const m1 = dayjs(d1);
+            const m2 = dayjs(d2);
+            if (inv === RecurringInterval.DAILY) return m1.isSame(m2, 'day');
+            if (inv === RecurringInterval.WEEKLY) return m1.isSame(m2, 'week');
+            if (inv === RecurringInterval.MONTHLY) return m1.isSame(m2, 'month');
+            if (inv === RecurringInterval.YEARLY) return m1.isSame(m2, 'year');
+            return false;
+          };
+
+          const nextDate = new Date(startDate);
+
+          // If the start date coincides with or precedes the reference transaction,
+          // advance once so the NEXT occurrence is correctly computed.
+          if (!referenceDate || startDate.getTime() <= referenceDate.getTime() || isSamePeriod(startDate, referenceDate, interval)) {
+            advanceByInterval(nextDate);
           }
+
+          // Backdate scenario: keep advancing until we land on today or a future date
+          // so the template always stores the next upcoming occurrence.
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          let safetyCounter = 0;
+          const MAX_ITERATIONS = 1000;
+          while (nextDate < today && safetyCounter < MAX_ITERATIONS) {
+            advanceByInterval(nextDate);
+            safetyCounter++;
+          }
+
+          return Timestamp.fromDate(nextDate);
+        })() : null,
+        status: TransactionStatus.COMPLETED,
+        isSplitTransaction: formData.isSplitTransaction || false,
+        splitGroupId: formData.splitGroupId || '',
+        // Category split fields
+        isCategorySplit: this.isCategorySplit(),
+        categorySplits: this.categorySplits,
+        totalSplitAmount: this.categorySplits.reduce((sum, split) => sum + split.amount, 0),
+        // Family split data
+        splitData: this.isFamilyMode() ? this.buildSplitData() : null,
+        userDisplayName: this.userProfile()?.displayName || '',
+        userPhotoURL: this.userProfile()?.photoURL || '',
+        createdAt: this.dialogData?.createdAt,
+        createdBy: this.dialogData?.createdBy,
+        updatedBy: this.userId,
+        updatedAt: Timestamp.now(),
+        familyId: this.isFamilyMode() ? (this.familyService.activeFamilyId() || '') : '',
+      };
+
+      if (this.adjustmentMode() && this.originalTransaction) {
+        const originalAmount = this.originalTransaction.amount || 0;
+        const newAmount = parseFloat(formData.amount);
+        const adjustmentDiff = newAmount - originalAmount;
+
+        // Resolve adjustment type correctly
+        let adjType: TransactionType = this.originalTransaction.type;
+        if (this.originalTransaction.type === TransactionType.EXPENSE) {
+          adjType = adjustmentDiff >= 0 ? TransactionType.EXPENSE : TransactionType.INCOME;
+        } else {
+          adjType = adjustmentDiff >= 0 ? TransactionType.INCOME : TransactionType.EXPENSE;
         }
 
-        const transactionData = {
+        // Sign multiplier: If we switched type (e.g. refunding an expense), we must flip the delta signs
+        const multiplier = (adjType === this.originalTransaction.type) ? 1 : -1;
 
-          accountId: formData.accountId,
-          toAccountId: formData.isTransferMode ? formData.toAccountId : undefined,
-          amount: parseFloat(formData.amount),
-          category: finalCategoryName,
-          categoryId: finalCategoryId,
-          categoryType: finalCategoryType,
-          type: finalCategoryType,
-          date: Timestamp.fromDate(this.dateService.getLocalDateTimeFromForm(formData.date, true, this.dialogData?.date)),
-          notes: formData.description,
-          taxAmount: formData.taxAmount || 0,
-          taxPercentage: formData.taxPercentage || 0,
-          taxes: formData.taxes || [],
-          isRecurring: formData.isRecurring || false,
-          payee: formData.description || this.dialogData?.payee || '', // Carry over payee if available
-          recurringInterval: formData.recurringInterval || RecurringInterval.MONTHLY,
-          recurringEndDate: formData.recurringEndDate ? Timestamp.fromDate(this.dateService.getLocalDateTimeFromForm(formData.recurringEndDate, false, this.dialogData?.recurringEndDate)) : null,
-          nextOccurrence: formData.isRecurring ? (() => {
-            const startStr = formData.recurringStartDate || formData.date;
-            const startDate = this.dateService.getLocalDateTimeFromForm(startStr, false, this.dialogData?.recurringStartDate || this.dialogData?.date);
-            const transactionDate = this.dateService.getLocalDateTimeFromForm(formData.date, false, this.dialogData?.date);
-            
-            // For existing transactions being converted to recurring
-            const referenceDate = (this.dialogData?.id && this.dialogData.date) 
-              ? this.dateService.toDate(this.dialogData.date) 
-              : transactionDate;
+        // Calculate splitting deltas
+        const baseSplitData = this.isSplitGroupMode() ? this.buildSplitData() : null;
+        const finalAdjustmentSplitData = this.calculateAdjustmentSplitData(baseSplitData, multiplier);
 
-            const interval = formData.recurringInterval as RecurringInterval;
+        // Calculate Paid By deltas
+        const paidByDeltas = this.calculateAdjustmentPaidByData(formData.paidByUserId, formData.paidBy, multiplier);
+        
+        if (finalAdjustmentSplitData) {
+          finalAdjustmentSplitData.paidByUserId = paidByDeltas.paidByUserId;
+          finalAdjustmentSplitData.paidByDisplayName = paidByDeltas.paidByDisplayName;
+          finalAdjustmentSplitData.paidBy = paidByDeltas.paidBy;
+        }
 
-            const advanceByInterval = (d: Date): void => {
-              switch (interval) {
-                case RecurringInterval.DAILY: d.setDate(d.getDate() + 1); break;
-                case RecurringInterval.WEEKLY: d.setDate(d.getDate() + 7); break;
-                case RecurringInterval.MONTHLY: d.setMonth(d.getMonth() + 1); break;
-                case RecurringInterval.YEARLY: d.setFullYear(d.getFullYear() + 1); break;
-              }
-            };
-
-            const isSamePeriod = (d1: Date, d2: Date, inv: RecurringInterval): boolean => {
-              const m1 = dayjs(d1);
-              const m2 = dayjs(d2);
-              if (inv === RecurringInterval.DAILY) return m1.isSame(m2, 'day');
-              if (inv === RecurringInterval.WEEKLY) return m1.isSame(m2, 'week');
-              if (inv === RecurringInterval.MONTHLY) return m1.isSame(m2, 'month');
-              if (inv === RecurringInterval.YEARLY) return m1.isSame(m2, 'year');
-              return false;
-            };
-
-            const nextDate = new Date(startDate);
-
-            // If the start date coincides with or precedes the reference transaction,
-            // advance once so the NEXT occurrence is correctly computed.
-            if (!referenceDate || startDate.getTime() <= referenceDate.getTime() || isSamePeriod(startDate, referenceDate, interval)) {
-              advanceByInterval(nextDate);
-            }
-
-            // Backdate scenario: keep advancing until we land on today or a future date
-            // so the template always stores the next upcoming occurrence.
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            let safetyCounter = 0;
-            const MAX_ITERATIONS = 1000;
-            while (nextDate < today && safetyCounter < MAX_ITERATIONS) {
-              advanceByInterval(nextDate);
-              safetyCounter++;
-            }
-
-            return Timestamp.fromDate(nextDate);
-          })() : null,
-          status: TransactionStatus.COMPLETED,
-          isSplitTransaction: formData.isSplitTransaction || false,
-          splitGroupId: formData.splitGroupId || '',
-          // Category split fields
-          isCategorySplit: this.isCategorySplit(),
-          categorySplits: this.categorySplits,
-          totalSplitAmount: this.categorySplits.reduce((sum, split) => sum + split.amount, 0),
-          // Family split data
-          splitData: this.isFamilyMode() ? this.buildSplitData() : null,
-          userDisplayName: this.userProfile()?.displayName || '',
-          userPhotoURL: this.userProfile()?.photoURL || '',
-          createdAt: this.dialogData?.createdAt,
-          createdBy: this.dialogData?.createdBy,
-          updatedBy: this.userId,
+        // Find Adjustment Category
+        const categories = this.categories();
+        const adjCategory = categories.find((c: any) => c.name.toLowerCase() === 'adjustment');
+        
+        const adjustmentData = {
+          ...transactionData,
+          amount: Math.abs(adjustmentDiff),
+          type: adjType,
+          category: adjCategory?.name || 'Adjustment',
+          categoryId: adjCategory?.id || 'adjustment',
+          notes: `Adjustment for: ${this.originalTransaction.category} on ${this.dateService.formatDate(this.originalTransaction.date)}.Original notes: ${formData.description}`,
+          splitData: finalAdjustmentSplitData,
+          userId: this.userId,
+          syncStatus: SyncStatus.PENDING,
+          createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
-          familyId: this.isFamilyMode() ? (this.familyService.activeFamilyId() || '') : '',
+          createdBy: this.userId,
+          updatedBy: this.userId,
         };
 
-        if (this.adjustmentMode() && this.originalTransaction) {
-          const originalAmount = this.originalTransaction.amount || 0;
-          const newAmount = parseFloat(formData.amount);
-          const adjustmentDiff = newAmount - originalAmount;
-
-          // Resolve adjustment type correctly
-          let adjType: TransactionType = this.originalTransaction.type;
-          if (this.originalTransaction.type === TransactionType.EXPENSE) {
-            adjType = adjustmentDiff >= 0 ? TransactionType.EXPENSE : TransactionType.INCOME;
-          } else {
-            adjType = adjustmentDiff >= 0 ? TransactionType.INCOME : TransactionType.EXPENSE;
-          }
-
-          // Sign multiplier: If we switched type (e.g. refunding an expense), we must flip the delta signs
-          const multiplier = (adjType === this.originalTransaction.type) ? 1 : -1;
-
-          // Calculate splitting deltas
-          const baseSplitData = this.isSplitGroupMode() ? this.buildSplitData() : null;
-          const finalAdjustmentSplitData = this.calculateAdjustmentSplitData(baseSplitData, multiplier);
-
-          // Calculate Paid By deltas
-          const paidByDeltas = this.calculateAdjustmentPaidByData(formData.paidByUserId, formData.paidBy, multiplier);
-          
-          if (finalAdjustmentSplitData) {
-            finalAdjustmentSplitData.paidByUserId = paidByDeltas.paidByUserId;
-            finalAdjustmentSplitData.paidByDisplayName = paidByDeltas.paidByDisplayName;
-            finalAdjustmentSplitData.paidBy = paidByDeltas.paidBy;
-          }
-
-          // Find Adjustment Category
-          const categories = this.categories();
-          const adjCategory = categories.find((c: any) => c.name.toLowerCase() === 'adjustment');
-          
-          const adjustmentData = {
-            ...transactionData,
-            amount: Math.abs(adjustmentDiff),
-            type: adjType,
-            category: adjCategory?.name || 'Adjustment',
-            categoryId: adjCategory?.id || 'adjustment',
-            notes: `Adjustment for: ${this.originalTransaction.category} on ${this.dateService.formatDate(this.originalTransaction.date)}.Original notes: ${formData.description}`,
-            splitData: finalAdjustmentSplitData,
+        await this.store.dispatch(
+          TransactionsActions.createTransaction({
             userId: this.userId,
-            syncStatus: SyncStatus.PENDING,
-            createdAt: Timestamp.now(),
-            updatedAt: Timestamp.now(),
-            createdBy: this.userId,
-            updatedBy: this.userId,
+            transaction: adjustmentData,
+          })
+        );
+        this.notificationService.info('Adjustment recorded successfully');
+      } else if (this.dialogData?.id) {
+        // 1. Update the transaction instance
+        await this.store.dispatch(
+          TransactionsActions.updateTransaction({
+            userId: this.userId,
+            transactionId: this.dialogData.id,
+            transaction: transactionData,
+          })
+        );
+
+        // 2. Handle recurring template (create or update)
+        if (formData.isRecurring) {
+          const templateUpdate: Partial<RecurringTemplate> = {
+            ...transactionData,
+            isActive: true,
+            isRecurring: true,
+            nextOccurrence: transactionData.nextOccurrence || Timestamp.now()
           };
-
-          await this.store.dispatch(
-            TransactionsActions.createTransaction({
+          this.store.dispatch(
+            TransactionsActions.updateRecurringTemplate({
               userId: this.userId,
-              transaction: adjustmentData,
+              templateId: this.dialogData.id,
+              template: templateUpdate,
             })
           );
-          this.notificationService.info('Adjustment recorded successfully');
-        } else if (this.dialogData?.id) {
-          // 1. Update the transaction instance
-          await this.store.dispatch(
-            TransactionsActions.updateTransaction({
-              userId: this.userId,
-              transactionId: this.dialogData.id,
-              transaction: transactionData,
-            })
-          );
-
-          // 2. Handle recurring template (create or update)
-          if (formData.isRecurring) {
-            const templateUpdate: Partial<RecurringTemplate> = {
-              ...transactionData,
-              isActive: true,
-              isRecurring: true,
-              nextOccurrence: transactionData.nextOccurrence || Timestamp.now()
-            };
-            this.store.dispatch(
-              TransactionsActions.updateRecurringTemplate({
-                userId: this.userId,
-                templateId: this.dialogData.id,
-                template: templateUpdate,
-              })
-            );
-            this.notificationService.info('Transaction and recurring template updated');
-          } else {
-            // If it WAS recurring but now it's NOT, delete the template
-            if (this.dialogData.isRecurring) {
-              this.store.dispatch(
-                TransactionsActions.deleteRecurringTemplate({
-                  userId: this.userId,
-                  templateId: this.dialogData.id
-                })
-              );
-              this.notificationService.info('Transaction updated and recurring deleted');
-            } else {
-              this.notificationService.info('Transaction updated successfully');
-            }
-          }
+          this.notificationService.info('Transaction and recurring template updated');
         } else {
-          // 1. Create the regular transaction instance
-          const transactionId = this.recurringService.generateId();
-          const transactionToCreate = {
-            id: transactionId,
+          // If it WAS recurring but now it's NOT, delete the template
+          if (this.dialogData.isRecurring) {
+            this.store.dispatch(
+              TransactionsActions.deleteRecurringTemplate({
+                userId: this.userId,
+                templateId: this.dialogData.id
+              })
+            );
+            this.notificationService.info('Transaction updated and recurring deleted');
+          } else {
+            this.notificationService.info('Transaction updated successfully');
+          }
+        }
+      } else {
+        // 1. Create the regular transaction instance
+        const transactionId = this.recurringService.generateId();
+        const transactionToCreate = {
+          id: transactionId,
+          userId: this.userId,
+          ...transactionData,
+          isRecurring: false, // This specific record is an instance, not a template
+          nextOccurrence: null,
+          recurringInterval: null,
+          recurringEndDate: null,
+          syncStatus: SyncStatus.PENDING,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+          createdBy: this.userId,
+          updatedBy: this.userId,
+        };
+
+        await this.store.dispatch(
+          TransactionsActions.createTransaction({
             userId: this.userId,
+            transaction: transactionToCreate,
+          })
+        );
+
+        // 2. If it's recurring, ALSO create the template in the recurring collection
+        if (formData.isRecurring) {
+          const templateData: Omit<RecurringTemplate, 'id'> = {
             ...transactionData,
-            isRecurring: false, // This specific record is an instance, not a template
-            nextOccurrence: null,
-            recurringInterval: null,
-            recurringEndDate: null,
-            syncStatus: SyncStatus.PENDING,
+            userId: this.userId,
+            isActive: true,
+            isRecurring: true,
+            nextOccurrence: transactionData.nextOccurrence || Timestamp.now(),
+            syncStatus: SyncStatus.SYNCED,
             createdAt: Timestamp.now(),
             updatedAt: Timestamp.now(),
             createdBy: this.userId,
             updatedBy: this.userId,
           };
-
-          await this.store.dispatch(
-            TransactionsActions.createTransaction({
+          this.store.dispatch(
+            TransactionsActions.createRecurringTemplate({
               userId: this.userId,
-              transaction: transactionToCreate,
+              template: templateData,
+              id: transactionId
             })
           );
-
-          // 2. If it's recurring, ALSO create the template in the recurring collection
-          if (formData.isRecurring) {
-            const templateData: Omit<RecurringTemplate, 'id'> = {
-              ...transactionData,
-              userId: this.userId,
-              isActive: true,
-              isRecurring: true,
-              nextOccurrence: transactionData.nextOccurrence || Timestamp.now(),
-              syncStatus: SyncStatus.SYNCED,
-              createdAt: Timestamp.now(),
-              updatedAt: Timestamp.now(),
-              createdBy: this.userId,
-              updatedBy: this.userId,
-            };
-            this.store.dispatch(
-              TransactionsActions.createRecurringTemplate({
-                userId: this.userId,
-                template: templateData,
-                id: transactionId
-              })
-            );
-          }
-
-          this.notificationService.info('Transaction added successfully');
-          this.notificationService.successVibration();
         }
 
-        this.router.navigate(['/dashboard/transactions']).catch(() => {
-          // Ignore navigation errors such as AbortError
-        });
+        this.notificationService.info('Transaction added successfully');
+        this.notificationService.successVibration();
+      }
 
-        this.dialogRef.close(true);
-      } catch (error) {
-        console.error('Error saving transaction:', error);
-        this.notificationService.error('Failed to save transaction');
-      } finally {
-        this.isSubmitting.set(false);
-        this.loaderService.hide();
-      }
-    } else {
-      this.notificationService.error('Please fill in all required fields');
+      this.router.navigate(['/dashboard/transactions']).catch(() => {
+        // Ignore navigation errors such as AbortError
+      });
 
-      // Show specific validation errors
-
-      if (this.transactionForm.get('amount')?.errors) {
-      }
-      if (this.transactionForm.get('categoryId')?.errors) {
-      }
-      if (this.transactionForm.get('categoryType')?.errors) {
-      }
-      if (this.transactionForm.get('accountId')?.errors) {
-      }
+      this.dialogRef.close(true);
+    } catch (error) {
+      console.error('Error saving transaction:', error);
+      this.notificationService.error('Failed to save transaction');
+    } finally {
+      this.isSubmitting.set(false);
+      this.loaderService.hide();
     }
   }
 
