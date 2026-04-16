@@ -1108,11 +1108,39 @@
 
 .transaction-main {
   display: flex;
+  align-items: stretch;
+  padding: 0;
+  gap: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.date-column {
+  width: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--surface-200), transparent 70%);
+  border-right: 1px solid var(--surface-200);
+  color: var(--neutral-500);
+  flex-shrink: 0;
+  padding: 8px 4px;
+
+  [data-theme='dark'] & {
+    background: rgba(255, 255, 255, 0.03);
+    border-right-color: rgba(255, 255, 255, 0.08);
+    color: var(--neutral-400);
+  }
+}
+
+.transaction-content {
+  flex: 1;
+  display: flex;
   align-items: center;
   padding: 12px 14px;
-  gap: 10px;
-  position: relative; // Ensure overlay is relative to this
-  z-index: 1;
+  gap: 12px;
+  min-width: 0;
 }
 
 
