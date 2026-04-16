@@ -163,6 +163,9 @@ export interface Transaction extends Auditable, RecurrenceInfo {
   flagMessage?: string;
   flaggedBy?: string | null;
   flaggedAt?: Date | Timestamp | null;
+
+  // Location
+  placeName?: string;
 }
 
 /**
@@ -200,6 +203,9 @@ export interface TransactionBaseRequest {
   settlementFamilyId?: string;
   settlementFromUserId?: string;
   settlementToUserId?: string;
+
+  // Location
+  placeName?: string;
 }
 
 /**

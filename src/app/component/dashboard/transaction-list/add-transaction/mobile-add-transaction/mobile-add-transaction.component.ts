@@ -65,6 +65,7 @@ import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { RecurringService } from 'src/app/util/service/db/recurring.service';
 import { CategoryService } from 'src/app/util/service/db/category.service';
 import { firstValueFrom } from 'rxjs';
+import { LocationService } from 'src/app/util/service/location.service';
 
 
 
@@ -157,6 +158,10 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   });
 
   public formattedAmount = signal('');
+  public capturedPlaceName = signal('');
+  public isFetchingLocation = signal(false);
+  public isLocationEnabled = signal(false);
+  public isEditingLocation = signal(false);
 
   onAmountKeyDown(event: KeyboardEvent) {
     const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End', '.'];
@@ -194,7 +199,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     private bottomSheet: MatBottomSheet,
     private cdr: ChangeDetectorRef,
     private recurringService: RecurringService,
-    private categoryService: CategoryService
+    private categoryService: CategoryService,
+    private locationService: LocationService
   ) {
     this.isGuestUser = this.userService.isGuestUser();
     const tomorrow = new Date();
@@ -333,8 +339,57 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     });
   }
 
+  async toggleLocation(event: any): Promise<void> {
+    const enabled = event.checked;
+    this.isLocationEnabled.set(enabled);
+    
+    // Save preference persistently
+    this.userService.updateUserPreferences({ captureLocationByDefault: enabled });
+    
+    if (enabled) {
+      await this.captureLocation();
+    } else {
+      this.capturedPlaceName.set('');
+    }
+  }
+
+  async captureLocation(): Promise<void> {
+    this.isFetchingLocation.set(true);
+    this.isEditingLocation.set(false);
+    try {
+      const position = await this.locationService.getCurrentPosition();
+      const placeName = await this.locationService.reverseGeocode(
+        position.coords.latitude, 
+        position.coords.longitude
+      );
+      this.capturedPlaceName.set(placeName);
+    } catch (error: any) {
+      console.error('Location error:', error);
+      this.notificationService.error(error.message || 'Failed to capture location');
+      this.isLocationEnabled.set(false);
+    } finally {
+      this.isFetchingLocation.set(false);
+      this.cdr.markForCheck();
+    }
+  }
+
+  toggleEditLocation(): void {
+    this.isEditingLocation.update(val => !val);
+  }
+
+  onManualPlaceNameChange(event: any): void {
+    this.capturedPlaceName.set(event.target.value);
+  }
+
   ngOnInit(): void {
     this.userId = this.userService.getCurrentUserId();
+
+    // Initialize location enabled state from preferences
+    const user = this.userService.getCurrentUserSnapshot();
+    if (user?.preferences?.captureLocationByDefault) {
+      this.isLocationEnabled.set(true);
+      this.captureLocation(); // Auto-capture on init if preference is enabled
+    }
     
     if (this.dialogData && this.dialogData.mode === 'adjustment') {
       this.adjustmentMode.set(true);
@@ -581,9 +636,14 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       paidByUserId: transaction.splitData?.paidByUserId || '',
       paidBy: transaction.splitData?.paidBy || [],
       splitBetween: transaction.splitData?.splitBetween || [],
-      isTransferMode: transaction.type === TransactionType.TRANSFER,
+       isTransferMode: transaction.type === TransactionType.TRANSFER,
       toAccountId: transaction.toAccountId || '',
     });
+
+    if (transaction.placeName) {
+      this.capturedPlaceName.set(transaction.placeName);
+      this.isLocationEnabled.set(true);
+    }
 
     if (transaction.isCategorySplit) {
       this.transactionForm.patchValue({ isCategorySplit: true });
@@ -815,9 +875,9 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       }
 
       const transactionData = {
-
         accountId: formData.accountId,
-        toAccountId: formData.isTransferMode ? formData.toAccountId : undefined,
+        toAccountId: (formData.isTransferMode) ? formData.toAccountId : undefined,
+        placeName: this.isLocationEnabled() ? this.capturedPlaceName() : undefined,
         amount: parseFloat(formData.amount),
         category: finalCategoryName,
         categoryId: finalCategoryId,

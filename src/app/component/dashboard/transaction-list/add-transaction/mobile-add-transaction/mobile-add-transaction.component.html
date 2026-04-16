@@ -698,6 +698,67 @@
               } <!-- end @if(!isFamilyMode()) for Tax Fields -->
 
 
+              <!-- Location Recording Section -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <mat-icon class="text-gray-600 dark:text-gray-400">location_on</mat-icon>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Record Location
+                    </label>
+                  </div>
+                  <mat-slide-toggle [checked]="isLocationEnabled()" (change)="toggleLocation($event)" [disabled]="isFetchingLocation() || viewMode()"></mat-slide-toggle>
+                </div>
+                
+                @if (isLocationEnabled()) {
+                  <div class="mt-3 flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800 transition-all duration-300">
+                    <mat-icon class="text-primary-600 dark:text-primary-400 text-sm mt-0.5" [class.animate-spin]="isFetchingLocation()">
+                      {{ isFetchingLocation() ? 'sync' : 'place' }}
+                    </mat-icon>
+                    <div class="flex-1 min-w-0">
+                      @if (isFetchingLocation()) {
+                        <p class="text-sm text-blue-600 dark:text-blue-400">Fetching your location...</p>
+                      } @else if (isEditingLocation()) {
+                        <input type="text" [value]="capturedPlaceName()" (input)="onManualPlaceNameChange($event)" 
+                          class="w-full text-sm bg-white dark:bg-gray-800 border border-primary-300 dark:border-primary-700 rounded px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+                          placeholder="Enter location name..." />
+                        <div class="flex items-center gap-3 mt-2">
+                          <button type="button" (click)="toggleEditLocation()" class="text-xs text-green-600 dark:text-green-400 font-bold flex items-center gap-1">
+                            <mat-icon style="font-size: 16px; width: 16px; height: 16px;">check_circle</mat-icon>
+                            Done
+                          </button>
+                          <button type="button" (click)="captureLocation()" class="text-xs text-primary-600 dark:text-primary-400 font-bold flex items-center gap-1">
+                            <mat-icon style="font-size: 16px; width: 16px; height: 16px;">sync</mat-icon>
+                            Auto-detect
+                          </button>
+                        </div>
+                      } @else if (capturedPlaceName()) {
+                        <p class="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 leading-relaxed">{{ capturedPlaceName() }}</p>
+                        <div class="flex items-center gap-4 mt-2">
+                          <button type="button" (click)="captureLocation()" class="text-xs text-primary-600 dark:text-primary-400 font-bold hover:text-primary-700 dark:hover:text-primary-300 flex items-center gap-1 transition-colors">
+                            <mat-icon style="font-size: 16px; width: 16px; height: 16px;">my_location</mat-icon>
+                            Auto-detect
+                          </button>
+                          <button type="button" (click)="toggleEditLocation()" class="text-xs text-gray-600 dark:text-gray-400 font-bold hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1 transition-colors">
+                            <mat-icon style="font-size: 16px; width: 16px; height: 16px;">edit</mat-icon>
+                            Edit
+                          </button>
+                        </div>
+                      } @else {
+                        <div class="flex flex-col gap-2">
+                          <p class="text-sm text-red-500">Could not fetch location name</p>
+                          <button type="button" (click)="toggleEditLocation()" class="text-xs text-primary-600 dark:text-primary-400 font-bold hover:underline flex items-center gap-1 w-fit">
+                            <mat-icon style="font-size: 16px; width: 16px; height: 16px;">edit</mat-icon>
+                            Enter manually
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+
+
               <!-- Bottom Spacing for Mobile -->
               <div class="h-20"></div>
             </form>

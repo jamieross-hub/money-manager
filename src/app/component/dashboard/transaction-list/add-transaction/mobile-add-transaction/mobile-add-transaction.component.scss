@@ -317,3 +317,13 @@ textarea:focus-visible {
   outline: 2px solid var(--primary-600);
   outline-offset: 2px;
 } 
+
+/* Spin animation for loading state */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

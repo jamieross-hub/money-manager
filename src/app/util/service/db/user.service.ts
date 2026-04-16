@@ -1838,6 +1838,38 @@ export class UserService implements OnDestroy {
 
 
   /**
+   * Update User Preferences
+   */
+  async updateUserPreferences(preferences: any): Promise<void> {
+    const uid = this.getCurrentUserId();
+    if (!uid) return;
+
+    const currentUser = this.getCurrentUserSnapshot();
+    if (!currentUser) return;
+
+    const updatedUser = {
+      ...currentUser,
+      preferences: {
+        ...(currentUser.preferences || {}),
+        ...preferences
+      },
+      updatedAt: new Date()
+    };
+
+    // 1. Update local state/cache
+    this.storageService.setItem(`user-data-${uid}`, updatedUser);
+    this.store.dispatch(ProfileActions.setProfile({ profile: updatedUser }));
+
+    // 2. Persist remotely (if not guest)
+    if (!this.isGuestUser()) {
+      this.store.dispatch(ProfileActions.updatePreferences({
+        userId: uid,
+        preferences: preferences
+      }));
+    }
+  }
+
+  /**
    * Update FCM Token
    */
   async updateFcmToken(token: string): Promise<void> {

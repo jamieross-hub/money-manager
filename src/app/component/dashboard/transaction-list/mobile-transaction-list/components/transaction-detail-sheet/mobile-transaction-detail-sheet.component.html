@@ -65,6 +65,19 @@
           <span class="updated-date">{{ data().transaction._updatedAtDisplay }}</span>
         </div>
       </div>
+      
+      <!-- Location Information -->
+      @if (data().transaction.placeName) {
+      <div class="detail-row">
+        <div class="detail-label">
+          <mat-icon class="detail-icon">place</mat-icon>
+          <span>Location</span>
+        </div>
+        <div class="detail-value">
+          <span class="location-name">{{ data().transaction.placeName }}</span>
+        </div>
+      </div>
+      }
 
       <!-- Notes -->
       @if (data().transaction.notes; as notes) {

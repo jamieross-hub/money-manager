@@ -55,6 +55,7 @@ export interface UserPreferences {
 	activeFamilyId?: string | null;
 	hapticFeedback?: boolean;
 	hasSeenWelcome?: boolean;
+	captureLocationByDefault?: boolean;
 }
 
 
