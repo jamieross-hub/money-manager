@@ -68,12 +68,24 @@
 
       <!-- Transactions List -->
       <div>
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Transactions</p>
+        <div class="flex items-center justify-between mb-1.5">
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Transactions</p>
+          @if (expandedData?.transactions?.length && expandedData!.transactions!.length > 1) {
+            <button (click)="toggleSort($event)" 
+                    class="flex items-center gap-1 text-[9px] font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors bg-transparent border-none cursor-pointer p-0"
+                    [matTooltip]="sortOrder === 'none' ? 'Sort by amount' : sortOrder === 'desc' ? 'Highest to Lowest' : 'Lowest to Highest'">
+              <mat-icon class="!text-[12px] !w-3 !h-3">
+                {{ sortOrder === 'none' ? 'sort' : sortOrder === 'desc' ? 'arrow_downward' : 'arrow_upward' }}
+              </mat-icon>
+              <span>{{ sortOrder === 'none' ? 'Sort' : sortOrder === 'desc' ? 'Highest' : 'Lowest' }}</span>
+            </button>
+          }
+        </div>
         @if (expandedData?.transactions?.length === 0) {
           <p class="text-[10px] text-gray-400 italic text-center py-2">No items found</p>
         } @else {
           <div class="divide-y divide-gray-100/80 dark:divide-gray-700/50">
-            @for (t of expandedData?.transactions; track t.id) {
+            @for (t of sortedTransactions; track t.id) {
               <div class="flex justify-between items-center py-1.5 text-[11px] px-1">
                 <div class="min-w-0 flex-1">
                   <span class="font-medium text-gray-700 dark:text-gray-300 truncate block">{{ t.note || t.category || 'Untitled' }}</span>
