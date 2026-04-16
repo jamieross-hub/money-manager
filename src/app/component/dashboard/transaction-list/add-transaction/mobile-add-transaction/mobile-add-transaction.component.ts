@@ -158,6 +158,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   });
 
   public formattedAmount = signal('');
+  public isTypingExpression = signal(false);
   public capturedPlaceName = signal('');
   public isFetchingLocation = signal(false);
   public isLocationEnabled = signal(false);
@@ -165,11 +166,10 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   public locationCaptureError = signal<string | null>(null);
 
   onAmountKeyDown(event: KeyboardEvent) {
-    const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End', '.'];
+    const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End', '.', '+', '-', '*', '/', '(', ')'];
     if (allowedKeys.includes(event.key) || (event.key >= '0' && event.key <= '9')) {
-      // Allow the key
-      if (event.key === '.' && this.formattedAmount().includes('.')) {
-        event.preventDefault(); // Prevent second decimal point
+      if (event.key === 'Enter') {
+        this.onAmountBlur();
       }
       return;
     }
@@ -664,6 +664,8 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   private initializeFormData(): void {
     // Subscribe to amount changes to keep formattedAmount in sync
     this.transactionForm.get('amount')?.valueChanges.pipe(takeUntil(this._onDestroy)).subscribe(value => {
+      if (this.isTypingExpression()) return;
+
       if (value !== null && value !== undefined && value !== '') {
         const numericValue = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
         if (!isNaN(numericValue) && this.formattedAmount() !== this.formatCurrency(numericValue)) {
@@ -782,28 +784,54 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
 
   onFormattedAmountInput(event: any): void {
     const input = event.target.value;
-    // Remove all non-numeric characters except decimal point
-    const numericString = input.replace(/[^0-9.]/g, '');
+    const hasOperators = /[+\-*/()]/.test(input);
+    this.isTypingExpression.set(hasOperators);
 
-    if (numericString || numericString === '0') {
-      const numericValue = parseFloat(numericString);
-      if (!isNaN(numericValue)) {
-        this.transactionForm.get('amount')?.setValue(numericValue, { emitEvent: false });
-        //this.updateTaxCalculations('amount');
-        this.updateEqualSplitAmounts(numericValue);
-        // Don't format while typing to avoid cursor jumps, but we could if we handle selection
-        // However, user specifically asked for visibility. Let's format on blur or smartly.
+    if (hasOperators) {
+      this.formattedAmount.set(input);
+      const result = this.evaluateExpression(input);
+      if (result > 0) {
+        this.transactionForm.get('amount')?.setValue(result, { emitEvent: false });
+        this.updateEqualSplitAmounts(result);
       }
     } else {
-      this.transactionForm.get('amount')?.setValue('', { emitEvent: false });
-      this.updateEqualSplitAmounts(0);
+      const numericString = input.replace(/[^0-9.]/g, '');
+      if (numericString || numericString === '0') {
+        const numericValue = parseFloat(numericString);
+        if (!isNaN(numericValue)) {
+          this.transactionForm.get('amount')?.setValue(numericValue, { emitEvent: false });
+          this.updateEqualSplitAmounts(numericValue);
+        }
+      } else {
+        this.transactionForm.get('amount')?.setValue('', { emitEvent: false });
+        this.updateEqualSplitAmounts(0);
+      }
     }
   }
 
   onAmountBlur(): void {
-    const amount = this.transactionForm.get('amount')?.value;
-    if (amount !== null && amount !== undefined && amount !== '') {
-      this.formattedAmount.set(this.formatCurrency(parseFloat(amount)));
+    const input = this.formattedAmount();
+    if (this.isTypingExpression()) {
+      const result = this.evaluateExpression(input);
+      this.isTypingExpression.set(false);
+      this.transactionForm.get('amount')?.setValue(result);
+      this.formattedAmount.set(this.formatCurrency(result));
+    } else {
+      const amount = this.transactionForm.get('amount')?.value;
+      if (amount !== null && amount !== undefined && amount !== '') {
+        this.formattedAmount.set(this.formatCurrency(parseFloat(amount)));
+      }
+    }
+  }
+
+  evaluateExpression(expr: string): number {
+    try {
+      const sanitized = expr.replace(/[^0-9+\-*/().]/g, '');
+      if (!sanitized || !/[0-9]/.test(sanitized)) return 0;
+      const result = new Function(`return ${sanitized}`)();
+      return typeof result === 'number' && isFinite(result) ? result : 0;
+    } catch (e) {
+      return 0;
     }
   }
 
