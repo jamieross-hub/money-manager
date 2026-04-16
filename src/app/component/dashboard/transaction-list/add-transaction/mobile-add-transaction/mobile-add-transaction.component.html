@@ -744,13 +744,33 @@
                             Edit
                           </button>
                         </div>
+                      } @else if (locationCaptureError()) {
+                        <div class="flex flex-col gap-2">
+                          <p class="text-sm text-red-500">{{ locationCaptureError() }}</p>
+                          <div class="flex items-center gap-3">
+                            <button type="button" (click)="captureLocation()" class="text-xs text-primary-600 dark:text-primary-400 font-bold hover:underline flex items-center gap-1 w-fit">
+                              <mat-icon style="font-size: 16px; width: 16px; height: 16px;">sync</mat-icon>
+                              Retry
+                            </button>
+                            <button type="button" (click)="toggleEditLocation()" class="text-xs text-gray-600 dark:text-gray-400 font-bold hover:underline flex items-center gap-1 w-fit">
+                              <mat-icon style="font-size: 16px; width: 16px; height: 16px;">edit</mat-icon>
+                              Enter manually
+                            </button>
+                          </div>
+                        </div>
                       } @else {
                         <div class="flex flex-col gap-2">
-                          <p class="text-sm text-red-500">Could not fetch location name</p>
-                          <button type="button" (click)="toggleEditLocation()" class="text-xs text-primary-600 dark:text-primary-400 font-bold hover:underline flex items-center gap-1 w-fit">
-                            <mat-icon style="font-size: 16px; width: 16px; height: 16px;">edit</mat-icon>
-                            Enter manually
-                          </button>
+                          <p class="text-sm text-gray-500 dark:text-gray-400">Location capture is enabled for this transaction.</p>
+                          <div class="flex items-center gap-3">
+                            <button type="button" (click)="captureLocation()" class="text-xs text-primary-600 dark:text-primary-400 font-bold hover:text-primary-700 flex items-center gap-1 transition-colors">
+                              <mat-icon style="font-size: 16px; width: 16px; height: 16px;">my_location</mat-icon>
+                              Detect Now
+                            </button>
+                            <button type="button" (click)="toggleEditLocation()" class="text-xs text-gray-600 dark:text-gray-400 font-bold hover:text-gray-700 flex items-center gap-1 transition-colors">
+                              <mat-icon style="font-size: 16px; width: 16px; height: 16px;">edit</mat-icon>
+                              Enter manually
+                            </button>
+                          </div>
                         </div>
                       }
                     </div>

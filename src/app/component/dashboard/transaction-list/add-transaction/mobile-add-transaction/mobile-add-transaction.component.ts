@@ -162,6 +162,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   public isFetchingLocation = signal(false);
   public isLocationEnabled = signal(false);
   public isEditingLocation = signal(false);
+  public locationCaptureError = signal<string | null>(null);
 
   onAmountKeyDown(event: KeyboardEvent) {
     const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End', '.'];
@@ -356,6 +357,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   async captureLocation(): Promise<void> {
     this.isFetchingLocation.set(true);
     this.isEditingLocation.set(false);
+    this.locationCaptureError.set(null);
     try {
       const position = await this.locationService.getCurrentPosition();
       const placeName = await this.locationService.reverseGeocode(
@@ -365,8 +367,9 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       this.capturedPlaceName.set(placeName);
     } catch (error: any) {
       console.error('Location error:', error);
-      this.notificationService.error(error.message || 'Failed to capture location');
-      this.isLocationEnabled.set(false);
+      this.locationCaptureError.set(error.message || 'Failed to capture location');
+      // We don't automatically disable the toggle anymore, just show the error
+      // this.isLocationEnabled.set(false);
     } finally {
       this.isFetchingLocation.set(false);
       this.cdr.markForCheck();
@@ -388,7 +391,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     const user = this.userService.getCurrentUserSnapshot();
     if (user?.preferences?.captureLocationByDefault) {
       this.isLocationEnabled.set(true);
-      this.captureLocation(); // Auto-capture on init if preference is enabled
+      // Removed captureLocation() call on start to avoid permission prompt
     }
     
     if (this.dialogData && this.dialogData.mode === 'adjustment') {
