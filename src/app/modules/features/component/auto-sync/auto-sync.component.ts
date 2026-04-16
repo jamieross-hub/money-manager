@@ -4,6 +4,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { TranslateModule } from '@ngx-translate/core';
 
+import { ClipboardModule } from '@angular/cdk/clipboard';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Clipboard } from '@angular/cdk/clipboard';
+
 @Component({
   selector: 'app-auto-sync',
   templateUrl: './auto-sync.component.html',
@@ -13,10 +17,26 @@ import { TranslateModule } from '@ngx-translate/core';
     CommonModule, 
     MatIconModule, 
     MatButtonModule, 
-    TranslateModule
+    TranslateModule,
+    ClipboardModule,
+    MatSnackBarModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AutoSyncComponent {
-  constructor() {}
+  readonly forwardingEmail = 'familyexpensetracker.noreply@gmail.com';
+
+  constructor(
+    private clipboard: Clipboard,
+    private snackBar: MatSnackBar
+  ) {}
+
+  copyEmail() {
+    this.clipboard.copy(this.forwardingEmail);
+    this.snackBar.open('Email copied to clipboard!', 'Close', {
+      duration: 3000,
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom',
+    });
+  }
 }

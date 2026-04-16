@@ -1,12 +1,84 @@
-<div class="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
-  <div class="!mb-0 p-0 bg-primary-500/10 rounded-full">
-    <mat-icon class="text-primary-500 !text-6xl !w-16 !h-16 flex items-center justify-center">sync</mat-icon>
+<div class="max-w-3xl mx-auto py-4 md:py-8 px-4 md:px-6">
+  <!-- Header Section -->
+  <div class="text-center mb-6 md:mb-10">
+   
+    <h1 class="text-2xl md:text-3xl font-bold text-primary-500 mb-2 md:mb-3">Setup Auto Sync</h1>
+    <p class="text-gray-400 text-sm md:text-lg max-w-2xl mx-auto leading-relaxed">
+      Connect your bank accounts by forwarding transaction emails to our secure tracker. Follow the steps below.
+    </p>
   </div>
-  
-  <h1 class="text-3xl font-bold mb-3">Auto Sync</h1>
-  
-  <p class="text-gray-400 max-w-md text-lg leading-relaxed">
-    Securely connect your bank accounts and automatically track transactions in real-time.
-    <span class="block mt-2 font-medium text-primary-500 opacity-80 italic">Coming Soon</span>
-  </p>
+
+  <!-- Main Content -->
+  <div class="grid grid-cols-1 gap-6 md:gap-8">
+    <!-- Step Section -->
+    <div class="bg-surface-200 backdrop-blur-sm border border-gray-700/50 rounded-2xl md:rounded-3xl p-5 md:p-8">
+      <p class="text-lg md:text-xl font-semibold text-primary-500 mb-6 flex items-center">
+        <mat-icon class="mr-2 text-primary-500">info</mat-icon>
+        Gmail Forwarding Steps
+      </p>
+
+      <div class="space-y-6 md:space-y-8">
+        <!-- Step 1 -->
+        <div class="flex items-start">
+          <div class="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 bg-primary-500/20 text-primary-400 rounded-full flex items-center justify-center text-sm md:text-base font-bold mr-3 md:mr-4">1</div>
+          <div class="flex-1 pt-0.5 md:pt-1">
+            <h3 class="text-primary-500 font-medium mb-1 text-sm md:text-base">Open Gmail Settings</h3>
+            <p class="text-gray-400 text-xs md:text-sm leading-relaxed">On your computer, click the <mat-icon class="!text-[12px] md:!text-sm !w-3 md:!w-4 !h-3 md:!h-4 inline-block align-middle">settings</mat-icon> icon and select <b>"See all settings"</b>.</p>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="flex items-start">
+          <div class="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 bg-primary-500/20 text-primary-400 rounded-full flex items-center justify-center text-sm md:text-base font-bold mr-3 md:mr-4">2</div>
+          <div class="flex-1 pt-0.5 md:pt-1">
+            <h3 class="text-primary-500 font-medium mb-1 text-sm md:text-base">Go to Forwarding Tab</h3>
+            <p class="text-gray-400 text-xs md:text-sm">Click the <b>"Forwarding and POP/IMAP"</b> tab at the top.</p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="flex items-start">
+          <div class="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 bg-primary-500/20 text-primary-400 rounded-full flex items-center justify-center text-sm md:text-base font-bold mr-3 md:mr-4">3</div>
+          <div class="flex-1 pt-0.5 md:pt-1">
+            <div class="mb-3">
+              <h3 class="text-primary-500 font-medium mb-1 text-sm md:text-base">Add Forwarding Address</h3>
+              <p class="text-gray-400 text-xs md:text-sm mb-3">Click <b>"Add a forwarding address"</b> and enter:</p>
+            </div>
+            
+            <!-- Email Box -->
+            <div class="bg-gray-900 border border-gray-700 rounded-xl p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
+              <div class="flex items-center overflow-hidden">
+                <mat-icon class="text-gray-500 mr-2 md:mr-3 text-sm md:text-base">mail</mat-icon>
+                <code class="text-primary-500 font-mono text-xs md:text-sm  select-all break-all">{{forwardingEmail}}</code>
+              </div>
+              <button mat-flat-button (click)="copyEmail()" class="!bg-primary-500 !text-white !rounded-lg !py-1 !px-3 sm:!w-auto w-full flex items-center justify-center">
+                <mat-icon class="mr-1 !text-sm">content_copy</mat-icon>
+                <span class="text-xs uppercase font-bold">Copy</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="flex items-start">
+          <div class="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 bg-primary-500/20 text-primary-400 rounded-full flex items-center justify-center text-sm md:text-base font-bold mr-3 md:mr-4">4</div>
+          <div class="flex-1 pt-0.5 md:pt-1">
+            <h3 class="text-primary-500 font-medium mb-1 text-sm md:text-base">Verify and Enable</h3>
+            <p class="text-gray-400 text-xs md:text-sm leading-relaxed">Confirm the code sent to us, then select <b>"Forward a copy of incoming mail..."</b> and click <b>"Save Changes"</b> at the bottom.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Tip -->
+    <div class="bg-primary-500/5 border border-primary-500/20 rounded-xl md:rounded-2xl p-4 md:p-6">
+      <div class="flex items-center text-primary-400 mb-2 md:mb-3">
+        <mat-icon class="mr-2 !text-sm md:!text-base">lightbulb</mat-icon>
+        <span class="font-bold uppercase tracking-wider text-[10px] md:text-xs text-primary-300">Pro Tip: Use Filters</span>
+      </div>
+      <p class="text-primary-500 text-xs md:text-sm leading-relaxed">
+        To protect your privacy, create a filter in Gmail to only forward bank-related emails (e.g., <code class="bg-gray-800 px-1 rounded text-primary-300/80">from:alerts@yourbank.com</code>).
+      </p>
+    </div>
+  </div>
 </div>
