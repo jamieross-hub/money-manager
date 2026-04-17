@@ -65,7 +65,9 @@ export class FamilyProcessorService {
 
   // ─── Input Selectors ─────────────────────────────────────────────────────────
   private readonly family = toSignal(this.store.select(FamilySelectors.selectFamily).pipe(distinctUntilChanged()), { initialValue: null as any });
-  private readonly members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(distinctUntilChanged((a, b) => a.length === b.length && a[0] === b[0])), { initialValue: [] as FamilyMember[] });
+  private readonly members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(distinctUntilChanged((a, b) => 
+    a.length === b.length && a.every((m, i) => m.userId === b[i]?.userId && m.isActive === b[i]?.isActive)
+  )), { initialValue: [] as FamilyMember[] });
   private readonly transactions = toSignal(
     this.store.select(TransactionsSelectors.selectAllTransactions).pipe(
       distinctUntilChanged((a, b) => {

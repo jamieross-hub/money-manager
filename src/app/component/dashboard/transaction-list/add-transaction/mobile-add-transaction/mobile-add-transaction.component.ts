@@ -421,7 +421,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     this.familyService.getMembers(familyId)
       .pipe(takeUntil(this._onDestroy))
       .subscribe(members => {
-        this.familyMembers.set(members);
+        this.familyMembers.set(members.filter(m => m.isActive !== false));
         // Default "Paid By" to current user
         if (members.length && !this.transactionForm.get('paidByUserId')?.value) {
           this.transactionForm.patchValue({ paidByUserId: this.userId });

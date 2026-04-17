@@ -63,7 +63,7 @@ export class FamilyMembersComponent implements OnInit {
   readonly isBottomSheet = signal(!!this.bottomSheetRef);
 
   family  = toSignal(this.store.select(FamilySelectors.selectFamily).pipe(distinctUntilChanged()), { initialValue: null as any });
-  members = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(distinctUntilChanged((a, b) => a.length === b.length)), { initialValue: [] as FamilyMember[] });
+  members = toSignal(this.store.select(FamilySelectors.selectActiveFamilyMembers), { initialValue: [] as FamilyMember[] });
   loading = toSignal(this.store.select(FamilySelectors.selectFamilyLoading).pipe(distinctUntilChanged()), { initialValue: true });
 
   /** Current user UID from AppState.profile */

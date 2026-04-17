@@ -144,7 +144,9 @@ export class FamilyDashboardComponent implements OnInit {
 
   // ─── Public Signals (from store) ─────────────────────────────────────────────
   readonly currentUserId     = toSignal(this.store.select(ProfileSelectors.selectUserId), { initialValue: undefined });
-  readonly members           = toSignal(this.store.select(FamilySelectors.selectFamilyMembers).pipe(distinctUntilChanged((a, b) => a.length === b.length && a[0]?.userId === b[0]?.userId && (a[0] as any)?.isActive === (b[0] as any)?.isActive)), { initialValue: [] as FamilyMember[] });
+  readonly members           = toSignal(this.store.select(FamilySelectors.selectActiveFamilyMembers).pipe(distinctUntilChanged((a, b) => 
+    a.length === b.length && a.every((m, i) => m.userId === b[i]?.userId && m.isActive === b[i]?.isActive)
+  )), { initialValue: [] as FamilyMember[] });
   readonly transactions      = toSignal(this.store.select(TransactionsSelectors.selectAllTransactions).pipe(distinctUntilChanged((a, b) => a.length === b.length && a[0]?.id === b[0]?.id && (a[0] as any)?.updatedAt === (b[0] as any)?.updatedAt && a[0]?.familyId === b[0]?.familyId)), { initialValue: [] as Transaction[] });
   readonly recentTxns        = toSignal(this.store.select(TransactionsSelectors.selectRecentTransactions(5)).pipe(distinctUntilChanged((a, b) => a.length === b.length && a[0]?.id === b[0]?.id && (a[0] as any)?.updatedAt === (b[0] as any)?.updatedAt)), { initialValue: [] as Transaction[] });
   readonly settlements       = toSignal(this.store.select(FamilySelectors.selectSettlements).pipe(distinctUntilChanged((a, b) => a.length === b.length && a[0]?.id === b[0]?.id && (a[0] as any)?.createdAt === (b[0] as any)?.createdAt)), { initialValue: [] as Settlement[] });
@@ -252,9 +254,18 @@ export class FamilyDashboardComponent implements OnInit {
   }
 
   openMembersSheet(): void {
-    this.pwaNavigationService.openBottomSheet(FamilyMembersComponent, {
+    const ref = this.pwaNavigationService.openBottomSheet(FamilyMembersComponent, {
       panelClass: ['bg-transparent', 'auto-height-sheet'],
       closeOnNavigation: false
+    });
+
+    ref.afterDismissed().subscribe(() => {
+      const famId = this.family()?.id;
+      if (famId) {
+        // Force a refresh of members and processor stats on close
+        this.store.dispatch(FamilyActions.loadMembers({ familyId: famId }));
+        this.familyProcessor.loadFamilyData(famId);
+      }
     });
   }
 

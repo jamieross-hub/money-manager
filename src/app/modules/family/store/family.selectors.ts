@@ -6,6 +6,7 @@ export const selectFamilyState = createFeatureSelector<FamilyState>('family');
 
 export const selectFamily = createSelector(selectFamilyState, s => s?.family || null);
 export const selectFamilyMembers = createSelector(selectFamilyState, s => s?.members || []);
+export const selectActiveFamilyMembers = createSelector(selectFamilyMembers, members => members.filter(m => m.isActive !== false));
 export const selectRawTransactions = createSelector(selectFamilyState, s => s?.transactions || []);
 
 export const selectFamilyTransactions = createSelector(
