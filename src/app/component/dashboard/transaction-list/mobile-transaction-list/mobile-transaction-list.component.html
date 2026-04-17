@@ -35,13 +35,16 @@
 
         @if (showSearchInput()) {
         <div class="search-input-wrapper-inner">
-          <input type="text" [ngModel]="searchTerm()" (ngModelChange)="onSearchChange($event)"
-            placeholder="Search transactions..." class="search-input-inline" #searchInput
-            (keyup.escape)="toggleSearch()" autofocus />
+          <form (submit)="onSearchChange(searchInput.value); searchInput.blur(); $event.preventDefault()" class="w-full flex items-center">
+            <input type="search" [value]="searchTerm()" 
+              placeholder="Search transactions..." class="search-input-inline w-full" #searchInput
+              (search)="onSearchChange(searchInput.value); searchInput.blur()"
+              (keyup.escape)="toggleSearch()" autofocus />
+          </form>
           @if (searchTerm()) {
-          <button mat-icon-button class="clear-search-btn-inline" (click)="onSearchChange('')">
-            <mat-icon>close</mat-icon>
-          </button>
+            <button mat-icon-button class="clear-search-btn-inline" (click)="onSearchChange('')">
+              <mat-icon>close</mat-icon>
+            </button>
           }
         </div>
         } @else {
@@ -75,13 +78,16 @@
         @if (showActiveFilterDetails() && !showSearchInput()) {
         <div class="expanded-search-container">
           <mat-icon class="search-icon-mini">search</mat-icon>
-          <input type="text" [ngModel]="searchTerm()" (ngModelChange)="onSearchChange($event)"
-            placeholder="Search transactions..." class="search-input-inline" autofocus
-            (keyup.escape)="closeExpandedHeader($event)" />
+          <form (submit)="onSearchChange(searchInputMini.value); searchInputMini.blur(); $event.preventDefault()" class="w-full">
+            <input type="search" [value]="searchTerm()" 
+              placeholder="Search transactions..." class="search-input-inline w-full" autofocus #searchInputMini
+              (search)="onSearchChange(searchInputMini.value); searchInputMini.blur()"
+              (keyup.escape)="closeExpandedHeader($event)" />
+          </form>
           @if (searchTerm()) {
-          <button mat-icon-button class="clear-search-btn-mini" (click)="onSearchChange('')">
-            <mat-icon>close</mat-icon>
-          </button>
+            <button mat-icon-button class="clear-search-btn-mini" (click)="onSearchChange('')">
+              <mat-icon>close</mat-icon>
+            </button>
           }
         </div>
         }
