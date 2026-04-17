@@ -40,9 +40,13 @@ export class MemberBreakdownSheetComponent {
 
   readonly memberTransactions = computed(() => {
     const userId = this.memberData().userId;
+    const mode = this.data.mode || 'common';
+    const activeMembersCount = this.data.activeMembersCount || 1;
+
     return this.txsData()
       .filter(tx => {
         if (tx.status === TransactionStatus.DELETED) return false;
+        if (this.data.familyId && tx.familyId !== this.data.familyId) return false;
         
         // Check if member paid
         const isPayer = tx.splitData?.paidByUserId === userId || 
@@ -50,8 +54,19 @@ export class MemberBreakdownSheetComponent {
                       (!tx.splitData && tx.userId === userId);
         
         // Check if member shared
-        const isSharer = tx.splitData?.splitBetween?.some(s => s.userId === userId) || 
-                       (!tx.splitData); // fallback logic usually includes everyone in 'common' mode
+        let isSharer = false;
+        if (tx.splitData?.splitBetween) {
+          isSharer = tx.splitData.splitBetween.some(s => s.userId === userId);
+        } else {
+          // Fallback logic
+          if (mode === 'common') {
+            // In common mode, all ACTIVE members share. 
+            // We assume this member is active if they are in the list.
+            isSharer = this.data.member.isActive;
+          } else {
+            isSharer = tx.userId === userId;
+          }
+        }
                        
         return isPayer || isSharer;
       })
@@ -60,21 +75,27 @@ export class MemberBreakdownSheetComponent {
 
   readonly memberCategories = computed(() => {
     const userId = this.memberData().userId;
+    const mode = this.data.mode || 'common';
+    const activeMembersCount = this.data.activeMembersCount || 1;
     const categoryMap = new Map<string, number>();
     let totalMemberSpent = 0;
 
     this.txsData().forEach(tx => {
       if (tx.status === TransactionStatus.DELETED || tx.type !== TransactionType.EXPENSE) return;
+      if (this.data.familyId && tx.familyId !== this.data.familyId) return;
       
       let memberShare = 0;
       if (tx.splitData?.splitBetween) {
         const share = tx.splitData.splitBetween.find(s => s.userId === userId);
         if (share) memberShare = share.amount;
       } else {
-        // Simple fallback for common mode (equal split logic normally, but here we estimate)
-        // If they created it and no split data, it might be 100% theirs or equally shared.
-        // We'll stick to what the processor does: if it's there, it's there.
-        if (tx.userId === userId) memberShare = tx.amount;
+        if (mode === 'common') {
+          if (this.data.member.isActive) {
+            memberShare = (tx.amount || 0) / activeMembersCount;
+          }
+        } else if (tx.userId === userId) {
+          memberShare = tx.amount;
+        }
       }
 
       if (memberShare > 0) {
@@ -106,6 +127,8 @@ export class MemberBreakdownSheetComponent {
       memberColor: string;
       isCurrentUserAdmin?: boolean;
       familyId?: string;
+      mode?: 'common' | 'split';
+      activeMembersCount?: number;
     },
     private bottomSheetRef: MatBottomSheetRef<MemberBreakdownSheetComponent>
   ) {}
@@ -141,8 +164,20 @@ export class MemberBreakdownSheetComponent {
 
   getTxAmountLabel(tx: Transaction): string {
     const userId = this.data.member.userId;
+    const mode = this.data.mode || 'common';
+    
     const isPayer = tx.splitData?.paidByUserId === userId || (tx.splitData?.paidBy?.some(p => p.userId === userId)) || (!tx.splitData && tx.userId === userId);
-    const isSharer = tx.splitData?.splitBetween?.some(s => s.userId === userId) || (!tx.splitData);
+    
+    let isSharer = false;
+    if (tx.splitData?.splitBetween) {
+      isSharer = tx.splitData.splitBetween.some(s => s.userId === userId);
+    } else {
+      if (mode === 'common') {
+        isSharer = this.data.member.isActive;
+      } else {
+        isSharer = tx.userId === userId;
+      }
+    }
 
     if (isPayer && !isSharer) return 'Paid only';
     if (!isPayer && isSharer) return 'Your share';
@@ -152,9 +187,17 @@ export class MemberBreakdownSheetComponent {
 
   getMemberShareInTx(tx: Transaction): number {
     const userId = this.data.member.userId;
+    const mode = this.data.mode || 'common';
+    const activeMembersCount = this.data.activeMembersCount || 1;
+
     if (tx.splitData?.splitBetween) {
       return tx.splitData.splitBetween.find(s => s.userId === userId)?.amount || 0;
     }
+    
+    if (mode === 'common' && this.data.member.isActive) {
+      return (tx.amount || 0) / activeMembersCount;
+    }
+
     return tx.userId === userId ? tx.amount : 0;
   }
 }

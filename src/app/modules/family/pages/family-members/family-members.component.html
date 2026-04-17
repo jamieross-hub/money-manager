@@ -20,24 +20,53 @@
             </div>
             <div>
               <h3 class="text-base font-bold text-gray-900 dark:text-gray-100">Add Member</h3>
-              <p class="text-xs text-gray-400 dark:text-gray-500">Invite someone using their registration email</p>
+              @if (addMode() === 'email') {
+                <p class="text-xs text-gray-400 dark:text-gray-500">Invite someone using their registration email</p>
+              } @else {
+                <p class="text-xs text-gray-400 dark:text-gray-500">Add someone who doesn't have an email ID</p>
+              }
             </div>
+          </div>
+
+          <!-- Mode Toggle -->
+          <div class="flex p-1 bg-gray-50 dark:bg-gray-900/50 rounded-xl mb-4">
+            <button class="flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2"
+              [class.bg-white]="addMode() === 'email'"
+              [class.dark:bg-gray-800]="addMode() === 'email'"
+              [class.text-primary-600]="addMode() === 'email'"
+              [class.shadow-sm]="addMode() === 'email'"
+              [class.text-gray-400]="addMode() !== 'email'"
+              (click)="addMode.set('email'); memberInput.set('')">
+              <mat-icon class="!text-[16px] !w-4 !h-4">mail_outline</mat-icon>
+              By Email
+            </button>
+            <button class="flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2"
+              [class.bg-white]="addMode() === 'name'"
+              [class.dark:bg-gray-800]="addMode() === 'name'"
+              [class.text-primary-600]="addMode() === 'name'"
+              [class.shadow-sm]="addMode() === 'name'"
+              [class.text-gray-400]="addMode() !== 'name'"
+              (click)="addMode.set('name'); memberInput.set('')">
+              <mat-icon class="!text-[16px] !w-4 !h-4">badge</mat-icon>
+              By Name
+            </button>
           </div>
           
           <div class="flex flex-col gap-2">
             <mat-form-field appearance="fill" class="flex-1 !pb-0 app-mat-form-field-dense">
-              <mat-label>Email Address</mat-label>
-              <input matInput type="email" [(ngModel)]="emailToAdd" placeholder="e.g. name@example.com" 
+              <mat-label>{{ addMode() === 'email' ? 'Email Address' : 'Full Name' }}</mat-label>
+              <input matInput [type]="addMode() === 'email' ? 'email' : 'text'" 
+                [(ngModel)]="memberInput" [placeholder]="addMode() === 'email' ? 'e.g. name@example.com' : 'e.g. Junior'" 
                 (keyup.enter)="addMember()" [disabled]="isAdding()">
-              <mat-icon matPrefix class="mr-2 text-gray-400">mail_outline</mat-icon>
-              @if (emailToAdd() && !isEmailValid()) {
-                <mat-error>Please enter a valid email address</mat-error>
+              <mat-icon matPrefix class="mr-2 text-gray-400">{{ addMode() === 'email' ? 'mail_outline' : 'person_outline' }}</mat-icon>
+              @if (memberInput() && !isInputValid()) {
+                <mat-error>{{ addMode() === 'email' ? 'Please enter a valid email address' : 'Name must be at least 2 characters' }}</mat-error>
               }
             </mat-form-field>
             
             <button mat-flat-button color="primary" 
               class="!h-[48px] !rounded-xl !px-6 font-bold shadow-sm shadow-primary-200 dark:shadow-none transition-all active:scale-95 disabled:grayscale"
-              (click)="addMember()" [disabled]="!emailToAdd() || isAdding() || !isEmailValid()">
+              (click)="addMember()" [disabled]="!memberInput() || isAdding() || !isInputValid()">
               @if (isAdding()) {
                 <mat-spinner diameter="20" class="mr-2"></mat-spinner>
               } @else {

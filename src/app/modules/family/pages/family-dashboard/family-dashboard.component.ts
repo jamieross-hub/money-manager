@@ -291,7 +291,9 @@ export class FamilyDashboardComponent implements OnInit {
         balances: this.settleBalances(),
         memberColor: this.memberColor(member.userId),
         isCurrentUserAdmin,
-        familyId
+        familyId,
+        mode: this.family()?.mode || 'common',
+        activeMembersCount: this.members().length
       },
       panelClass: ['bg-transparent', 'auto-height-sheet'],
       closeOnNavigation: false

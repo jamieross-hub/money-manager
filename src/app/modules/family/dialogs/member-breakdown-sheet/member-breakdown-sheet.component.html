@@ -57,15 +57,10 @@
           {{ data.member.totalExpense | currency }}
         </p>
       </div>
-      <div class="bg-white dark:bg-gray-900/50 rounded-2xl p-3 border border-gray-100 dark:border-gray-800 shadow-sm"
-           [class.bg-green-50/50]="data.member.netBalance > 0"
-           [class.bg-orange-50/50]="data.member.netBalance < 0">
-        <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 opacity-70">Balance</p>
-        <p class="text-[14px] font-black leading-none"
-           [class.text-green-600]="data.member.netBalance > 0"
-           [class.text-orange-600]="data.member.netBalance < 0"
-           [class.text-gray-900]="data.member.netBalance === 0">
-          {{ data.member.netBalance | currency }}
+      <div class="bg-white dark:bg-gray-900/50 rounded-2xl p-3 border border-gray-100 dark:border-gray-800 shadow-sm">
+        <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 opacity-70">Entries</p>
+        <p class="text-[14px] font-black text-gray-900 dark:text-white leading-none">
+          {{ data.member.transactionCount }}
         </p>
       </div>
     </div>
@@ -93,7 +88,7 @@
     }
 
     <!-- Net Settlement Details -->
-    @if (filteredBalances().length > 0) {
+    @if (data.mode !== 'common' && filteredBalances().length > 0) {
       <div>
         <h3 class="text-[11px] font-black text-gray-500 uppercase tracking-widest mb-3 px-1">Settlement status</h3>
         <div class="flex flex-col gap-2">

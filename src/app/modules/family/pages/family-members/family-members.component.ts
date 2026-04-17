@@ -79,13 +79,17 @@ export class FamilyMembersComponent implements OnInit {
 
   private memberColors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
 
-  emailToAdd = signal('');
+  memberInput = signal('');
+  addMode = signal<'email' | 'name'>('email');
   isAdding = signal(false);
 
-  isEmailValid = computed(() => {
-    const email = this.emailToAdd().trim();
-    if (!email) return true;
-    return this.validationService.validateEmail(email);
+  isInputValid = computed(() => {
+    const value = this.memberInput().trim();
+    if (!value) return true;
+    if (this.addMode() === 'email') {
+      return this.validationService.validateEmail(value);
+    }
+    return value.length >= 2;
   });
 
   constructor() {
@@ -128,14 +132,18 @@ export class FamilyMembersComponent implements OnInit {
   }
 
   async addMember() {
-    const email = this.emailToAdd().trim();
+    const value = this.memberInput().trim();
     const famId = this.family()?.id;
-    if (!email || !famId || !this.isEmailValid()) return;
+    if (!value || !famId || !this.isInputValid()) return;
 
     this.isAdding.set(true);
     try {
-      await this.familyService.addMemberByEmail(famId, email);
-      this.emailToAdd.set('');
+      if (this.addMode() === 'email') {
+        await this.familyService.addMemberByEmail(famId, value);
+      } else {
+        await this.familyService.addMemberByName(famId, value);
+      }
+      this.memberInput.set('');
     } catch (err: any) {
       this.notificationService.error(err.message || 'Failed to add member');
     } finally {

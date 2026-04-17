@@ -792,6 +792,30 @@ export class FamilyService implements OnDestroy {
     this.notificationService.success(`${user.displayName} added to family!`);
   }
 
+  async addMemberByName(familyId: string, displayName: string): Promise<void> {
+    // Generate a unique ID for virtual members
+    const memberId = 'v_' + doc(collection(this.firestore, 'families')).id;
+    
+    const memberData: Omit<FamilyMember, 'id'> = {
+      familyId,
+      userId: memberId,
+      email: '', // No email for virtual members
+      displayName: displayName,
+      photoURL: '',
+      role: 'member',
+      joinedAt: new Date(),
+      isActive: true,
+    };
+
+    await setDoc(this.getMemberDoc(familyId, memberId), memberData);
+    await updateDoc(this.getFamilyDoc(familyId), {
+      memberIds: arrayUnion(memberId),
+      updatedAt: new Date()
+    });
+
+    this.notificationService.success(`${displayName} added to family!`);
+  }
+
   // ─── Transactions ─────────────────────────────────────────────────────────
 
   // ─── Stats ────────────────────────────────────────────────────────────────
