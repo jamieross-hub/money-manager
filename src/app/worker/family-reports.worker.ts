@@ -404,10 +404,12 @@ function computeStats(
     }
   });
 
-  const memberBreakdown = Array.from(memberMap.values()).map(m => ({
-    ...m,
-    netBalance: Math.round((m.totalPaid + m.totalIncome - m.totalExpense) * 100) / 100
-  }));
+  const memberBreakdown = Array.from(memberMap.values())
+    .map(m => ({
+      ...m,
+      netBalance: Math.round((m.totalPaid + m.totalIncome - m.totalExpense) * 100) / 100
+    }))
+    .filter(m => m.isActive || m.transactionCount > 0 || m.actualPaid !== 0 || m.totalExpense > 0 || m.totalIncome > 0);
 
   const categoryBreakdown = Array.from(categoryMap.entries())
     .map(([category, amount]) => ({
