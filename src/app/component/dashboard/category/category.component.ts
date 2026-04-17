@@ -471,11 +471,12 @@ export class CategoryComponent implements OnInit, OnDestroy {
     }
     const matchingCategories = this._categoriesSnapshot.filter(c => c.group === groupName);
     const currentIcon = matchingCategories.find(c => c.groupIcon)?.groupIcon || 'category';
+    const allUserCategories = this._categoriesSnapshot.filter(c => !c.isSystem && !c.isSubCategory);
 
     const dialogRef = this.dialog.open(EditCategoryGroupDialogComponent, {
       panelClass: 'responsive-dialog',
       closeOnNavigation: false,
-      data: { groupName, groupIcon: currentIcon }
+      data: { groupName, groupIcon: currentIcon, categories: matchingCategories, allCategories: allUserCategories }
     });
 
     dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
@@ -485,7 +486,9 @@ export class CategoryComponent implements OnInit, OnDestroy {
         const newGroupName = result.groupName;
         const newGroupIcon = result.groupIcon;
         
-        matchingCategories.forEach(cat => {
+        // 1. Update Added and Existing Categories
+        const toSave = [...(result.added || []), ...(result.updated || [])];
+        toSave.forEach(cat => {
           this.store.dispatch(CategoriesActions.updateCategory({
             userId: this.userId,
             categoryId: cat.id!,
@@ -498,6 +501,24 @@ export class CategoryComponent implements OnInit, OnDestroy {
             isSubCategory: cat.isSubCategory,
             group: newGroupName,
             groupIcon: newGroupIcon
+          }));
+        });
+
+        // 2. Clear Group for Removed Categories
+        const toRemove = result.removed || [];
+        toRemove.forEach((cat: any) => {
+          this.store.dispatch(CategoriesActions.updateCategory({
+            userId: this.userId,
+            categoryId: cat.id!,
+            name: cat.name,
+            categoryType: cat.type,
+            icon: cat.icon,
+            color: cat.color,
+            budgetData: cat.budget,
+            parentCategoryId: cat.parentCategoryId,
+            isSubCategory: cat.isSubCategory,
+            group: '',
+            groupIcon: ''
           }));
         });
         

@@ -15,6 +15,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { CommonHeaderComponent } from 'src/app/util/components/dialog/common-header/common-header.component';
 import { CommonBodyContentComponent } from 'src/app/util/components/dialog/common-body-content/common-body-content.component';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 export interface CategoryBudgetDialogData {
   category: Category;
@@ -38,7 +39,8 @@ export interface CategoryBudgetDialogData {
     MatDatepickerModule,
     MatNativeDateModule,
     CommonHeaderComponent,
-    CommonBodyContentComponent
+    CommonBodyContentComponent,
+    MatSlideToggleModule
 ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
