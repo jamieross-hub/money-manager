@@ -36,6 +36,9 @@ import { CategoryReportItemComponent } from 'src/app/util/components/cards/categ
 import { MatTableModule } from '@angular/material/table';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatCardModule } from '@angular/material/card';
+import { MatTooltipModule } from '@angular/material/tooltip';
+
+import { MathPipe } from 'src/app/util/pipes/math.pipe';
 
 @Component({
   selector: 'app-family-reports',
@@ -55,6 +58,8 @@ import { MatCardModule } from '@angular/material/card';
     MatTableModule,
     MatDividerModule,
     MatCardModule,
+    MatTooltipModule,
+    MathPipe,
     CategoryReportItemComponent,
     RouterModule
   ],

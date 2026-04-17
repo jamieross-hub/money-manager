@@ -66,7 +66,7 @@
 
         <!-- Top Row: Group Identity -->
         <div
-          class="border-b border-gray-100 dark:border-gray-800 pb-4 mb-4 flex items-center justify-between px-2 pt-4 relative z-10">
+          class="border-b border-gray-100 dark:border-gray-800 pb-2 mb-2 flex items-center justify-between px-2 pt-4 relative z-10">
           <div class="flex items-start gap-3">
             <div
               class="w-10 h-10 rounded-xl bg-surface-100 dark:bg-gray-800/40 flex items-center justify-center border border-gray-100 dark:border-gray-700 shadow-inner">
@@ -91,41 +91,103 @@
 
         <!-- Ledger Style Details -->
         <div class="space-y-3 mb-4 px-2 relative z-10">
-          @if (family()?.mode !== 'split') {
-          <div class="flex justify-between items-center text-xs">
-            <span class="text-gray-500 dark:text-gray-400 font-medium">Net Balance</span>
-            <span class="text-lg font-bold leading-none" [class.text-green-600]="stats()?.netBalance ?? 0 >= 0"
-              [class.dark:text-green-400]="stats()?.netBalance ?? 0 >= 0"
-              [class.text-red-500]="stats()?.netBalance ?? 0 < 0"
-              [class.dark:text-red-400]="stats()?.netBalance ?? 0 < 0">
-              {{ stats()?.netBalance | currency }}
-            </span>
-          </div>
-          <div class="flex justify-between items-center text-xs">
-            <span class="text-gray-500 dark:text-gray-400 font-medium">Group Income</span>
-            <span class="font-bold text-green-600 dark:text-green-500">{{ stats()?.totalIncome | currency }}</span>
-          </div>
-          }
+          @if (stats()) {
+          <div class="space-y-4">
+            <!-- Combined Expense/Savings Bar for Common Mode -->
+            @if (family()?.mode === 'common') {
+            <div class="pt-2">
+              <!-- Combined Bar -->
+              <div
+                class="flex h-2.5 w-full rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 border border-gray-200/80 dark:border-gray-700/80 shadow-sm">
+                <!-- Expense Segment -->
+                <div class="h-full bg-red-500 opacity-80"
+                  [style.width]="(stats()!.totalExpense | math:'percentWidth':stats()!.totalIncome) + '%'"
+                  [matTooltip]="'Expense: ' + (stats()!.totalExpense | currency)">
+                </div>
+                <!-- Savings Segment -->
+                <div class="h-full bg-green-500 opacity-80"
+                  [style.width]="(stats()!.netBalance > 0 ? (stats()!.netBalance | math:'percentWidth':stats()!.totalIncome) : 0) + '%'"
+                  [matTooltip]="'Savings: ' + (stats()!.netBalance | currency)">
+                </div>
+              </div>
 
-          <div class="flex justify-between items-center text-xs">
-            <span class="text-gray-500 dark:text-gray-400 font-medium">Group Mode</span>
-            <div class="flex items-center gap-1.5 py-1 rounded-lg border transition-all duration-300"
-              (click)="openModeInfo($event)">
-              <span
-                class="text-[10px] font-semibold uppercase tracking-wider bg-primary-500 text-white px-2 py-1 rounded-lg">
-                {{ (family()?.mode || 'common') }}
-              </span>
+              <!-- Legend -->
+              <div class="flex items-center justify-center mt-2.5">
+                <div class="flex items-center gap-4 text-[10px] font-bold uppercase tracking-wider">
+                  <!-- Expense Legend -->
+                  <div class="flex items-center gap-1.5 text-red-500">
+                    <span class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
+                    <span>Expense</span>
+                    <span class="text-gray-400 dark:text-gray-500">({{ (stats()!.totalExpense |
+                      math:'percentWidth':stats()!.totalIncome) | number:'1.0-0' }}%)</span>
+                  </div>
+
+                  <!-- Savings/Deficit Legend -->
+                  <div class="flex items-center gap-1.5"
+                    [class.text-green-500]="stats()!.netBalance >= 0"
+                    [class.text-red-400]="stats()!.netBalance < 0">
+                    <span class="w-2 h-2 rounded-full flex-shrink-0"
+                      [class.bg-green-500]="stats()!.netBalance >= 0"
+                      [class.bg-red-400]="stats()!.netBalance < 0"></span>
+                    <span>{{ stats()!.netBalance >= 0 ? 'Savings' : 'Deficit' }}</span>
+                    <span class="text-gray-400 dark:text-gray-500">({{ (stats()!.netBalance | abs |
+                      math:'percentWidth':stats()!.totalIncome) | number:'1.0-0' }}%)</span>
+                  </div>
+                </div>
+
+                
+              </div>
+            </div>
+
+            <!-- Value Display -->
+            <div class="space-y-2 mt-4">
+              <div class="flex justify-between items-center text-xs">
+                <span class="text-gray-500 dark:text-gray-400 font-medium">Group Income</span>
+                <span class="font-bold text-green-600 dark:text-green-500">{{ stats()?.totalIncome | currency }}</span>
+              </div>
+              <div class="flex justify-between items-center text-xs">
+                <span class="text-gray-500 dark:text-gray-400 font-medium">Group Expenses</span>
+                <span class="font-bold text-red-500 dark:text-red-400">{{ stats()?.totalExpense | currency }}</span>
+              </div>
+              <div class="flex justify-between items-center text-xs">
+                <span class="text-gray-500 dark:text-gray-400 font-medium">
+                  {{ stats()!.netBalance >= 0 ? 'Group Savings' : 'Deficit' }}
+                </span>
+                <span class="font-bold" [class.text-green-600]="stats()!.netBalance >= 0"
+                  [class.text-red-500]="stats()!.netBalance < 0">
+                  {{ (stats()!.netBalance | abs) | currency }}
+                </span>
+              </div>
+            </div>
+            } @else {
+              <!-- Split Mode Simple Details -->
+              <div class="space-y-2.5 mt-4 px-0.5">
+                <div class="flex justify-between items-center text-xs">
+                  <span class="text-gray-500 dark:text-gray-400 font-medium">Group Expenses</span>
+                  <span class="font-bold text-red-500 dark:text-red-400">{{ stats()?.totalExpense | currency }}</span>
+                </div>
+                <div class="flex justify-between items-center text-xs">
+                  <span class="text-gray-500 dark:text-gray-400 font-medium">Total Transactions</span>
+                  <span class="font-bold text-gray-800 dark:text-gray-200">{{ stats()?.transactionCount }}</span>
+                </div>
+              </div>
+            }
+
+            <mat-divider class="!border-gray-100 dark:!border-gray-800 !mt-2"></mat-divider>
+
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-gray-500 dark:text-gray-400 font-medium">Group Mode</span>
+              <div class="flex items-center gap-1.5 py-1 rounded-lg border border-transparent transition-all duration-300"
+                (click)="openModeInfo($event)">
+                <span
+                  class="text-[10px] font-semibold uppercase tracking-wider bg-primary-500 text-white px-2 py-0.5 rounded-lg flex items-center gap-1">
+                  {{ (family()?.mode || 'common') }}
+                  <mat-icon class="!text-[12px] !w-3 !h-3">info</mat-icon>
+                </span>
+              </div>
             </div>
           </div>
-          <div class="flex justify-between items-center text-xs">
-            <span class="text-gray-500 dark:text-gray-400 font-medium">Group Expenses</span>
-            <span class="font-bold text-red-500 dark:text-red-400">{{ stats()?.totalExpense | currency }}</span>
-          </div>
-
-          <div class="flex justify-between items-center text-xs">
-            <span class="text-gray-500 dark:text-gray-400 font-medium">Total Transactions</span>
-            <span class="font-bold text-gray-800 dark:text-gray-200">{{ stats()?.transactionCount }}</span>
-          </div>
+          }
         </div>
 
         <!-- Smart Insights -->
