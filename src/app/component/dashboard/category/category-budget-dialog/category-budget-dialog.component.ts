@@ -4,6 +4,8 @@ import { FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Category } from 'src/app/util/models/category.model';
 import { CategoryBudgetService } from 'src/app/util/service/category-budget.service';
 import { Subscription } from 'rxjs';
+import { CurrencyService } from 'src/app/util/service/currency.service';
+import { computed } from '@angular/core';
 
 
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -55,11 +57,17 @@ export class CategoryBudgetDialogComponent implements OnInit, OnDestroy {
   constructor(
     private dialogRef: MatDialogRef<CategoryBudgetDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: CategoryBudgetDialogData,
-    private budgetService: CategoryBudgetService
+    private budgetService: CategoryBudgetService,
+    private currencyService: CurrencyService
   ) {
     this.budgetForm = this.budgetService.createBudgetForm();
     this.budgetPeriods = this.budgetService.getBudgetPeriods();
   }
+
+  public currencySymbol = computed(() => {
+    const code = this.currencyService.currentCurrency();
+    return this.currencyService.getCurrencyConfig(code)?.symbol || '$';
+  });
 
   ngOnInit(): void {
     this.subscription = this.budgetService.initializeBudgetForm(this.budgetForm, this.data.category);

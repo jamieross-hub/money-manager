@@ -127,13 +127,13 @@
                                   <span class="btn-label">Edit</span>
                                 </button>
                                 <!-- Set/Edit Budget -->
-                                @if (category.type === 'expense') {
+                                <!-- Edit Budget (Only if exists) -->
+                                @if (category.type === 'expense' && category.budget?.hasBudget) {
                                   <button mat-icon-button class="expansion-action-btn budget-btn"
                                     (click)="openBudgetDialog(category)"
-                                    [matTooltip]="category.budget?.hasBudget ? 'Edit Budget' : 'Set Budget'">
+                                    matTooltip="Edit Budget">
                                     <mat-icon>account_balance_wallet</mat-icon>
-                                    <span class="btn-label">{{ category.budget?.hasBudget ? 'Edit Budget' : 'Set
-                                    Budget' }}</span>
+                                    <span class="btn-label">Edit Budget</span>
                                   </button>
                                 }
                                 <!-- Remove Budget -->
@@ -201,6 +201,16 @@
                                       </div>
                                     </div>
                                   }
+                                </div>
+                              }
+
+                              <!-- Set Budget Call-to-Action -->
+                              @if (category.type === 'expense' && !category.budget?.hasBudget) {
+                                <div class="px-4 pb-4 !mt-5">
+                                  <button mat-flat-button color="primary" 
+                                          class="w-full !rounded-2xl" 
+                                          (click)="openBudgetDialog(category)"> <mat-icon>account_balance_wallet</mat-icon> Set Category Budget
+                                  </button>
                                 </div>
                               }
                             </div>
