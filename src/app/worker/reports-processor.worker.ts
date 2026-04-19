@@ -306,7 +306,7 @@ function buildMonthlySummaries(transactions: any[], iconMap: any, colorMap: any)
 function computePeriodSummaries(
     transactions: any[],
     monthlySummaries: MonthlySummary[],
-    selectedPeriod: 'weekly' | 'monthly' | 'yearly',
+    selectedPeriod: 'weekly' | 'monthly' | 'yearly' | 'all',
     selectedYear: number,
     selectedMonth: number | null,
     selectedWeekOffset: number,
@@ -348,6 +348,10 @@ function computePeriodSummaries(
 
         currentMonths = buildAdhocSummary(currentPeriodTransactions, iconMap, colorMap);
         previousMonths = buildAdhocSummary(prevTransactions, iconMap, colorMap);
+    } else if (selectedPeriod === 'all') {
+        currentMonths = monthlySummaries;
+        previousMonths = [];
+        currentPeriodTransactions = transactions;
     } else {
         currentMonths = monthlySummaries.filter(m => m.year === year);
         previousMonths = monthlySummaries.filter(m => m.year === year - 1);
@@ -416,6 +420,8 @@ function computePeriodSummaries(
             ...g,
             savingsRate: g.income > 0 ? (g.savings / g.income) * 100 : 0
         })).sort((a, b) => b.date.getTime() - a.date.getTime());
+    } else if (selectedPeriod === 'all') {
+        filteredHistory = monthlySummaries;
     } else {
         filteredHistory = monthlySummaries.filter(m => m.year === selectedYear);
     }
@@ -520,6 +526,8 @@ function getPeriodLabel(which: 'current' | 'previous', selectedPeriod: string, s
         if (offset === 0 && which === 'current') return 'This Week';
         if (offset === -1 && which === 'previous') return 'Last Week';
         return `${start.format('D MMM')} - ${end.format('D MMM YYYY')}`;
+    } else if (selectedPeriod === 'all') {
+        return 'All Time';
     } else {
         return which === 'current' ? `${year}` : `${year - 1}`;
     }

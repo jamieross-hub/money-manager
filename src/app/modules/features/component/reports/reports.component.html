@@ -250,7 +250,7 @@
                       </div>
 
                       <!-- Year Select (Desktop) -->
-                      @if (!breakpointService.device.isMobile) {
+                      @if (!breakpointService.device.isMobile && selectedPeriod() !== 'all') {
                         <mat-form-field appearance="fill"
                           class="year-select-field !w-auto !text-primary-500 !bg-transparent !border-none mb-0">
                           <mat-select [value]="selectedYear()"
@@ -392,16 +392,16 @@
             <mat-card class="!rounded-xl !border-none ">
               <mat-card-content class="pt-4">
                 <p class="text-lg font-semibold text-neutral-500 mb-5 flex items-center gap-2">
-                  <mat-icon class="text-primary-500">{{ selectedPeriod() === 'weekly' ? 'view_week' : 'calendar_month' }}</mat-icon>
-                  {{ selectedPeriod() === 'weekly' ? 'Weekly' : selectedPeriod() === 'yearly' ? 'Yearly' : 'Monthly' }} History 
-                  <span *ngIf="selectedPeriod() !== 'yearly'">({{ selectedYear() }})</span>
+                  <mat-icon class="text-primary-500">{{ selectedPeriod() === 'weekly' ? 'view_week' : (selectedPeriod() === 'all' ? 'history' : 'calendar_month') }}</mat-icon>
+                  {{ selectedPeriod() === 'weekly' ? 'Weekly' : selectedPeriod() === 'yearly' ? 'Yearly' : selectedPeriod() === 'all' ? 'All Time' : 'Monthly' }} History 
+                  <span *ngIf="selectedPeriod() !== 'yearly' && selectedPeriod() !== 'all'">({{ selectedYear() }})</span>
                 </p>
                 <div class="overflow-x-auto rounded-lg mat-elevation-z1">
                   <table mat-table [dataSource]="filteredMonthlySummaries"
                     class="w-full history-table compact-table">
                     <!-- Month Column -->
                     <ng-container matColumnDef="month">
-                      <th mat-header-cell *matHeaderCellDef>{{ selectedPeriod() === 'weekly' ? 'Week' : selectedPeriod() === 'yearly' ? 'Year' : 'Month' }}</th>
+                      <th mat-header-cell *matHeaderCellDef>{{ selectedPeriod() === 'weekly' ? 'Week' : selectedPeriod() === 'yearly' ? 'Year' : (selectedPeriod() === 'all' ? 'Period' : 'Month') }}</th>
                       <td mat-cell *matCellDef="let m"
                         class="font-medium text-neutral-700 !text-xs sm:!text-sm">
                         {{ m.label }}

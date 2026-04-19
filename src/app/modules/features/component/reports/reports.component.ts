@@ -116,7 +116,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     }
 
     // Period selector (Signals)
-    selectedPeriod = signal<'weekly' | 'monthly' | 'yearly'>('monthly');
+    selectedPeriod = signal<'weekly' | 'monthly' | 'yearly' | 'all'>('monthly');
     selectedYear = signal<number>(new Date().getFullYear());
     selectedMonth = signal<number | null>(null);
     selectedWeekOffset = signal<number>(0);
@@ -264,6 +264,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     // Navigation Bounds (Signals)
     readonly canGoPrevious = computed(() => {
         const period = this.selectedPeriod();
+        if (period === 'all') return false;
         const summaries = this.monthlySummariesSignal();
         if (summaries.length === 0) return false;
 
@@ -300,6 +301,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
     readonly canGoNext = computed(() => {
         const period = this.selectedPeriod();
+        if (period === 'all') return false;
         const summaries = this.monthlySummariesSignal();
         if (summaries.length === 0) return false;
 
@@ -381,7 +383,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     private subscriptions: Subscription[] = [];
 
     // Period options for template iteration (typed)
-    readonly periodOptions: ('weekly' | 'monthly' | 'yearly')[] = ['weekly', 'monthly', 'yearly'];
+    readonly periodOptions: ('weekly' | 'monthly' | 'yearly' | 'all')[] = ['weekly', 'monthly', 'yearly', 'all'];
 
     // Category icon & color lookup
     private categoryIconMap = new Map<string, string>();
@@ -503,7 +505,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     // Helpers
     // ══════════════════════════════════════════
 
-    selectPeriod(period: 'weekly' | 'monthly' | 'yearly'): void {
+    selectPeriod(period: 'weekly' | 'monthly' | 'yearly' | 'all'): void {
         this.selectedPeriod.set(period);
         this.selectedWeekOffset.set(0);
         this.selectedMonth.set(null);

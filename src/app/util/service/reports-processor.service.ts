@@ -144,7 +144,7 @@ export class ReportsProcessorService {
     process(data: {
         transactions: Transaction[];
         currentUserId: string | null;
-        selectedPeriod: 'weekly' | 'monthly' | 'yearly';
+        selectedPeriod: 'weekly' | 'monthly' | 'yearly' | 'all';
         selectedYear: number;
         selectedMonth: number | null;
         selectedWeekOffset: number;
