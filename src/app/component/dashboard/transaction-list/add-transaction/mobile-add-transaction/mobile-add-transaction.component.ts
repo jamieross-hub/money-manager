@@ -40,8 +40,9 @@ import { Category } from 'src/app/util/models';
 import { BreakpointObserver } from '@angular/cdk/layout';
 
 import { filter, map, Observable, take, combineLatest, merge } from 'rxjs';
-import { selectLatestCompletedTransaction } from 'src/app/store/transactions/transactions.selectors';
 import { Transaction, CategorySplit } from 'src/app/util/models/transaction.model';
+import * as TransactionsSelectors from 'src/app/store/transactions/transactions.selectors';
+import { AppViewService } from 'src/app/util/service/app-view.service';
 import { RecurringTemplate } from 'src/app/util/models/recurring.model';
 import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 import { CategorySplitDialogComponent } from 'src/app/util/components/category-split-dialog/category-split-dialog.component';
@@ -136,7 +137,9 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     { initialValue: false }
   );
   public categories = toSignal(this._store.select(selectAllCategories), { initialValue: [] as Category[] });
+  public allTransactions = this._store.selectSignal(TransactionsSelectors.selectAllTransactions);
   public userProfile = this._store.selectSignal(fromProfile.selectProfile);
+  private appViewService = inject(AppViewService);
 
   // ─── Family / Split Mode ───────────────────────────────────────────────────
   /** All members of the active family group. Loaded after ngOnInit. */
@@ -711,7 +714,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       });
 
       combineLatest([
-        this.store.select(selectLatestCompletedTransaction).pipe(take(1)),
+        this.store.select(TransactionsSelectors.selectLatestCompletedTransaction).pipe(take(1)),
         this.accountList$.pipe(take(1))
       ]).pipe(takeUntil(this._onDestroy)).subscribe(([transaction, accounts]) => {
         if (!accounts || accounts.length === 0) return;
@@ -880,10 +883,11 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     this.isSubmitting.set(true);
 
     try {
-      this.loaderService.show();
+    
 
       const formData = this.transactionForm.value;
 
+      this.loaderService.show();
       let finalCategoryId = formData.categoryId;
       let finalCategoryName = formData.categoryName;
       let finalCategoryType = formData.categoryType as TransactionType;
@@ -904,6 +908,46 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
           finalCategoryId = 'transfer_system';
         }
       }
+
+      // --- DUPLICATION CHECK (Amount + Category) ---
+      const newAmount = parseFloat(formData.amount);
+      const newDate = this.dateService.getLocalDateTimeFromForm(formData.date, true, this.dialogData?.date);
+      const currentView = this.appViewService.appView;
+
+      const isDuplicate = this.allTransactions().some(t => {
+        if (t.id === this.dialogData?.id) return false;
+        if (t.amount !== newAmount) return false;
+        if (t.categoryId !== finalCategoryId) return false; // Match category
+        
+        const existingDate = this.dateService.toDate(t.date);
+        if (!existingDate) return false;
+
+        const d1 = dayjs(newDate);
+        const d2 = dayjs(existingDate);
+
+        if (currentView === 'WEEKLY') return d1.isSame(d2, 'week');
+        if (currentView === 'YEARLY') return d1.isSame(d2, 'year');
+        return d1.isSame(d2, 'month');
+      });
+
+      if (isDuplicate) {
+        this.loaderService.hide(); // Hide loader while dialog is open
+        const confirmed = await firstValueFrom(this.notificationService.confirm({
+          title: 'Possible Duplicate',
+          message: `A transaction with amount <b>${newAmount}</b> for <b>${finalCategoryName}</b> already exists for this <b>${this.appViewService.getViewLabel()}</b>. Do you want to add it anyway?`,
+          confirmText: 'Add Anyway',
+          cancelText: 'Cancel',
+          type: 'warning'
+        }));
+
+        if (!confirmed) {
+          this.isSubmitting.set(false);
+          return;
+        }
+        this.loaderService.show(); // Show loader again if continuing
+      }
+      // -------------------------
+
 
       const transactionData = {
         accountId: formData.accountId,
