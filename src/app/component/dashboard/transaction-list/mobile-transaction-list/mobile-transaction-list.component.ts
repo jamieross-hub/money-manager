@@ -157,6 +157,7 @@ export class MobileTransactionListComponent
 
   isSelectionMode = computed(() => this.selectedTxIds().size > 0);
   newlyAddedTxId = signal<string | null>(null);
+  activeTxId = signal<string | null>(null);
   private previousTxIds = new Set<string>();
   showFilters: boolean = false;
 
@@ -492,12 +493,25 @@ export class MobileTransactionListComponent
   currentDateLabel = computed(() => {
     const date = this.selectedDate();
     const range = this.selectedDateRange();
+    const view = this.appView();
 
     if (date) return dayjs(date).format('DD MMM, YYYY');
     if (range) {
-      const start = dayjs(range.startDate).format('DD MMM');
-      const end = dayjs(range.endDate).format('DD MMM, YYYY');
-      return `${start} - ${end}`;
+      const start = dayjs(range.startDate);
+      const end = dayjs(range.endDate);
+
+      // Group by View Preference
+      if (view === 'MONTHLY' && start.date() === 1 && end.date() === start.daysInMonth()) {
+        return start.format('MMMM YYYY');
+      }
+      if (view === 'YEARLY' && start.month() === 0 && start.date() === 1 && end.month() === 11 && end.date() === 31) {
+        return start.format('YYYY');
+      }
+
+      // Default range formatting
+      const startStr = start.format('DD MMM');
+      const endStr = end.format('DD MMM, YYYY');
+      return `${startStr} - ${endStr}`;
     }
     return 'All Dates';
   });
@@ -929,6 +943,9 @@ export class MobileTransactionListComponent
 
   onTransactionClick(transaction: Transaction) {
     if (this.isLongPressing || this.selectedRange() === 'category') return;
+    
+    // Set active ID for highlighting
+    this.activeTxId.set(transaction.id || null);
     
     if (this.isSelectionMode()) {
       this.toggleSelection(transaction);

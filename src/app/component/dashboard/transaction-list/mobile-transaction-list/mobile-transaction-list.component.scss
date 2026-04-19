@@ -494,40 +494,94 @@
   }
 }
 
-// Transaction Summary
-.transaction-summary {
+// Unified Summary Header Card
+.summary-header-card {
   background: var(--surface-100);
+  border: 1px solid var(--primary-300);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+  animation: slideDown 0.3s ease-out;
+
+  [data-theme='dark'] & {
+    background: var(--surface-200);
+    border-color: rgba(var(--primary-400-rgb), 0.2);
+  }
+}
+
+.navigator-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px;
+  background: rgba(var(--primary-rgb), 0.02);
+
+  .nav-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--neutral-400);
+    transition: all 0.2s ease;
+
+    &:hover:not(.disabled) {
+      background: var(--surface-100);
+      color: var(--primary-600);
+    }
+
+    &.disabled {
+      opacity: 0.2;
+      cursor: not-allowed;
+    }
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .date-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--primary-600);
+    
+    [data-theme='dark'] & {
+      color: var(--primary-400);
+    }
+  }
+}
+
+.summary-row {
   padding: 6px 10px;
-  border-bottom: 1px solid var(--surface-200);
-  z-index: 5;
-  animation: fadeIn 0.3s ease-out;
+
+  &.with-divider {
+    border-top: 1px solid rgba(var(--primary-300), 0.3);
+    [data-theme='dark'] & {
+      border-top-color: rgba(255, 255, 255, 0.05);
+    }
+  }
 }
 
 .summary-stats {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
   align-items: center;
-  gap: 8px;
-  max-width: 600px;
-  margin: 0 auto;
+  gap: 12px;
+  width: 100%;
 }
 
 .stat-item {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 4px;
-  padding: 6px 4px;
-  // background: var(--surface-50);
-  // border: 1px solid var(--surface-300);
-  border-radius: 8px;
-  transition: all 0.2s ease;
   min-width: 0;
-
-  &:hover {
-    background: var(--surface-100);
-    border-color: var(--primary-200);
-  }
 
   mat-icon {
     font-size: 14px;
@@ -540,61 +594,41 @@
   .stat-content {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0px;
-    overflow: hidden;
     min-width: 0;
   }
 
   .stat-value {
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--neutral-800);
     white-space: nowrap;
-    text-overflow: ellipsis;
     overflow: hidden;
-    letter-spacing: -0.01em;
-  }
+    text-overflow: ellipsis;
 
-  .stat-total {
-    font-size: 9px;
-    color: var(--neutral-400);
-    font-weight: 500;
-    white-space: nowrap;
+    [data-theme='dark'] & {
+      color: var(--neutral-100);
+    }
   }
 
   &.income {
-    border-color: var(--success-200);
     mat-icon { color: var(--success-500); }
-    .stat-value { color: var(--success-700); }
-    
-  
+    .stat-value { color: var(--success-700); [data-theme='dark'] & { color: var(--success-400); } }
   }
 
   &.expense {
-    border-color: var(--error-200);
     mat-icon { color: var(--error-500); }
-    .stat-value { color: var(--error-700); }
+    .stat-value { color: var(--error-700); [data-theme='dark'] & { color: var(--error-400); } }
   }
 
   &.settlement {
-    border-color: var(--primary-200);
     mat-icon { color: var(--primary-500); }
-    .stat-value { color: var(--primary-700); }
-
-    [data-theme='dark'] & {
-      border-color: rgba(var(--primary-400-rgb), 0.2);
-      mat-icon { color: var(--primary-400); }
-      .stat-value { color: var(--primary-300); }
-    }
+    .stat-value { color: var(--primary-700); [data-theme='dark'] & { color: var(--primary-400); } }
   }
 }
 
 // Transaction List Container
 .transaction-list-container {
   flex: 1;
-  // overflow-y: auto;
-  // overflow-x: hidden;
   position: relative;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
@@ -1045,6 +1079,19 @@
     .icon-container {
       filter: grayscale(1);
       opacity: 0.5;
+    }
+  }
+
+  &.active-card {
+    border-color: var(--primary-400);
+    background: var(--surface-100);
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.08);
+    position: relative;
+    z-index: 5;
+
+    &::before {
+      opacity: 1;
+      background: var(--primary-500);
     }
   }
 
