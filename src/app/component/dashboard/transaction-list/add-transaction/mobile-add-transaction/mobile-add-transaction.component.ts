@@ -909,43 +909,45 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
         }
       }
 
-      // --- DUPLICATION CHECK (Amount + Category) ---
-      const newAmount = parseFloat(formData.amount);
-      const newDate = this.dateService.getLocalDateTimeFromForm(formData.date, true, this.dialogData?.date);
-      const currentView = this.appViewService.appView;
+      // --- DUPLICATION CHECK (Only for Add Mode) ---
+      if (!this.editMode() && !this.adjustmentMode()) {
+        const newAmount = parseFloat(formData.amount);
+        const newDate = this.dateService.getLocalDateTimeFromForm(formData.date, true, this.dialogData?.date);
+        const currentView = this.appViewService.appView;
 
-      const isDuplicate = this.allTransactions().some(t => {
-        if (t.id === this.dialogData?.id) return false;
-        if (t.amount !== newAmount) return false;
-        if (t.categoryId !== finalCategoryId) return false; // Match category
-        
-        const existingDate = this.dateService.toDate(t.date);
-        if (!existingDate) return false;
+        const isDuplicate = this.allTransactions().some(t => {
+          if (t.amount !== newAmount) return false;
+          if (t.categoryId !== finalCategoryId) return false;
+          
+          const existingDate = this.dateService.toDate(t.date);
+          if (!existingDate) return false;
 
-        const d1 = dayjs(newDate);
-        const d2 = dayjs(existingDate);
+          const d1 = dayjs(newDate);
+          const d2 = dayjs(existingDate);
 
-        if (currentView === 'WEEKLY') return d1.isSame(d2, 'week');
-        if (currentView === 'YEARLY') return d1.isSame(d2, 'year');
-        return d1.isSame(d2, 'month');
-      });
+          if (currentView === 'WEEKLY') return d1.isSame(d2, 'week');
+          if (currentView === 'YEARLY') return d1.isSame(d2, 'year');
+          return d1.isSame(d2, 'month');
+        });
 
-      if (isDuplicate) {
-        this.loaderService.hide(); // Hide loader while dialog is open
-        const confirmed = await firstValueFrom(this.notificationService.confirm({
-          title: 'Possible Duplicate',
-          message: `A transaction with amount <b>${newAmount}</b> for <b>${finalCategoryName}</b> already exists for this <b>${this.appViewService.getViewLabel()}</b>. Do you want to add it anyway?`,
-          confirmText: 'Add Anyway',
-          cancelText: 'Cancel',
-          type: 'warning'
-        }));
+        if (isDuplicate) {
+          this.loaderService.hide(); // Hide loader while dialog is open
+          const confirmed = await firstValueFrom(this.notificationService.confirm({
+            title: 'Possible Duplicate',
+            message: `A transaction with amount <b>${newAmount}</b> for <b>${finalCategoryName}</b> already exists for this <b>${this.appViewService.getViewLabel()}</b>. Do you want to add it anyway?`,
+            confirmText: 'Add Anyway',
+            cancelText: 'Cancel',
+            type: 'warning'
+          }));
 
-        if (!confirmed) {
-          this.isSubmitting.set(false);
-          return;
+          if (!confirmed) {
+            this.isSubmitting.set(false);
+            return;
+          }
+          this.loaderService.show(); // Show loader again if continuing
         }
-        this.loaderService.show(); // Show loader again if continuing
       }
+      // -------------------------
       // -------------------------
 
 
