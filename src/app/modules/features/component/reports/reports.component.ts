@@ -142,6 +142,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
         const categories = this.allCategories();
         const categoryMap = new Map(categories.map(c => [c.id, c]));
+        const validCategoryIds = new Set(categories.map(c => c.id));
 
         const groups = new Map<string, { 
             name: string, 
@@ -157,36 +158,57 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
         summary.categoryBreakdown.forEach(item => {
             const cat = categoryMap.get(item.categoryId);
-            const groupName = cat?.group;
+            const isUnrecognized = !validCategoryIds.has(item.categoryId);
 
-            if (groupName && groupName.trim() !== '') {
-                if (!groups.has(groupName)) {
-                    groups.set(groupName, {
+            if (isUnrecognized) {
+                const groupName = 'Unrecognized Category';
+                const groupId = 'group_unrecognized';
+                if (!groups.has(groupId)) {
+                    groups.set(groupId, {
                         name: groupName,
                         amount: 0,
                         transactionCount: 0,
-                        categoryIcon: item.categoryIcon,
-                        groupIcon: cat?.groupIcon, // [NEW]
-                        categoryColor: (!item.categoryColor || item.categoryColor === '#9ca3af') ? this.stringToColor(groupName) : item.categoryColor,
-                        categoryId: 'group_' + groupName
+                        categoryIcon: 'help_outline',
+                        groupIcon: 'help_outline',
+                        categoryColor: '#94a3b8',
+                        categoryId: groupId
                     });
                 }
-                const g = groups.get(groupName)!;
+                const g = groups.get(groupId)!;
                 g.amount += item.amount;
                 g.transactionCount += item.transactionCount;
-                if (item.amount > (g.amount - item.amount)) {
-                    g.categoryIcon = item.categoryIcon;
-                    g.categoryColor = (!item.categoryColor || item.categoryColor === '#9ca3af') ? this.stringToColor(groupName) : item.categoryColor;
-                }
             } else {
-                groups.set(item.categoryId, {
-                    name: item.categoryName,
-                    amount: item.amount,
-                    transactionCount: item.transactionCount,
-                    categoryIcon: item.categoryIcon,
-                    categoryColor: item.categoryColor,
-                    categoryId: item.categoryId
-                });
+                const groupName = cat?.group;
+
+                if (groupName && groupName.trim() !== '') {
+                    if (!groups.has(groupName)) {
+                        groups.set(groupName, {
+                            name: groupName,
+                            amount: 0,
+                            transactionCount: 0,
+                            categoryIcon: item.categoryIcon,
+                            groupIcon: cat?.groupIcon, // [NEW]
+                            categoryColor: (!item.categoryColor || item.categoryColor === '#9ca3af') ? this.stringToColor(groupName) : item.categoryColor,
+                            categoryId: 'group_' + groupName
+                        });
+                    }
+                    const g = groups.get(groupName)!;
+                    g.amount += item.amount;
+                    g.transactionCount += item.transactionCount;
+                    if (item.amount > (g.amount - item.amount)) {
+                        g.categoryIcon = item.categoryIcon;
+                        g.categoryColor = (!item.categoryColor || item.categoryColor === '#9ca3af') ? this.stringToColor(groupName) : item.categoryColor;
+                    }
+                } else {
+                    groups.set(item.categoryId, {
+                        name: item.categoryName,
+                        amount: item.amount,
+                        transactionCount: item.transactionCount,
+                        categoryIcon: item.categoryIcon,
+                        categoryColor: item.categoryColor,
+                        categoryId: item.categoryId
+                    });
+                }
             }
             totalAmount += item.amount;
         });
@@ -214,6 +236,20 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
         const txns = this.currentPeriodTransactionsSignal();
         const categories = this.allCategories();
+        const validCategoryIds = new Set(categories.map(c => c.id));
+
+        if (catId === 'group_unrecognized') {
+            const items = txns.filter(t => !validCategoryIds.has(t.categoryId));
+            const summary = this.currentPeriodSummarySignal();
+            const breakdown = summary?.categoryBreakdown.filter(item => !validCategoryIds.has(item.categoryId)) || [];
+
+            return {
+                isGroup: true,
+                groupName: 'Unrecognized Category',
+                transactions: items.map(t => ({ ...t, date: this.toDateHelper(t.date) })).sort((a, b) => ((b.date as Date)?.getTime() || 0) - ((a.date as Date)?.getTime() || 0)),
+                breakdown: breakdown.sort((a, b) => b.amount - a.amount)
+            };
+        }
 
         if (catId.startsWith('group_')) {
             const groupName = catId.replace('group_', '');
