@@ -158,14 +158,17 @@ export class ReportsProcessorService {
         }
         if (!data.transactions) return;
 
-        const fingerprint = this.generateFingerprint(data);
+        // Ignore transfer transactions in reports
+        const reportTransactions = data.transactions.filter(t => (t.type as any) !== 'transfer');
+
+        const fingerprint = this.generateFingerprint({ ...data, transactions: reportTransactions });
         if (fingerprint === this.lastFingerprint) return;
         this.lastFingerprint = fingerprint;
 
         this.isProcessing.set(true);
 
         // ── Optimized Fingerprinting & Caching ──
-        const baseFingerprint = this.generateBaseFingerprint(data.transactions, data.currentUserId);
+        const baseFingerprint = this.generateBaseFingerprint(reportTransactions, data.currentUserId);
         
         // Only fetch from storage if we don't have a hot worker/cache
         const cached = this.storageService.getItem<{ fingerprint: string, data: any }>('reports_base_cache');
@@ -181,7 +184,7 @@ export class ReportsProcessorService {
 
         const workerData = {
             ...data,
-            transactions: baseChanged ? data.transactions : [],
+            transactions: baseChanged ? reportTransactions : [],
             cachedBase,
             baseFingerprint
         };

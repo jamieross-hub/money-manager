@@ -40,6 +40,14 @@ import { MathPipe } from '../../../../util/pipes/math.pipe';
 import { TrendPipe } from '../../../../util/pipes/trend.pipe';
 import { LocalIndexDBStorageService } from '../../../../util/service/indexdb-storage.service';
 import { CategoryReportItemComponent } from 'src/app/util/components/cards/category-report-item/category-report-item.component';
+import { LocalStorageKey } from '../../../../util/models/local-storage.model';
+
+interface ReportsPreferences {
+    selectedPeriod: 'weekly' | 'monthly' | 'yearly' | 'all';
+    selectedYear: number;
+    selectedMonth: number | null;
+    selectedWeekOffset: number;
+}
 
 @Component({
     selector: 'app-reports',
@@ -443,6 +451,26 @@ export class ReportsComponent implements OnInit, OnDestroy {
         private cdr: ChangeDetectorRef,
         public breakpointService: BreakpointService
     ) {
+        // Load cached preferences
+        const cachedPrefs = this.storageService.getItem<ReportsPreferences>(LocalStorageKey.REPORTS_PREFERENCES);
+        if (cachedPrefs) {
+            this.selectedPeriod.set(cachedPrefs.selectedPeriod);
+            this.selectedYear.set(cachedPrefs.selectedYear);
+            this.selectedMonth.set(cachedPrefs.selectedMonth);
+            this.selectedWeekOffset.set(cachedPrefs.selectedWeekOffset);
+        }
+
+        // Effect to save preferences when they change
+        effect(() => {
+            const prefs: ReportsPreferences = {
+                selectedPeriod: this.selectedPeriod(),
+                selectedYear: this.selectedYear(),
+                selectedMonth: this.selectedMonth(),
+                selectedWeekOffset: this.selectedWeekOffset()
+            };
+            this.storageService.setItem(LocalStorageKey.REPORTS_PREFERENCES, prefs);
+        });
+
         // Effect to trigger processor when dependencies change
         effect(() => {
             const txns = this.transactions();
@@ -478,10 +506,15 @@ export class ReportsComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
+        const cachedPrefs = this.storageService.getItem<ReportsPreferences>(LocalStorageKey.REPORTS_PREFERENCES);
+        
         const viewSub = this.appViewService.appView$.subscribe(view => {
-            if (view === 'WEEKLY') this.selectedPeriod.set('weekly');
-            else if (view === 'YEARLY') this.selectedPeriod.set('yearly');
-            else this.selectedPeriod.set('monthly');
+            // Only apply app-view defaults if no cached preferences exist
+            if (!cachedPrefs) {
+                if (view === 'WEEKLY') this.selectedPeriod.set('weekly');
+                else if (view === 'YEARLY') this.selectedPeriod.set('yearly');
+                else this.selectedPeriod.set('monthly');
+            }
         });
         this.subscriptions.push(viewSub);
     }

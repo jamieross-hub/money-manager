@@ -453,6 +453,8 @@ addEventListener('message', ({ data }) => {
       _categoryIcon: category?.icon || 'category',
       _categoryName: category?.name || tx.categoryId || 'Unknown',
       _accountName: account?.name || 'Unknown Account',
+      _fromAccountName: tx.type === 'transfer' ? (accountMap.get(tx.fromAccountId || tx.accountId)?.name || 'Unknown Account') : undefined,
+      _toAccountName: tx.type === 'transfer' ? (accountMap.get(tx.toAccountId)?.name || 'Unknown Account') : undefined,
       _accountType: account?.type || 'Unknown',
       _dateDisplay: dateObj.format('DD MMM HH:mm'),
       _timeDisplay: dateObj.format('hh:mm a'),
