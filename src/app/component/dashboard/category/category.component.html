@@ -166,6 +166,15 @@
                                 <div class="details-container">
                                   <div class="detail-row">
                                     <div class="detail-label">
+                                      <mat-icon class="detail-icon">label</mat-icon>
+                                      <span>Name</span>
+                                    </div>
+                                    <div class="detail-value">
+                                      {{ category.name }}
+                                    </div>
+                                  </div>
+                                  <div class="detail-row">
+                                    <div class="detail-label">
                                       <mat-icon class="detail-icon">analytics</mat-icon>
                                       <span>Total Spent</span>
                                     </div>
@@ -295,6 +304,15 @@
                                   <div class="category-details-expanded subcategory-details-expanded">
                                     @if (subCategory.stats; as stats) {
                                       <div class="details-container">
+                                        <div class="detail-row">
+                                          <div class="detail-label">
+                                            <mat-icon class="detail-icon">label</mat-icon>
+                                            <span>Sub Category</span>
+                                          </div>
+                                          <div class="detail-value">
+                                            {{ subCategory.name }}
+                                          </div>
+                                        </div>
                                         <div class="detail-row">
                                           <div class="detail-label">
                                             <mat-icon class="detail-icon">analytics</mat-icon>
