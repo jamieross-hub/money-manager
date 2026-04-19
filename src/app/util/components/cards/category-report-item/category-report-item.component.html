@@ -42,7 +42,7 @@
 
   <!-- EXPANDED CONTENT -->
   @if (isExpanded) {
-    <div class="px-3 py-2 bg-gray-50/50 dark:bg-gray-900/10 border-t border-gray-100 dark:border-gray-700 space-y-2.5 animation-slide-down">
+    <div class="px-3 py-2 bg-gray-50/50 dark:bg-gray-900/10 border-t border-gray-100 dark:border-gray-700 space-y-2.5 animation-slide-down overflow-y-auto">
       
       @if (expandedData?.isGroup) {
         <!-- Group Breakdown -->
@@ -84,7 +84,7 @@
         @if (expandedData?.transactions?.length === 0) {
           <p class="text-[10px] text-gray-400 italic text-center py-2">No items found</p>
         } @else {
-          <div class="divide-y divide-gray-100/80 dark:divide-gray-700/50">
+          <div class="divide-y divide-gray-100/80 dark:divide-gray-700/50 ">
             @for (t of sortedTransactions; track t.id) {
               <div class="flex justify-between items-center py-1.5 text-[11px] px-1">
                 <div class="min-w-0 flex-1">
