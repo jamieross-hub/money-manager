@@ -524,23 +524,39 @@ export class CategoryComponent implements OnInit, OnDestroy {
         
         this.notificationService.success(`Group "${groupName}" updated successfully`);
       } else if (result.action === 'delete') {
-         // Ungroup
-         matchingCategories.forEach(cat => {
-           this.store.dispatch(CategoriesActions.updateCategory({
-             userId: this.userId,
-             categoryId: cat.id!,
-             name: cat.name,
-             categoryType: cat.type,
-             icon: cat.icon,
-             color: cat.color,
-             budgetData: cat.budget,
-             parentCategoryId: cat.parentCategoryId,
-             isSubCategory: cat.isSubCategory,
-             group: '', // Clear group name
-             groupIcon: '' // Clear group icon
-           }));
-         });
-         this.notificationService.success(`Group "${groupName}" deleted (Categories ungrouped)`);
+        const confirmRef = this.dialog.open(ConfirmDialogComponent, {
+          width: '400px',
+          closeOnNavigation: false,
+          data: {
+            title: 'Ungroup Categories',
+            message: `Are you sure you want to ungroup all categories in "${groupName}"? The group will be deleted.`,
+            confirmText: 'Ungroup',
+            cancelText: 'Cancel',
+            confirmColor: 'warn'
+          }
+        });
+
+        confirmRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(confirmResult => {
+          if (confirmResult) {
+            // Ungroup
+            matchingCategories.forEach(cat => {
+              this.store.dispatch(CategoriesActions.updateCategory({
+                userId: this.userId,
+                categoryId: cat.id!,
+                name: cat.name,
+                categoryType: cat.type,
+                icon: cat.icon,
+                color: cat.color,
+                budgetData: cat.budget,
+                parentCategoryId: cat.parentCategoryId,
+                isSubCategory: cat.isSubCategory,
+                group: '', // Clear group name
+                groupIcon: '' // Clear group icon
+              }));
+            });
+            this.notificationService.success(`Group "${groupName}" deleted (Categories ungrouped)`);
+          }
+        });
       }
     });
   }
