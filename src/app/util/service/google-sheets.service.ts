@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { BaseService } from './base.service';
-import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, Timestamp, addDoc, onSnapshot, writeBatch, serverTimestamp } from '@angular/fire/firestore';
+import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDocs, onSnapshot, query, orderBy } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
-import { Observable, from, throwError, of } from 'rxjs';
-import { catchError, map, tap, switchMap } from 'rxjs/operators';
+import { Observable, from, throwError, of, BehaviorSubject } from 'rxjs';
+import { catchError, map, tap, switchMap, timeout } from 'rxjs/operators';
 import { CurrencyService } from './currency.service';
 import { LocalIndexDBStorageService } from './indexdb-storage.service';
 import { LocalStorageKeyHelper } from '../models/local-storage.model';
@@ -18,14 +18,15 @@ export interface GoogleSheetsConfig {
 
 export interface GoogleSheetsConnection {
   id: string;
+  userId?: string;
   name: string;
   spreadsheetUrl: string;
   spreadsheetId: string;
   sheetName: string;
   isActive: boolean;
-  lastSync?: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  lastSync?: Date | any;
+  createdAt: Date | any;
+  updatedAt: Date | any;
 }
 
 @Injectable({
@@ -33,6 +34,8 @@ export interface GoogleSheetsConnection {
 })
 export class GoogleSheetsService extends BaseService {
   private readonly COLLECTION_NAME = 'googleSheets';
+  private connectionsSubject = new BehaviorSubject<GoogleSheetsConnection[]>([]);
+  private activeListenerPath: string | null = null;
 
   constructor(
     protected override readonly firestore: Firestore,
@@ -74,77 +77,149 @@ export class GoogleSheetsService extends BaseService {
   }
 
   /**
-   * Get all Google Sheets connections for the current user (Local-Only)
+   * Get all Google Sheets connections for the current user
    */
   getConnections(): Observable<GoogleSheetsConnection[]> {
     const userId = this.userService.getCurrentUserId();
     if (!userId) return of([]);
 
-    return new Observable<GoogleSheetsConnection[]>(observer => {
-      try {
-        const cached = this.storageService.getItem<GoogleSheetsConnection[]>(LocalStorageKeyHelper.getGoogleSheetsCacheKey(userId));
-        observer.next(cached || []);
-      } catch (error) {
-        console.warn('[GoogleSheetsService] Failed to load cached connections:', error);
-        observer.next([]);
-      }
-      observer.complete();
+    return this.storageService.isReady$.pipe(
+      switchMap(() => {
+        // 1. Emit cached connections immediately
+        const cacheKey = LocalStorageKeyHelper.getGoogleSheetsCacheKey(userId);
+        const cached = this.storageService.getItem<GoogleSheetsConnection[]>(cacheKey) || [];
+        if (cached.length > 0) {
+          this.connectionsSubject.next(cached);
+        }
+
+        // 2. Return reactive subject
+        return this.connectionsSubject.asObservable();
+      })
+    );
+  }
+
+  /**
+   * Set up a real-time listener for connections
+   */
+  listenToConnections(userId: string): Observable<void> {
+    if (!userId || userId === 'offline-guest') return of(undefined);
+
+    const currentPath = `users/${userId}/${this.COLLECTION_NAME}`;
+    if (this.activeListenerPath === currentPath) {
+      return of(undefined);
+    }
+    this.activeListenerPath = currentPath;
+
+    return new Observable<void>(observer => {
+      const collectionRef = query(
+        collection(this.firestore, currentPath),
+        orderBy('createdAt', 'desc')
+      );
+
+      console.log(`[GoogleSheetsService] 🔌 Starting real-time listener for connections: ${userId}`);
+
+      const unsubscribe = onSnapshot(collectionRef, (snap) => {
+        const connections: GoogleSheetsConnection[] = [];
+        snap.forEach(docSnap => {
+          const data = docSnap.data() as any;
+          connections.push({
+            ...data,
+            id: docSnap.id,
+            // Convert Timestamps to Dates if necessary
+            createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
+            updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : data.updatedAt,
+            lastSync: data.lastSync?.toDate ? data.lastSync.toDate() : data.lastSync
+          });
+        });
+
+        const cacheKey = LocalStorageKeyHelper.getGoogleSheetsCacheKey(userId);
+        this.storageService.setItem(cacheKey, connections);
+        this.connectionsSubject.next(connections);
+        
+        observer.next();
+      }, (error) => {
+        console.warn(`[GoogleSheetsService] ⚠️ Real-time listener failed:`, error);
+        observer.complete();
+      });
+
+      return () => {
+        this.activeListenerPath = null;
+        unsubscribe();
+      };
     });
   }
 
   /**
    * Pull connections from Firestore and update local cache
    */
-  // pullFromFirestore(userId: string): Observable<void> {
-  //   const collectionRef = this.getCollectionRef(this.COLLECTION_NAME);
+  pullFromFirestore(userId: string): Observable<void> {
+    if (!userId || userId === 'offline-guest') return of(undefined);
 
-  //   console.log(`[GoogleSheetsService] Pulling connections for user: ${userId}`);
+    const currentPath = `users/${userId}/${this.COLLECTION_NAME}`;
+    const collectionRef = collection(this.firestore, currentPath);
 
-  //   return from(getDocs(collectionRef)).pipe(
-  //     tap(snapshot => {
-  //       const connections = snapshot.docs.map(doc => ({
-  //         id: doc.id,
-  //         ...doc.data() as any
-  //       } as GoogleSheetsConnection));
+    console.log(`[GoogleSheetsService] Pulling connections for user: ${userId}`);
 
-  //       console.log(`[GoogleSheetsService] Pulled ${connections.length} connections from Firestore`);
+    return from(getDocs(collectionRef)).pipe(
+      timeout(10000),
+      tap(snapshot => {
+        const connections = snapshot.docs.map(docSnap => {
+          const data = docSnap.data() as any;
+          return {
+            ...data,
+            id: docSnap.id,
+            createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
+            updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : data.updatedAt,
+            lastSync: data.lastSync?.toDate ? data.lastSync.toDate() : data.lastSync
+          };
+        });
 
-  //       // Cache the fresh data
-  //       this.storageService.setItem(LocalStorageKeyHelper.getGoogleSheetsCacheKey(userId), connections);
-        
-  //       // Note: Dispatched to store if googleSheets integration exists in store
-  //     }),
-  //     map(() => undefined),
-  //     catchError(error => {
-  //       console.error('[GoogleSheetsService] Pull failed:', error);
-  //       return of(undefined);
-  //     })
-  //   );
-  // }
+        console.log(`[GoogleSheetsService] Pulled ${connections.length} connections from Firestore`);
+
+        const cacheKey = LocalStorageKeyHelper.getGoogleSheetsCacheKey(userId);
+        this.storageService.setItem(cacheKey, connections);
+        this.connectionsSubject.next(connections);
+      }),
+      map(() => undefined),
+      catchError(error => {
+        console.error('[GoogleSheetsService] Pull failed:', error);
+        return of(undefined);
+      })
+    );
+  }
 
   /**
    * Create a new Google Sheets connection
    */
   createConnection(connection: Omit<GoogleSheetsConnection, 'id' | 'createdAt' | 'updatedAt'>): Observable<GoogleSheetsConnection> {
-    try {
+    const userId = this.userService.getCurrentUserId();
+    if (!userId) return throwError(() => new Error('User not authenticated'));
 
-      // Extract spreadsheet ID from URL
+    try {
       const spreadsheetId = this.extractSpreadsheetId(connection.spreadsheetUrl);
       if (!spreadsheetId) {
         return throwError(() => new Error('Invalid Google Sheets URL'));
       }
 
+      const id = this.generateId();
       const newConnection: GoogleSheetsConnection = {
         ...connection,
+        id,
+        userId,
         spreadsheetId,
-        id: this.generateId(),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      const docRef = this.getDocumentRef(this.COLLECTION_NAME, newConnection.id);
+      const docRef = doc(this.firestore, `users/${userId}/${this.COLLECTION_NAME}/${id}`);
 
-      return from(setDoc(docRef, newConnection)).pipe(
+      // Optimistic update
+      const currentConnections = this.connectionsSubject.value;
+      this.connectionsSubject.next([newConnection, ...currentConnections]);
+      const cacheKey = LocalStorageKeyHelper.getGoogleSheetsCacheKey(userId);
+      this.storageService.setItem(cacheKey, [newConnection, ...currentConnections]);
+
+      return from(setDoc(docRef, this.scrubUndefined(newConnection))).pipe(
         map(() => newConnection),
         catchError(error => this.handleError(error, 'createConnection'))
       );
@@ -157,14 +232,29 @@ export class GoogleSheetsService extends BaseService {
    * Update an existing Google Sheets connection
    */
   updateConnection(id: string, updates: Partial<GoogleSheetsConnection>): Observable<void> {
+    const userId = this.userService.getCurrentUserId();
+    if (!userId) return throwError(() => new Error('User not authenticated'));
+
     try {
-      const docRef = this.getDocumentRef(this.COLLECTION_NAME, id);
+      const docRef = doc(this.firestore, `users/${userId}/${this.COLLECTION_NAME}/${id}`);
       const updateData = {
         ...updates,
         updatedAt: new Date()
       };
 
-      return from(updateDoc(docRef, updateData)).pipe(
+      // Optimistic update
+      const currentConnections = this.connectionsSubject.value;
+      const index = currentConnections.findIndex(c => c.id === id);
+      if (index !== -1) {
+        const updated = { ...currentConnections[index], ...updateData };
+        const newConnections = [...currentConnections];
+        newConnections[index] = updated;
+        this.connectionsSubject.next(newConnections);
+        const cacheKey = LocalStorageKeyHelper.getGoogleSheetsCacheKey(userId);
+        this.storageService.setItem(cacheKey, newConnections);
+      }
+
+      return from(updateDoc(docRef, this.scrubUndefined(updateData))).pipe(
         catchError(error => this.handleError(error, 'updateConnection'))
       );
     } catch (error) {
@@ -176,8 +266,18 @@ export class GoogleSheetsService extends BaseService {
    * Delete a Google Sheets connection
    */
   deleteConnection(id: string): Observable<void> {
+    const userId = this.userService.getCurrentUserId();
+    if (!userId) return throwError(() => new Error('User not authenticated'));
+
     try {
-      const docRef = this.getDocumentRef(this.COLLECTION_NAME, id);
+      const docRef = doc(this.firestore, `users/${userId}/${this.COLLECTION_NAME}/${id}`);
+
+      // Optimistic update
+      const currentConnections = this.connectionsSubject.value;
+      const newConnections = currentConnections.filter(c => c.id !== id);
+      this.connectionsSubject.next(newConnections);
+      const cacheKey = LocalStorageKeyHelper.getGoogleSheetsCacheKey(userId);
+      this.storageService.setItem(cacheKey, newConnections);
 
       return from(deleteDoc(docRef)).pipe(
         catchError(error => this.handleError(error, 'deleteConnection'))
@@ -192,14 +292,13 @@ export class GoogleSheetsService extends BaseService {
    */
   testConnection(config: GoogleSheetsConfig): Observable<boolean> {
     try {
-      // For read-only access, we'll use a simple fetch to check if the sheet is accessible
-      // This works for publicly shared sheets or sheets shared with "Anyone with the link can view"
-      const url = `https://docs.google.com/spreadsheets/d/${config.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${config.sheetName}`;
+      // Use GET with a minimal range to check accessibility robustly without heavy data transfer
+      // range=A1:A1 ensures we only try to read one cell
+      const url = `https://docs.google.com/spreadsheets/d/${config.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(config.sheetName)}&range=A1:A1`;
 
-      return from(fetch(url, { method: 'HEAD' })).pipe(
-        map(response => {
-          return response.ok;
-        }),
+      return from(fetch(url)).pipe(
+        timeout(5000),
+        map(response => response.ok),
         catchError(error => {
           console.error('Google Sheets connection test failed:', error);
           return of(false);
@@ -216,9 +315,10 @@ export class GoogleSheetsService extends BaseService {
   importFromSheet(config: GoogleSheetsConfig): Observable<any[]> {
     try {
       // Use Google Sheets CSV export for read-only access
-      const url = `https://docs.google.com/spreadsheets/d/${config.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${config.sheetName}`;
+      const url = `https://docs.google.com/spreadsheets/d/${config.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(config.sheetName)}`;
 
       return from(fetch(url)).pipe(
+        timeout(15000),
         switchMap(response => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -285,8 +385,7 @@ export class GoogleSheetsService extends BaseService {
    * Export data to Google Sheets (read-only - this will be disabled)
    */
   exportToSheet(config: GoogleSheetsConfig, data: any[]): Observable<boolean> {
-    // Read-only mode - export is not supported
-    return throwError(() => new Error('Export is not supported in read-only mode. Please use the Google Sheets interface to edit data.'));
+    return throwError(() => new Error('Export is not supported in read-only mode.'));
   }
 
   /**
@@ -313,4 +412,5 @@ export class GoogleSheetsService extends BaseService {
   getApiDocsUrl(): string {
     return 'https://support.google.com/docs/answer/2494822?hl=en';
   }
-} 
+}
+ 

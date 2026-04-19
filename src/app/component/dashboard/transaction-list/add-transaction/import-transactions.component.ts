@@ -4,7 +4,8 @@ import {
   ElementRef,
   ViewChild,
   OnDestroy,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -18,6 +19,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
 import { NotificationService } from 'src/app/util/service/notification.service';
 import { Auth } from '@angular/fire/auth';
@@ -35,6 +37,10 @@ import { Observable, of, take, ReplaySubject, Subject } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { takeUntil } from 'rxjs/operators';
 import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
+import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
+import { selectAllTransactions } from 'src/app/store/transactions/transactions.selectors';
+import { DateService } from 'src/app/util/service/date.service';
+import { Transaction } from 'src/app/util/models/transaction.model';
 
 @Component({
   selector: 'import-transactions',
@@ -54,10 +60,11 @@ import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
     MatProgressBarModule,
     MatCheckboxModule,
     MatProgressSpinnerModule,
+    MatTooltipModule,
     TranslateModule,
-    NgxMatSelectSearchModule
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    NgxMatSelectSearchModule,
+    CurrencyPipe
+  ]
 })
 export class ImportTransactionsComponent implements OnDestroy {
   @ViewChild('fileUploadContainer') fileUploadContainer!: ElementRef;
@@ -72,8 +79,10 @@ export class ImportTransactionsComponent implements OnDestroy {
     description: string;
     amount: number;
     notes?: string;
+    isDuplicate?: boolean;
   }[] = [];
   selectedToImport: Set<number> = new Set();
+  existingTransactions: Transaction[] = [];
   error: string = '';
   isLoading: boolean = false;
   isDragOver: boolean = false;
@@ -102,11 +111,14 @@ export class ImportTransactionsComponent implements OnDestroy {
     private store: Store<AppState>,
     private ssrService: SsrService,
     private userService: UserService,
-    private backupRestoreService: BackupRestoreService
+    private backupRestoreService: BackupRestoreService,
+    private dateService: DateService,
+    private cd: ChangeDetectorRef
   ) {
     this.categories = this.data.categories;
     this.setupDragAndDrop();
     this.loadAccountsAndCategories();
+    this.subscribeToTransactions();
 
     // Initialize filtered categories for ngx-mat-select-search
     this.categories$.pipe(takeUntil(this._onDestroy)).subscribe(categories => {
@@ -179,6 +191,48 @@ export class ImportTransactionsComponent implements OnDestroy {
     } catch (error) {
       console.error('Error loading accounts and categories:', error);
     }
+  }
+
+  private subscribeToTransactions() {
+    this.store.select(selectAllTransactions)
+      .pipe(takeUntil(this._onDestroy))
+      .subscribe(transactions => {
+        this.existingTransactions = transactions;
+        if (this.parsedTransactions.length > 0) {
+          this.checkForDuplicates();
+        }
+      });
+  }
+
+  private checkForDuplicates() {
+    this.parsedTransactions = this.parsedTransactions.map(tx => {
+      const txDate = this.dateService.toDate(tx.date);
+      if (!txDate) return { ...tx, isDuplicate: false };
+
+      const isDuplicate = this.existingTransactions.some(etx => {
+        const eDate = this.dateService.toDate(etx.date);
+        if (!eDate) return false;
+
+        // Type-safe amount comparison
+        const amountsMatch = Math.abs(Number(etx.amount)) === Math.abs(Number(tx.amount));
+        
+        // Date match (same month and year)
+        const datesMatch = eDate.getMonth() === txDate.getMonth() &&
+                          eDate.getFullYear() === txDate.getFullYear();
+        
+        // Description/Payee fuzzy match (if available)
+        const txDesc = (tx.description || '').toLowerCase().trim();
+        const etxPayee = (etx.payee || '').toLowerCase().trim();
+        
+        const payeeMatch = !txDesc || !etxPayee || 
+                          etxPayee.includes(txDesc) || 
+                          txDesc.includes(etxPayee);
+
+        return amountsMatch && datesMatch && payeeMatch;
+      });
+
+      return { ...tx, isDuplicate };
+    });
   }
 
   updateCategory(idx: number, newCategory: string) {
@@ -262,6 +316,9 @@ export class ImportTransactionsComponent implements OnDestroy {
       this.notificationService.success(
         `Successfully parsed ${this.parsedTransactions.length} transactions from JSON file`
       );
+
+      this.checkForDuplicates();
+      this.cd.detectChanges();
 
     } catch (error: any) {
       this.isLoading = false;
@@ -378,12 +435,11 @@ export class ImportTransactionsComponent implements OnDestroy {
     this.dialogRef.close();
   }
 
-
-  setCategory(transactions: any[]) {
-    // compair name of category in parsedTransactions and categories
+  private setCategory(transactions: any[]) {
+    // compare name of category in parsedTransactions and categories
     // if name is same, then update the categoryId
 
-    return transactions.map((tx) => {
+    const mapped = transactions.map((tx) => {
       const category = this.categories.find((category) => category.name.toLowerCase() === tx.category.toLowerCase());
       if (category) {
         tx['categoryId'] = category.id;
@@ -391,5 +447,9 @@ export class ImportTransactionsComponent implements OnDestroy {
       }
       return tx;
     });
+
+    this.parsedTransactions = mapped;
+    this.checkForDuplicates();
+    return this.parsedTransactions;
   }
 }

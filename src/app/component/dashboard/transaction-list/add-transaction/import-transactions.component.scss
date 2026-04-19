@@ -312,7 +312,7 @@ mat-dialog-content {
   }
   
   .category-cell {
-    max-width: 120px;
+    max-width: 180px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -408,6 +408,32 @@ mat-dialog-content {
     text-align: center;
     white-space: nowrap;
   }
+
+  .status-cell {
+    text-align: center;
+    
+    .duplicate-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: var(--warning-100);
+      color: var(--warning-800);
+      border: 1px solid var(--warning-200);
+      white-space: nowrap;
+    }
+
+    .new-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: var(--success-50);
+      color: var(--success-700);
+      border: 1px solid var(--success-100);
+      opacity: 0.8;
+    }
+  }
   
   .transaction-row {
     transition: background-color 0.2s ease;
@@ -454,7 +480,7 @@ mat-dialog-content {
     }
     
     .category-cell {
-      max-width: 80px;
+      max-width: 120px;
     }
   }
   
@@ -476,7 +502,7 @@ mat-dialog-content {
     }
     
     .category-cell {
-      max-width: 60px;
+      max-width: 100px;
     }
   }
   

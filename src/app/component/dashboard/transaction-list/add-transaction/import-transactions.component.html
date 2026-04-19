@@ -113,6 +113,7 @@
                 <th>Type</th>
                 <th>Category</th>
                 <th>Date</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -127,7 +128,7 @@
                       {{ tx.type === 'income' ? '+' : '-' }}{{ tx.amount | currency }}
                     </span>
                   </td>
-                  <td class="payee-cell">{{ tx.description }}</td>
+                  <td class="payee-cell" [matTooltip]="tx.description">{{ tx.description }}</td>
                   <td class="type-cell">
                     <span class="type-badge" [class.income]="tx.type === 'income'"
                       [class.expense]="tx.type === 'expense'">
@@ -153,6 +154,15 @@
                     </mat-select>
                   </td>
                   <td class="date-cell">{{ tx.date | date:'dd MMM yyyy' }}</td>
+                  <td class="status-cell">
+                    @if (tx.isDuplicate) {
+                      <span class="duplicate-badge" matTooltip="A transaction with this amount already exists in this month">
+                        Duplicate
+                      </span>
+                    } @else {
+                      <span class="new-badge">New</span>
+                    }
+                  </td>
                 </tr>
               }
             </tbody>

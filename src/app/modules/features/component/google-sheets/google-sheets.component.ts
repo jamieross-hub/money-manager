@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -81,7 +81,8 @@ export class GoogleSheetsComponent implements OnInit, OnDestroy {
     public breakpointService: BreakpointService,
     private transactionsService: TransactionsService,
     private store: Store<AppState>,
-    private auth: Auth
+    private auth: Auth,
+    private cdr: ChangeDetectorRef
   ) {
     this.connectionForm = this.formBuilder.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
@@ -92,7 +93,15 @@ export class GoogleSheetsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    const userId = this.userService.getCurrentUserId();
+    if (userId) {
+      this.googleSheetsService.listenToConnections(userId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe();
+    }
+    
     this.loadConnections();
+    
     this.store.select(selectAllCategories).pipe(takeUntil(this.destroy$)).subscribe((categories) => {
       this.allCategories = categories;
     });
@@ -137,10 +146,10 @@ export class GoogleSheetsComponent implements OnInit, OnDestroy {
       this.googleSheetsService.createConnection(connectionData)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
-          next: (connection) => {
-            this.connections.push(connection);
+          next: () => {
             this.connectionForm.reset({ sheetName: 'Sheet1', isActive: true });
             this.showSnackBar('Connection created successfully', 'success');
+            this.cdr.markForCheck();
           },
           error: (error) => {
             console.error('Error creating connection:', error);
@@ -163,6 +172,7 @@ export class GoogleSheetsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.showSnackBar('Connection updated successfully', 'success');
+          this.cdr.markForCheck();
         },
         error: (error) => {
           console.error('Error updating connection:', error);
@@ -177,8 +187,8 @@ export class GoogleSheetsComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
-            this.connections = this.connections.filter(c => c.id !== connection.id);
             this.showSnackBar('Connection deleted successfully', 'success');
+            this.cdr.markForCheck();
           },
           error: (error) => {
             console.error('Error deleting connection:', error);
@@ -187,6 +197,7 @@ export class GoogleSheetsComponent implements OnInit, OnDestroy {
         });
     }
   }
+
 
   testConnection(): void {
     if (this.connectionForm.valid) {
@@ -240,24 +251,37 @@ export class GoogleSheetsComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data: ImportTransaction[]) => {
-          this.isImporting = false;
-          if (data.length > 0) {
-            // Transform Google Sheets data to match import transactions format
-            const transformedData = this.transformGoogleSheetsData(data);
+          try {
+            if (data.length > 0) {
+              // Transform Google Sheets data to match import transactions format
+              const transformedData = this.transformGoogleSheetsData(data);
 
-            const dialogRef = this.dialog.open(ImportTransactionsComponent, {
-              data: { transactions: transformedData, categories: this.allCategories },
-              panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'import-transactions-dialog',
-            });
+              const dialogRef = this.dialog.open(ImportTransactionsComponent, {
+                data: { transactions: transformedData, categories: this.allCategories },
+                panelClass: this.breakpointService.device.isMobile ? 'mobile-dialog' : 'import-transactions-dialog',
+              });
 
-            // Handle the result when user confirms import
-            dialogRef.afterClosed().subscribe(result => {
-              if (result && result.length > 0) {
-                this.createTransactionsFromImport(result);
-              }
-            });
-          } else {
-            this.showSnackBar('No data found in the specified sheet', 'warning');
+              // Handle the result when user confirms import
+              dialogRef.afterClosed().subscribe(result => {
+                this.isImporting = false;
+                this.selectedSpreadsheetId = '';
+                if (result && result.length > 0) {
+                  this.createTransactionsFromImport(result);
+                }
+                this.cdr.markForCheck();
+              });
+            } else {
+              this.isImporting = false;
+              this.selectedSpreadsheetId = '';
+              this.showSnackBar('No data found in the specified sheet', 'warning');
+            }
+            this.cdr.markForCheck();
+          } catch (error) {
+            console.error('Error during data transformation:', error);
+            this.isImporting = false;
+            this.selectedSpreadsheetId = '';
+            this.showSnackBar('Error processing sheet data. Please check your sheet format.', 'error');
+            this.cdr.markForCheck();
           }
         },
         error: (error) => {
@@ -275,17 +299,18 @@ export class GoogleSheetsComponent implements OnInit, OnDestroy {
     description: string;
     amount: number;
   }[] {
-    return data.map(item => {
-
-      let amount = this.extractNumberFromString(item.Amount);
-      return {
-        type: item.Type.toLowerCase(),
-        category: item.Category.toLowerCase(),
-        date: new Date(item.Date) || new Date(), //YYYY-MM-DD format
-        description: item.Description.toLowerCase(),
-        amount: amount
-      }
-    });
+    return data
+      .filter(item => item && (item.Amount || item.Description)) // Filter out empty rows
+      .map(item => {
+        let amount = this.extractNumberFromString(item.Amount || '0');
+        return {
+          type: (item.Type || 'expense').toLowerCase(),
+          category: (item.Category || 'uncategorized').toLowerCase(),
+          date: item.Date ? new Date(item.Date) : new Date(),
+          description: (item.Description || '').toLowerCase(),
+          amount: amount
+        };
+      });
   }
 
   private extractNumberFromString(str: string): number {
@@ -302,7 +327,7 @@ export class GoogleSheetsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.isImporting = true;
+    // this.isImporting = true; // Stop using main loader for background processing
     let successCount = 0;
     let errorCount = 0;
 
@@ -343,7 +368,7 @@ export class GoogleSheetsComponent implements OnInit, OnDestroy {
 
     // Wait for all transactions to be processed
     Promise.all(importPromises).then(() => {
-      this.isImporting = false;
+      // this.isImporting = false;
 
       if (successCount > 0) {
         this.showSnackBar(`Successfully imported ${successCount} transactions`, 'success');
@@ -355,7 +380,7 @@ export class GoogleSheetsComponent implements OnInit, OnDestroy {
         this.showSnackBar(`${errorCount} transactions failed to import`, 'warning');
       }
     }).catch((error) => {
-      this.isImporting = false;
+      // this.isImporting = false;
       console.error('Error during import:', error);
       this.showSnackBar('Error during import process', 'error');
     });

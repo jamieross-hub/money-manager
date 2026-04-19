@@ -172,7 +172,9 @@ export class CommonSyncService implements OnDestroy {
     private notificationService: NotificationService,
     private injector: Injector,
     private familyService: FamilyService,
+    private googleSheetsService: GoogleSheetsService,
     @Inject(PLATFORM_ID) private platformId: Object
+
   ) {
     if (!isPlatformServer(this.platformId)) {
       this.initializeServices();
@@ -550,7 +552,6 @@ export class CommonSyncService implements OnDestroy {
 
     const abort$ = this.isOnline$.pipe(filter(online => !online));
 
-    // 1. Push pending changes first
     return from(this.manualSync()).pipe(
       timeout(10000), // Reduced timeout
       switchMap(() => from(new Promise<void>(resolve => setTimeout(resolve, 1000)))),
@@ -563,11 +564,14 @@ export class CommonSyncService implements OnDestroy {
           this.userService.pullFromFirestore(userId),
           this.familyService.pullFromFirestore(userId),
           feedbackService.pullFromFirestore(),
-          contactService.pullFromFirestore()
+          contactService.pullFromFirestore(),
+          this.googleSheetsService.pullFromFirestore(userId)
         ]).pipe(
           timeout(20000) // Reduced timeout
         );
       }),
+
+
       takeUntil(abort$), // Abort immediately if network drops
       tap(() => {
         this.log('syncAll: Pull complete for all services');
