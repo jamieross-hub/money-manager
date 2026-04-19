@@ -100,10 +100,6 @@
                             <div class="amount-container">
                               <span class="category-amount">
                                 {{ category.totalSpent | currency:{round: true} }}
-                                @if (!breakpointService.device.isMobile) {
-                                  <span class="period">/ {{
-                                  appViewService.getViewLabel() }}</span>
-                                }
                               </span>
                               <!-- Budget Progress -->
                               @if (category.budget?.hasBudget) {
