@@ -96,9 +96,9 @@ RULES:
     `.trim()
     },
 
-autoCategorize: {
-    role: 'system',
-    content: `
+    autoCategorize: {
+        role: 'system',
+        content: `
     You are a personal finance categorization assistant.
 
     You will receive:
@@ -131,6 +131,22 @@ autoCategorize: {
     - No explanations
     - No markdown
     - Only JSON array
+    `.trim()
+    },
+
+    categoryNameSuggestion: {
+        role: 'system',
+        content: `
+    You are a naming assistant for a personal finance app.
+    Given a partial category name or keywords, suggest 5-8 relevant and concise category names.
+
+    RULES:
+    - Return ONLY a valid JSON array of strings.
+    - Suggestions should be professional and easy to understand.
+    - Focus on common household and personal finance categories.
+    - Suggestions should evolve naturally from the user's input.
+    - Max 5-8 suggestions.
+    - No explanations or extra text.
     `.trim()
     }
 };

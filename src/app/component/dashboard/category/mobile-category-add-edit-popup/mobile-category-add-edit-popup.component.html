@@ -33,9 +33,29 @@
           </label>
           <div class="relative">
             <input type="text" formControlName="name" autofocus placeholder="e.g., Groceries"
+              [matAutocomplete]="nameAuto"
               class="w-full py-2.5 px-4 text-base font-semibold border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50/30 dark:bg-gray-900/30 focus:outline-none focus:ring-2 focus:ring-primary-600/20 focus:border-primary-600 dark:focus:border-primary-400 transition-all shadow-sm" />
             
-            @if(isSuggesting()) {
+            <mat-autocomplete #nameAuto="matAutocomplete" class="custom-autocomplete-panel">
+              @if (isSuggestingNames()) {
+                <mat-option disabled class="!h-10">
+                  <div class="flex items-center gap-2">
+                    <div class="animate-spin rounded-full h-3 w-3 border-2 border-primary-600/20 border-t-primary-600"></div>
+                    <span class="text-[10px] text-gray-400 font-medium italic">AI is thinking...</span>
+                  </div>
+                </mat-option>
+              }
+              @for (suggestion of nameSuggestions(); track suggestion) {
+                <mat-option [value]="suggestion">
+                  <div class="flex items-center gap-2">
+                    <mat-icon class="!text-xs !w-auto !h-auto text-primary-500">auto_awesome</mat-icon>
+                    <span class="text-sm font-medium">{{ suggestion }}</span>
+                  </div>
+                </mat-option>
+              }
+            </mat-autocomplete>
+
+            @if(isSuggesting() || isSuggestingNames()) {
               <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
                 <div class="animate-spin rounded-full h-4 w-4 border-2 border-primary-600/20 border-t-primary-600"></div>
               </div>
@@ -118,10 +138,10 @@
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Group (Optional)</label>
       <div class="relative">
         <mat-icon class="absolute left-3 top-3 transform -translate-y-1/2 text-gray-400">folder</mat-icon>
-        <input type="text" placeholder="Select or enter a group" [matAutocomplete]="auto"
+        <input type="text" placeholder="Select or enter a group" [matAutocomplete]="groupAuto"
           formControlName="group" class="w-full py-3 px-4 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
       </div>
-      <mat-autocomplete #auto="matAutocomplete">
+      <mat-autocomplete #groupAuto="matAutocomplete">
         @for (group of filteredGroups(); track group) {
           <mat-option [value]="group">{{group}}</mat-option>
         }

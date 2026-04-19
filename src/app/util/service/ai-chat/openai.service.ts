@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { User } from '../../models';
 import { environment } from 'src/environments/environment';
@@ -283,6 +283,32 @@ Remember, return ONLY a JSON array.`
           throw new Error('Invalid categorization format');
         }
       })
+    );
+  }
+
+  suggestCategoryNames(query: string): Observable<string[]> {
+    const systemMessage = SYSTEM_PROMPTS['categoryNameSuggestion'];
+    const userMessage: OpenAIMessage = {
+      role: 'user',
+      content: `Suggest names for a category starting with or related to: "${query}"`
+    };
+
+    return this.sendMessage([systemMessage, userMessage]).pipe(
+      map(response => {
+        try {
+          const start = response.indexOf('[');
+          const end = response.lastIndexOf(']');
+          if (start !== -1 && end !== -1) {
+            const jsonStr = response.substring(start, end + 1);
+            return JSON.parse(jsonStr);
+          }
+          return JSON.parse(response);
+        } catch (e) {
+          console.error('Failed to parse AI name suggestions JSON:', response);
+          return [];
+        }
+      }),
+      catchError(() => of([]))
     );
   }
 }

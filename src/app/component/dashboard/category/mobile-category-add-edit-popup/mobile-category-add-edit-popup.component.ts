@@ -114,6 +114,8 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
   categoryForm: FormGroup;
   public isSubmitting = signal<boolean>(false);
   public isSuggesting = signal<boolean>(false);
+  public isSuggestingNames = signal<boolean>(false);
+  public nameSuggestions = signal<string[]>([]);
   public userId = signal<string>('');
   
   public allCategories = computed(() => {
@@ -137,9 +139,6 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
   public colorValue!: Signal<string>;
   public iconValue!: Signal<string>;
 
-
-
-
   constructor(
     @Inject(MAT_DIALOG_DATA) public dialogData: { category: Category, isEdit: boolean, allCategories: Category[] } | null,
     private store: Store<AppState>,
@@ -154,7 +153,6 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
     private validationService: ValidationService,
     private ssrService: SsrService,
     private userService: UserService,
-
     private openaiService: OpenaiService
   ) {
     this.categoryForm = this.fb.group({
@@ -187,7 +185,23 @@ export class MobileCategoryAddEditPopupComponent implements OnInit, OnDestroy {
     this.colorValue = toSignal(this.categoryForm.controls['color'].valueChanges.pipe(startWith(this.categoryForm.controls['color'].value)), { initialValue: this.categoryForm.controls['color'].value });
     this.iconValue = toSignal(this.categoryForm.controls['icon'].valueChanges.pipe(startWith(this.categoryForm.controls['icon'].value)), { initialValue: this.categoryForm.controls['icon'].value });
 
-    // AI Suggestions
+    // AI Name Suggestions
+    this.categoryForm.controls['name'].valueChanges.pipe(
+      debounceTime(500),
+      distinctUntilChanged(),
+      filter(name => !!name && name.length >= 2 && !this.dialogData?.isEdit),
+      switchMap(name => {
+        this.isSuggestingNames.set(true);
+        return this.openaiService.suggestCategoryNames(name).pipe(
+          finalize(() => this.isSuggestingNames.set(false)),
+          catchError(() => of([]))
+        );
+      })
+    ).subscribe(suggestions => {
+      this.nameSuggestions.set(suggestions);
+    });
+
+    // AI Icon & Color Suggestions
     this.categoryForm.controls['name'].valueChanges.pipe(
       debounceTime(1000),
       distinctUntilChanged(),
