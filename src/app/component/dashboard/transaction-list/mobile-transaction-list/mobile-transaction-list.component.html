@@ -431,6 +431,26 @@
 
 
 
+  <!-- Date Navigator -->
+  @if (selectedDateRange() && selectedSpecialRange() !== 'category' && showFilters) {
+  <div class="px-2 pt-1">
+    <div
+      class="flex items-center justify-between bg-surface-50 dark:bg-surface-200 rounded-xl p-0.5 border border-gray-100 dark:border-gray-700 shadow-sm">
+      <button (click)="previousPeriod()" 
+        class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-100 dark:hover:bg-surface-300 text-gray-400 transition-colors">
+        <mat-icon >chevron_left</mat-icon>
+      </button>
+      <div class="text-[11px] font-bold tracking-tight text-primary-600 dark:text-primary-400">
+        {{ currentDateLabel() }}
+      </div>
+      <button (click)="nextPeriod()" [disabled]="!canGoNext()"
+        class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-100 dark:hover:bg-surface-300 text-gray-400 transition-colors disabled:opacity-20">
+        <mat-icon >chevron_right</mat-icon>
+      </button>
+    </div>
+  </div>
+  }
+
   <!-- Transaction Summary -->
   @if (showFilters && filteredTransactions().length > 0) {
   <div class="transaction-summary">

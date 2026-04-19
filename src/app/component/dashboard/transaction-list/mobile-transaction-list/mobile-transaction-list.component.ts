@@ -493,10 +493,10 @@ export class MobileTransactionListComponent
     const date = this.selectedDate();
     const range = this.selectedDateRange();
 
-    if (date) return dayjs(date).format('MMM DD, YYYY');
+    if (date) return dayjs(date).format('DD MMM, YYYY');
     if (range) {
-      const start = dayjs(range.startDate).format('MMM DD');
-      const end = dayjs(range.endDate).format('MMM DD, YYYY');
+      const start = dayjs(range.startDate).format('DD MMM');
+      const end = dayjs(range.endDate).format('DD MMM, YYYY');
       return `${start} - ${end}`;
     }
     return 'All Dates';
@@ -848,6 +848,44 @@ export class MobileTransactionListComponent
     }
 
     this.filterService.setSelectedDateRange(startDate, endDate);
+  }
+
+  previousPeriod(): void {
+    this.navigatePeriod(-1);
+  }
+
+  nextPeriod(): void {
+    this.navigatePeriod(1);
+  }
+
+  private navigatePeriod(direction: number): void {
+    const range = this.selectedDateRange();
+    if (!range) return;
+
+    const rangeType = this.selectedRange();
+    let unit: dayjs.ManipulateType = 'month';
+    
+    if (rangeType?.includes('week')) {
+      unit = 'week';
+    } else if (rangeType?.includes('year')) {
+      unit = 'year';
+    } else if (rangeType?.includes('today') || rangeType?.includes('yesterday')) {
+      unit = 'day';
+    }
+
+    const newStart = dayjs(range.startDate).add(direction, unit).startOf(unit).toDate();
+    const newEnd = dayjs(range.startDate).add(direction, unit).endOf(unit).toDate();
+
+    this.filterService.setSelectedDateRange(newStart, newEnd);
+    // Explicitly set to custom range to avoid it jumping back to predefined ranges
+    this.selectedRange.set('custom');
+  }
+
+  canGoNext(): boolean {
+    const range = this.selectedDateRange();
+    if (!range) return false;
+    // Cannot go past current period
+    return dayjs(range.endDate).isBefore(dayjs(), 'day');
   }
 
   isCurrentMonth = computed(() => {
