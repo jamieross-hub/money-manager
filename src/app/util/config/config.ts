@@ -61,7 +61,7 @@ export const APP_CONFIG = {
     MIN_ACCOUNT_BALANCE: -999999999.99,
     MAX_ACCOUNT_BALANCE: 999999999.99,
     RESERVED_CATEGORY_NAMES: {
-      'loan payment': 'is a reserved name for Loan Account category',
+      // 'loan payment': 'is a reserved name for Loan Account category',
       'settlement': 'is a reserved name for Family Group settlements',
       'adjustment': 'is a reserved name for Ledger adjustments',
       'transfer': 'is a reserved name for Transfer between accounts'
