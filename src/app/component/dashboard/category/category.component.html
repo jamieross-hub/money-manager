@@ -33,11 +33,11 @@
     }
       <!-- Summary Cards -->
  
-        <section class="summary-section">
+        <!-- <section class="summary-section">
           @defer {
             <app-category-summary-card></app-category-summary-card>
           }
-        </section>
+        </section> -->
       <!-- } -->
     <!-- Controls: Search & Filter -->
     <mat-tab-group class="category-tabs" animationDuration="0ms">
@@ -47,6 +47,7 @@
           <div class="flex items-center gap-2">
             <mat-icon class="!text-lg">category</mat-icon>
             <span>Categories</span>
+            <span class="tab-badge">{{ vm.categories.length }}</span>
           </div>
         </ng-template>
 
@@ -247,7 +248,6 @@
                                   <div class="amount-container">
                                     <span class="category-amount">
                                       {{ subCategory.totalSpent | currency }}
-                                      <span class="period">/ {{ appViewService.getViewLabel() }}</span>
                                     </span>
                                     <!-- Budget Progress for Subcategory -->
                                     @if (subCategory.budget?.hasBudget) {
@@ -367,6 +367,7 @@
           <div class="flex items-center gap-2">
             <mat-icon class="!text-lg">folder</mat-icon>
             <span>Groups</span>
+            <span class="tab-badge">{{ vm.availableGroups.length }}</span>
           </div>
         </ng-template>
 

@@ -50,7 +50,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
 import { TranslateModule } from '@ngx-translate/core';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
-import { CategorySummaryCardComponent } from 'src/app/util/components/cards/category-summary-card/category-summary-card.component';
+// import { CategorySummaryCardComponent } from 'src/app/util/components/cards/category-summary-card/category-summary-card.component';
 
 dayjs.extend(isBetween);
 
@@ -76,7 +76,7 @@ dayjs.extend(isBetween);
     MatTabsModule,
     TranslateModule,
     CurrencyPipe,
-    CategorySummaryCardComponent
+    //CategorySummaryCardComponent
   ]
 })
 export class CategoryComponent implements OnInit, OnDestroy {
@@ -169,7 +169,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
         const processedCategories = categories.map(cat => {
           const catTransactions = transactions.filter(t => t.categoryId === cat.id);
           const viewTransactions = catTransactions.filter(t => this.appViewService.isDateInView(t.date));
-          const totalSpent = viewTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
+          const totalSpent = catTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
           let budgetProgress = 0;
           let budgetColor = 'primary';
           let budgetStatusClass = '';
