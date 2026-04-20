@@ -562,7 +562,7 @@
         @if (selectedSpecialRange() !== 'category') {
         <div class="date-header-row sticky top-0 z-20 w-full px-2 py-2 pointer-events-none">
           <div class="date-header-pill" #headerPill [attr.data-header]="group.dateHeader">
-            <span class="header-title !text-[10px]">{{ group.dateHeader }}</span>
+            <span class="header-title !text-[12px] !text-neutral-700">{{ group.dateHeader }}</span>
             @if (group.incomeFormatted || group.expenseFormatted) {
             <span class="header-totals flex items-center gap-1 text-[10px]">
               @if (group.incomeFormatted) {
