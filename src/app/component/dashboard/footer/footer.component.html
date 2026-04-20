@@ -16,7 +16,8 @@
                       class="footer-item-animation group flex flex-col items-center gap-2 lg:gap-1"
                       [style.animation-delay]="i * 0.05 + 's'">
                 <div class="add-button-box w-12 h-12 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center shadow-md hover:scale-105 hover:shadow-lg transition-transform transition-colors duration-200"
-                  [ngClass]="fabConfig().bgClass" [class.glow-animation]="fabConfig().label !== 'Add'">
+                  [ngClass]="fabConfig().bgClass" [class.glow-animation]="fabConfig().label !== 'Add'"
+                  [matBadge]="fabConfig().badge" [matBadgeHidden]="!fabConfig().badge" matBadgeColor="primary" matBadgeSize="large">
                   <mat-icon class="text-white text-lg lg:text-base relative bottom-1">{{ fabConfig().icon }}</mat-icon>
                 </div>
                 <span class="nav-label add-label dark:text-slate-300">{{ fabConfig().label }}</span>
@@ -35,7 +36,8 @@
                       class="footer-item-animation group w-full flex flex-col items-center gap-2 lg:gap-1"
                       [style.animation-delay]="i * 0.05 + 's'">
                 <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
-                  [ngClass]="(isFamilyMode() ? isFamilyActive() : isHomeActive()) ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
+                  [ngClass]="(isFamilyMode() ? isFamilyActive() : isHomeActive()) ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'"
+                  [matBadge]="item.badge" [matBadgeHidden]="!item.badge" matBadgeColor="warn" matBadgeSize="large">
                   @if (isFamilyMode() && isImageIcon(activeFamilyIcon())) {
                     <img [src]="activeFamilyIcon()" class="w-6 h-6 object-cover rounded-md mt-0.5"
                          [ngClass]="isFamilyActive() ? '' : 'filter grayscale opacity-70'" alt="Family icon" />
@@ -57,7 +59,8 @@
                       class="footer-item-animation group w-full flex flex-col items-center gap-2 lg:gap-1"
                       [style.animation-delay]="i * 0.05 + 's'">
                 <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
-                  [ngClass]="isExpenseActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
+                  [ngClass]="isExpenseActive() ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'"
+                  [matBadge]="item.badge" [matBadgeHidden]="!item.badge" matBadgeColor="warn" matBadgeSize="large">
                   <mat-icon class="text-xl lg:text-base relative bottom-1"
                   [ngClass]="isExpenseActive() ? 'active-icon' : 'inactive-icon dark:text-slate-400'">{{ item.icon }}</mat-icon>
                 </div>
@@ -80,7 +83,8 @@
                 class="footer-item-animation group w-full flex flex-col items-center gap-2 lg:gap-1"
                 [style.animation-delay]="i * 0.05 + 's'">
                 <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
-                  [ngClass]="(isFamilyMode() ? (showSummaryInFamily() || activeFamily()?.mode !== 'split' ? isReportsActive() : isSettleActive()) : isReportsActive()) ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'">
+                  [ngClass]="(isFamilyMode() ? (showSummaryInFamily() || activeFamily()?.mode !== 'split' ? isReportsActive() : isSettleActive()) : isReportsActive()) ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400'"
+                  [matBadge]="item.badge" [matBadgeHidden]="!item.badge" matBadgeColor="warn" matBadgeSize="large">
                   <mat-icon class="text-xl lg:text-base relative bottom-1"
                   [ngClass]="(isFamilyMode() ? (showSummaryInFamily() || activeFamily()?.mode !== 'split' ? isReportsActive() : isSettleActive()) : isReportsActive()) ? 'active-icon' : 'inactive-icon dark:text-slate-400'">
                     {{ item.icon }}
@@ -99,7 +103,8 @@
                       class="footer-item-animation group w-full flex flex-col items-center gap-2 lg:gap-1"
                       [style.animation-delay]="i * 0.05 + 's'">
                 <div class="w-10 h-10 lg:w-8 lg:h-8 rounded-xl flex items-center justify-center shadow-md transition-transform transition-colors duration-200 hover:scale-105 hover:shadow-lg dark:shadow-none"
-                  [ngClass]="item.bgClass || ((item.id === 'category' ? isCategoryActive() : (item.id === 'accounts' ? isAccountsActive() : isProfileActive())) ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400')">
+                  [ngClass]="item.bgClass || ((item.id === 'category' ? isCategoryActive() : (item.id === 'accounts' ? isAccountsActive() : isProfileActive())) ? 'active-icon-box' : 'inactive-icon-box dark:bg-slate-800 dark:text-slate-400')"
+                  [matBadge]="item.badge" [matBadgeHidden]="!item.badge" matBadgeColor="warn" matBadgeSize="large">
                   <mat-icon class="text-xl lg:text-base relative bottom-1"
                   [ngClass]="item.bgClass ? 'text-white' : ((item.id === 'category' ? isCategoryActive() : (item.id === 'accounts' ? isAccountsActive() : isProfileActive())) ? 'active-icon' : 'inactive-icon dark:text-slate-400')">
                     {{ item.icon }}
@@ -117,7 +122,8 @@
           @if ((dynamicConfig().items?.length ?? 0) < 3 && !dynamicConfig().hideFab) {
              <button (click)="onAddFabClick()" class="group w-full flex flex-col items-center gap-2 lg:gap-1">
                 <div class="add-button-box w-12 h-12 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center shadow-md hover:scale-105 hover:shadow-lg transition-transform transition-colors duration-200"
-                  [ngClass]="fabConfig().bgClass" [class.glow-animation]="fabConfig().label !== 'Add'">
+                  [ngClass]="fabConfig().bgClass" [class.glow-animation]="fabConfig().label !== 'Add'"
+                  [matBadge]="fabConfig().badge" [matBadgeHidden]="!fabConfig().badge" matBadgeColor="primary" matBadgeSize="large">
                   <mat-icon class="text-white text-lg lg:text-base relative bottom-1">{{ fabConfig().icon }}</mat-icon>
                 </div>
                 <span class="nav-label add-label dark:text-slate-300">{{ fabConfig().label }}</span>

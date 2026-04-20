@@ -40,7 +40,7 @@
         </section> -->
       <!-- } -->
     <!-- Controls: Search & Filter -->
-    <mat-tab-group class="category-tabs" animationDuration="0ms">
+    <mat-tab-group class="category-tabs" animationDuration="0ms" [selectedIndex]="selectedtabGroup()" (selectedIndexChange)="selectedtabGroup.set($event)">
       <!-- Manage Categories Tab -->
       <mat-tab>
         <ng-template mat-tab-label>

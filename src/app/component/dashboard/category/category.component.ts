@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, ChangeDetectionStrategy, ViewChild, signal, computed } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { Auth } from '@angular/fire/auth';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { MatDialog } from '@angular/material/dialog';
@@ -50,6 +51,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
 import { TranslateModule } from '@ngx-translate/core';
 import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
+import { MatTabGroup } from '@angular/material/tabs';
 // import { CategorySummaryCardComponent } from 'src/app/util/components/cards/category-summary-card/category-summary-card.component';
 
 dayjs.extend(isBetween);
@@ -83,6 +85,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
   @Input() isChildView: boolean = false;
 
+  public selectedtabGroup = signal<number>(0);
   public isLoading$: Observable<boolean>;
   public transactions$: Observable<Transaction[]>;
   public Math = Math;
@@ -193,7 +196,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
           const matchesSearch = !searchText || category.name.toLowerCase().includes(searchText.toLowerCase());
           const matchesType = filterType === 'all' || category.type.toLowerCase() === filterType;
           const matchesGroup = !selectedGroup || category.group === selectedGroup;
-          
+
           // Added Family Mode context layout filter
           const matchesContext = isFamilyMode ? !!category.familyId : !category.familyId;
 
@@ -236,7 +239,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
         const incomeChange = calculateChange(totalIncome, prevIncome);
         const expenseCount = categories.filter(c => c.type === 'expense').length;
         const incomeCount = categories.filter(c => c.type === 'income').length;
-        
+
         const availableGroups = [...new Set(categories.map(c => c.group).filter(g => !!g))].map(groupName => {
           const matchingCategories = categories.filter(c => c.group === groupName);
           return {
@@ -245,9 +248,9 @@ export class CategoryComponent implements OnInit, OnDestroy {
             icon: matchingCategories.find(c => c.groupIcon)?.groupIcon || 'category'
           };
         });
-        
+
         const hasUngroupedCategories = processedCategories.some(c => !c.group && !c.isSystem && !c.isSubCategory);
-        
+
         this._categoriesSnapshot = processedCategories;
 
         return {
@@ -324,26 +327,23 @@ export class CategoryComponent implements OnInit, OnDestroy {
             icon: 'home',
             label: 'Home'
           },
-          
           {
-          id: 'fab',
-          icon: 'add',
-          label: 'Add Category',
-          bgClass: 'bg-primary-500',
-          isFab: true,
-          action: () => this.openAddMobileDialog()
-        },{
-            id: 'category-count',
-            icon: 'category',
-            label: `${vm.categories.length} Category`,
-            action: () => {} // informational button
+            id: 'fab',
+            icon: 'add',
+            label: 'Add Category',
+            bgClass: 'bg-primary-500',
+            isFab: true,
+            action: () => this.openAddMobileDialog()
           },
-          // {
-          //   id: 'group-count',
-          //   icon: 'folder',
-          //   label: `${vm.availableGroups.length} Groups`,
-          //   action: () => {} // informational button
-          // }
+          {
+            id: 'swappable-tab',
+            icon: computed(() => this.selectedtabGroup() === 0 ? 'folder' : 'category'),
+            label: computed(() => this.selectedtabGroup() === 0 ? 'Groups' : 'Categories'),
+            badge: computed(() => this.selectedtabGroup() === 0 ? vm.availableGroups.length : vm.categories.length),
+            action: () => {
+              this.selectedtabGroup.set(this.selectedtabGroup() === 0 ? 1 : 0);
+            }
+          }
         ]
       });
     });
@@ -481,11 +481,11 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
       if (!result) return;
-      
+
       if (result.action === 'save') {
         const newGroupName = result.groupName;
         const newGroupIcon = result.groupIcon;
-        
+
         // 1. Update Added and Existing Categories
         const toSave = [...(result.added || []), ...(result.updated || [])];
         toSave.forEach(cat => {
@@ -521,7 +521,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
             groupIcon: ''
           }));
         });
-        
+
         this.notificationService.success(`Group "${groupName}" updated successfully`);
       } else if (result.action === 'delete') {
         const confirmRef = this.dialog.open(ConfirmDialogComponent, {
@@ -722,7 +722,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
   public autoCategorize(): void {
     const ungrouped = this._categoriesSnapshot.filter(c => !c.group && !c.isSystem && !c.isSubCategory);
-    
+
     if (ungrouped.length === 0) {
       this.notificationService.info('No ungrouped categories found.');
       return;

@@ -1,8 +1,9 @@
-import { Component, ChangeDetectionStrategy, inject, computed, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed, signal, Signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatBadgeModule } from '@angular/material/badge';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { CommonSyncService, NetworkStatus } from '../../../util/service/common-sync.service';
 import { MatDialog } from '@angular/material/dialog';
@@ -30,7 +31,7 @@ import { FooterService, FooterAction, FooterConfig } from './footer.service';
   styleUrls: ['./footer.component.scss'],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, TranslateModule, MatIconModule, MatButtonModule, RouterModule]
+  imports: [CommonModule, TranslateModule, MatIconModule, MatButtonModule, MatBadgeModule, RouterModule]
 })
 export class FooterComponent {
   private commonSyncService = inject(CommonSyncService);
@@ -115,11 +116,15 @@ export class FooterComponent {
 
 
   /** Dynamic Footer Items from Service or Defaults */
-  readonly dynamicConfig = computed<FooterConfig>(() => {
+  readonly dynamicConfig = computed(() => {
     const custom = this.footerService.currentConfig();
     const isMobile = this.isMobile();
     const isFamilyMode = this.isFamilyMode();
     const currentUrl = this.currentUrl();
+
+    // Helper to resolve Signal or static value
+    const resolve = <T>(val: T | Signal<T> | undefined): T | undefined => 
+      typeof val === 'function' ? (val as Signal<T>)() : val;
 
     // Calculate Defaults
     const defaultItems: FooterAction[] = [];
@@ -201,13 +206,28 @@ export class FooterComponent {
     const finalItems = (custom && custom.items && custom.items.length > 0) ? custom.items : defaultItems;
     const finalFab = custom?.fab ?? defaultFab;
 
+    // Resolve signals in items
+    const resolvedItems = finalItems.map(item => ({
+      ...item,
+      label: resolve(item.label),
+      icon: resolve(item.icon),
+      badge: resolve(item.badge)
+    }));
+
+    const resolvedFab = {
+      ...finalFab,
+      label: resolve(finalFab.label),
+      icon: resolve(finalFab.icon),
+      badge: resolve(finalFab.badge)
+    };
+
     // Ensure they are sorted by priority
     return { 
-      items: finalItems.sort((a: FooterAction, b: FooterAction) => (a.priority || 0) - (b.priority || 0)), 
-      fab: finalFab,
+      items: resolvedItems.sort((a, b) => (a.priority || 0) - (b.priority || 0)), 
+      fab: resolvedFab,
       hideFooter: custom?.hideFooter ?? this.hideFooterForRoutes.includes(currentUrl),
       hideFab: custom?.hideFab ?? false
-    } as FooterConfig;
+    } as any;
   });
   
   readonly footerLayoutClass = computed(() => {

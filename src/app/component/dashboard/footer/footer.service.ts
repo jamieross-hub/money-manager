@@ -1,15 +1,15 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, Signal } from '@angular/core';
 
 export interface FooterAction {
   id: string;
-  icon: string;
-  label: string;
+  icon: string | Signal<string>;
+  label: string | Signal<string>;
   route?: string;
   action?: () => void;
   show?: boolean | (() => boolean);
   isFab?: boolean;
   bgClass?: string;
-  badge?: string | number;
+  badge?: string | number | Signal<string | number>;
   priority?: number;
 }
 
