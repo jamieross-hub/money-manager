@@ -119,19 +119,25 @@
               <div class="panel-content">
                 <div class="accounts-grid">
                   @for (accountVM of groupData.accounts; track accountVM.account.accountId) {
-                    <mat-card class="account-card dark:bg-slate-900 dark:border-slate-800"
+                    <div class="account-card-compact dark:bg-slate-900 dark:border-slate-800"
                       [class.negative-border]="accountVM.balanceClass === 'negative-balance'"
                       [class.selected]="expandedAccount?.accountId === accountVM.account.accountId"
                       (click)="toggleAccountExpansion(accountVM.account)">
-                      <mat-card-content>
-                        <div class="card-top">
+                        <div class="card-main">
                           <div class="account-icon-wrap" [class]="accountVM.account.type" [style.background-color]="accountVM.color + '1A'">
                             <mat-icon [style.color]="accountVM.color">{{ accountVM.icon }}</mat-icon>
                           </div>
-                          <div class="account-titles">
-                            <p class="name dark:text-slate-100">{{ accountVM.formattedName }}</p>
-                            <p class="institution dark:text-slate-400">{{ accountVM.formattedInstitution }}
-                            </p>
+                          <div class="account-content">
+                            <div class="account-info">
+                              <p class="name dark:text-slate-100">{{ accountVM.formattedName }}</p>
+                              <p class="institution dark:text-slate-400">{{ accountVM.formattedInstitution }}</p>
+                            </div>
+                            <div class="balance-info">
+                              <span class="amount dark:text-slate-100 financial-data"
+                                [class.negative]="accountVM.isLoan || accountVM.account.balance < 0">
+                                {{ accountVM.formattedBalance }}
+                              </span>
+                            </div>
                           </div>
                           <div class="menu-action">
                             <button mat-icon-button [matMenuTriggerFor]="itemMenu"
@@ -151,37 +157,7 @@
                             </mat-menu>
                           </div>
                         </div>
-                        <div class="card-details">
-                          <div class="balance-row">
-                            <span class="label dark:text-slate-500">Balance</span>
-                            <span class="amount dark:text-slate-100 financial-data"
-                              [class.negative]="accountVM.isLoan || accountVM.account.balance < 0">
-                              {{ accountVM.formattedBalance }}
-                            </span>
-                          </div>
-                          <!-- <div class="meta-row" *ngIf="accountVM.isLoan || accountVM.isCreditCard">
-                          <span class="account-number dark:bg-slate-800 dark:text-slate-400">****{{
-                          accountVM.maskedId }}</span>
-                          \
-                          @if (accountVM.isPaymentDue) {
-                            <div class="payment-due-badge"
-                              [class.overdue]="accountVM.paymentDueStatus === 'overdue'"
-                              [class.due-soon]="accountVM.paymentDueStatus === 'due-soon'">
-                              <mat-icon class="badge-icon">
-                                {{ accountVM.paymentDueStatus === 'overdue' ? 'warning' : 'schedule' }}
-                              </mat-icon>
-                              <span class="badge-text" *ngIf="accountVM.paymentDueStatus === 'overdue'">
-                                Overdue {{ -accountVM.daysUntilDue! }}d
-                              </span>
-                              <span class="badge-text" *ngIf="accountVM.paymentDueStatus === 'due-soon'">
-                                Due in {{ accountVM.daysUntilDue }}d
-                              </span>
-                            </div>
-                          }
-                        </div> -->
-                      </div>
-                    </mat-card-content>
-                  </mat-card>
+                    </div>
                   <!-- Account Expanded Panel (Mobile only) -->
                   @if (expandedAccount?.accountId === accountVM.account.accountId && breakpointService.device.isMobile) {
                     <div class="account-expanded-panel dark:bg-slate-900/40 dark:border-slate-800">

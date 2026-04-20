@@ -25,6 +25,7 @@ import * as ProfileSelectors from '../../../store/profile/profile.selectors';
 import { BehaviorSubject, combineLatest, map, distinctUntilChanged } from 'rxjs';
 import { CurrencyService } from 'src/app/util/service/currency.service';
 import { FooterService } from 'src/app/component/dashboard/footer/footer.service';
+import { CurrencyPipe } from 'src/app/util/pipes/currency.pipe';
 
 interface AccountViewModel {
   account: Account;
@@ -83,7 +84,8 @@ import { AccountStatsPipe } from 'src/app/util/pipes/account-stats.pipe';
     MatTooltipModule,
     TranslateModule,
     AccountSummaryCardComponent,
-    AccountStatsPipe
+    AccountStatsPipe,
+    CurrencyPipe
   ]
 })
 export class AccountsComponent implements OnInit, OnDestroy {
@@ -182,7 +184,8 @@ export class AccountsComponent implements OnInit, OnDestroy {
           {
             id: 'account-count',
             icon: 'account_balance_wallet',
-            label: `${accounts.length} Accounts`,
+            label: 'Accounts',
+            badge: accounts.length,
             action: () => {} // informational
           }
         ]
