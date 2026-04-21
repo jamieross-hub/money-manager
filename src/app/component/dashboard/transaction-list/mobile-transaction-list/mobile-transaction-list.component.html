@@ -7,8 +7,10 @@
     </button>
 
     <div class="navigator-pill" (click)="openCustomDateRangeDialog()">
+      
       <mat-icon class="pill-icon">calendar_month</mat-icon>
-      <span class="pill-label">{{ currentDateLabel() }}</span>
+      <span class="pill-label">{{ currentDateLabel()  }} </span>
+      <span class="pill-count-badge">{{ filteredCount() }}</span>
     </div>
 
     <button (click)="nextPeriod()" [disabled]="!canGoNext()" class="nav-arrow-btn" [class.disabled]="!canGoNext()"
