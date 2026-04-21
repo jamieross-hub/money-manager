@@ -41,6 +41,7 @@ import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.d
 
 import { MatDialog } from '@angular/material/dialog';
 import { MatBottomSheetModule, MatBottomSheet } from '@angular/material/bottom-sheet';
+import { MatBadgeModule } from '@angular/material/badge';
 import { Transaction } from '../../../../util/models/transaction.model';
 import { Subject, Subscription, Observable, timer } from 'rxjs';
 import dayjs from 'dayjs';
@@ -113,7 +114,8 @@ interface SortOption {
     FormsModule,
     MatDividerModule,
     ImageFallbackDirective,
-    MatBottomSheetModule
+    MatBottomSheetModule,
+    MatBadgeModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   animations: []
@@ -159,7 +161,7 @@ export class MobileTransactionListComponent
   newlyAddedTxId = signal<string | null>(null);
   activeTxId = signal<string | null>(null);
   private previousTxIds = new Set<string>();
-  showFilters: boolean = false;
+  showFilters = signal<boolean>(true);
 
   // Signals defined below...
 
@@ -727,7 +729,7 @@ export class MobileTransactionListComponent
 
   ngOnInit() {
     if (this.route.url.includes('transactions') && !this.isRecurring()) {
-      this.showFilters = true;
+      this.showFilters.set(true);
     }
 
     // Set initial date range based on App View preference and Family Mode

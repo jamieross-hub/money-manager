@@ -1,4 +1,23 @@
 <div class="mobile-transaction-container">
+  <!-- Sticky Date Navigator -->
+  @if (showFilters() && selectedDateRange() && selectedSpecialRange() !== 'category') {
+  <div class="navigator-container">
+    <button (click)="previousPeriod()" class="nav-arrow-btn" aria-label="Previous Period">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+
+    <div class="navigator-pill" (click)="openCustomDateRangeDialog()">
+      <mat-icon class="pill-icon">calendar_month</mat-icon>
+      <span class="pill-label">{{ currentDateLabel() }}</span>
+    </div>
+
+    <button (click)="nextPeriod()" [disabled]="!canGoNext()" class="nav-arrow-btn" [class.disabled]="!canGoNext()"
+      aria-label="Next Period">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+  }
+
   <!-- Chart area (amCharts) -->
   <!-- Chart area removed -->
 
@@ -20,7 +39,7 @@
       </button>
     </div>
   </div>
-  } @else if (showFilters && !showChart) {
+  } @else if (showFilters() && !showChart) {
   <div class="mobile-filter-header">
     <!-- Combined Search & Active Filters Indicator -->
     <div class="active-filters-indicator" [class.expanded]="showActiveFilterDetails()"
@@ -359,8 +378,13 @@
         <mat-divider></mat-divider>
 
         <button mat-menu-item [class.active-menu-item]="selectedRange() === null" (click)="onDateRangeChange(null)">
-          <mat-icon>calendar_today</mat-icon>
-          <span>All Time</span>
+          <mat-icon [matBadge]="totalCount()" matBadgeSize="small" matBadgeColor="accent">calendar_today</mat-icon>
+          <div class="flex items-center justify-between w-full">
+            <span>All Time</span>
+            <span class="ml-4 text-[10px] text-neutral-400 font-medium bg-neutral-100 dark:bg-neutral-800 rounded px-1.5 py-0.5">
+              {{ filteredCount() }} / {{ totalCount() }}
+            </span>
+          </div>
           @if (selectedRange() === null) {
           <mat-icon class="check-icon">check</mat-icon>
           }
@@ -432,29 +456,11 @@
 
 
   <!-- Combined Header Banner (Date Navigator + Summary) -->
-  @if (showFilters) {
+  <!-- @if (showFilters()) {
   <div class="px-2 pb-2">
     <div class="summary-header-card">
-      <!-- Top Section: Date Navigator -->
-      @if (selectedDateRange() && selectedSpecialRange() !== 'category') {
-      <div class="navigator-row">
-        <button (click)="previousPeriod()" 
-          class="nav-btn" aria-label="Previous Period">
-          <mat-icon>chevron_left</mat-icon>
-        </button>
-        <div class="date-label">
-          {{ currentDateLabel() }}
-        </div>
-        <button (click)="nextPeriod()" [disabled]="!canGoNext()"
-          class="nav-btn" [class.disabled]="!canGoNext()" aria-label="Next Period">
-          <mat-icon>chevron_right</mat-icon>
-        </button>
-      </div>
-      }
-
-      <!-- Bottom Section: Summary Stats -->
       @if (filteredTransactions().length > 0) {
-      <div class="summary-row" [class.with-divider]="selectedDateRange() && selectedSpecialRange() !== 'category'">
+      <div class="summary-row">
         <div class="summary-stats">
           <div class="stat-item count" matTooltip="Transactions Count">
             <mat-icon>list_alt</mat-icon>
@@ -503,7 +509,7 @@
       }
     </div>
   </div>
-  }
+  } -->
 
   <!-- Transaction List -->
   <div class="transaction-list-container" #scrollContainer (scroll)="onScroll($event)">
