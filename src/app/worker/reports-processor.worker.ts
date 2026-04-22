@@ -24,6 +24,7 @@ export interface MonthlySummary {
     savings: number;
     savingsRate: number; // %
     categoryBreakdown: CategoryBreakdownItem[];
+    incomeCategoryBreakdown: CategoryBreakdownItem[];
 }
 
 export interface PeriodSummary {
@@ -36,6 +37,7 @@ export interface PeriodSummary {
     avgMonthlyIncome: number;
     topCategory: CategoryBreakdownItem | null;
     categoryBreakdown: CategoryBreakdownItem[];
+    incomeCategoryBreakdown: CategoryBreakdownItem[];
     expenseGrowth: number | null;
 }
 
@@ -242,19 +244,16 @@ function buildMonthlySummaries(transactions: any[], iconMap: any, colorMap: any)
 
         const key = `${d.getFullYear()}-${d.getMonth()}`;
         if (!map.has(key)) {
-            map.set(key, { income: 0, expense: 0, categories: new Map() });
+            map.set(key, { income: 0, expense: 0, incomeCategories: new Map(), expenseCategories: new Map() });
         }
-        const entry = map.get(key)!;
+        const entry = map.get(key)! as any;
+        const catKey = t.categoryId || t.category || 'Uncategorized';
+        const catName = t.category || 'Uncategorized';
 
         if (t.type === 'income') {
             entry.income += t.amount;
-        } else if (t.type === 'expense') {
-            entry.expense += t.amount;
-
-            const catKey = t.categoryId || t.category || 'Uncategorized';
-            const catName = t.category || 'Uncategorized';
-            if (!entry.categories.has(catKey)) {
-                entry.categories.set(catKey, { 
+            if (!entry.incomeCategories.has(catKey)) {
+                entry.incomeCategories.set(catKey, { 
                     categoryId: catKey, 
                     categoryName: catName, 
                     categoryIcon: iconMap[catKey] || 'category', 
@@ -264,25 +263,48 @@ function buildMonthlySummaries(transactions: any[], iconMap: any, colorMap: any)
                     transactionCount: 0 
                 });
             }
-            const cat = entry.categories.get(catKey)!;
+            const cat = entry.incomeCategories.get(catKey)!;
+            cat.amount += t.amount;
+            cat.transactionCount += 1;
+        } else if (t.type === 'expense') {
+            entry.expense += t.amount;
+            if (!entry.expenseCategories.has(catKey)) {
+                entry.expenseCategories.set(catKey, { 
+                    categoryId: catKey, 
+                    categoryName: catName, 
+                    categoryIcon: iconMap[catKey] || 'category', 
+                    categoryColor: colorMap[catKey] || '#9ca3af', 
+                    amount: 0, 
+                    percentage: 0, 
+                    transactionCount: 0 
+                });
+            }
+            const cat = entry.expenseCategories.get(catKey)!;
             cat.amount += t.amount;
             cat.transactionCount += 1;
         }
     }
 
     const summaries: MonthlySummary[] = [];
-    for (const [key, val] of map) {
+    for (const [key, val] of map as any) {
         const [yearStr, monthStr] = key.split('-');
         const year = parseInt(yearStr);
         const month = parseInt(monthStr);
         const savings = val.income - val.expense;
         const savingsRate = val.income > 0 ? (savings / val.income) * 100 : 0;
 
-        const categories = Array.from(val.categories.values());
-        if (val.income > 0) {
-            categories.forEach(c => c.percentage = (c.amount / val.income) * 100);
+        const expenseCategories = Array.from(val.expenseCategories.values()) as CategoryBreakdownItem[];
+        const incomeCategories = Array.from(val.incomeCategories.values()) as CategoryBreakdownItem[];
+
+        if (val.expense > 0) {
+            expenseCategories.forEach(c => c.percentage = (c.amount / val.expense) * 100);
         }
-        categories.sort((a, b) => b.amount - a.amount);
+        if (val.income > 0) {
+            incomeCategories.forEach(c => c.percentage = (c.amount / val.income) * 100);
+        }
+        
+        expenseCategories.sort((a, b) => b.amount - a.amount);
+        incomeCategories.sort((a, b) => b.amount - a.amount);
 
         summaries.push({
             month, year,
@@ -291,7 +313,8 @@ function buildMonthlySummaries(transactions: any[], iconMap: any, colorMap: any)
             expense: val.expense,
             savings,
             savingsRate,
-            categoryBreakdown: categories
+            categoryBreakdown: expenseCategories,
+            incomeCategoryBreakdown: incomeCategories
         });
     }
 
@@ -435,16 +458,17 @@ function buildAdhocSummary(txns: any[], iconMap: any, colorMap: any): MonthlySum
     if (txns.length === 0) return [];
     let income = 0;
     let expense = 0;
-    const catMap = new Map<string, CategoryBreakdownItem>();
+    const expenseCatMap = new Map<string, CategoryBreakdownItem>();
+    const incomeCatMap = new Map<string, CategoryBreakdownItem>();
 
     for (const t of txns) {
-        if (t.type === 'income') income += t.amount;
-        else if (t.type === 'expense') {
-            expense += t.amount;
-            const catKey = t.categoryId || t.category || 'Uncategorized';
-            const catName = t.category || 'Uncategorized';
-            if (!catMap.has(catKey)) {
-                catMap.set(catKey, { 
+        const catKey = t.categoryId || t.category || 'Uncategorized';
+        const catName = t.category || 'Uncategorized';
+
+        if (t.type === 'income') {
+            income += t.amount;
+            if (!incomeCatMap.has(catKey)) {
+                incomeCatMap.set(catKey, { 
                     categoryId: catKey, 
                     categoryName: catName, 
                     categoryIcon: iconMap[catKey] || 'category', 
@@ -454,20 +478,42 @@ function buildAdhocSummary(txns: any[], iconMap: any, colorMap: any): MonthlySum
                     transactionCount: 0 
                 });
             }
-            const cat = catMap.get(catKey)!;
+            const cat = incomeCatMap.get(catKey)!;
+            cat.amount += t.amount;
+            cat.transactionCount += 1;
+        } else if (t.type === 'expense') {
+            expense += t.amount;
+            if (!expenseCatMap.has(catKey)) {
+                expenseCatMap.set(catKey, { 
+                    categoryId: catKey, 
+                    categoryName: catName, 
+                    categoryIcon: iconMap[catKey] || 'category', 
+                    categoryColor: colorMap[catKey] || '#9ca3af', 
+                    amount: 0, 
+                    percentage: 0, 
+                    transactionCount: 0 
+                });
+            }
+            const cat = expenseCatMap.get(catKey)!;
             cat.amount += t.amount;
             cat.transactionCount += 1;
         }
     }
 
-    const categories = Array.from(catMap.values());
-    if (income > 0) categories.forEach(c => c.percentage = (c.amount / income) * 100);
-    categories.sort((a, b) => b.amount - a.amount);
+    const expenseCategories = Array.from(expenseCatMap.values());
+    const incomeCategories = Array.from(incomeCatMap.values());
+    
+    if (expense > 0) expenseCategories.forEach(c => c.percentage = (c.amount / expense) * 100);
+    if (income > 0) incomeCategories.forEach(c => c.percentage = (c.amount / income) * 100);
+    
+    expenseCategories.sort((a, b) => b.amount - a.amount);
+    incomeCategories.sort((a, b) => b.amount - a.amount);
 
     return [{
         month: 0, year: 0, label: '', income, expense, savings: income - expense,
         savingsRate: income > 0 ? ((income - expense) / income) * 100 : 0,
-        categoryBreakdown: categories
+        categoryBreakdown: expenseCategories,
+        incomeCategoryBreakdown: incomeCategories
     }];
 }
 
@@ -481,11 +527,13 @@ function aggregatePeriod(months: MonthlySummary[], label: string, iconMap: any, 
     const avgMonthlySpending = expense / (months.length || 1);
     const avgMonthlyIncome = income / (months.length || 1);
 
-    const catMap = new Map<string, CategoryBreakdownItem>();
+    const expenseCatMap = new Map<string, CategoryBreakdownItem>();
+    const incomeCatMap = new Map<string, CategoryBreakdownItem>();
+
     for (const m of months) {
         for (const c of m.categoryBreakdown) {
-            if (!catMap.has(c.categoryId)) {
-                catMap.set(c.categoryId, { 
+            if (!expenseCatMap.has(c.categoryId)) {
+                expenseCatMap.set(c.categoryId, { 
                     ...c, 
                     categoryIcon: iconMap[c.categoryId] || 'category', 
                     categoryColor: colorMap[c.categoryId] || '#9ca3af', 
@@ -494,18 +542,38 @@ function aggregatePeriod(months: MonthlySummary[], label: string, iconMap: any, 
                     percentage: 0 
                 });
             }
-            const existing = catMap.get(c.categoryId)!;
+            const existing = expenseCatMap.get(c.categoryId)!;
+            existing.amount += c.amount;
+            existing.transactionCount += c.transactionCount;
+        }
+
+        for (const c of m.incomeCategoryBreakdown || []) {
+            if (!incomeCatMap.has(c.categoryId)) {
+                incomeCatMap.set(c.categoryId, { 
+                    ...c, 
+                    categoryIcon: iconMap[c.categoryId] || 'category', 
+                    categoryColor: colorMap[c.categoryId] || '#9ca3af', 
+                    amount: 0, 
+                    transactionCount: 0, 
+                    percentage: 0 
+                });
+            }
+            const existing = incomeCatMap.get(c.categoryId)!;
             existing.amount += c.amount;
             existing.transactionCount += c.transactionCount;
         }
     }
-    const categories = Array.from(catMap.values()).sort((a, b) => b.amount - a.amount);
-    if (income > 0) categories.forEach(c => c.percentage = (c.amount / income) * 100);
+    const expenseCategories = Array.from(expenseCatMap.values()).sort((a, b) => b.amount - a.amount);
+    const incomeCategories = Array.from(incomeCatMap.values()).sort((a, b) => b.amount - a.amount);
+    
+    if (expense > 0) expenseCategories.forEach(c => c.percentage = (c.amount / expense) * 100);
+    if (income > 0) incomeCategories.forEach(c => c.percentage = (c.amount / income) * 100);
 
     return {
         label, income, expense, savings, savingsRate, avgMonthlySpending, avgMonthlyIncome,
-        topCategory: categories.length > 0 ? categories[0] : null,
-        categoryBreakdown: categories,
+        topCategory: expenseCategories.length > 0 ? expenseCategories[0] : null,
+        categoryBreakdown: expenseCategories,
+        incomeCategoryBreakdown: incomeCategories,
         expenseGrowth: null
     };
 }

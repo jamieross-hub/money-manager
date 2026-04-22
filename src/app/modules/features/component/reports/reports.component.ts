@@ -144,6 +144,22 @@ export class ReportsComponent implements OnInit, OnDestroy {
     previousPeriodSummarySignal = this.reportsProcessor.previousPeriodSummary;
     currentPeriodTransactionsSignal = this.reportsProcessor.currentPeriodTransactions;
 
+    readonly incomeBreakdown = computed(() => {
+        const summary = this.currentPeriodSummarySignal();
+        if (!summary || !summary.incomeCategoryBreakdown) return [];
+
+        const categories = this.allCategories();
+        const categoryMap = new Map(categories.map(c => [c.id!, c]));
+
+        return summary.incomeCategoryBreakdown.map(item => {
+            const cat = categoryMap.get(item.categoryId);
+            return {
+                ...item,
+                budget: cat?.budget?.budgetAmount ?? null
+            };
+        });
+    });
+
     readonly groupedCategoryBreakdown = computed(() => {
         const summary = this.currentPeriodSummarySignal();
         if (!summary || !summary.categoryBreakdown) return [];

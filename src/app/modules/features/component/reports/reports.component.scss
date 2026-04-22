@@ -92,56 +92,85 @@
 }
 
 // ── Mat Table ──
-.history-table {
+.history-table.accounting-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--neutral-400);
+
+
   ::ng-deep {
     .mat-mdc-header-row {
-      background-color: var(--surface-200);
+      background-color: var(--primary-100) !important; // Light cyan/blue shade matching accounting sheets
+    }
+
+    .mat-mdc-footer-row {
+      background-color: var(--primary-100) !important;
     }
 
     .mat-mdc-header-cell {
-      font-weight: 600;
-      font-size: 0.8125rem;
-      color: var(--neutral-600);
+      font-weight: 800;
+      font-size: 0.75rem;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+      border-right: 1px solid var(--neutral-400);
+      border-bottom: 1px solid var(--neutral-400);
+      padding: 10px 12px;
+
+      &:last-child {
+        border-right: none;
+      }
     }
 
     .mat-mdc-cell {
-      font-size: 0.875rem;
+      font-size: 0.8125rem;
+      color: #4b5563;
+      border-right: 1px solid var(--neutral-300);
+      border-bottom: 1px solid var(--neutral-300);
+      padding: 8px 12px;
+
+      &:last-child {
+        border-right: none;
+      }
     }
 
     .mat-mdc-row {
+      background-color: white;
       transition: background-color 0.15s ease;
 
       &:hover {
-        background-color: var(--surface-100);
+        background-color: #f9fafb;
+      }
+
+      &:last-child .mat-mdc-cell {
+        border-bottom: none;
       }
     }
 
     .mat-mdc-footer-cell {
-      border-top: 1px solid var(--surface-400) !important;
+      font-weight: 700;
+      font-size: 0.8125rem;
+      color: #1f2937;
+      border-right: 1px solid var(--neutral-400);
+      border-top: 1px solid var(--neutral-400) !important;
+      padding: 10px 12px;
+
+      &:last-child {
+        border-right: none;
+      }
     }
   }
 }
 
 .compact-table {
   ::ng-deep {
-    .mat-mdc-header-cell,
-    .mat-mdc-cell,
-    .mat-mdc-footer-cell {
-      padding: 8px 10px;
-      white-space: nowrap;
-    }
-
-    .mat-mdc-header-cell {
-      font-size: 0.7rem;
-    }
-
     .mat-mdc-row,
     .mat-mdc-footer-row {
-      height: 40px;
+      height: 38px;
     }
 
     .mat-mdc-header-row {
-      height: 36px;
+      height: 42px;
     }
   }
 }
@@ -349,4 +378,61 @@ mat-list-item {
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+// ── Metric Grid & Cards ──
+.metric-card {
+  background-color: var(--surface-50);
+  border: 1px solid var(--surface-300);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.08);
+    border-color: var(--surface-400);
+    background-color: white;
+  }
+
+  .metric-icon-bg {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover .metric-icon-bg {
+    transform: scale(1.1);
+  }
+
+  .metric-value {
+    line-height: 1.2;
+  }
+}
+
+// Mobile overrides for metrics grid
+@media (max-width: 640px) {
+  .metric-card {
+    padding: 1rem;
+    
+    .metric-icon-bg {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.75rem;
+      
+      mat-icon {
+        font-size: 1.1rem;
+        width: 1.1rem;
+        height: 1.1rem;
+      }
+    }
+  }
 }
