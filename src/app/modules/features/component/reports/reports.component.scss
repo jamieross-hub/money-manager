@@ -2,6 +2,10 @@
 
 :host {
   display: block;
+
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 // ── Mat Tabs ──
@@ -378,61 +382,4 @@ mat-list-item {
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-// ── Metric Grid & Cards ──
-.metric-card {
-  background-color: var(--surface-50);
-  border: 1px solid var(--surface-300);
-  border-radius: 1.25rem;
-  padding: 1.25rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.08);
-    border-color: var(--surface-400);
-    background-color: white;
-  }
-
-  .metric-icon-bg {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 0.875rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.3s ease;
-  }
-
-  &:hover .metric-icon-bg {
-    transform: scale(1.1);
-  }
-
-  .metric-value {
-    line-height: 1.2;
-  }
-}
-
-// Mobile overrides for metrics grid
-@media (max-width: 640px) {
-  .metric-card {
-    padding: 1rem;
-    
-    .metric-icon-bg {
-      width: 2rem;
-      height: 2rem;
-      border-radius: 0.75rem;
-      
-      mat-icon {
-        font-size: 1.1rem;
-        width: 1.1rem;
-        height: 1.1rem;
-      }
-    }
-  }
 }
