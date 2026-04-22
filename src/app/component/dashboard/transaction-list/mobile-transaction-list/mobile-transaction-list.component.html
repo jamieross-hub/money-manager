@@ -10,7 +10,7 @@
       
       <mat-icon class="pill-icon">calendar_month</mat-icon>
       <span class="pill-label">{{ currentDateLabel()  }} </span>
-      <span class="pill-count-badge">{{ filteredCount() }}</span>
+      <!-- <span class="pill-count-badge">{{ filteredCount() }}</span> -->
     </div>
 
     <button (click)="nextPeriod()" [disabled]="!canGoNext()" class="nav-arrow-btn" [class.disabled]="!canGoNext()"
@@ -458,7 +458,7 @@
 
 
   <!-- Combined Header Banner (Date Navigator + Summary) -->
-  <!-- @if (showFilters()) {
+  @if (showFilters()) {
   <div class="px-2 pb-2">
     <div class="summary-header-card">
       @if (filteredTransactions().length > 0) {
@@ -511,7 +511,7 @@
       }
     </div>
   </div>
-  } -->
+  }
 
   <!-- Transaction List -->
   <div class="transaction-list-container" #scrollContainer (scroll)="onScroll($event)">
@@ -759,6 +759,40 @@
           </div>
         </div>
         }
+      </div>
+      }
+
+      @if (filteredCount() > (selectedRange() === 'all' ? 100 : 100)) {
+      <div class="pagination-footer px-2">
+        <div class="pagination-pill">
+          <button mat-icon-button (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 0"
+            class="pagination-nav-btn">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+          
+          <div class="pagination-info" [matMenuTriggerFor]="pageSizeMenu">
+            <span class="range-label">{{ paginationRangeLabel() }}</span>
+          </div>
+
+          <button mat-icon-button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() >= totalPages() - 1"
+            class="pagination-nav-btn">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+
+        <mat-menu #pageSizeMenu="matMenu" class="page-size-menu">
+          <div class="menu-title">Items per page</div>
+          @for (size of [50, 100, 200, 500]; track size) {
+            <button mat-menu-item (click)="changePageSize(size)">
+              <div class="flex items-center justify-between w-full">
+                <span>{{ size }}</span>
+                @if (pageSize() === size) {
+                  <mat-icon color="primary">check</mat-icon>
+                }
+              </div>
+            </button>
+          }
+        </mat-menu>
       </div>
       }
     </div>

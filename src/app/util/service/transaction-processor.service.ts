@@ -145,6 +145,8 @@ export class TransactionProcessorService {
     currentUserId?: string;
     familyId?: string;
     familyMembers?: Array<{ userId: string; role: string }>;
+    currentPage?: number;
+    pageSize?: number;
   }) {
     if (this.debounceTimer) {
       cancelAnimationFrame(this.debounceTimer);

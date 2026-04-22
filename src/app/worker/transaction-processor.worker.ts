@@ -45,7 +45,9 @@ addEventListener('message', ({ data }) => {
     currentUserId,
     fingerprint,
     familyId,
-    familyMembers
+    familyMembers,
+    currentPage = 0,
+    pageSize = 100
   } = data;
 
   // Pre-compute admin status once (O(m)) instead of per-transaction O(n×m)
@@ -406,7 +408,9 @@ addEventListener('message', ({ data }) => {
   const yesterday = dayjs().subtract(1, 'day').startOf('day');
   const isDateSort = sort === 'date-desc' || sort === 'date-asc';
 
-  finalSortedTransactions.forEach((tx: any) => {
+  const paginatedTransactions = finalSortedTransactions.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
+
+  paginatedTransactions.forEach((tx: any) => {
     const txDate = toDate(tx.date);
     const dateObj = dayjs(txDate);
     

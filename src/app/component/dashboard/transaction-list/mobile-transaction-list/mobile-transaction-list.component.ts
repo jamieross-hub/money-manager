@@ -42,6 +42,7 @@ import { ImageFallbackDirective } from 'src/app/util/directives/image-fallback.d
 import { MatDialog } from '@angular/material/dialog';
 import { MatBottomSheetModule, MatBottomSheet } from '@angular/material/bottom-sheet';
 import { MatBadgeModule } from '@angular/material/badge';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { Transaction } from '../../../../util/models/transaction.model';
 import { Subject, Subscription, Observable, timer } from 'rxjs';
 import dayjs from 'dayjs';
@@ -115,7 +116,8 @@ interface SortOption {
     MatDividerModule,
     ImageFallbackDirective,
     MatBottomSheetModule,
-    MatBadgeModule
+    MatBadgeModule,
+    MatPaginatorModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   animations: []
@@ -162,6 +164,8 @@ export class MobileTransactionListComponent
   activeTxId = signal<string | null>(null);
   private previousTxIds = new Set<string>();
   showFilters = signal<boolean>(true);
+  currentPage = signal<number>(0);
+  pageSize = signal<number>(100);
 
   // Signals defined below...
 
@@ -405,6 +409,30 @@ export class MobileTransactionListComponent
 
   totalCount = computed(() => this.allTransactions().length);
 
+  totalPages = computed(() => Math.ceil(this.filteredCount() / this.pageSize()));
+
+  paginationRangeLabel = computed(() => {
+    const total = this.filteredCount();
+    if (total === 0) return '0 of 0';
+    const start = this.currentPage() * this.pageSize() + 1;
+    const end = Math.min((this.currentPage() + 1) * this.pageSize(), total);
+    return `${start} - ${end} of ${total}`;
+  });
+
+  goToPage(page: number) {
+    if (page >= 0 && page < this.totalPages()) {
+      this.currentPage.set(page);
+      if (this.scrollContainer) {
+        this.scrollContainer.nativeElement.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  }
+
+  changePageSize(size: number) {
+    this.pageSize.set(size);
+    this.currentPage.set(0);
+  }
+
 
   /** Current user's UID */
   private readonly currentUserProfile = this.store.selectSignal<User | null>(ProfileSelectors.selectProfile);
@@ -614,7 +642,15 @@ export class MobileTransactionListComponent
       const isFamilyMode = this.isFamilyMode();
       const activeFamilyId = this.activeFamily()?.id;
       const _currentCurrency = this.currencyService.currentCurrency(); 
+      const currentPage = this.currentPage();
+      const pageSize = this.pageSize();
 
+      // Reset to first page when any filter signal changes (except pagination signals themselves)
+      // We use untracked to avoid cyclic dependency if we were to set currentPage here, 
+      // but a better way is to track filter changes and reset.
+      // However, signals in effect are dependencies. 
+      // Let's use a separate technique or just accept that page resets on filter change.
+      
       this.processorService.process({
         transactions,
         recurringTemplates,
@@ -640,9 +676,31 @@ export class MobileTransactionListComponent
         isDeletedMode: (selectedSpecialRange || selectedRange) === 'deleted',
         currentUserId: this.currentUserId(),
         familyId: activeFamilyId,
-        familyMembers: this.familyMembers()
+        familyMembers: this.familyMembers(),
+        currentPage,
+        pageSize
       });
     });
+
+    // Reset page when filters change
+    effect(() => {
+      this.searchTerm();
+      this.selectedCategory();
+      this.selectedType();
+      this.selectedDate();
+      this.selectedDateRange();
+      this.isRecurringFilter();
+      this.selectedAccounts();
+      this.selectedAccountTypes();
+      this.selectedSort();
+      this.selectedRange();
+      this.selectedSpecialRange();
+      this.selectedMember();
+      this.appView();
+      
+      // Reset page to 0 when any of the above change
+      this.currentPage.set(0);
+    }, { allowSignalWrites: true });
 
 
     // Detect newly added transactions to scroll and highlight
@@ -798,6 +856,16 @@ export class MobileTransactionListComponent
 
   onTypeChange(type: string) {
     this.filterService.setSelectedType(type);
+  }
+
+  handlePageEvent(event: PageEvent) {
+    this.currentPage.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
+    
+    // Scroll to top when page changes
+    if (this.scrollContainer) {
+      this.scrollContainer.nativeElement.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   onAccountTypeChange(type: string) {
