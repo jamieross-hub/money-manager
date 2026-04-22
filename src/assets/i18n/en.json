@@ -42,7 +42,7 @@
         "ACCOUNT": "Account",
         "ADMIN": "Admin",
         "SPLITWISE": "Splitwise",
-        "GOOGLE_SHEETS": "Import by Google Sheets",
+        "GOOGLE_SHEETS": "Sync with Google Sheets",
         "OPENAI": "OpenAI Integration",
         "NOTIFICATIONS_NAV": "Notifications",
         "FEEDBACK": "Feedback",

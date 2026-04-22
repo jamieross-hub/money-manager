@@ -31,11 +31,21 @@
   border-radius: 24px !important;
 
   .mat-mdc-card-header {
-    padding: 24px 24px 0 !important;
+    padding: 24px !important;
+    transition: all 0.2s ease;
+    border-radius: 24px;
+
+    &.cursor-pointer:hover {
+      background-color: var(--neutral-50);
+    }
+  }
+
+  &.is-collapsed {
+    margin-bottom: 1rem !important;
   }
 
   .mat-mdc-card-content {
-    padding: 24px !important;
+    padding: 0 24px 24px !important;
   }
 
   .instructions-list {

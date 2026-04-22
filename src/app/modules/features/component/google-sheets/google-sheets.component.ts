@@ -64,6 +64,7 @@ export class GoogleSheetsComponent implements OnInit, OnDestroy {
   isLoading = false;
   isTestingConnection = false;
   isImporting = false;
+  isInstructionsCollapsed = true;
 
   connectionForm: FormGroup;
   testConfig: GoogleSheetsConfig | null = null;
@@ -87,7 +88,7 @@ export class GoogleSheetsComponent implements OnInit, OnDestroy {
     this.connectionForm = this.formBuilder.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
       spreadsheetUrl: ['', [Validators.required, this.urlValidator.bind(this)]],
-      sheetName: ['Sheet1', [Validators.required]],
+      sheetName: ['Import Transactions', [Validators.required]],
       isActive: [true]
     });
   }
@@ -225,7 +226,7 @@ export class GoogleSheetsComponent implements OnInit, OnDestroy {
             if (isValid) {
               this.showSnackBar('Connection test successful!', 'success');
             } else {
-              this.showSnackBar('Connection test failed. Please check your URL and sheet name, and ensure the sheet is shared with "Anyone with the link can view".', 'error');
+              this.showSnackBar('Connection test failed. Please check your URL and sheet name, and ensure the sheet is shared with "Anyone with the link can edit".', 'error');
             }
           },
           error: (error) => {

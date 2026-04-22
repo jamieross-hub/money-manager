@@ -389,7 +389,7 @@ export class GoogleSheetsService extends BaseService {
   }
 
   /**
-   * Get Google Sheets setup instructions for read-only access
+   * Get Google Sheets setup instructions
    */
   getSetupInstructions(): string[] {
     return [
@@ -397,12 +397,12 @@ export class GoogleSheetsService extends BaseService {
       '2. In the example sheet, click "File" → "Make a copy" to create your own version',
       '3. Open your copied Google Sheet in the browser',
       '4. Click "Share" in the top right corner',
-      '5. Set sharing to "Anyone with the link can view"',
+      '5. Set sharing to "Anyone with the link" and select "Editor" role',
       '6. Copy the URL from your browser address bar',
       '7. Paste the URL in the "Sheet URL" field below',
-      '8. Enter the name of the specific sheet tab (e.g., "Sheet1", "Transactions")',
+      '8. Enter the name of the specific sheet tab (e.g., "Import Transactions")',
       '9. Test the connection to verify access',
-      'Note: This is read-only access for data import only'
+      'Note: This requires Editor access to support both data import and automated backups'
     ];
   }
 

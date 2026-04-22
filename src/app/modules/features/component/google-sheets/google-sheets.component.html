@@ -8,58 +8,64 @@
       </div>
       <div>
         <p class="page-title dark:text-white !mb-[5px]">Google Sheets</p>
-        <p class="page-description dark:text-slate-400">Import your financial data from Google Sheets</p>
+        <p class="page-description dark:text-slate-400">Import and backup your financial data with Google Sheets</p>
       </div>
     </div>
   </header>
 
   <div class="google-sheets-container max-w-8xl mx-auto px-6 pb-24">
     <!-- Setup Instructions Card -->
-    <mat-card class="setup-card mb-8 dark:bg-slate-900 dark:border-slate-800 overflow-hidden">
-      <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-      <mat-card-header class="mb-4">
-        <mat-icon mat-card-avatar class="text-blue-500">info</mat-icon>
-        <mat-card-title class="text-lg font-bold dark:text-white">Setup Instructions</mat-card-title>
+    <mat-card class="setup-card mb-8 dark:bg-slate-900 dark:border-slate-800 overflow-hidden" [class.is-collapsed]="isInstructionsCollapsed">
+      <div class="absolute top-0 left-0 w-1 h-full "></div>
+      <mat-card-header class="flex flex-row items-center justify-between cursor-pointer" (click)="isInstructionsCollapsed = !isInstructionsCollapsed">
+        <div class="flex items-center gap-1">
+          <mat-card-title class="text-lg font-bold dark:text-white mb-0">How to connect Google Sheets</mat-card-title>
+        </div>
+        <button mat-icon-button (click)="$event.stopPropagation(); isInstructionsCollapsed = !isInstructionsCollapsed" class="dark:text-slate-400">
+          <mat-icon>{{ isInstructionsCollapsed ? 'expand_more' : 'expand_less' }}</mat-icon>
+        </button>
       </mat-card-header>
 
-      <mat-card-content>
-        <!-- Quick Start Tip -->
-        <div
-          class="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-xl p-4 mb-6 flex gap-4">
-          <mat-icon class="text-emerald-500 shrink-0">lightbulb</mat-icon>
-          <div>
-            <span class="font-semibold text-emerald-900 dark:text-emerald-400 block mb-1">Quick Start</span>
-            <p class="text-sm text-emerald-800/80 dark:text-emerald-400/80 m-0">
-              Not sure how to format your Google Sheet? Click "Get Example Sheet" to open a template you can copy and
-              use.
-            </p>
-          </div>
-        </div>
-
-        <div class="instructions-list space-y-3 dark:text-slate-300">
-          @for (instruction of getSetupInstructions(); track instruction; let i = $index) {
-            <div class="flex gap-3 text-sm">
-              <span
-                class="flex-none w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">{{
-              i + 1 }}</span>
-              <span class="pt-1 leading-relaxed">{{ instruction }}</span>
+      @if (!isInstructionsCollapsed) {
+        <mat-card-content class="fade-in">
+          <!-- Quick Start Tip -->
+          <div
+            class="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-xl p-4 mb-6 flex gap-4">
+            <mat-icon class="text-emerald-500 shrink-0">lightbulb</mat-icon>
+            <div>
+              <span class="font-semibold text-emerald-900 dark:text-emerald-400 block mb-1">Quick Start</span>
+              <p class="text-sm text-emerald-800/80 dark:text-emerald-400/80 m-0">
+                Not sure how to format your Google Sheet? Click "Get Example Sheet" to open a template you can copy and
+                use.
+              </p>
             </div>
-          }
-        </div>
-      </mat-card-content>
+          </div>
 
-      <mat-card-actions class="p-6 pt-2 flex flex-wrap gap-3">
-        <button mat-stroked-button color="primary" (click)="openApiDocs()"
-          class="dark:border-slate-700 dark:text-slate-300">
-          <mat-icon>open_in_new</mat-icon>
-          View Help
-        </button>
-        <button mat-flat-button color="primary" (click)="openExampleSheet()"
-          class="bg-emerald-600 text-white hover:bg-emerald-700">
-          <mat-icon>content_copy</mat-icon>
-          Get Example Sheet
-        </button>
-      </mat-card-actions>
+          <div class="instructions-list space-y-3 dark:text-slate-300">
+            @for (instruction of getSetupInstructions(); track instruction; let i = $index) {
+              <div class="flex gap-3 text-sm">
+                <span
+                  class="flex-none w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">{{
+                i + 1 }}</span>
+                <span class="pt-1 leading-relaxed">{{ instruction }}</span>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+
+        <mat-card-actions class="p-6 pt-2 flex flex-wrap gap-3 fade-in">
+          <button mat-stroked-button color="primary" (click)="openApiDocs()"
+            class="dark:border-slate-700 dark:text-slate-300">
+            <mat-icon>open_in_new</mat-icon>
+            View Help
+          </button>
+          <button mat-flat-button color="primary" (click)="openExampleSheet()"
+            class="bg-emerald-600 text-white hover:bg-emerald-700">
+            <mat-icon>content_copy</mat-icon>
+            Get Example Sheet
+          </button>
+        </mat-card-actions>
+      }
     </mat-card>
 
     <!-- Connection Form Card -->
@@ -99,7 +105,7 @@
               placeholder="https://docs.google.com/spreadsheets/d/...">
               <mat-icon matPrefix class="text-slate-400 mr-2">link</mat-icon>
               <mat-hint class="dark:text-slate-500">Ensure the sheet is shared with "Anyone with the link can
-              view"</mat-hint>
+              edit"</mat-hint>
               @if (getFieldError('spreadsheetUrl')) {
                 <mat-error>{{ getFieldError('spreadsheetUrl') }}</mat-error>
               }
@@ -162,7 +168,7 @@
         </div>
         <h4 class="text-xl font-bold dark:text-white mb-2">No connections yet</h4>
         <p class="text-slate-500 dark:text-slate-400 max-w-xs mx-auto">Create your first Google Sheets connection to start
-        importing your financial data.</p>
+        syncing your financial data.</p>
       </div>
     }
 
@@ -172,7 +178,7 @@
           <mat-card
             class="connection-card dark:bg-slate-900 dark:border-slate-800 hover:shadow-xl transition-all duration-300">
             <mat-card-content class="p-6">
-              <div class="flex items-start justify-between mb-6">
+              <div class="flex items-start justify-between p-8">
                 <div class="flex items-center gap-4">
                   <div
                     class="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/10">
@@ -197,7 +203,7 @@
                   </button>
                 </div>
               </div>
-              <div class="grid grid-cols-2 gap-4 mb-6">
+              <div class="grid grid-cols-2 gap-4 p-8 pb-4">
                 <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl">
                   <span class="block text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 mb-1">Sheet
                   Name</span>
@@ -221,7 +227,7 @@
                   </span>
                 </div>
               </div>
-              <div class="flex gap-3">
+              <div class="flex gap-3 p-8">
                 <button mat-flat-button color="primary" (click)="importFromSheet(connection)"
                   [disabled]="isImporting && selectedSpreadsheetId === connection.spreadsheetId"
                   class="flex-1 shadow-lg shadow-blue-500/20">
