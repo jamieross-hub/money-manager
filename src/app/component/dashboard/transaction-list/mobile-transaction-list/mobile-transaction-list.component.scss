@@ -92,6 +92,8 @@
   }
 
   .filter-text {
+    top: 1px;
+    position: relative;
     font-size: 13px;
     font-weight: 500;
     color: var(--secondary-500);
@@ -2133,9 +2135,9 @@
 }
 
 .quick-clear-btn {
-  width: 44px !important;
-  height: 44px !important;
-  line-height: 44px !important;
+  // width: 44px !important;
+  // height: 44px !important;
+  // line-height: 44px !important;
   margin-left: auto;
   color: var(--primary-600);
   background: var(--primary-100);
