@@ -172,6 +172,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
             name: string, 
             amount: number, 
             transactionCount: number, 
+            budget: number,
             categoryIcon: string, 
             groupIcon?: string, // [NEW]
             categoryColor: string,
@@ -183,6 +184,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
         summary.categoryBreakdown.forEach(item => {
             const cat = categoryMap.get(item.categoryId);
             const isUnrecognized = !validCategoryIds.has(item.categoryId);
+            const budget = cat?.budget?.budgetAmount || 0;
 
             if (isUnrecognized) {
                 const groupName = 'Unrecognized Category';
@@ -192,6 +194,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
                         name: groupName,
                         amount: 0,
                         transactionCount: 0,
+                        budget: 0,
                         categoryIcon: 'help_outline',
                         groupIcon: 'help_outline',
                         categoryColor: '#94a3b8',
@@ -201,6 +204,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
                 const g = groups.get(groupId)!;
                 g.amount += item.amount;
                 g.transactionCount += item.transactionCount;
+                g.budget += budget;
             } else {
                 const groupName = cat?.group;
 
@@ -210,6 +214,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
                             name: groupName,
                             amount: 0,
                             transactionCount: 0,
+                            budget: 0,
                             categoryIcon: item.categoryIcon,
                             groupIcon: cat?.groupIcon, // [NEW]
                             categoryColor: (!item.categoryColor || item.categoryColor === '#9ca3af') ? this.stringToColor(groupName) : item.categoryColor,
@@ -219,6 +224,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
                     const g = groups.get(groupName)!;
                     g.amount += item.amount;
                     g.transactionCount += item.transactionCount;
+                    g.budget += budget;
                     if (item.amount > (g.amount - item.amount)) {
                         g.categoryIcon = item.categoryIcon;
                         g.categoryColor = (!item.categoryColor || item.categoryColor === '#9ca3af') ? this.stringToColor(groupName) : item.categoryColor;
@@ -228,6 +234,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
                         name: item.categoryName,
                         amount: item.amount,
                         transactionCount: item.transactionCount,
+                        budget: budget,
                         categoryIcon: item.categoryIcon,
                         categoryColor: item.categoryColor,
                         categoryId: item.categoryId
@@ -246,12 +253,17 @@ export class ReportsComponent implements OnInit, OnDestroy {
                 categoryColor: g.categoryColor,
                 amount: g.amount,
                 transactionCount: g.transactionCount,
+                budget: g.budget,
                 percentage: (summary.income ?? 0) > 0 ? (g.amount / summary.income!) * 100 : 0,
                 isGrouped: g.categoryId.startsWith('group_')
             }))
             .sort((a, b) => b.amount - a.amount);
 
         return sorted;
+    });
+
+    readonly totalExpenseBudget = computed(() => {
+        return this.groupedCategoryBreakdown().reduce((sum, item) => sum + (item.budget || 0), 0);
     });
 
     readonly expandedItemData = computed(() => {

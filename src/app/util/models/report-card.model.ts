@@ -8,6 +8,7 @@ export interface CategoryReportItem {
   transactionCount: number;
   percentage: number;
   isGrouped?: boolean;
+  budget?: number;
 }
 
 export interface ExpandedReportData {

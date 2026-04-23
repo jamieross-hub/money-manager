@@ -53,6 +53,7 @@
                 <div class="flex items-center gap-2">
                   <mat-icon class="!text-[14px] !w-3.5 !h-3.5 text-gray-400">{{ sub.categoryIcon || fallbackIcon }}</mat-icon>
                   <span class="text-gray-600 dark:text-gray-400 font-medium">{{ sub.categoryName }}</span>
+                  <span class="text-[9px] text-gray-400 font-normal ml-0.5">({{ sub.transactionCount }})</span>
                 </div>
                 <div class="flex items-center gap-2">
                   <span class="font-semibold text-gray-800 dark:text-gray-200">{{ sub.amount | currency:{compact:true} }}</span>

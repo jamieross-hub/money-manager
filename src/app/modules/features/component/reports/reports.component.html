@@ -86,7 +86,7 @@
             <div class="space-y-6">
               <!-- ═══════════ KEY METRICS ═══════════ -->
               <!-- ═══════════ KEY METRICS LEDGER ═══════════ -->
-              <div class="overflow-hidden border border-neutral-400 rounded-xl bg-white mb-8 shadow-sm">
+              <div class="hidden md:block overflow-hidden border border-neutral-400 rounded-xl bg-white mb-8 shadow-sm">
                 <!-- Desktop Header (Hidden on Mobile) -->
                 <div class="hidden md:grid grid-cols-4 bg-primary-100 border-b border-neutral-400">
                   <div
@@ -327,8 +327,11 @@
                   </div>
                   }
                 </mat-card-content>
-                @defer (on viewport) {
-                <!-- ═══════════ CATEGORY BREAKDOWN ═══════════ -->
+              </mat-card>
+
+              @defer (on viewport) {
+              <!-- ═══════════ CATEGORY BREAKDOWN ═══════════ -->
+              <mat-card class="!rounded-xl !border-none">
                 <mat-card-content class="!px-4 !pt-1">
                   <div class="flex items-center flex-wrap mb-2 mt-3 gap-2 justify-between">
                     <p class="text-sm font-semibold text-neutral-500 flex items-center gap-2 !mb-0">
@@ -345,6 +348,7 @@
                       <thead>
                         <tr class="mat-mdc-header-row">
                           <th class="mat-mdc-header-cell">EXPENSE CATEGORY</th>
+                          <th class="mat-mdc-header-cell !text-right">BUDGET</th>
                           <th class="mat-mdc-header-cell !text-right hidden sm:table-cell">PERCENT</th>
                           <th class="mat-mdc-header-cell !text-right">ACTUAL</th>
                         </tr>
@@ -369,6 +373,9 @@
                               </div>
                             </div>
                           </td>
+                          <td class="mat-mdc-cell !text-right text-neutral-400">
+                            {{ cat.budget ? (cat.budget | currency:{ compact: true }) : '—' }}
+                          </td>
                           <td class="mat-mdc-cell !text-right hidden sm:table-cell">
                             <div class="flex flex-col items-end gap-1">
                               <span class="text-xs font-bold text-neutral-600">{{ cat.percentage | number:'1.0-1'
@@ -387,7 +394,7 @@
                         <!-- Expandable Transaction List (Optional but kept for UX) -->
                         @if (expandedCategoryId() === cat.categoryId) {
                         <tr class="mat-mdc-row bg-neutral-50/50">
-                          <td [attr.colspan]="breakpointService.isMobile() ? 2 : 3" class="mat-mdc-cell !p-0">
+                          <td [attr.colspan]="breakpointService.isMobile() ? 3 : 4" class="mat-mdc-cell !p-0">
                             <div class="p-4 bg-white/50 border-b border-neutral-100">
                               <app-category-report-item [item]="cat" [isExpanded]="true"
                                 [expandedData]="expandedItemData()" (toggleExpand)="toggleExpand(cat.categoryId)"
@@ -399,7 +406,7 @@
                         }
                         } @empty {
                         <tr class="mat-mdc-row">
-                          <td [attr.colspan]="breakpointService.isMobile() ? 2 : 3"
+                          <td [attr.colspan]="breakpointService.isMobile() ? 3 : 4"
                             class="mat-mdc-cell text-center py-12">
                             <mat-icon class="text-neutral-200 !text-5xl mb-2">auto_graph</mat-icon>
                             <p class="text-neutral-400 font-medium">No expenses recorded for this period</p>
@@ -410,6 +417,9 @@
                       <tfoot>
                         <tr class="mat-mdc-footer-row">
                           <td class="mat-mdc-footer-cell">TOTAL SPENDING</td>
+                          <td class="mat-mdc-footer-cell !text-right text-neutral-400">
+                            {{ totalExpenseBudget() | currency:{ compact: true } }}
+                          </td>
                           <td class="mat-mdc-footer-cell !text-right hidden sm:table-cell">100%</td>
                           <td class="mat-mdc-footer-cell !text-right text-error-600">
                             {{ currentPeriodSummary?.expense | currency:{ compact: true } }}
@@ -429,14 +439,14 @@
                   </div>
                   <!-- category inslight  later -->
                 </mat-card-content>
-                } @placeholder {
-                <div class="space-y-3">
-                  <div class="h-14 bg-neutral-200 rounded-xl animate-pulse"></div>
-                  <div class="h-14 bg-neutral-200 rounded-xl animate-pulse"></div>
-                  <div class="h-14 bg-neutral-200 rounded-xl animate-pulse"></div>
-                </div>
-                }
               </mat-card>
+              } @placeholder {
+              <div class="space-y-3">
+                <div class="h-14 bg-neutral-200 rounded-xl animate-pulse"></div>
+                <div class="h-14 bg-neutral-200 rounded-xl animate-pulse"></div>
+                <div class="h-14 bg-neutral-200 rounded-xl animate-pulse"></div>
+              </div>
+              }
               @defer (on viewport) {
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <!-- Income Table -->
@@ -447,7 +457,6 @@
                         <thead>
                           <tr class="mat-mdc-header-row">
                             <th class="mat-mdc-header-cell">INCOME</th>
-                            <th class="mat-mdc-header-cell !text-right">BUDGET</th>
                             <th class="mat-mdc-header-cell !text-right">ACTUAL</th>
                           </tr>
                         </thead>
@@ -455,16 +464,13 @@
                           @for (item of incomeBreakdown(); track item.categoryId) {
                           <tr class="mat-mdc-row">
                             <td class="mat-mdc-cell font-medium">{{ item.categoryName }}</td>
-                            <td class="mat-mdc-cell !text-right text-neutral-400">
-                              {{ item.budget ? (item.budget | currency:{ compact: true }) : '—' }}
-                            </td>
                             <td class="mat-mdc-cell !text-right !text-success-600 font-mono tabular-nums font-semibold">
                               {{ item.amount | currency:{ compact: true } }}
                             </td>
                           </tr>
                           } @empty {
                           <tr class="mat-mdc-row">
-                            <td colspan="3" class="mat-mdc-cell text-center py-8 text-neutral-400">No income data for
+                            <td colspan="2" class="mat-mdc-cell text-center py-8 text-neutral-400">No income data for
                               this period</td>
                           </tr>
                           }
@@ -472,10 +478,7 @@
                         <tfoot>
                           <tr class="mat-mdc-footer-row">
                             <td class="mat-mdc-footer-cell">TOTAL</td>
-                            <td class="mat-mdc-footer-cell !text-right">
-                              {{ currentPeriodSummary?.avgMonthlyIncome | currency:{ compact: true } }}
-                            </td>
-                            <td class="mat-mdc-cell !text-right !text-success-600 font-mono tabular-nums">
+                            <td class="mat-mdc-footer-cell !text-right !text-success-600 font-mono tabular-nums">
                               {{ currentPeriodSummary?.income | currency:{ compact: true } }}
                             </td>
                           </tr>
