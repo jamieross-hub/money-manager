@@ -366,7 +366,7 @@
                                   || 'category' }}</mat-icon>
                               </div>
                               <div class="flex flex-col">
-                                <span class="font-bold text-xs text-neutral-800">{{ cat.categoryName }}</span>
+                                <span class="font-medium text-xs text-neutral-800">{{ cat.categoryName }}</span>
                                 <span class="text-[10px] text-neutral-400 font-semibold">
                                   {{ cat.transactionCount }} Trans.
                                 </span>
@@ -395,10 +395,11 @@
                         @if (expandedCategoryId() === cat.categoryId) {
                         <tr class="mat-mdc-row bg-neutral-50/50">
                           <td [attr.colspan]="breakpointService.isMobile() ? 3 : 4" class="mat-mdc-cell !p-0">
-                            <div class="p-4 bg-white/50 border-b border-neutral-100">
+                            <div class="px-2 py-4 bg-neutral-50/50 border-b border-neutral-100 min-w-0 overflow-hidden">
                               <app-category-report-item [item]="cat" [isExpanded]="true"
+                                [hideHeader]="true"
                                 [expandedData]="expandedItemData()" (toggleExpand)="toggleExpand(cat.categoryId)"
-                                class="!block !shadow-none !border-none !bg-transparent">
+                                class="!block !shadow-none !border-none !bg-transparent min-w-0">
                               </app-category-report-item>
                             </div>
                           </td>
@@ -488,31 +489,47 @@
                   </mat-card-content>
                 </mat-card>
 
-                <!-- Notes Table -->
-                <!-- <mat-card class="!rounded-xl !border-none">
+                <!-- Accounts Table -->
+                <mat-card class="!rounded-xl !border-none">
                   <mat-card-content class="pt-4">
                     <div class="overflow-x-auto">
                       <table class="w-full history-table accounting-table compact-table">
                         <thead>
                           <tr class="mat-mdc-header-row">
-                            <th class="mat-mdc-header-cell">NOTES</th>
+                            <th class="mat-mdc-header-cell">ACCOUNTS</th>
+                            <th class="mat-mdc-header-cell !text-right">BALANCE</th>
                           </tr>
                         </thead>
                         <tbody>
+                          @for (account of allAccounts(); track account.accountId) {
                           <tr class="mat-mdc-row">
-                            <td class="mat-mdc-cell h-10"></td>
+                            <td class="mat-mdc-cell font-medium">{{ account.name }}</td>
+                            <td class="mat-mdc-cell !text-right font-mono tabular-nums font-semibold"
+                                [class.text-success-600]="account.balance >= 0"
+                                [class.text-error-600]="account.balance < 0">
+                              {{ account.balance | currency:{ compact: true } }}
+                            </td>
                           </tr>
+                          } @empty {
                           <tr class="mat-mdc-row">
-                            <td class="mat-mdc-cell h-10"></td>
+                            <td colspan="2" class="mat-mdc-cell text-center py-8 text-neutral-400">No accounts found</td>
                           </tr>
-                          <tr class="mat-mdc-row">
-                            <td class="mat-mdc-cell h-10"></td>
-                          </tr>
+                          }
                         </tbody>
+                        <tfoot>
+                          <tr class="mat-mdc-footer-row">
+                            <td class="mat-mdc-footer-cell uppercase tracking-wider">NET WORTH</td>
+                            <td class="mat-mdc-footer-cell !text-right font-mono tabular-nums font-bold"
+                                [class.!text-success-600]="totalBalance() >= 0"
+                                [class.!text-error-600]="totalBalance() < 0">
+                              {{ totalBalance() | currency:{ compact: true } }}
+                            </td>
+                          </tr>
+                        </tfoot>
                       </table>
                     </div>
                   </mat-card-content>
-                </mat-card> -->
+                </mat-card>
               </div>
               <!-- ═══════════ MONTHLY HISTORY ═══════════ -->
               @if (filteredMonthlySummaries.length > 0) {

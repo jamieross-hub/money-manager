@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, signal, computed } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
@@ -25,11 +25,19 @@ import { CategoryReportItem, ExpandedReportData } from '../../../models/report-c
 export class CategoryReportItemComponent {
   @Input({ required: true }) item!: CategoryReportItem;
   @Input({ required: true }) isExpanded: boolean = false;
+  @Input() hideHeader: boolean = false;
   @Input() expandedData: ExpandedReportData | null = null;
   @Output() toggleExpand = new EventEmitter<void>();
 
+  selectedSubId = signal<string | null>(null);
+
   onToggle(): void {
     this.toggleExpand.emit();
+  }
+
+  onSubCategoryClick(event: Event, categoryId: string): void {
+    event.stopPropagation();
+    this.selectedSubId.update(current => current === categoryId ? null : categoryId);
   }
 
   sortOrder: 'none' | 'asc' | 'desc' = 'none';
@@ -46,7 +54,14 @@ export class CategoryReportItemComponent {
   }
 
   get sortedTransactions(): any[] {
-    const transactions = this.expandedData?.transactions || [];
+    let transactions = this.expandedData?.transactions || [];
+    
+    // Apply sub-category filter if active
+    const filterId = this.selectedSubId();
+    if (filterId) {
+      transactions = transactions.filter(t => t.categoryId === filterId);
+    }
+
     if (this.sortOrder === 'none') {
       return transactions;
     }

@@ -7,6 +7,7 @@ import { AppState } from '../../../../store/app.state';
 import * as TransactionsSelectors from '../../../../store/transactions/transactions.selectors';
 import * as CategoriesSelectors from '../../../../store/categories/categories.selectors';
 import * as ProfileSelectors from '../../../../store/profile/profile.selectors';
+import * as AccountsSelectors from '../../../../store/accounts/accounts.selectors';
 import { UserService } from '../../../../util/service/db/user.service';
 import { CurrencyService } from '../../../../util/service/currency.service';
 import { DateService } from '../../../../util/service/date.service';
@@ -133,6 +134,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
     // Store Signals
     readonly transactions = this.store.selectSignal(TransactionsSelectors.selectAllTransactions);
     readonly allCategories = this.store.selectSignal(CategoriesSelectors.selectAllCategories);
+    readonly allAccounts = this.store.selectSignal(AccountsSelectors.selectAllAccounts);
+    readonly totalBalance = this.store.selectSignal(AccountsSelectors.selectTotalBalance);
 
     // Data from ReportsProcessorService (Signals)
     monthlySummariesSignal = this.reportsProcessor.monthlySummaries;

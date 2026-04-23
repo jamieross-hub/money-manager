@@ -1,107 +1,167 @@
-<div class="group flex flex-col bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-all duration-200 mb-1 overflow-hidden"
-  [class.expanded-card]="isExpanded">
-  <div class="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-900/10"
-    (click)="onToggle()">
-    <!-- Left: Icon Box -->
-    <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105"
-      [style.background-color]="item.categoryColor + '20'"
-      [style.color]="item.categoryColor">
-      <mat-icon class="category-icon !text-[20px] !w-5 !h-5">{{ item.groupIcon || item.categoryIcon || fallbackIcon }}</mat-icon>
-    </div>
-    
-    <!-- Right: Content Column -->
-    <div class="flex-1 min-w-0">
-      <div class="flex justify-between items-baseline mb-0.5">
-        <div class="min-w-0">
-          <span class="text-xs font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-1 min-w-0">
-            <span class="truncate">{{ item.categoryName }}</span>
-            <mat-icon class="!text-xs !w-auto !h-auto text-gray-400 transition-transform duration-200 flex-shrink-0" [class.rotate-180]="isExpanded">keyboard_arrow_down</mat-icon>
-          </span>
-          <div class="flex items-center gap-1.5 mt-0.5">
-            <span class="text-[10px] text-gray-400 font-medium leading-none">
-              {{ item.transactionCount }} transaction{{ item.transactionCount !== 1 ? 's' : '' }}
+<div class="group flex flex-col transition-all duration-200 overflow-hidden"
+  [class.bg-white]="!hideHeader"
+  [class.dark:bg-gray-800]="!hideHeader"
+  [class.rounded-xl]="!hideHeader"
+  [class.shadow-sm]="!hideHeader"
+  [class.border]="!hideHeader"
+  [class.border-gray-100]="!hideHeader"
+  [class.dark:border-gray-700]="!hideHeader"
+  [class.mb-1]="!hideHeader">
+  
+  @if (!hideHeader) {
+    <div class="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-900/10"
+      (click)="onToggle()">
+      <!-- Left: Icon Box -->
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105"
+        [style.background-color]="item.categoryColor + '20'"
+        [style.color]="item.categoryColor">
+        <mat-icon class="category-icon !text-[20px] !w-5 !h-5">{{ item.groupIcon || item.categoryIcon || fallbackIcon }}</mat-icon>
+      </div>
+      
+      <!-- Right: Content Column -->
+      <div class="flex-1 min-w-0">
+        <div class="flex justify-between items-baseline mb-0.5">
+          <div class="min-w-0">
+            <span class="text-xs font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-1 min-w-0">
+              <span class="truncate">{{ item.categoryName }}</span>
+              <mat-icon class="!text-xs !w-auto !h-auto text-gray-400 transition-transform duration-200 flex-shrink-0" [class.rotate-180]="isExpanded">keyboard_arrow_down</mat-icon>
             </span>
-            <span class="text-[9px] font-bold text-gray-400 bg-gray-50 dark:bg-gray-700/50 px-1.5 py-0.5 rounded-full leading-none">
-              {{ item.percentage | number:'1.0-0' }}%
-            </span>
+            <div class="flex items-center gap-1.5 mt-0.5">
+              <span class="text-[10px] text-gray-400 font-medium leading-none">
+                {{ item.transactionCount }} transaction{{ item.transactionCount !== 1 ? 's' : '' }}
+              </span>
+              <span class="text-[9px] font-bold text-gray-400 bg-gray-50 dark:bg-gray-700/50 px-1.5 py-0.5 rounded-full leading-none">
+                {{ item.percentage | number:'1.0-0' }}%
+              </span>
+            </div>
           </div>
-        </div>
-        <div class="text-right flex flex-col items-end">
-          <span class="text-xs font-semibold text-neutral-500 dark:text-gray-100">
-            {{ item.amount | currency:{compact:true} }}
-          </span>
-          <!-- Progress Bar -->
-          <div class="mt-1 h-1 w-12 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-            <div class="h-full rounded-full transition-all duration-500" [style.background-color]="item.categoryColor" [style.width.%]="item.percentage"></div>
+          <div class="text-right flex flex-col items-end">
+            <span class="text-xs font-semibold text-neutral-500 dark:text-gray-100">
+              {{ item.amount | currency:{compact:true} }}
+            </span>
+            <!-- Progress Bar -->
+            <div class="mt-1 h-1 w-12 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-500" [style.background-color]="item.categoryColor" [style.width.%]="item.percentage"></div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  }
 
   <!-- EXPANDED CONTENT -->
   @if (isExpanded) {
-    <div class="px-3 py-2 bg-gray-50/50 dark:bg-gray-900/10 border-t border-gray-100 dark:border-gray-700 space-y-2.5 animation-slide-down overflow-y-auto">
+    <div class="animation-slide-down"
+         [class.px-3]="!hideHeader"
+         [class.py-2]="!hideHeader"
+         [class.bg-gray-50/50]="!hideHeader"
+         [class.dark:bg-gray-900/10]="!hideHeader"
+         [class.border-t]="!hideHeader">
       
       @if (expandedData?.isGroup) {
-        <!-- Group Breakdown -->
-        <div>
-          <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Breakdown</p>
-          <div class="space-y-1">
-            @for (sub of expandedData?.breakdown; track sub.categoryId) {
-              <div class="flex items-center justify-between text-[11px] py-1 border-b border-gray-100/50 dark:border-gray-700/50 last:border-b-0">
-                <div class="flex items-center gap-2">
-                  <mat-icon class="!text-[14px] !w-3.5 !h-3.5 text-gray-400">{{ sub.categoryIcon || fallbackIcon }}</mat-icon>
-                  <span class="text-gray-600 dark:text-gray-400 font-medium">{{ sub.categoryName }}</span>
-                  <span class="text-[9px] text-gray-400 font-normal ml-0.5">({{ sub.transactionCount }})</span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="font-semibold text-gray-800 dark:text-gray-200">{{ sub.amount | currency:{compact:true} }}</span>
-                  <span class="text-[9px] font-bold text-gray-400 bg-gray-100 dark:bg-gray-800 px-1 rounded">{{ sub.percentage | number:'1.0-0' }}%</span>
-                </div>
-              </div>
-            }
+        <!-- Group Breakdown Section -->
+        <div class="mb-5">
+           <div class="flex items-center gap-2 mb-2 px-1">
+             <mat-icon class="!text-[14px] !w-3.5 !h-3.5 text-neutral-400">account_tree</mat-icon>
+             <p class="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Sub-Category Breakdown</p>
+           </div>
+          <div class="border-l-4 rounded-r-lg overflow-hidden bg-white shadow-sm border-neutral-200" [style.borderLeftColor]="item.categoryColor || '#cbd5e1'">
+            <table class="w-full table-fixed history-table accounting-table compact-table border-none">
+              <tbody>
+                @for (sub of expandedData?.breakdown; track sub.categoryId) {
+                  <tr class="mat-mdc-row hover:bg-neutral-50/50 transition-colors cursor-pointer"
+                      [class.bg-primary-50]="selectedSubId() === sub.categoryId"
+                      (click)="onSubCategoryClick($event, sub.categoryId)">
+                    <td class="mat-mdc-cell !py-2 !px-3 !border-r-0">
+                      <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-6 h-6 rounded flex items-center justify-center shrink-0" 
+                             [class.bg-neutral-50]="selectedSubId() !== sub.categoryId"
+                             [class.bg-primary-100]="selectedSubId() === sub.categoryId">
+                           <mat-icon class="!text-[14px] !w-3.5 !h-3.5"
+                                     [class.text-neutral-400]="selectedSubId() !== sub.categoryId"
+                                     [class.text-primary-600]="selectedSubId() === sub.categoryId">
+                             {{ sub.categoryIcon || fallbackIcon }}
+                           </mat-icon>
+                        </div>
+                        <span class="text-neutral-700 font-medium break-words leading-tight truncate"
+                              [class.text-primary-700]="selectedSubId() === sub.categoryId">
+                          {{ sub.categoryName }}
+                        </span>
+                      </div>
+                    </td>
+                    <td class="mat-mdc-cell !py-2 !px-3 !text-right !border-r-0 w-16 hidden sm:table-cell">
+                      <span class="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                            [class.text-neutral-400]="selectedSubId() !== sub.categoryId"
+                            [class.bg-neutral-100]="selectedSubId() !== sub.categoryId"
+                            [class.text-primary-600]="selectedSubId() === sub.categoryId"
+                            [class.bg-primary-100]="selectedSubId() === sub.categoryId">
+                        {{ sub.percentage | number:'1.0-0' }}%
+                      </span>
+                    </td>
+                    <td class="mat-mdc-cell !py-2 !px-3 !text-right font-bold text-neutral-800 tabular-nums w-24">
+                      {{ sub.amount | currency:{compact:true} }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
         </div>
-        <mat-divider class="dark:border-gray-700/50"></mat-divider>
       }
 
-      <!-- Transactions List -->
+      <!-- Transactions List Section -->
       <div>
-        <div class="flex items-center justify-between mb-1.5">
-          <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Transactions</p>
+        <div class="flex items-center justify-between mb-2 px-1">
+          <div class="flex items-center gap-2">
+            <mat-icon class="!text-[14px] !w-3.5 !h-3.5 text-neutral-400">receipt_long</mat-icon>
+            <div class="flex items-center gap-2">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Transaction History</p>
+              @if (selectedSubId()) {
+                <span class="text-[9px] font-bold text-primary-500 bg-primary-50 px-1.5 py-0.5 rounded-full border border-primary-100 animate-pulse">
+                  Filtering by sub-category
+                </span>
+                <button (click)="onSubCategoryClick($event, selectedSubId()!)" 
+                        class="text-[9px] font-bold text-neutral-400 hover:text-error-500 transition-colors bg-transparent border-none cursor-pointer p-0 underline">
+                  Clear
+                </button>
+              }
+            </div>
+          </div>
           @if (expandedData?.transactions?.length && expandedData!.transactions!.length > 1) {
             <button (click)="toggleSort($event)" 
-                    class="flex items-center gap-1 text-[9px] font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors bg-transparent border-none cursor-pointer p-0"
-                    [matTooltip]="sortOrder === 'none' ? 'Sort by amount' : sortOrder === 'desc' ? 'Highest to Lowest' : 'Lowest to Highest'">
-              <mat-icon class="!text-[12px] !w-3 !h-3">
+                    class="flex items-center gap-1.5 text-[10px] font-bold text-primary-500 hover:text-primary-700 transition-colors bg-transparent border-none cursor-pointer p-0">
+              <mat-icon class="!text-[14px] !w-3.5 !h-3.5">
                 {{ sortOrder === 'none' ? 'sort' : sortOrder === 'desc' ? 'arrow_downward' : 'arrow_upward' }}
               </mat-icon>
-              <span>{{ sortOrder === 'none' ? 'Sort' : sortOrder === 'desc' ? 'Highest' : 'Lowest' }}</span>
+              <span>Sort</span>
             </button>
           }
         </div>
+        
         @if (expandedData?.transactions?.length === 0) {
-          <p class="text-[10px] text-gray-400 italic text-center py-2">No items found</p>
+          <div class="text-center py-6 bg-neutral-50/50 rounded-lg border border-dashed border-neutral-200">
+             <p class="text-[11px] text-neutral-400 font-medium italic">No recent transactions</p>
+          </div>
         } @else {
-          <div class="divide-y divide-gray-100/80 dark:divide-gray-700/50 ">
-            @for (t of sortedTransactions; track t.id) {
-              <div class="flex justify-between items-center py-1.5 text-[11px] px-1">
-                <div class="min-w-0 flex-1">
-                  <span class="font-medium text-gray-700 dark:text-gray-300 truncate block">{{ t.note || t.category || 'Untitled' }}</span>
-                  <p class="text-[10px] text-gray-400 truncate">
-                    {{ t.date | date:'mediumDate' }}
-                    @if (t.notes && t.notes !== t.note) {
-                      <span class="text-gray-300 px-1">•</span>
-                      <span class="italic text-gray-500/80">{{ t.notes }}</span>
-                    }
-                  </p>
-                </div>
-                <span class="font-semibold ml-2" [class]="t.type === 'expense' || t.amount < 0 ? 'text-red-500 dark:text-red-400' : 'text-green-500 dark:text-green-400'">
-                  {{ (t.type === 'expense' || t.amount < 0 ? '-' : '+') }}{{ (t.amount | abs) | currency }}
-                </span>
-              </div>
-            }
+          <div class="border border-neutral-200 rounded-lg overflow-hidden bg-white shadow-sm ring-1 ring-black/5">
+            <table class="w-full table-fixed history-table accounting-table compact-table border-none">
+              <tbody>
+                @for (t of sortedTransactions; track t.id) {
+                  <tr class="mat-mdc-row hover:bg-neutral-50/50 transition-colors">
+                    <td class="mat-mdc-cell !py-2.5 !px-3 !border-r-0">
+                      <div class="flex flex-col min-w-0">
+                         <span class="font-medium text-neutral-800 break-words leading-tight truncate">{{ t.note || t.category || 'Untitled' }}</span>
+                         <span class="text-[9px] text-neutral-400 font-medium mt-1">{{ t.date | date:'mediumDate' }}</span>
+                      </div>
+                    </td>
+                    <td class="mat-mdc-cell !py-2.5 !px-3 !text-right font-bold tabular-nums text-[12px] w-24" 
+                        [class]="t.type === 'expense' || t.amount < 0 ? 'text-error-600' : 'text-success-600'">
+                      {{ (t.type === 'expense' || t.amount < 0 ? '-' : '+') }}{{ (t.amount | abs) | currency:{compact:true} }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
         }
       </div>
