@@ -41,21 +41,22 @@ import { ThemeSwitchingService } from '../../../../util/service/theme-switching.
 })
 export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy {
     // Model values
-    loanAmount: number = 500000;
-    interestRate: number = 10.5;
-    tenureValue: number = 36;
-    tenureType: 'mo' | 'yr' = 'mo';
+    loanAmount: number = 750000;
+    interestRate: number = 9.99;
+    tenureValue: number = 5;
+    processingCharges: number = 0;
 
     // Calculated results
     monthlyEmi: number = 0;
     totalInterest: number = 0;
     totalAmount: number = 0;
+    totalCost: number = 0;
 
     // Constants
-    minAmount = 10000;
+    minAmount = 25000;
     maxAmount = 5000000;
-    minRate = 1;
-    maxRate = 30;
+    minRate = 5;
+    maxRate = 24.0;
 
     // amCharts
     // amCharts (Removed)
@@ -77,7 +78,7 @@ export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy
             if (params['amount']) this.loanAmount = +params['amount'];
             if (params['rate']) this.interestRate = +params['rate'];
             if (params['tenure']) this.tenureValue = +params['tenure'];
-            if (params['type']) this.tenureType = params['type'] as 'mo' | 'yr';
+            if (params['charges']) this.processingCharges = +params['charges'];
             this.calculateEMI();
         });
 
@@ -99,7 +100,7 @@ export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy
     calculateEMI(): void {
         const P = this.loanAmount;
         const R = this.interestRate / 12 / 100;
-        const N = this.tenureType === 'yr' ? this.tenureValue * 12 : this.tenureValue;
+        const N = this.tenureValue * 12;
 
         if (R === 0) {
             this.monthlyEmi = P / N;
@@ -109,15 +110,16 @@ export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy
 
         this.totalAmount = this.monthlyEmi * N;
         this.totalInterest = this.totalAmount - P;
+        this.totalCost = this.totalAmount + this.processingCharges;
 
         // this.updateChart();
     }
 
     resetToDefaults(): void {
-        this.loanAmount = 500000;
-        this.interestRate = 10.5;
-        this.tenureValue = 36;
-        this.tenureType = 'mo';
+        this.loanAmount = 750000;
+        this.interestRate = 9.99;
+        this.tenureValue = 5;
+        this.processingCharges = 0;
         this.calculateEMI();
     }
 
@@ -126,7 +128,7 @@ export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy
         url.searchParams.set('amount', this.loanAmount.toString());
         url.searchParams.set('rate', this.interestRate.toString());
         url.searchParams.set('tenure', this.tenureValue.toString());
-        url.searchParams.set('type', this.tenureType);
+        url.searchParams.set('charges', this.processingCharges.toString());
 
         navigator.clipboard.writeText(url.toString()).then(() => {
             this.snackBar.open(this.translate.instant('LOAN_CALCULATOR.LINK_COPIED'), this.translate.instant('COMMON.CLOSE'), {
@@ -150,19 +152,10 @@ export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy
     }
 
     get currentMaxTenure(): number {
-        return this.tenureType === 'yr' ? 30 : 360;
+        return 30; // Max 30 years
     }
 
-    onTenureTypeChange(): void {
-        if (this.tenureType === 'yr') {
-            if (this.tenureValue > 30) {
-                this.tenureValue = 30;
-            }
-        } else {
-            // No need to convert if we want to stay within 360
-        }
-        this.calculateEMI();
-    }
+    // Tenure type change removed as it is always years
 
     onTenureChange(event: any): void {
         this.tenureValue = Number(event.target.value);

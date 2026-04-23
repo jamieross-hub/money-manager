@@ -1,210 +1,123 @@
-<div class="loan-calculator-container p-4 md:p-8 animate-fadeUp">
-    <!-- Unified Header -->
-    <header class="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-10 gap-4 md:gap-6">
-        <div class="space-y-1 md:space-y-2">
-            <div class="flex items-center gap-3 md:gap-4 mb-1 md:mb-2">
-                <div class="bg-theme-primary/15 p-2 md:p-3 rounded-xl md:rounded-2xl shadow-sm">
-                    <mat-icon
-                        class="text-theme-primary !w-6 !h-6 !text-xl md:!w-7 md:!h-7 md:!text-[28px]">calculate</mat-icon>
-                </div>
-                <p class="title-text !mb-0">
-                    {{ 'LOAN_CALCULATOR.TITLE' | translate }}
-                </p>
-            </div>
-            <p class="text-professional text-xs md:text-sm text-gray-500 dark:text-gray-400 max-w-xl">
-                {{ 'LOAN_CALCULATOR.SUBTITLE' | translate }}
-            </p>
-        </div>
 
-        <div class="flex gap-2">
-            <button mat-stroked-button color="primary" class="!rounded-xl md:!rounded-1.5xl flex-1 md:flex-none"
-                (click)="resetToDefaults()">
-                <mat-icon class="mr-1 md:mr-2 !text-lg">refresh</mat-icon>
-                <span class="text-xs md:text-sm">{{ 'LOAN_CALCULATOR.RESET_DEFAULTS' | translate }}</span>
-            </button>
-            <button mat-flat-button color="primary"
-                class="!rounded-xl md:!rounded-1.5xl flex-1 md:flex-none shadow-md shadow-theme-primary/20"
-                (click)='copyShareableLink()'>
-                <mat-icon class="mr-1 md:mr-2 !text-lg">link</mat-icon>
-                <span class="text-xs md:text-sm">{{ 'LOAN_CALCULATOR.COPY_LINK' | translate }}</span>
-            </button>
-        </div>
+<div class="loan-calculator-wrapper">
+    <!-- Header -->
+    <header class="calculator-header">
+        <div class="text-2xl font-extrabold text-primary-500">{{ 'LOAN_CALCULATOR.TITLE' | translate }}</div>
+        <div class="text-sm text-neutral-500">{{ 'LOAN_CALCULATOR.SUBTITLE' | translate }}</div>
     </header>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10">
+    <div class="calculator-grid">
         <!-- Control Panel (Inputs) -->
-        <aside class="lg:col-span-4 xl:col-span-5 space-y-6 md:space-y-8">
-            <mat-card class="glass-card p-5 md:p-8">
-                <div class="flex items-center gap-3 mb-6 md:mb-10">
-                    <div class="w-1 h-5 md:w-1.5 md:h-6 bg-theme-primary rounded-full"></div>
-                    <p class="text-professional-medium text-base md:text-lg text-gray-800 dark:text-gray-100 mb-0">
-                        {{ 'LOAN_CALCULATOR.LOAN_DETAILS' | translate }}
-                    </p>
-                </div>
-
-                <div class="space-y-8 md:space-y-10">
-                    <!-- Loan Amount -->
-                    <div class="space-y-3 md:space-y-4">
-                        <div class="flex justify-between items-center px-1">
-                            <span class="label-text">{{ 'LOAN_CALCULATOR.LOAN_AMOUNT' | translate }}</span>
-                            <div
-                                class="flex items-center bg-gray-50/50 dark:bg-gray-800/30 rounded-lg md:rounded-xl border border-gray-100 dark:border-gray-700/50 px-3 md:px-4 py-1.5 md:py-2">
-                                <span class="text-gray-400 font-medium mr-1 text-sm md:text-base">₹</span>
-                                <input type="number" [(ngModel)]="loanAmount" (input)="calculateEMI()" [min]="minAmount"
-                                    [max]="maxAmount"
-                                    class="w-20 md:w-28 bg-transparent border-none outline-none data-text text-theme-primary text-lg md:text-xl text-right">
-                            </div>
-                        </div>
-                        <mat-slider [min]="minAmount" [max]="maxAmount" step="10000" class="w-full">
-                            <input matSliderThumb [(ngModel)]="loanAmount" (valueChange)="calculateEMI()">
-                        </mat-slider>
-                        <div class="flex justify-between label-text !text-[8px] md:!text-[9px] opacity-60 px-1">
-                            <span class="data-text">{{ currencyService.formatAmount(minAmount,{round:true}) }}</span>
-                            <span class="data-text">{{ currencyService.formatAmount(maxAmount,{round:true}) }}</span>
-                        </div>
-                    </div>
-
-                    <!-- Interest Rate -->
-                    <div class="space-y-3 md:space-y-4">
-                        <div class="flex justify-between items-center px-1">
-                            <span class="label-text">{{ 'LOAN_CALCULATOR.INTEREST_RATE' | translate }}</span>
-                            <div
-                                class="flex items-center bg-gray-50/50 dark:bg-gray-800/30 rounded-lg md:rounded-xl border border-gray-100 dark:border-gray-700/50 px-3 md:px-4 py-1.5 md:py-2">
-                                <input type="number" [(ngModel)]="interestRate" (input)="calculateEMI()" [min]="minRate"
-                                    [max]="maxRate"
-                                    class="w-12 md:w-16 bg-transparent border-none outline-none data-text text-theme-primary text-lg md:text-xl text-right">
-                                <span class="text-gray-400 font-medium ml-1 text-sm md:text-base">%</span>
-                            </div>
-                        </div>
-                        <mat-slider [min]="minRate" [max]="maxRate" step="0.1" class="w-full">
-                            <input matSliderThumb [(ngModel)]="interestRate" (valueChange)="calculateEMI()">
-                        </mat-slider>
-                        <div class="flex justify-between label-text !text-[8px] md:!text-[9px] opacity-60 px-1">
-                            <span class="data-text">{{ minRate }}%</span>
-                            <span class="data-text">{{ maxRate }}%</span>
-                        </div>
-                    </div>
-
-                    <!-- Tenure -->
-                    <div class="space-y-3 md:space-y-4">
-                        <div class="flex justify-between items-center px-1">
-                            <span class="label-text">{{ 'LOAN_CALCULATOR.LOAN_TENURE' | translate }}</span>
-                            <div class="flex items-center gap-2 md:gap-4">
-                                <div
-                                    class="bg-gray-50/50 dark:bg-gray-800/30 rounded-lg md:rounded-xl border border-gray-100 dark:border-gray-700/50 px-3 md:px-4 py-1.5 md:py-2">
-                                    <input type="number" [(ngModel)]="tenureValue" (input)="calculateEMI()"
-                                        class="w-10 md:w-16 bg-transparent border-none outline-none data-text text-theme-primary text-lg md:text-xl text-right">
-                                </div>
-                                <mat-button-toggle-group [(ngModel)]="tenureType" (change)="onTenureTypeChange()"
-                                    class="small-toggle">
-                                    <mat-button-toggle value="mo">Mo</mat-button-toggle>
-                                    <mat-button-toggle value="yr">Yr</mat-button-toggle>
-                                </mat-button-toggle-group>
-                            </div>
-                        </div>
-                        <mat-slider [min]="currentMinTenure" [max]="currentMaxTenure" step="1" class="w-full">
-                            <input matSliderThumb [(ngModel)]="tenureValue" (valueChange)="calculateEMI()">
-                        </mat-slider>
-                        <div class="flex justify-between label-text !text-[8px] md:!text-[9px] opacity-60 px-1">
-                            <span class="data-text">1 {{ (tenureType === 'yr' ? 'year' : 'month') }}</span>
-                            <span class="data-text">{{ currentMaxTenure }} {{ (tenureType === 'yr' ? 'years' : 'months')
-                                }}</span>
-                        </div>
+        <aside class="calculator-input-card">
+            <!-- Loan Amount -->
+            <div class="input-group">
+                <div class="input-header">
+                    <label>{{ 'LOAN_CALCULATOR.LOAN_AMOUNT' | translate }}</label>
+                    <div class="value-display">
+                        <input type="number" [(ngModel)]="loanAmount" (input)="calculateEMI()" [min]="minAmount" [max]="maxAmount">
                     </div>
                 </div>
-            </mat-card>
+                <div class="slider-container">
+                    <mat-slider [min]="minAmount" [max]="maxAmount" step="10000">
+                        <input matSliderThumb [(ngModel)]="loanAmount" (valueChange)="calculateEMI()">
+                    </mat-slider>
+                </div>
+                <div class="range-labels">
+                    <span>{{ currencyService.formatAmount(minAmount, {round: true}) }}</span>
+                    <span>{{ currencyService.formatAmount(maxAmount, {round: true}) }}</span>
+                </div>
+            </div>
+
+            <!-- Tenure -->
+            <div class="input-group">
+                <div class="input-header">
+                    <label>{{ 'LOAN_CALCULATOR.LOAN_TENURE' | translate }}</label>
+                    <div class="value-display">
+                        <input type="number" [(ngModel)]="tenureValue" (input)="calculateEMI()" [min]="1" [max]="currentMaxTenure">
+                    </div>
+                </div>
+                <div class="slider-container">
+                    <mat-slider [min]="currentMinTenure" [max]="currentMaxTenure" step="1">
+                        <input matSliderThumb [(ngModel)]="tenureValue" (valueChange)="calculateEMI()">
+                    </mat-slider>
+                </div>
+                <div class="range-labels">
+                    <span>1 year</span>
+                    <span>{{ currentMaxTenure }} years</span>
+                </div>
+            </div>
+
+            <!-- Interest Rate -->
+            <div class="input-group">
+                <div class="input-header">
+                    <label>{{ 'LOAN_CALCULATOR.INTEREST_RATE' | translate }}</label>
+                    <div class="value-display flex items-center">
+                        <input type="number" [(ngModel)]="interestRate" (input)="calculateEMI()" [min]="minRate" [max]="maxRate" step="0.01">
+                        <span class="ml-1 text-xs opacity-50">%</span>
+                    </div>
+                </div>
+                <div class="slider-container">
+                    <mat-slider [min]="minRate" [max]="maxRate" step="0.01">
+                        <input matSliderThumb [(ngModel)]="interestRate" (valueChange)="calculateEMI()">
+                    </mat-slider>
+                </div>
+                <div class="range-labels">
+                    <span>{{ minRate }}% PA</span>
+                    <span>{{ maxRate }}% PA</span>
+                </div>
+            </div>
+            <!-- Processing Charges -->
+            <div class="input-group">
+                <div class="input-header">
+                    <label>{{ 'LOAN_CALCULATOR.PROCESSING_CHARGES' | translate }}</label>
+                    <div class="value-display">
+                        <input type="number" [(ngModel)]="processingCharges" (input)="calculateEMI()" [min]="0">
+                    </div>
+                </div>
+            </div>
         </aside>
 
         <!-- Dashboard Results -->
-        <main class="lg:col-span-8 xl:col-span-7 space-y-6 md:space-y-10">
-            <!-- Visual Analytics Card -->
-            <mat-card class="glass-card p-5 md:p-8 flex flex-col h-full">
-                <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 gap-4">
-                    <p
-                        class="text-professional-medium text-base md:text-lg text-gray-700 dark:text-gray-200 mb-0 text-center md:text-left">
-                        {{ 'LOAN_CALCULATOR.PRINCIPAL_VS_INTEREST' | translate }}
-                    </p>
-                    <div class="flex justify-center md:justify-end gap-4 md:gap-6">
-                        <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-theme-primary"
-                                style="background-color: var(--primary-500);"></div>
-                            <span class="label-text !text-[9px] md:!text-[10px]">{{ 'LOAN_CALCULATOR.PRINCIPAL' |
-                                translate }}</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-theme-tertiary"
-                                style="background-color: var(--tertiary-500);"></div>
-                            <span class="label-text !text-[9px] md:!text-[10px]">{{ 'LOAN_CALCULATOR.INTEREST' |
-                                translate }}</span>
-                        </div>
-                    </div>
+        <main class="calculator-result-card">
+            <div class="emi-banner">
+                <span>Your Monthly EMI will be</span>
+                <div class="emi-value">{{ currencyService.formatAmount(monthlyEmi) }}</div>
+            </div>
+
+            <div class="result-list">
+                <div class="result-item">
+                    <span class="label">{{ 'LOAN_CALCULATOR.TOTAL_AMOUNT' | translate }}</span>
+                    <span class="value">{{ currencyService.formatAmount(totalAmount) }}</span>
                 </div>
-
-                <div class="flex-grow flex flex-col items-center justify-center relative chart-box w-full px-4">
-                    <!-- Simple CSS Bar for Principal vs Interest -->
-                    <div
-                        class="w-full h-8 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden flex relative mb-6">
-                        <div class="h-full bg-theme-primary transition-all duration-500"
-                            [style.width.%]="(loanAmount / totalAmount) * 100"
-                            [matTooltip]="('LOAN_CALCULATOR.PRINCIPAL' | translate)">
-                        </div>
-                        <div class="h-full bg-theme-tertiary transition-all duration-500"
-                            [style.width.%]="(totalInterest / totalAmount) * 100"
-                            [matTooltip]="('LOAN_CALCULATOR.INTEREST' | translate)">
-                        </div>
-                    </div>
-
-                    <!-- Summary Labels inside the card -->
-                    <div class="flex justify-between w-full">
-                        <div class="summary-label left animate-fadeUp">
-                            <div class="flex items-center gap-1 mb-1">
-                                <div class="w-2 h-2 rounded-full bg-theme-primary"></div>
-                                <p class="label-text !text-[10px] md:!text-[11px] mb-0">{{ 'LOAN_CALCULATOR.PRINCIPAL' |
-                                    translate }}</p>
-                            </div>
-                            <p class="data-text text-theme-primary text-sm md:text-lg mb-0 font-bold">{{
-                                currencyService.formatAmount(loanAmount,{round:true}) }}</p>
-                            <p class="text-[10px] text-gray-500">({{ (loanAmount / totalAmount * 100) | number:'1.0-1'
-                                }}%)</p>
-                        </div>
-
-                        <div class="summary-label right animate-fadeUp [animation-delay:200ms] text-right">
-                            <div class="flex items-center justify-end gap-1 mb-1">
-                                <div class="w-2 h-2 rounded-full bg-theme-tertiary"></div>
-                                <p class="label-text !text-[10px] md:!text-[11px] mb-0">{{ 'LOAN_CALCULATOR.INTEREST' |
-                                    translate }}</p>
-                            </div>
-                            <p class="data-text text-theme-tertiary text-sm md:text-lg mb-0 font-bold">{{
-                                currencyService.formatAmount(totalInterest,{round:true}) }}</p>
-                            <p class="text-[10px] text-gray-500">({{ (totalInterest / totalAmount * 100) |
-                                number:'1.0-1' }}%)</p>
-                        </div>
-                    </div>
+                <div class="result-item">
+                    <span class="label">{{ 'LOAN_CALCULATOR.TOTAL_INTEREST' | translate }}</span>
+                    <span class="value">{{ currencyService.formatAmount(totalInterest) }}</span>
                 </div>
-
-                <div class="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-gray-100 dark:border-gray-800/50">
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                        <div class="text-center sm:text-left">
-                            <p class="label-text mb-1 md:mb-2">{{ 'LOAN_CALCULATOR.MONTHLY_EMI' | translate }}</p>
-                            <p class="data-text text-theme-primary text-xl md:text-2xl font-bold mb-0">
-                                {{ currencyService.formatAmount(monthlyEmi,{round:true}) }}
-                            </p>
-                        </div>
-                        <div class="text-center sm:text-left">
-                            <p class="label-text mb-1 md:mb-2">{{ 'LOAN_CALCULATOR.TOTAL_INTEREST' | translate }}</p>
-                            <p class="data-text text-theme-tertiary text-xl md:text-2xl font-bold mb-0">
-                                {{ currencyService.formatAmount(totalInterest,{round:true}) }}
-                            </p>
-                        </div>
-                        <div class="text-center sm:text-left">
-                            <p class="label-text mb-1 md:mb-2">{{ 'LOAN_CALCULATOR.TOTAL_AMOUNT' | translate }}</p>
-                            <p class="data-text text-theme-secondary text-xl md:text-2xl font-bold mb-0">
-                                {{ currencyService.formatAmount(totalAmount,{round:true}) }}
-                            </p>
-                        </div>
-                    </div>
+                <div class="result-item">
+                    <span class="label">{{ 'LOAN_CALCULATOR.PRINCIPAL' | translate }}</span>
+                    <span class="value">{{ currencyService.formatAmount(loanAmount) }}</span>
                 </div>
-            </mat-card>
+                <div class="result-item">
+                    <span class="label">{{ 'LOAN_CALCULATOR.PROCESSING_CHARGES' | translate }} (upfront)</span>
+                    <span class="value">{{ currencyService.formatAmount(processingCharges) }}</span>
+                </div>
+                <div class="result-item border-t border-dashed !pt-4 mt-2">
+                    <span class="label font-bold text-slate-800 dark:text-slate-200">Total Outgo</span>
+                    <span class="value text-primary-600 dark:text-primary-400">{{ currencyService.formatAmount(totalCost) }}</span>
+                </div>
+            </div>
         </main>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-container">
+        <button mat-stroked-button color="primary" (click)="resetToDefaults()">
+            <mat-icon class="mr-2">refresh</mat-icon>
+            Reset
+        </button>
+        <button mat-flat-button color="primary" (click)="copyShareableLink()">
+            <mat-icon class="mr-2">link</mat-icon>
+            Copy Link
+        </button>
     </div>
 </div>

@@ -54,8 +54,8 @@
         "AUTO_SYNC": "Auto Sync"
     },
     "LOAN_CALCULATOR": {
-        "TITLE": "Personal Loan EMI Calculator",
-        "SUBTITLE": "Calculate your monthly payments instantly",
+        "TITLE": "Personal Loan Calculator",
+        "SUBTITLE": "Take Out the Guess Work from Financial Planning. Calculate your EMIs now!",
         "LOAN_DETAILS": "Loan Details",
         "LOAN_AMOUNT": "Loan Amount",
         "INTEREST_RATE": "Interest Rate (per year)",
@@ -70,7 +70,8 @@
         "INTEREST": "Interest",
         "RESET_DEFAULTS": "Reset to Defaults",
         "COPY_LINK": "Copy Shareable Link",
-        "LINK_COPIED": "Link copied to clipboard!"
+        "LINK_COPIED": "Link copied to clipboard!",
+        "PROCESSING_CHARGES": "Processing Charges"
     },
     "PROFILE": {
         "PERSONAL_INFO": "Personal Information",
