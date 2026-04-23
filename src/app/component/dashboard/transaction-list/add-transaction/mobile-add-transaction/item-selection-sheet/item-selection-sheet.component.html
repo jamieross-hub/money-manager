@@ -5,16 +5,10 @@
     <!-- Drag Handle -->
     <div class="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mb-4" (click)="close()"></div>
 
-    <!-- <div class="flex items-center justify-end w-full mb-2">
-    <button mat-icon-button (click)="close()" class="text-gray-500">
-      <mat-icon>close</mat-icon>
-    </button>
-  </div> -->
-
   <!-- Search Bar -->
   <mat-form-field appearance="fill" class="w-full search-field">
     <mat-icon matPrefix class="text-gray-400 mr-2">search</mat-icon>
-    <input #searchInput matInput [formControl]="searchControl" placeholder="Search categories...">
+    <input #searchInput matInput [formControl]="searchControl" [placeholder]="'Search ' + data.type + 's...'">
     @if (searchControl.value) {
       <button matSuffix mat-icon-button aria-label="Clear"
         (click)="searchControl.setValue('')">
@@ -24,30 +18,31 @@
   </mat-form-field>
 </div>
 
-<!-- Category List -->
+<!-- List -->
 <div class="overflow-y-auto px-2 pb-4" (scroll)="searchInput.blur()">
   <mat-nav-list>
-    @for (category of filteredCategories$ | async; track category.id) {
-      <mat-list-item (click)="selectCategory(category)"
+    @for (item of filteredItems$ | async; track (data.type === 'category' ? item.id : item.accountId)) {
+      <mat-list-item (click)="selectItem(item)"
         class="rounded-lg mb-1 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-        [class.bg-blue-50]="category.id === data.selectedCategoryId"
-        [class.dark:bg-blue-900]="category.id === data.selectedCategoryId && '20'">
+        [class.bg-blue-50]="(data.type === 'category' ? item.id : item.accountId) === data.selectedId"
+        [class.dark:bg-blue-900]="(data.type === 'category' ? item.id : item.accountId) === data.selectedId && '20'">
         <div matListItemIcon class="w-10 h-10 rounded-full flex items-center justify-center mr-4 shrink-0"
-          [style.background-color]="(category.color || '#cccccc') + '20'"
-          [style.color]="category.color || '#cccccc'">
-          <mat-icon>{{ category.icon }}</mat-icon>
+          [style.background-color]="(item.color || '#cccccc') + '20'"
+          [style.color]="item.color || '#cccccc'">
+          <mat-icon>{{ item.icon || (data.type === 'category' ? 'category' : 'account_balance_wallet') }}</mat-icon>
         </div>
         <div matListItemTitle class="flex items-center gap-2 mb-0.5 ml-1">
-          <span class="font-medium text-gray-800 dark:text-gray-200">{{ category.name | titlecase }}</span>
+          <span class="font-medium text-gray-800 dark:text-gray-200">{{ item.name | titlecase }}</span>
           <span class="text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider leading-none"
                               [ngClass]="{
-                                'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': category.type === 'income',
-                                'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': category.type === 'expense'
+                                'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': item.type === 'income' || item.type === 'bank',
+                                'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': item.type === 'expense' || item.type === 'loan',
+                                'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400': item.type === 'cash' || item.type === 'credit'
                               }">
-            {{ category.type }}
+            {{ item.type }}
           </span>
         </div>
-        @if (category.id === data.selectedCategoryId) {
+        @if ((data.type === 'category' ? item.id : item.accountId) === data.selectedId) {
           <div matListItemMeta>
             <mat-icon class="text-primary">check_circle</mat-icon>
           </div>
@@ -55,8 +50,8 @@
       </mat-list-item>
     }
 
-    @if ((filteredCategories$ | async)?.length === 0) {
-      @if (searchControl.value) {
+    @if ((filteredItems$ | async)?.length === 0) {
+      @if (searchControl.value && data.type === 'category') {
         <mat-list-item (click)="createAndSelectCategory(searchControl.value || '')"
           class="rounded-lg mb-1 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer bg-blue-50/50 dark:bg-blue-900/20"
           [class.pointer-events-none]="isCreating()" [class.opacity-75]="isCreating()">
@@ -75,8 +70,8 @@
         </mat-list-item>
       } @else {
         <div class="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400">
-          <mat-icon class="text-4xl mb-2 opacity-50">category_off</mat-icon>
-          <p>No categories found</p>
+          <mat-icon class="text-4xl mb-2 opacity-50">{{ data.type === 'category' ? 'category_off' : 'account_balance' }}</mat-icon>
+          <p>No {{ data.type }}s found</p>
         </div>
       }
     }

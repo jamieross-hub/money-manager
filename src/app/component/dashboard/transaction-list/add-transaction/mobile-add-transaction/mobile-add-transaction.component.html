@@ -395,20 +395,51 @@
             </div>
 
             <div class="space-y-2">
-              <mat-form-field appearance="fill" class="w-full">
-                <mat-label>Select an account</mat-label>
-                <mat-select formControlName="accountId">
-                  @for (account of accountList$ | async; track account.accountId) {
-                    <mat-option [value]="account.accountId">{{ account.name }} ({{ account.type | titlecase
-                    }})</mat-option>
+              @if(!breakpointService.device.isMobile) {
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>Select an account</mat-label>
+                  <mat-select formControlName="accountId">
+                    @for (account of accountList$ | async; track account.accountId) {
+                      <mat-option [value]="account.accountId">{{ account.name }} ({{ account.type | titlecase
+                      }})</mat-option>
+                    }
+                  </mat-select>
+
+                  @if(transactionForm.get('accountId')?.hasError('required') &&
+                    transactionForm.get('accountId')?.touched) {
+                    <mat-error>Account is required</mat-error>
                   }
-                </mat-select>
+                </mat-form-field>
+              }
+
+              @if(breakpointService.device.isMobile) {
+                <!-- Custom Account Select Trigger -->
+                <div (click)="openAccountSheet('accountId')"
+                  class="relative w-full cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-3 px-4 flex items-center justify-between hover:border-blue-500 transition-colors"
+                  [class.bg-gray-100]="viewMode()" [class.opacity-70]="viewMode()"
+                  [class.pointer-events-none]="viewMode()">
+
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="w-6 h-6 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-500">
+                      <mat-icon class="text-sm">account_balance_wallet</mat-icon>
+                    </div>
+                    <span [class.text-gray-500]="!transactionForm.get('accountId')?.value"
+                      [class.dark:text-gray-400]="!transactionForm.get('accountId')?.value"
+                      [class.text-gray-900]="transactionForm.get('accountId')?.value"
+                      [class.dark:text-gray-100]="transactionForm.get('accountId')?.value">
+                      {{ getAccountName(transactionForm.get('accountId')?.value) || 'Select an account' }}
+                    </span>
+                  </div>
+
+                  <mat-icon class="text-gray-500 text-base">expand_more</mat-icon>
+                </div>
 
                 @if(transactionForm.get('accountId')?.hasError('required') &&
                   transactionForm.get('accountId')?.touched) {
-                  <mat-error>Account is required</mat-error>
+                  <p class="text-red-500 text-xs mt-1 ml-1">Account is required</p>
                 }
-              </mat-form-field>
+              }
             </div>
 
             <!-- Transfer Option Inside Account -->
@@ -421,20 +452,51 @@
             @if (transactionForm.get('isTransferMode')?.value) {
               <!-- To Account Field -->
               <div class="pt-3  border-gray-100 dark:border-gray-700">
-                <mat-form-field appearance="fill" class="w-full">
-                  <mat-label>Select destination account</mat-label>
-                  <mat-select formControlName="toAccountId">
-                    @for (account of accountList$ | async; track account.accountId) {
-                      <mat-option [value]="account.accountId" [disabled]="account.accountId === transactionForm.get('accountId')?.value">{{ account.name }} ({{ account.type | titlecase
-                      }})</mat-option>
+                @if(!breakpointService.device.isMobile) {
+                  <mat-form-field appearance="fill" class="w-full">
+                    <mat-label>Select destination account</mat-label>
+                    <mat-select formControlName="toAccountId">
+                      @for (account of accountList$ | async; track account.accountId) {
+                        <mat-option [value]="account.accountId" [disabled]="account.accountId === transactionForm.get('accountId')?.value">{{ account.name }} ({{ account.type | titlecase
+                        }})</mat-option>
+                      }
+                    </mat-select>
+
+                    @if(transactionForm.get('toAccountId')?.hasError('required') &&
+                      transactionForm.get('toAccountId')?.touched) {
+                      <mat-error>Destination account is required</mat-error>
                     }
-                  </mat-select>
+                  </mat-form-field>
+                }
+
+                @if(breakpointService.device.isMobile) {
+                  <!-- Custom Destination Account Select Trigger -->
+                  <div (click)="openAccountSheet('toAccountId')"
+                    class="relative w-full cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-3 px-4 flex items-center justify-between hover:border-blue-500 transition-colors"
+                    [class.bg-gray-100]="viewMode()" [class.opacity-70]="viewMode()"
+                    [class.pointer-events-none]="viewMode()">
+
+                    <div class="flex items-center gap-3">
+                      <div
+                        class="w-6 h-6 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-500">
+                        <mat-icon class="text-sm">account_balance</mat-icon>
+                      </div>
+                      <span [class.text-gray-500]="!transactionForm.get('toAccountId')?.value"
+                        [class.dark:text-gray-400]="!transactionForm.get('toAccountId')?.value"
+                        [class.text-gray-900]="transactionForm.get('toAccountId')?.value"
+                        [class.dark:text-gray-100]="transactionForm.get('toAccountId')?.value">
+                        {{ getAccountName(transactionForm.get('toAccountId')?.value) || 'Select destination account' }}
+                      </span>
+                    </div>
+
+                    <mat-icon class="text-gray-500 text-base">expand_more</mat-icon>
+                  </div>
 
                   @if(transactionForm.get('toAccountId')?.hasError('required') &&
                     transactionForm.get('toAccountId')?.touched) {
-                    <mat-error>Destination account is required</mat-error>
+                    <p class="text-red-500 text-xs mt-1 ml-1">Destination account is required</p>
                   }
-                </mat-form-field>
+                }
               </div>
             }
           </div>

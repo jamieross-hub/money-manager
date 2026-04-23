@@ -36,7 +36,7 @@ import { loadAccounts } from 'src/app/store/accounts/accounts.actions';
 import { selectAllAccounts } from 'src/app/store/accounts/accounts.selectors';
 import { selectAllCategories } from 'src/app/store/categories/categories.selectors';
 import { RecurringInterval, SyncStatus, TransactionStatus, TransactionType, AccountType } from 'src/app/util/config/enums';
-import { Category } from 'src/app/util/models';
+import { Category, Account } from 'src/app/util/models';
 import { BreakpointObserver } from '@angular/cdk/layout';
 
 import { filter, map, Observable, take, combineLatest, merge } from 'rxjs';
@@ -50,7 +50,7 @@ import { FormControl } from '@angular/forms';
 import { ReplaySubject, Subject } from 'rxjs';
 import { takeUntil, startWith, debounceTime } from 'rxjs/operators';
 import { CurrencyService } from 'src/app/util/service/currency.service';
-import { CategorySelectionSheetComponent } from './category-selection-sheet/category-selection-sheet.component';
+import { ItemSelectionSheetComponent, SelectionSheetData } from './item-selection-sheet/item-selection-sheet.component';
 import { UserService } from 'src/app/util/service/db/user.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonHeaderComponent } from 'src/app/util/components/dialog/common-header/common-header.component';
@@ -137,6 +137,7 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
     { initialValue: false }
   );
   public categories = toSignal(this._store.select(selectAllCategories), { initialValue: [] as Category[] });
+  public accounts = toSignal(this._store.select(selectAllAccounts), { initialValue: [] as Account[] });
   public allTransactions = this._store.selectSignal(TransactionsSelectors.selectAllTransactions);
   public userProfile = this._store.selectSignal(fromProfile.selectProfile);
   private appViewService = inject(AppViewService);
@@ -1316,6 +1317,16 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   }
 
 
+  getAccountName(accountId: string): string {
+    return this.accounts().find(a => a.accountId === accountId)?.name || '';
+  }
+
+  onAccountChange(accountId: string): void {
+    if (!accountId) return;
+    this.transactionForm.patchValue({ accountId: accountId });
+    this.cdr.markForCheck();
+  }
+
   private _applyCategoryData(category: Category): void {
     this.currentCategoryIcon.set(category.icon);
     this.currentCategoryColor.set(category.color);
@@ -1332,22 +1343,44 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   openCategorySheet(): void {
     if (this.viewMode()) return;
 
-    // Determine default transaction type. If not set, maybe Expense or based on logic?
-    // Using current form value or defaulting to Expense
     const currentType = this.transactionForm.get('categoryType')?.value || TransactionType.EXPENSE;
+    const data: SelectionSheetData = {
+      selectedId: this.transactionForm.get('categoryId')?.value,
+      type: 'category',
+      transactionType: currentType
+    };
 
-    const sheetRef = this.pwaNavigationService.openBottomSheet(CategorySelectionSheetComponent, {
-      data: {
-        selectedCategoryId: this.transactionForm.get('categoryId')?.value,
-        transactionType: currentType // We might want to pass this to filter list
-      },
+    const sheetRef = this.pwaNavigationService.openBottomSheet(ItemSelectionSheetComponent, {
+      data: data,
       closeOnNavigation: false,
-      panelClass: 'bg-transparent' // For rounded corners if needed
+      panelClass: 'bg-transparent'
     });
 
     sheetRef.afterDismissed().subscribe((category: Category | undefined) => {
       if (category) {
         this.onCategoryChange(category);
+      }
+    });
+  }
+
+  openAccountSheet(targetField: 'accountId' | 'toAccountId' = 'accountId'): void {
+    if (this.viewMode()) return;
+
+    const data: SelectionSheetData = {
+      selectedId: this.transactionForm.get(targetField)?.value,
+      type: 'account'
+    };
+
+    const sheetRef = this.pwaNavigationService.openBottomSheet(ItemSelectionSheetComponent, {
+      data: data,
+      closeOnNavigation: false,
+      panelClass: 'bg-transparent'
+    });
+
+    sheetRef.afterDismissed().subscribe((account: Account | undefined) => {
+      if (account) {
+        this.transactionForm.get(targetField)?.setValue(account.accountId);
+        this.cdr.markForCheck();
       }
     });
   }
