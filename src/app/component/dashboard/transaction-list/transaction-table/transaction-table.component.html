@@ -103,19 +103,29 @@
         </th>
         <td mat-cell *matCellDef="let element"
           class="px-3 md:px-4 py-4 border-b border-gray-100 dark:border-slate-800 hidden sm:table-cell">
-          <div
-            class="inline-flex items-center gap-1.5 md:gap-2 px-1.5 md:px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-slate-800">
-            <mat-icon class="text-xs md:text-sm" [style.color]="getCategoryColor(element.categoryId)">{{
-            getCategoryIcon(element.categoryId) }}</mat-icon>
-            <span class="text-xs font-medium text-gray-800 dark:text-slate-200">
-              {{getCategoryName(element.categoryId)}}
-            </span>
-            @if (element.isRecurring) {
-              <mat-icon
-                class="text-[10px] md:text-xs text-primary-500 ml-1"
-              matTooltip="Recurring Transaction">repeat</mat-icon>
-            }
-          </div>
+          @if (!element.isEditing) {
+            <div
+              class="inline-flex items-center gap-1.5 md:gap-2 px-1.5 md:px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-slate-800">
+              <mat-icon class="text-xs md:text-sm" [style.color]="getCategoryColor(element.categoryId)">{{
+              getCategoryIcon(element.categoryId) }}</mat-icon>
+              <span class="text-xs font-medium text-gray-800 dark:text-slate-200">
+                {{getCategoryName(element.categoryId)}}
+              </span>
+              @if (element.isRecurring) {
+                <mat-icon
+                  class="text-[10px] md:text-xs text-primary-500 ml-1"
+                matTooltip="Recurring Transaction">repeat</mat-icon>
+              }
+            </div>
+          }
+          @if (element.isEditing) {
+            <select [(ngModel)]="element.categoryId"
+              class="w-full px-2 md:px-3 py-1 md:py-2 border border-blue-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              @for (cat of categoryList; track cat.id) {
+                <option [value]="cat.id">{{cat.name}}</option>
+              }
+            </select>
+          }
         </td>
       </ng-container>
       <!-- Amount Column -->
@@ -166,6 +176,7 @@
               class="w-full px-2 md:px-3 py-1 md:py-2 border border-blue-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               <option value="income">Income</option>
               <option value="expense">Expense</option>
+              <option value="transfer">Transfer</option>
             </select>
           }
         </td>
@@ -180,9 +191,19 @@
           </div>
         </th>
         <td mat-cell *matCellDef="let element" class="px-3 md:px-4 py-4 border-b border-gray-100 dark:border-slate-800">
-          <div class="text-xs md:text-sm text-gray-600 dark:text-slate-400">
-            {{ getAccountName(element.accountId) }}
-          </div>
+          @if (!element.isEditing) {
+            <div class="text-xs md:text-sm text-gray-600 dark:text-slate-400">
+              {{ getAccountName(element.accountId) }}
+            </div>
+          }
+          @if (element.isEditing) {
+            <select [(ngModel)]="element.accountId"
+              class="w-full px-2 md:px-3 py-1 md:py-2 border border-blue-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              @for (acc of accounts; track acc.accountId) {
+                <option [value]="acc.accountId">{{acc.name}}</option>
+              }
+            </select>
+          }
         </td>
       </ng-container>
       <!-- Actions Column -->
@@ -242,6 +263,7 @@
         [class.upcoming-transaction]="isUpcoming(row)"
         [class.opacity-50]="row.syncStatus === 'pending'"
         [class.grayscale]="row.syncStatus === 'pending'"
+        [class.selected-row]="isSelected(row)"
         (click)="onRowClick(row)">
       </tr>
     </table>
@@ -258,6 +280,7 @@
           [class.upcoming-transaction]="isUpcoming(element)"
           [class.opacity-50]="element.syncStatus === 'pending'"
           [class.grayscale]="element.syncStatus === 'pending'"
+          [class.selected-row]="isSelected(element)"
           (click)="onRowClick(element)">
           <div class="flex items-center justify-between">
             <!-- Left Section -->
@@ -380,6 +403,7 @@
           [class.upcoming-transaction]="isUpcoming(element)"
           [class.opacity-50]="element.syncStatus === 'pending'"
           [class.grayscale]="element.syncStatus === 'pending'"
+          [class.selected-row]="isSelected(element)"
           (click)="onRowClick(element)">
           <!-- Header Row -->
           <div class="card-header">

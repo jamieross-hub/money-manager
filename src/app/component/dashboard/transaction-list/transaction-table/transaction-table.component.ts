@@ -109,6 +109,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
 
   private subscription = new Subscription();
   categories: { [key: string]: Category } = {};
+  categoryList: Category[] = [];
 
   // Store observables
   transactions$: Observable<Transaction[]> = this.store.select(selectAllTransactions);
@@ -342,16 +343,37 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
       });
   }
 
-  onStartRowEdit(transaction: Transaction) {
-    this.editTransaction.emit(transaction);
+  onStartRowEdit(transaction: any) {
+    // Clone to avoid NgRx frozen object error when adding UI properties
+    const index = this.dataSource.data.findIndex(t => t.id === transaction.id);
+    if (index !== -1) {
+      const clonedTransaction = { ...transaction };
+      
+      // Update the data source with the new object reference so the parent can mutate it safely
+      const newData = [...this.dataSource.data];
+      newData[index] = clonedTransaction;
+      this.dataSource.data = newData;
+
+      clonedTransaction.originalValues = {
+        amount: transaction.amount,
+        type: transaction.type,
+        categoryId: transaction.categoryId,
+        accountId: transaction.accountId
+      };
+      
+      this.startRowEdit.emit(clonedTransaction);
+      this.cdr.markForCheck();
+    }
   }
 
-  onSaveRowEdit(transaction: Transaction) {
+  onSaveRowEdit(transaction: any) {
     this.saveRowEdit.emit(transaction);
+    this.cdr.markForCheck();
   }
 
-  onCancelRowEdit(transaction: Transaction) {
+  onCancelRowEdit(transaction: any) {
     this.cancelRowEdit.emit(transaction);
+    this.cdr.markForCheck();
   }
 
   onAddTransaction() {
@@ -359,8 +381,9 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   onRowClick(transaction: Transaction) {
-    // Open transaction in view mode (read-only)
-    this.openTransactionViewDialog(transaction);
+    // Select the row
+    this.toggleSelection(transaction);
+    this.cdr.markForCheck();
   }
 
   private openTransactionViewDialog(transaction: Transaction) {
@@ -409,6 +432,7 @@ export class TransactionTableComponent implements OnInit, OnDestroy, AfterViewIn
     if (userId) {
       this.subscription.add(
         this.store.select(selectAllCategories).subscribe((categories: Category[]) => {
+          this.categoryList = categories;
           for (const category of categories) {
             (this.categories as { [key: string]: Category })[category.id as string] = category;
           }

@@ -23,7 +23,7 @@ export const transactionsReducer = createReducer(
       return acc;
     }, {} as { [id: string]: any });
     
-    const ids = filteredTransactions.map(t => t.id).filter(id => id) as string[];
+    const ids = Array.from(new Set(filteredTransactions.map(t => t.id).filter(id => id))) as string[];
     
     return {
       ...state,
@@ -56,7 +56,7 @@ export const transactionsReducer = createReducer(
         ...state.entities,
         [transaction.id]: transaction
       },
-      ids: [...state.ids, transaction.id],
+      ids: state.ids.includes(transaction.id) ? state.ids : [...state.ids, transaction.id],
       loading: false,
       error: null
     };

@@ -224,10 +224,7 @@ export class TransactionListComponent implements OnInit, OnDestroy {
 
   // Row-level editing methods
   startRowEdit(element: any) {
-    element.originalValues = {
-      amount: element.amount,
-      type: element.type
-    };
+    // Logic moved to TransactionTableComponent to handle cloning and data source updates
     element.isEditing = true;
   }
 
@@ -238,14 +235,16 @@ export class TransactionListComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!element.type || (element.type !== 'income' && element.type !== 'expense')) {
+    if (!element.type || (element.type !== 'income' && element.type !== 'expense' && element.type !== 'transfer')) {
       this.notificationService.error('Please select a valid transaction type');
       return;
     }
 
-    const updateData = {
+    const updateData: any = {
       amount: amount,
-      type: element.type
+      type: element.type,
+      categoryId: element.categoryId,
+      accountId: element.accountId
     };
 
     const userId = this.userService.getCurrentUserId();
@@ -262,8 +261,12 @@ export class TransactionListComponent implements OnInit, OnDestroy {
   }
 
   cancelRowEdit(element: any) {
-    element.amount = element.originalValues.amount;
-    element.type = element.originalValues.type;
+    if (element.originalValues) {
+      element.amount = element.originalValues.amount;
+      element.type = element.originalValues.type;
+      element.categoryId = element.originalValues.categoryId;
+      element.accountId = element.originalValues.accountId;
+    }
     element.isEditing = false;
     delete element.originalValues;
   }
