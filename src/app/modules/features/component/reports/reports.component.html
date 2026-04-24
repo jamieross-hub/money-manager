@@ -201,336 +201,319 @@
                   }
                 </mat-button-toggle-group>
               </div>
-              <!-- ═══════════ PERIOD SUMMARY ═══════════ -->
-              <mat-card class="!rounded-xl !border-none">
-                <mat-card-content class="!px-4">
-                  <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                    <!-- Title -->
-                    <!-- <div class="flex items-center gap-2">
-                      <div class="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-900/10 flex items-center justify-center flex-shrink-0">
-                        <mat-icon class="text-primary-500">date_range</mat-icon>
-                      </div>
-                      <h3 class="text-lg font-bold text-neutral-800 dark:text-neutral-100 mb-0">Summary</h3>
-                    </div> -->
+              <!-- ═══════ SUMMARY & CATEGORY GRID ═══════ -->
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                
+                <!-- ═══════════ COLUMN 1: FINANCIAL OVERVIEW ═══════════ -->
+                <div class="space-y-6">
+                  <!-- ═══════════ PERIOD SUMMARY ═══════════ -->
+                  <mat-card class="!rounded-xl !border-none">
+                    <mat-card-content class="!px-4">
+                      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+                        <!-- Controls Group -->
+                        <div class="flex items-center gap-3 w-full md:w-auto">
+                          <!-- Date Navigator Pill -->
+                          <div
+                            class="flex items-center bg-surface-100 dark:bg-surface-300 rounded-full p-1 border border-neutral-200 dark:border-neutral-700 shadow-sm flex-1 md:flex-initial justify-between md:justify-center min-w-[200px]">
+                            @if (selectedPeriod() === 'monthly' || selectedPeriod() === 'weekly' || selectedPeriod() === 'yearly') {
+                            <button (click)="selectedPeriod() === 'weekly' ? previousWeek() : previousMonth()"
+                              [disabled]="!canGoPrevious()"
+                              class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-200 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                              <mat-icon>chevron_left</mat-icon>
+                            </button>
+                            }
+                            <span class="text-xs font-bold text-primary-600 dark:text-primary-400 px-3 truncate text-center flex-1">
+                              {{ getPeriodLabel('current') }}
+                            </span>
+                            @if (selectedPeriod() === 'monthly' || selectedPeriod() === 'weekly' || selectedPeriod() === 'yearly') {
+                            <button (click)="selectedPeriod() === 'weekly' ? nextWeek() : nextMonth()"
+                              [disabled]="!canGoNext()"
+                              class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-200 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                              <mat-icon>chevron_right</mat-icon>
+                            </button>
+                            }
+                          </div>
 
-                    <!-- Controls Group -->
-                    <div class="flex items-center gap-3 w-full md:w-auto">
-                      <!-- Date Navigator Pill -->
-                      <div
-                        class="flex items-center bg-surface-100 dark:bg-surface-300 rounded-full p-1 border border-neutral-200 dark:border-neutral-700 shadow-sm flex-1 md:flex-initial justify-between md:justify-center min-w-[200px]">
-                        @if (selectedPeriod() === 'monthly' || selectedPeriod() === 'weekly' || selectedPeriod() ===
-                        'yearly') {
-                        <button (click)="selectedPeriod() === 'weekly' ? previousWeek() : previousMonth()"
-                          [disabled]="!canGoPrevious()"
-                          class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-200 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                          <mat-icon>chevron_left</mat-icon>
-                        </button>
-                        }
-                        <span
-                          class="text-xs font-bold text-primary-600 dark:text-primary-400 px-3 truncate text-center flex-1">
-                          {{ getPeriodLabel('current') }}
-                        </span>
-                        @if (selectedPeriod() === 'monthly' || selectedPeriod() === 'weekly' || selectedPeriod() ===
-                        'yearly') {
-                        <button (click)="selectedPeriod() === 'weekly' ? nextWeek() : nextMonth()"
-                          [disabled]="!canGoNext()"
-                          class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-200 dark:hover:bg-neutral-800 transition-all text-neutral-600 dark:text-neutral-300 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                          <mat-icon>chevron_right</mat-icon>
-                        </button>
-                        }
-                      </div>
-
-                      <!-- Year Select (Desktop) -->
-                      @if (!breakpointService.device.isMobile && selectedPeriod() !== 'all') {
-                      <mat-form-field appearance="fill"
-                        class="year-select-field !w-auto !text-primary-500 !bg-transparent !border-none mb-0">
-                        <mat-select [value]="selectedYear()" (selectionChange)="selectYear($event.value)">
-                          @for (y of availableYears; track y) {
-                          <mat-option [value]="y">{{ y }}</mat-option>
+                          <!-- Year Select -->
+                          @if (!breakpointService.device.isMobile && selectedPeriod() !== 'all') {
+                          <mat-form-field appearance="fill"
+                            class="year-select-field !w-auto !text-primary-500 !bg-transparent !border-none mb-0">
+                            <mat-select [value]="selectedYear()" (selectionChange)="selectYear($event.value)">
+                              @for (y of availableYears; track y) {
+                              <mat-option [value]="y">{{ y }}</mat-option>
+                              }
+                            </mat-select>
+                          </mat-form-field>
                           }
-                        </mat-select>
-                      </mat-form-field>
-                      }
-                    </div>
-                  </div>
-                  <!-- Current Period -->
-                  @if (currentPeriodSummary) {
-                  <div class="space-y-4">
-                    <!-- Visual Goal Progress -->
-                    <!-- <div class="px-2 pt-2">
-                        <div class="flex h-1.5 w-full rounded-full overflow-hidden bg-neutral-100 border border-neutral-200/50">
-                          <div class="h-full bg-error-500 opacity-80" 
-                            [style.width]="(currentPeriodSummary.expense | math:'percentWidth':currentPeriodSummary.income) + '%'"
-                            matTooltip="Expense: {{ currentPeriodSummary.expense | currency }}">
-                          </div>
-                          <div class="h-full bg-success-500 opacity-80" 
-                            [style.width]="(currentPeriodSummary.savings > 0 ? (currentPeriodSummary.savings | math:'percentWidth':currentPeriodSummary.income) : 0) + '%'"
-                            matTooltip="Savings: {{ currentPeriodSummary.savings | currency }}">
-                          </div>
                         </div>
-                      </div> -->
+                      </div>
 
-                    <!-- Summary Table -->
-                    <div class="overflow-x-auto">
-                      <table class="w-full history-table accounting-table compact-table">
-                        <thead>
-                          <tr class="mat-mdc-header-row">
-                            <th class="mat-mdc-header-cell">SUMMARY</th>
-                            <th class="mat-mdc-header-cell !text-right">PERCENT</th>
-                            <th class="mat-mdc-header-cell !text-right">TOTAL</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr class="mat-mdc-row">
-                            <td class="mat-mdc-cell font-medium">Total Income</td>
-                            <td class="mat-mdc-cell !text-right text-neutral-400">100%</td>
-                            <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold !text-success-800">
-                              {{ currentPeriodSummary.income | currency:{compact:false,round:true} }}
-                            </td>
-                          </tr>
-                          <tr class="mat-mdc-row">
-                            <td class="mat-mdc-cell font-medium">Total Expenses</td>
-                            <td class="mat-mdc-cell !text-right text-neutral-400">
-                              {{ (currentPeriodSummary.expense | math:'percentWidth':currentPeriodSummary.income) |
-                              number:'1.0-0' }}%
-                            </td>
-                            <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold !text-error-600">
-                              {{ currentPeriodSummary.expense | currency:{compact:false,round:true} }}
-                            </td>
-                          </tr>
-                        </tbody>
-                        <tfoot>
-                          <tr class="mat-mdc-footer-row">
-                            <td class="mat-mdc-footer-cell uppercase tracking-wider">
-                              {{ currentPeriodSummary.savings >= 0 ? 'NET SAVINGS' : 'NET DEFICIT' }}
-                            </td>
-                            <td class="mat-mdc-footer-cell !text-right font-mono tabular-nums">
-                              {{ (currentPeriodSummary.savingsRate | abs) | number:'1.0-0' }}%
-                            </td>
-                            <td class="mat-mdc-footer-cell !text-right font-mono tabular-nums"
-                              [class.!text-success-800]="currentPeriodSummary.savings >= 0"
-                              [class.!text-error-600]="currentPeriodSummary.savings < 0">
-                              {{ currentPeriodSummary.savings >= 0 ? '+' : '-' }}{{ (currentPeriodSummary.savings | abs)
-                              | currency:{compact:false,round:true} }}
-                            </td>
-                          </tr>
-                        </tfoot>
-                      </table>
-                    </div>
+                      <!-- Current Period Summary Table -->
+                      @if (currentPeriodSummary) {
+                      <div class="overflow-x-auto">
+                        <table class="w-full history-table accounting-table compact-table">
+                          <thead>
+                            <tr class="mat-mdc-header-row">
+                              <th class="mat-mdc-header-cell">SUMMARY</th>
+                              <th class="mat-mdc-header-cell !text-right">PERCENT</th>
+                              <th class="mat-mdc-header-cell !text-right">TOTAL</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr class="mat-mdc-row">
+                              <td class="mat-mdc-cell font-medium">Total Income</td>
+                              <td class="mat-mdc-cell !text-right text-neutral-400">100%</td>
+                              <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold !text-success-800">
+                                {{ currentPeriodSummary.income | currency:{compact:false,round:true} }}
+                              </td>
+                            </tr>
+                            <tr class="mat-mdc-row">
+                              <td class="mat-mdc-cell font-medium">Total Expenses</td>
+                              <td class="mat-mdc-cell !text-right text-neutral-400">
+                                {{ (currentPeriodSummary.expense | math:'percentWidth':currentPeriodSummary.income) | number:'1.0-0' }}%
+                              </td>
+                              <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold !text-error-600">
+                                {{ currentPeriodSummary.expense | currency:{compact:false,round:true} }}
+                              </td>
+                            </tr>
+                          </tbody>
+                          <tfoot>
+                            <tr class="mat-mdc-footer-row">
+                              <td class="mat-mdc-footer-cell uppercase tracking-wider">
+                                {{ currentPeriodSummary.savings >= 0 ? 'NET SAVINGS' : 'NET DEFICIT' }}
+                              </td>
+                              <td class="mat-mdc-footer-cell !text-right font-mono tabular-nums">
+                                {{ (currentPeriodSummary.savingsRate | abs) | number:'1.0-0' }}%
+                              </td>
+                              <td class="mat-mdc-footer-cell !text-right font-mono tabular-nums"
+                                [class.!text-success-800]="currentPeriodSummary.savings >= 0"
+                                [class.!text-error-600]="currentPeriodSummary.savings < 0">
+                                {{ currentPeriodSummary.savings >= 0 ? '+' : '-' }}{{ (currentPeriodSummary.savings | abs) | currency:{compact:false,round:true} }}
+                              </td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                      } @else {
+                      <div class="text-center py-8">
+                        <mat-icon class="text-neutral-300 !text-4xl mb-2">event_busy</mat-icon>
+                        <p class="text-neutral-400 text-sm">No data for the selected period</p>
+                      </div>
+                      }
+                    </mat-card-content>
+                  </mat-card>
+
+                  <!-- Income Table -->
+                  <mat-card class="!rounded-xl !border-none">
+                    <mat-card-content class="pt-4">
+                      <div class="overflow-x-auto">
+                        <table class="w-full history-table accounting-table compact-table">
+                          <thead>
+                            <tr class="mat-mdc-header-row">
+                              <th class="mat-mdc-header-cell">INCOME</th>
+                              <th class="mat-mdc-header-cell !text-right">ACTUAL</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (item of incomeBreakdown(); track item.categoryId) {
+                            <tr class="mat-mdc-row">
+                              <td class="mat-mdc-cell font-medium">{{ item.categoryName }}</td>
+                              <td class="mat-mdc-cell !text-right !text-success-600 font-mono tabular-nums font-semibold">
+                                {{ item.amount | currency:{ compact: true } }}
+                              </td>
+                            </tr>
+                            } @empty {
+                            <tr class="mat-mdc-row">
+                              <td colspan="2" class="mat-mdc-cell text-center py-8 text-neutral-400">No income data for this period</td>
+                            </tr>
+                            }
+                          </tbody>
+                          <tfoot>
+                            <tr class="mat-mdc-footer-row">
+                              <td class="mat-mdc-footer-cell">TOTAL</td>
+                              <td class="mat-mdc-footer-cell !text-right !text-success-600 font-mono tabular-nums">
+                                {{ currentPeriodSummary?.income | currency:{ compact: true } }}
+                              </td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+
+                  <!-- Accounts Table -->
+                  <mat-card class="!rounded-xl !border-none">
+                    <mat-card-content class="pt-4">
+                      <div class="overflow-x-auto">
+                        <table class="w-full history-table accounting-table compact-table">
+                          <thead>
+                            <tr class="mat-mdc-header-row">
+                              <th class="mat-mdc-header-cell">ACCOUNTS</th>
+                              <th class="mat-mdc-header-cell !text-right">BALANCE</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (account of allAccounts(); track account.accountId) {
+                            <tr class="mat-mdc-row">
+                              <td class="mat-mdc-cell font-medium">{{ account.name }}</td>
+                              <td class="mat-mdc-cell !text-right font-mono tabular-nums font-semibold"
+                                  [class.text-success-600]="account.balance >= 0"
+                                  [class.text-error-600]="account.balance < 0">
+                                {{ account.balance | currency:{ compact: true } }}
+                              </td>
+                            </tr>
+                            } @empty {
+                            <tr class="mat-mdc-row">
+                              <td colspan="2" class="mat-mdc-cell text-center py-8 text-neutral-400">No accounts found</td>
+                            </tr>
+                            }
+                          </tbody>
+                          <tfoot>
+                            <tr class="mat-mdc-footer-row">
+                              <td class="mat-mdc-footer-cell uppercase tracking-wider">NET WORTH</td>
+                              <td class="mat-mdc-footer-cell !text-right font-mono tabular-nums font-bold"
+                                  [class.!text-success-600]="totalBalance() >= 0"
+                                  [class.!text-error-600]="totalBalance() < 0">
+                                {{ totalBalance() | currency:{ compact: true } }}
+                              </td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                </div>
+
+                <!-- ═══════════ COLUMN 2: EXPENSE ANALYSIS ═══════════ -->
+                <div class="space-y-6">
+                  @defer (on viewport) {
+                  <!-- ═══════════ CATEGORY BREAKDOWN ═══════════ -->
+                  <mat-card class="!rounded-xl !border-none">
+                    <mat-card-content class="!px-4 !pt-1">
+                      <div class="flex items-center flex-wrap mb-2 mt-3 gap-2 justify-between">
+                        <p class="text-sm font-semibold text-neutral-500 flex items-center gap-2 !mb-0">
+                          <mat-icon class="text-primary-500">pie_chart</mat-icon>
+                          Expense
+                        </p>
+                      </div>
+                      <div class="overflow-x-auto mt-2">
+                        <table class="w-full history-table accounting-table compact-table">
+                          <thead>
+                            <tr class="mat-mdc-header-row">
+                              <th class="mat-mdc-header-cell">EXPENSE CATEGORY</th>
+                              <th class="mat-mdc-header-cell !text-right">BUDGET</th>
+                              <th class="mat-mdc-header-cell !text-right hidden sm:table-cell">TREND/PREV</th>
+                              <th class="mat-mdc-header-cell !text-right hidden sm:table-cell">PERCENT</th>
+                              <th class="mat-mdc-header-cell !text-right">ACTUAL</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (cat of groupedCategoryBreakdown(); track cat.categoryId) {
+                            <tr class="mat-mdc-row hover:bg-neutral-50 cursor-pointer transition-colors"
+                              (click)="toggleExpand(cat.categoryId)"
+                              [class.bg-primary-50]="expandedCategoryId() === cat.categoryId">
+                              <td class="mat-mdc-cell">
+                                <div class="flex items-center gap-3">
+                                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0 border-2">
+                                    <mat-icon class="!text-sm !w-auto !h-auto" [style.color]="'#94a3b8'">{{ cat.categoryIcon || 'category' }}</mat-icon>
+                                  </div>
+                                  <div class="flex flex-col">
+                                    <span class="font-medium text-xs text-neutral-800">{{ cat.categoryName }}</span>
+                                    <span class="text-[10px] text-neutral-400 font-semibold">
+                                      {{ cat.transactionCount }} Trans.
+                                    </span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td class="mat-mdc-cell !text-right text-neutral-400 font-mono tabular-nums">
+                                {{ cat.budget ? (cat.budget | currency:{ compact: true }) : '—' }}
+                              </td>
+                              <td class="mat-mdc-cell !text-right hidden sm:table-cell">
+                                <div class="flex items-center justify-end gap-3">
+                                  <span class="text-xs text-neutral-400 font-mono tabular-nums">
+                                    {{ cat.prevAmount ? (cat.prevAmount | currency:{ compact: true }) : '—' }}
+                                  </span>
+                                  <div class="flex items-center gap-0.5 font-mono tabular-nums text-xs font-medium justify-end"
+                                       [class.text-error-600]="cat.diff > 0"
+                                       [class.text-success-600]="cat.diff < 0">
+                                    <mat-icon class="!text-sm !w-auto !h-auto">
+                                      {{ cat.diff > 0 ? 'trending_up' : (cat.diff < 0 ? 'trending_down' : 'trending_flat') }}
+                                    </mat-icon>
+                                    {{ (cat.trend || 0) | abs | number:'1.0-0' }}%
+                                  </div>
+                                </div>
+                              </td>
+                              <td class="mat-mdc-cell !text-right hidden sm:table-cell">
+                                <div class="flex flex-col items-end gap-1">
+                                  <span class="text-xs font-bold text-neutral-600">{{ cat.percentage | number:'1.0-1' }}%</span>
+                                  <div class="w-16 h-1 bg-neutral-100 rounded-full overflow-hidden">
+                                    <div class="h-full rounded-full" [style.width.%]="cat.percentage"
+                                      [style.backgroundColor]="cat.categoryColor || '#94a3b8'"></div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold !text-error-600">
+                                {{ cat.amount | currency:{ compact: true } }}
+                              </td>
+                            </tr>
+
+                            @if (expandedCategoryId() === cat.categoryId) {
+                            <tr class="mat-mdc-row bg-neutral-50/50">
+                              <td [attr.colspan]="breakpointService.isMobile() ? 3 : 5" class="mat-mdc-cell !p-0">
+                                <div class="px-2 py-4 bg-neutral-50/50 border-b border-neutral-100 min-w-0 overflow-hidden">
+                                  <app-category-report-item [item]="cat" [isExpanded]="true"
+                                    [hideHeader]="true"
+                                    [expandedData]="expandedItemData()" (toggleExpand)="toggleExpand(cat.categoryId)"
+                                    class="!block !shadow-none !border-none !bg-transparent min-w-0">
+                                  </app-category-report-item>
+                                </div>
+                              </td>
+                            </tr>
+                            }
+                            } @empty {
+                            <tr class="mat-mdc-row">
+                              <td [attr.colspan]="breakpointService.isMobile() ? 3 : 5" class="mat-mdc-cell text-center py-12">
+                                <mat-icon class="text-neutral-200 !text-5xl mb-2">auto_graph</mat-icon>
+                                <p class="text-neutral-400 font-medium">No expenses recorded for this period</p>
+                              </td>
+                            </tr>
+                            }
+                          </tbody>
+                          <tfoot>
+                            <tr class="mat-mdc-footer-row">
+                              <td class="mat-mdc-footer-cell">TOTAL SPENDING</td>
+                              <td class="mat-mdc-footer-cell !text-right text-neutral-400 font-mono tabular-nums">
+                                {{ totalExpenseBudget() | currency:{ compact: true } }}
+                              </td>
+                              <td class="mat-mdc-footer-cell hidden sm:table-cell" colspan="2"></td>
+                              <td class="mat-mdc-footer-cell !text-right text-error-600 font-mono tabular-nums font-bold">
+                                {{ currentPeriodSummary?.expense | currency:{ compact: true } }}
+                              </td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+
+                      <div class="flex justify-center mt-6">
+                        <button mat-button color="primary" routerLink="/dashboard/category"
+                          class="!text-xs !font-bold flex items-center gap-1 group !h-7 !px-3 hover:bg-primary-50 rounded-full transition-all">
+                          <span>Explore All Categories</span>
+                          <mat-icon class="!text-sm !w-auto !h-auto transition-transform group-hover:translate-x-1">arrow_forward</mat-icon>
+                        </button>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                  } @placeholder {
+                  <div class="space-y-3">
+                    <div class="h-14 bg-neutral-200 rounded-xl animate-pulse"></div>
+                    <div class="h-14 bg-neutral-200 rounded-xl animate-pulse"></div>
+                    <div class="h-14 bg-neutral-200 rounded-xl animate-pulse"></div>
                   </div>
                   }
-                  <!-- No data for period -->
-                  @if (!currentPeriodSummary) {
-                  <div class="text-center py-8">
-                    <mat-icon class="text-neutral-300 !text-4xl mb-2">event_busy</mat-icon>
-                    <p class="text-neutral-400 text-sm">No data for the selected period</p>
-                  </div>
-                  }
-                </mat-card-content>
-              </mat-card>
-
-              @defer (on viewport) {
-              <!-- ═══════════ CATEGORY BREAKDOWN ═══════════ -->
-              <mat-card class="!rounded-xl !border-none">
-                <mat-card-content class="!px-4 !pt-1">
-                  <div class="flex items-center flex-wrap mb-2 mt-3 gap-2 justify-between">
-                    <p class="text-sm font-semibold text-neutral-500 flex items-center gap-2 !mb-0">
-                      <mat-icon class="text-primary-500">pie_chart</mat-icon>
-                      Expense
-                    </p>
-                    <!-- <span class="text-xs font-medium text-primary-600 bg-primary-50/80 px-2.5 py-1 rounded-full border border-primary-100/50 flex items-center gap-1.5">
-                    <mat-icon class="!text-sm !w-auto !h-auto">event</mat-icon>
-                    {{ getPeriodLabel('current') }}
-                  </span> -->
-                  </div>
-                  <div class="overflow-x-auto mt-2">
-                    <table class="w-full history-table accounting-table compact-table">
-                      <thead>
-                        <tr class="mat-mdc-header-row">
-                          <th class="mat-mdc-header-cell">EXPENSE CATEGORY</th>
-                          <th class="mat-mdc-header-cell !text-right">BUDGET</th>
-                          <th class="mat-mdc-header-cell !text-right hidden sm:table-cell">PERCENT</th>
-                          <th class="mat-mdc-header-cell !text-right">ACTUAL</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        @for (cat of groupedCategoryBreakdown(); track cat.categoryId) {
-                        <tr class="mat-mdc-row hover:bg-neutral-50 cursor-pointer transition-colors"
-                          (click)="toggleExpand(cat.categoryId)"
-                          [class.bg-primary-50]="expandedCategoryId() === cat.categoryId">
-                          <td class="mat-mdc-cell">
-                            <div class="flex items-center gap-3">
-                              <div
-                                class="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0 border-2">
-                                <mat-icon class="!text-sm !w-auto !h-auto" [style.color]="'#94a3b8'">{{ cat.categoryIcon
-                                  || 'category' }}</mat-icon>
-                              </div>
-                              <div class="flex flex-col">
-                                <span class="font-medium text-xs text-neutral-800">{{ cat.categoryName }}</span>
-                                <span class="text-[10px] text-neutral-400 font-semibold">
-                                  {{ cat.transactionCount }} Trans.
-                                </span>
-                              </div>
-                            </div>
-                          </td>
-                          <td class="mat-mdc-cell !text-right text-neutral-400">
-                            {{ cat.budget ? (cat.budget | currency:{ compact: true }) : '—' }}
-                          </td>
-                          <td class="mat-mdc-cell !text-right hidden sm:table-cell">
-                            <div class="flex flex-col items-end gap-1">
-                              <span class="text-xs font-bold text-neutral-600">{{ cat.percentage | number:'1.0-1'
-                                }}%</span>
-                              <div class="w-16 h-1 bg-neutral-100 rounded-full overflow-hidden">
-                                <div class="h-full rounded-full" [style.width.%]="cat.percentage"
-                                  [style.backgroundColor]="cat.categoryColor || '#94a3b8'"></div>
-                              </div>
-                            </div>
-                          </td>
-                          <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold !text-error-600">
-                            {{ cat.amount | currency:{ compact: true } }}
-                          </td>
-                        </tr>
-
-                        <!-- Expandable Transaction List (Optional but kept for UX) -->
-                        @if (expandedCategoryId() === cat.categoryId) {
-                        <tr class="mat-mdc-row bg-neutral-50/50">
-                          <td [attr.colspan]="breakpointService.isMobile() ? 3 : 4" class="mat-mdc-cell !p-0">
-                            <div class="px-2 py-4 bg-neutral-50/50 border-b border-neutral-100 min-w-0 overflow-hidden">
-                              <app-category-report-item [item]="cat" [isExpanded]="true"
-                                [hideHeader]="true"
-                                [expandedData]="expandedItemData()" (toggleExpand)="toggleExpand(cat.categoryId)"
-                                class="!block !shadow-none !border-none !bg-transparent min-w-0">
-                              </app-category-report-item>
-                            </div>
-                          </td>
-                        </tr>
-                        }
-                        } @empty {
-                        <tr class="mat-mdc-row">
-                          <td [attr.colspan]="breakpointService.isMobile() ? 3 : 4"
-                            class="mat-mdc-cell text-center py-12">
-                            <mat-icon class="text-neutral-200 !text-5xl mb-2">auto_graph</mat-icon>
-                            <p class="text-neutral-400 font-medium">No expenses recorded for this period</p>
-                          </td>
-                        </tr>
-                        }
-                      </tbody>
-                      <tfoot>
-                        <tr class="mat-mdc-footer-row">
-                          <td class="mat-mdc-footer-cell">TOTAL SPENDING</td>
-                          <td class="mat-mdc-footer-cell !text-right text-neutral-400">
-                            {{ totalExpenseBudget() | currency:{ compact: true } }}
-                          </td>
-                          <td class="mat-mdc-footer-cell !text-right hidden sm:table-cell">100%</td>
-                          <td class="mat-mdc-footer-cell !text-right text-error-600">
-                            {{ currentPeriodSummary?.expense | currency:{ compact: true } }}
-                          </td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-
-                  <div class="flex justify-center mt-6">
-                    <button mat-button color="primary" routerLink="/dashboard/category"
-                      class="!text-xs !font-bold flex items-center gap-1 group !h-7 !px-3 hover:bg-primary-50 rounded-full transition-all">
-                      <span>Explore All Categories</span>
-                      <mat-icon
-                        class="!text-sm !w-auto !h-auto transition-transform group-hover:translate-x-1">arrow_forward</mat-icon>
-                    </button>
-                  </div>
-                  <!-- category inslight  later -->
-                </mat-card-content>
-              </mat-card>
-              } @placeholder {
-              <div class="space-y-3">
-                <div class="h-14 bg-neutral-200 rounded-xl animate-pulse"></div>
-                <div class="h-14 bg-neutral-200 rounded-xl animate-pulse"></div>
-                <div class="h-14 bg-neutral-200 rounded-xl animate-pulse"></div>
+                </div>
               </div>
-              }
               @defer (on viewport) {
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <!-- Income Table -->
-                <mat-card class="!rounded-xl !border-none">
-                  <mat-card-content class="pt-4">
-                    <div class="overflow-x-auto">
-                      <table class="w-full history-table accounting-table compact-table">
-                        <thead>
-                          <tr class="mat-mdc-header-row">
-                            <th class="mat-mdc-header-cell">INCOME</th>
-                            <th class="mat-mdc-header-cell !text-right">ACTUAL</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          @for (item of incomeBreakdown(); track item.categoryId) {
-                          <tr class="mat-mdc-row">
-                            <td class="mat-mdc-cell font-medium">{{ item.categoryName }}</td>
-                            <td class="mat-mdc-cell !text-right !text-success-600 font-mono tabular-nums font-semibold">
-                              {{ item.amount | currency:{ compact: true } }}
-                            </td>
-                          </tr>
-                          } @empty {
-                          <tr class="mat-mdc-row">
-                            <td colspan="2" class="mat-mdc-cell text-center py-8 text-neutral-400">No income data for
-                              this period</td>
-                          </tr>
-                          }
-                        </tbody>
-                        <tfoot>
-                          <tr class="mat-mdc-footer-row">
-                            <td class="mat-mdc-footer-cell">TOTAL</td>
-                            <td class="mat-mdc-footer-cell !text-right !text-success-600 font-mono tabular-nums">
-                              {{ currentPeriodSummary?.income | currency:{ compact: true } }}
-                            </td>
-                          </tr>
-                        </tfoot>
-                      </table>
-                    </div>
-                  </mat-card-content>
-                </mat-card>
-
-                <!-- Accounts Table -->
-                <mat-card class="!rounded-xl !border-none">
-                  <mat-card-content class="pt-4">
-                    <div class="overflow-x-auto">
-                      <table class="w-full history-table accounting-table compact-table">
-                        <thead>
-                          <tr class="mat-mdc-header-row">
-                            <th class="mat-mdc-header-cell">ACCOUNTS</th>
-                            <th class="mat-mdc-header-cell !text-right">BALANCE</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          @for (account of allAccounts(); track account.accountId) {
-                          <tr class="mat-mdc-row">
-                            <td class="mat-mdc-cell font-medium">{{ account.name }}</td>
-                            <td class="mat-mdc-cell !text-right font-mono tabular-nums font-semibold"
-                                [class.text-success-600]="account.balance >= 0"
-                                [class.text-error-600]="account.balance < 0">
-                              {{ account.balance | currency:{ compact: true } }}
-                            </td>
-                          </tr>
-                          } @empty {
-                          <tr class="mat-mdc-row">
-                            <td colspan="2" class="mat-mdc-cell text-center py-8 text-neutral-400">No accounts found</td>
-                          </tr>
-                          }
-                        </tbody>
-                        <tfoot>
-                          <tr class="mat-mdc-footer-row">
-                            <td class="mat-mdc-footer-cell uppercase tracking-wider">NET WORTH</td>
-                            <td class="mat-mdc-footer-cell !text-right font-mono tabular-nums font-bold"
-                                [class.!text-success-600]="totalBalance() >= 0"
-                                [class.!text-error-600]="totalBalance() < 0">
-                              {{ totalBalance() | currency:{ compact: true } }}
-                            </td>
-                          </tr>
-                        </tfoot>
-                      </table>
-                    </div>
-                  </mat-card-content>
-                </mat-card>
-              </div>
+             
               <!-- ═══════════ MONTHLY HISTORY ═══════════ -->
               @if (filteredMonthlySummaries.length > 0) {
               <mat-card class="!rounded-xl !border-none ">

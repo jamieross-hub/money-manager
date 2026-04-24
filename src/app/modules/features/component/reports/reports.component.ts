@@ -165,101 +165,102 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
     readonly groupedCategoryBreakdown = computed(() => {
         const summary = this.currentPeriodSummarySignal();
+        const prevSummary = this.previousPeriodSummarySignal();
         if (!summary || !summary.categoryBreakdown) return [];
 
         const categories = this.allCategories();
         const categoryMap = new Map(categories.map(c => [c.id, c]));
         const validCategoryIds = new Set(categories.map(c => c.id));
 
-        const groups = new Map<string, { 
-            name: string, 
-            amount: number, 
-            transactionCount: number, 
-            budget: number,
-            categoryIcon: string, 
-            groupIcon?: string, // [NEW]
-            categoryColor: string,
-            categoryId: string 
-        }>();
+        // Internal helper to aggregate category data into groups/standalone items
+        const aggregate = (breakdown: CategoryBreakdownItem[]) => {
+            const groups = new Map<string, { 
+                name: string, 
+                amount: number, 
+                transactionCount: number, 
+                budget: number,
+                categoryIcon: string, 
+                groupIcon?: string,
+                categoryColor: string,
+                categoryId: string 
+            }>();
 
-        let totalAmount = 0;
+            breakdown.forEach(item => {
+                const cat = categoryMap.get(item.categoryId);
+                const isUnrecognized = !validCategoryIds.has(item.categoryId);
+                const budget = cat?.budget?.budgetAmount || 0;
 
-        summary.categoryBreakdown.forEach(item => {
-            const cat = categoryMap.get(item.categoryId);
-            const isUnrecognized = !validCategoryIds.has(item.categoryId);
-            const budget = cat?.budget?.budgetAmount || 0;
-
-            if (isUnrecognized) {
-                const groupName = 'Unrecognized Category';
-                const groupId = 'group_unrecognized';
-                if (!groups.has(groupId)) {
-                    groups.set(groupId, {
-                        name: groupName,
-                        amount: 0,
-                        transactionCount: 0,
-                        budget: 0,
-                        categoryIcon: 'help_outline',
-                        groupIcon: 'help_outline',
-                        categoryColor: '#94a3b8',
-                        categoryId: groupId
-                    });
-                }
-                const g = groups.get(groupId)!;
-                g.amount += item.amount;
-                g.transactionCount += item.transactionCount;
-                g.budget += budget;
-            } else {
-                const groupName = cat?.group;
-
-                if (groupName && groupName.trim() !== '') {
-                    if (!groups.has(groupName)) {
-                        groups.set(groupName, {
-                            name: groupName,
-                            amount: 0,
-                            transactionCount: 0,
-                            budget: 0,
-                            categoryIcon: item.categoryIcon,
-                            groupIcon: cat?.groupIcon, // [NEW]
-                            categoryColor: (!item.categoryColor || item.categoryColor === '#9ca3af') ? this.stringToColor(groupName) : item.categoryColor,
-                            categoryId: 'group_' + groupName
+                if (isUnrecognized) {
+                    const groupId = 'group_unrecognized';
+                    if (!groups.has(groupId)) {
+                        groups.set(groupId, {
+                            name: 'Unrecognized Category', amount: 0, transactionCount: 0, budget: 0,
+                            categoryIcon: 'help_outline', groupIcon: 'help_outline',
+                            categoryColor: '#94a3b8', categoryId: groupId
                         });
                     }
-                    const g = groups.get(groupName)!;
+                    const g = groups.get(groupId)!;
                     g.amount += item.amount;
                     g.transactionCount += item.transactionCount;
                     g.budget += budget;
-                    if (item.amount > (g.amount - item.amount)) {
-                        g.categoryIcon = item.categoryIcon;
-                        g.categoryColor = (!item.categoryColor || item.categoryColor === '#9ca3af') ? this.stringToColor(groupName) : item.categoryColor;
-                    }
                 } else {
-                    groups.set(item.categoryId, {
-                        name: item.categoryName,
-                        amount: item.amount,
-                        transactionCount: item.transactionCount,
-                        budget: budget,
-                        categoryIcon: item.categoryIcon,
-                        categoryColor: item.categoryColor,
-                        categoryId: item.categoryId
-                    });
+                    const groupName = cat?.group;
+                    if (groupName && groupName.trim() !== '') {
+                        const groupId = 'group_' + groupName;
+                        if (!groups.has(groupId)) {
+                            groups.set(groupId, {
+                                name: groupName, amount: 0, transactionCount: 0, budget: 0,
+                                categoryIcon: item.categoryIcon, groupIcon: cat?.groupIcon,
+                                categoryColor: (!item.categoryColor || item.categoryColor === '#9ca3af') ? this.stringToColor(groupName) : item.categoryColor,
+                                categoryId: groupId
+                            });
+                        }
+                        const g = groups.get(groupId)!;
+                        g.amount += item.amount;
+                        g.transactionCount += item.transactionCount;
+                        g.budget += budget;
+                        // Keep icon/color of the largest contributor in the group
+                        if (item.amount > (g.amount - item.amount)) {
+                            g.categoryIcon = item.categoryIcon;
+                        }
+                    } else {
+                        groups.set(item.categoryId, {
+                            name: item.categoryName, amount: item.amount, transactionCount: item.transactionCount,
+                            budget: budget, categoryIcon: item.categoryIcon, categoryColor: item.categoryColor,
+                            categoryId: item.categoryId
+                        });
+                    }
                 }
-            }
-            totalAmount += item.amount;
-        });
+            });
+            return groups;
+        };
 
-        const sorted = Array.from(groups.values())
-            .map(g => ({
-                categoryId: g.categoryId,
-                categoryName: g.name,
-                categoryIcon: g.categoryIcon,
-                groupIcon: g.groupIcon,
-                categoryColor: g.categoryColor,
-                amount: g.amount,
-                transactionCount: g.transactionCount,
-                budget: g.budget,
-                percentage: (summary.income ?? 0) > 0 ? (g.amount / summary.income!) * 100 : 0,
-                isGrouped: g.categoryId.startsWith('group_')
-            }))
+        const currentAggregated = aggregate(summary.categoryBreakdown);
+        const prevAggregated = prevSummary ? aggregate(prevSummary.categoryBreakdown) : new Map();
+
+        const sorted = Array.from(currentAggregated.values())
+            .map(g => {
+                const prev = prevAggregated.get(g.categoryId);
+                const prevAmount = prev ? prev.amount : 0;
+                const diff = g.amount - prevAmount;
+                const trend = prevAmount > 0 ? (diff / prevAmount) * 100 : (g.amount > 0 ? 100 : 0);
+
+                return {
+                    categoryId: g.categoryId,
+                    categoryName: g.name,
+                    categoryIcon: g.categoryIcon,
+                    groupIcon: g.groupIcon,
+                    categoryColor: g.categoryColor,
+                    amount: g.amount,
+                    prevAmount,
+                    diff,
+                    trend,
+                    transactionCount: g.transactionCount,
+                    budget: g.budget,
+                    percentage: (summary.income ?? 0) > 0 ? (g.amount / summary.income!) * 100 : 0,
+                    isGrouped: g.categoryId.startsWith('group_')
+                };
+            })
             .sort((a, b) => b.amount - a.amount);
 
         return sorted;
@@ -491,6 +492,12 @@ export class ReportsComponent implements OnInit, OnDestroy {
             this.selectedWeekOffset.set(cachedPrefs.selectedWeekOffset);
         }
 
+        // Load cached UI state (expanded category)
+        const uiState = this.storageService.getItem<any>(LocalStorageKey.REPORTS_UI_STATE);
+        if (uiState?.expandedCategoryId) {
+            this.expandedCategoryId.set(uiState.expandedCategoryId);
+        }
+
         // Effect to save preferences when they change
         effect(() => {
             const prefs: ReportsPreferences = {
@@ -500,6 +507,15 @@ export class ReportsComponent implements OnInit, OnDestroy {
                 selectedWeekOffset: this.selectedWeekOffset()
             };
             this.storageService.setItem(LocalStorageKey.REPORTS_PREFERENCES, prefs);
+        });
+
+        // Effect to save expanded category
+        effect(() => {
+            const currentUIState = this.storageService.getItem<any>(LocalStorageKey.REPORTS_UI_STATE) || {};
+            this.storageService.setItem(LocalStorageKey.REPORTS_UI_STATE, {
+                ...currentUIState,
+                expandedCategoryId: this.expandedCategoryId()
+            });
         });
 
         // Effect to trigger processor when dependencies change

@@ -12,6 +12,8 @@ export interface SidebarNavChild {
   hideInFamily?: boolean;
   /** If true, hide this item for guest users */
   hideForGuest?: boolean;
+  /** If true, only show this item on mobile devices */
+  mobileOnly?: boolean;
 }
 
 export interface SidebarNavParent {
@@ -151,7 +153,8 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         route: '/dashboard/manage-desktop',
         icon: 'desktop_mac',
         hideInFamily: true,
-        order: 8
+        order: 8,
+        mobileOnly: true
       }
     ]
   },

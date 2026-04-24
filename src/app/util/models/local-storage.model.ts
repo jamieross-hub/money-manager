@@ -34,6 +34,7 @@ export enum LocalStorageKey {
     APP_LOGS = 'app_logs',
     APP_LANGUAGE = 'app_language',
     REPORTS_PREFERENCES = 'reports-preferences',
+    REPORTS_UI_STATE = 'reports-ui-state',
 
     // Feature Flags
     FEATURE_FLAGS = 'feature-flags',

@@ -51,8 +51,7 @@
           matTooltipPosition="above">
           <div class="bar-tooltip">{{ item.value | currency }}</div>
           <div class="bar"
-            [style.height.%]="maxChartValue > 0 ? (item.value / maxChartValue * 100) : 0"
-            [style.background-color]="viewMode === 'category' ? item.color : null">
+            [style.height.%]="maxChartValue > 0 ? (item.value / maxChartValue * 100) : 0">
           </div>
           <!-- <span class="bar-label" [class.category-label]="viewMode === 'category'">
           <mat-icon *ngIf="viewMode === 'category'" class="text-[10px] mr-0.5">{{ item.icon }}</mat-icon>

@@ -83,10 +83,15 @@
                              {{ sub.categoryIcon || fallbackIcon }}
                            </mat-icon>
                         </div>
-                        <span class="text-neutral-700 font-medium break-words leading-tight truncate"
-                              [class.text-primary-700]="selectedSubId() === sub.categoryId">
-                          {{ sub.categoryName }}
-                        </span>
+                        <div class="flex flex-col min-w-0">
+                          <span class="text-neutral-700 font-medium break-words leading-tight truncate"
+                                [class.text-primary-700]="selectedSubId() === sub.categoryId">
+                            {{ sub.categoryName }}
+                          </span>
+                          <span class="text-[9px] text-neutral-400 font-medium leading-none mt-1">
+                            {{ sub.transactionCount }} transaction{{ sub.transactionCount !== 1 ? 's' : '' }}
+                          </span>
+                        </div>
                       </div>
                     </td>
                     <td class="mat-mdc-cell !py-2 !px-3 !text-right !border-r-0 w-16 hidden sm:table-cell">
@@ -150,8 +155,15 @@
                   <tr class="mat-mdc-row hover:bg-neutral-50/50 transition-colors">
                     <td class="mat-mdc-cell !py-2.5 !px-3 !border-r-0">
                       <div class="flex flex-col min-w-0">
-                         <span class="font-medium text-neutral-800 break-words leading-tight truncate">{{ t.note || t.category || 'Untitled' }}</span>
-                         <span class="text-[9px] text-neutral-400 font-medium mt-1">{{ t.date | date:'mediumDate' }}</span>
+                         <span class="font-medium text-neutral-800 break-words leading-tight truncate">{{ t.note || t.notes || t.category || 'Untitled' }}</span>
+                         <div class="flex items-center gap-1.5 mt-1">
+                            @if ((t.note || t.notes) && t.category) {
+                              <span class="text-[9px] font-bold text-primary-500  py-0.5 bg-primary-50 rounded leading-none">
+                                {{ t.category }}
+                              </span>
+                            }
+                            <span class="text-[9px] text-neutral-400 font-medium leading-none">{{ t.date | date:'mediumDate' }}</span>
+                         </div>
                       </div>
                     </td>
                     <td class="mat-mdc-cell !py-2.5 !px-3 !text-right font-bold tabular-nums text-[12px] w-24" 

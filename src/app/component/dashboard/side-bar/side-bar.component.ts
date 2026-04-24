@@ -18,6 +18,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/store/app.state';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { selectIsFamilyMode } from 'src/app/store/profile/profile.selectors';
+import { BreakpointService } from 'src/app/util/service/breakpoint.service';
 
 @Component({
   selector: 'side-bar',
@@ -41,8 +42,9 @@ export class SideBarComponent implements AfterViewInit, OnDestroy, OnInit {
   
   public userService = inject(UserService);
   private store = inject(Store<AppState>);
+  public breakpointService = inject(BreakpointService);
   
-  user$: Observable<User | null> = this.userService.userAuth$;
+  user$: Observable<User | null> = this.userService.userAuth$ ;
 
   /** True when the user has family mode enabled — drives familyOnly nav items */
   readonly isFamilyMode = toSignal(this.store.select(selectIsFamilyMode), { initialValue: false });
