@@ -73,6 +73,14 @@ const routes: Routes = [
             roles: ['free', 'premium', 'admin'],
             requireEmailVerification: true
         }
+    },
+    {
+        path: 'manage-desktop',
+        loadComponent: () => import('./component/manage-desktop/manage-desktop.component').then(m => m.ManageDesktopComponent),
+        data: {
+            roles: ['free', 'premium', 'admin'],
+            requireEmailVerification: true
+        }
     }
 ];
 

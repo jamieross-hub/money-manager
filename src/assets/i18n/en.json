@@ -51,7 +51,8 @@
         "BACKUP_RESTORE": "Backup & Restore",
         "GITHUB_SUPPORT": "GitHub Repo",
         "GROUP_SELECTION": "All Family Groups",
-        "AUTO_SYNC": "Auto Sync"
+        "AUTO_SYNC": "Auto Sync",
+        "MANAGE_DESKTOP": "Manage from Desktop"
     },
     "LOAN_CALCULATOR": {
         "TITLE": "Personal Loan Calculator",

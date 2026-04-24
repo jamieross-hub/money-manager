@@ -10,6 +10,8 @@ export const APP_CONFIG = {
   APP_VERSION: '1.0.0',
   APP_DESCRIPTION: 'Family expense management application',
   WELCOME_MESSAGE: 'Master your money, your way. Choose the mode that fits your needs to get started:',
+  WEB_APP_URL: 'https://prashiln79.github.io/money-manager/#/sign-in',
+  SHARE_TEXT: 'Manage your finances from your desktop for a better experience!',
   install_prompt_dismissed_days: 7,
 
   // Firebase configuration

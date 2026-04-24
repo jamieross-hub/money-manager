@@ -8,6 +8,7 @@ import { GoogleSheetsComponent } from './component/google-sheets/google-sheets.c
 import { OpenaiInteractionComponent } from './component/openai-interaction/openai-interaction.component';
 import { ReportsComponent } from './component/reports/reports.component';
 import { AutoSyncComponent } from './component/auto-sync/auto-sync.component';
+import { ManageDesktopComponent } from './component/manage-desktop/manage-desktop.component';
 import { SharedModule } from '../shared/shared.module';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
@@ -25,7 +26,8 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
         TaxComponent,
         GoogleSheetsComponent,
         OpenaiInteractionComponent,
-        AutoSyncComponent
+        AutoSyncComponent,
+        ManageDesktopComponent
     ]
 })
 export class FeaturesModule { }

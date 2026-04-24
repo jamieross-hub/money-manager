@@ -1,0 +1,87 @@
+<div class="manage-desktop-container">
+  <div class="header-section">
+    <div class="icon-circle">
+      <mat-icon>desktop_windows</mat-icon>
+    </div>
+    <h1>Manage from Desktop</h1>
+    <p class="subtitle">Experience the full power of your financial data on a larger screen.</p>
+  </div>
+
+  <div class="features-grid">
+    <mat-card class="feature-card">
+      <mat-card-header>
+        <div mat-card-avatar class="feature-icon">
+          <mat-icon>table_chart</mat-icon>
+        </div>
+        <mat-card-title>Spreadsheet View</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p>A comprehensive table view designed for quick analysis and bulk tracking.</p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="feature-card">
+      <mat-card-header>
+        <div mat-card-avatar class="feature-icon">
+          <mat-icon>insights</mat-icon>
+        </div>
+        <mat-card-title>Advanced Insights</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Larger, more interactive charts to visualize your spending trends clearly.</p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="feature-card">
+      <mat-card-header>
+        <div mat-card-avatar class="feature-icon">
+          <mat-icon>upload_file</mat-icon>
+        </div>
+        <mat-card-title>Easy Bulk Imports</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Drag and drop CSV/Excel files from your bank statement with ease.</p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="feature-card">
+      <mat-card-header>
+        <div mat-card-avatar class="feature-icon">
+          <mat-icon>keyboard</mat-icon>
+        </div>
+        <mat-card-title>Keyboard Support</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Navigate and add transactions faster using built-in keyboard shortcuts.</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <mat-card class="action-card">
+    <mat-card-content>
+      <h3>Ready to try it?</h3>
+      <p>Simply open this link on your desktop or laptop browser:</p>
+      
+      <div class="link-container">
+        <code class="app-url">{{ currentUrl }}</code>
+        <button mat-icon-button (click)="copyLink()" matTooltip="Copy Link">
+          <mat-icon>content_copy</mat-icon>
+        </button>
+      </div>
+
+      <div class="actions">
+        <button mat-raised-button color="primary" class="desktop-btn" (click)="shareLink()">
+          <mat-icon>share</mat-icon>
+          <span>Share Link</span>
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="pwa-instruction">
+    <p>
+      <!-- <mat-icon>info</mat-icon> -->
+      Tip: You can install the app on your computer for a native desktop experience by clicking the "Install" icon in your browser's address bar.
+    </p>
+  </div>
+</div>

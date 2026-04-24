@@ -145,6 +145,13 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         icon: 'calculate',
         hideInFamily: true,
         order: 7
+      },
+      {
+        label: 'NAVIGATION.MANAGE_DESKTOP',
+        route: '/dashboard/manage-desktop',
+        icon: 'desktop_mac',
+        hideInFamily: true,
+        order: 8
       }
     ]
   },
