@@ -319,33 +319,35 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
   private setupFooter(): void {
     this.vm$.pipe(takeUntil(this.destroy$)).subscribe(vm => {
-      this.footerService.patchConfig({
-        hideFab: true,
-        items: [
-          {
-            id: 'home',
-            icon: 'home',
-            label: 'Home'
-          },
-          {
-            id: 'fab',
-            icon: 'add',
-            label: 'Add Category',
-            bgClass: 'bg-primary-500',
-            isFab: true,
-            action: () => this.openAddMobileDialog()
-          },
-          {
-            id: 'swappable-tab',
-            icon: computed(() => this.selectedtabGroup() === 0 ? 'folder' : 'category'),
-            label: computed(() => this.selectedtabGroup() === 0 ? 'Groups' : 'Categories'),
-            badge: computed(() => this.selectedtabGroup() === 0 ? vm.availableGroups.length : vm.categories.length),
-            action: () => {
-              this.selectedtabGroup.set(this.selectedtabGroup() === 0 ? 1 : 0);
+      if (this.breakpointService.isMobile()) {
+        this.footerService.patchConfig({
+          hideFab: true,
+          items: [
+            {
+              id: 'home',
+              icon: 'home',
+              label: 'Home'
+            },
+            {
+              id: 'fab',
+              icon: 'add',
+              label: 'Add Category',
+              bgClass: 'bg-primary-500',
+              isFab: true,
+              action: () => this.openAddMobileDialog()
+            },
+            {
+              id: 'swappable-tab',
+              icon: computed(() => this.selectedtabGroup() === 0 ? 'folder' : 'category'),
+              label: computed(() => this.selectedtabGroup() === 0 ? 'Groups' : 'Categories'),
+              badge: computed(() => this.selectedtabGroup() === 0 ? vm.availableGroups.length : vm.categories.length),
+              action: () => {
+                this.selectedtabGroup.set(this.selectedtabGroup() === 0 ? 1 : 0);
+              }
             }
-          }
-        ]
-      });
+          ]
+        });
+      }
     });
   }
 

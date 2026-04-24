@@ -105,12 +105,12 @@ export class FooterComponent {
   readonly isProfileActive = computed(() => this.currentUrl() === '/dashboard/profile');
   readonly isFamilyActive = computed(() => {
     const url = this.currentUrl();
-    return url.includes('/dashboard/family/dashboard') || 
-           url.includes('/dashboard/family/groups') || 
-           url === '/dashboard/family';
+    return url.includes('/dashboard/family/dashboard') ||
+      url.includes('/dashboard/family/groups') ||
+      url === '/dashboard/family';
   });
   readonly isMoreActive = computed(() => [
-    '/dashboard/accounts', '/dashboard/budgets', '/dashboard/goals', 
+    '/dashboard/accounts', '/dashboard/budgets', '/dashboard/goals',
     '/dashboard/notes', '/dashboard/tax', '/dashboard/subscription'
   ].includes(this.currentUrl()));
 
@@ -123,7 +123,7 @@ export class FooterComponent {
     const currentUrl = this.currentUrl();
 
     // Helper to resolve Signal or static value
-    const resolve = <T>(val: T | Signal<T> | undefined): T | undefined => 
+    const resolve = <T>(val: T | Signal<T> | undefined): T | undefined =>
       typeof val === 'function' ? (val as Signal<T>)() : val;
 
     // Calculate Defaults
@@ -156,25 +156,25 @@ export class FooterComponent {
     };
 
     // 4. Reports / Settlement (Mobile only)
-    if (isMobile) {
-      if (isFamilyMode) {
-        const isCommonMode = this.activeFamily()?.mode !== 'split';
-        const showSummary = this.showSummaryInFamily() || isCommonMode;
-        defaultItems.push({
-          id: 'reports',
-          icon: showSummary ? 'assessment' : 'handshake',
-          label: showSummary ? 'NAVIGATION.SUMMARY' : 'Settle',
-          priority: 4
-        });
-      } else {
-        defaultItems.push({
-          id: 'reports',
-          icon: 'assessment',
-          label: 'NAVIGATION.SUMMARY',
-          priority: 4
-        });
-      }
+
+    if (isFamilyMode) {
+      const isCommonMode = this.activeFamily()?.mode !== 'split';
+      const showSummary = this.showSummaryInFamily() || isCommonMode;
+      defaultItems.push({
+        id: 'reports',
+        icon: showSummary ? 'assessment' : 'handshake',
+        label: showSummary ? 'NAVIGATION.SUMMARY' : 'Settle',
+        priority: 4
+      });
+    } else {
+      defaultItems.push({
+        id: 'reports',
+        icon: 'assessment',
+        label: 'NAVIGATION.SUMMARY',
+        priority: 4
+      });
     }
+
 
     // 5. Large screen items (Category/Accounts)
     if (!isMobile) {
@@ -192,15 +192,13 @@ export class FooterComponent {
       });
     }
 
-    // 6. Profile (Mobile only)
-    if (isMobile) {
-      defaultItems.push({
-        id: 'profile',
-        icon: isFamilyMode ? 'group' : 'person',
-        label: 'NAVIGATION.PROFILE',
-        priority: 7
-      });
-    }
+    // 6. Profile
+    defaultItems.push({
+      id: 'profile',
+      icon: isFamilyMode ? 'group' : 'person',
+      label: 'NAVIGATION.PROFILE',
+      priority: 7
+    });
 
     // Merge strategy: Use custom items if provided, otherwise use defaults
     const finalItems = (custom && custom.items && custom.items.length > 0) ? custom.items : defaultItems;
@@ -222,25 +220,30 @@ export class FooterComponent {
     };
 
     // Ensure they are sorted by priority
-    return { 
-      items: resolvedItems.sort((a, b) => (a.priority || 0) - (b.priority || 0)), 
+    return {
+      items: resolvedItems.sort((a, b) => (a.priority || 0) - (b.priority || 0)),
       fab: resolvedFab,
       hideFooter: custom?.hideFooter ?? this.hideFooterForRoutes.includes(currentUrl),
       hideFab: custom?.hideFab ?? false
     } as any;
   });
-  
+
   readonly footerLayoutClass = computed(() => {
     const items = this.dynamicConfig().items || [];
     const showFab = !this.dynamicConfig().hideFab;
     const total = items.length + (showFab ? 1 : 0);
+
+    const maxW = 'lg:max-w-2xl';
     
-    if (total === 1) return 'grid grid-cols-1 gap-2 lg:max-w-md lg:mx-auto lg:gap-1';
-    if (total === 2) return 'grid grid-cols-2 gap-2 lg:max-w-md lg:mx-auto lg:gap-1';
-    if (total === 3) return 'grid grid-cols-3 gap-2 lg:max-w-md lg:mx-auto lg:gap-1';
-    if (total === 4) return 'grid grid-cols-4 gap-2 lg:max-w-md lg:mx-auto lg:gap-1';
-    
-    return 'grid grid-cols-5 gap-2 lg:max-w-md lg:mx-auto lg:gap-1';
+    if (total === 1) return `grid grid-cols-1 gap-2 ${maxW} lg:mx-auto lg:gap-1`;
+    if (total === 2) return `grid grid-cols-2 gap-2 ${maxW} lg:mx-auto lg:gap-1`;
+    if (total === 3) return `grid grid-cols-3 gap-2 ${maxW} lg:mx-auto lg:gap-1`;
+    if (total === 4) return `grid grid-cols-4 gap-2 ${maxW} lg:mx-auto lg:gap-1`;
+    if (total === 5) return `grid grid-cols-5 gap-2 ${maxW} lg:mx-auto lg:gap-1`;
+    if (total === 6) return `grid grid-cols-6 gap-2 ${maxW} lg:mx-auto lg:gap-1`;
+    if (total === 7) return `grid grid-cols-7 gap-2 ${maxW} lg:mx-auto lg:gap-1`;
+
+    return `grid grid-cols-5 gap-2 ${maxW} lg:mx-auto lg:gap-1`;
   });
 
   readonly fabConfig = computed(() => this.dynamicConfig().fab || ({ id: 'fab', icon: 'add_circle', label: 'Add', bgClass: '' } as FooterAction));
@@ -248,7 +251,7 @@ export class FooterComponent {
   readonly footerSelectionItems = computed(() => {
     const families = this.userFamilies();
     const activeId = this.isFamilyMode() ? this.familyService.activeFamilyId() : null;
-    
+
     // Base items
     const allItems = [
       { id: null, name: 'Personal', icon: 'person', isIndividual: true },
@@ -256,7 +259,7 @@ export class FooterComponent {
     ];
 
     // Load recents from indexing storage (synchronous via in-memory cache)
-    const recents = this.storageService.getItem< (string | null)[] >(LocalStorageKey.RECENT_FOOTER_MODES) || [];
+    const recents = this.storageService.getItem<(string | null)[]>(LocalStorageKey.RECENT_FOOTER_MODES) || [];
 
     // Sort: Active first, then by recents, then by default
     const sorted = [...allItems].sort((a, b) => {
@@ -267,14 +270,14 @@ export class FooterComponent {
       // 2. Then by most recently used
       const idxA = recents.indexOf(a.id as any);
       const idxB = recents.indexOf(b.id as any);
-      
+
       if (idxA !== -1 && idxB !== -1) return idxA - idxB;
       if (idxA !== -1) return -1;
       if (idxB !== -1) return 1;
 
       return 0;
     });
-    
+
     // Limit to 4 items
     return sorted.slice(0, 4);
   });
@@ -282,12 +285,12 @@ export class FooterComponent {
   onAddFabClick() {
     this.notificationService.buttonClick();
     const fab = this.fabConfig();
-    
+
     if (fab.action) {
       fab.action();
       return;
     }
-    
+
     this.addTransaction();
   }
 
@@ -304,12 +307,12 @@ export class FooterComponent {
       item.action();
       return;
     }
-    
+
     if (item.route) {
       this.navigateTo(item.route);
       return;
     }
-    
+
     // Legacy fallback for known IDs
     if (item.id === 'category') this.navigateTo('/dashboard/category');
     else if (item.id === 'accounts') this.navigateTo('/dashboard/accounts');
@@ -383,11 +386,11 @@ export class FooterComponent {
   selectFamily(familyId: string | undefined | null) {
     this.showHomeMenu.set(false);
     this.familyService.setActiveFamily(familyId || null);
-    
+
     // Update recently used cache in indexing storage
     const id = familyId || null;
-    let recents = this.storageService.getItem< (string | null)[] >(LocalStorageKey.RECENT_FOOTER_MODES) || [];
-    
+    let recents = this.storageService.getItem<(string | null)[]>(LocalStorageKey.RECENT_FOOTER_MODES) || [];
+
     // Move to front, remove duplicates
     recents = [id, ...recents.filter(r => r !== id)].slice(0, 10);
     this.storageService.setItem(LocalStorageKey.RECENT_FOOTER_MODES, recents);
@@ -401,7 +404,7 @@ export class FooterComponent {
 
   handleSettleClick() {
     if (this.isLongPress) return;
-    
+
     // 1. Individual mode: Always go to standard reports
     if (!this.isFamilyMode()) {
       this.navigateTo('/dashboard/reports');

@@ -2,7 +2,7 @@
 @if(!hideFooter() || (isMobile() || isTablePortrait())){
   <footer class="footer-container flex-shrink-0 border-t dark:bg-slate-950 dark:border-slate-800">
     <!-- Professional Action Bar -->
-    <div class="px-2 py-3 lg:px-5 lg:py-2 " [ngClass]="{'lg:pb-2 mt-2': isDesktop()}">
+    <div class="px-2 py-3 lg:px-5 lg:py-2" [ngClass]="{'lg:pb-2 mt-2': isDesktop()}">
       <!-- Quick Actions Grid -->
       <div [ngClass]="footerLayoutClass()" style="align-items: flex-end; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);">
         @if (!showHomeMenu()) {

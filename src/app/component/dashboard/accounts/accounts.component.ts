@@ -165,12 +165,13 @@ export class AccountsComponent implements OnInit, OnDestroy {
 
   private setupFooter(): void {
     this.accounts$.pipe(takeUntil(this.destroy$)).subscribe(accounts => {
-      this.footerService.patchConfig({
-        hideFab: true,
-        items: [
-          {
-            id: 'home',
-            icon: 'home',
+      if (this.breakpointService.isMobile()) {
+        this.footerService.patchConfig({
+          hideFab: true,
+          items: [
+            {
+              id: 'home',
+              icon: 'home',
             label: 'Home'
           },
           {
@@ -190,6 +191,7 @@ export class AccountsComponent implements OnInit, OnDestroy {
           }
         ]
       });
+    }
     });
   }
 

@@ -26,6 +26,7 @@ import { PinLockComponent } from './util/components/pin-lock/pin-lock.component'
 import { TransactionProcessorService } from './util/service/transaction-processor.service';
 import { PerformanceDashboardComponent } from './component/dashboard/header/performance-dashboard/performance-dashboard.component';
 import { PerformanceMetricsService } from './util/service/performance-metrics.service';
+import { BreakpointService } from './util/service/breakpoint.service';
 import { inject } from '@angular/core';
 
 
@@ -46,6 +47,7 @@ import { inject } from '@angular/core';
 })
 export class AppComponent implements OnInit, OnDestroy {
   private metricsService = inject(PerformanceMetricsService);
+  private breakpointService = inject(BreakpointService);
   public showPerformanceDashboard = this.metricsService.showDashboard;
   public title = APP_CONFIG.APP_NAME;
   public isLocked = this.securityService.isLocked;
@@ -207,7 +209,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
       // This disables all right-click / long-press menus globally
       document.addEventListener('contextmenu', (event) => {
-        event.preventDefault();
+        if (this.breakpointService.isMobile()) {
+          event.preventDefault();
+        }
       });
     }
   }
