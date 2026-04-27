@@ -1119,7 +1119,8 @@ export class UserService implements OnDestroy {
         country: regionalConfig.country,
         notifications: true,
         emailUpdates: true,
-        theme: 'light-theme'
+        theme: 'light-theme',
+        hasSeenWelcome: false
       }
     };
 

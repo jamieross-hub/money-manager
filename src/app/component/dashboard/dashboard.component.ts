@@ -144,7 +144,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       filter(user => !!user),
       take(1)
     ).subscribe(user => {
-      if (user && user.preferences && user.preferences.hasSeenWelcome === false) {
+      if (user && user.preferences && !user.preferences.hasSeenWelcome) {
         this.notificationService.confirm({
           title: APP_CONFIG.APP_NAME,
           message: APP_CONFIG.WELCOME_MESSAGE,
