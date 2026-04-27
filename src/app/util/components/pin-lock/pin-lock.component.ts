@@ -83,11 +83,8 @@ export class PinLockComponent {
 
   async logout(): Promise<void> {
     try {
-      await this.userService.signOut();
+      await this.userService.logout();
       this.securityService.setPinVerified(false);
-      if (typeof window !== 'undefined') {
-        window.location.reload();
-      }
     } catch (error) {
       console.error('Logout failed:', error);
     }

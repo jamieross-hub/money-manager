@@ -251,9 +251,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
   async logout(): Promise<void> {
     try {
-      await this.userService.signOut();
+      await this.userService.logout();
       this.securityService.setPinVerified(false);
-      window.location.reload();
     } catch (error) {
       console.error('Logout failed:', error);
     }

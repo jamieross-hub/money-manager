@@ -117,20 +117,18 @@
             </span>
           </button>
         }
-        @if (!isGuestMode() && breakpointService.device.isMobile) {
-          <button mat-flat-button (click)="logout()"
-            [disabled]="isLoading()" class="!h-[42px] !rounded-lg !text-white !bg-primary-700 w-full">
-            <span class="flex items-center justify-center gap-2">
-              @if (isLogoutLoading()) {
-                <mat-spinner diameter="20"></mat-spinner>
-              }
-              @if (!isLogoutLoading()) {
-                <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">logout</mat-icon>
-              }
-              {{ isLogoutLoading() ? 'Loading...' : 'AUTH.SIGN_OUT' | translate }}
-            </span>
-          </button>
-        }
+        <button mat-flat-button (click)="logout()"
+          [disabled]="isLoading()" class="!h-[42px] !rounded-lg !text-white !bg-primary-700 w-full">
+          <span class="flex items-center justify-center gap-2">
+            @if (isLogoutLoading()) {
+              <mat-spinner diameter="20"></mat-spinner>
+            }
+            @if (!isLogoutLoading()) {
+              <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">logout</mat-icon>
+            }
+            {{ isLogoutLoading() ? 'Loading...' : (isGuestMode() ? ('USER_MENU.EXIT_GUEST' | translate) : ('AUTH.SIGN_OUT' | translate)) }}
+          </span>
+        </button>
       </div>
     </div>
   </div>

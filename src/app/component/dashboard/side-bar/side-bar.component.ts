@@ -120,9 +120,8 @@ export class SideBarComponent implements AfterViewInit, OnDestroy, OnInit {
     }
   }
 
-  public async logout() {
+  public async logout(): Promise<void> {
     await this.userService.logout();
-    this.router.navigate(['/sign-in'], { queryParams: { loggedOut: 'true' } });
   }
 
   /**

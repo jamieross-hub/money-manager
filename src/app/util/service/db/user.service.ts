@@ -400,7 +400,15 @@ export class UserService implements OnDestroy {
     if (this.isGuestUser()) {
       this.storageService.removeItem(LocalStorageKey.GUEST_MODE);
       this.storageService.removeItem('guest-data-initialized');
+      this.storageService.removeItem(LocalStorageKey.LAST_ACTIVE_UID);
       this.store.dispatch(ProfileActions.clearProfile());
+      
+      // Navigate to sign-in and reload for clean state (matching signOut behavior)
+      this.router.navigate(['/sign-in']);
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } else {
       await this.signOut();
     }
@@ -931,6 +939,7 @@ export class UserService implements OnDestroy {
         // Clear cached data
         this.storageService.removeItem(`user-data-${currentUser.uid}`);
         this.storageService.removeItem(`last-login-${currentUser.uid}`);
+        this.storageService.removeItem(LocalStorageKey.LAST_ACTIVE_UID);
 
         // Clear rate limits for this user
         this.rateLimitMap.delete(`signin:${currentUser.email}`);

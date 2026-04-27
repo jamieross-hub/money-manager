@@ -788,9 +788,11 @@ export class ProfileComponent {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: 'Sign Out',
-        message: 'Are you sure you want to log out from your account?',
-        confirmText: 'Sign Out',
+        title: this.isGuestMode() ? 'Exit Guest Mode?' : 'Sign Out',
+        message: this.isGuestMode() 
+          ? 'Are you sure you want to exit guest mode? (Note: Your data is saved locally. To delete it permenantly, use "Delete Account" below)' 
+          : 'Are you sure you want to log out from your account?',
+        confirmText: this.isGuestMode() ? 'Exit' : 'Sign Out',
         cancelText: 'Cancel',
         type: 'info',
         closeOnNavigation: false
@@ -804,7 +806,6 @@ export class ProfileComponent {
           this.isActionLoading.set(true);
           await this.userService.logout();
           this.notificationService.info('Logged out successfully');
-          window.location.reload();
         } catch (error) {
           console.error('Error logging out:', error);
           this.notificationService.error(ERROR_MESSAGES.NETWORK.SERVER_ERROR);

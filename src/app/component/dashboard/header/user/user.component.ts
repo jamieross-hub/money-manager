@@ -356,15 +356,15 @@ export class UserComponent {
     if (this.isGuest()) {
       this.notificationService.confirm({
         title: 'Sign Out?',
-        message: 'Are you sure you want to sign out? All your guest data will be permanently deleted.',
+        message: 'Are you sure you want to sign out? (Note: Your guest data is saved locally. To delete it permenantly, use "Delete Account" in Profile)',
         confirmText: 'Sign Out',
         cancelText: 'Cancel',
         type: 'warning',
       }).subscribe(async confirmed => {
         if (confirmed) {
           try {
-            await this.userService.signOut();
-            this.notificationService.success('Signed out and guest data cleared');
+            await this.userService.logout();
+            this.notificationService.success('Signed out successfully');
             this.close();
           } catch (error) {
             console.error('Error signing out guest:', error);
@@ -382,7 +382,7 @@ export class UserComponent {
       }).subscribe(confirmed => {
         if (confirmed) {
           try {
-            this.userService.signOut().then(() => {
+            this.userService.logout().then(() => {
               this.notificationService.success('Signed out successfully');
               this.close();
             });
