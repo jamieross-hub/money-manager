@@ -305,12 +305,32 @@
 
                   <!-- Income Table -->
                   <mat-card class="!rounded-xl !border-none">
-                    <mat-card-content class="pt-4">
+                    <div (click)="toggleIncomeCollapse()" 
+                         class="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-neutral-50 transition-colors rounded-xl">
+                      <p class="text-sm font-semibold text-neutral-500 flex items-center gap-2 !mb-0">
+                        <mat-icon class="text-success-500">payments</mat-icon>
+                        Income Breakdown
+                      </p>
+                      <div class="flex items-center gap-3">
+                        @if (isIncomeCollapsed()) {
+                          <span class="text-xs font-bold text-success-600 font-mono">
+                            {{ currentPeriodSummary?.income | currency:{ compact: true } }}
+                          </span>
+                        }
+                        <mat-icon class="text-neutral-400 transition-all duration-300" 
+                                  [class.rotate-180]="!isIncomeCollapsed()">
+                          expand_more
+                        </mat-icon>
+                      </div>
+                    </div>
+
+                    @if (!isIncomeCollapsed()) {
+                    <mat-card-content class="pt-0 pb-4">
                       <div class="overflow-x-auto">
                         <table class="w-full history-table accounting-table compact-table">
                           <thead>
                             <tr class="mat-mdc-header-row">
-                              <th class="mat-mdc-header-cell">INCOME</th>
+                              <th class="mat-mdc-header-cell">INCOME SOURCE</th>
                               <th class="mat-mdc-header-cell !text-right">ACTUAL</th>
                             </tr>
                           </thead>
@@ -329,9 +349,9 @@
                             }
                           </tbody>
                           <tfoot>
-                            <tr class="mat-mdc-footer-row">
-                              <td class="mat-mdc-footer-cell">TOTAL</td>
-                              <td class="mat-mdc-footer-cell !text-right !text-success-600 font-mono tabular-nums">
+                            <tr class="mat-mdc-footer-row border-t border-neutral-100">
+                              <td class="mat-mdc-footer-cell">TOTAL INCOME</td>
+                              <td class="mat-mdc-footer-cell !text-right !text-success-600 font-mono tabular-nums font-bold">
                                 {{ currentPeriodSummary?.income | currency:{ compact: true } }}
                               </td>
                             </tr>
@@ -339,16 +359,39 @@
                         </table>
                       </div>
                     </mat-card-content>
+                    }
                   </mat-card>
 
                   <!-- Accounts Table -->
                   <mat-card class="!rounded-xl !border-none">
-                    <mat-card-content class="pt-4">
+                    <div (click)="toggleAccountsCollapse()" 
+                         class="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-neutral-50 transition-colors rounded-xl">
+                      <p class="text-sm font-semibold text-neutral-500 flex items-center gap-2 !mb-0">
+                        <mat-icon class="text-primary-500">account_balance</mat-icon>
+                        Accounts & Balance
+                      </p>
+                      <div class="flex items-center gap-3">
+                        @if (isAccountsCollapsed()) {
+                          <span class="text-xs font-bold font-mono"
+                                [class.text-success-600]="totalBalance() >= 0"
+                                [class.text-error-600]="totalBalance() < 0">
+                            {{ totalBalance() | currency:{ compact: true } }}
+                          </span>
+                        }
+                        <mat-icon class="text-neutral-400 transition-all duration-300" 
+                                  [class.rotate-180]="!isAccountsCollapsed()">
+                          expand_more
+                        </mat-icon>
+                      </div>
+                    </div>
+
+                    @if (!isAccountsCollapsed()) {
+                    <mat-card-content class="pt-0 pb-4">
                       <div class="overflow-x-auto">
                         <table class="w-full history-table accounting-table compact-table">
                           <thead>
                             <tr class="mat-mdc-header-row">
-                              <th class="mat-mdc-header-cell">ACCOUNTS</th>
+                              <th class="mat-mdc-header-cell">ACCOUNT NAME</th>
                               <th class="mat-mdc-header-cell !text-right">BALANCE</th>
                             </tr>
                           </thead>
@@ -369,7 +412,7 @@
                             }
                           </tbody>
                           <tfoot>
-                            <tr class="mat-mdc-footer-row">
+                            <tr class="mat-mdc-footer-row border-t border-neutral-100">
                               <td class="mat-mdc-footer-cell uppercase tracking-wider">NET WORTH</td>
                               <td class="mat-mdc-footer-cell !text-right font-mono tabular-nums font-bold"
                                   [class.!text-success-600]="totalBalance() >= 0"
@@ -381,6 +424,7 @@
                         </table>
                       </div>
                     </mat-card-content>
+                    }
                   </mat-card>
                 </div>
 
@@ -389,13 +433,27 @@
                   @defer (on viewport) {
                   <!-- ═══════════ CATEGORY BREAKDOWN ═══════════ -->
                   <mat-card class="!rounded-xl !border-none">
-                    <mat-card-content class="!px-4 !pt-1">
-                      <div class="flex items-center flex-wrap mb-2 mt-3 gap-2 justify-between">
-                        <p class="text-sm font-semibold text-neutral-500 flex items-center gap-2 !mb-0">
-                          <mat-icon class="text-primary-500">pie_chart</mat-icon>
-                          Expense
-                        </p>
+                    <div (click)="toggleExpenseCollapse()" 
+                         class="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-neutral-50 transition-colors rounded-xl">
+                      <p class="text-sm font-semibold text-neutral-500 flex items-center gap-2 !mb-0">
+                        <mat-icon class="text-primary-500">pie_chart</mat-icon>
+                        Expense Analysis
+                      </p>
+                      <div class="flex items-center gap-3">
+                        @if (isExpenseCollapsed()) {
+                          <span class="text-xs font-bold text-error-600 font-mono">
+                            {{ currentPeriodSummary?.expense | currency:{ compact: true } }}
+                          </span>
+                        }
+                        <mat-icon class="text-neutral-400 transition-all duration-300" 
+                                  [class.rotate-180]="!isExpenseCollapsed()">
+                          expand_more
+                        </mat-icon>
                       </div>
+                    </div>
+
+                    @if (!isExpenseCollapsed()) {
+                    <mat-card-content class="!px-4 !pt-0 pb-4">
                       <div class="overflow-x-auto mt-2">
                         <table class="w-full history-table accounting-table compact-table">
                           <thead>
@@ -480,7 +538,7 @@
                             }
                           </tbody>
                           <tfoot>
-                            <tr class="mat-mdc-footer-row">
+                            <tr class="mat-mdc-footer-row border-t border-neutral-100">
                               <td class="mat-mdc-footer-cell">TOTAL SPENDING</td>
                               <td class="mat-mdc-footer-cell !text-right text-neutral-400 font-mono tabular-nums">
                                 {{ totalExpenseBudget() | currency:{ compact: true } }}
@@ -502,6 +560,7 @@
                         </button>
                       </div>
                     </mat-card-content>
+                    }
                   </mat-card>
                   } @placeholder {
                   <div class="space-y-3">

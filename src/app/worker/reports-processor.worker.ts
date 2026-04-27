@@ -82,6 +82,9 @@ addEventListener('message', ({ data }) => {
         categoryIconMap,
         categoryColorMap,
         categoryGroupMap,
+        isIncomeCollapsed: extIncomeCollapsed,
+        isAccountsCollapsed: extAccountsCollapsed,
+        isExpenseCollapsed: extExpenseCollapsed,
         cachedBase,
         baseFingerprint
     } = data;
@@ -110,6 +113,10 @@ addEventListener('message', ({ data }) => {
     let nextMonthPrediction: Prediction | null = null;
     let next3MonthsPrediction: Prediction | null = null;
     let yearEndPrediction: Prediction | null = null;
+
+    let isIncomeCollapsed = extIncomeCollapsed;
+    let isAccountsCollapsed = extAccountsCollapsed;
+    let isExpenseCollapsed = extExpenseCollapsed;
 
     if (cachedBase && !baseRecalculated) {
         // Use provided external cache (from IndexedDB via main thread)
@@ -219,6 +226,9 @@ addEventListener('message', ({ data }) => {
         nextMonthPrediction,
         next3MonthsPrediction,
         yearEndPrediction,
+        isIncomeCollapsed,
+        isAccountsCollapsed,
+        isExpenseCollapsed,
         baseRecalculated,
         baseFingerprint,
         durationMs: performance.now() - startTime

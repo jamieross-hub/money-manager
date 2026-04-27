@@ -61,6 +61,9 @@ export interface ReportsProcessorOutput {
     nextMonthPrediction: Prediction | null;
     next3MonthsPrediction: Prediction | null;
     yearEndPrediction: Prediction | null;
+    isIncomeCollapsed?: boolean;
+    isAccountsCollapsed?: boolean;
+    isExpenseCollapsed?: boolean;
 }
 
 @Injectable({
@@ -128,7 +131,10 @@ export class ReportsProcessorService {
                             overallSavingsRate: data.overallSavingsRate,
                             nextMonthPrediction: data.nextMonthPrediction,
                             next3MonthsPrediction: data.next3MonthsPrediction,
-                            yearEndPrediction: data.yearEndPrediction
+                            yearEndPrediction: data.yearEndPrediction,
+                            isIncomeCollapsed: data.isIncomeCollapsed,
+                            isAccountsCollapsed: data.isAccountsCollapsed,
+                            isExpenseCollapsed: data.isExpenseCollapsed
                         }
                     });
                 }
@@ -153,6 +159,9 @@ export class ReportsProcessorService {
         categoryIconMap: Record<string, string>;
         categoryColorMap: Record<string, string>;
         categoryGroupMap: Record<string, string>;
+        isIncomeCollapsed?: boolean;
+        isAccountsCollapsed?: boolean;
+        isExpenseCollapsed?: boolean;
     }): void {
         if (!this.worker) {
             console.warn('Worker not initialized, processing skipped.');

@@ -130,6 +130,9 @@ export class ReportsComponent implements OnInit, OnDestroy {
     selectedMonth = signal<number | null>(null);
     selectedWeekOffset = signal<number>(0);
     expandedCategoryId = signal<string | null>(null);
+    isIncomeCollapsed = signal<boolean>(false);
+    isAccountsCollapsed = signal<boolean>(false);
+    isExpenseCollapsed = signal<boolean>(false);
 
     // Store Signals
     readonly transactions = this.store.selectSignal(TransactionsSelectors.selectAllTransactions);
@@ -318,6 +321,18 @@ export class ReportsComponent implements OnInit, OnDestroy {
         this.expandedCategoryId.update(current => current === categoryId ? null : categoryId);
     }
 
+    toggleIncomeCollapse(): void {
+        this.isIncomeCollapsed.update(v => !v);
+    }
+
+    toggleAccountsCollapse(): void {
+        this.isAccountsCollapsed.update(v => !v);
+    }
+
+    toggleExpenseCollapse(): void {
+        this.isExpenseCollapsed.update(v => !v);
+    }
+
     filteredMonthlySummariesSignal = this.reportsProcessor.filteredMonthlySummaries;
     
     readonly totalHistory = computed(() => {
@@ -492,10 +507,13 @@ export class ReportsComponent implements OnInit, OnDestroy {
             this.selectedWeekOffset.set(cachedPrefs.selectedWeekOffset);
         }
 
-        // Load cached UI state (expanded category)
+        // Load cached UI state (expanded category & collapse states)
         const uiState = this.storageService.getItem<any>(LocalStorageKey.REPORTS_UI_STATE);
-        if (uiState?.expandedCategoryId) {
-            this.expandedCategoryId.set(uiState.expandedCategoryId);
+        if (uiState) {
+            if (uiState.expandedCategoryId) this.expandedCategoryId.set(uiState.expandedCategoryId);
+            if (uiState.isIncomeCollapsed !== undefined) this.isIncomeCollapsed.set(uiState.isIncomeCollapsed);
+            if (uiState.isAccountsCollapsed !== undefined) this.isAccountsCollapsed.set(uiState.isAccountsCollapsed);
+            if (uiState.isExpenseCollapsed !== undefined) this.isExpenseCollapsed.set(uiState.isExpenseCollapsed);
         }
 
         // Effect to save preferences when they change
@@ -509,12 +527,15 @@ export class ReportsComponent implements OnInit, OnDestroy {
             this.storageService.setItem(LocalStorageKey.REPORTS_PREFERENCES, prefs);
         });
 
-        // Effect to save expanded category
+        // Effect to save expanded category & collapse states
         effect(() => {
             const currentUIState = this.storageService.getItem<any>(LocalStorageKey.REPORTS_UI_STATE) || {};
             this.storageService.setItem(LocalStorageKey.REPORTS_UI_STATE, {
                 ...currentUIState,
-                expandedCategoryId: this.expandedCategoryId()
+                expandedCategoryId: this.expandedCategoryId(),
+                isIncomeCollapsed: this.isIncomeCollapsed(),
+                isAccountsCollapsed: this.isAccountsCollapsed(),
+                isExpenseCollapsed: this.isExpenseCollapsed()
             });
         });
 
@@ -543,7 +564,10 @@ export class ReportsComponent implements OnInit, OnDestroy {
                     selectedWeekOffset: offset,
                     categoryIconMap: iconMap,
                     categoryColorMap: colorMap,
-                    categoryGroupMap: groupMap
+                    categoryGroupMap: groupMap,
+                    isIncomeCollapsed: this.isIncomeCollapsed(),
+                    isAccountsCollapsed: this.isAccountsCollapsed(),
+                    isExpenseCollapsed: this.isExpenseCollapsed()
                 });
             }
         });
