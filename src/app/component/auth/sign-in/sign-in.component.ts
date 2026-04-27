@@ -372,12 +372,12 @@ export class SignInComponent implements OnInit, OnDestroy {
       this.isLoading.set(true);
 
       // Force sign out first to clear any stale state
-      try {
-        await this.userService.signOut();
-      } catch (e) {
-        // Ignore error if already signed out
-        console.log('Pre-sign-in logout skipped or failed', e);
-      }
+      // try {
+      //   await this.userService.signOut();
+      // } catch (e) {
+      //   // Ignore error if already signed out
+      //   console.log('Pre-sign-in logout skipped or failed', e);
+      // }
 
       // Log Google sign-in attempt
       this.securityService.logSecurityEvent(
