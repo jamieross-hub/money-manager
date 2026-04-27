@@ -133,6 +133,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
     isIncomeCollapsed = signal<boolean>(false);
     isAccountsCollapsed = signal<boolean>(false);
     isExpenseCollapsed = signal<boolean>(false);
+    ignoredCategoryIds = signal<Set<string>>(new Set());
+
 
     // Store Signals
     readonly transactions = this.store.selectSignal(TransactionsSelectors.selectAllTransactions);
@@ -318,6 +320,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     });
 
     toggleExpand(categoryId: string): void {
+        if (this.isLongPressTriggered) return;
         this.expandedCategoryId.update(current => current === categoryId ? null : categoryId);
     }
 
@@ -331,6 +334,42 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
     toggleExpenseCollapse(): void {
         this.isExpenseCollapsed.update(v => !v);
+    }
+
+    // ── Long Press Logic ──
+    private longPressTimeout: any;
+    private readonly LONG_PRESS_DURATION = 600; // ms
+    private isLongPressTriggered = false;
+
+    onLongPressStart(categoryId: string, event: Event): void {
+        this.isLongPressTriggered = false;
+        this.longPressTimeout = setTimeout(() => {
+            this.isLongPressTriggered = true;
+            this.toggleIgnoreCategory(categoryId);
+        }, this.LONG_PRESS_DURATION);
+    }
+
+    onLongPressEnd(): void {
+        if (this.longPressTimeout) {
+            clearTimeout(this.longPressTimeout);
+            this.longPressTimeout = null;
+        }
+    }
+
+    toggleIgnoreCategory(categoryId: string): void {
+        this.ignoredCategoryIds.update(set => {
+            const newSet = new Set(set);
+            if (newSet.has(categoryId)) {
+                newSet.delete(categoryId);
+            } else {
+                newSet.add(categoryId);
+            }
+            return newSet;
+        });
+        // Close expansion if we're ignoring the category
+        if (this.ignoredCategoryIds().has(categoryId) && this.expandedCategoryId() === categoryId) {
+            this.expandedCategoryId.set(null);
+        }
     }
 
     filteredMonthlySummariesSignal = this.reportsProcessor.filteredMonthlySummaries;
@@ -565,6 +604,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
                     categoryIconMap: iconMap,
                     categoryColorMap: colorMap,
                     categoryGroupMap: groupMap,
+                    ignoredCategoryIds: Array.from(this.ignoredCategoryIds()),
                     isIncomeCollapsed: this.isIncomeCollapsed(),
                     isAccountsCollapsed: this.isAccountsCollapsed(),
                     isExpenseCollapsed: this.isExpenseCollapsed()

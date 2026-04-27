@@ -467,9 +467,16 @@
                           </thead>
                           <tbody>
                             @for (cat of groupedCategoryBreakdown(); track cat.categoryId) {
-                            <tr class="mat-mdc-row hover:bg-neutral-50 cursor-pointer transition-colors"
+                            <tr class="mat-mdc-row hover:bg-neutral-50 cursor-pointer transition-colors select-none"
+                              (mousedown)="onLongPressStart(cat.categoryId, $event)"
+                              (touchstart)="onLongPressStart(cat.categoryId, $event)"
+                              (touchmove)="onLongPressEnd()"
+                              (mouseup)="onLongPressEnd()"
+                              (touchend)="onLongPressEnd()"
                               (click)="toggleExpand(cat.categoryId)"
-                              [class.bg-primary-50]="expandedCategoryId() === cat.categoryId">
+                              [class.bg-primary-50]="expandedCategoryId() === cat.categoryId"
+                              [class.opacity-40]="ignoredCategoryIds().has(cat.categoryId)"
+                              [class.grayscale]="ignoredCategoryIds().has(cat.categoryId)">
                               <td class="mat-mdc-cell">
                                 <div class="flex items-center gap-3">
                                   <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0 border-2">

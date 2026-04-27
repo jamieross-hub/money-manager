@@ -159,6 +159,7 @@ export class ReportsProcessorService {
         categoryIconMap: Record<string, string>;
         categoryColorMap: Record<string, string>;
         categoryGroupMap: Record<string, string>;
+        ignoredCategoryIds?: string[];
         isIncomeCollapsed?: boolean;
         isAccountsCollapsed?: boolean;
         isExpenseCollapsed?: boolean;
@@ -221,7 +222,8 @@ export class ReportsProcessorService {
     private generateFingerprint(data: any): string {
         // Includes filters
         const base = this.generateBaseFingerprint(data.transactions, data.currentUserId);
-        return `${base}_${data.selectedPeriod}_${data.selectedYear}_${data.selectedMonth}_${data.selectedWeekOffset}`;
+        const ignored = (data.ignoredCategoryIds || []).join(',');
+        return `${base}_${data.selectedPeriod}_${data.selectedYear}_${data.selectedMonth}_${data.selectedWeekOffset}_${ignored}`;
     }
 
     destroy() {

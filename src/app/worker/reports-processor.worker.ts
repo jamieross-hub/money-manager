@@ -70,6 +70,7 @@ let cachedAvailableYears: number[] = [];
 let cachedNextMonthPrediction: Prediction | null = null;
 let cachedNext3MonthsPrediction: Prediction | null = null;
 let cachedYearEndPrediction: Prediction | null = null;
+let lastIgnoredFingerprint = '';
 
 addEventListener('message', ({ data }) => {
     const { 
@@ -82,6 +83,7 @@ addEventListener('message', ({ data }) => {
         categoryIconMap,
         categoryColorMap,
         categoryGroupMap,
+        ignoredCategoryIds,
         isIncomeCollapsed: extIncomeCollapsed,
         isAccountsCollapsed: extAccountsCollapsed,
         isExpenseCollapsed: extExpenseCollapsed,
@@ -105,6 +107,32 @@ addEventListener('message', ({ data }) => {
     if (categoryColorMap) cachedColorMap = categoryColorMap;
     if (categoryGroupMap) cachedGroupMap = categoryGroupMap;
 
+    // ── Check if Ignored Categories Changed ──
+    const currentIgnoredFingerprint = (ignoredCategoryIds || []).sort().join(',');
+    const ignoredChanged = currentIgnoredFingerprint !== lastIgnoredFingerprint;
+    lastIgnoredFingerprint = currentIgnoredFingerprint;
+
+    // ── Filtering Ignored Categories ──
+    let transactionsToProcess = cachedTransactions;
+    if (ignoredCategoryIds && ignoredCategoryIds.length > 0) {
+        const ignoredSet = new Set(ignoredCategoryIds);
+        transactionsToProcess = cachedTransactions.filter(t => {
+            const catId = t.categoryId;
+            if (ignoredSet.has(catId)) return false;
+            
+            const groupName = cachedGroupMap[catId];
+            if (groupName && ignoredSet.has('group_' + groupName)) return false;
+            
+            // Handle "Unrecognized Category" group
+            if (ignoredSet.has('group_unrecognized')) {
+                const isRecognized = !!cachedIconMap[catId] && cachedIconMap[catId] !== 'help_outline';
+                if (!isRecognized) return false;
+            }
+
+            return true;
+        });
+    }
+
     let monthlySummaries: MonthlySummary[] = [];
     let availableYears: number[] = [];
     let avgMonthlySpending = 0;
@@ -118,7 +146,7 @@ addEventListener('message', ({ data }) => {
     let isAccountsCollapsed = extAccountsCollapsed;
     let isExpenseCollapsed = extExpenseCollapsed;
 
-    if (cachedBase && !baseRecalculated) {
+    if (cachedBase && !baseRecalculated && !ignoredChanged) {
         // Use provided external cache (from IndexedDB via main thread)
         monthlySummaries = cachedBase.monthlySummaries || [];
         availableYears = cachedBase.availableYears || [];
@@ -138,9 +166,9 @@ addEventListener('message', ({ data }) => {
         cachedNextMonthPrediction = nextMonthPrediction;
         cachedNext3MonthsPrediction = next3MonthsPrediction;
         cachedYearEndPrediction = yearEndPrediction;
-    } else if (baseRecalculated) {
+    } else if (baseRecalculated || ignoredChanged) {
         // Full recalculation
-        monthlySummaries = buildMonthlySummaries(cachedTransactions, cachedIconMap, cachedColorMap);
+        monthlySummaries = buildMonthlySummaries(cachedTransactions, cachedIconMap, cachedColorMap, cachedGroupMap, ignoredCategoryIds || []);
 
         const yearSet = new Set<number>();
         for (const m of monthlySummaries) {
@@ -245,8 +273,9 @@ function toDate(date: any): Date | null {
     return null;
 }
 
-function buildMonthlySummaries(transactions: any[], iconMap: any, colorMap: any): MonthlySummary[] {
-    const map = new Map<string, { income: number; expense: number; categories: Map<string, CategoryBreakdownItem> }>();
+function buildMonthlySummaries(transactions: any[], iconMap: any, colorMap: any, groupMap: any, ignoredCategoryIds: string[]): MonthlySummary[] {
+    const map = new Map<string, { income: number; expense: number; incomeCategories: Map<string, CategoryBreakdownItem>, expenseCategories: Map<string, CategoryBreakdownItem> }>();
+    const ignoredSet = new Set(ignoredCategoryIds);
 
     for (const t of transactions) {
         const d = toDate(t.date);
@@ -256,12 +285,16 @@ function buildMonthlySummaries(transactions: any[], iconMap: any, colorMap: any)
         if (!map.has(key)) {
             map.set(key, { income: 0, expense: 0, incomeCategories: new Map(), expenseCategories: new Map() });
         }
-        const entry = map.get(key)! as any;
+        const entry = map.get(key)!;
         const catKey = t.categoryId || t.category || 'Uncategorized';
         const catName = t.category || 'Uncategorized';
 
+        const isIgnored = ignoredSet.has(catKey) || 
+                          (groupMap[catKey] && ignoredSet.has('group_' + groupMap[catKey])) ||
+                          (ignoredSet.has('group_unrecognized') && (!iconMap[catKey] || iconMap[catKey] === 'help_outline'));
+
         if (t.type === 'income') {
-            entry.income += t.amount;
+            if (!isIgnored) entry.income += t.amount;
             if (!entry.incomeCategories.has(catKey)) {
                 entry.incomeCategories.set(catKey, { 
                     categoryId: catKey, 
@@ -277,7 +310,7 @@ function buildMonthlySummaries(transactions: any[], iconMap: any, colorMap: any)
             cat.amount += t.amount;
             cat.transactionCount += 1;
         } else if (t.type === 'expense') {
-            entry.expense += t.amount;
+            if (!isIgnored) entry.expense += t.amount;
             if (!entry.expenseCategories.has(catKey)) {
                 entry.expenseCategories.set(catKey, { 
                     categoryId: catKey, 
@@ -296,7 +329,7 @@ function buildMonthlySummaries(transactions: any[], iconMap: any, colorMap: any)
     }
 
     const summaries: MonthlySummary[] = [];
-    for (const [key, val] of map as any) {
+    for (const [key, val] of map) {
         const [yearStr, monthStr] = key.split('-');
         const year = parseInt(yearStr);
         const month = parseInt(monthStr);
