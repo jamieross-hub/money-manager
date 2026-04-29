@@ -327,3 +327,193 @@ textarea:focus-visible {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* ── Date Field ─────────────────────────────────────────────────────────── */
+
+/* Hide the native input but keep it in the DOM for form binding + showPicker() */
+.date-input-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* Premium tappable row – mirrors the category / account selector style */
+.date-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb; // gray-200
+  background: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active:not(.disabled) {
+    background: #f3f4f6;
+    box-shadow: none;
+  }
+
+  &:hover:not(.disabled) {
+    border-color: var(--primary-600); // indigo-500
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  }
+
+  &.disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  // Dark theme
+  :host-context(.dark-theme) & {
+    background: transparent;
+    border-color: #374151; // gray-700
+
+    &:hover:not(.disabled) {
+      border-color: var(--primary-600); // indigo-400
+      box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15);
+    }
+
+    &:active:not(.disabled) {
+      background: rgba(55, 65, 81, 0.5);
+    }
+  }
+}
+
+/* Coloured circular icon pill */
+.date-icon-pill {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--primary-600), 0.12); // indigo-500 @ 12%
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: var(--primary-600); // indigo-500
+  }
+
+  :host-context(.dark-theme) & {
+    background: rgba(129, 140, 248, 0.18);
+
+    mat-icon {
+      color: var(--primary-600); // indigo-400
+    }
+  }
+}
+
+/* Text area: stacked label + value */
+.date-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.date-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #9ca3af; // gray-400 – muted, like a field label
+
+  :host-context(.dark-theme) & {
+    color: #6b7280; // gray-500
+  }
+}
+
+.date-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827; // gray-900 – strong, readable
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  line-height: 1.4;
+
+  :host-context(.dark-theme) & {
+    color: #f9fafb; // gray-50
+  }
+}
+
+/* "Today" pill badge */
+.today-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: var(--surface-200); // indigo-500 @ 12%
+  color: var(--primary-600); // indigo-500
+  border: 1px solid var(--surface-200); // rgba(99, 102, 241, 0.25);
+
+  :host-context(.dark-theme) & {
+    background: var(--surface-200);
+    color: var(--primary-600);
+    border-color: var(--surface-200);
+  }
+}
+
+/* Trailing chevron */
+.date-chevron {
+  flex-shrink: 0;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: #d1d5db; // gray-300
+
+  :host-context(.dark-theme) & {
+    color: #4b5563; // gray-600
+  }
+}
+
+/* ── More Options card ──────────────────────────────────────────────────── */
+
+/* Chevron rotates when panel is open */
+.more-opts-chevron {
+  transition: transform 0.22s ease;
+
+  &.rotated {
+    transform: rotate(180deg);
+  }
+}
+
+/* Expandable body fade-in */
+.more-opts-body {
+  animation: fadeSlideIn 0.18s ease-out;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Active-indicator badge pills in the collapsed header */
+.more-opts-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--surface-200, #f3f4f6);
+  color: var(--primary-600);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  line-height: 1.4;
+  white-space: nowrap;
+}

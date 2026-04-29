@@ -2,7 +2,7 @@ import { Component, Inject, inject, ViewChild, ElementRef, AfterViewInit, OnInit
 import dayjs from 'dayjs';
 import { Timestamp } from '@angular/fire/firestore';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef, MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -94,6 +94,7 @@ import { LocationService } from 'src/app/util/service/location.service';
     MatBottomSheetModule,
     TranslateModule,
     CurrencyPipe,
+    DatePipe,
     MatExpansionModule,
     CommonHeaderComponent,
     CommonBodyContentComponent,
@@ -162,12 +163,16 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   });
 
   public formattedAmount = signal('');
+
+  /** Returns today's date as a local ISO string (YYYY-MM-DD) for the "Today" badge. */
+  public todayISOString = computed(() => this.dateService.toLocalISOString(new Date()));
   public isTypingExpression = signal(false);
   public capturedPlaceName = signal('');
   public isFetchingLocation = signal(false);
   public isLocationEnabled = signal(false);
   public isEditingLocation = signal(false);
   public locationCaptureError = signal<string | null>(null);
+  public showMoreOptions = signal(false);
 
   onAmountKeyDown(event: KeyboardEvent) {
     const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End', '.', '+', '-', '*', '/', '(', ')'];
