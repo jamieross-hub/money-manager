@@ -202,25 +202,10 @@ export class NotesComponent implements OnInit, OnDestroy {
   }
 
   deleteNote(id: string): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '320px',
-      data: {
-        title: 'Delete Note',
-        message: 'Are you sure you want to delete this note? This action cannot be undone.',
-        confirmText: 'Delete',
-        cancelText: 'Cancel',
-        type: 'delete'
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        const userId = this.userService.getCurrentUserId() || 'offline-guest';
-        this.notesService.deleteNote(userId, id);
-        this.cdr.markForCheck();
-        this.snackBar.open('Note deleted', '', { duration: 2000 });
-      }
-    });
+    const userId = this.userService.getCurrentUserId() || 'offline-guest';
+    this.notesService.deleteNote(userId, id);
+    this.cdr.markForCheck();
+    this.snackBar.open('Note deleted', '', { duration: 2000 });
   }
 
   setColor(color: string): void {

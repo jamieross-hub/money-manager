@@ -12,9 +12,20 @@
       <input matInput [(ngModel)]="title" placeholder="Title" maxlength="100" [readonly]="currentMode() === 'view'">
     </mat-form-field>
   
+    <div class="text-utilities">
+      <button mat-button class="util-btn" (click)="copyToClipboard()" [disabled]="!content">
+        <mat-icon>content_copy</mat-icon>
+        {{ hasSelection() ? 'Copy Selected' : 'Copy' }}
+      </button>
+      <button mat-button class="util-btn" (click)="pasteFromClipboard()" *ngIf="currentMode() !== 'view'">
+        <mat-icon>content_paste</mat-icon>
+        Paste
+      </button>
+    </div>
+  
     <mat-form-field appearance="fill" class="full-width no-margin">
       <mat-label>Content</mat-label>
-      <textarea matInput [(ngModel)]="content" placeholder="Take a note..." rows="5" maxlength="2000" [readonly]="currentMode() === 'view'"></textarea>
+      <textarea matInput [(ngModel)]="content" placeholder="Take a note..." rows="5" maxlength="2000" [readonly]="currentMode() === 'view'" #noteTextarea (select)="checkSelection()" (keyup)="checkSelection()" (click)="checkSelection()" (input)="checkSelection()" (mousedown)="checkSelection()"></textarea>
     </mat-form-field>
   
     <div class="color-section" *ngIf="currentMode() !== 'view'">
