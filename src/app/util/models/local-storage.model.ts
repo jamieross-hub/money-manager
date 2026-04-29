@@ -68,6 +68,7 @@ export enum LocalStorageKey {
     RECURRING_CACHE = 'recurring-cache',
     CURRENT_FILTER_STATE = 'current-filter-state',
     RECENT_FOOTER_MODES = 'recent-footer-modes',
+    LOAN_CALCULATOR_INPUTS = 'loan-calculator-inputs',
 }
 
 /**
@@ -93,6 +94,14 @@ export interface LocalStorageTypeMap {
 
     // Feature Flags
     [LocalStorageKey.FEATURE_FLAGS]: Record<string, boolean>;
+
+    // Loan Calculator
+    [LocalStorageKey.LOAN_CALCULATOR_INPUTS]: {
+        loanAmount: number;
+        interestRate: number;
+        tenureValue: number;
+        processingCharges: number;
+    };
 }
 
 /**

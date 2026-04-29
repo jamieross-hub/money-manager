@@ -110,36 +110,67 @@
 
             .slider-container {
                 padding: 0 0.5rem;
-                
-                ::ng-deep .mat-mdc-slider {
+                display: flex;
+                align-items: center;
+
+                .native-slider {
+                    -webkit-appearance: none;
                     width: 100%;
-                    --mdc-slider-active-track-color: #1e40af;
-                    --mdc-slider-active-track-height: 6px;
-                    --mdc-slider-inactive-track-height: 6px;
-                    
-                    .mdc-slider__track--inactive {
-                        background-color: white !important;
-                        opacity: 1;
+                    height: 6px;
+                    background: white;
+                    border-radius: 3px;
+                    outline: none;
+                    margin: 1rem 0;
+                    cursor: default;
+
+                    .dark-theme & {
+                        background: #475569;
                     }
 
-                    .mdc-slider__thumb-knob {
-                        background-color: var(--primary-500) !important; // Red
-                        width: 24px !important;
-                        height: 24px !important;
-                        border: 3px solid white !important;
-                        border-radius: 4px !important;
-                        box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4) !important;
-                        
-                        // Custom pattern (square cross)
-                        &::after {
-                            content: '';
-                            position: absolute;
-                            top: 50%;
-                            left: 50%;
-                            transform: translate(-50%, -50%);
-                            width: 8px;
-                            height: 8px;
-                            border: 2px solid white;
+                    // Thumb styling
+                    &::-webkit-slider-thumb {
+                        -webkit-appearance: none;
+                        appearance: none;
+                        width: 24px;
+                        height: 24px;
+                        background: var(--primary-500);
+                        border: 3px solid white;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+                        transition: all 0.2s ease;
+
+                        &:hover {
+                            transform: scale(1.1);
+                            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.5);
+                        }
+                    }
+
+                    &::-moz-range-thumb {
+                        width: 24px;
+                        height: 24px;
+                        background: var(--primary-500);
+                        border: 3px solid white;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+                        transition: all 0.2s ease;
+
+                        &:hover {
+                            transform: scale(1.1);
+                            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.5);
+                        }
+                    }
+
+                    // Track styling for Moz
+                    &::-moz-range-track {
+                        width: 100%;
+                        height: 6px;
+                        background: white;
+                        border-radius: 3px;
+
+                        .dark-theme & {
+                            background: #475569;
                         }
                     }
                 }
@@ -247,3 +278,4 @@
         transform: translateY(0);
     }
 }
+

@@ -1,8 +1,8 @@
-import { Component, OnInit, OnDestroy, Inject, NgZone, PLATFORM_ID, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, NgZone, PLATFORM_ID, AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
-import { MatSliderModule } from '@angular/material/slider';
+
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -16,6 +16,8 @@ import { Subscription } from 'rxjs';
 
 import { CurrencyService } from '../../../../util/service/currency.service';
 import { ThemeSwitchingService } from '../../../../util/service/theme-switching.service';
+import { LocalIndexDBStorageService } from '../../../../util/service/indexdb-storage.service';
+import { LocalStorageKey } from '../../../../util/models/local-storage.model';
 
 @Component({
     selector: 'app-loan-calculator',
@@ -25,7 +27,7 @@ import { ThemeSwitchingService } from '../../../../util/service/theme-switching.
         FormsModule,
         ReactiveFormsModule,
         MatCardModule,
-        MatSliderModule,
+
         MatFormFieldModule,
         MatInputModule,
         MatButtonToggleModule,
@@ -52,6 +54,12 @@ export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy
     totalAmount: number = 0;
     totalCost: number = 0;
 
+    private isDragging = false;
+    private lastValidValues: { [key: string]: number } = {};
+
+    isLoanAmountFocused = false;
+    isProcessingFocused = false;
+
     // Constants
     minAmount = 25000;
     maxAmount = 5000000;
@@ -70,21 +78,43 @@ export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy
         private snackBar: MatSnackBar,
         private translate: TranslateService,
         private route: ActivatedRoute,
-        private themeService: ThemeSwitchingService
+        private themeService: ThemeSwitchingService,
+        private storageService: LocalIndexDBStorageService,
+        private cdr: ChangeDetectorRef
     ) { }
 
     ngOnInit(): void {
-        this.route.queryParams.subscribe(params => {
-            if (params['amount']) this.loanAmount = +params['amount'];
-            if (params['rate']) this.interestRate = +params['rate'];
-            if (params['tenure']) this.tenureValue = +params['tenure'];
-            if (params['charges']) this.processingCharges = +params['charges'];
+        this.storageService.isReady$.subscribe(() => {
+            const savedInputs = this.storageService.getItem<any>(LocalStorageKey.LOAN_CALCULATOR_INPUTS);
+            if (savedInputs) {
+                this.loanAmount = savedInputs.loanAmount ?? this.loanAmount;
+                this.interestRate = savedInputs.interestRate ?? this.interestRate;
+                this.tenureValue = savedInputs.tenureValue ?? this.tenureValue;
+                this.processingCharges = savedInputs.processingCharges ?? this.processingCharges;
+            }
+
+            this.route.queryParams.subscribe(params => {
+                if (params['amount']) this.loanAmount = +params['amount'];
+                if (params['rate']) this.interestRate = +params['rate'];
+                if (params['tenure']) this.tenureValue = +params['tenure'];
+                if (params['charges']) this.processingCharges = +params['charges'];
+                this.calculateEMI();
+                this.updateLastValidValues();
+                this.cdr.markForCheck();
+            });
+
             this.calculateEMI();
+            this.updateLastValidValues();
+            this.cdr.markForCheck();
         });
+    }
 
-
-
-        this.calculateEMI();
+    private updateLastValidValues(): void {
+        this.lastValidValues = {
+            loanAmount: this.loanAmount,
+            interestRate: this.interestRate,
+            tenureValue: this.tenureValue
+        };
     }
 
     ngAfterViewInit(): void {
@@ -112,7 +142,17 @@ export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy
         this.totalInterest = this.totalAmount - P;
         this.totalCost = this.totalAmount + this.processingCharges;
 
+        this.saveInputs();
         // this.updateChart();
+    }
+
+    private saveInputs(): void {
+        this.storageService.setItem(LocalStorageKey.LOAN_CALCULATOR_INPUTS, {
+            loanAmount: this.loanAmount,
+            interestRate: this.interestRate,
+            tenureValue: this.tenureValue,
+            processingCharges: this.processingCharges
+        });
     }
 
     resetToDefaults(): void {
@@ -121,6 +161,7 @@ export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy
         this.tenureValue = 5;
         this.processingCharges = 0;
         this.calculateEMI();
+        this.updateLastValidValues();
     }
 
     copyShareableLink(): void {
@@ -160,5 +201,48 @@ export class LoanCalculatorComponent implements OnInit, AfterViewInit, OnDestroy
     onTenureChange(event: any): void {
         this.tenureValue = Number(event.target.value);
         this.calculateEMI();
+    }
+
+    onSliderMouseDown(event: PointerEvent, min: number, max: number, current: number, modelKey: string): void {
+        const el = event.currentTarget as HTMLInputElement;
+        const rect = el.getBoundingClientRect();
+        
+        const thumbWidth = 24; 
+        const ratio = (current - min) / (max - min);
+        const thumbPos = (ratio * (rect.width - thumbWidth)) + (thumbWidth / 2);
+        const clickPos = event.clientX - rect.left;
+        
+        const threshold = 22; 
+        if (Math.abs(clickPos - thumbPos) <= threshold) {
+            this.isDragging = true;
+            this.lastValidValues[modelKey] = current;
+        } else {
+            event.preventDefault();
+            this.isDragging = false;
+        }
+    }
+
+    onSliderInput(event: any, modelKey: string): void {
+        const value = Number(event.target.value);
+        if (!this.isDragging) {
+            // Force revert if not dragging
+            event.target.value = this.lastValidValues[modelKey] ?? value;
+            (this as any)[modelKey] = this.lastValidValues[modelKey] ?? value;
+        } else {
+            this.lastValidValues[modelKey] = value;
+            (this as any)[modelKey] = value;
+            this.calculateEMI();
+        }
+    }
+
+    onNumberInput(modelKey: string): void {
+        this.lastValidValues[modelKey] = (this as any)[modelKey];
+        this.calculateEMI();
+    }
+
+    @HostListener('window:pointerup')
+    @HostListener('window:mouseup')
+    onGlobalMouseUp(): void {
+        this.isDragging = false;
     }
 }

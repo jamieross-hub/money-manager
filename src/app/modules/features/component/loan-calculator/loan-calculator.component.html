@@ -13,14 +13,23 @@
             <div class="input-group">
                 <div class="input-header">
                     <label>{{ 'LOAN_CALCULATOR.LOAN_AMOUNT' | translate }}</label>
-                    <div class="value-display">
-                        <input type="number" [(ngModel)]="loanAmount" (input)="calculateEMI()" [min]="minAmount" [max]="maxAmount">
+                    <div class="value-display relative group">
+                        <input type="number" 
+                               [(ngModel)]="loanAmount" 
+                               (input)="onNumberInput('loanAmount')" 
+                               (focus)="isLoanAmountFocused = true"
+                               (blur)="isLoanAmountFocused = false"
+                               [min]="minAmount" [max]="maxAmount"
+                               class="w-full text-right bg-transparent border-none outline-none z-10"
+                               [class.opacity-0]="!isLoanAmountFocused">
+                        <span *ngIf="!isLoanAmountFocused" 
+                              class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-primary-500 dark:text-blue-400">
+                            {{ loanAmount | currency:currencyService.getCurrentCurrency():'symbol':'1.0-0' }}
+                        </span>
                     </div>
                 </div>
                 <div class="slider-container">
-                    <mat-slider [min]="minAmount" [max]="maxAmount" step="10000">
-                        <input matSliderThumb [(ngModel)]="loanAmount" (valueChange)="calculateEMI()">
-                    </mat-slider>
+                    <input type="range" class="native-slider" [min]="minAmount" [max]="maxAmount" step="10000" [value]="loanAmount" (input)="onSliderInput($event, 'loanAmount')" (pointerdown)="onSliderMouseDown($event, minAmount, maxAmount, loanAmount, 'loanAmount')">
                 </div>
                 <div class="range-labels">
                     <span>{{ currencyService.formatAmount(minAmount, {round: true}) }}</span>
@@ -33,13 +42,11 @@
                 <div class="input-header">
                     <label>{{ 'LOAN_CALCULATOR.LOAN_TENURE' | translate }}</label>
                     <div class="value-display">
-                        <input type="number" [(ngModel)]="tenureValue" (input)="calculateEMI()" [min]="1" [max]="currentMaxTenure">
+                        <input type="number" [(ngModel)]="tenureValue" (input)="onNumberInput('tenureValue')" [min]="1" [max]="currentMaxTenure">
                     </div>
                 </div>
                 <div class="slider-container">
-                    <mat-slider [min]="currentMinTenure" [max]="currentMaxTenure" step="1">
-                        <input matSliderThumb [(ngModel)]="tenureValue" (valueChange)="calculateEMI()">
-                    </mat-slider>
+                    <input type="range" class="native-slider" [min]="currentMinTenure" [max]="currentMaxTenure" step="1" [value]="tenureValue" (input)="onSliderInput($event, 'tenureValue')" (pointerdown)="onSliderMouseDown($event, currentMinTenure, currentMaxTenure, tenureValue, 'tenureValue')">
                 </div>
                 <div class="range-labels">
                     <span>1 year</span>
@@ -52,14 +59,12 @@
                 <div class="input-header">
                     <label>{{ 'LOAN_CALCULATOR.INTEREST_RATE' | translate }}</label>
                     <div class="value-display flex items-center">
-                        <input type="number" [(ngModel)]="interestRate" (input)="calculateEMI()" [min]="minRate" [max]="maxRate" step="0.01">
+                        <input type="number" [(ngModel)]="interestRate" (input)="onNumberInput('interestRate')" [min]="minRate" [max]="maxRate" step="0.01">
                         <span class="ml-1 text-xs opacity-50">%</span>
                     </div>
                 </div>
                 <div class="slider-container">
-                    <mat-slider [min]="minRate" [max]="maxRate" step="0.01">
-                        <input matSliderThumb [(ngModel)]="interestRate" (valueChange)="calculateEMI()">
-                    </mat-slider>
+                    <input type="range" class="native-slider" [min]="minRate" [max]="maxRate" step="0.01" [value]="interestRate" (input)="onSliderInput($event, 'interestRate')" (pointerdown)="onSliderMouseDown($event, minRate, maxRate, interestRate, 'interestRate')">
                 </div>
                 <div class="range-labels">
                     <span>{{ minRate }}% PA</span>
@@ -70,8 +75,19 @@
             <div class="input-group">
                 <div class="input-header">
                     <label>{{ 'LOAN_CALCULATOR.PROCESSING_CHARGES' | translate }}</label>
-                    <div class="value-display">
-                        <input type="number" [(ngModel)]="processingCharges" (input)="calculateEMI()" [min]="0">
+                    <div class="value-display relative group">
+                        <input type="number" 
+                               [(ngModel)]="processingCharges" 
+                               (input)="onNumberInput('processingCharges')" 
+                               (focus)="isProcessingFocused = true"
+                               (blur)="isProcessingFocused = false"
+                               [min]="0"
+                               class="w-full text-right bg-transparent border-none outline-none z-10"
+                               [class.opacity-0]="!isProcessingFocused">
+                        <span *ngIf="!isProcessingFocused" 
+                              class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-primary-500 dark:text-blue-400">
+                            {{ processingCharges | currency:currencyService.getCurrentCurrency():'symbol':'1.0-0' }}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -81,29 +97,29 @@
         <main class="calculator-result-card">
             <div class="emi-banner">
                 <span>Your Monthly EMI will be</span>
-                <div class="emi-value">{{ currencyService.formatAmount(monthlyEmi) }}</div>
+                <div class="emi-value">{{ monthlyEmi | currency:currencyService.getCurrentCurrency():'symbol':'1.0-0' }}</div>
             </div>
 
             <div class="result-list">
                 <div class="result-item">
                     <span class="label">{{ 'LOAN_CALCULATOR.TOTAL_AMOUNT' | translate }}</span>
-                    <span class="value">{{ currencyService.formatAmount(totalAmount) }}</span>
+                    <span class="value">{{ totalAmount | currency:currencyService.getCurrentCurrency():'symbol':'1.0-0' }}</span>
                 </div>
                 <div class="result-item">
                     <span class="label">{{ 'LOAN_CALCULATOR.TOTAL_INTEREST' | translate }}</span>
-                    <span class="value">{{ currencyService.formatAmount(totalInterest) }}</span>
+                    <span class="value">{{ totalInterest | currency:currencyService.getCurrentCurrency():'symbol':'1.0-0' }}</span>
                 </div>
                 <div class="result-item">
                     <span class="label">{{ 'LOAN_CALCULATOR.PRINCIPAL' | translate }}</span>
-                    <span class="value">{{ currencyService.formatAmount(loanAmount) }}</span>
+                    <span class="value">{{ loanAmount | currency:currencyService.getCurrentCurrency():'symbol':'1.0-0' }}</span>
                 </div>
                 <div class="result-item">
                     <span class="label">{{ 'LOAN_CALCULATOR.PROCESSING_CHARGES' | translate }} (upfront)</span>
-                    <span class="value">{{ currencyService.formatAmount(processingCharges) }}</span>
+                    <span class="value">{{ processingCharges | currency:currencyService.getCurrentCurrency():'symbol':'1.0-0' }}</span>
                 </div>
                 <div class="result-item border-t border-dashed !pt-4 mt-2">
                     <span class="label font-bold text-slate-800 dark:text-slate-200">Total Outgo</span>
-                    <span class="value text-primary-600 dark:text-primary-400">{{ currencyService.formatAmount(totalCost) }}</span>
+                    <span class="value text-primary-600 dark:text-primary-400">{{ totalCost | currency:currencyService.getCurrentCurrency():'symbol':'1.0-0' }}</span>
                 </div>
             </div>
         </main>
