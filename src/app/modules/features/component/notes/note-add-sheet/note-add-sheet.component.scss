@@ -1,0 +1,117 @@
+@use 'sass:map';
+
+$note-colors: (
+  "default": (light: #ffffff, dark: #1e293b, border-light: #e2e8f0, border-dark: #334155),
+  "rose":    (light: #fff1f2, dark: #4c0519,  border-light: #fecdd3, border-dark: #9f1239),
+  "amber":   (light: #fffbeb, dark: #451a03,  border-light: #fde68a, border-dark: #92400e),
+  "emerald": (light: #ecfdf5, dark: #052e16,  border-light: #a7f3d0, border-dark: #065f46),
+  "sky":     (light: #f0f9ff, dark: #0c2840,  border-light: #bae6fd, border-dark: #075985),
+  "violet":  (light: #f5f3ff, dark: #2e1065,  border-light: #ddd6fe, border-dark: #5b21b6),
+  "teal":    (light: #f0fdfa, dark: #042f2e,  border-light: #99f6e4, border-dark: #115e59),
+);
+
+.note-sheet-container {
+  padding: 1.5rem;
+  background: white;
+  border-radius: 1.5rem 1.5rem 0 0;
+  
+  .dark-theme & {
+    background: #0f172a;
+    color: #f1f5f9;
+  }
+
+  .sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+
+    h3 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+  }
+
+  .sheet-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    .full-width { width: 100%; }
+    .no-margin { margin: 0; }
+  }
+
+  .color-section {
+    margin-top: 0.5rem;
+    
+    .label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+
+    .color-swatches {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .swatch {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid #e2e8f0;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+      padding: 0;
+
+      .dark-theme & { border-color: #334155; }
+
+      &:hover { transform: scale(1.1); }
+
+      &.swatch-selected {
+        border-color: var(--primary-500);
+        transform: scale(1.15);
+        box-shadow: 0 0 0 2px white, 0 0 0 4px var(--primary-500);
+        .dark-theme & { box-shadow: 0 0 0 2px #0f172a, 0 0 0 4px var(--primary-500); }
+      }
+    }
+  }
+
+  .sheet-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+
+    .spacer { flex: 1; }
+
+    .delete-btn {
+      color: #ef4444;
+      font-weight: 600;
+      mat-icon { margin-right: 0.25rem; }
+    }
+
+    .save-btn {
+      border-radius: 12px;
+      padding: 0 1.5rem;
+      font-weight: 600;
+      
+      mat-icon { margin-right: 0.5rem; }
+    }
+  }
+}
+
+// Swatch colors
+.color-default  { background: #f8fafc; }
+.color-rose     { background: #fda4af; }
+.color-amber    { background: #fcd34d; }
+.color-emerald  { background: #6ee7b7; }
+.color-sky      { background: #7dd3fc; }
+.color-violet   { background: #c4b5fd; }
+.color-teal     { background: #5eead4; }

@@ -28,6 +28,7 @@ import { TransactionsFacadeService } from './db/transactions-facade.service';
 import { BudgetsService } from './db/budgets.service';
 import { GoalsService } from './db/goals.service';
 import { UserService } from './db/user.service';
+import { NotesService } from './db/notes.service';
 import * as ProfileSelectors from 'src/app/store/profile/profile.selectors';
 import { FamilyService } from '../../modules/family/services/family.service';
 import { PwaSwService } from './pwa-sw.service';
@@ -52,7 +53,7 @@ export interface NetworkStatus {
 
 export interface SyncItem {
   id: string;
-  type: 'transaction' | 'budget' | 'account' | 'goal' | 'category' | 'user';
+  type: 'transaction' | 'budget' | 'account' | 'goal' | 'category' | 'user' | 'note';
   operation: 'create' | 'update' | 'delete';
   data: any;
   timestamp: number;
@@ -549,6 +550,7 @@ export class CommonSyncService implements OnDestroy {
     //const subscriptionService = this.injector.get(SubscriptionService);
     const feedbackService = this.injector.get(FeedbackService);
     const contactService = this.injector.get(ContactService);
+    const notesService = this.injector.get(NotesService);
 
     const abort$ = this.isOnline$.pipe(filter(online => !online));
 
@@ -565,7 +567,8 @@ export class CommonSyncService implements OnDestroy {
           this.familyService.pullFromFirestore(userId),
           feedbackService.pullFromFirestore(),
           contactService.pullFromFirestore(),
-          this.googleSheetsService.pullFromFirestore(userId)
+          this.googleSheetsService.pullFromFirestore(userId),
+          notesService.pullFromFirestore(userId)
         ]).pipe(
           timeout(20000) // Reduced timeout
         );
@@ -634,6 +637,7 @@ export class CommonSyncService implements OnDestroy {
         const categoryService = this.injector.get(CategoryFacadeService);
         const budgetsService = this.injector.get<BudgetsService>(BudgetsService);
         const goalsService = this.injector.get<GoalsService>(GoalsService);
+        const notesService = this.injector.get(NotesService);
 
         // ALWAYS enable listeners, even when offline.
         // They provide immediate cache emission and resume when online.
@@ -644,6 +648,7 @@ export class CommonSyncService implements OnDestroy {
             categoryService.listenToCategories(user.uid).pipe(catchError(() => of(null))),
             // budgetsService.listenToBudgets(user.uid).pipe(catchError(() => of(null))),
             // goalsService.listenToGoals(user.uid).pipe(catchError(() => of(null)))
+            notesService.listenToNotes(user.uid).pipe(catchError(() => of(null)))
         );
 
         return merge(initialSync$, listeners$);
@@ -809,6 +814,7 @@ export class CommonSyncService implements OnDestroy {
               case 'goal': await this.processGoalSync(item, userId, batch); break;
               case 'category': await this.processCategorySync(item, userId, batch); break;
               case 'user': await this.processUserSync(item, userId, batch); break;
+              case 'note': await this.processNoteSync(item, userId, batch); break;
             }
 
             itemsToProcess.push(item);
@@ -848,6 +854,7 @@ export class CommonSyncService implements OnDestroy {
                   case 'goal': await this.processGoalSync(item, userId); break;
                   case 'category': await this.processCategorySync(item, userId); break;
                   case 'user': await this.processUserSync(item, userId); break;
+                  case 'note': await this.processNoteSync(item, userId); break;
                 }
                 itemsToProcess.push(item);
               } catch (itemError) {
@@ -1140,6 +1147,31 @@ export class CommonSyncService implements OnDestroy {
       else await deleteDoc(userRef);
     }
   }
+
+  private async processNoteSync(item: SyncItem, userId: string, batch?: WriteBatch): Promise<void> {
+    const basePath = item.collectionPath || `users/${userId}/notes`;
+    const recordId = this.getRecordId(item);
+    if (!recordId) return;
+    
+    const noteRef = doc(this.firestore, `${basePath}/${recordId}`);
+    const dataToWrite = this.restoreTimestamps(this.scrubUndefined({ ...item.data }));
+    if ('syncStatus' in dataToWrite && item.operation !== 'delete') {
+      dataToWrite.syncStatus = 'synced';
+      dataToWrite.lastSyncedAt = Timestamp.now();
+    }
+
+    switch (item.operation) {
+      case 'create':
+      case 'update':
+        if (batch) batch.set(noteRef, dataToWrite, { merge: true });
+        else await setDoc(noteRef, dataToWrite, { merge: true });
+        break;
+      case 'delete':
+        if (batch) batch.delete(noteRef);
+        else await deleteDoc(noteRef);
+        break;
+    }
+  }
   // #endregion
 
   // #region Status & Statistics
@@ -1231,6 +1263,19 @@ export class CommonSyncService implements OnDestroy {
           categories[index] = { ...categories[index], ...category };
           this.storageService.setItem(cacheKey, categories);
         }
+      }
+      else if (item.type === 'note') {
+        const cacheKey = LocalStorageKeyHelper.getNotesCacheKey(userId);
+        const notes = this.storageService.getItem<any[]>(cacheKey) || [];
+        const index = notes.findIndex(n => n.id === recordId);
+        
+        const note = { ...item.data, syncStatus: status, lastSyncedAt: Timestamp.now() };
+        if (index !== -1) {
+          notes[index] = { ...notes[index], ...note };
+        } else {
+          notes.unshift(note);
+        }
+        this.storageService.setItem(cacheKey, notes);
       }
       
       this.log(`${item.type} ${recordId} sync status updated to: ${status}`);

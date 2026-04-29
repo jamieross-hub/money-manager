@@ -81,6 +81,14 @@ const routes: Routes = [
             roles: ['free', 'premium', 'admin'],
             requireEmailVerification: true
         }
+    },
+    {
+        path: 'notes',
+        loadComponent: () => import('./component/notes/notes.component').then(m => m.NotesComponent),
+        data: {
+            roles: ['free', 'premium', 'admin'],
+            requireEmailVerification: true
+        }
     }
 ];
 

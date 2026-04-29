@@ -108,6 +108,7 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         route: '/dashboard/auto-sync',
         icon: 'sync',
         order: 1.5,
+        hideForGuest: true,
       },
       {
         label: 'NAVIGATION.TAX',
@@ -131,7 +132,8 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         icon: 'table_chart',
         order: 5,
         isPremium: false,
-        hideInFamily: true
+        hideInFamily: true,
+        hideForGuest: true,
       },
       {
         label: 'Connect AI Models',
@@ -139,7 +141,8 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         icon: 'smart_toy',
         order: 6,
         hideInFamily: true,
-        isPremium: false
+        isPremium: false,
+        hideForGuest: true,
       },
       {
         label: 'NAVIGATION.LOAN_CALCULATOR',
@@ -154,7 +157,14 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         icon: 'desktop_mac',
         hideInFamily: true,
         order: 8,
-        mobileOnly: true
+        mobileOnly: true,
+        hideForGuest: true,
+      },
+      {
+        label: 'NAVIGATION.NOTES',
+        route: '/dashboard/notes',
+        icon: 'sticky_note_2',
+        order: 9,
       }
     ]
   },

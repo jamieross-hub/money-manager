@@ -115,16 +115,6 @@ export const routes: Routes = [
         }
       },
       {
-        path: 'notes',
-        loadComponent: () => import('./component/dashboard/notes/notes.component').then(m => m.NotesComponent),
-        title: 'Notes',
-        data: {
-          roles: ['free', 'premium', 'admin'],
-          requireEmailVerification: true,
-          title: 'Notes'
-        }
-      },
-      {
         path: 'import',
         loadComponent: () => import('./component/dashboard/transaction-list/add-transaction/import-transactions.component')
           .then(m => m.ImportTransactionsComponent),

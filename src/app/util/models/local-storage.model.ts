@@ -69,6 +69,8 @@ export enum LocalStorageKey {
     CURRENT_FILTER_STATE = 'current-filter-state',
     RECENT_FOOTER_MODES = 'recent-footer-modes',
     LOAN_CALCULATOR_INPUTS = 'loan-calculator-inputs',
+    GUEST_NOTES = 'guest_notes',
+    NOTES_CACHE = 'notes-cache',
 }
 
 /**
@@ -102,6 +104,9 @@ export interface LocalStorageTypeMap {
         tenureValue: number;
         processingCharges: number;
     };
+
+    // Notes
+    [LocalStorageKey.GUEST_NOTES]: any[];
 }
 
 /**
@@ -254,6 +259,13 @@ export class LocalStorageKeyHelper {
         return familyId
             ? `${LocalStorageKey.GOALS_CACHE}-${uid}-${familyId}`
             : `${LocalStorageKey.GOALS_CACHE}-${uid}`;
+    }
+
+    /**
+     * Get notes cache key
+     */
+    static getNotesCacheKey(uid: string): string {
+        return `${LocalStorageKey.NOTES_CACHE}-${uid}`;
     }
 
     /**

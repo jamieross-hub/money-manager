@@ -1,0 +1,47 @@
+<div class="note-sheet-container">
+  <div class="sheet-header">
+    <h3>{{ data?.note ? 'Edit Note' : 'New Note' }}</h3>
+    <button mat-icon-button (click)="cancel()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="sheet-content overflow-auto p-2">
+    <mat-form-field appearance="fill" class="full-width no-margin">
+      <mat-label>Title</mat-label>
+      <input matInput [(ngModel)]="title" placeholder="Title" maxlength="100">
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width no-margin">
+      <mat-label>Content</mat-label>
+      <textarea matInput [(ngModel)]="content" placeholder="Take a note..." rows="5" maxlength="2000"></textarea>
+    </mat-form-field>
+
+    <div class="color-section">
+      <!-- <span class="label !mb-0">Color</span> -->
+      <div class="color-swatches">
+        <button
+          *ngFor="let c of noteColors"
+          type="button"
+          class="swatch {{ c.bgClass }}"
+          [class.swatch-selected]="selectedColor() === c.value"
+          (click)="setColor(c.value)"
+          [title]="c.label"
+        ></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet-actions">
+    <button mat-button color="warn" class="delete-btn" (click)="delete()" *ngIf="data?.note">
+      <mat-icon>delete_outline</mat-icon>
+      Delete
+    </button>
+    <div class="spacer"></div>
+    <button mat-button (click)="cancel()"  *ngIf="!data?.note">Cancel</button>
+    <button mat-flat-button color="primary" class="save-btn" (click)="save()">
+      <mat-icon>save</mat-icon>
+      Save Note
+    </button>
+  </div>
+</div>

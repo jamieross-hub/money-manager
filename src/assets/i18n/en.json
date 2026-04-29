@@ -52,7 +52,8 @@
         "GITHUB_SUPPORT": "GitHub Repo",
         "GROUP_SELECTION": "All Family Groups",
         "AUTO_SYNC": "Auto Sync",
-        "MANAGE_DESKTOP": "Manage from Desktop"
+        "MANAGE_DESKTOP": "Manage from Desktop",
+        "NOTES": "Notes"
     },
     "LOAN_CALCULATOR": {
         "TITLE": "Personal Loan Calculator",

@@ -1,0 +1,74 @@
+<div class="notes-wrapper">
+
+  <!-- Header -->
+  <header class="notes-header">
+    <div class="header-left">
+      <mat-icon class="header-icon">sticky_note_2</mat-icon>
+      <div>
+        <h1 class="notes-title">Notes</h1>
+        <p class="notes-subtitle">Capture ideas, reminders &amp; thoughts</p>
+      </div>
+    </div>
+    <button
+      mat-flat-button
+      class="new-note-btn"
+      (click)="startCreating()"
+      *ngIf="!breakpointService.isMobile()"
+    >
+      <mat-icon>add</mat-icon>
+      New Note
+    </button>
+  </header>
+
+  <!-- Search bar -->
+  <div class="search-bar">
+    <mat-icon class="search-icon">search</mat-icon>
+    <input
+      class="search-input"
+      placeholder="Search notes…"
+      [value]="searchQuery()"
+      (input)="onSearch($event)"
+    />
+    <button *ngIf="searchQuery()" mat-icon-button class="clear-btn" (click)="clearSearch()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty-state" *ngIf="filteredNotes().length === 0">
+    <mat-icon>note_alt</mat-icon>
+    <p *ngIf="!searchQuery()">Your notes will appear here.<br />Tap <strong>New Note</strong> to get started.</p>
+    <p *ngIf="searchQuery()">No notes match "<strong>{{ searchQuery() }}</strong>".</p>
+  </div>
+
+  <!-- Notes Grid -->
+  <div class="notes-grid" *ngIf="filteredNotes().length > 0">
+    <ng-container *ngFor="let note of filteredNotes(); trackBy: trackById">
+
+      <!-- Note Card -->
+      <div
+        class="note-card note-{{ note.color }}"
+        (click)="startEditing(note)"
+      >
+        <div class="note-card-header">
+          <span class="note-card-title">{{ note.title }}</span>
+          <div class="note-card-actions" (click)="$event.stopPropagation()">
+            <button mat-icon-button [matTooltip]="note.isPinned ? 'Unpin' : 'Pin'" (click)="togglePin(note)">
+              <mat-icon [class.pinned]="note.isPinned">push_pin</mat-icon>
+            </button>
+            <button mat-icon-button matTooltip="Delete" (click)="deleteNote(note.id)">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+        </div>
+        <p class="note-card-content">{{ note.content }}</p>
+        <div class="note-card-footer">
+          <span class="note-date">{{ formatDate(note.updatedAt) }}</span>
+          <mat-icon *ngIf="note.isPinned" class="pin-badge">push_pin</mat-icon>
+        </div>
+      </div>
+
+    </ng-container>
+  </div>
+
+</div>
