@@ -28,7 +28,8 @@ import { ConfirmDialogComponent } from 'src/app/util/components/confirm-dialog/c
 export class NoteAddSheetComponent implements OnInit {
   private bottomSheetRef = inject(MatBottomSheetRef<NoteAddSheetComponent>);
   private dialog = inject(MatDialog);
-  public data = inject<{ note?: Note }>(MAT_BOTTOM_SHEET_DATA, { optional: true });
+  public data = inject<{ note?: Note, mode?: 'add' | 'edit' | 'view' }>(MAT_BOTTOM_SHEET_DATA, { optional: true });
+  public currentMode = signal<'add' | 'edit' | 'view'>(this.data?.mode || (this.data?.note ? 'edit' : 'add'));
 
   title = '';
   content = '';
@@ -79,6 +80,11 @@ export class NoteAddSheetComponent implements OnInit {
   }
 
   setColor(color: string) {
+    if (this.currentMode() === 'view') return;
     this.selectedColor.set(color);
+  }
+
+  switchToEdit() {
+    this.currentMode.set('edit');
   }
 }

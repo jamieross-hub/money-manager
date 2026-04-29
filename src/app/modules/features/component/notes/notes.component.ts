@@ -69,7 +69,16 @@ export class NotesComponent implements OnInit, OnDestroy {
 
   filteredNotes = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
-    const all = this.notes();
+    let all = [...this.notes()];
+
+    // Sort: Pinned first, then by most recent update
+    all.sort((a, b) => {
+      if (a.isPinned !== b.isPinned) {
+        return b.isPinned ? 1 : -1;
+      }
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
+
     if (!q) return all;
     return all.filter(
       (n) =>
@@ -83,12 +92,12 @@ export class NotesComponent implements OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private cdr: ChangeDetectorRef,
     private bottomSheet: MatBottomSheet,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.setupFooter();
     const userId = this.userService.getCurrentUserId() || 'offline-guest';
-    
+
     this.notesService.getNotes(userId).pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(notes => {
@@ -135,17 +144,17 @@ export class NotesComponent implements OnInit, OnDestroy {
   }
 
   startCreating(): void {
-    this.openNoteSheet();
+    this.openNoteSheet('add');
   }
 
   startEditing(note: Note): void {
-    this.openNoteSheet(note);
+    this.openNoteSheet('view', note);
   }
 
-  private openNoteSheet(note?: Note): void {
+  private openNoteSheet(mode: string, note?: Note,): void {
     const sheetRef = this.bottomSheet.open(NoteAddSheetComponent, {
       panelClass: 'full-width-bottom-sheet',
-      data: { note }
+      data: { note, mode: mode }
     });
 
     sheetRef.afterDismissed().subscribe(result => {

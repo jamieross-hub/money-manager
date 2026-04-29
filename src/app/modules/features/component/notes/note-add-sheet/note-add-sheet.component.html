@@ -1,6 +1,6 @@
 <div class="note-sheet-container">
   <div class="sheet-header">
-    <h3>{{ data?.note ? 'Edit Note' : 'New Note' }}</h3>
+    <h3>{{ currentMode() === 'view' ? 'View Note' : (data?.note ? 'Edit Note' : 'New Note') }}</h3>
     <button mat-icon-button (click)="cancel()">
       <mat-icon>close</mat-icon>
     </button>
@@ -9,15 +9,15 @@
   <div class="sheet-content overflow-auto p-2">
     <mat-form-field appearance="fill" class="full-width no-margin">
       <mat-label>Title</mat-label>
-      <input matInput [(ngModel)]="title" placeholder="Title" maxlength="100">
+      <input matInput [(ngModel)]="title" placeholder="Title" maxlength="100" [readonly]="currentMode() === 'view'">
     </mat-form-field>
-
+  
     <mat-form-field appearance="fill" class="full-width no-margin">
       <mat-label>Content</mat-label>
-      <textarea matInput [(ngModel)]="content" placeholder="Take a note..." rows="5" maxlength="2000"></textarea>
+      <textarea matInput [(ngModel)]="content" placeholder="Take a note..." rows="5" maxlength="2000" [readonly]="currentMode() === 'view'"></textarea>
     </mat-form-field>
-
-    <div class="color-section">
+  
+    <div class="color-section" *ngIf="currentMode() !== 'view'">
       <!-- <span class="label !mb-0">Color</span> -->
       <div class="color-swatches">
         <button
@@ -39,7 +39,11 @@
     </button>
     <div class="spacer"></div>
     <button mat-button (click)="cancel()"  *ngIf="!data?.note">Cancel</button>
-    <button mat-flat-button color="primary" class="save-btn" (click)="save()">
+    <button mat-flat-button color="primary" class="save-btn" (click)="switchToEdit()" *ngIf="currentMode() === 'view'">
+      <mat-icon>edit</mat-icon>
+      Edit Note
+    </button>
+    <button mat-flat-button color="primary" class="save-btn" (click)="save()" *ngIf="currentMode() !== 'view'">
       <mat-icon>save</mat-icon>
       Save Note
     </button>

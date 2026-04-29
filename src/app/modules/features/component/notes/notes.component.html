@@ -56,15 +56,14 @@
             <button mat-icon-button [matTooltip]="note.isPinned ? 'Unpin' : 'Pin'" (click)="togglePin(note)">
               <mat-icon [class.pinned]="note.isPinned">push_pin</mat-icon>
             </button>
-            <button mat-icon-button matTooltip="Delete" (click)="deleteNote(note.id)">
+            <!-- <button mat-icon-button matTooltip="Delete" (click)="deleteNote(note.id)">
               <mat-icon>delete_outline</mat-icon>
-            </button>
+            </button> -->
           </div>
         </div>
         <p class="note-card-content">{{ note.content }}</p>
         <div class="note-card-footer">
           <span class="note-date">{{ formatDate(note.updatedAt) }}</span>
-          <mat-icon *ngIf="note.isPinned" class="pin-badge">push_pin</mat-icon>
         </div>
       </div>
 
