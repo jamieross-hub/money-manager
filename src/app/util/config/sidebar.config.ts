@@ -87,6 +87,12 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         icon: 'pie_chart',
         order: 7
       },
+       {
+        label: 'NAVIGATION.NOTES',
+        route: '/dashboard/notes',
+        icon: 'sticky_note_2',
+        order: 8,
+      }
     
     ]
   },
@@ -159,12 +165,6 @@ export const SIDEBAR_NAVIGATION_CONFIG: SidebarNavParent[] = [
         order: 8,
         mobileOnly: true,
         hideForGuest: true,
-      },
-      {
-        label: 'NAVIGATION.NOTES',
-        route: '/dashboard/notes',
-        icon: 'sticky_note_2',
-        order: 9,
       }
     ]
   },

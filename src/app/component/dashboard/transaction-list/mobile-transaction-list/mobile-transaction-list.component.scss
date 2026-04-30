@@ -143,6 +143,29 @@
     }
   }
 
+  .indicator-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    padding-right: 4px;
+    flex-shrink: 0;
+  }
+
+  .main-filter-menu-btn {
+    color: var(--neutral-400);
+    transition: all 0.2s ease;
+    
+    &.active {
+      color: var(--primary-600);
+    }
+
+    &:hover {
+      background: var(--surface-100);
+      color: var(--primary-500);
+    }
+  }
+
   .active-filter-details {
     padding: 0 12px 12px 12px;
     border-top: 1px solid rgba(var(--primary-600), 0.1);
@@ -284,14 +307,9 @@
 }
 
 
-// Filter Menu Container
+// Filter Menu Container (Deprecated - consolidated into main-filter-menu-btn)
 .filter-menu-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  width: 100%;
+  display: none;
 }
 
 .filter-menu-btn {
@@ -2138,7 +2156,6 @@
   // width: 44px !important;
   // height: 44px !important;
   // line-height: 44px !important;
-  margin-left: auto;
   color: var(--primary-600);
   background: var(--primary-100);
   border-radius: 50%;

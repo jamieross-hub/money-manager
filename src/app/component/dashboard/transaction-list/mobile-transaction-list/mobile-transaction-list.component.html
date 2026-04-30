@@ -83,14 +83,21 @@
           <mat-icon class="expand-icon">{{ showActiveFilterDetails() ? 'expand_less' : 'expand_more' }}</mat-icon>
           }
         </div>
+        }
 
-        @if (activeFiltersCount() > 0) {
-        <button mat-icon-button class="quick-clear-btn" (click)="quickClearFilters(); $event.stopPropagation()"
-          matTooltip="Clear all filters">
-          <mat-icon>close</mat-icon>
-        </button>
-        }
-        }
+        <div class="indicator-actions">
+          @if (activeFiltersCount() > 0 && !showSearchInput()) {
+          <button mat-icon-button class="quick-clear-btn" (click)="quickClearFilters(); $event.stopPropagation()"
+            matTooltip="Clear all filters">
+            <mat-icon>close</mat-icon>
+          </button>
+          }
+
+          <button mat-icon-button class="main-filter-menu-btn" [matMenuTriggerFor]="mainFilterMenu"
+            [class.active]="hasActiveFilters()" matTooltip="All Filters">
+            <mat-icon>tune</mat-icon>
+          </button>
+        </div>
       </div>
 
       <!-- Detailed Filter Chips -->
@@ -180,19 +187,57 @@
       </div>
       }
     </div>
-    <!-- Filter Menu Buttons -->
-    <div class="filter-menu-container md:justify-center">
-        <!-- Chart Button -->
-      <button mat-icon-button class="filter-menu-btn" (click)="openCategoryChart()" matTooltip="Category Overview">
+    <!-- Main Filter Menu -->
+    <mat-menu #mainFilterMenu="matMenu" class="filter-menu main-filter-menu">
+      <button mat-menu-item (click)="openCategoryChart()">
         <mat-icon>pie_chart</mat-icon>
+        <span>Category Overview</span>
       </button>
+      
+      <mat-divider></mat-divider>
+
+      <button mat-menu-item [matMenuTriggerFor]="sortMenu" [class.active-menu-item]="selectedSort() !== 'date-desc'">
+        <mat-icon>{{ currentSortIcon() }}</mat-icon>
+        <span>Sort: {{ currentSortLabel() }}</span>
+      </button>
+
+      @if (!(isFamilyMode() && isSplitMode())) {
+      <button mat-menu-item [matMenuTriggerFor]="combinedMenu" 
+        [class.active-menu-item]="selectedAccounts().length > 0 || selectedType() !== 'all'">
+        <mat-icon>{{ selectedType() !== 'all' ? currentTypeIcon() : currentAccountIcon() }}</mat-icon>
+        <span>
+          @if (selectedType() !== 'all' && selectedAccounts().length > 0) {
+            Type & Accounts
+          } @else if (selectedType() !== 'all') {
+            Type: {{ currentTypeLabel() }}
+          } @else {
+            Account: {{ currentAccountLabel() }}
+          }
+        </span>
+      </button>
+      }
+
+      @if (isFamilyMode() && isSplitMode()) {
+      <button mat-menu-item [matMenuTriggerFor]="memberMenu" [class.active-menu-item]="selectedMember() !== null">
+        <mat-icon>{{ currentMemberIcon() }}</mat-icon>
+        <span>Member: {{ currentMemberLabel() }}</span>
+      </button>
+      }
+
+      <button mat-menu-item [matMenuTriggerFor]="categoryMenu" [class.active-menu-item]="!(selectedCategory() | includes:'all')">
+        <mat-icon>{{ currentCategoryIcon() }}</mat-icon>
+        <span>Category: {{ currentCategoryLabel() }}</span>
+      </button>
+
+      <button mat-menu-item [matMenuTriggerFor]="dateMenu" [class.active-menu-item]="selectedDateRange() !== null">
+        <mat-icon>{{ currentDateIcon() }}</mat-icon>
+        <span>Date: {{ currentDateLabel() }}</span>
+      </button>
+    </mat-menu>
+
+    <!-- Sub Menus (Hidden triggers) -->
+    <div class="hidden-menu-triggers" style="display: none;">
       <!-- Sort Menu -->
-      <button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="sortMenu"
-        [ngClass]="{'active': selectedSort() !== 'date-desc'}" matTooltip="{{ currentSortLabel() }}"
-        aria-label="Sort transactions">
-        <mat-icon> filter_alt</mat-icon>
-        <span class="filter-btn-text">{{ currentSortLabel() }}</span>
-      </button>
       <mat-menu #sortMenu="matMenu" class="filter-menu">
         @for (option of sortOptions; track option.value) {
         <button mat-menu-item [class.active-menu-item]="selectedSort() === option.value"
@@ -205,23 +250,8 @@
         </button>
         }
       </mat-menu>
-      <!-- Combined Account & Type Menu -->
-      @if (!(isFamilyMode() && isSplitMode())) {
-      <button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="combinedMenu"
-        [ngClass]="{'active': selectedAccounts().length > 0 || selectedType() !== 'all'}"
-        matTooltip="Filter by Account or Type">
-        <mat-icon>{{ selectedType() !== 'all' ? currentTypeIcon() : currentAccountIcon() }}</mat-icon>
-        <span class="filter-btn-text">
-          @if (selectedType() !== 'all' && selectedAccounts().length > 0) {
-            Filters
-          } @else if (selectedType() !== 'all') {
-            {{ currentTypeLabel() }}
-          } @else {
-            {{ currentAccountLabel() }}
-          }
-        </span>
-      </button>
 
+      <!-- Combined Account & Type Menu -->
       <mat-menu #combinedMenu="matMenu" class="filter-menu">
         <div class="menu-section-label px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-500 opacity-70">
           Transaction Type
@@ -257,21 +287,8 @@
         }
         }
       </mat-menu>
-      }
-      <!-- Member Menu (family split mode only) -->
-      @if (isFamilyMode() && isSplitMode()) {
-      <button mat-icon-button class="filter-menu-btn !p-0 flex items-center !justify-center"
-        [ngClass]="{'active': selectedMember() !== null}" [matMenuTriggerFor]="memberMenu"
-        matTooltip="{{ currentMemberLabel() }}" aria-label="Filter by member">
-        @if (currentMemberPhoto()) {
-        <div class="rounded-full overflow-hidden shrink-0 border border-current  flex items-center">
-          <img [src]="currentMemberPhoto()" appImageFallback alt="avatar" class="w-full h-full object-cover" />
-        </div>
-        } @else {
-        <mat-icon class=" ml-1">{{ currentMemberIcon() }}</mat-icon>
-        }
-        <span class="filter-btn-text">{{ currentMemberLabel() }}</span>
-      </button>
+
+      <!-- Member Menu -->
       <mat-menu #memberMenu="matMenu" class="filter-menu">
         <button mat-menu-item [class.active-menu-item]="selectedMember() === null" (click)="onMemberChange(null)">
           <mat-icon>groups</mat-icon>
@@ -302,14 +319,8 @@
         }
         }
       </mat-menu>
-      }
+
       <!-- Category Menu -->
-      <button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="categoryMenu"
-        matTooltip="{{ currentCategoryLabel() }}" aria-label="Filter by category"
-        [ngClass]="{'active': !(selectedCategory() | includes:'all')}">
-        <mat-icon>{{ currentCategoryIcon() }}</mat-icon>
-        <span class="filter-btn-text">{{ currentCategoryLabel() }}</span>
-      </button>
       <mat-menu #categoryMenu="matMenu" class="filter-menu">
         <button mat-menu-item [class.active-menu-item]="(selectedCategory() | includes:'all')"
           (click)="onCategoryChange('all'); $event.stopPropagation()">
@@ -331,13 +342,8 @@
         </button>
         }
       </mat-menu>
+
       <!-- Date Range Menu -->
-      <button mat-icon-button class="filter-menu-btn" [matMenuTriggerFor]="dateMenu"
-        [ngClass]="{'active': selectedDateRange() !== null}" matTooltip="{{ currentDateLabel() }}"
-        aria-label="Filter by date range">
-        <mat-icon>{{ currentDateIcon() }}</mat-icon>
-        <span class="filter-btn-text">{{ currentDateLabel() }}</span>
-      </button>
       <mat-menu #dateMenu="matMenu" class="filter-menu">
         <button mat-menu-item [class.active-menu-item]="selectedSpecialRange() === 'category'"
           (click)="onDateRangeChange('category'); $event.stopPropagation()">
@@ -392,11 +398,6 @@
           }
         </button>
      
-
-      
-
-      
-
         <button mat-menu-item [class.active-menu-item]="selectedRange() === 'this-week'"
           (click)="onDateRangeChange('this-week')">
           <mat-icon>calendar_view_week</mat-icon>
@@ -449,8 +450,6 @@
           }
         </button>
       </mat-menu>
-    
-  
     </div>
   </div>
   }
