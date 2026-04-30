@@ -78,7 +78,9 @@ addEventListener('message', ({ data }) => {
       if (updatedAt) {
         let updateTime = dayjs(updatedAt);
         if (updatedAt && typeof updatedAt === 'object' && 'seconds' in updatedAt) {
-            updateTime = dayjs(updatedAt.seconds * 1000);
+            const seconds = Number(updatedAt.seconds);
+            const nanoseconds = Number(updatedAt.nanoseconds || 0);
+            updateTime = dayjs(seconds * 1000 + Math.floor(nanoseconds / 1000000));
         } else if (updatedAt instanceof Date) {
             updateTime = dayjs(updatedAt);
         } else {
@@ -336,19 +338,37 @@ addEventListener('message', ({ data }) => {
     const sorted = [...list];
     switch (sortBy) {
       case 'date-desc':
-        return sorted.sort((a, b) => (toDate(b.date)?.getTime() || 0) - (toDate(a.date)?.getTime() || 0));
+        return sorted.sort((a, b) => {
+          const diff = (toDate(b.date)?.getTime() || 0) - (toDate(a.date)?.getTime() || 0);
+          if (diff !== 0) return diff;
+          return (b.id || '').localeCompare(a.id || '');
+        });
       case 'date-asc':
-        return sorted.sort((a, b) => (toDate(a.date)?.getTime() || 0) - (toDate(b.date)?.getTime() || 0));
+        return sorted.sort((a, b) => {
+          const diff = (toDate(a.date)?.getTime() || 0) - (toDate(b.date)?.getTime() || 0);
+          if (diff !== 0) return diff;
+          return (a.id || '').localeCompare(b.id || '');
+        });
       case 'amount-desc':
-        return sorted.sort((a, b) => b.amount - a.amount);
+        return sorted.sort((a, b) => {
+          const diff = b.amount - a.amount;
+          if (diff !== 0) return diff;
+          return (b.id || '').localeCompare(a.id || '');
+        });
       case 'amount-asc':
-        return sorted.sort((a, b) => a.amount - b.amount);
+        return sorted.sort((a, b) => {
+          const diff = a.amount - b.amount;
+          if (diff !== 0) return diff;
+          return (a.id || '').localeCompare(b.id || '');
+        });
       case 'category-asc':
         // Handle name comparison if available, otherwise fallback to id
         return sorted.sort((a, b) => {
           const nameA = categoryMap.get(a.categoryId)?.name || a.categoryId || '';
           const nameB = categoryMap.get(b.categoryId)?.name || b.categoryId || '';
-          return nameA.localeCompare(nameB);
+          const diff = nameA.localeCompare(nameB);
+          if (diff !== 0) return diff;
+          return (a.id || '').localeCompare(b.id || '');
         });
       default:
         return sorted;

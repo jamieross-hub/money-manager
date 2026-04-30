@@ -131,7 +131,15 @@ export class DateService {
       if (!dateB) return ascending ? 1 : -1;
 
       const comparison = dateA.getTime() - dateB.getTime();
-      return ascending ? comparison : -comparison;
+      if (comparison !== 0) {
+        return ascending ? comparison : -comparison;
+      }
+
+      // Tie-breaker: use 'id' if available for stable sorting
+      const idA = (a as any).id || '';
+      const idB = (b as any).id || '';
+      const idComparison = idA.localeCompare(idB);
+      return ascending ? idComparison : -idComparison;
     });
   }
 

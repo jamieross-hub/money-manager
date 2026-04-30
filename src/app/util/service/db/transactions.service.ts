@@ -939,12 +939,24 @@ export class TransactionsService extends BaseService {
                 if (date instanceof Date) return date.getTime();
                 if (typeof date === 'object') {
                     if (typeof (date as any).toDate === 'function') return (date as any).toDate().getTime();
-                    if ('seconds' in date) return (date as any).seconds * 1000;
+                    if ('seconds' in date) {
+                        const seconds = Number((date as any).seconds);
+                        const nanoseconds = Number((date as any).nanoseconds || 0);
+                        return seconds * 1000 + Math.floor(nanoseconds / 1000000);
+                    }
                 }
                 const d = new Date(date);
                 return isNaN(d.getTime()) ? 0 : d.getTime();
             };
-            return getTime(b.date) - getTime(a.date);
+            const timeA = getTime(a.date);
+            const timeB = getTime(b.date);
+            const comparison = timeB - timeA;
+            if (comparison !== 0) return comparison;
+
+            // Tie-breaker for stable sorting
+            const idA = a.id || '';
+            const idB = b.id || '';
+            return idB.localeCompare(idA); // Descending ID for newest first by default
         });
     }
 

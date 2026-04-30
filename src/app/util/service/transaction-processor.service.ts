@@ -266,13 +266,19 @@ export class TransactionProcessorService {
     const toDate = (val: any): Date | null => {
       if (!val) return null;
       if (val instanceof Date) return val;
-      if (val && typeof val === 'object' && val.seconds) return new Date(val.seconds * 1000);
+      if (typeof val === 'object') {
+        if ('seconds' in val) {
+          const seconds = Number(val.seconds);
+          const nanoseconds = Number(val.nanoseconds || 0);
+          return new Date(seconds * 1000 + Math.floor(nanoseconds / 1000000));
+        }
+        if (typeof val.toDate === 'function') return val.toDate();
+      }
       if (typeof val === 'number') return new Date(val);
       if (typeof val === 'string') {
         const d = new Date(val);
         return isNaN(d.getTime()) ? null : d;
       }
-      if (val && typeof val.toDate === 'function') return val.toDate();
       return null;
     };
 
@@ -488,18 +494,36 @@ export class TransactionProcessorService {
       const sorted = [...list];
       switch (sortBy) {
         case 'date-desc':
-          return sorted.sort((a, b) => (toDate(b.date)?.getTime() || 0) - (toDate(a.date)?.getTime() || 0));
+          return sorted.sort((a, b) => {
+            const diff = (toDate(b.date)?.getTime() || 0) - (toDate(a.date)?.getTime() || 0);
+            if (diff !== 0) return diff;
+            return (b.id || '').localeCompare(a.id || '');
+          });
         case 'date-asc':
-          return sorted.sort((a, b) => (toDate(a.date)?.getTime() || 0) - (toDate(b.date)?.getTime() || 0));
+          return sorted.sort((a, b) => {
+            const diff = (toDate(a.date)?.getTime() || 0) - (toDate(b.date)?.getTime() || 0);
+            if (diff !== 0) return diff;
+            return (a.id || '').localeCompare(b.id || '');
+          });
         case 'amount-desc':
-          return sorted.sort((a, b) => b.amount - a.amount);
+          return sorted.sort((a, b) => {
+            const diff = b.amount - a.amount;
+            if (diff !== 0) return diff;
+            return (b.id || '').localeCompare(a.id || '');
+          });
         case 'amount-asc':
-          return sorted.sort((a, b) => a.amount - b.amount);
+          return sorted.sort((a, b) => {
+            const diff = a.amount - b.amount;
+            if (diff !== 0) return diff;
+            return (a.id || '').localeCompare(b.id || '');
+          });
         case 'category-asc':
           return sorted.sort((a, b) => {
             const nameA = categoryMap.get(a.categoryId)?.name || a.categoryId || '';
             const nameB = categoryMap.get(b.categoryId)?.name || b.categoryId || '';
-            return nameA.localeCompare(nameB);
+            const diff = nameA.localeCompare(nameB);
+            if (diff !== 0) return diff;
+            return (a.id || '').localeCompare(b.id || '');
           });
         default:
           return sorted;
