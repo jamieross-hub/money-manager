@@ -228,6 +228,11 @@ export class FooterComponent {
     } as any;
   });
 
+  readonly midIndex = computed(() => {
+    const items = this.dynamicConfig().items || [];
+    return Math.floor(items.length / 2);
+  });
+
   readonly footerLayoutClass = computed(() => {
     const items = this.dynamicConfig().items || [];
     const showFab = !this.dynamicConfig().hideFab;

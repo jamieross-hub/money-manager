@@ -148,7 +148,7 @@ export class NotesComponent implements OnInit, OnDestroy {
   }
 
   startEditing(note: Note): void {
-    this.openNoteSheet('view', note);
+    this.openNoteSheet('edit', note);
   }
 
   private openNoteSheet(mode: string, note?: Note,): void {

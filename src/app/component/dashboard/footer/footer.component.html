@@ -10,8 +10,8 @@
           <!-- Dynamic Items Rendering -->
           @for (item of dynamicConfig().items; track item.id; let i = $index) {
             
-            <!-- Insert FAB at middle position (index 2) -->
-            @if (i === 2 && !dynamicConfig().hideFab) {
+            <!-- Insert FAB at middle position -->
+            @if (i === midIndex() && !dynamicConfig().hideFab) {
               <button (click)="onAddFabClick()" 
                       class="footer-item-animation group flex flex-col items-center gap-2 lg:gap-1"
                       [style.animation-delay]="i * 0.05 + 's'">

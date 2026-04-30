@@ -19,10 +19,14 @@ $note-colors: (
 
 // ── Wrapper ───────────────────────────────────────────────────────────────────
 .notes-wrapper {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem 1rem 4rem;
+  padding: 1rem 1rem 4rem;
   animation: fadeUp 0.5s ease-out;
+
+  @media (min-width: 768px) {
+    padding: 2rem 1.5rem 4rem;
+  }
 }
 
 // ── Header ────────────────────────────────────────────────────────────────────
@@ -248,18 +252,27 @@ $note-colors: (
 
 // ── Notes Grid ────────────────────────────────────────────────────────────────
 .notes-grid {
-  columns: 1;
-  column-gap: 1.25rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  align-items: start;
 
-  @media (min-width: 600px)  { columns: 2; }
-  @media (min-width: 900px)  { columns: 3; }
-  @media (min-width: 1200px) { columns: 4; }
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (min-width: 1440px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 // ── Note Card ─────────────────────────────────────────────────────────────────
 .note-card {
-  display: inline-block;
-  width: 100%;
+  display: block;
   box-sizing: border-box;
   border-radius: 1.125rem;
   border: 1px solid #e2e8f0;
