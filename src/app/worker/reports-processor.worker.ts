@@ -49,6 +49,7 @@ export interface Prediction {
     confidence: 'low' | 'medium' | 'high';
     trend: 'increasing' | 'decreasing' | 'stable';
     overspendCategories: CategoryBreakdownItem[];
+    expectedCategories: CategoryBreakdownItem[];
 }
 
 const MONTHS = [
@@ -713,7 +714,7 @@ function computePredictions(monthlySummaries: MonthlySummary[], iconMap: any, co
     const latestMonth = recent[0];
     
     // 1. Build a map of group-level averages over the recent period
-    const groupMetricsMap = new Map<string, { totalAmount: number; count: number; name: string }>();
+    const groupMetricsMap = new Map<string, { totalAmount: number; count: number; name: string; amounts: number[] }>();
 
     for (const m of recent) {
         const monthGroupSums = new Map<string, number>();
@@ -725,13 +726,28 @@ function computePredictions(monthlySummaries: MonthlySummary[], iconMap: any, co
 
         for (const [gName, amt] of monthGroupSums) {
             if (!groupMetricsMap.has(gName)) {
-                groupMetricsMap.set(gName, { totalAmount: 0, count: 0, name: gName });
+                groupMetricsMap.set(gName, { totalAmount: 0, count: 0, name: gName, amounts: [] });
             }
             const g = groupMetricsMap.get(gName)!;
             g.totalAmount += amt;
             g.count += 1;
+            g.amounts.push(amt);
         }
     }
+
+    // Identify repeating categories (expected) in the last 4 months
+    const last4Months = monthlySummaries.slice(0, Math.min(4, monthlySummaries.length));
+    const repetitionCountMap = new Map<string, number>();
+    for (const m of last4Months) {
+        const categoriesInMonth = new Set<string>();
+        for (const c of m.categoryBreakdown) {
+            categoriesInMonth.add(groupMap[c.categoryId] || c.categoryName);
+        }
+        for (const gName of categoriesInMonth) {
+            repetitionCountMap.set(gName, (repetitionCountMap.get(gName) || 0) + 1);
+        }
+    }
+    const repetitionThreshold = last4Months.length >= 4 ? 3 : (last4Months.length >= 3 ? 2 : 1);
 
     // 2. Identify groups trending above their average in the latest month
     const overspendCategories: CategoryBreakdownItem[] = [];
@@ -775,23 +791,93 @@ function computePredictions(monthlySummaries: MonthlySummary[], iconMap: any, co
     }
 
     overspendCategories.sort((a, b) => b.percentage - a.percentage);
+    
+    // 3. Compute expected expenses for repeating categories
+    const expectedCategories: CategoryBreakdownItem[] = [];
+    let totalExpectedAmount = 0;
+    
+    for (const [gName, metrics] of groupMetricsMap) {
+        const repCount = repetitionCountMap.get(gName) || 0;
+        if (repCount < repetitionThreshold) continue;
 
-    const predictedExpMonth = avgExpense * (trend === 'increasing' ? trendFactor : trend === 'decreasing' ? trendFactor : 1);
+        const amounts = metrics.amounts; // latest first
+        
+        // 1. Detect fixed recurring costs (same amount for 4 months)
+        const isFixed = amounts.length >= 4 && amounts.every(a => Math.round(a) === Math.round(amounts[0]));
+        
+        let predictedAmt: number;
+        if (isFixed) {
+            predictedAmt = amounts[0];
+        } else {
+            // 2. Identify and ignore abnormal spikes (> 2.5x the average of others)
+            let filteredAmounts = [...amounts];
+            if (amounts.length >= 3) {
+                const avgOthers = (amounts.reduce((a, b) => a + b, 0) - Math.max(...amounts)) / (amounts.length - 1);
+                const maxVal = Math.max(...amounts);
+                if (maxVal > avgOthers * 2.5) {
+                    filteredAmounts = filteredAmounts.filter(a => a !== maxVal);
+                }
+            }
+
+            // 3. Weighted Moving Average (40%, 30%, 20%, 10% for last 4 months)
+            // Note: filteredAmounts is latest first
+            const weights = [0.4, 0.3, 0.2, 0.1];
+            let weightedSum = 0;
+            let weightUsed = 0;
+            
+            for (let i = 0; i < Math.min(filteredAmounts.length, weights.length); i++) {
+                weightedSum += filteredAmounts[i] * weights[i];
+                weightUsed += weights[i];
+            }
+            
+            const wma = weightUsed > 0 ? weightedSum / weightUsed : (metrics.totalAmount / metrics.count);
+            
+            // 4. Adjust for trend
+            predictedAmt = wma * (trend === 'increasing' ? trendFactor : trend === 'decreasing' ? trendFactor : 1);
+        }
+
+        // Be realistic: if predicted is less than the latest month for a repeating category, 
+        // and we have an increasing trend, don't be too optimistic.
+        if (trend === 'increasing' && predictedAmt < amounts[0]) {
+             predictedAmt = (predictedAmt + amounts[0]) / 2;
+        }
+        
+        // Find reference category for icon/color
+        const ref = latestGroupSums.get(gName) || { icon: 'category', color: '#9ca3af', categoryId: 'unknown' };
+
+        expectedCategories.push({
+            categoryId: ref.categoryId,
+            categoryName: gName,
+            categoryIcon: ref.icon,
+            categoryColor: ref.color,
+            amount: predictedAmt,
+            percentage: 0, // Will calculate after total
+            transactionCount: 0 
+        });
+        totalExpectedAmount += predictedAmt;
+    }
+
+    if (totalExpectedAmount > 0) {
+        expectedCategories.forEach(c => c.percentage = (c.amount / totalExpectedAmount) * 100);
+    }
+    expectedCategories.sort((a, b) => b.amount - a.amount);
+    
+    const finalPredictedExp = Math.round(totalExpectedAmount);
     
     const nextMonthPrediction: Prediction = {
         label: getNextMonthLabel(1),
-        predictedExpense: Math.round(predictedExpMonth),
+        predictedExpense: finalPredictedExp,
         predictedIncome: Math.round(avgIncome),
-        predictedSavings: Math.round(avgIncome - predictedExpMonth),
-        confidence, trend, overspendCategories
+        predictedSavings: Math.round(avgIncome - finalPredictedExp),
+        confidence, trend, overspendCategories, expectedCategories
     };
 
     const next3MonthsPrediction: Prediction = {
         label: `Next 3 Months`,
-        predictedExpense: Math.round(predictedExpMonth * 3),
+        predictedExpense: Math.round(totalExpectedAmount * 3),
         predictedIncome: Math.round(avgIncome * 3),
-        predictedSavings: Math.round((avgIncome * 3) - (predictedExpMonth * 3)),
-        confidence, trend, overspendCategories
+        predictedSavings: Math.round((avgIncome * 3) - (totalExpectedAmount * 3)),
+        confidence, trend, overspendCategories, expectedCategories: []
     };
 
     const now = new Date();
@@ -802,11 +888,11 @@ function computePredictions(monthlySummaries: MonthlySummary[], iconMap: any, co
 
     const yearEndPrediction: Prediction = {
         label: `Year-End ${now.getFullYear()}`,
-        predictedExpense: Math.round(currentYearExpense + (predictedExpMonth * remainingMonths)),
+        predictedExpense: Math.round(currentYearExpense + (totalExpectedAmount * remainingMonths)),
         predictedIncome: Math.round(currentYearIncome + (avgIncome * remainingMonths)),
-        predictedSavings: Math.round((currentYearIncome + (avgIncome * remainingMonths)) - (currentYearExpense + (predictedExpMonth * remainingMonths))),
+        predictedSavings: Math.round((currentYearIncome + (avgIncome * remainingMonths)) - (currentYearExpense + (totalExpectedAmount * remainingMonths))),
         confidence: recent.length >= 4 ? 'medium' : 'low',
-        trend, overspendCategories: []
+        trend, overspendCategories: [], expectedCategories: []
     };
 
     return { nextMonthPrediction, next3MonthsPrediction, yearEndPrediction };

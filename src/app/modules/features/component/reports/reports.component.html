@@ -821,58 +821,63 @@
                 </div>
                 }
                 @defer (on viewport) {
-                <!-- Overspend Categories Warning -->
-                @if (nextMonthPrediction.overspendCategories.length > 0) {
+                <!-- Expected Expenses Breakdown -->
+                @if (nextMonthPrediction.expectedCategories.length > 0) {
                 <mat-card class="!rounded-xl !border-none !bg-white mt-4">
-                  <div (click)="toggleOverspendCollapse()" 
+                  <div (click)="toggleExpectedExpensesCollapse()" 
                        class="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-neutral-50 transition-colors rounded-xl">
                     <p class="text-sm font-semibold text-neutral-500 flex items-center gap-2 !mb-0">
-                      <mat-icon class="text-warning-500">warning</mat-icon>
-                      Categories Likely to Overspend
+                      <mat-icon class="text-primary-500">receipt_long</mat-icon>
+                      Next Month Expected Expenses
                     </p>
                     <div class="flex items-center gap-3">
-                      <span class="text-[10px] font-bold px-2 py-0.5 bg-warning-100/50 text-warning-600 rounded-full border border-warning-200">
-                        {{ nextMonthPrediction.overspendCategories.length }} flagged
+                      <span class="text-[10px] font-bold px-2 py-0.5 bg-primary-100/50 text-primary-600 rounded-full border border-primary-200">
+                        {{ nextMonthPrediction.expectedCategories.length }} categories
                       </span>
                       <mat-icon class="text-neutral-400 transition-all duration-300" 
-                                [class.rotate-180]="!isOverspendCollapsed()">
+                                [class.rotate-180]="!isExpectedExpensesCollapsed()">
                         expand_more
                       </mat-icon>
                     </div>
                   </div>
 
-                  @if (!isOverspendCollapsed()) {
+                  @if (!isExpectedExpensesCollapsed()) {
                   <mat-card-content class="pt-0 pb-4">
                     <p class="text-[11px] text-neutral-400 mb-3 px-1">
-                      These categories are trending above their average. Keep an eye on them!
+                      Based on your patterns, these are the predicted expenses for next month.
                     </p>
                     <div class="overflow-x-auto">
                       <table class="w-full history-table accounting-table compact-table">
                         <thead>
                           <tr class="mat-mdc-header-row">
                             <th class="mat-mdc-header-cell uppercase">Category</th>
-                            <th class="mat-mdc-header-cell uppercase">Trend</th>
                             <th class="mat-mdc-header-cell !text-right uppercase">Estimated</th>
                           </tr>
                         </thead>
                         <tbody>
-                          @for (cat of nextMonthPrediction.overspendCategories; track cat.categoryId) {
+                          @for (cat of nextMonthPrediction.expectedCategories; track cat.categoryId) {
                           <tr class="mat-mdc-row">
-                            <td class="mat-mdc-cell font-medium">{{ cat.categoryName }}</td>
-                            <td class="mat-mdc-cell">
-                              <div class="flex items-center gap-1.5">
-                                <mat-icon class="!text-warning-500 !text-sm">trending_up</mat-icon>
-                                <span class="text-[10px] font-bold text-warning-600 uppercase tracking-tight">
-                                  {{ cat.percentage | number:'1.0-0' }}% Above Avg
-                                </span>
+                            <td class="mat-mdc-cell font-medium">
+                              <div class="flex items-center gap-2">
+                                <mat-icon class="!text-xs text-neutral-400">{{ cat.categoryIcon || 'category' }}</mat-icon>
+                                <span>{{ cat.categoryName }}</span>
                               </div>
                             </td>
-                            <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold !text-warning-600">
+                            <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold !text-error-600">
                               {{ cat.amount | currency:{ compact: true } }}
                             </td>
                           </tr>
                           }
                         </tbody>
+                        <tfoot>
+                          <tr class="mat-mdc-footer-row border-t border-neutral-100">
+                            <td class="mat-mdc-footer-cell font-bold uppercase tracking-wider text-neutral-500">Total Expected</td>
+                     
+                            <td class="mat-mdc-footer-cell !text-right text-error-600 font-mono tabular-nums font-bold">
+                              {{ nextMonthPrediction.predictedExpense | currency:{ compact: false } }}
+                            </td>
+                          </tr>
+                        </tfoot>
                       </table>
                     </div>
                   </mat-card-content>
@@ -889,12 +894,9 @@
                       <mat-icon class="text-neutral-400 !text-sm mt-0.5">info</mat-icon>
                       <div class="text-xs text-neutral-400 leading-relaxed">
                         <strong class="text-neutral-500">How predictions work:</strong>
-                        We analyse your historical spending patterns, detect trends
-                        (increasing/decreasing),
-                        and use weighted averages to forecast. Categories spending 20%+ above
-                        their average
-                        are flagged as potential overspends. Predictions improve with more
-                        data.
+                        We use a <strong>weighted moving average</strong> (40/30/20/10) over the last 4 months, adjusted for spending trends. 
+                        <strong>Fixed costs</strong> (like rent) are detected and projected exactly. 
+                        <strong>Abnormal spikes</strong> are automatically filtered out to ensure a realistic forecast.
                       </div>
                     </div>
                   </mat-card-content>

@@ -134,7 +134,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     isAccountsCollapsed = signal<boolean>(false);
     isExpenseCollapsed = signal<boolean>(false);
     isPredictionsCollapsed = signal<boolean>(false);
-    isOverspendCollapsed = signal<boolean>(false);
+    isExpectedExpensesCollapsed = signal<boolean>(false);
     ignoredCategoryIds = signal<Set<string>>(new Set());
 
 
@@ -342,8 +342,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
         this.isPredictionsCollapsed.update(v => !v);
     }
 
-    toggleOverspendCollapse(): void {
-        this.isOverspendCollapsed.update(v => !v);
+    toggleExpectedExpensesCollapse(): void {
+        this.isExpectedExpensesCollapsed.update(v => !v);
     }
 
     // ── Long Press Logic ──
@@ -598,7 +598,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
             if (uiState.isAccountsCollapsed !== undefined) this.isAccountsCollapsed.set(uiState.isAccountsCollapsed);
             if (uiState.isExpenseCollapsed !== undefined) this.isExpenseCollapsed.set(uiState.isExpenseCollapsed);
             if (uiState.isPredictionsCollapsed !== undefined) this.isPredictionsCollapsed.set(uiState.isPredictionsCollapsed);
-            if (uiState.isOverspendCollapsed !== undefined) this.isOverspendCollapsed.set(uiState.isOverspendCollapsed);
+            if (uiState.isExpectedExpensesCollapsed !== undefined) this.isExpectedExpensesCollapsed.set(uiState.isExpectedExpensesCollapsed);
         }
 
         // Effect to save preferences when they change
@@ -622,7 +622,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
                 isAccountsCollapsed: this.isAccountsCollapsed(),
                 isExpenseCollapsed: this.isExpenseCollapsed(),
                 isPredictionsCollapsed: this.isPredictionsCollapsed(),
-                isOverspendCollapsed: this.isOverspendCollapsed()
+                isExpectedExpensesCollapsed: this.isExpectedExpensesCollapsed()
             });
         });
 

@@ -46,6 +46,7 @@ export interface Prediction {
     confidence: 'low' | 'medium' | 'high';
     trend: 'increasing' | 'decreasing' | 'stable';
     overspendCategories: CategoryBreakdownItem[];
+    expectedCategories: CategoryBreakdownItem[];
 }
 
 export interface ReportsProcessorOutput {
