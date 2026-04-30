@@ -455,19 +455,17 @@
                     @if (!isExpenseCollapsed()) {
                     <mat-card-content class="!px-4 !pt-0 pb-4">
                       <div class="overflow-x-auto mt-2">
-                        <table class="w-full history-table accounting-table compact-table">
+                                <table class="w-full history-table accounting-table compact-table">
                           <thead>
                             <tr class="mat-mdc-header-row">
-                              <th class="mat-mdc-header-cell">EXPENSE CATEGORY</th>
-                              <th class="mat-mdc-header-cell !text-right">BUDGET</th>
-                              <th class="mat-mdc-header-cell !text-right hidden sm:table-cell">TREND/PREV</th>
-                              <th class="mat-mdc-header-cell !text-right hidden sm:table-cell">PERCENT</th>
-                              <th class="mat-mdc-header-cell !text-right">ACTUAL</th>
+                              <th class="mat-mdc-header-cell">Expense Category</th>
+                               <th class="mat-mdc-header-cell !text-right ">Total</th>
                             </tr>
                           </thead>
                           <tbody>
                             @for (cat of groupedCategoryBreakdown(); track cat.categoryId) {
-                            <tr class="mat-mdc-row hover:bg-neutral-50 cursor-pointer transition-colors select-none"
+                            <!-- Category Header Row -->
+                            <tr class="mat-mdc-row !bg-neutral-50/80 hover:bg-neutral-100/50 cursor-pointer transition-colors select-none"
                               (mousedown)="onLongPressStart(cat.categoryId, $event)"
                               (touchstart)="onLongPressStart(cat.categoryId, $event)"
                               (touchmove)="onLongPressEnd()"
@@ -477,54 +475,61 @@
                               [class.bg-primary-50]="expandedCategoryId() === cat.categoryId"
                               [class.opacity-40]="ignoredCategoryIds().has(cat.categoryId)"
                               [class.grayscale]="ignoredCategoryIds().has(cat.categoryId)">
-                              <td class="mat-mdc-cell">
+                              <td class="mat-mdc-cell py-2 px-3">
                                 <div class="flex items-center gap-3">
                                   <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0 border-2">
-                                    <mat-icon class="!text-sm !w-auto !h-auto" [style.color]="'#94a3b8'">{{ cat.categoryIcon || 'category' }}</mat-icon>
+                                    <mat-icon class="!text-sm !w-auto !h-auto"  [style.color]="'#94a3b8'">{{ cat.categoryIcon || 'category' }}</mat-icon>
                                   </div>
                                   <div class="flex flex-col">
                                     <span class="font-medium text-xs text-neutral-800">{{ cat.categoryName }}</span>
-                                    <span class="text-[10px] text-neutral-400 font-semibold">
-                                      {{ cat.transactionCount }} Trans.
-                                    </span>
+                                    <span class="text-[10px] text-neutral-400 font-semibold">{{ cat.transactionCount }} Transactions</span>
                                   </div>
                                 </div>
                               </td>
-                              <td class="mat-mdc-cell !text-right text-neutral-400 font-mono tabular-nums">
-                                {{ cat.budget ? (cat.budget | currency:{ compact: true }) : '—' }}
-                              </td>
-                              <td class="mat-mdc-cell !text-right hidden sm:table-cell">
+                              <td class="mat-mdc-cell !text-right py-2 px-3">
                                 <div class="flex items-center justify-end gap-3">
-                                  <span class="text-xs text-neutral-400 font-mono tabular-nums">
-                                    {{ cat.prevAmount ? (cat.prevAmount | currency:{ compact: true }) : '—' }}
+                                  <span class="font-semibold text-xs !text-error-600 font-mono tabular-nums">
+                                    {{ cat.amount | currency:{ compact: true } }}
                                   </span>
-                                  <div class="flex items-center gap-0.5 font-mono tabular-nums text-xs font-medium justify-end"
-                                       [class.text-error-600]="cat.diff > 0"
-                                       [class.text-success-600]="cat.diff < 0">
-                                    <mat-icon class="!text-sm !w-auto !h-auto">
-                                      {{ cat.diff > 0 ? 'trending_up' : (cat.diff < 0 ? 'trending_down' : 'trending_flat') }}
-                                    </mat-icon>
-                                    {{ (cat.trend || 0) | abs | number:'1.0-0' }}%
-                                  </div>
+                                  <!-- <mat-icon class="text-neutral-300 !text-sm transition-transform duration-300" [class.rotate-180]="expandedCategoryId() === cat.categoryId">expand_more</mat-icon> -->
                                 </div>
                               </td>
-                              <td class="mat-mdc-cell !text-right hidden sm:table-cell">
-                                <div class="flex flex-col items-end gap-1">
-                                  <span class="text-xs font-bold text-neutral-600">{{ cat.percentage | number:'1.0-1' }}%</span>
-                                  <div class="w-16 h-1 bg-neutral-100 rounded-full overflow-hidden">
-                                    <div class="h-full rounded-full" [style.width.%]="cat.percentage"
-                                      [style.backgroundColor]="cat.categoryColor || '#94a3b8'"></div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold !text-error-600">
-                                {{ cat.amount | currency:{ compact: true } }}
+                            </tr>
+                            
+                            <!-- Metric Rows (Hidden by default, shown on expand) -->
+                            @if (expandedCategoryId() === cat.categoryId) {
+                            <tr class="mat-mdc-row">
+                              <td class="mat-mdc-cell pl-10 font-medium text-neutral-500 text-[10px] ">Budget</td>
+                              <td class="mat-mdc-cell !text-right font-mono tabular-nums font-semibold text-xs text-neutral-400" colspan="2">
+                                {{ cat.budget ? (cat.budget | currency:{ compact: true }) : '—' }}
                               </td>
                             </tr>
 
-                            @if (expandedCategoryId() === cat.categoryId) {
+                            <tr class="mat-mdc-row">
+                              <td class="mat-mdc-cell pl-10 font-medium text-neutral-500 text-[10px] ">Prev Period (Trend)</td>
+                              <td class="mat-mdc-cell !text-right font-mono tabular-nums font-semibold text-xs" colspan="2">
+                                <div class="flex items-center justify-end gap-2">
+                                  <span class="text-neutral-400">{{ cat.prevAmount ? (cat.prevAmount | currency:{ compact: true }) : '—' }}</span>
+                                  <div class="flex items-center gap-0.5 font-bold"
+                                       [class.text-error-600]="cat.diff > 0"
+                                       [class.text-success-600]="cat.diff < 0">
+                                    <mat-icon class="!text-xs">{{ cat.diff > 0 ? 'trending_up' : (cat.diff < 0 ? 'trending_down' : 'remove') }}</mat-icon>
+                                    <span>{{ cat.trend | abs | number:'1.0-0' }}%</span>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+
+                            <tr class="mat-mdc-row border-b-4 border-neutral-50">
+                              <td class="mat-mdc-cell pl-10 text-[10px]">Actual Spending</td>
+                              <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold text-xs !text-error-600" colspan="2">
+                                {{ cat.amount | currency:{ compact: false } }}
+                              </td>
+                            </tr>
+
+                            <!-- Expanded Category Details -->
                             <tr class="mat-mdc-row bg-neutral-50/50">
-                              <td [attr.colspan]="breakpointService.isMobile() ? 3 : 5" class="mat-mdc-cell !p-0">
+                              <td colspan="3" class="mat-mdc-cell !p-0">
                                 <div class="px-2 py-4 bg-neutral-50/50 border-b border-neutral-100 min-w-0 overflow-hidden">
                                   <app-category-report-item [item]="cat" [isExpanded]="true"
                                     [hideHeader]="true"
@@ -546,13 +551,10 @@
                           </tbody>
                           <tfoot>
                             <tr class="mat-mdc-footer-row border-t border-neutral-100">
-                              <td class="mat-mdc-footer-cell">TOTAL SPENDING</td>
-                              <td class="mat-mdc-footer-cell !text-right text-neutral-400 font-mono tabular-nums">
-                                {{ totalExpenseBudget() | currency:{ compact: true } }}
-                              </td>
-                              <td class="mat-mdc-footer-cell hidden sm:table-cell" colspan="2"></td>
+                              <td class="mat-mdc-footer-cell font-bold uppercase tracking-wider text-neutral-500">Total</td>
+                             
                               <td class="mat-mdc-footer-cell !text-right text-error-600 font-mono tabular-nums font-bold">
-                                {{ currentPeriodSummary?.expense | currency:{ compact: true } }}
+                                {{ currentPeriodSummary?.expense | currency:{ compact: false } }}
                               </td>
                             </tr>
                           </tfoot>
@@ -710,7 +712,7 @@
                 <!-- Spending Trend Banner -->
                 <mat-card class="!rounded-xl">
                   <mat-card-content class="pt-4">
-                    <p class="text-lg font-semibold text-neutral-500 mb-4 flex items-center gap-2">
+                    <p class="text-sm font-semibold text-neutral-500 mb-4 flex items-center gap-2">
                       <mat-icon [class]="nextMonthPrediction.trend | trend:'color'">
                         {{ nextMonthPrediction.trend | trend:'icon' }}
                       </mat-icon>
@@ -738,161 +740,79 @@
                   </mat-card-content>
                 </mat-card>
                 @defer (on viewport) {
-                <!-- Prediction Cards -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  <!-- Next Month -->
-                  @if (nextMonthPrediction) {
-                  <mat-card class="!rounded-xl">
-                    <mat-card-content class="pt-4">
-                      <div class="flex items-center justify-between mb-4">
-                        <p class="font-semibold text-neutral-500 flex items-center gap-2">
-                          <mat-icon class="text-primary-500 !text-lg">event</mat-icon>
-                          {{ nextMonthPrediction.label }}
-                        </p>
-                        <mat-chip-set>
-                          <mat-chip [highlighted]="true"
-                            [color]="nextMonthPrediction.confidence | trend:'confidenceColor'" class="!text-xs">
-                            {{ nextMonthPrediction.confidence }}
-                          </mat-chip>
-                        </mat-chip-set>
-                      </div>
-                      <div class="space-y-0">
-                        <div class="flex items-center justify-between py-2 px-3">
-                          <span class="text-sm text-neutral-500">Expected Expense</span>
-                          <span class="font-semibold text-error-500">
-                            {{ nextMonthPrediction.predictedExpense | currency }}
-                          </span>
-                        </div>
-                        <mat-divider></mat-divider>
-                        <div class="flex items-center justify-between py-2 px-3">
-                          <span class="text-sm text-neutral-500">Expected Income</span>
-                          <span class="font-semibold text-success-500">
-                            {{ nextMonthPrediction.predictedIncome | currency }}
-                          </span>
-                        </div>
-                        <mat-divider></mat-divider>
-                      </div>
-                      <div class="flex justify-between py-2 px-3 rounded-lg mt-2"
-                        [class.bg-success-100]="nextMonthPrediction.predictedSavings >= 0"
-                        [class.bg-error-100]="nextMonthPrediction.predictedSavings < 0">
-                        <span class="text-sm font-medium"
-                          [class.text-success-700]="nextMonthPrediction.predictedSavings >= 0"
-                          [class.text-error-700]="nextMonthPrediction.predictedSavings < 0">
-                          {{ nextMonthPrediction.predictedSavings >= 0 ? 'Expected Savings'
-                          : 'Expected Deficit' }}
-                        </span>
-                        <span class="font-bold" [class.text-success-600]="nextMonthPrediction.predictedSavings >= 0"
-                          [class.text-error-600]="nextMonthPrediction.predictedSavings < 0">
-                          {{ nextMonthPrediction.predictedSavings >= 0 ? '+' : '-' }}{{
-                          (nextMonthPrediction.predictedSavings | abs) | currency }}
-                        </span>
-                      </div>
-                    </mat-card-content>
-                  </mat-card>
+                <!-- Prediction Table -->
+                <mat-card class="!rounded-xl !border-none !bg-white">
+                  <div (click)="togglePredictionsCollapse()" 
+                       class="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-neutral-50 transition-colors rounded-xl">
+                    <p class="text-sm font-semibold text-neutral-500 flex items-center gap-2 !mb-0">
+                      <mat-icon class="text-primary-500">insights</mat-icon>
+                      Predictions & Forecasts
+                    </p>
+                    <div class="flex items-center gap-3">
+                      <mat-icon class="text-neutral-400 transition-all duration-300" 
+                                [class.rotate-180]="!isPredictionsCollapsed()">
+                        expand_more
+                      </mat-icon>
+                    </div>
+                  </div>
+
+                  @if (!isPredictionsCollapsed()) {
+                  <mat-card-content class="pt-0 pb-4">
+                    <div class="overflow-x-auto">
+                      <table class="w-full history-table accounting-table compact-table">
+                        <thead>
+                          <tr class="mat-mdc-header-row">
+                            <th class="mat-mdc-header-cell uppercase">Prediction Category</th>
+                            <th class="mat-mdc-header-cell !text-right uppercase">Estimated Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (prediction of allPredictions(); track prediction.label) {
+                          <!-- Period Header Row -->
+                          <tr class="mat-mdc-row !bg-neutral-50/80">
+                            <td colspan="2" class="mat-mdc-cell py-2 px-3">
+                              <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                  <div [class]="prediction.iconClass + ' w-6 h-6 rounded flex items-center justify-center bg-white border border-neutral-100 shadow-sm'">
+                                    <mat-icon class="!text-sm">{{ prediction.icon }}</mat-icon>
+                                  </div>
+                                  <span class="font-bold text-neutral-800 uppercase tracking-tight text-xs">{{ prediction.label }}</span>
+                                </div>
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest bg-white border border-neutral-100 shadow-sm"
+                                  [style.color]="prediction.confidence === 'high' ? '#15803d' : prediction.confidence === 'medium' ? '#a16207' : '#b91c1c'">
+                                  {{ prediction.confidence }} Confidence
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                          <!-- Data Rows -->
+                          <tr class="mat-mdc-row">
+                            <td class="mat-mdc-cell pl-10 font-medium text-neutral-500">Expected Expense</td>
+                            <td class="mat-mdc-cell !text-right font-mono tabular-nums font-semibold !text-error-600">
+                              {{ prediction.predictedExpense | currency:{ compact: true } }}
+                            </td>
+                          </tr>
+                          <tr class="mat-mdc-row">
+                            <td class="mat-mdc-cell pl-10 font-medium text-neutral-500">Expected Income</td>
+                            <td class="mat-mdc-cell !text-right font-mono tabular-nums font-semibold !text-success-600">
+                              {{ prediction.predictedIncome | currency:{ compact: true } }}
+                            </td>
+                          </tr>
+                          <tr class="mat-mdc-row border-b-4 border-neutral-50">
+                            <td class="mat-mdc-cell pl-10 font-bold text-neutral-800">Potential Savings</td>
+                            <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold"
+                                [class.!text-success-600]="prediction.predictedSavings >= 0"
+                                [class.!text-error-600]="prediction.predictedSavings < 0">
+                              {{ (prediction.predictedSavings >= 0 ? '+' : '-') }}{{ (prediction.predictedSavings | abs) | currency:{ compact: true } }}
+                            </td>
+                          </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  </mat-card-content>
                   }
-                  <!-- Next 3 Months -->
-                  @if (next3MonthsPrediction) {
-                  <mat-card class="!rounded-xl">
-                    <mat-card-content class="pt-4">
-                      <div class="flex items-center justify-between mb-4">
-                        <p class="font-semibold text-neutral-500 flex items-center gap-2">
-                          <mat-icon class="text-secondary-500 !text-lg">date_range
-                          </mat-icon>
-                          {{ next3MonthsPrediction.label }}
-                        </p>
-                        <mat-chip-set>
-                          <mat-chip [highlighted]="true"
-                            [color]="next3MonthsPrediction.confidence | trend:'confidenceColor'" class="!text-xs">
-                            {{ next3MonthsPrediction.confidence }}
-                          </mat-chip>
-                        </mat-chip-set>
-                      </div>
-                      <div class="space-y-0">
-                        <div class="flex items-center justify-between py-2 px-3">
-                          <span class="text-sm text-neutral-500">Expected Expense</span>
-                          <span class="font-semibold text-error-500">
-                            {{ next3MonthsPrediction.predictedExpense | currency }}
-                          </span>
-                        </div>
-                        <mat-divider></mat-divider>
-                        <div class="flex items-center justify-between py-2 px-3">
-                          <span class="text-sm text-neutral-500">Expected Income</span>
-                          <span class="font-semibold text-success-500">
-                            {{ next3MonthsPrediction.predictedIncome | currency }}
-                          </span>
-                        </div>
-                        <mat-divider></mat-divider>
-                      </div>
-                      <div class="flex justify-between py-2 px-3 rounded-lg mt-2"
-                        [class.bg-success-100]="next3MonthsPrediction.predictedSavings >= 0"
-                        [class.bg-error-100]="next3MonthsPrediction.predictedSavings < 0">
-                        <span class="text-sm font-medium"
-                          [class.text-success-700]="next3MonthsPrediction.predictedSavings >= 0"
-                          [class.text-error-700]="next3MonthsPrediction.predictedSavings < 0">
-                          {{ next3MonthsPrediction.predictedSavings >= 0 ? 'Expected
-                          Savings' : 'Expected Deficit' }}
-                        </span>
-                        <span class="font-bold" [class.text-success-600]="next3MonthsPrediction.predictedSavings >= 0"
-                          [class.text-error-600]="next3MonthsPrediction.predictedSavings < 0">
-                          {{ next3MonthsPrediction.predictedSavings >= 0 ? '+' : '-' }}{{
-                          (next3MonthsPrediction.predictedSavings | abs) | currency }}
-                        </span>
-                      </div>
-                    </mat-card-content>
-                  </mat-card>
-                  }
-                  <!-- Year End -->
-                  @if (yearEndPrediction) {
-                  <mat-card class="!rounded-xl">
-                    <mat-card-content class="pt-4">
-                      <div class="flex items-center justify-between mb-4">
-                        <p class="font-semibold text-neutral-500 flex items-center gap-2">
-                          <mat-icon class="text-tertiary-500 !text-lg">event_available
-                          </mat-icon>
-                          {{ yearEndPrediction.label }}
-                        </p>
-                        <mat-chip-set>
-                          <mat-chip [highlighted]="true"
-                            [color]="yearEndPrediction.confidence | trend:'confidenceColor'" class="!text-xs">
-                            {{ yearEndPrediction.confidence }}
-                          </mat-chip>
-                        </mat-chip-set>
-                      </div>
-                      <div class="space-y-0">
-                        <div class="flex items-center justify-between py-2 px-3">
-                          <span class="text-sm text-neutral-500">Projected Expense</span>
-                          <span class="font-semibold text-error-500">
-                            {{ yearEndPrediction.predictedExpense | currency }}
-                          </span>
-                        </div>
-                        <mat-divider></mat-divider>
-                        <div class="flex items-center justify-between py-2 px-3">
-                          <span class="text-sm text-neutral-500">Projected Income</span>
-                          <span class="font-semibold text-success-500">
-                            {{ yearEndPrediction.predictedIncome | currency }}
-                          </span>
-                        </div>
-                        <mat-divider></mat-divider>
-                      </div>
-                      <div class="flex justify-between py-2 px-3 rounded-lg mt-2"
-                        [class.bg-success-100]="yearEndPrediction.predictedSavings >= 0"
-                        [class.bg-error-100]="yearEndPrediction.predictedSavings < 0">
-                        <span class="text-sm font-medium"
-                          [class.text-success-700]="yearEndPrediction.predictedSavings >= 0"
-                          [class.text-error-700]="yearEndPrediction.predictedSavings < 0">
-                          {{ yearEndPrediction.predictedSavings >= 0 ? 'Projected Savings'
-                          : 'Projected Deficit' }}
-                        </span>
-                        <span class="font-bold" [class.text-success-600]="yearEndPrediction.predictedSavings >= 0"
-                          [class.text-error-600]="yearEndPrediction.predictedSavings < 0">
-                          {{ yearEndPrediction.predictedSavings >= 0 ? '+' : '-' }}{{
-                          (yearEndPrediction.predictedSavings | abs) | currency }}
-                        </span>
-                      </div>
-                    </mat-card-content>
-                  </mat-card>
-                  }
-                </div>
+                </mat-card>
                 } @placeholder {
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   <div class="h-48 bg-neutral-200 rounded-xl animate-pulse"></div>
@@ -903,46 +823,61 @@
                 @defer (on viewport) {
                 <!-- Overspend Categories Warning -->
                 @if (nextMonthPrediction.overspendCategories.length > 0) {
-                <div class="bg-surface-50 rounded-xl border border-surface-300 p-4 shadow-sm">
-                  <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2">
+                <mat-card class="!rounded-xl !border-none !bg-white mt-4">
+                  <div (click)="toggleOverspendCollapse()" 
+                       class="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-neutral-50 transition-colors rounded-xl">
+                    <p class="text-sm font-semibold text-neutral-500 flex items-center gap-2 !mb-0">
                       <mat-icon class="text-warning-500">warning</mat-icon>
-                      <span class="font-bold text-neutral-800 dark:text-neutral-100">Categories Likely to
-                        Overspend</span>
+                      Categories Likely to Overspend
+                    </p>
+                    <div class="flex items-center gap-3">
+                      <span class="text-[10px] font-bold px-2 py-0.5 bg-warning-100/50 text-warning-600 rounded-full border border-warning-200">
+                        {{ nextMonthPrediction.overspendCategories.length }} flagged
+                      </span>
+                      <mat-icon class="text-neutral-400 transition-all duration-300" 
+                                [class.rotate-180]="!isOverspendCollapsed()">
+                        expand_more
+                      </mat-icon>
                     </div>
-                    <span
-                      class="text-xs font-semibold px-2 py-0.5 bg-warning-100/50 text-warning-600 rounded-full border border-warning-200">
-                      {{ nextMonthPrediction.overspendCategories.length }} flagged
-                    </span>
                   </div>
-                  <p class="text-sm text-neutral-400 mb-4">
-                    These categories are trending above their average. Keep an eye on them!
-                  </p>
 
-                  <div class="space-y-2">
-                    @for (cat of nextMonthPrediction.overspendCategories; track cat.categoryId) {
-                    <div
-                      class="flex items-center justify-between w-full p-2.5 bg-surface-100 rounded-lg border border-surface-300 transition-all hover:bg-surface-200 cursor-default">
-                      <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-surface-50 flex items-center justify-center shadow-sm">
-                          <mat-icon class="text-warning-500 !text-lg">trending_up</mat-icon>
-                        </div>
-                        <div>
-                          <div class="text-sm font-bold text-neutral-800 dark:text-neutral-100">
-                            {{ cat.categoryName }}
-                          </div>
-                          <div class="text-[10px] uppercase tracking-wider font-bold text-warning-500">
-                            {{ cat.percentage | number:'1.0-0' }}% above average
-                          </div>
-                        </div>
-                      </div>
-                      <div class="text-sm font-bold text-warning-600">
-                        {{ cat.amount | currency }}
-                      </div>
+                  @if (!isOverspendCollapsed()) {
+                  <mat-card-content class="pt-0 pb-4">
+                    <p class="text-[11px] text-neutral-400 mb-3 px-1">
+                      These categories are trending above their average. Keep an eye on them!
+                    </p>
+                    <div class="overflow-x-auto">
+                      <table class="w-full history-table accounting-table compact-table">
+                        <thead>
+                          <tr class="mat-mdc-header-row">
+                            <th class="mat-mdc-header-cell uppercase">Category</th>
+                            <th class="mat-mdc-header-cell uppercase">Trend</th>
+                            <th class="mat-mdc-header-cell !text-right uppercase">Estimated</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (cat of nextMonthPrediction.overspendCategories; track cat.categoryId) {
+                          <tr class="mat-mdc-row">
+                            <td class="mat-mdc-cell font-medium">{{ cat.categoryName }}</td>
+                            <td class="mat-mdc-cell">
+                              <div class="flex items-center gap-1.5">
+                                <mat-icon class="!text-warning-500 !text-sm">trending_up</mat-icon>
+                                <span class="text-[10px] font-bold text-warning-600 uppercase tracking-tight">
+                                  {{ cat.percentage | number:'1.0-0' }}% Above Avg
+                                </span>
+                              </div>
+                            </td>
+                            <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold !text-warning-600">
+                              {{ cat.amount | currency:{ compact: true } }}
+                            </td>
+                          </tr>
+                          }
+                        </tbody>
+                      </table>
                     </div>
-                    }
-                  </div>
-                </div>
+                  </mat-card-content>
+                  }
+                </mat-card>
                 }
                 } @placeholder {
                 <div class="h-24 bg-neutral-200 rounded-xl animate-pulse"></div>

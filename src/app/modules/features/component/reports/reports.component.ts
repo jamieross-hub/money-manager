@@ -133,6 +133,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
     isIncomeCollapsed = signal<boolean>(false);
     isAccountsCollapsed = signal<boolean>(false);
     isExpenseCollapsed = signal<boolean>(false);
+    isPredictionsCollapsed = signal<boolean>(false);
+    isOverspendCollapsed = signal<boolean>(false);
     ignoredCategoryIds = signal<Set<string>>(new Set());
 
 
@@ -336,6 +338,14 @@ export class ReportsComponent implements OnInit, OnDestroy {
         this.isExpenseCollapsed.update(v => !v);
     }
 
+    togglePredictionsCollapse(): void {
+        this.isPredictionsCollapsed.update(v => !v);
+    }
+
+    toggleOverspendCollapse(): void {
+        this.isOverspendCollapsed.update(v => !v);
+    }
+
     // ── Long Press Logic ──
     private longPressTimeout: any;
     private readonly LONG_PRESS_DURATION = 600; // ms
@@ -389,6 +399,40 @@ export class ReportsComponent implements OnInit, OnDestroy {
     nextMonthPredictionSignal = this.reportsProcessor.nextMonthPrediction;
     next3MonthsPredictionSignal = this.reportsProcessor.next3MonthsPrediction;
     yearEndPredictionSignal = this.reportsProcessor.yearEndPrediction;
+
+    readonly allPredictions = computed(() => {
+        const next = this.nextMonthPredictionSignal();
+        const next3 = this.next3MonthsPredictionSignal();
+        const year = this.yearEndPredictionSignal();
+
+        const items = [];
+        if (next) {
+            items.push({
+                ...next,
+                icon: 'event',
+                iconClass: '!text-primary-500',
+                prefix: 'Expected'
+            });
+        }
+        if (next3) {
+            items.push({
+                ...next3,
+                icon: 'date_range',
+                iconClass: '!text-secondary-500',
+                prefix: 'Expected'
+            });
+        }
+        if (year) {
+            items.push({
+                ...year,
+                icon: 'event_available',
+                iconClass: '!text-tertiary-500',
+                prefix: 'Projected'
+            });
+        }
+        return items;
+    });
+
     isProcessing = this.reportsProcessor.isProcessing;
     
     // Navigation Bounds (Signals)
@@ -553,6 +597,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
             if (uiState.isIncomeCollapsed !== undefined) this.isIncomeCollapsed.set(uiState.isIncomeCollapsed);
             if (uiState.isAccountsCollapsed !== undefined) this.isAccountsCollapsed.set(uiState.isAccountsCollapsed);
             if (uiState.isExpenseCollapsed !== undefined) this.isExpenseCollapsed.set(uiState.isExpenseCollapsed);
+            if (uiState.isPredictionsCollapsed !== undefined) this.isPredictionsCollapsed.set(uiState.isPredictionsCollapsed);
+            if (uiState.isOverspendCollapsed !== undefined) this.isOverspendCollapsed.set(uiState.isOverspendCollapsed);
         }
 
         // Effect to save preferences when they change
@@ -574,7 +620,9 @@ export class ReportsComponent implements OnInit, OnDestroy {
                 expandedCategoryId: this.expandedCategoryId(),
                 isIncomeCollapsed: this.isIncomeCollapsed(),
                 isAccountsCollapsed: this.isAccountsCollapsed(),
-                isExpenseCollapsed: this.isExpenseCollapsed()
+                isExpenseCollapsed: this.isExpenseCollapsed(),
+                isPredictionsCollapsed: this.isPredictionsCollapsed(),
+                isOverspendCollapsed: this.isOverspendCollapsed()
             });
         });
 

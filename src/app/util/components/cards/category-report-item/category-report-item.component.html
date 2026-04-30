@@ -65,7 +65,7 @@
              <mat-icon class="!text-[14px] !w-3.5 !h-3.5 text-neutral-400">account_tree</mat-icon>
              <p class="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Sub-Category Breakdown</p>
            </div>
-          <div class="border-l-4 rounded-r-lg overflow-hidden bg-white shadow-sm border-neutral-200" [style.borderLeftColor]="item.categoryColor || '#cbd5e1'">
+          <div class="border-l-4 rounded-r-lg overflow-hidden bg-white shadow-sm border-neutral-200 ml-3" [style.borderLeftColor]="item.categoryColor || '#cbd5e1'">
             <table class="w-full table-fixed history-table accounting-table compact-table border-none">
               <tbody>
                 @for (sub of expandedData?.breakdown; track sub.categoryId) {

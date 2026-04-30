@@ -651,7 +651,50 @@ function computePredictions(monthlySummaries: MonthlySummary[], iconMap: any, co
 
     const recent = monthlySummaries.slice(0, Math.min(6, monthlySummaries.length));
     const avgExpense = recent.reduce((s, m) => s + m.expense, 0) / recent.length;
-    const avgIncome = recent.reduce((s, m) => s + m.income, 0) / recent.length;
+    
+    // Refined Predicted Income Calculation
+    // Identify "Salary" categories/groups and treat them as constant based on the latest month.
+    // Other income sources are averaged over the recent period.
+    const incomeCatStats = new Map<string, { amounts: number[], latest: number, name: string }>();
+    for (let i = 0; i < recent.length; i++) {
+        const m = recent[i];
+        for (const c of m.incomeCategoryBreakdown) {
+            if (!incomeCatStats.has(c.categoryId)) {
+                incomeCatStats.set(c.categoryId, { amounts: [], latest: 0, name: c.categoryName });
+            }
+            const stats = incomeCatStats.get(c.categoryId)!;
+            stats.amounts.push(c.amount);
+            if (i === 0) stats.latest = c.amount;
+        }
+    }
+
+    let calculatedPredictedIncome = 0;
+    incomeCatStats.forEach((stats, catId) => {
+        const gName = groupMap[catId] || '';
+        const isSalary = stats.name.toLowerCase().includes('salary') || gName.toLowerCase().includes('salary');
+        
+        if (isSalary) {
+            // Salary is stable. Use latest month's value if it's > 0, 
+            // else use the average of its occurrences.
+            if (stats.latest > 0) {
+                calculatedPredictedIncome += stats.latest;
+            } else {
+                const total = stats.amounts.reduce((a, b) => a + b, 0);
+                calculatedPredictedIncome += (total / stats.amounts.length);
+            }
+        } else {
+            // Other income: average over the entire recent period (months where it didn't occur count as 0)
+            const total = stats.amounts.reduce((a, b) => a + b, 0);
+            calculatedPredictedIncome += (total / recent.length);
+        }
+    });
+
+    // Fallback to simple average if no categories were processed or sum is zero
+    if (calculatedPredictedIncome === 0 && recent.length > 0) {
+        calculatedPredictedIncome = recent.reduce((s, m) => s + m.income, 0) / recent.length;
+    }
+
+    const avgIncome = calculatedPredictedIncome;
 
     const half = Math.floor(recent.length / 2);
     const recentHalf = recent.slice(0, half);
