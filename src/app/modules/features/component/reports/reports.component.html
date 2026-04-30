@@ -267,6 +267,18 @@
                                 {{ currentPeriodSummary.income | currency:{compact:false,round:true} }}
                               </td>
                             </tr>
+                            @if (totalCreditCardSpending() > 0) {
+                              <tr class="mat-mdc-row">
+                                <td class="mat-mdc-cell font-medium">Credit Card Spending</td>
+                                <td class="mat-mdc-cell !text-right text-neutral-400">
+                                  {{ (totalCreditCardSpending() | math:'percentWidth':currentPeriodSummary.income) | number:'1.0-0' }}%
+                                </td>
+                                <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold !text-error-600">
+                                  {{ totalCreditCardSpending() | currency:{compact:false,round:true} }}
+                                </td>
+                              </tr>
+                            }
+
                             <tr class="mat-mdc-row">
                               <td class="mat-mdc-cell font-medium">Total Expenses</td>
                               <td class="mat-mdc-cell !text-right text-neutral-400">

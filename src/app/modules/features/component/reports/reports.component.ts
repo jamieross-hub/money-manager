@@ -14,6 +14,8 @@ import { DateService } from '../../../../util/service/date.service';
 import { AppViewService, AppView } from '../../../../util/service/app-view.service';
 import dayjs from 'dayjs';
 import { ReportsProcessorService, MonthlySummary, CategoryBreakdownItem, PeriodSummary, Prediction } from '../../../../util/service/reports-processor.service';
+import { AccountType } from '../../../../util/config/enums';
+
 
 // Angular Material
 import { MatCardModule } from '@angular/material/card';
@@ -276,6 +278,20 @@ export class ReportsComponent implements OnInit, OnDestroy {
     readonly totalExpenseBudget = computed(() => {
         return this.groupedCategoryBreakdown().reduce((sum, item) => sum + (item.budget || 0), 0);
     });
+
+    readonly creditCardAccountIds = computed(() => {
+        const accounts = this.allAccounts();
+        return new Set(accounts.filter(a => a.type === AccountType.CREDIT).map(a => a.accountId));
+    });
+
+    readonly totalCreditCardSpending = computed(() => {
+        const txns = this.currentPeriodTransactionsSignal();
+        const creditCardIds = this.creditCardAccountIds();
+        return txns
+            .filter(t => t.type === 'expense' && t.accountId && creditCardIds.has(t.accountId))
+            .reduce((sum, t) => sum + (t.amount || 0), 0);
+    });
+
 
     readonly expandedItemData = computed(() => {
         const catId = this.expandedCategoryId();
