@@ -278,6 +278,17 @@
                                 </td>
                               </tr>
                             }
+                            @if (selectedPeriod() === 'monthly' && totalCreditCardPayments() > 0) {
+                              <tr class="mat-mdc-row">
+                                <td class="mat-mdc-cell font-medium">Previous Month Due</td>
+                                <td class="mat-mdc-cell !text-right text-neutral-400">
+                                  {{ (totalCreditCardPayments() | math:'percentWidth':currentPeriodSummary.income) | number:'1.0-0' }}%
+                                </td>
+                                <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold !text-error-600">
+                                  {{ totalCreditCardPayments() | currency:{compact:false,round:true} }}
+                                </td>
+                              </tr>
+                            }
 
                             <tr class="mat-mdc-row">
                               <td class="mat-mdc-cell font-medium">Total Expenses</td>

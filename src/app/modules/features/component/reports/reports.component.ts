@@ -292,6 +292,14 @@ export class ReportsComponent implements OnInit, OnDestroy {
             .reduce((sum, t) => sum + (t.amount || 0), 0);
     });
 
+    readonly totalCreditCardPayments = computed(() => {
+        const txns = this.currentPeriodTransactionsSignal();
+        const creditCardIds = this.creditCardAccountIds();
+        return txns
+            .filter(t => t.type === 'transfer' && t.toAccountId && creditCardIds.has(t.toAccountId))
+            .reduce((sum, t) => sum + (t.amount || 0), 0);
+    });
+
 
     readonly expandedItemData = computed(() => {
         const catId = this.expandedCategoryId();

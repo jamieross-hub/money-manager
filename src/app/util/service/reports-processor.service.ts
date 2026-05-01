@@ -171,8 +171,8 @@ export class ReportsProcessorService {
         }
         if (!data.transactions) return;
 
-        // Ignore transfer transactions in reports
-        const reportTransactions = data.transactions.filter(t => (t.type as any) !== 'transfer');
+        // Include transfers in reports so we can track credit card payments
+        const reportTransactions = data.transactions;
 
         const fingerprint = this.generateFingerprint({ ...data, transactions: reportTransactions });
         if (fingerprint === this.lastFingerprint) return;
