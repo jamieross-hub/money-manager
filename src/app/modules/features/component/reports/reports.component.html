@@ -267,9 +267,19 @@
                                 {{ currentPeriodSummary.income | currency:{compact:false,round:true} }}
                               </td>
                             </tr>
+
+                            <tr class="mat-mdc-row">
+                              <td class="mat-mdc-cell font-medium">Expenses</td>
+                              <td class="mat-mdc-cell !text-right text-neutral-400">
+                                {{ (nonCreditCardExpenses() | math:'percentWidth':currentPeriodSummary.income) | number:'1.0-0' }}%
+                              </td>
+                              <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold !text-error-600">
+                                {{ nonCreditCardExpenses() | currency:{compact:false,round:true} }}
+                              </td>
+                            </tr>
                             @if (totalCreditCardSpending() > 0) {
                               <tr class="mat-mdc-row">
-                                <td class="mat-mdc-cell font-medium">Credit Card Spending</td>
+                                <td class="mat-mdc-cell font-medium">Credit Card Expenses</td>
                                 <td class="mat-mdc-cell !text-right text-neutral-400">
                                   {{ (totalCreditCardSpending() | math:'percentWidth':currentPeriodSummary.income) | number:'1.0-0' }}%
                                 </td>
@@ -290,18 +300,48 @@
                               </tr>
                             }
 
-                            <tr class="mat-mdc-row">
-                              <td class="mat-mdc-cell font-medium">Total Expenses</td>
-                              <td class="mat-mdc-cell !text-right text-neutral-400">
-                                {{ (currentPeriodSummary.expense | math:'percentWidth':currentPeriodSummary.income) | number:'1.0-0' }}%
-                              </td>
-                              <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold !text-error-600">
-                                {{ currentPeriodSummary.expense | currency:{compact:false,round:true} }}
-                              </td>
-                            </tr>
+                            
+
+                            @if (totalLoanPayments() > 0) {
+                              <tr class="mat-mdc-row">
+                                <td class="mat-mdc-cell font-medium">Loan Payments</td>
+                                <td class="mat-mdc-cell !text-right text-neutral-400">
+                                  {{ (totalLoanPayments() | math:'percentWidth':currentPeriodSummary.income) | number:'1.0-0' }}%
+                                </td>
+                                <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold !text-error-600">
+                                  {{ totalLoanPayments() | currency:{compact:false,round:true} }}
+                                </td>
+                              </tr>
+                            }
+
+                            @if (totalOtherTransfers() > 0) {
+                              <tr class="mat-mdc-row">
+                                <td class="mat-mdc-cell font-medium">Other Transfers</td>
+                                <td class="mat-mdc-cell !text-right text-neutral-400">
+                                  {{ (totalOtherTransfers() | math:'percentWidth':currentPeriodSummary.income) | number:'1.0-0' }}%
+                                </td>
+                                <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold !text-error-600">
+                                  {{ totalOtherTransfers() | currency:{compact:false,round:true} }}
+                                </td>
+                              </tr>
+                            }
+
+                            @if (totalInvestments() > 0) {
+                              <tr class="mat-mdc-row">
+                                <td class="mat-mdc-cell font-medium">Investments</td>
+                                <td class="mat-mdc-cell !text-right text-neutral-400">
+                                  {{ (totalInvestments() | math:'percentWidth':currentPeriodSummary.income) | number:'1.0-0' }}%
+                                </td>
+                                <td class="mat-mdc-cell !text-right font-mono tabular-nums font-bold !text-error-600">
+                                  {{ totalInvestments() | currency:{compact:false,round:true} }}
+                                </td>
+                              </tr>
+                            }
+
+                            
                           </tbody>
                           <tfoot>
-                            <tr class="mat-mdc-footer-row">
+                            <!-- <tr class="mat-mdc-footer-row">
                               <td class="mat-mdc-footer-cell uppercase tracking-wider">
                                 {{ currentPeriodSummary.savings >= 0 ? 'NET SAVINGS' : 'NET DEFICIT' }}
                               </td>
@@ -312,6 +352,19 @@
                                 [class.!text-success-800]="currentPeriodSummary.savings >= 0"
                                 [class.!text-error-600]="currentPeriodSummary.savings < 0">
                                 {{ currentPeriodSummary.savings >= 0 ? '+' : '-' }}{{ (currentPeriodSummary.savings | abs) | currency:{compact:false,round:true} }}
+                              </td>
+                            </tr> -->
+                            <tr class="mat-mdc-footer-row !bg-neutral-50/50">
+                              <td class="mat-mdc-footer-cell font-bold">
+                                Balance
+                              </td>
+                              <td class="mat-mdc-footer-cell !text-right font-mono tabular-nums">
+                                {{ (currentPeriodBalance() | math:'percentWidth':currentPeriodSummary.income) | number:'1.0-0' }}%
+                              </td>
+                              <td class="mat-mdc-footer-cell !text-right font-mono tabular-nums font-bold"
+                                [class.!text-success-800]="currentPeriodBalance() >= 0"
+                                [class.!text-error-600]="currentPeriodBalance() < 0">
+                                {{ currentPeriodBalance() | currency:{compact:false,round:true} }}
                               </td>
                             </tr>
                           </tfoot>
@@ -373,7 +426,7 @@
                           </tbody>
                           <tfoot>
                             <tr class="mat-mdc-footer-row border-t border-neutral-100">
-                              <td class="mat-mdc-footer-cell">TOTAL INCOME</td>
+                              <td class="mat-mdc-footer-cell">Total Income</td>
                               <td class="mat-mdc-footer-cell !text-right !text-success-600 font-mono tabular-nums font-bold">
                                 {{ currentPeriodSummary?.income | currency:{ compact: true } }}
                               </td>
@@ -423,8 +476,8 @@
                             <tr class="mat-mdc-row">
                               <td class="mat-mdc-cell font-medium">{{ account.name }}</td>
                               <td class="mat-mdc-cell !text-right font-mono tabular-nums font-semibold"
-                                  [class.text-success-600]="account.balance >= 0"
-                                  [class.text-error-600]="account.balance < 0">
+                                  [class.!text-success-600]="account.balance >= 0"
+                                  [class.!text-error-600]="account.balance < 0">
                                 {{ account.balance | currency:{ compact: true } }}
                               </td>
                             </tr>
@@ -436,7 +489,7 @@
                           </tbody>
                           <tfoot>
                             <tr class="mat-mdc-footer-row border-t border-neutral-100">
-                              <td class="mat-mdc-footer-cell uppercase tracking-wider">NET WORTH</td>
+                              <td class="mat-mdc-footer-cell">Net Worth</td>
                               <td class="mat-mdc-footer-cell !text-right font-mono tabular-nums font-bold"
                                   [class.!text-success-600]="totalBalance() >= 0"
                                   [class.!text-error-600]="totalBalance() < 0">
@@ -574,8 +627,7 @@
                           </tbody>
                           <tfoot>
                             <tr class="mat-mdc-footer-row border-t border-neutral-100">
-                              <td class="mat-mdc-footer-cell font-bold uppercase tracking-wider text-neutral-500">Total</td>
-                             
+                              <td class="mat-mdc-footer-cell font-bold text-neutral-500">Total Expenses</td>
                               <td class="mat-mdc-footer-cell !text-right text-error-600 font-mono tabular-nums font-bold">
                                 {{ currentPeriodSummary?.expense | currency:{ compact: false } }}
                               </td>

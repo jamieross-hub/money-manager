@@ -292,12 +292,72 @@ export class ReportsComponent implements OnInit, OnDestroy {
             .reduce((sum, t) => sum + (t.amount || 0), 0);
     });
 
+    readonly nonCreditCardExpenses = computed(() => {
+        const summary = this.currentPeriodSummarySignal();
+        if (!summary) return 0;
+        return (summary.expense || 0) - this.totalCreditCardSpending();
+    });
+
     readonly totalCreditCardPayments = computed(() => {
         const txns = this.currentPeriodTransactionsSignal();
         const creditCardIds = this.creditCardAccountIds();
         return txns
             .filter(t => t.type === 'transfer' && t.toAccountId && creditCardIds.has(t.toAccountId))
             .reduce((sum, t) => sum + (t.amount || 0), 0);
+    });
+
+    readonly totalInvestments = computed(() => {
+        const txns = this.currentPeriodTransactionsSignal();
+        const accounts = this.allAccounts();
+        const investmentAccountIds = new Set(accounts.filter(a => a.type === AccountType.INVESTMENT).map(a => a.accountId));
+        
+        return txns
+            .filter(t => t.type === 'transfer' && t.toAccountId && investmentAccountIds.has(t.toAccountId))
+            .reduce((sum, t) => sum + (t.amount || 0), 0);
+    });
+
+    readonly totalLoanPayments = computed(() => {
+        const txns = this.currentPeriodTransactionsSignal();
+        const accounts = this.allAccounts();
+        const loanAccountIds = new Set(accounts.filter(a => a.type === AccountType.LOAN).map(a => a.accountId));
+        
+        return txns
+            .filter(t => t.type === 'transfer' && t.toAccountId && loanAccountIds.has(t.toAccountId))
+            .reduce((sum, t) => sum + (t.amount || 0), 0);
+    });
+
+    readonly totalOtherTransfers = computed(() => {
+        const txns = this.currentPeriodTransactionsSignal();
+        const accounts = this.allAccounts();
+        const creditCardIds = new Set(accounts.filter(a => a.type === AccountType.CREDIT).map(a => a.accountId));
+        const investmentAccountIds = new Set(accounts.filter(a => a.type === AccountType.INVESTMENT).map(a => a.accountId));
+        const loanAccountIds = new Set(accounts.filter(a => a.type === AccountType.LOAN).map(a => a.accountId));
+        const liquidAccountIds = new Set(accounts.filter(a => a.type === AccountType.BANK || a.type === AccountType.CASH).map(a => a.accountId));
+
+        return txns
+            .filter(t => t.type === 'transfer' && 
+                        t.toAccountId && 
+                        !liquidAccountIds.has(t.toAccountId) && 
+                        !creditCardIds.has(t.toAccountId) && 
+                        !investmentAccountIds.has(t.toAccountId) &&
+                        !loanAccountIds.has(t.toAccountId))
+            .reduce((sum, t) => sum + (t.amount || 0), 0);
+    });
+
+    readonly currentPeriodBalance = computed(() => {
+        const summary = this.currentPeriodSummarySignal();
+        if (!summary) return 0;
+        
+        // Liquid balance starts with income minus non-credit card expenses
+        const liquidSavings = summary.income - this.nonCreditCardExpenses();
+        
+        // Then deduct all cash-outflow transfers
+        const investments = this.totalInvestments();
+        const loans = this.totalLoanPayments();
+        const otherTransfers = this.totalOtherTransfers();
+        const ccPayments = this.totalCreditCardPayments();
+        
+        return liquidSavings - investments - loans - otherTransfers - ccPayments;
     });
 
 
