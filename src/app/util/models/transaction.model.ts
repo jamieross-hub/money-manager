@@ -138,8 +138,14 @@ export interface Transaction extends Auditable, RecurrenceInfo {
   _categoryName?: string;
   _categoryBgColor?: string;
   _accountName?: string;
+  _accountIcon?: string;
+  _accountColor?: string;
   _fromAccountName?: string;
+  _fromAccountIcon?: string;
+  _fromAccountColor?: string;
   _toAccountName?: string;
+  _toAccountIcon?: string;
+  _toAccountColor?: string;
   _accountType?: string;
   _dateDisplay?: string;
   _timeDisplay?: string;

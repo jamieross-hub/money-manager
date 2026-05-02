@@ -442,15 +442,27 @@
                   [class.pointer-events-none]="viewMode()">
 
                   <div class="flex items-center gap-3">
-                    <div
-                      class="w-6 h-6 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-500">
-                      <mat-icon class="text-sm">account_balance_wallet</mat-icon>
-                    </div>
-                    <span [class.text-gray-500]="!transactionForm.get('accountId')?.value"
-                      [class.dark:text-gray-400]="!transactionForm.get('accountId')?.value"
-                      [class.text-gray-900]="transactionForm.get('accountId')?.value"
-                      [class.dark:text-gray-100]="transactionForm.get('accountId')?.value">
-                      {{ getAccountName(transactionForm.get('accountId')?.value) || 'Select an account' }}
+                    @if (transactionForm.get('accountId')?.value && currentAccountIcon()) {
+                      <div
+                        class="w-6 h-6 rounded-full flex items-center justify-center"
+                        [style.background-color]="(currentAccountColor() || '#6b7280') + '20'"
+                        [style.color]="currentAccountColor() || '#6b7280'">
+                        <mat-icon style="font-size:18px;width:18px;height:18px;">{{ currentAccountIcon() }}</mat-icon>
+                      </div>
+                    } @else {
+                      <div
+                        class="w-6 h-6 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-500">
+                        <mat-icon style="font-size:18px;width:18px;height:18px;">account_balance_wallet</mat-icon>
+                      </div>
+                    }
+                    <span [class.text-gray-500]="!currentAccountName()"
+                      [class.dark:text-gray-400]="!currentAccountName()"
+                      [class.text-gray-900]="currentAccountName()"
+                      [class.dark:text-gray-100]="currentAccountName()">
+                      {{ currentAccountName() || 'Select an account' }}
+                      @if (currentAccountType()) {
+                        <span class="text-xs text-gray-500 font-normal ml-1">({{ currentAccountType() | titlecase }})</span>
+                      }
                     </span>
                   </div>
 
@@ -499,15 +511,27 @@
                     [class.pointer-events-none]="viewMode()">
 
                     <div class="flex items-center gap-3">
-                      <div
-                        class="w-6 h-6 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-500">
-                        <mat-icon class="text-sm">account_balance</mat-icon>
-                      </div>
-                      <span [class.text-gray-500]="!transactionForm.get('toAccountId')?.value"
-                        [class.dark:text-gray-400]="!transactionForm.get('toAccountId')?.value"
-                        [class.text-gray-900]="transactionForm.get('toAccountId')?.value"
-                        [class.dark:text-gray-100]="transactionForm.get('toAccountId')?.value">
-                        {{ getAccountName(transactionForm.get('toAccountId')?.value) || 'Select destination account' }}
+                      @if (transactionForm.get('toAccountId')?.value && currentToAccountIcon()) {
+                        <div
+                          class="w-6 h-6 rounded-full flex items-center justify-center"
+                          [style.background-color]="(currentToAccountColor() || '#6b7280') + '20'"
+                          [style.color]="currentToAccountColor() || '#6b7280'">
+                          <mat-icon style="font-size:18px;width:18px;height:18px;">{{ currentToAccountIcon() }}</mat-icon>
+                        </div>
+                      } @else {
+                        <div
+                          class="w-6 h-6 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-500">
+                          <mat-icon style="font-size:18px;width:18px;height:18px;">account_balance</mat-icon>
+                        </div>
+                      }
+                      <span [class.text-gray-500]="!currentToAccountName()"
+                        [class.dark:text-gray-400]="!currentToAccountName()"
+                        [class.text-gray-900]="currentToAccountName()"
+                        [class.dark:text-gray-100]="currentToAccountName()">
+                        {{ currentToAccountName() || 'Select destination account' }}
+                        @if (currentToAccountType()) {
+                          <span class="text-xs text-gray-500 font-normal ml-1">({{ currentToAccountType() | titlecase }})</span>
+                        }
                       </span>
                     </div>
 

@@ -115,6 +115,15 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
   public currentCategoryIcon = signal('');
   public currentCategoryColor = signal('');
 
+  public currentAccountIcon = signal('');
+  public currentAccountColor = signal('');
+  public currentAccountName = signal('');
+  public currentAccountType = signal('');
+  public currentToAccountIcon = signal('');
+  public currentToAccountColor = signal('');
+  public currentToAccountName = signal('');
+  public currentToAccountType = signal('');
+
   public editMode = signal(false);
   public viewMode = signal(false);
   public TransactionType = TransactionType;
@@ -334,6 +343,33 @@ export class MobileAddTransactionComponent implements OnInit, AfterViewInit, OnD
       categoryNameCtrl?.updateValueAndValidity({ emitEvent: false });
       categoryTypeCtrl?.updateValueAndValidity({ emitEvent: false });
       toAccountIdCtrl?.updateValueAndValidity({ emitEvent: false });
+      this.cdr.markForCheck();
+    });
+
+    // Create signals for form values to use in effect
+    const accountId$ = this.transactionForm.get('accountId')!.valueChanges.pipe(startWith(this.transactionForm.get('accountId')?.value));
+    const toAccountId$ = this.transactionForm.get('toAccountId')!.valueChanges.pipe(startWith(this.transactionForm.get('toAccountId')?.value));
+    const accountIdSignal = toSignal(accountId$);
+    const toAccountIdSignal = toSignal(toAccountId$);
+
+    // Update account and toAccount icon/color signals automatically when form values or accounts list change
+    effect(() => {
+      const accounts = this.accounts();
+      const accountId = accountIdSignal();
+      const toAccountId = toAccountIdSignal();
+
+      const acc = accounts.find(a => a.accountId === accountId);
+      this.currentAccountIcon.set(acc?.icon || '');
+      this.currentAccountColor.set(acc?.color || '');
+      this.currentAccountName.set(acc?.name || '');
+      this.currentAccountType.set(acc?.type || '');
+
+      const toAcc = accounts.find(a => a.accountId === toAccountId);
+      this.currentToAccountIcon.set(toAcc?.icon || '');
+      this.currentToAccountColor.set(toAcc?.color || '');
+      this.currentToAccountName.set(toAcc?.name || '');
+      this.currentToAccountType.set(toAcc?.type || '');
+      
       this.cdr.markForCheck();
     });
 

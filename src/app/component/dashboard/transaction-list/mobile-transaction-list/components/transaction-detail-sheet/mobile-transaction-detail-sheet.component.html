@@ -28,19 +28,28 @@
 
       <mat-divider></mat-divider>
 
+       @if (data().transaction.type != 'transfer') {
       <!-- Account Information -->
       <div class="detail-row">
         <div class="detail-label">
           <mat-icon class="detail-icon">account_balance</mat-icon>
           <span>Account</span>
         </div>
-        <div class="detail-value">
+        <div class="detail-value flex items-center gap-2">
+          @if (data().transaction._accountIcon) {
+            <div class="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+              [style.backgroundColor]="data().transaction._accountColor + '20'"
+              [style.color]="data().transaction._accountColor">
+              <mat-icon style="font-size:12px;width:12px;height:12px;">{{ data().transaction._accountIcon }}</mat-icon>
+            </div>
+          }
           <span class="account-name">{{ data().transaction._accountName }}</span>
           @if (data().transaction._accountType) {
-          <span class="account-type">({{ data().transaction._accountType }})</span>
+          <span class="account-type ml-1">({{ data().transaction._accountType }})</span>
           }
         </div>
       </div>
+    }
 
       <!-- Transfer Details -->
       @if (data().transaction.type === 'transfer') {
@@ -49,10 +58,30 @@
           <mat-icon class="detail-icon">swap_horiz</mat-icon>
           <span>Transfer</span>
         </div>
-        <div class="detail-value">
-          <span class="account-name">From ({{ data().transaction._fromAccountName || 'Unknown' }})</span>
-          <mat-icon class="!text-[10px] !w-3 !h-3 mx-1 text-gray-400">arrow_forward</mat-icon>
-          <span class="account-name">To ({{ data().transaction._toAccountName || 'Unknown' }})</span>
+        <div class="detail-value flex items-center flex-wrap gap-y-1">
+          <div class="flex items-center gap-1.5">
+            @if (data().transaction._fromAccountIcon) {
+              <div class="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
+                [style.backgroundColor]="data().transaction._fromAccountColor + '20'"
+                [style.color]="data().transaction._fromAccountColor">
+                <mat-icon style="font-size:10px;width:10px;height:10px;">{{ data().transaction._fromAccountIcon }}</mat-icon>
+              </div>
+            }
+            <span class="account-name text-xs">{{ data().transaction._fromAccountName || 'Unknown' }}</span>
+          </div>
+          
+          <mat-icon class="!text-[10px] !w-3 !h-3 mx-1 text-gray-400 shrink-0">arrow_forward</mat-icon>
+          
+          <div class="flex items-center gap-1.5">
+            @if (data().transaction._toAccountIcon) {
+              <div class="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
+                [style.backgroundColor]="data().transaction._toAccountColor + '20'"
+                [style.color]="data().transaction._toAccountColor">
+                <mat-icon style="font-size:10px;width:10px;height:10px;">{{ data().transaction._toAccountIcon }}</mat-icon>
+              </div>
+            }
+            <span class="account-name text-xs">{{ data().transaction._toAccountName || 'Unknown' }}</span>
+          </div>
         </div>
       </div>
       }
