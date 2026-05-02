@@ -108,6 +108,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   private currentCharIndex = 0;
   private isDeleting = false;
   private typingTimeout: any;
+  private ttsCheckInterval: any; // stored for ngOnDestroy cleanup
 
   // Voice Interaction State
   isRecording: boolean = false;
@@ -150,6 +151,11 @@ export class ChatComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     if (this.typingTimeout) {
       clearTimeout(this.typingTimeout);
+    }
+    // Safety: clear any outstanding TTS poll interval
+    if (this.ttsCheckInterval) {
+      clearInterval(this.ttsCheckInterval);
+      this.ttsCheckInterval = null;
     }
     // Store current index in facade for session persistence
     this.greetingFacade.setChatPlaceholderIndex(this.currentPlaceholderIndex);
@@ -221,17 +227,23 @@ export class ChatComponent implements OnInit, OnDestroy {
     // We listen for the next bot message to play TTS if it was a voice message
     if (isVoiceMessage) {
       const currentLength = this.chatFacadeService.messages().length;
-      const checkInterval = setInterval(() => {
+      this.ttsCheckInterval = setInterval(() => {
         if (this.chatFacadeService.messages().length > currentLength) {
           const lastMsg = this.chatFacadeService.messages()[this.chatFacadeService.messages().length - 1];
           if (lastMsg.sender === 'bot') {
             this.playTts(lastMsg.text);
-            clearInterval(checkInterval);
+            clearInterval(this.ttsCheckInterval);
+            this.ttsCheckInterval = null;
           }
         }
-        // Timeout after 10s to stop checking
+        // Timeout after 15s to stop checking
       }, 500);
-      setTimeout(() => clearInterval(checkInterval), 1000);
+      setTimeout(() => {
+        if (this.ttsCheckInterval) {
+          clearInterval(this.ttsCheckInterval);
+          this.ttsCheckInterval = null;
+        }
+      }, 15000);
     }
   }
 

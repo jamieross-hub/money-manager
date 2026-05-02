@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, OnDestroy } from '@angular/core';
 import { Transaction } from '../models/transaction.model';
 import { TransactionsService } from './db/transactions.service';
 import { RecurringTemplate } from '../models/recurring.model';
@@ -29,7 +29,7 @@ export interface ProcessorOutput {
 @Injectable({
   providedIn: 'root'
 })
-export class TransactionProcessorService {
+export class TransactionProcessorService implements OnDestroy {
   private readonly userService = inject(UserService);
   private readonly currencyService = inject(CurrencyService);
   private readonly transactionsService = inject(TransactionsService);
@@ -83,6 +83,26 @@ export class TransactionProcessorService {
     }
   }
 
+  ngOnDestroy(): void {
+    // Cancel any pending debounce timer
+    if (this.debounceTimer) {
+      if (typeof cancelIdleCallback !== 'undefined' && this.idleCallbackId !== null) {
+        cancelIdleCallback(this.idleCallbackId);
+      } else {
+        clearTimeout(this.debounceTimer);
+      }
+      this.debounceTimer = null;
+      this.idleCallbackId = null;
+    }
+    // Terminate the worker thread
+    if (this.worker) {
+      this.worker.terminate();
+      this.worker = null;
+    }
+    // Clear WeakMap cache
+    this.txViewCache = new WeakMap();
+  }
+
   // Output Signals
   private _output = signal<ProcessorOutput>({
     filteredTransactions: [],
@@ -114,6 +134,7 @@ export class TransactionProcessorService {
   public isProcessing = computed(() => this._isProcessing());
 
   private debounceTimer: any;
+  private idleCallbackId: number | null = null;
 
   /**
    * WeakMap cache: Transaction object reference → enriched view-model.
@@ -170,7 +191,8 @@ export class TransactionProcessorService {
     };
 
     if (typeof requestIdleCallback !== 'undefined') {
-      this.debounceTimer = requestIdleCallback(run, { timeout: 150 });
+      this.idleCallbackId = requestIdleCallback(run, { timeout: 150 }) as unknown as number;
+      this.debounceTimer = this.idleCallbackId;
     } else {
       this.debounceTimer = setTimeout(run, 150);
     }

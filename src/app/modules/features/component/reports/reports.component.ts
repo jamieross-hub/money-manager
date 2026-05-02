@@ -697,10 +697,10 @@ export class ReportsComponent implements OnInit, OnDestroy {
         });
 
         // Effect to save expanded category & collapse states
+        // Note: write the full object directly — no prior getItem() read needed,
+        // avoiding a synchronous IndexedDB read + new object allocation on every signal change.
         effect(() => {
-            const currentUIState = this.storageService.getItem<any>(LocalStorageKey.REPORTS_UI_STATE) || {};
             this.storageService.setItem(LocalStorageKey.REPORTS_UI_STATE, {
-                ...currentUIState,
                 expandedCategoryId: this.expandedCategoryId(),
                 isIncomeCollapsed: this.isIncomeCollapsed(),
                 isAccountsCollapsed: this.isAccountsCollapsed(),

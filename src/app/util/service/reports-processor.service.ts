@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, OnDestroy } from '@angular/core';
 import { Transaction } from '../models/transaction.model';
 import { LocalIndexDBStorageService } from './indexdb-storage.service';
 
@@ -70,7 +70,7 @@ export interface ReportsProcessorOutput {
 @Injectable({
     providedIn: 'root'
 })
-export class ReportsProcessorService {
+export class ReportsProcessorService implements OnDestroy {
     private worker: Worker | null = null;
     private storageService = inject(LocalIndexDBStorageService);
 
@@ -227,10 +227,17 @@ export class ReportsProcessorService {
         return `${base}_${data.selectedPeriod}_${data.selectedYear}_${data.selectedMonth}_${data.selectedWeekOffset}_${ignored}`;
     }
 
-    destroy() {
+    ngOnDestroy(): void {
         if (this.worker) {
             this.worker.terminate();
             this.worker = null;
         }
+        this.lastFingerprint = '';
+        this.workerBaseFingerprint = '';
+    }
+
+    /** @deprecated use ngOnDestroy — kept for manual call sites if any */
+    destroy(): void {
+        this.ngOnDestroy();
     }
 }

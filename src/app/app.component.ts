@@ -55,6 +55,27 @@ export class AppComponent implements OnInit, OnDestroy {
   navigationState: NavigationState;
   private destroy$ = new Subject<void>();
 
+  // Stored DOM listener references for proper cleanup
+  private _onOnline = () => this.isOnline = true;
+  private _onOffline = () => this.isOnline = false;
+  private _onBeforeUnload = (_event: BeforeUnloadEvent) => {
+    if (this.navigationState.isStandalone) {
+      this.saveAppState();
+    }
+  };
+  private _onVisibilityChange = () => {
+    if (document.visibilityState === 'hidden') {
+      this.handleAppBackground();
+    } else if (document.visibilityState === 'visible') {
+      this.handleAppForeground();
+    }
+  };
+  private _onContextMenu = (event: MouseEvent) => {
+    if (this.breakpointService.isMobile()) {
+      event.preventDefault();
+    }
+  };
+
   constructor(
     private location: Location,
     private loaderService: LoaderService,
@@ -88,7 +109,10 @@ export class AppComponent implements OnInit, OnDestroy {
 
     // Track page views
     this.router.events
-      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
       .subscribe((event) => {
         const pageTitle = this.getDeepestTitle(this.route) || document.title || 'Unknown';
       });
@@ -148,6 +172,14 @@ export class AppComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     this.pwaNavigationService.ngOnDestroy();
+    // Remove all globally registered DOM listeners
+    if (this.ssrService.isClientSide()) {
+      window.removeEventListener('online', this._onOnline);
+      window.removeEventListener('offline', this._onOffline);
+      window.removeEventListener('beforeunload', this._onBeforeUnload);
+      document.removeEventListener('visibilitychange', this._onVisibilityChange);
+      document.removeEventListener('contextmenu', this._onContextMenu);
+    }
   }
 
   private initializePwaFeatures(): void {
@@ -187,32 +219,17 @@ export class AppComponent implements OnInit, OnDestroy {
   private setupEventListeners(): void {
     if (this.ssrService.isClientSide()) {
       // Handle online/offline events
-      window.addEventListener('online', () => this.isOnline = true);
-      window.addEventListener('offline', () => this.isOnline = false);
+      window.addEventListener('online', this._onOnline);
+      window.addEventListener('offline', this._onOffline);
 
       // Handle beforeunload for PWA
-      window.addEventListener('beforeunload', (event) => {
-        if (this.navigationState.isStandalone) {
-          // Save current state before app closes
-          this.saveAppState();
-        }
-      });
+      window.addEventListener('beforeunload', this._onBeforeUnload);
 
       // Handle visibility change for PWA
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-          this.handleAppBackground();
-        } else if (document.visibilityState === 'visible') {
-          this.handleAppForeground();
-        }
-      });
+      document.addEventListener('visibilitychange', this._onVisibilityChange);
 
       // This disables all right-click / long-press menus globally
-      document.addEventListener('contextmenu', (event) => {
-        if (this.breakpointService.isMobile()) {
-          event.preventDefault();
-        }
-      });
+      document.addEventListener('contextmenu', this._onContextMenu);
     }
   }
 

@@ -1,11 +1,12 @@
-import { Injectable, signal, inject, PLATFORM_ID } from "@angular/core";
+import { Injectable, signal, inject, PLATFORM_ID, OnDestroy } from "@angular/core";
 import { BreakpointObserver } from "@angular/cdk/layout";
 import { isPlatformBrowser } from "@angular/common";
+import { Subscription } from "rxjs";
 
 @Injectable({
   providedIn: "root",
 })
-export class BreakpointService {
+export class BreakpointService implements OnDestroy {
 
   private platformId = inject(PLATFORM_ID);
 
@@ -24,9 +25,11 @@ export class BreakpointService {
     isDesktop: false,
   };
 
+  private bpSubscription: Subscription | null = null;
+
   constructor(private breakpointObserver: BreakpointObserver) {
 
-    this.breakpointObserver
+    this.bpSubscription = this.breakpointObserver
       .observe([
         "(max-width: 480px)",
         "(min-width: 481px) and (max-width: 768px)",
@@ -63,6 +66,11 @@ export class BreakpointService {
           isDesktop,
         };
       });
+  }
+
+  ngOnDestroy(): void {
+    this.bpSubscription?.unsubscribe();
+    this.bpSubscription = null;
   }
 
   /**
