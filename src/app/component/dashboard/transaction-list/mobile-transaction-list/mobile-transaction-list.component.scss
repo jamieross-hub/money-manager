@@ -1654,6 +1654,18 @@
   margin: 0;
   white-space: nowrap;
   letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+
+  .credit-card-icon {
+    font-size: 14px !important;
+    width: 14px !important;
+    height: 14px !important;
+    color: var(--neutral-400);
+    opacity: 0.8;
+  }
 
   &.income-text  { color: var(--success-600); }
   &.expense-text { color: var(--error-600); }

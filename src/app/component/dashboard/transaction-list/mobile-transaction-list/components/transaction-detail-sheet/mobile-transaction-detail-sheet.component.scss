@@ -120,6 +120,18 @@
           letter-spacing: -0.05em;
           line-height: 1.1;
           font-variant-numeric: tabular-nums;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+
+          .credit-card-icon {
+            font-size: 24px !important;
+            width: 24px !important;
+            height: 24px !important;
+            color: var(--neutral-400);
+            opacity: 0.6;
+          }
           
           &.income {
             color: #059669; // More premium emerald green

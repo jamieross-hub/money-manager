@@ -21,6 +21,9 @@
     <div class="details-container">
       <div class="amount-section">
         <div class="amount-display" [class.income]="data().transaction._isIncome" [class.expense]="!data().transaction._isIncome">
+          @if (data().transaction._accountType === 'credit') {
+          <mat-icon class="credit-card-icon">credit_card</mat-icon>
+          }
           {{ data().transaction._isIncome ? '+' : '-' }}{{ data().transaction.amount | currency:{round:false,compact:false} }}
         </div>
       </div>

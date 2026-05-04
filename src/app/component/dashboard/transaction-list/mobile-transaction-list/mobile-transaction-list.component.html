@@ -717,6 +717,9 @@
                 <!-- Amount (right) -->
                 <div class="transaction-amount">
                   <div class="amount-value" [ngClass]="item._isIncome ? 'income-text' : 'expense-text'">
+                    @if (item._accountType === 'credit') {
+                    <mat-icon class="credit-card-icon">credit_card</mat-icon>
+                    }
                     {{ item._isIncome ? '+' : '-' }}{{ item.amount | currency }}
                   </div>
                   @if (selectedSpecialRange() !== 'category' && !(isFamilyMode() && isSplitMode() && !item._isSummary)) {
