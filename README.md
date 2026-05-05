@@ -7,7 +7,7 @@
   </a>
 </div>
 
-</p>
+</p> 
 <p align="center">
   <img src="https://img.shields.io/badge/Angular-18-red" />
   <img src="https://img.shields.io/badge/PWA-Ready-green" />
